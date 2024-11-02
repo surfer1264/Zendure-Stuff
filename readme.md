@@ -22,6 +22,10 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
 ## Vorbereitungen
 Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
+Verwendung findet 
+-- sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
+-- number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
+
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
