@@ -1,4 +1,4 @@
-![Foto einer Pyramide](Flows_kalibrierung.jpg)
+![Foto einer Pyramide](/Flows_kalibrierung.jpg)
 
 # Herbeiführen einer Kalibrierung Zendure
 ## Ziel
