@@ -21,8 +21,8 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
 
 ## Vorbereitungen
--Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
--Verwendung findet 
+- Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
+- Verwendung findet 
 -- sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
 -- number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
 
