@@ -33,7 +33,7 @@ Die Umsetzung erfolgte in Node-Red.
 Sie besteht aus drei Flows.
 
 ### Disclamier
-Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgeführten Parameter sind in den Nodes anzupassen.
+Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgeführten Parameter sind in den Nodes anzupassen. Die Flows sollen einen Impuls zur externen Überwachung des Ladezustandes samt Sicherstellung eines regelmäßigen Ladzyklus geben.
 
 ### 1. Hilfsflow
 Dies ist ein Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwndet werden, um jeden anderen Wert einzustellen.
