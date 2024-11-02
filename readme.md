@@ -11,8 +11,8 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 ## Meine Konfiguration
  - Zendure SF1200
  - Zendure AB2000
- - Hoymiles HM8002T
- - Shelly 3EM
+ - Hoymiles HM8002T mit DTU WLite-S
+ - Shelly 3EM (hierfür nicht erforderlich)
 
 ## Voraussetzungen
 - eine Home Assistent Installation
