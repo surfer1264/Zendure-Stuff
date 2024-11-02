@@ -1,4 +1,4 @@
-# Herbeiführen einer Kalibrierung
+# Herbeiführen einer Kalibrierung Zendure
 ## Ziel
 LiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.
 Es gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. 
@@ -9,8 +9,8 @@ Wenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselr
 Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
 ## Meine Konfiguration
- - SF1200
- - AB2000
+ - Zendure SF1200
+ - Zendure AB2000
  - Hoymiles HM8002T
  - Shelly 3EM
 
