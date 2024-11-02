@@ -1,3 +1,5 @@
+[/Flows_kalibrierung.jpg]
+
 # Herbeiführen einer Kalibrierung Zendure
 ## Ziel
 LiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.
