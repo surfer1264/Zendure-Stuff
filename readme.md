@@ -46,10 +46,10 @@ Ist er = 100%
 - wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
 - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
 
-### 3. Überwachungsflow Zeit seit letzter Kalibrierung
+### 3. Überwachungsflow Zeit seit _letzter Kalibrierung_
 Dieser FLow wird täglich um 09:00 einmalig ausgeführt.
-Hier wird der Helfer Letzte Kalibierung
-- um den Wert 1 erhöht
+Hier wird der Helfer _Letzte Kalibierung_
+- um den Wert 1 erhöht (z.B. steht dann ein Wert 5 für: seit 5 Tagen fand keine Kalibrierung statt)
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
   - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
   - wird eine Nachricht in die Konsole geschrieben
