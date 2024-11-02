@@ -23,13 +23,12 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 ## Vorbereitungen
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
 - Verwendung findet
--- sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
--- number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
-
+  - sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
+  - number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
-Sie besteht aus drei Flows
+Sie besteht aus drei Flows.
 
 ### Disclamier
 Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgeführten Parameter sind in den Nodes anzupassen.
@@ -52,8 +51,8 @@ Dieser FLow wird täglich um 09:00 einmalig ausgeführt.
 Hier wird der Helfer Letzte Kalibierung
 - um den Wert 1 erhöht
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
--- wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
--- wird eine Nachricht in die Konsole geschrieben
+  - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
+  - wird eine Nachricht in die Konsole geschrieben
 
 
 
