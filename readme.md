@@ -54,6 +54,8 @@ Hier wird der Helfer _Letzte Kalibierung_
   - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
   - wird eine Nachricht in die Konsole geschrieben
 
-
+## Installation
+Importiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
+Passe die Parameter nach Deinen Wünschen an.
 
 
