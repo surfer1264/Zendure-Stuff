@@ -5,7 +5,7 @@
 ## Ziel
 LiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.
 Es gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch und zeitgesteuert organisiert. 
-Erzwungen kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis.
+Erzwungen kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis, also manuelle Eingriffe.
 
 Mein Ziel war es, über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.
 Wenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. 
@@ -51,7 +51,7 @@ Ist er = 100%:
 - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
 
 ### 3. Überwachungsflow Zeit seit _letzter Kalibrierung_
-Dieser FLow wird täglich um 09:00 einmalig ausgeführt.
+Dieser Flow wird täglich um 09:00 einmalig ausgeführt.
 Hier wird der Helfer _Letzte Kalibierung_
 - um den Wert 1 erhöht (z.B. steht dann ein Wert 5 für: seit 5 Tagen fand keine Kalibrierung statt)
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
