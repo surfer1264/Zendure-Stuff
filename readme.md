@@ -44,7 +44,8 @@ Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten)
 Hier wird der SoC des Akkus abgefragt. (electricevel)
 Ist er kleiner als 100%:
 - endet der Flow.
-Ist er = 100% 
+
+Ist er = 100%:
 - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
 - wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
 - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
