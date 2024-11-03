@@ -1,7 +1,7 @@
 
 ![Foto einer Pyramide](/Flows_kalibrierung.JPG)
 
-# Herbeiführen einer Kalibrierung Zendure
+# Herbeiführen einer Kalibrierung mit Zendure
 ## Ziel
 LiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.
 Es gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch und zeitgesteuert organisiert. 
