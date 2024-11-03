@@ -1,3 +1,4 @@
+
 ![Foto einer Pyramide](/Flows_kalibrierung.JPG)
 
 # Herbeiführen einer Kalibrierung Zendure
@@ -24,7 +25,7 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
 ## Vorbereitungen
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
-- Verwendung findet
+- Verwendung finden folgende Entitäten:
   - sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
   - number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
 
@@ -36,7 +37,7 @@ Sie besteht aus drei Flows.
 Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgeführten Parameter sind in den Nodes anzupassen. Die Flows sollen einen Impuls zur externen Überwachung des Ladezustandes samt Sicherstellung eines regelmäßigen Ladzyklus geben.
 
 ### 1. Hilfsflow
-Dies ist ein Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwndet werden, um jeden anderen Wert einzustellen.
+Dies ist ein (nur) Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwndet werden, um jeden anderen Wert einzustellen.
 
 ### 2. Überwachungsflow Akku 100%
 Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten)
