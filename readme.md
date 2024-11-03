@@ -42,7 +42,7 @@ Dies ist ein (nur) Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 
 ### 2. Überwachungsflow Akku 100%
 Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten)
 Hier wird der SoC des Akkus abgefragt. (electricevel)
-Ist er kleiner als 100%
+Ist er kleiner als 100%:
 - endet der Flow.
 Ist er = 100% 
 - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
