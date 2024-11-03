@@ -17,7 +17,7 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
  - Shelly 3EM (hierfür nicht erforderlich)
 
 ## Voraussetzungen
-- eine Home Assistent Installation
+- eine Home Assistent Installation (https://www.home-assistant.io/installation/)
 - eine Node-Red HA-Installation (über Addon)
 - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)
 - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
