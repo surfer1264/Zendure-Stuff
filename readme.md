@@ -40,7 +40,7 @@ Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgef�
 Dies ist ein (nur) Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwndet werden, um jeden anderen Wert einzustellen.
 
 ### 2. Überwachungsflow Akku 100%
-Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten)
+Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten). Diese Zeit kann angepasst werden im ersten Node.
 Hier wird der SoC des Akkus abgefragt. (electricevel)
 Ist er kleiner als 100%:
 - endet der Flow.
@@ -51,7 +51,7 @@ Ist er = 100%:
 - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
 
 ### 3. Überwachungsflow Zeit seit _letzter Kalibrierung_
-Dieser Flow wird täglich um 09:00 einmalig ausgeführt.
+Dieser Flow wird täglich um 09:00 einmalig ausgeführt. Diese Zeit kann angepasst werden im ersten Node.
 Hier wird der Helfer _Letzte Kalibierung_
 - um den Wert 1 erhöht (z.B. steht dann ein Wert 5 für: seit 5 Tagen fand keine Kalibrierung statt)
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
