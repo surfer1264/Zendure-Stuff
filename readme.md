@@ -57,6 +57,7 @@ Hier wird der Helfer _Letzte Kalibierung_
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
   - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
   - wird eine Nachricht in die Konsole geschrieben
+der Vergleichswert nach wieviel Tagen der Ladezyklus erzwungen wird, kann natürlich in der entsprechenden Node geändert werden.
 
 ## Installation
 Importiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
