@@ -11,7 +11,7 @@ Mein Ziel war es, über eine externe Automatisierung die Ladung auf 100% zu erzw
 Wenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. 
 Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
-Die Lösung ist dabei, Daten des Akkus auszuwerten und dann den Wechselrichter anzusteuern. beim Hoymiles Wechserichter kann über einen Parameter die Ausgangsleistung zw. 0% und 100% gesteuert werden.
+Die Lösung ist dabei, Daten des Akkus auszuwerten und dann den Wechselrichter anzusteuern. Beim Hoymiles Wechserichter kann über einen Parameter die Ausgangsleistung zw. 0% und 100% gesteuert werden.
 
 ## Meine Konfiguration
  - Zendure SF1200
