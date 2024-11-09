@@ -12,6 +12,8 @@ Wenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselr
 Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
 Die Lösung ist dabei, Daten des Akkus auszuwerten und dann den Wechselrichter anzusteuern. Beim Hoymiles Wechserichter kann über einen Parameter die Ausgangsleistung zw. 0% und 100% gesteuert werden.
+Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen. 
+
 
 ## Meine Konfiguration
  - Zendure SF1200
