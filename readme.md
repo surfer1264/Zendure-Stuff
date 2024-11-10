@@ -1,5 +1,5 @@
 
-![Foto einer Pyramide](/Flows_kalibrierung.JPG)
+![Flow](/Flows_kalibrierung.JPG)
 
 # Herbeiführen einer Kalibrierung mit Zendure
 ## Ziel
@@ -29,9 +29,11 @@ Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen.
 
 ## Vorbereitungen
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
-- Verwendung finden folgende Entitäten:
-  - sensor.electriclevel (Akku-Ladezustand, SoC) (Zendure Akku)
-  - number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
+- Anlegen einer Zähler-Helfer-Variable  (_Akku Voll_). Diese Variabe zählt das Vorkommen des Zustandes 100% des Akkus. (nur Info)
+- Verwendung finden weiterhin folgende Entitäten:
+  - sensor.electriclevel (Akku-Ladezustand, SoC) (aus dem MQTT Stream des Zendure Akkus)
+  - number.wechselrichter_leistungsbegrenzung (aus der Hoymiles WR Integration)
+  
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
