@@ -45,27 +45,29 @@ Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgef�
 ### 1. Hilfsflow
 Dies ist ein (nur) Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
 
-### 2. Überwachungsflow Akku 100%
-Dieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten). Diese Zeit kann angepasst werden im ersten Node.
-Hier wird der SoC des Akkus abgefragt. (electricevel)
-Ist er kleiner als 100%:
+### 2. Überwachungsflow Akku 100%?
+Dieser FLow wird täglich zw. 11:00 und 19:00 ausgeführt (Alle 20 Minuten). Diese Zeit kann angepasst werden im ersten Node.
+Dieser FLow soll den Akkustatus überprüfen und bei Erreichen der 100% den ZUstand _Letzte Kalibrierung_ auf den Wert 0 (entspreicht "Heute") zurücksetzen
+Es wird der SoC des Akkus abgefragt (electricevel)
+Ist _electriclevel_ kleiner als 100%:
 - endet der Flow.
 
 Ist er = 100%:
 - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
-- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
-- wird der _button.wechselrichter_einschalten_ betätigt
-- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
-- wird die Hilfsvariable _akku voll_ hochgezählt
+- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet.
+- wird der _button.wechselrichter_einschalten_ betätigt.
+- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%.
+- wird die Hilfsvariable _akku voll_ hochgezählt.
 
 ### 3. Überwachungsflow Zeit seit _letzter Kalibrierung_
 Dieser Flow wird täglich um 09:15 einmalig ausgeführt. Diese Zeit kann angepasst werden im ersten Node.
+Dieser Flow soll festsetellen, wann der letzte Zellabgleich durchgeführt wurde und bei Überschreiten einer festgelegten Tagesdauer, den WR Ausgang schließen.
 Hier wird der Helfer _Letzte Kalibierung_
 - um den Wert 1 erhöht (z.B. steht dann ein Wert 5 für: seit 5 Tagen fand keine Kalibrierung statt)
-- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann 
+- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Code Beispiel den Wert 6), dann 
   - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
-  - wird der _button.wechselrichter_ausschalten_ betätigt
-  - wird eine Nachricht in die Konsole geschrieben
+  - wird der _button.wechselrichter_ausschalten_ betätigt.
+  - wird eine Nachricht in die Konsole geschrieben.
 
 Der Vergleichswert nach wieviel Tagen der Ladezyklus erzwungen wird, kann natürlich in der entsprechenden Node geändert werden.
 
