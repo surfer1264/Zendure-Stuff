@@ -1,5 +1,991 @@
 [
     {
+        "id": "3d2a81e3c1ae2c8c",
+        "type": "tab",
+        "label": "Status der letzten Kalibrierung",
+        "disabled": false,
+        "info": "# Herbeiführen einer Kalibrierung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das LAden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im WInter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HM8002T\r\n - Shelly 3EM\r\n\r\n## Voraussetzungen\r\n- eine Home Assistent Installation\r\n- eine Node-Red HA-Installation (über Addon)\r\n- eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n- eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n\r\n## Vorbereitungen\r\n- Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\nVerwendung findet \r\n    - sensor.electriclevel (Akku-LAdezustand, SoC)\r\n    - number.wechselrichter_leistungsbegrenzung\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\nSie besteht aus drei Flows\r\n\r\n### 1. Hilfsflow\r\nDies ist ein Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwndet werden, um jeden anderen Wert einzustellen.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDieser FLow wird täglich zw. 10:00 und 19:00 ausgeführt (Alle 20 Minuten)\r\nHier wird der SoC des Akkus abgefragt. (electricevel)\r\nIst er kleiner als 100%\r\n- endet der Flow.\r\nIst er = 100% \r\n- wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet\r\n- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n\r\n### 3. Überwachungsflow Zeit seit letzter Kalibrierung\r\nDieser FLow wird täglich um 09:00 einmalig ausgeführt.\r\nHier wird der Helfer Letzte Kalibierung\r\n- um den Wert 1 erhöht\r\n- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 7), dann \r\n    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.\r\n    - wird eine Nachricht in die Konsole geschrieben\r\n\r\n\r\n\r\n\r\n",
+        "env": []
+    },
+    {
+        "id": "103dc338d37dba19",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Akkustatus überprüfen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "5310d90eb9e34eff",
+            "ece1b5e242f568da",
+            "fa408e1fa4b7e848",
+            "de5f72f121bca456",
+            "008622d155d33a6f",
+            "e9ecaea2c1505d26",
+            "7230ec9a96927093",
+            "0830d93383e59d3a",
+            "99515c24b27fb232",
+            "df1a51396cc15924",
+            "514564445a70848a",
+            "30f5db3f101436ed",
+            "e50a07e5ffca56e5",
+            "936e181748ce7cfa",
+            "ac03a78e927443c6"
+        ],
+        "x": 34,
+        "y": 219,
+        "w": 1132,
+        "h": 382
+    },
+    {
+        "id": "cb951c1227cd6476",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Status Letzte Kalibrierung (Zeit) überprüfen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "0bd29e25a3368fe1",
+            "0a8e29cbf690c247",
+            "38a9f11a5f14ef80",
+            "b4f2aa097b17ecde",
+            "0664f9615f779794",
+            "20a2e36b5705230d",
+            "2c4d013e881155f5",
+            "32244a8c595eb0a3",
+            "64a2973b998a9933",
+            "fe26652a15f58f18",
+            "407ef7108cf44443",
+            "60883a3c02850b43",
+            "822244a8ca19e317",
+            "bc47b14626a6b329",
+            "8c5010cf360f0d2a",
+            "b883b9022ae9fd4b"
+        ],
+        "x": 34,
+        "y": 619,
+        "w": 1132,
+        "h": 282
+    },
+    {
+        "id": "54839a68fcca4b36",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "manueller Flow, Setzen \"Letzte Kalibierung\" auf einen gewünschten Wert",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "9d366c1bce391294",
+            "e1600020487b026c",
+            "c5fddd2b82d992db",
+            "6b425c4a990d179d",
+            "d5c4c61c4a6a57a1",
+            "c09b3456562f6965",
+            "b1dc413f2cea219e"
+        ],
+        "x": 34,
+        "y": 59,
+        "w": 1132,
+        "h": 122
+    },
+    {
+        "id": "0bd29e25a3368fe1",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Plus Eins",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_number.increment",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_number.letzte_kalibrierung"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "last",
+        "blockInputOverrides": false,
+        "domain": "input_number",
+        "service": "increment",
+        "x": 440,
+        "y": 720,
+        "wires": [
+            [
+                "8c5010cf360f0d2a"
+            ]
+        ]
+    },
+    {
+        "id": "0a8e29cbf690c247",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Status",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 290,
+        "y": 720,
+        "wires": [
+            [
+                "0bd29e25a3368fe1"
+            ]
+        ]
+    },
+    {
+        "id": "ece1b5e242f568da",
+        "type": "inject",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "*/20 11-18 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 480,
+        "wires": [
+            [
+                "5310d90eb9e34eff"
+            ]
+        ]
+    },
+    {
+        "id": "38a9f11a5f14ef80",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Set: Letzte Kalibrierung =+ 1d",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 640,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "008622d155d33a6f",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Set auf Null",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_number.letzte_kalibrierung"
+        ],
+        "labelId": [],
+        "data": "{ \"value\": 0}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "data"
+            }
+        ],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_number",
+        "service": "set_value",
+        "x": 750,
+        "y": 560,
+        "wires": [
+            [
+                "514564445a70848a"
+            ]
+        ]
+    },
+    {
+        "id": "514564445a70848a",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "debug 9",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "1a2383e396129bfd",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Set Letzte Kalibrierung auf Heute == 0",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 790,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "b4f2aa097b17ecde",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "debug 5",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1040,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "fa408e1fa4b7e848",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Status Akku",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "100",
+        "halt_if_type": "num",
+        "halt_if_compare": "gte",
+        "entity_id": "sensor.electriclevel",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 450,
+        "y": 480,
+        "wires": [
+            [
+                "008622d155d33a6f",
+                "e9ecaea2c1505d26",
+                "7230ec9a96927093",
+                "0830d93383e59d3a",
+                "df1a51396cc15924"
+            ],
+            [
+                "99515c24b27fb232"
+            ]
+        ]
+    },
+    {
+        "id": "613ebba604841034",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Akku auf 100%?",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 420,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "0664f9615f779794",
+        "type": "inject",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "15 09 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 720,
+        "wires": [
+            [
+                "0a8e29cbf690c247"
+            ]
+        ]
+    },
+    {
+        "id": "936e181748ce7cfa",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "alle 20Min",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 120,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "20a2e36b5705230d",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "täglich um 09:15",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 140,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "2c4d013e881155f5",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Hole Wert letzte Kalibrierung",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 380,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "32244a8c595eb0a3",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Prüfe letzte Kalibrierung",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "6",
+        "halt_if_type": "num",
+        "halt_if_compare": "gte",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 790,
+        "y": 720,
+        "wires": [
+            [
+                "b4f2aa097b17ecde",
+                "fe26652a15f58f18",
+                "407ef7108cf44443",
+                "b883b9022ae9fd4b"
+            ],
+            [
+                "64a2973b998a9933"
+            ]
+        ]
+    },
+    {
+        "id": "9d366c1bce391294",
+        "type": "inject",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 140,
+        "y": 140,
+        "wires": [
+            [
+                "c5fddd2b82d992db"
+            ]
+        ]
+    },
+    {
+        "id": "e1600020487b026c",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_number.letzte_kalibrierung"
+        ],
+        "labelId": [],
+        "data": "{ \"value\": 0}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "data"
+            }
+        ],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_number",
+        "service": "set_value",
+        "x": 690,
+        "y": 140,
+        "wires": [
+            [
+                "6b425c4a990d179d"
+            ]
+        ]
+    },
+    {
+        "id": "c5fddd2b82d992db",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "Letzte Kalibrierung",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "1",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 390,
+        "y": 140,
+        "wires": [
+            [
+                "e1600020487b026c"
+            ]
+        ]
+    },
+    {
+        "id": "6b425c4a990d179d",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "debug 7",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "d5c4c61c4a6a57a1",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "manuell",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 130,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "c09b3456562f6965",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "Setze auf Null = Heute",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 680,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "64a2973b998a9933",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "e9ecaea2c1505d26",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Notify 100%",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"message\":\"{{payload}}\",\"title\":\"Akkustand\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 890,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "99515c24b27fb232",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "fe26652a15f58f18",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Set WR AUS",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.wechselrichter_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": 0}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 1050,
+        "y": 700,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "407ef7108cf44443",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Notify WR aus",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"message\":\"Wechselrichter aus\",\"title\":\"Akkuladung priorisiert\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 1060,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "60883a3c02850b43",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Check >=6? ",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 850,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "7230ec9a96927093",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Set WR EIN",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.wechselrichter_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": 100}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 890,
+        "y": 400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "02bd0774f18ebf8e",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "WR Ein",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 830,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "822244a8ca19e317",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "WR Aus",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 1040,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "b1dc413f2cea219e",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "54839a68fcca4b36",
+        "name": "Hole letzte Kalibrierung",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 400,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "bc47b14626a6b329",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Notify Letzte Kalibrierung",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"message\":\"{{payload}}\",\"title\":\"Letzte Kalibrierung\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 790,
+        "y": 780,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8c5010cf360f0d2a",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "Status",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 590,
+        "y": 720,
+        "wires": [
+            [
+                "bc47b14626a6b329",
+                "32244a8c595eb0a3"
+            ]
+        ]
+    },
+    {
+        "id": "5310d90eb9e34eff",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Status",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "0",
+        "halt_if_type": "num",
+        "halt_if_compare": "gt",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 290,
+        "y": 480,
+        "wires": [
+            [
+                "fa408e1fa4b7e848"
+            ],
+            [
+                "de5f72f121bca456"
+            ]
+        ]
+    },
+    {
+        "id": "de5f72f121bca456",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "debug 10",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 380,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "ac03a78e927443c6",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Zw. 11:00 und 19:00",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 150,
+        "y": 440,
+        "wires": []
+    },
+    {
         "id": "0830d93383e59d3a",
         "type": "api-current-state",
         "z": "3d2a81e3c1ae2c8c",
@@ -43,6 +1029,114 @@
                 "30f5db3f101436ed"
             ]
         ]
+    },
+    {
+        "id": "30f5db3f101436ed",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "counter.increment",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "counter.akku_voll"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "counter",
+        "service": "increment",
+        "x": 910,
+        "y": 300,
+        "wires": [
+            []
+        ],
+        "info": "zähle wie oft der akku auf 100 geladen wurde."
+    },
+    {
+        "id": "b883b9022ae9fd4b",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cb951c1227cd6476",
+        "name": "WR Aus",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "button.press",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "button.wechselrichter_ausschalten"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "button",
+        "service": "press",
+        "x": 1040,
+        "y": 740,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "df1a51396cc15924",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "WR EIn",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "button.press",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "button.wechselrichter_einschalten"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "button",
+        "service": "press",
+        "x": 880,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e50a07e5ffca56e5",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "Zähler: wie oft 100% erreicht wurden",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 800,
+        "y": 260,
+        "wires": []
     },
     {
         "id": "285afb99.5208c4",
