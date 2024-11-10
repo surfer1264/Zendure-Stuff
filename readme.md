@@ -1,5 +1,5 @@
 
-![FLows](/Flows_kalibrierung.JPG)
+![FLow](/Flows_kalibrierung.JPG)
 
 # Herbeiführen einer Kalibrierung mit Zendure
 ## Ziel
