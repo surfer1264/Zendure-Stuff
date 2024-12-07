@@ -30,6 +30,7 @@ Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen.
     - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
 
 ## Vorbereitungen
+im HomeAssistent sind zwei Helfervariablen anzulegen:
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
 Verwendung findet 
 - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.   
