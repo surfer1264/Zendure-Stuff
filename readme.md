@@ -76,14 +76,15 @@ Alle 60 Minuten werden die Einstellungen daher aufgefrischt.
 ### 4. Alarm, wenn Zellspannung unter 3,1V
 Dieser Flow überprüft die Zellspannung minVol.
 Liegt die Zellspannung unterhalb 3,1V
-    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
-    - wird der Wechselrichter auf AUS gesetzt
-    - wird eine Nachricht in die Konsole geschrieben
-    - wird eine Alarm-EMail versendet
-Der FLow kann auch manuell angesoßen werden, zur Überprüfung
+- wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
+- wird der Wechselrichter auf AUS gesetzt
+- wird eine Nachricht in die Konsole geschrieben
+- wird eine Alarm-EMail versendet
+
+Der FLow kann auch manuell angesoßen werden, zur Überprüfung.
 Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
-Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall
-Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen
+Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall.
+Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
 
 ## Installation
 Importiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
