@@ -86,6 +86,15 @@ Der FLow kann auch manuell angesoßen werden, zur Überprüfung.
 Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
 Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall.
 Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
+eine MQTT.yaml ist im Codebereich angefügt und enthält  die Werte minVol, maxVol, SOC Level und Akkutemperatur
+ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
+- <deviceID>
+- <appKey>/<deviceID>
+- <EurePVHubSeriennummer>
+Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits 
+
+Nicht vergessen !! eine Zeile in die configuration.yaml im Home Assistent zu setzen
+- mqtt: !include mqtt.yaml
 
 ## Installation
 Importiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
