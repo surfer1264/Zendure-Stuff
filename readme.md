@@ -14,6 +14,8 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 Die Lösung ist dabei, Daten des Akkus auszuwerten und dann den Wechselrichter anzusteuern. Beim Hoymiles Wechserichter kann über einen Parameter die Ausgangsleistung zw. 0% und 100% gesteuert werden.
 Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen. 
 
+## Disclaimer
+Die ist ein experimentelles Projekt. Für alle Fans des HomeAssistent und Node-Red. Keine Garantie auf (sofortiges) Funktionieren. Anpassungen sind notwendig wie hier beschrieben.
 
 ## Meine Konfiguration
  - Zendure SF1200
@@ -33,7 +35,7 @@ Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen.
 im HomeAssistent sind zwei Helfervariablen anzulegen:
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
 Verwendung findet 
-- Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.   
+- Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1. Ich will damit zählen wie oft der Akku auf 100% geht.   
 
 Folgende Sensoren werden verwendet:
 - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
