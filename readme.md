@@ -34,7 +34,6 @@ Die ist ein experimentelles Projekt. Für alle Fans des HomeAssistent und Node-R
 ## Vorbereitungen
 im HomeAssistent sind zwei Helfervariablen anzulegen:
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
-Verwendung findet 
 - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1. Ich will damit zählen wie oft der Akku auf 100% geht.   
 
 Folgende Sensoren werden verwendet:
@@ -58,6 +57,7 @@ Hier wird der SoC des Akkus abgefragt (electricevel).
 
 Ist er kleiner als 100%
 - endet der Flow.
+
 Ist er = 100% 
 - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
 - wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
