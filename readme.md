@@ -50,7 +50,8 @@ Mit dem dritten Hilfsflow lässt sich der Akku abfragen (electriclevel)
 Alle drei Hilfsflows sind experimentell, anpassbar.
 
 ### 2. Überwachungsflow Akku 100%
-Hier wird der SoC des Akkus abgefragt. (electricevel)
+Hier wird der SoC des Akkus abgefragt (electricevel).
+
 Ist er kleiner als 100%
 - endet der Flow.
 Ist er = 100% 
