@@ -33,6 +33,7 @@ Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen.
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
 Verwendung findet 
 - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.   
+
 Folgende Sensoren werden verwendet:
 - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
 - number.wechselrichter_leistungsbegrenzung (Hoymiles WR) 
