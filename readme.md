@@ -22,57 +22,68 @@ Die Parameter des Hubs lassen sich über diesen Weg nicht beeinflussen.
  - Shelly 3EM (hierfür nicht erforderlich)
 
 ## Voraussetzungen
-- eine Home Assistent Installation (https://www.home-assistant.io/installation/)
+- eine Home Assistent Installation
 - eine Node-Red HA-Installation (über Addon)
 - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)
 - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
+    - Wichtig ist die Einbindugn der MQTT-Daten von Zendure, dies gelingt mit der vorliegenden Beschreibung 
+    - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
 
 ## Vorbereitungen
 - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
-- Anlegen einer Zähler-Helfer-Variable  (_Akku Voll_). Diese Variabe zählt das Vorkommen des Zustandes 100% des Akkus. (nur Info)
-- Verwendung finden weiterhin folgende Entitäten:
-  - sensor.electriclevel (Akku-Ladezustand, SoC) (aus dem MQTT Stream des Zendure Akkus)
-  - number.wechselrichter_leistungsbegrenzung (aus der Hoymiles WR Integration)
-  
+Verwendung findet 
+- Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.   
+Folgende Sensoren werden verwendet:
+- sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
+- number.wechselrichter_leistungsbegrenzung (Hoymiles WR) 
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
-Sie besteht aus drei Flows.
+Sie besteht aus 5 Flows
 
-### Disclamier
-Ich übernehme keine Garantie für das korrekte Funktionieren. Die unten aufgeführten Parameter sind in den Nodes anzupassen. Die Flows sollen einen Impuls zur externen Überwachung des Ladezustandes samt Sicherstellung eines regelmäßigen Ladzyklus geben.
+### 1. (drei) Hilfsflows
+Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
+Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)
+Mit dem dritten Hilfsflow lässt sich der Akku abfragen (electriclevel)
+Alle drei Hilfsflows sind experimentell, anpassbar.
 
-### 1. Hilfsflow
-Dies ist ein (nur) Hilfsflow, der den Helfer _Letzte Kalibrierung_ auf den Wert 0 setzt. Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
-
-### 2. Überwachungsflow Akku 100%?
-Dieser FLow wird täglich zw. 11:00 und 19:00 ausgeführt (Alle 20 Minuten). Diese Zeit kann angepasst werden im ersten Node.
-Dieser FLow soll den Akkustatus überprüfen und bei Erreichen der 100% den ZUstand _Letzte Kalibrierung_ auf den Wert 0 (entspreicht "Heute") zurücksetzen
-Es wird der SoC des Akkus abgefragt (electricevel)
-Ist _electriclevel_ kleiner als 100%:
+### 2. Überwachungsflow Akku 100%
+Hier wird der SoC des Akkus abgefragt. (electricevel)
+Ist er kleiner als 100%
 - endet der Flow.
-
-Ist er = 100%:
+Ist er = 100% 
 - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
-- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet.
-- wird der _button.wechselrichter_einschalten_ betätigt.
-- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%.
-- wird die Hilfsvariable _akku voll_ hochgezählt.
+- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
+- wird der Wechselrichter auf AN gesetzt.
+- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
+- wird der Counter-Helfer _counter.akku_voll_ inkementiert.
 
-### 3. Überwachungsflow Zeit seit _letzter Kalibrierung_
-Dieser Flow wird täglich um 09:15 einmalig ausgeführt. Diese Zeit kann angepasst werden im ersten Node.
-Dieser Flow soll festsetellen, wann der letzte Zellabgleich durchgeführt wurde und bei Überschreiten einer festgelegten Tagesdauer, den WR Ausgang schließen.
+### 3. Überwachungsflow Zeit seit letzter Kalibrierung
+Dieser FLow wird täglich um 09:15 einmalig ausgeführt.
 Hier wird der Helfer _Letzte Kalibierung_
-- um den Wert 1 erhöht (z.B. steht dann ein Wert 5 für: seit 5 Tagen fand keine Kalibrierung statt)
-- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Code Beispiel den Wert 6), dann 
-  - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
-  - wird der _button.wechselrichter_ausschalten_ betätigt.
-  - wird eine Nachricht in die Konsole geschrieben.
+- um den Wert 1 erhöht
+- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann 
+    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
+    - wird der Wechselrichter auf AUS gesetzt
+    - wird eine Nachricht in die Konsole geschrieben
 
 Der Vergleichswert nach wieviel Tagen der Ladezyklus erzwungen wird, kann natürlich in der entsprechenden Node geändert werden.
+
+Die Werte Wechselrichter AN/AUS und _wechselrichter_leistungsbegrenzug_ sind flüchtig. Der WR  geht in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig
+Alle 60 Minuten werden die Einstellungen daher aufgefrischt.
+
+### 4. Alarm, wenn Zellspannung unter 3,1V
+Dieser Flow überprüft die Zellspannung minVol.
+Liegt die Zellspannung unterhalb 3,1V
+    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
+    - wird der Wechselrichter auf AUS gesetzt
+    - wird eine Nachricht in die Konsole geschrieben
+    - wird eine Alarm-EMail versendet
+Der FLow kann auch manuell angesoßen werden, zur Überprüfung
+Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
+Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall
+Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen
 
 ## Installation
 Importiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
 Passe die Parameter nach Deinen Wünschen an.
-
-
