@@ -63,6 +63,7 @@ Ist er = 100%
 
 ### 3. Überwachungsflow Zeit seit letzter Kalibrierung
 Dieser FLow wird täglich um 09:15 einmalig ausgeführt.
+
 Hier wird der Helfer _Letzte Kalibierung_
 - um den Wert 1 erhöht
 - wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann 
@@ -77,23 +78,26 @@ Alle 60 Minuten werden die Einstellungen daher aufgefrischt.
 
 ### 4. Alarm, wenn Zellspannung unter 3,1V
 Dieser Flow überprüft die Zellspannung minVol.
+
 Liegt die Zellspannung unterhalb 3,1V
 - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
 - wird der Wechselrichter auf AUS gesetzt
 - wird eine Nachricht in die Konsole geschrieben
 - wird eine Alarm-EMail versendet
 
-Der FLow kann auch manuell angesoßen werden, zur Überprüfung.
-Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
-Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall.
+Der FLow kann auch manuell angesoßen werden (zur Überprüfung).
+Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden. Dies ist durch die obigen MQTT Integrationen nicht automatisch der Fall.
+
 Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
-eine MQTT.yaml ist im Codebereich angefügt und enthält  die Werte minVol, maxVol, SOC Level und Akkutemperatur
-ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
+
+Eine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur.
+
+Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
 - deviceID
 - appKey/deviceID
 - EurePVHubSeriennummer
 
-Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits 
+Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar 
 
 Nicht vergessen !! eine Zeile in die configuration.yaml im Home Assistent zu setzen
 - mqtt: !include mqtt.yaml
