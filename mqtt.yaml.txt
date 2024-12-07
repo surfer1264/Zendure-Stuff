@@ -1,0 +1,48 @@
+sensor:
+    - name: Batterie 1 maxTemp
+      unique_id: <deviceID>Batterie1maxTemp
+      state_topic: <appKey>/<deviceID>/state
+      value_template: '{{ (value_json.packData[0].maxTemp | float - 273.15) | round(2) }}'
+      unit_of_measurement: "°C"
+      device_class: temperature
+      device:
+        name: SolarFlow
+        identifiers: <EurePVHubSeriennummer>
+        manufacturer: Zendure
+        model: SmartPV Hub 1200 Controller
+ 
+    - name: Batterie 1 maxVol
+      unique_id: <deviceID>Batterie1maxVol
+      state_topic: <appKey>/<deviceID>/state
+      value_template: '{{ value_json.packData[0].maxVol | float / 100 }}'
+      unit_of_measurement: "V"
+      device_class: voltage
+      device:
+        name: SolarFlow
+        identifiers: <EurePVHubSeriennummer>
+        manufacturer: Zendure
+        model: SmartPV Hub 1200 Controller
+ 
+    - name: Batterie 1 minVol
+      unique_id: <deviceID>Batterie1minVol
+      state_topic: <appKey>/<deviceID>/state
+      value_template: '{{ value_json.packData[0].minVol | float / 100 }}'
+      unit_of_measurement: "V"
+      device_class: voltage
+      device:
+        name: SolarFlow
+        identifiers: <EurePVHubSeriennummer>
+        manufacturer: Zendure
+        model: SmartPV Hub 1200 Controller
+ 
+    - name: Batterie 1 socLevel
+      unique_id: <deviceID>Batterie1socLevel
+      state_topic: <appKey>/<deviceID>/state
+      value_template: '{{ value_json.packData[0].socLevel | int }}'
+      unit_of_measurement: "%"
+      device_class: battery
+      device:
+        name: SolarFlow
+        identifiers: <EurePVHubSeriennummer>
+        manufacturer: Zendure
+        model: SmartPV Hub 1200 Controller
