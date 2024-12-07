@@ -39,7 +39,9 @@ Verwendung findet
 
 Folgende Sensoren werden verwendet:
 - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
-- number.wechselrichter_leistungsbegrenzung (Hoymiles WR) 
+- number.wechselrichter_leistungsbegrenzung (Hoymiles WR)
+- button.wechselrichter_ausschalten (Hoymiles WR)
+- button.wechselrichter_ansschalten (Hoymiles WR)
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
