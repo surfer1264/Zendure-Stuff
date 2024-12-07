@@ -88,9 +88,10 @@ Dies ist durch die obign MQTT Integrationen nicht automatisch der Fall.
 Es müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
 eine MQTT.yaml ist im Codebereich angefügt und enthält  die Werte minVol, maxVol, SOC Level und Akkutemperatur
 ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
-- <deviceID>
-- <appKey>/<deviceID>
-- <EurePVHubSeriennummer>
+- deviceID
+- appKey/deviceID
+- EurePVHubSeriennummer
+
 Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits 
 
 Nicht vergessen !! eine Zeile in die configuration.yaml im Home Assistent zu setzen
