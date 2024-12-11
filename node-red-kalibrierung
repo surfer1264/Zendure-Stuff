@@ -2,9 +2,9 @@
     {
         "id": "3d2a81e3c1ae2c8c",
         "type": "tab",
-        "label": "Status der letzten Kalibrierung",
+        "label": "Solarflow",
         "disabled": false,
-        "info": "# Herbeiführen einer Kalibrierung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das LAden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im WInter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HM8002T\r\n - Shelly 3EM\r\n\r\n## Voraussetzungen\r\n- eine Home Assistent Installation\r\n- eine Node-Red HA-Installation (über Addon)\r\n- eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n- eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n    - Wichtig ist die Einbindugn der MQTT-Daten von Zendure, dies gelingt mit der vorliegenden Beschreibung \r\n    - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant\r\n\r\n\r\n## Vorbereitungen\r\n- Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\nVerwendung findet \r\n- Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.   \r\nFolgende Sensoren werden verwendet:\r\n- sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n- number.wechselrichter_leistungsbegrenzung (Hoymiles WR) \r\n\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\nSie besteht aus 5 Flows\r\n\r\n### 1. (drei) Hilfsflows\r\nDer erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\nMit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\nMit dem dritten Hilfsflow lässt sich der Akku abfragen (electriclevel)\r\nAlle drei Hilfsflows sind experimentell, anpassbar.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nHier wird der SoC des Akkus abgefragt. (electricevel)\r\nIst er kleiner als 100%\r\n- endet der Flow.\r\nIst er = 100% \r\n- wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n- wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet\r\n- wird der Wechselrichter auf AN gesetzt.\r\n- wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n- wird der Counter-Helfer _counter.akku_voll_ inkementiert.\r\n\r\n### 3. Überwachungsflow Zeit seit letzter Kalibrierung\r\nDieser FLow wird täglich um 09:15 einmalig ausgeführt.\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n- wenn der Wert der Helfervariable einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann \r\n    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.\r\n    - wird der Wechselrichter auf AUS gesetzt\r\n    - wird eine Nachricht in die Konsole geschrieben\r\n\r\nDer Vergleichswert nach wieviel Tagen der Ladezyklus erzwungen wird, kann natürlich in der entsprechenden Node geändert werden.\r\n\r\nDie Werte Wechselrichter AN/AUS und _wechselrichter_leistungsbegrenzug_ sind flüchtig. Der WR  geht in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig\r\nAlle 60 Minuten werden die Einstellungen daher aufgefrischt.\r\n\r\n### 4. Alarm, wenn Zellspannung unter 3,1V\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.\r\n    - wird der Wechselrichter auf AUS gesetzt\r\n    - wird eine Nachricht in die Konsole geschrieben\r\n    - wird eine Alarm-EMail versendet\r\nDer FLow kann auch manuell angesoßen werden, zur Überprüfung\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.\r\nDies ist durch die obign MQTT Integrationen nicht automatisch der Fall\r\nEs müssen Anpssungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen\r\n\r\n## Installation\r\nImportiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an.",
+        "info": "# Herbeiführen einer Kalibrierung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das LAden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im WInter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nDa der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.\r\n\r\n## Disclaimer\r\nDues ist ein experimentelles Projekt.Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HM8002T\r\n - Shelly 3EM\r\n\r\n## Voraussetzungen\r\n - eine Home Assistent Installation\r\n - eine Node-Red HA-Installation (über Addon)\r\n - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n      - Wichtig ist die Einbindugn der MQTT-Daten von Zendure, dies gelingt mit der vorliegenden Beschreibung \r\n      - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant\r\n - Optional: für das Auslesen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.\r\n\r\nFür _min_vol_ müssen Anpassungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.\r\nEine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur. (Danke an bzach)\r\nErsetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!\r\n\r\n - deviceID\r\n - appKey/deviceID\r\n - EurePVHubSeriennummer\r\n \r\nWenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar\r\nNicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:\r\n\r\nmqtt: !include mqtt.yaml\r\n\r\n## Vorbereitungen im HA\r\nIm HomeAssistent sind zwei Helfervariablen anzulegen:\r\n - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\n - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  \r\n\r\nFolgende Entities werden verwendet:\r\n - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n - number.wechselrichter_leistungsbegrenzung (Hoymiles WR) \r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\nSie besteht aus 6 Flows\r\n\r\n### 1. (drei) Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n Alle drei Hilfsflows sind experimentell, anpassbar und werden für den Betrieb nicht benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen. daercStaus muss min. 10 Min bestehen.\r\n\r\nIst er = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n - wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet\r\n - wird der Wechselrichter auf AN gesetzt.\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird eine Mail versendet zum AKkustand 100%\r\n - wird der Counter-Helfer _counter.akku_voll_ inkementiert.  Ich will damit zählen wie oft der Akku auf 100% geht.\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 4 \"Überprüfung kritischer Werte\" und FLow 5 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Lade und Update des Helfers _Letzte Kalibrierung_\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%.\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n\r\n### 4. Überprüfung kritischer Werte\r\n - wenn die minimale Zellspannung _minVol_ einen Wert unterschreitet (3,1V), oder\r\n - wenn der Wert der Helfervariable _letzte Kalibierung_ einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann \r\n    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.\r\n    - wird der Wechselrichter auf AUS gesetzt\r\n    \r\nDie Vergleichswerte für _minVol_ und _letzte_Kalibierung_ können natürlich in der entsprechenden Node geändert werden.\r\n\r\nDie Werte Wechselrichter AN/AUS und _wechselrichter_leistungsbegrenzug_ sind flüchtig. \r\nDer WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig\r\nUm die FUnktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. \r\nSind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher aufgefrischt.\r\n\r\n### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.\r\n    - wird der Wechselrichter auf AUS gesetzt\r\n    - wird eine Nachricht in die Konsole geschrieben\r\n    - wird eine Alarm-E-Mail versendet\r\nDer FLow kann auch manuell angesoßen werden, zur Überprüfung.\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an.",
         "env": []
     },
     {
@@ -35,50 +35,19 @@
             "dcc5669987ecfaf3",
             "9a20c82c0a6c1ebf",
             "d0dde2acf1cb75c8",
-            "254fb1f12881a797"
+            "254fb1f12881a797",
+            "02bd0774f18ebf8e"
         ],
         "x": 54,
         "y": 59,
-        "w": 1132,
+        "w": 1212,
         "h": 422
-    },
-    {
-        "id": "cb951c1227cd6476",
-        "type": "group",
-        "z": "3d2a81e3c1ae2c8c",
-        "name": "Status Letzte Kalibrierung (Zeit) überprüfen",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "0bd29e25a3368fe1",
-            "0a8e29cbf690c247",
-            "38a9f11a5f14ef80",
-            "0664f9615f779794",
-            "20a2e36b5705230d",
-            "2c4d013e881155f5",
-            "32244a8c595eb0a3",
-            "64a2973b998a9933",
-            "fe26652a15f58f18",
-            "407ef7108cf44443",
-            "60883a3c02850b43",
-            "822244a8ca19e317",
-            "bc47b14626a6b329",
-            "8c5010cf360f0d2a",
-            "b883b9022ae9fd4b",
-            "3c6433a1326b5cb7",
-            "e60de2552765fe72"
-        ],
-        "x": 54,
-        "y": 539,
-        "w": 1132,
-        "h": 362
     },
     {
         "id": "54839a68fcca4b36",
         "type": "group",
         "z": "3d2a81e3c1ae2c8c",
-        "name": "manueller Flow, ReSet \"Letzte Kalibierung\" auf \"0\"",
+        "name": "Hilfsflow 1, ReSet \"Letzte Kalibierung\" auf \"0\"",
         "style": {
             "label": true
         },
@@ -100,7 +69,7 @@
         "id": "7014361d83c913c8",
         "type": "group",
         "z": "3d2a81e3c1ae2c8c",
-        "name": "Manuelles  Ausschalten des WR",
+        "name": "Hilfsflow 2: Manuelles  Ausschalten des WR",
         "style": {
             "label": true
         },
@@ -111,14 +80,14 @@
         ],
         "x": 54,
         "y": 1439,
-        "w": 712,
+        "w": 1012,
         "h": 82
     },
     {
         "id": "ccf33a29674c6a92",
         "type": "group",
         "z": "3d2a81e3c1ae2c8c",
-        "name": "Alarm, wenn Zellspannung unter 3.1V",
+        "name": "Alarm, kritische Zellspannung (unter 3.1V)",
         "style": {
             "label": true
         },
@@ -130,11 +99,16 @@
             "3ad37083267c36f9",
             "1d0f490a6a490af8",
             "e8efa4d19e95eb9a",
-            "b4a23d8adb86cb1c"
+            "b4a23d8adb86cb1c",
+            "aacef27ac3b37d79",
+            "d87ae5ce4d3d9e8f",
+            "d68d1cf2e10b57c6",
+            "c1ba31a944683268",
+            "1e1b35845c66627a"
         ],
         "x": 54,
-        "y": 939,
-        "w": 1132,
+        "y": 999,
+        "w": 1212,
         "h": 202,
         "info": "wenn die Zellspannung MinVol unter einen Wert fällt (3,1V) dann wird der Wechselrichter geschlossen und eine Entladung des Akkus gestoppt."
     },
@@ -142,7 +116,7 @@
         "id": "5be95441d82eac70",
         "type": "group",
         "z": "3d2a81e3c1ae2c8c",
-        "name": "Akkustatus abfragen",
+        "name": "Hilfsflow 3: Akkustatus abfragen",
         "style": {
             "label": true
         },
@@ -159,10 +133,61 @@
         "h": 122
     },
     {
+        "id": "cfc155f0234869fb",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Prüfe und Update letzte Kalibierung (einmal täglich)",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "0bd29e25a3368fe1",
+            "0a8e29cbf690c247",
+            "38a9f11a5f14ef80",
+            "0664f9615f779794",
+            "20a2e36b5705230d",
+            "bc47b14626a6b329",
+            "8c5010cf360f0d2a",
+            "50ceccc82432949e",
+            "c5be6868ecbc2eb2",
+            "8ecaa17e8ee3367a",
+            "6baede5f0d51dbaf"
+        ],
+        "x": 54,
+        "y": 499,
+        "w": 1212,
+        "h": 202
+    },
+    {
+        "id": "2ea0bae458ce7f13",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Frage kritische Werte ab (minVol und letzte Kalibrierung und stoppe ggf. Einspeisung)",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "32244a8c595eb0a3",
+            "64a2973b998a9933",
+            "fe26652a15f58f18",
+            "60883a3c02850b43",
+            "822244a8ca19e317",
+            "b883b9022ae9fd4b",
+            "3c6433a1326b5cb7",
+            "e60de2552765fe72",
+            "beed669ace0790c1",
+            "b2c5e71d93474e66"
+        ],
+        "x": 54,
+        "y": 719,
+        "w": 1212,
+        "h": 262
+    },
+    {
         "id": "0bd29e25a3368fe1",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
+        "g": "cfc155f0234869fb",
         "name": "Plus Eins",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -184,8 +209,8 @@
         "blockInputOverrides": false,
         "domain": "input_number",
         "service": "increment",
-        "x": 460,
-        "y": 620,
+        "x": 660,
+        "y": 580,
         "wires": [
             [
                 "8c5010cf360f0d2a"
@@ -196,7 +221,7 @@
         "id": "0a8e29cbf690c247",
         "type": "api-current-state",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
+        "g": "cfc155f0234869fb",
         "name": "Status",
         "server": "285afb99.5208c4",
         "version": 3,
@@ -229,8 +254,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 310,
-        "y": 620,
+        "x": 510,
+        "y": 580,
         "wires": [
             [
                 "0bd29e25a3368fe1"
@@ -271,11 +296,11 @@
         "id": "38a9f11a5f14ef80",
         "type": "comment",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
+        "g": "cfc155f0234869fb",
         "name": "Set: Letzte Kalibrierung =+ 1d",
         "info": "eine in HA definierte Helfer Entität",
-        "x": 520,
-        "y": 580,
+        "x": 760,
+        "y": 540,
         "wires": []
     },
     {
@@ -283,7 +308,7 @@
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
         "g": "103dc338d37dba19",
-        "name": "Set auf Null",
+        "name": "Heute: 100%",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -333,7 +358,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1080,
+        "x": 1160,
         "y": 440,
         "wires": []
     },
@@ -407,7 +432,7 @@
         "g": "103dc338d37dba19",
         "name": "Akku auf 100%?",
         "info": "eine in HA definierte Helfer Entität",
-        "x": 380,
+        "x": 460,
         "y": 320,
         "wires": []
     },
@@ -415,7 +440,7 @@
         "id": "0664f9615f779794",
         "type": "inject",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
+        "g": "cfc155f0234869fb",
         "name": "",
         "props": [
             {
@@ -427,14 +452,14 @@
             }
         ],
         "repeat": "",
-        "crontab": "15 09 * * *",
+        "crontab": "",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 170,
-        "y": 620,
+        "x": 160,
+        "y": 660,
         "wires": [
             [
                 "0a8e29cbf690c247"
@@ -445,73 +470,12 @@
         "id": "20a2e36b5705230d",
         "type": "comment",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "täglich um 09:15",
+        "g": "cfc155f0234869fb",
+        "name": "Manueller Start ",
         "info": "eine in HA definierte Helfer Entität",
         "x": 160,
-        "y": 580,
+        "y": 620,
         "wires": []
-    },
-    {
-        "id": "2c4d013e881155f5",
-        "type": "comment",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Hole Wert letzte Kalibrierung",
-        "info": "eine in HA definierte Helfer Entität",
-        "x": 380,
-        "y": 680,
-        "wires": []
-    },
-    {
-        "id": "32244a8c595eb0a3",
-        "type": "api-current-state",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Prüfe letzte Kalibrierung",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 2,
-        "halt_if": "6",
-        "halt_if_type": "num",
-        "halt_if_compare": "gte",
-        "entity_id": "input_number.letzte_kalibrierung",
-        "state_type": "str",
-        "blockInputOverrides": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            }
-        ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 830,
-        "y": 760,
-        "wires": [
-            [
-                "fe26652a15f58f18",
-                "407ef7108cf44443",
-                "b883b9022ae9fd4b"
-            ],
-            [
-                "64a2973b998a9933"
-            ]
-        ]
     },
     {
         "id": "9d366c1bce391294",
@@ -670,24 +634,6 @@
         "wires": []
     },
     {
-        "id": "64a2973b998a9933",
-        "type": "debug",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "debug 8",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1060,
-        "y": 860,
-        "wires": []
-    },
-    {
         "id": "e9ecaea2c1505d26",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
@@ -711,8 +657,8 @@
         "blockInputOverrides": true,
         "domain": "notify",
         "service": "persistent_notification",
-        "x": 920,
-        "y": 340,
+        "x": 910,
+        "y": 360,
         "wires": [
             []
         ]
@@ -733,79 +679,6 @@
         "statusType": "auto",
         "x": 580,
         "y": 440,
-        "wires": []
-    },
-    {
-        "id": "fe26652a15f58f18",
-        "type": "api-call-service",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Set LB auf 0",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "number.wechselrichter_leistungsbegrenzung"
-        ],
-        "labelId": [],
-        "data": "{\"value\": 0}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "number",
-        "service": "set_value",
-        "x": 1070,
-        "y": 620,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "407ef7108cf44443",
-        "type": "api-call-service",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Notify WR aus",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "notify.persistent_notification",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [],
-        "labelId": [],
-        "data": "{\"message\":\"Wechselrichter aus\",\"title\":\"Akkuladung priorisiert\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "notify",
-        "service": "persistent_notification",
-        "x": 1080,
-        "y": 740,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "60883a3c02850b43",
-        "type": "comment",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Check >=6? ",
-        "info": "eine in HA definierte Helfer Entität",
-        "x": 870,
-        "y": 720,
         "wires": []
     },
     {
@@ -834,8 +707,8 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 920,
-        "y": 280,
+        "x": 900,
+        "y": 320,
         "wires": [
             []
         ]
@@ -844,21 +717,11 @@
         "id": "02bd0774f18ebf8e",
         "type": "comment",
         "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
         "name": "WR Ein",
         "info": "eine in HA definierte Helfer Entität",
-        "x": 830,
-        "y": 300,
-        "wires": []
-    },
-    {
-        "id": "822244a8ca19e317",
-        "type": "comment",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "WR Aus",
-        "info": "eine in HA definierte Helfer Entität",
-        "x": 1060,
-        "y": 580,
+        "x": 870,
+        "y": 240,
         "wires": []
     },
     {
@@ -876,7 +739,7 @@
         "id": "bc47b14626a6b329",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
+        "g": "cfc155f0234869fb",
         "name": "Notify Letzte Kalibrierung",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -896,56 +759,10 @@
         "blockInputOverrides": true,
         "domain": "notify",
         "service": "persistent_notification",
-        "x": 830,
-        "y": 620,
+        "x": 1130,
+        "y": 580,
         "wires": [
             []
-        ]
-    },
-    {
-        "id": "8c5010cf360f0d2a",
-        "type": "api-current-state",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "Status",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 1,
-        "halt_if": "",
-        "halt_if_type": "str",
-        "halt_if_compare": "is",
-        "entity_id": "input_number.letzte_kalibrierung",
-        "state_type": "num",
-        "blockInputOverrides": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            }
-        ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 610,
-        "y": 620,
-        "wires": [
-            [
-                "bc47b14626a6b329",
-                "32244a8c595eb0a3"
-            ]
         ]
     },
     {
@@ -1075,38 +892,6 @@
         "info": "zähle wie oft der akku auf 100 geladen wurde."
     },
     {
-        "id": "b883b9022ae9fd4b",
-        "type": "api-call-service",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "WR Aus",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": true,
-        "action": "button.press",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "button.wechselrichter_ausschalten"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "button",
-        "service": "press",
-        "x": 1060,
-        "y": 680,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "df1a51396cc15924",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
@@ -1132,8 +917,8 @@
         "blockInputOverrides": true,
         "domain": "button",
         "service": "press",
-        "x": 900,
-        "y": 240,
+        "x": 880,
+        "y": 280,
         "wires": [
             []
         ]
@@ -1227,7 +1012,7 @@
         "targetType": "full",
         "statusVal": "payload",
         "statusType": "auto",
-        "x": 660,
+        "x": 960,
         "y": 1480,
         "wires": []
     },
@@ -1259,11 +1044,12 @@
         "to": "",
         "reg": false,
         "x": 860,
-        "y": 1060,
+        "y": 1120,
         "wires": [
             [
                 "680e518c16edb299",
-                "1d0f490a6a490af8"
+                "1d0f490a6a490af8",
+                "1e1b35845c66627a"
             ]
         ]
     },
@@ -1305,7 +1091,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 490,
-        "y": 1040,
+        "y": 1080,
         "wires": [
             [
                 "e2f65914858c276f",
@@ -1327,10 +1113,10 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL@DOMAIN.de",
+        "name": "ronline1@jihlefeld.de",
         "dname": "send",
-        "x": 1070,
-        "y": 1080,
+        "x": 1130,
+        "y": 1140,
         "wires": []
     },
     {
@@ -1356,7 +1142,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 1100,
+        "y": 1160,
         "wires": [
             [
                 "3ad37083267c36f9"
@@ -1401,7 +1187,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 490,
-        "y": 1100,
+        "y": 1160,
         "wires": [
             [
                 "e2f65914858c276f"
@@ -1435,52 +1221,11 @@
         "blockInputOverrides": true,
         "domain": "notify",
         "service": "persistent_notification",
-        "x": 1090,
-        "y": 1020,
+        "x": 1150,
+        "y": 1080,
         "wires": [
             []
         ]
-    },
-    {
-        "id": "3c6433a1326b5cb7",
-        "type": "inject",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "0 10-21 * * *",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 170,
-        "y": 760,
-        "wires": [
-            [
-                "32244a8c595eb0a3"
-            ]
-        ]
-    },
-    {
-        "id": "e60de2552765fe72",
-        "type": "comment",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "cb951c1227cd6476",
-        "name": "täglich alle 60 Min zw. 10:00 und 22:00",
-        "info": "",
-        "x": 230,
-        "y": 720,
-        "wires": []
     },
     {
         "id": "e8efa4d19e95eb9a",
@@ -1509,7 +1254,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 850,
-        "y": 980,
+        "y": 1040,
         "wires": [
             []
         ]
@@ -1541,7 +1286,7 @@
         "domain": "button",
         "service": "press",
         "x": 840,
-        "y": 1020,
+        "y": 1080,
         "wires": [
             []
         ]
@@ -1557,7 +1302,7 @@
         "outputs": 2,
         "halt_if": "100",
         "halt_if_type": "num",
-        "halt_if_compare": "gte",
+        "halt_if_compare": "is",
         "entity_id": "sensor.electriclevel",
         "state_type": "str",
         "blockInputOverrides": false,
@@ -1575,7 +1320,7 @@
                 "valueType": "entity"
             }
         ],
-        "for": "0",
+        "for": "10",
         "forType": "num",
         "forUnits": "minutes",
         "override_topic": false,
@@ -1583,8 +1328,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 420,
-        "y": 240,
+        "x": 300,
+        "y": 200,
         "wires": [
             [
                 "0830d93383e59d3a",
@@ -1620,10 +1365,10 @@
         "type": "comment",
         "z": "3d2a81e3c1ae2c8c",
         "g": "103dc338d37dba19",
-        "name": "Akku auf 100%?",
-        "info": "eine in HA definierte Helfer Entität",
-        "x": 360,
-        "y": 200,
+        "name": "Akku auf 100% für 10 Min?",
+        "info": "",
+        "x": 280,
+        "y": 160,
         "wires": []
     },
     {
@@ -1631,9 +1376,9 @@
         "type": "comment",
         "z": "3d2a81e3c1ae2c8c",
         "g": "103dc338d37dba19",
-        "name": "Manuelle Auslösung",
+        "name": "Nur manuelle (Test)Auslösung",
         "info": "",
-        "x": 190,
+        "x": 200,
         "y": 320,
         "wires": []
     },
@@ -1813,9 +1558,9 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL.DOMAIN.de",
+        "name": "ronline1@jihlefeld.de",
         "dname": "send",
-        "x": 970,
+        "x": 950,
         "y": 140,
         "wires": []
     },
@@ -1831,10 +1576,475 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL.DOMAIN.de",
+        "name": "ronline1@jihlefeld.de",
         "dname": "send",
         "x": 950,
         "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "aacef27ac3b37d79",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "Manuell",
+        "info": "",
+        "x": 130,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "d87ae5ce4d3d9e8f",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "Automatischer Auslöser",
+        "info": "",
+        "x": 400,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "d68d1cf2e10b57c6",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "Nachricht basteln",
+        "info": "",
+        "x": 860,
+        "y": 1160,
+        "wires": []
+    },
+    {
+        "id": "c1ba31a944683268",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "Prüfe MinVol",
+        "info": "",
+        "x": 370,
+        "y": 1120,
+        "wires": []
+    },
+    {
+        "id": "1e1b35845c66627a",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "Notify WR aus",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"message\":\"Wechselrichter aus\",\"title\":\"Akkuladung priorisiert\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 1160,
+        "y": 1040,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8c5010cf360f0d2a",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cfc155f0234869fb",
+        "name": "Status",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 810,
+        "y": 580,
+        "wires": [
+            [
+                "bc47b14626a6b329"
+            ]
+        ]
+    },
+    {
+        "id": "50ceccc82432949e",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cfc155f0234869fb",
+        "name": "Hole Wert letzte Kalibrierung",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 600,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "c5be6868ecbc2eb2",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cfc155f0234869fb",
+        "name": "Speichere Wert letzte Kalibrierung",
+        "info": "",
+        "x": 900,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "8ecaa17e8ee3367a",
+        "type": "server-state-changed",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cfc155f0234869fb",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_rising"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "60",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 230,
+        "y": 580,
+        "wires": [
+            [
+                "0a8e29cbf690c247"
+            ]
+        ]
+    },
+    {
+        "id": "6baede5f0d51dbaf",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "cfc155f0234869fb",
+        "name": "1h nach Sonnenaufgang",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 190,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "32244a8c595eb0a3",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "Prüfe letzte Kalibrierung",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "6",
+        "halt_if_type": "num",
+        "halt_if_compare": "gte",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 830,
+        "y": 880,
+        "wires": [
+            [
+                "fe26652a15f58f18",
+                "b883b9022ae9fd4b"
+            ],
+            [
+                "64a2973b998a9933"
+            ]
+        ]
+    },
+    {
+        "id": "64a2973b998a9933",
+        "type": "debug",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "debug 8",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1160,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "fe26652a15f58f18",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "Set LB auf 0",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.wechselrichter_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": 0}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 1110,
+        "y": 800,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "60883a3c02850b43",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "Check >=6? ",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 790,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "822244a8ca19e317",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "WR Aus",
+        "info": "eine in HA definierte Helfer Entität",
+        "x": 1080,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "b883b9022ae9fd4b",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "WR Aus",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": true,
+        "action": "button.press",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "button.wechselrichter_ausschalten"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "button",
+        "service": "press",
+        "x": 1140,
+        "y": 840,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3c6433a1326b5cb7",
+        "type": "inject",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3600",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 860,
+        "wires": [
+            [
+                "beed669ace0790c1"
+            ]
+        ]
+    },
+    {
+        "id": "e60de2552765fe72",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "täglich alle 60 Min",
+        "info": "",
+        "x": 170,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "beed669ace0790c1",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "3.1",
+        "halt_if_type": "num",
+        "halt_if_compare": "lt",
+        "entity_id": "sensor.solarflow_batterie_1_minvol",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 470,
+        "y": 860,
+        "wires": [
+            [
+                "fe26652a15f58f18",
+                "b883b9022ae9fd4b"
+            ],
+            [
+                "32244a8c595eb0a3"
+            ]
+        ]
+    },
+    {
+        "id": "b2c5e71d93474e66",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "2ea0bae458ce7f13",
+        "name": "Prüfe MinVol <3.1",
+        "info": "",
+        "x": 370,
+        "y": 820,
         "wires": []
     },
     {
