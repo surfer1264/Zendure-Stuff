@@ -59,7 +59,7 @@ Folgende Entities werden verwendet:
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
-Sie besteht aus 6 Flows
+Sie besteht aus 4 Flows (und ein paar Hilfsflows)
 
 ### 1. (drei) Hilfsflows
  1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
