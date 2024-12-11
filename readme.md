@@ -95,8 +95,8 @@ Hier wird der Helfer _Letzte Kalibierung_
 Die Vergleichswerte für _minVol_ und _letzte_Kalibierung_ können natürlich in der entsprechenden Node geändert werden.
 
 Die Werte Wechselrichter AN/AUS und _wechselrichter_leistungsbegrenzug_ sind flüchtig. 
-Der WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig
-Um die FUnktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. 
+Der WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. 
+Um die Funktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. 
 Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher aufgefrischt.
 
 ### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)
