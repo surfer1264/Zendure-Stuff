@@ -52,7 +52,7 @@ Im HomeAssistent sind zwei Helfervariablen anzulegen:
 
 Folgende Entities werden verwendet:
  - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
- - number.wechselrichter_leistungsbegrenzung (Hoymiles WR) 
+ - number.wechselrichter_leistungsbegrenzung (Hoymiles WR) (seit letztem Update in 11/24 der hoymiles Integration im HA nicht mehr verfügbar als Entität)
  - button.wechselrichter_ausschalten (Hoymiles WR)
  - button.wechselrichter_ansschalten (Hoymiles WR)
  - minVol (AB2000, MQTT)
