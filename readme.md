@@ -102,10 +102,12 @@ Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher au
 ### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)
 Dieser Flow überprüft die Zellspannung minVol.
 Liegt die Zellspannung unterhalb 3,1V
-    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
-    - wird der Wechselrichter auf AUS gesetzt
-    - wird eine Nachricht in die Konsole geschrieben
-    - wird eine Alarm-E-Mail versendet
+
+- wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
+- wird der Wechselrichter auf AUS gesetzt
+- wird eine Nachricht in die Konsole geschrieben
+- wird eine Alarm-E-Mail versendet
+
 Der FLow kann auch manuell angesoßen werden, zur Überprüfung.
 Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
 
