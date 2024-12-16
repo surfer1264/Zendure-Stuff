@@ -14,7 +14,7 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 Da der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.
 
 ## Disclaimer
-Dies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.
+Dues ist ein experimentelles Projekt.Anwendung auf eigene Gefahr.
 Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.
 
 ## Meine Konfiguration
@@ -34,13 +34,14 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
 
 Für _min_vol_ müssen Anpassungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
 Eine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur. (Danke an bzach)
-Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
+Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten (alle eckigen Klammern müssen verschwunden sein)!!!
 
  - deviceID
  - appKey/deviceID
  - EurePVHubSeriennummer
  
-Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar
+Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar.
+
 Nicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:
 
 mqtt: !include mqtt.yaml
@@ -52,14 +53,13 @@ Im HomeAssistent sind zwei Helfervariablen anzulegen:
 
 Folgende Entities werden verwendet:
  - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)
- - number.wechselrichter_leistungsbegrenzung (Hoymiles WR) (seit letztem Update in 11/24 der hoymiles Integration im HA nicht mehr verfügbar als Entität)
  - button.wechselrichter_ausschalten (Hoymiles WR)
  - button.wechselrichter_ansschalten (Hoymiles WR)
  - minVol (AB2000, MQTT)
 
 ## Dokumentation
 Die Umsetzung erfolgte in Node-Red.
-Sie besteht aus 4 Flows (und ein paar Hilfsflows)
+Sie besteht aus 4 Flows (und ein paar Hilfsflows).
 
 ### 1. (drei) Hilfsflows
  1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
@@ -72,10 +72,9 @@ Der Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen. daer
 
 Ist er = 100% 
  - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
- - wird die _wechselrichter_leistungsbegrenzung_ auf 100 gesetzt. Dies bedeutet der WR wird vollständig geöffnet
  - wird der Wechselrichter auf AN gesetzt.
  - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%
- - wird eine Mail versendet zum AKkustand 100%
+ - wird eine Mail versendet zum Akkustand 100%
  - wird der Counter-Helfer _counter.akku_voll_ inkementiert.  Ich will damit zählen wie oft der Akku auf 100% geht.
 
 Dieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 4 "Überprüfung kritischer Werte" und FLow 5 "kritische Zellspannung" gesetzt wird.
@@ -89,12 +88,11 @@ Hier wird der Helfer _Letzte Kalibierung_
 ### 4. Überprüfung kritischer Werte
  - wenn die minimale Zellspannung _minVol_ einen Wert unterschreitet (3,1V), oder
  - wenn der Wert der Helfervariable _letzte Kalibierung_ einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann 
-    - wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
-    - wird der Wechselrichter auf AUS gesetzt
+     - wird der Wechselrichter auf AUS gesetzt
     
 Die Vergleichswerte für _minVol_ und _letzte_Kalibierung_ können natürlich in der entsprechenden Node geändert werden.
 
-Die Werte Wechselrichter AN/AUS und _wechselrichter_leistungsbegrenzug_ sind flüchtig. 
+Der Wert Wechselrichter AN/AUS ist flüchtig. 
 Der WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. 
 Um die Funktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. 
 Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher aufgefrischt.
@@ -102,13 +100,11 @@ Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher au
 ### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)
 Dieser Flow überprüft die Zellspannung minVol.
 Liegt die Zellspannung unterhalb 3,1V
-
-- wird die _wechselrichter_leistungsbegrenzung_ auf 0 gesetzt. Dies bedeutet der WR wird vollständig geschlossen.
 - wird der Wechselrichter auf AUS gesetzt
 - wird eine Nachricht in die Konsole geschrieben
 - wird eine Alarm-E-Mail versendet
 
-Der FLow kann auch manuell angesoßen werden, zur Überprüfung.
+Der Flow kann auch manuell angesoßen werden, zur Überprüfung.
 Dieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.
 
 
