@@ -14,7 +14,7 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 Da der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.
 
 ## Disclaimer
-Dues ist ein experimentelles Projekt.Anwendung auf eigene Gefahr.
+Dies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.
 Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.
 
 ## Meine Konfiguration
