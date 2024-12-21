@@ -40,7 +40,7 @@ Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten (alle e
  - appKey/deviceID
  - EurePVHubSeriennummer
  
-Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar.
+ Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar. Die mqtt.yaml wird im gleichen Pfad abgelegt, wie die configuration.yaml des HA.
 
 Nicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:
 
