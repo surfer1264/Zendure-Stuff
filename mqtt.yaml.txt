@@ -28,6 +28,7 @@ sensor:
       state_topic: <appKey>/<deviceID>/state
       value_template: '{{ value_json.packData[0].minVol | float / 100 }}'
       unit_of_measurement: "V"
+      state_class: "measurement"      
       device_class: voltage
       device:
         name: SolarFlow
@@ -46,3 +47,21 @@ sensor:
         identifiers: <EurePVHubSeriennummer>
         manufacturer: Zendure
         model: SmartPV Hub 1200 Controller
+
+    - name: "Solar Input Power"
+       unique_id: "<deviceID>solarInputPower"
+       state_topic: "<appKey>/<deviceID>/state"
+       unit_of_measurement: "W"
+       device_class: "power"
+       value_template: >
+         {% if states('sensor.solarflow_solar_input_power') not in ['unknown'] %} 
+           {{ int(value_json.solarInputPower, 0) }}
+         {% else %}
+           {{ int(0) }}
+         {% endif %}
+       state_class: "measurement"
+       device: 
+         name: SolarFlow
+         identifiers: "<EurePVHubSeriennummer>"
+         manufacturer: Zendure
+         model: SmartPV Hub 1200 Controller
