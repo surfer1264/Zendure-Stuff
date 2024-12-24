@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "Solarflow",
         "disabled": false,
-        "info": "# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das LAden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im WInter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nDa der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.\r\n\r\n## Disclaimer\r\nDues ist ein experimentelles Projekt.Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HM8002T\r\n - Shelly 3EM\r\n\r\n## Voraussetzungen\r\n - eine Home Assistent Installation\r\n - eine Node-Red HA-Installation (über Addon)\r\n - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n      - Wichtig ist die Einbindugn der MQTT-Daten von Zendure, dies gelingt mit der vorliegenden Beschreibung \r\n      - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant\r\n - Optional: für das Auslesen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.\r\n\r\nFür _min_vol_ müssen Anpassungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.\r\nEine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur. (Danke an bzach)\r\nErsetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!\r\n\r\n - deviceID\r\n - appKey/deviceID\r\n - EurePVHubSeriennummer\r\n \r\nWenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar.\r\n\r\nNicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:\r\n\r\nmqtt: !include mqtt.yaml\r\n\r\n## Vorbereitungen im HA\r\nIm HomeAssistent sind zwei Helfervariablen anzulegen:\r\n - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\n - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  \r\n\r\nFolgende Entities werden verwendet:\r\n - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\nSie besteht aus 4 Flows (und ein paar Hilfsflows).\r\n\r\n### 1. (drei) Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n Alle drei Hilfsflows sind experimentell, anpassbar und werden für den Betrieb nicht benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen. daercStaus muss min. 10 Min bestehen.\r\n\r\nIst er = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n - wird der Wechselrichter auf AN gesetzt.\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird eine Mail versendet zum Akkustand 100%\r\n - wird der Counter-Helfer _counter.akku_voll_ inkementiert.  Ich will damit zählen wie oft der Akku auf 100% geht.\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 4 \"Überprüfung kritischer Werte\" und FLow 5 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Lade und Update des Helfers _Letzte Kalibrierung_\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%.\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n\r\n### 4. Überprüfung kritischer Werte\r\n - wenn die minimale Zellspannung _minVol_ einen Wert unterschreitet (3,1V), oder\r\n - wenn der Wert der Helfervariable _letzte Kalibierung_ einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann \r\n     - wird der Wechselrichter auf AUS gesetzt\r\n    \r\nDie Vergleichswerte für _minVol_ und _letzte_Kalibierung_ können natürlich in der entsprechenden Node geändert werden.\r\n\r\nDer Wert Wechselrichter AN/AUS ist flüchtig. \r\nDer WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\nUm die Funktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. \r\nSind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher aufgefrischt.\r\n\r\n### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n    - wird der Wechselrichter auf AUS gesetzt\r\n    - wird eine Nachricht in die Konsole geschrieben\r\n    - wird eine Alarm-E-Mail versendet\r\n\r\nDer Flow kann auch manuell angesoßen werden, zur Überprüfung.\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an.",
+        "info": "# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das LAden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im WInter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nDa der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.\r\n\r\n## Disclaimer\r\nDies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HM8002T\r\n - Shelly 3EM\r\n\r\n## Voraussetzungen\r\n - eine Home Assistent Installation\r\n - eine Node-Red HA-Installation (über Addon)\r\n - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n      - Wichtig ist die Einbindugn der MQTT-Daten von Zendure, dies gelingt mit der vorliegenden Beschreibung \r\n      - eine sehr gute Beschreibung findet sich auch hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant\r\n - Optional: für das Auslesen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.\r\n\r\nFür _min_vol_ müssen Anpassungen an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.\r\nEine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur. (Danke an bzach)\r\nErsetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!\r\n\r\n - deviceID\r\n - appKey/deviceID\r\n - EurePVHubSeriennummer\r\n \r\nWenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar.\r\n\r\nNicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:\r\n\r\nmqtt: !include mqtt.yaml\r\n\r\n## Vorbereitungen im HA\r\nIm HomeAssistent sind zwei Helfervariablen anzulegen:\r\n - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\n - Anlegen einer Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  \r\n\r\nFolgende Entities werden verwendet:\r\n - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\nSie besteht aus 4 Flows (und ein paar Hilfsflows).\r\n\r\n### 1. (drei) Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n Alle drei Hilfsflows sind experimentell, anpassbar und werden für den Betrieb nicht benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen. daercStaus muss min. 10 Min bestehen.\r\n\r\nIst er = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n - wird der Wechselrichter auf AN gesetzt.\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird eine Mail versendet zum Akkustand 100%\r\n - wird der Counter-Helfer _counter.akku_voll_ inkementiert.  Ich will damit zählen wie oft der Akku auf 100% geht.\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 4 \"Überprüfung kritischer Werte\" und FLow 5 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Lade und Update des Helfers _Letzte Kalibrierung_\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%.\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n\r\n### 4. Überprüfung kritischer Werte\r\n - wenn die minimale Zellspannung _minVol_ einen Wert unterschreitet (3,1V), oder\r\n - wenn der Wert der Helfervariable _letzte Kalibierung_ einen bestimmten Wert erreicht (hier im Beispiel den Wert 6), dann \r\n     - wird der Wechselrichter auf AUS gesetzt\r\n    \r\nDie Vergleichswerte für _minVol_ und _letzte_Kalibierung_ können natürlich in der entsprechenden Node geändert werden.\r\n\r\nDer Wert Wechselrichter AN/AUS ist flüchtig. \r\nDer WR  geht z.B.: in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\nUm die Funktion sicherzustellen wird dieser Flow daher alle 60 Minuten aufgerufen. \r\nSind die Eingangsvoraussetzungen unverändert, werden die Einstellungen daher aufgefrischt.\r\n\r\n### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n - wird der Wechselrichter auf AUS gesetzt\r\n - wird eine Nachricht in die Konsole geschrieben\r\n - wird eine Alarm-E-Mail versendet\r\n\r\nDer Flow kann auch manuell angesoßen werden, zur Überprüfung.\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht werden.\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an.",
         "env": []
     },
     {
@@ -29,14 +29,14 @@
             "e50a07e5ffca56e5",
             "613ebba604841034",
             "1a2383e396129bfd",
-            "18dc2ab015fd4e02",
             "de5f72f121bca456",
             "dcc5669987ecfaf3",
             "9a20c82c0a6c1ebf",
             "d0dde2acf1cb75c8",
             "254fb1f12881a797",
             "02bd0774f18ebf8e",
-            "171954e778cd90ed"
+            "171954e778cd90ed",
+            "b492b661c5838aa5"
         ],
         "x": 54,
         "y": 59,
@@ -93,7 +93,6 @@
         },
         "nodes": [
             "e2f65914858c276f",
-            "b758bbd85af495c9",
             "680e518c16edb299",
             "80478c4c3d656be6",
             "3ad37083267c36f9",
@@ -103,7 +102,8 @@
             "d68d1cf2e10b57c6",
             "c1ba31a944683268",
             "1e1b35845c66627a",
-            "10a7a3021bbb3a4e"
+            "10a7a3021bbb3a4e",
+            "a7644e3fdaa476fa"
         ],
         "x": 54,
         "y": 999,
@@ -1020,53 +1020,6 @@
         ]
     },
     {
-        "id": "b758bbd85af495c9",
-        "type": "api-current-state",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "ccf33a29674c6a92",
-        "name": "",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 2,
-        "halt_if": "3.1",
-        "halt_if_type": "num",
-        "halt_if_compare": "lt",
-        "entity_id": "sensor.solarflow_batterie_1_minvol",
-        "state_type": "str",
-        "blockInputOverrides": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            }
-        ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 490,
-        "y": 1080,
-        "wires": [
-            [
-                "e2f65914858c276f",
-                "b4a23d8adb86cb1c"
-            ],
-            []
-        ]
-    },
-    {
         "id": "680e518c16edb299",
         "type": "e-mail",
         "z": "3d2a81e3c1ae2c8c",
@@ -1078,7 +1031,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "DEINE_MAIL@DOMÄNE",
+        "name": "MAIL@DOMAIN.DE",
         "dname": "send",
         "x": 1130,
         "y": 1140,
@@ -1221,57 +1174,6 @@
         "x": 840,
         "y": 1060,
         "wires": [
-            []
-        ]
-    },
-    {
-        "id": "18dc2ab015fd4e02",
-        "type": "api-current-state",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "103dc338d37dba19",
-        "name": "",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 2,
-        "halt_if": "100",
-        "halt_if_type": "num",
-        "halt_if_compare": "is",
-        "entity_id": "sensor.electriclevel",
-        "state_type": "str",
-        "blockInputOverrides": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            }
-        ],
-        "for": "10",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 300,
-        "y": 200,
-        "wires": [
-            [
-                "0830d93383e59d3a",
-                "df1a51396cc15924",
-                "e9ecaea2c1505d26",
-                "008622d155d33a6f",
-                "d0dde2acf1cb75c8",
-                "171954e778cd90ed"
-            ],
             []
         ]
     },
@@ -1491,7 +1393,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "DEINE_MAIL@DOMÄNE",
+        "name": "MAIL@DOMAIN.DE",
         "dname": "send",
         "x": 950,
         "y": 140,
@@ -1509,7 +1411,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "DEINE_MAIL@DOMÄNE",
+        "name": "MAIL@DOMAIN.DE",
         "dname": "send",
         "x": 950,
         "y": 1620,
@@ -2035,6 +1937,132 @@
         "x": 1140,
         "y": 920,
         "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b492b661c5838aa5",
+        "type": "server-state-changed",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.electriclevel"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "100",
+        "ifStateType": "num",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "10",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 300,
+        "y": 120,
+        "wires": [
+            [
+                "d0dde2acf1cb75c8",
+                "0830d93383e59d3a",
+                "df1a51396cc15924",
+                "e9ecaea2c1505d26",
+                "171954e778cd90ed",
+                "008622d155d33a6f"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a7644e3fdaa476fa",
+        "type": "server-state-changed",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "ccf33a29674c6a92",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.solarflow_batterie_1_minvol"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "3.1",
+        "ifStateType": "num",
+        "ifStateOperator": "lt",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 490,
+        "y": 1080,
+        "wires": [
+            [
+                "b4a23d8adb86cb1c",
+                "e2f65914858c276f"
+            ],
             []
         ]
     },
