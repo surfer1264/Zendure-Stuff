@@ -39,6 +39,8 @@ Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten (alle e
  - deviceID
  - appKey/deviceID
  - EurePVHubSeriennummer
+
+ siehe auch: https://pastebin.com/4Qf6VbrU (für eine mqtt.yaml-Beispiel von bzach, das ich als Vorlage verwendet habe)
  
  Wenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar. Die mqtt.yaml wird im gleichen Pfad abgelegt, wie die configuration.yaml des HA.
 
