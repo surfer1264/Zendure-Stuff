@@ -67,6 +67,7 @@ Sie besteht aus 4 Flows (und ein paar Hilfsflows).
  1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
  2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)
  3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)
+
  Alle drei Hilfsflows sind experimentell, anpassbar und werden für den Betrieb nicht benötigt.
 
 ### 2. Überwachungsflow Akku 100%
