@@ -52,7 +52,7 @@ Nicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setz
 `mqtt: !include mqtt.yaml`
 
 ## Vorbereitungen im HA
-Im HomeAssistent sind zwei Helfervariablen anzulegen:
+Im HomeAssistent sind Helfervariablen anzulegen:
  - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.
  - Anlegen einer Helfer-Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  
  - Anlegen einer Helfer-Boolean-Variable (Button) _input_boolean.ladung_erreicht_ . Am Tag der 100% Ladung wird die Variable auf TRUE gesetzt ansonsten FALSE.
