@@ -67,14 +67,14 @@ Folgende Entities werden verwendet:
 Die Umsetzung erfolgte in Node-Red.
 
 
-### 1. (drei) Hilfsflows
+### 1. Hilfsflows
  1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.
  2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)
  3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)
  Alle drei Hilfsflows sind experimentell, anpassbar und werden für den Betrieb nicht benötigt.
 
 ### 2. Überwachungsflow Akku 100%
-Der Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen. daercStaus muss min. 10 Min bestehen.
+Der Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen.
 
 Ist er = 100% 
  - wird der Helfer _Letzte Kalibierung_ auf "0" (heute) gesetzt.
@@ -101,11 +101,11 @@ In diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:
  -  _letzte_Kalibierung_
  -  _ladung_erreicht_
 
- Es wird eine Mal aufbereitet und versendet
+ Es wird eine Mal aufbereitet und versendet.
  
- Es wird eine Nachricht in die Konsole geschrieben
+ Es wird eine Nachricht in die Konsole geschrieben.
 
- Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung
+ Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung.
 
 ### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)
 
