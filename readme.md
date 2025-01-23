@@ -11,6 +11,9 @@ Mein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwi
 Wenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. 
 Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 
+Mittlerweile hat sich dercAnsatz leicht gewandelt. Die Zellspannung ist der entscheidende Faktor. diese steht im Mittelpunkt
+der Überwachung und Steuerung.
+
 Da der SOC sehr unzuverlässig ist, wollte ich zusätzlich die minimale Zellspannung überwachen und die Einspeisung stoppen bei Unterschreitung eines definierten Wertes.
 
 ## Disclaimer
