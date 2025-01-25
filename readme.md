@@ -23,7 +23,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
 ## Meine Konfiguration
  - SF1200
  - AB2000
- - Hoymiles HM8002T
+ - Hoymiles HMS8002T
  - Shelly 3EM
 
 ## Voraussetzungen
