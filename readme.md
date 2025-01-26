@@ -1,6 +1,8 @@
 
 ![Flow](/Flows_kalibrierung.JPG)
 
+# Mein Wiki: Wissen https://github.com/surfer1264/Zendure-Stuff/wiki
+
 # Herbeiführen einer Kalibrierung und Überwachung der Zellspannung
 ## Ziel
 LiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.
