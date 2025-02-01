@@ -16,7 +16,7 @@ Nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.
 Mittlerweile hat sich mein Ansatz leicht gewandelt. **Die Zellspannung ist der entscheidende Faktor.** Mein Akku konnte im Dezember 2024 26 Tage ohne das Aufladen auf 100% überleben.
 Die untere Zellspannung über 3V zu halten ist zielführender.
 
-Die folgende Überwachung und Steuerung orintiert sich daher ehr an der unteren Zellspannung, als der zurückliegenden Dauer der letzten Kalibrierung auf 100%.
+Die folgende Überwachung und Steuerung orintiert sich daher eher an der unteren Zellspannung, als der zurückliegenden Dauer der letzten Kalibrierung auf 100%.
 
 ## Disclaimer
 Dies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.
