@@ -105,7 +105,7 @@ In diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:
  -  _letzte_Kalibierung_
  -  _ladung_erreicht_
 
- Es wird eine Mal aufbereitet und versendet.
+ Es wird eine Mail aufbereitet und versendet.
  
  Es wird eine Nachricht in die Konsole geschrieben.
 
