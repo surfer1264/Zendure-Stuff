@@ -35,6 +35,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
  - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)
  - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
       - hier ist beschrieben wie man sich einen Zugang zu MQTT-Daten generiert und diesen dann im Home Assistent einbindet.
+      - damit sind. ereits die Topics und die Zendure Entitäten sichtbar. 
       - eine vertiefende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
  - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.
  - ein anpassbares Beispiel findet sich hier: https://pastebin.com/4Qf6VbrU (diese habe ich als Vorlage verwendet)
