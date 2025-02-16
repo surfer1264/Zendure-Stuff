@@ -2,6 +2,9 @@
 ![Flow](/Bild1_HA.jpeg)
 
 ## Mein Wiki: https://github.com/surfer1264/ZendureWiki/wiki
+Erfahrungen mit LiFePO4 und Zendure-Akkus
+## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki
+Beschreibungen rund um das vorgestellte HA Projekt
 
 # Herbeiführen einer Kalibrierung und Überwachung der Zellspannung
 ## Ziel
