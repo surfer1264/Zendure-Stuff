@@ -27,7 +27,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
  - AB2000
  - Hoymiles HMS8002T
  - Shelly 3EM
- - HomeAssistent-HW: Home Assistent Green (https://www.home-assistant.io/green/)
+ - HomeAssistent-HW: [Home Assistent Green](https://www.home-assistant.io/green/)
 
 ## Voraussetzungen
  - eine Home Assistent Installation
