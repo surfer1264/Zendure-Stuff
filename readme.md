@@ -31,11 +31,12 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
 
 ## Voraussetzungen
  - eine Home Assistent Installation
- - eine Node-Red HA-Installation (über Addon)
+ - Mosqitto-Broker Add-on
+ - eine Node-Red HA-Installation (über Add-on)
  - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)
  - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
       - Hier ist beschrieben wie man sich den Zugang zu den MQTT-Daten organisiert (appKey/deviceID).
-      - Der Mosquitto-MQTT-Client ist damit richtig konfiguriert!
+      - Der Mosquitto-Broker ist damit richtig konfiguriert!
       - und die Topics Deines Zendure-Systems sind im HA sichtbar und verwendbar.
       - eine vertiefende/ weitergehende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
  - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.
