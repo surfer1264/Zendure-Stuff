@@ -43,11 +43,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
       - Die MQTT_Daten liefern die _min_vol_ nicht als Einzelwert sondern in der _packdata_-Entität zusammen mit weiteren Werten. 
 Für _min_vol_ müssen Anpassungen also an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
 Eine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level, Akkutemperatur und weitere (Danke an bzach).
-Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!
-
-- deviceI
-- appKey/deviceID
-- EurePVHubSeriennummer
+Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!! (deviceID, appKey/deviceID, EurePVHubSeriennummer)
 
 Nicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:
 
