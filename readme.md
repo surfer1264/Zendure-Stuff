@@ -1,5 +1,5 @@
 
-![Flow](/Flows_kalibrierung.JPG)
+![Flow](/Bild1_HA.jpeg)
 
 ## Mein Wiki: https://github.com/surfer1264/ZendureWiki/wiki
 
