@@ -6,6 +6,7 @@ Hier findet Ihr
 * Erfahrungen mit LiFePO4 und Zendure-Akkus
 * Infos zum Winterbetrieb
 * Infos zur Kalibrierung
+* Infos rund um den Bypass
 * Datenblätter
 * Mess-/Datenkurven
 
