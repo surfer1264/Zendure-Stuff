@@ -12,6 +12,6 @@ Hier findet Ihr
 
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
 Hier findet Ihr
-* eine Beschreibunf des Node-Red Projektes
+* eine Beschreibung des Node-Red Projektes
 * Voraussetzungen
 * notwendige Links zur Vorbereitung
