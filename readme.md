@@ -1,7 +1,7 @@
 
 ![Flow](/Flows_kalibrierung.JPG)
 
-## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki
+## Mein Wiki: https://github.com/surfer1264/ZendureWiki/wiki
 
 # Herbeiführen einer Kalibrierung und Überwachung der Zellspannung
 ## Ziel
