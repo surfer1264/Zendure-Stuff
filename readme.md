@@ -33,7 +33,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
  - eine Home Assistent Installation
  - Mosqitto-Broker Add-on
  - eine Node-Red HA-Installation (über Add-on)
- - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)
+ - eine [Hoymiles Integration](https://github.com/suaveolent/ha-hoymiles-wifi)
  - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
       - Hier ist beschrieben wie man sich den Zugang zu den MQTT-Daten organisiert (appKey/deviceID).
       - Der Mosquitto-Broker ist damit richtig konfiguriert!
