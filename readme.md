@@ -3,7 +3,7 @@
 
 ## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
 Hier findet Ihr 
-* [Grundlagenwissen](https://github.com/surfer1264/ZendureWiki/wiki/Der-AB2000)
+* [Grundlagenwissen zu LiFEPO4 und AB2000](https://github.com/surfer1264/ZendureWiki/wiki/Der-AB2000)
 * [Lademenagement und Kalibrierung](https://github.com/surfer1264/ZendureWiki/wiki/Lademanagement-und-Kalibrierung)
 * [Bypass](https://github.com/surfer1264/Zendure-Stuff/wiki/ByPass)
 * [Erfahrungsbericht 30.11.2024](https://github.com/surfer1264/ZendureWiki/wiki/Erfahrungsbericht-30.11.2024)
