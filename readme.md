@@ -41,7 +41,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
       - eine vertiefende/ weitergehende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
  - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen. Die MQTT_Daten liefern die _min_vol_ nicht als Einzelwert sondern in der _packdata_-Entität zusammen mit weiteren Werten. 
 Für _min_vol_ müssen Anpassungen also an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
-Eine [MQTT.yaml](https://github.com/surfer1264/Zendure-Stuff/blob/main/mqtt.yaml.txt) ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level, Akkutemperatur und weitere (Danke an [bzachs Quelle] (https://pastebin.com/4Qf6VbrU).
+Eine [MQTT.yaml](https://github.com/surfer1264/Zendure-Stuff/blob/main/mqtt.yaml.txt) ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level, Akkutemperatur und weitere (Danke an [bzachs Quelle](https://pastebin.com/4Qf6VbrU).
 Ersetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!! (deviceID, appKey/deviceID, EurePVHubSeriennummer)
 
 Nicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:
