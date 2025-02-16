@@ -146,6 +146,6 @@ Dieser Flow wurde bei mir noch nie ausgelöst!
 
 
 ## Installation
-Importiere den Quellcode (  Node-red_flow  ) des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
+Importiere den Quellcode (  Node-red_flow: https://github.com/surfer1264/Zendure-Stuff/blob/main/Node-red_flow ) des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.
 Passe die Parameter nach Deinen Wünschen an.
 
