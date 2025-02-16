@@ -1,4 +1,5 @@
 
+
 ![Flow](/Flows_kalibrierung.JPG)
 
 ## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki
@@ -36,7 +37,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
  - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)
       - Hier ist beschrieben wie man sich den Zugang zu den MQTT-Daten,
       - der Mosquitto-MQTT-Client ist damit richtig konfiguriert
-      - und die Topics Deines Systems sind im HA sichtbar und verwendbar.
+      - und die Topics Deines Zendure-Systems sind im HA sichtbar und verwendbar.
       - eine vertiefende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
  - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.
  - ein anpassbares Beispiel findet sich hier: https://pastebin.com/4Qf6VbrU (diese habe ich als Vorlage verwendet)
