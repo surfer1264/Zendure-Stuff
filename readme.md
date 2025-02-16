@@ -3,12 +3,13 @@
 
 ## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
 Hier findet Ihr 
-* Erfahrungen mit LiFePO4 und Zendure-Akkus
-* Infos zum Winterbetrieb
-* Infos zur Kalibrierung
-* Infos rund um den Bypass
-* Datenblätter
-* Mess-/Datenkurven
+* [Grundlagenwissen](https://github.com/surfer1264/ZendureWiki/wiki/Der-AB2000)
+* [Lademenagement und Kalibrierung](https://github.com/surfer1264/ZendureWiki/wiki/Lademanagement-und-Kalibrierung)
+* [Bypass](https://github.com/surfer1264/Zendure-Stuff/wiki/ByPass)
+* [Erfahrungsbericht 30.11.2024](https://github.com/surfer1264/ZendureWiki/wiki/Erfahrungsbericht-30.11.2024)
+* [Winterbetrieb](https://github.com/surfer1264/ZendureWiki/wiki/Winterbetrieb)
+* [Wintertest AB2000 (extern)](https://www.smartzone.de/zendure-ab2000-akku-test/)
+* [Links & Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
 
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
