@@ -1,0 +1,25 @@
+- sensor:
+  - name: "SF Output Pack Power Filtered"
+    unique_id: sf_output_pack_power_filtered
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    state: >-
+      {% set last_change = (now() - states.sensor.solarflow_sf_output_pack_power.last_changed).total_seconds() %}
+      {% if last_change > 180 %}
+        0
+      {% else %}
+        {{ states('sensor.solarflow_sf_output_pack_power') }}
+      {% endif %}
+  - name: "SF Pack Input Power Filtered"
+    unique_id: sf_pack_input_power_filtered
+    unit_of_measurement: "W"
+    device_class: power
+    state_class: measurement
+    state: >-
+      {% set last_change = (now() - states.sensor.solarflow_sf_pack_input_power.last_changed).total_seconds() %}
+      {% if last_change > 180 %}
+        0
+      {% else %}
+        {{ states('sensor.solarflow_sf_pack_input_power') }}
+      {% endif %}
