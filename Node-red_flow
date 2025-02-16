@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "Solarflow",
         "disabled": false,
-        "info": "# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nMittlerweile hat sich mein Ansatz leicht gewandelt. **Die Zellspannung ist der entscheidende Faktor.** Mein Akku konnte im Dezember 2024 26 Tage ohne das Aufladen auf 100% überleben.\r\nDie untere Zellspannung über 3V zu halten ist zielführender.\r\n\r\nDie folgende Überwachung und Steuerung orintiert sich daher ehr an der unteren Zellspannung, als der zurückliegenden Dauer der letzten Kalibrierung auf 100%.\r\n\r\n## Disclaimer\r\nDies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HMS8002T\r\n - Shelly 3EM\r\n - HomeAssistent-HW: Home Assistent Green (https://www.home-assistant.io/green/)\r\n\r\n## Voraussetzungen\r\n - eine Home Assistent Installation\r\n - eine Node-Red HA-Installation (über Addon)\r\n - eine Hoymiles Integration (https://github.com/suaveolent/ha-hoymiles-wifi)\r\n - eine Zendure Integration (https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n      - hier ist beschrieben wie man sich einen Zugang zu MQTT-Daten generiert und diesen dann im Home Assistent einbindet.\r\n      - eine vertiefende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant\r\n - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.\r\n - ein anpassbares Beispiel findet sich hier: https://pastebin.com/4Qf6VbrU (diese habe ich als Vorlage verwendet)\r\n\r\nDie MQTT_Daten liefern die _min_vol_ nicht als Einzelwert sondern in der _packdata_-Entität zusammen mit weiteren Werten. \r\nFür _min_vol_ müssen Anpassungen also an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.\r\nEine MQTT.yaml ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level und Akkutemperatur. (Danke an bzach)\r\nErsetzt werden müssen in der MQTT.yaml folgende Strings mit Euren Daten !!!\r\n\r\n - deviceID\r\n - appKey/deviceID\r\n - EurePVHubSeriennummer\r\n \r\nWenn Ihr obige Voraussetzungen abgearbeitet habt, dann habt Ihr diese Werte bereits schon verfügbar.\r\n\r\nNicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:\r\n\r\n`mqtt: !include mqtt.yaml`\r\n\r\n## Vorbereitungen im HA\r\nUm meine Flows verwenden zu können sind im HomeAssistent folgende Helfervariablen anzulegen (Bereich Geräte und Dienste):\r\n - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\n - Anlegen einer Helfer-Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  \r\n - Anlegen einer Helfer-Boolean-Variable (Button) _ladung_erreicht_ . Am Tag der 100% Ladung wird die Variable auf TRUE gesetzt ansonsten FALSE.\r\n - Anlegen einer Helfer-Boolean-Variable (Button) _batterie_kritisch_. Die Variable wird auf _True_ gesetzt, wenn minVol unter einen Schwellwert fällt.\r\n\r\nFolgende Entities werden verwendet:\r\n - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\n\r\n\r\n### 1. Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n Alle drei **Hilfsflows** sind experimentell, anpassbar und werden für den Betrieb **nicht** benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen.\r\n\r\nIst er = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n - wird der Helfer _ladung_erreicht_ auf TRUE gesetzt.\r\n - wird der Wechselrichter auf AN gesetzt.\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird der Kommunikationsflow aufgerufen\r\n - wird der Counter-Helfer _counter.akku_voll_ inkementiert. Ich will damit zählen wie oft der Akku auf 100% geht.\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 5 \"Überprüfung kritischer Werte\" und FLow 6 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Lade und Update des Helfers _Letzte Kalibrierung_\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%?\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n- der Kommunikationsflow wird aufgerufen\r\n\r\n### 4. Kommunikationsflow\r\nIn diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:\r\n -  _minVol_\r\n -  _akku_voll_\r\n -  _electriclevel_\r\n -  _letzte_Kalibierung_\r\n -  _ladung_erreicht_\r\n\r\n Es wird eine Mal aufbereitet und versendet.\r\n \r\n Es wird eine Nachricht in die Konsole geschrieben.\r\n\r\n Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung.\r\n\r\n### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)\r\n\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n -  wird der Wechselrichter auf AUS gesetzt\r\n -  wird _batterie_kritisch_ auf TRUE gesetzt\r\n -  wird eine Nachricht in die Konsole geschrieben\r\n -  der Kommunikationsflow aufgerufen\r\n\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht wurden !! (siehe Vorbereitungen)\r\n\r\nDieser Flow wurde bei mir noch nie ausgelöst!\r\n\r\n### 6. Überprüfung kritischer Werte\r\n\r\nDer Wert Wechselrichter AN/AUS scheint flüchtig zu sein.\r\nDer WR  geht z.B. in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\n\r\nUm die Funktion sicherzustellen, wird dieser Flow daher alle 60 Minuten aufgerufen und überprüft die Einstellungen. Sind die Eingangsvoraussetzungen unverändert, \r\nwerden die Einstellungen daher aufgefrischt.\r\n\r\nÜberprüft werden:\r\n\r\n -  die minimale Zellspannung _minVol_ (Unterschreitung z.B: 3,1V)\r\n -  der _electriclevel_ (SOC Unterschreitet z.B. 21%),\r\n -  _letzte_kalibrierung_ (z.B. länger her, als 30 Tage)\r\n -  _batterie_kritisch_ (Wert True)\r\n\r\nDie Überprüfung ist ODER verknüpft. Trifft einer der Bedingungen zu, wird\r\n -   der Wechselrichter auf AUS gesetzt\r\n    \r\nAlle Vergleichswerte für _minVol_ und _letzte_Kalibierung_ _electric_Level_ können natürlich in der entsprechenden function-Node geändert werden.\r\n\r\nAktuell nutze ich nur _batterie_kritisch_== _true_ ODER _letzte_kalibrierung_ > 30 Tage zur Überwachung.\r\n\r\nDieser Flow wurde bei mir noch nie ausgelöst!\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des Flows in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an."
+        "info": "## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki\r\n\r\n# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nMittlerweile hat sich mein Ansatz leicht gewandelt. **Die Zellspannung ist der entscheidende Faktor.** Mein Akku konnte im Dezember 2024 26 Tage ohne das Aufladen auf 100% überleben.\r\nDie Überwachung der unteren Zellspannung ist zielführender (über 3V zu halten).\r\n\r\nDie folgende Überwachung und Steuerung orintiert sich daher ehr an der unteren Zellspannung, als der zurückliegenden Dauer der letzten Kalibrierung auf 100%.\r\n\r\n## Disclaimer\r\nDies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000\r\n - Hoymiles HMS8002T\r\n - Shelly 3EM\r\n - HomeAssistent-HW: [Home Assistent Green](https://www.home-assistant.io/green/)\r\n\r\n## Voraussetzungen\r\n - eine Home Assistent Installation\r\n - Mosqitto-Broker Add-on\r\n - eine Node-Red HA-Installation (über Addon)\r\n - eine [Hoymiles Integration](https://github.com/suaveolent/ha-hoymiles-wifi)\r\n - eine [Zendure Integration](https://www.justiot.de/smart-home/anleitung-zendure-solarflow-superbase-in-home-assistent-einbinden/)\r\n     - Hier ist beschrieben wie man sich den Zugang zu den MQTT-Daten organisiert (appKey/deviceID).\r\n     - Der Mosquitto-Broker ist damit richtig konfiguriert!\r\n     - und die Topics Deines Zendure-Systems sind im HA sichtbar und verwendbar.\r\n     - eine vertiefende/ weitergehende Beschreibung findet sich hier von [z-master42](https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant)\r\n- Für das Benutzen der Zellspannungen minVol sind Anpassungen an der mqtt.yaml im HA vorzunehmen. Die MQTT_Daten liefern die min_vol nicht als Einzelwert sondern in der packdata-Entität zusammen mit weiteren Werten. Für min_vol müssen Anpassungen also an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-PackData-String herauszulösen. \r\nEine [MQTT.yaml](https://github.com/surfer1264/Zendure-Stuff/blob/main/mqtt.yaml.txt) ist im Codebereich angefügt und enthält die Werte minVol, maxVol, SOC Level, Akkutemperatur und weitere (Danke an [bzachs Quelle](https://pastebin.com/4Qf6VbrU)). \r\nErsetzt werden müssen in der _mqtt.yaml_ folgende Strings mit Euren Daten !!! (deviceID, appKey/deviceID, EurePVHubSeriennummer)\r\n- Überprüft Eure yaml-Datei mit einem [yaml-Validator](https://jsonformatter.org/yaml-validator), Falsche Einrückungen, falsche Leerzeichen nach Copy/Paste sind häufig ein Problem.  \r\n\r\nNicht vergessen!! eine Zeile in die configuration.yaml im Home Assistent zu setzen:\r\n\r\n`mqtt: !include mqtt.yaml`\r\n\r\n## Vorbereitungen im HA\r\nUm meine Flows verwenden zu können sind im HomeAssistent folgende Helfervariablen anzulegen (Bereich Geräte und Dienste):\r\n - Anlegen einer numerischen Helfervariable (_Letzte Kalibrierung_). Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibierung.\r\n - Anlegen einer Helfer-Zählvariable - (_counter.akku_voll_). Wenn Akku voll, dann +1.  Ich will damit zählen wie oft der Akku auf 100% geht.  \r\n - Anlegen einer Helfer-Boolean-Variable (Button) _ladung_erreicht_ . Am Tag der 100% Ladung wird die Variable auf TRUE gesetzt ansonsten FALSE.\r\n - Anlegen einer Helfer-Boolean-Variable (Button) _batterie_kritisch_. Die Variable wird auf _True_ gesetzt, wenn minVol unter einen Schwellwert fällt.\r\n\r\nFolgende Entities werden verwendet:\r\n - sensor.electriclevel (Akku-Ladezustand, AB2000 SoC)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgte in Node-Red.\r\n\r\n\r\n### 1. Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n Alle drei **Hilfsflows** sind experimentell, anpassbar und werden für den Betrieb **nicht** benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen.\r\n\r\nIst er = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt.\r\n - wird der Helfer _ladung_erreicht_ auf TRUE gesetzt.\r\n - wird der Wechselrichter auf AN gesetzt.\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird der Counter-Helfer _counter.akku_voll_ inkementiert. Ich will damit zählen wie oft der Akku auf 100% geht.\r\n - wird der Kommunikationsflow aufgerufen\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 5 \"Überprüfung kritischer Werte\" und FLow 6 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Lade und Update des Helfers _Letzte Kalibrierung_\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%?\r\nHier wird der Helfer _Letzte Kalibierung_\r\n- um den Wert 1 erhöht\r\n- der Kommunikationsflow wird aufgerufen\r\n\r\n### 4. Kommunikationsflow\r\nIn diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:\r\n -  _minVol_\r\n -  _akku_voll_\r\n -  _electriclevel_\r\n -  _letzte_Kalibierung_\r\n -  _ladung_erreicht_\r\n\r\n Es wird eine Mal aufbereitet und versendet.\r\n \r\n Es wird eine Nachricht in die Konsole geschrieben.\r\n\r\n Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung (z.B: externe Statistik)\r\n\r\n### 5. Alarm, wenn Zellspannung kritisch (unter 3,1V)\r\n\r\nDieser Flow überprüft die Zellspannung minVol.\r\nLiegt die Zellspannung unterhalb 3,1V\r\n -  wird der Wechselrichter auf AUS gesetzt\r\n -  wird **_batterie_kritisch_ auf TRUE** gesetzt\r\n -  wird eine Nachricht in die Konsole geschrieben\r\n -  der Kommunikationsflow aufgerufen\r\n\r\nDieser Flow setzt voraus, dass die Zellspannungsdaten des AB2000 im HA verfügbar gemacht wurden !! (siehe Vorbereitungen)\r\n\r\nDieser Flow wurde bei mir noch nie ausgelöst!\r\n\r\n### 6. Überprüfung kritischer Werte\r\n\r\nDer Wert Wechselrichter AN/AUS scheint flüchtig zu sein.\r\nDer WR  geht z.B. in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\n\r\nUm die Funktion sicherzustellen, wird dieser Flow daher alle 60 Minuten aufgerufen und überprüft die Einstellungen. Sind die Eingangsvoraussetzungen unverändert, \r\nwerden die Einstellungen daher aufgefrischt.\r\n\r\nÜberprüft werden:\r\n\r\n -  die minimale Zellspannung _minVol_ (Unterschreitung z.B: 3,1V)\r\n -  der _electriclevel_ (SOC Unterschreitet z.B. 21%),\r\n -  _letzte_kalibrierung_ (z.B. länger her, als 30 Tage)\r\n -  _batterie_kritisch_ (Wert True)\r\n\r\nDie Überprüfung ist ODER verknüpft. Trifft einer der Bedingungen zu, wird\r\n -   der Wechselrichter auf AUS gesetzt\r\n    \r\nAlle Vergleichswerte für _minVol_ und _letzte_Kalibierung_ _electric_Level_ können natürlich in der entsprechenden function-Node geändert werden.\r\n\r\nAktuell nutze ich nur _batterie_kritisch_== _true_ ODER _letzte_kalibrierung_ > 30 Tage zur Überwachung. Die Bedingung\r\n\r\nDieser Flow wurde bei mir noch nie ausgelöst!\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des [Node-red_flow](https://github.com/surfer1264/Zendure-Stuff/blob/main/Node-red_flow) in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an. "
     },
     {
         "id": "103dc338d37dba19",
@@ -43,7 +43,8 @@
             "d4c3980b4265854e",
             "9e8a4ff7b4ede049",
             "208495aa6e3be251",
-            "5245f8e8c8dc2b67"
+            "5245f8e8c8dc2b67",
+            "a43da2c5f3bb2584"
         ],
         "x": 54,
         "y": 39,
@@ -158,8 +159,8 @@
             "88c4c2e75f266ae4",
             "cd575199e3ef4d63"
         ],
-        "x": 34,
-        "y": 559,
+        "x": 54,
+        "y": 539,
         "w": 1392,
         "h": 182
     },
@@ -316,7 +317,7 @@
         "halt_if": "100",
         "halt_if_type": "num",
         "halt_if_compare": "gte",
-        "entity_id": "sensor.electriclevel",
+        "entity_id": "sensor.solarflow_electric_level",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -523,6 +524,7 @@
         "id": "e9ecaea2c1505d26",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
+        "d": true,
         "g": "103dc338d37dba19",
         "name": "Notify Akku 100%",
         "server": "285afb99.5208c4",
@@ -998,7 +1000,7 @@
         "halt_if": "",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "sensor.electriclevel",
+        "entity_id": "sensor.solarflow_electric_level",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -1023,7 +1025,7 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 440,
+        "x": 470,
         "y": 2240,
         "wires": [
             [
@@ -1125,7 +1127,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL@DOMAIN.DE",
+        "name": "MAIL@DOMAIN.de",
         "dname": "send",
         "x": 950,
         "y": 2280,
@@ -1225,7 +1227,7 @@
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
-                "sensor.electriclevel"
+                "sensor.solarflow_electric_level"
             ],
             "substring": [],
             "regex": []
@@ -1264,11 +1266,11 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 240,
+        "x": 270,
         "y": 220,
         "wires": [
             [
-                "5dc2ac8a9326afb0"
+                "a43da2c5f3bb2584"
             ],
             []
         ]
@@ -1343,8 +1345,8 @@
         "links": [
             "14793b987caeb001"
         ],
-        "x": 615,
-        "y": 220,
+        "x": 635,
+        "y": 180,
         "wires": []
     },
     {
@@ -1469,8 +1471,8 @@
         "blockInputOverrides": false,
         "domain": "input_number",
         "service": "increment",
-        "x": 660,
-        "y": 640,
+        "x": 680,
+        "y": 620,
         "wires": [
             [
                 "8c5010cf360f0d2a"
@@ -1514,8 +1516,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 510,
-        "y": 640,
+        "x": 530,
+        "y": 620,
         "wires": [
             [
                 "0bd29e25a3368fe1"
@@ -1529,8 +1531,8 @@
         "g": "48fbdb692109f9bf",
         "name": "Set: Letzte Kalibrierung =+ 1d",
         "info": "eine in HA definierte Helfer Entität",
-        "x": 720,
-        "y": 600,
+        "x": 740,
+        "y": 580,
         "wires": []
     },
     {
@@ -1576,8 +1578,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 830,
-        "y": 640,
+        "x": 850,
+        "y": 620,
         "wires": [
             [
                 "9bf1ed93415fd39e"
@@ -1591,8 +1593,8 @@
         "g": "48fbdb692109f9bf",
         "name": "Hole Wert letzte Kalibrierung",
         "info": "eine in HA definierte Helfer Entität",
-        "x": 580,
-        "y": 680,
+        "x": 600,
+        "y": 660,
         "wires": []
     },
     {
@@ -1602,8 +1604,8 @@
         "g": "48fbdb692109f9bf",
         "name": "Speichere Wert letzte Kalibrierung",
         "info": "",
-        "x": 900,
-        "y": 680,
+        "x": 920,
+        "y": 660,
         "wires": []
     },
     {
@@ -1657,8 +1659,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 230,
-        "y": 640,
+        "x": 250,
+        "y": 620,
         "wires": [
             [
                 "0a8e29cbf690c247"
@@ -1672,8 +1674,8 @@
         "g": "48fbdb692109f9bf",
         "name": "1h nach Sonnenaufgang",
         "info": "",
-        "x": 190,
-        "y": 600,
+        "x": 210,
+        "y": 580,
         "wires": []
     },
     {
@@ -1686,8 +1688,8 @@
         "links": [
             "b1d69b92cd238b15"
         ],
-        "x": 1385,
-        "y": 640,
+        "x": 1405,
+        "y": 620,
         "wires": []
     },
     {
@@ -1702,7 +1704,7 @@
         "halt_if": "",
         "halt_if_type": "num",
         "halt_if_compare": "gte",
-        "entity_id": "sensor.electriclevel",
+        "entity_id": "sensor.solarflow_electric_level",
         "state_type": "str",
         "blockInputOverrides": false,
         "outputProperties": [
@@ -1792,7 +1794,7 @@
                 "vt": "str"
             }
         ],
-        "repeat": "3600",
+        "repeat": "7200",
         "crontab": "",
         "once": false,
         "onceDelay": 0.1,
@@ -2133,8 +2135,8 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_off",
-        "x": 1040,
-        "y": 640,
+        "x": 1060,
+        "y": 620,
         "wires": [
             [
                 "88c4c2e75f266ae4"
@@ -2362,7 +2364,7 @@
         "z": "3d2a81e3c1ae2c8c",
         "g": "7d21c588e9ce2984",
         "name": "Baue Ausgabe in Datei",
-        "func": "// Aktuelles Datum\nconst datum = new Date().toLocaleDateString();\n// const datum = new Date().toLocaleString(); \n// Entitäten aus der Payload\nconst { minVol, electriclevel, letzteKalibrierung, akkuvoll, ladung } = msg.payload;\n// Boolean to String\nvar ladung1 = true\nif (msg.payload.ladung_erreicht == true)\n{\n    ladung1 = true\n}\nelse\n{\n    ladung1 = false\n}\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${minVol};${electriclevel};${letzteKalibrierung};${akkuvoll};${ladung1}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
+        "func": "// Aktuelles Datum\n//const datum = new Date().toLocaleDateString();\n\nconst date = new Date(); // aktuelles Datum\nconst day = String(date.getDate()).padStart(2, '0'); // Tag mit führender Null\nconst month = String(date.getMonth() + 1).padStart(2, '0'); // Monat (0-basiert, daher +1) mit führender Null\nconst year = date.getFullYear(); // Jahr\nconst datum = `${day}.${month}.${year}`;\n\n// Entitäten aus der Payload\nconst { minVol, electriclevel, letzteKalibrierung, akkuvoll, ladung } = msg.payload;\n// Boolean to String\nvar ladung1 = true\nif (msg.payload.ladung_erreicht == true)\n{\n    ladung1 = true\n}\nelse\n{\n    ladung1 = false\n}\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${minVol};${electriclevel};${letzteKalibrierung};${akkuvoll};${ladung1}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2531,7 +2533,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL@DOMAIN.DE",
+        "name": "MAIL@DOMAIN.de",
         "dname": "send",
         "x": 1350,
         "y": 940,
@@ -2639,8 +2641,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1260,
-        "y": 640,
+        "x": 1280,
+        "y": 620,
         "wires": [
             [
                 "788e36dd64e4b0aa"
@@ -2841,8 +2843,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 140,
-        "y": 700,
+        "x": 160,
+        "y": 680,
         "wires": [
             [
                 "0a8e29cbf690c247"
@@ -2853,6 +2855,7 @@
         "id": "b429db5074ec392e",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
+        "d": true,
         "g": "363c9ee96829a2aa",
         "name": "WR ein",
         "server": "285afb99.5208c4",
@@ -2916,6 +2919,32 @@
         "x": 1060,
         "y": 1460,
         "wires": []
+    },
+    {
+        "id": "a43da2c5f3bb2584",
+        "type": "delay",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "103dc338d37dba19",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 500,
+        "y": 180,
+        "wires": [
+            [
+                "5dc2ac8a9326afb0"
+            ]
+        ]
     },
     {
         "id": "285afb99.5208c4",
