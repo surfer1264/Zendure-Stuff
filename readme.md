@@ -40,7 +40,7 @@ Anpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfigurati
       - und die Topics Deines Zendure-Systems sind im HA sichtbar und verwendbar.
       - eine vertiefende Beschreibung findet sich hier: https://github.com/z-master42/solarflow/wiki/Einbindung-in-Home-Assistant
  - Für das Benutzen der Zellspannungen _minVol_ sind Anpassungen an der mqtt.yaml im HA vorzunehmen.
- - ein anpassbares Beispiel findet sich hier: https://pastebin.com/4Qf6VbrU (diese habe ich als Vorlage verwendet)
+ - ein anpassbares Beispiel findet sich in meinem Codebereich und basiert auf: https://pastebin.com/4Qf6VbrU
 
 Die MQTT_Daten liefern die _min_vol_ nicht als Einzelwert sondern in der _packdata_-Entität zusammen mit weiteren Werten. 
 Für _min_vol_ müssen Anpassungen also an der MQTT.yaml vorgenommen werden, um die Daten aus dem MQTT-packdata-String herauszulösen.
