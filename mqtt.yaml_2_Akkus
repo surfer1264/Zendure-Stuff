@@ -1,0 +1,273 @@
+sensor:
+- name: "Batterie 1 maxTemp"
+  unique_id: <deviceID>Batterie1maxTemp
+  state_topic: <appKey>/<deviceID>/state
+  value_template: >
+    {% if (value_json.packData | is_defined) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Akku_Seriennummer1>" %}
+          {{ (i.maxTemp | float - 273.15) | round(2) }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  unit_of_measurement: "°C"
+  device_class: "temperature"
+  device: 
+    name: "SolarFlow"
+    identifiers: "<EurePVHubSeriennummer>"
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
+- name: "Batterie 2 maxTemp"
+  unique_id: <deviceID>Batterie2maxTemp
+  state_topic: <appKey>/<deviceID>/state
+  value_template: >
+    {% if (value_json.packData | is_defined) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Akku_Seriennummer2>" %}
+          {{ (i.maxTemp | float - 273.15) | round(2) }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  unit_of_measurement: "°C"
+  device_class: "temperature"
+  device: 
+    name: "SolarFlow"
+    identifiers: "<EurePVHubSeriennummer>"
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
+- name: "Batterie 1 socLevel"
+  unique_id: <deviceID>Batterie1socLevel
+  state_topic: <appKey>/<deviceID>/state
+  value_template: >
+    {% if (value_json.packData | is_defined) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Akku_Seriennummer1>" %}
+          {{ i.socLevel | int }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  unit_of_measurement: "%"
+  device_class: "battery"
+  device: 
+    name: "SolarFlow"
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
+- name: "Batterie 2 socLevel"
+  unique_id: <deviceID>Batterie2socLevel
+  state_topic: <appKey>/<deviceID>/state
+  value_template: >
+    {% if (value_json.packData | is_defined) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Akku_Seriennummer2>" %}
+          {{ i.socLevel | int }}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+  unit_of_measurement: "%"
+  device_class: "battery"
+  device: 
+    name: "SolarFlow"
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
+- name: SF Solar Input Power
+  unique_id: <deviceID>SFsolarInputPower
+  state_topic: <appKey>/<deviceID>/state
+  unit_of_measurement: 'W'
+  device_class: power
+  value_template: '{{ value_json.solarInputPower | int(0) }}'
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Output Home Power
+  unique_id: <deviceID>SFoutputHomePower
+  state_topic: <appKey>/<deviceID>/state
+  unit_of_measurement: 'W'
+  device_class: power
+  value_template: '{{ value_json.outputHomePower | int(0) }}'
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Solar Power 1
+  unique_id: <deviceID>SFsolarPower1
+  state_topic: <appKey>/<deviceID>/state
+  value_template: '{{ value_json.solarPower1 | int(0) }}'
+  unit_of_measurement: 'W'
+  device_class: power
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Solar Power 2
+  unique_id: <deviceID>SFsolarPower2
+  state_topic: <appKey>/<deviceID>/state
+  value_template: '{{ value_json.solarPower2 | int(0) }}'
+  unit_of_measurement: 'W'
+  device_class: power
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: SF Pack Input Power
+  unique_id: <deviceID>SFpackInputPower
+  state_topic: <appKey>/<deviceID>/state
+  unit_of_measurement: 'W'
+  device_class: power
+  value_template: '{{ value_json.packInputPower | int(0) }}'
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: SF Output Pack Power
+  unique_id: <deviceID>SFoutputPackPower
+  state_topic: <appKey>/<deviceID>/state
+  unit_of_measurement: 'W'
+  device_class: power
+  value_template: '{{ value_json.outputPackPower | int(0) }}'
+  state_class: measurement
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Electric Level
+  unique_id: <deviceID>SFelectricLevel
+  state_topic: <appKey>/<deviceID>/state
+  unit_of_measurement: '%'
+  device_class: battery
+  value_template: '{{ value_json.electricLevel | int }}'
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Pack Data1
+  unique_id: <deviceID>SFpackData1
+  state_topic: <appKey>/<deviceID>/state
+  value_template: '{{ value_json.packData[0] }}'
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: "Heat State"
+  unique_id: "<deviceID>heatState"
+  state_topic: <appKey>/<deviceID>/state
+  value_template: "{{ value_json.heatState | int }}"
+  device: 
+    name: "SolarFlow"
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: Pack State
+  unique_id: <deviceID>SFpackState
+  state_topic: <appKey>/<deviceID>/state
+  ## value_template: '{{ value_json.packState | 'N/A' }}'
+  value_template: "{{ value_json.packState if 'packState' in value_json else 'N/A' }}"
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: "Batterie 1 maxVol"
+  unique_id: <deviceID>Batterie1maxVol
+  state_topic: <appKey>/<deviceID>/state
+  ## value_template: '{{ value_json.packData[0].maxVol | float / 100 }}'  
+  value_template: >-
+    {% if value_json.packData[0].maxVol is not none and value_json.packData[0].maxVol | float != 0 %}
+      {{ value_json.packData[0].maxVol | float / 100 }}
+    {% else %}
+      states('sensor.batterie_1_maxVol')
+    {% endif %}
+  unit_of_measurement: "V"
+  state_class: measurement
+  device_class: voltage
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: "Batterie 1 minVol"
+  unique_id: <deviceID>Batterie1minVol
+  state_topic: <appKey>/<deviceID>/state
+  ##value_template: '{{ value_json.packData[0].minVol | float / 100 }}'
+  value_template: >-
+    {% if value_json.packData[0].minVol is not none and value_json.packData[0].minVol | float != 0 %}
+      {{ value_json.packData[0].minVol | float / 100 }}
+    {% else %}
+      states('sensor.batterie_1_minVol')
+    {% endif %}
+  unit_of_measurement: "V"
+  state_class: measurement
+  device_class: voltage
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller    
+
+- name: "Batterie 2 maxVol"
+  unique_id: <deviceID>Batterie2maxVol
+  state_topic: <appKey>/<deviceID>/state
+  ## value_template: '{{ value_json.packData[1].maxVol | float / 100 }}'  
+  value_template: >-
+    {% if value_json.packData[1].maxVol is not none and value_json.packData[1].maxVol | float != 0 %}
+      {{ value_json.packData[1].maxVol | float / 100 }}
+    {% else %}
+      states('sensor.batterie_2_maxVol')
+    {% endif %}
+  unit_of_measurement: "V"
+  state_class: measurement
+  device_class: voltage
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
+
+- name: "Batterie 2 minVol"
+  unique_id: <deviceID>Batterie2minVol
+  state_topic: <appKey>/<deviceID>/state
+  ##value_template: '{{ value_json.packData[1].minVol | float / 100 }}'
+  value_template: >-
+    {% if value_json.packData[1].minVol is not none and value_json.packData[1].minVol | float != 0 %}
+      {{ value_json.packData[1].minVol | float / 100 }}
+    {% else %}
+      states('sensor.batterie_2_minVol')
+    {% endif %}
+  unit_of_measurement: "V"
+  state_class: measurement
+  device_class: voltage
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
