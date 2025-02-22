@@ -5,8 +5,9 @@
     device_class: power
     state_class: measurement
     state: >-
-      {% if states.sensor.solarflow_pack_state == 2 or states.sensor.solarflow_pack_state == 0 %}
-        0
+      {% set pack_state = states('sensor.solarflow_pack_state') %}
+        {% if pack_state in ['2', '0'] %}
+          0
       {% else %}
         {{ states('sensor.solarflow_sf_output_pack_power') }}
       {% endif %}
@@ -16,8 +17,9 @@
     device_class: power
     state_class: measurement
     state: >-
-      {% if states.sensor.solarflow_pack_state == 1 or states.sensor.solarflow_pack_state == 0 %}
-        0
+      {% set pack_state = states('sensor.solarflow_pack_state') %}
+        {% if pack_state in ['1', '0'] %}
+          0
       {% else %}
-        {{ states('sensor.solarflow_sf_pack_input_power') }}
+          {{ states('sensor.solarflow_sf_pack_input_power') }}
       {% endif %}
