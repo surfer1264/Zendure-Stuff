@@ -5,8 +5,7 @@
     device_class: power
     state_class: measurement
     state: >-
-      {% set last_change = (now() - states.sensor.solarflow_sf_output_pack_power.last_changed).total_seconds() %}
-      {% if last_change > 180 %}
+      {% if states.sensor.solarflow_pack_state == 2 or states.sensor.solarflow_pack_state == 0 %}
         0
       {% else %}
         {{ states('sensor.solarflow_sf_output_pack_power') }}
@@ -17,8 +16,7 @@
     device_class: power
     state_class: measurement
     state: >-
-      {% set last_change = (now() - states.sensor.solarflow_sf_pack_input_power.last_changed).total_seconds() %}
-      {% if last_change > 180 %}
+      {% if states.sensor.solarflow_pack_state == 1 or states.sensor.solarflow_pack_state == 0 %}
         0
       {% else %}
         {{ states('sensor.solarflow_sf_pack_input_power') }}
