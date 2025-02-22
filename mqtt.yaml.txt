@@ -160,3 +160,14 @@ sensor:
     identifiers: <EurePVHubSeriennummer>
     manufacturer: Zendure
     model: SmartPV Hub 1200 Controller
+
+- name: Pack State
+  unique_id: <deviceID>SFpackState
+  state_topic: <appKey>/<deviceID>/state
+  ## value_template: '{{ value_json.packState | 'N/A' }}'
+  value_template: "{{ value_json.packState if 'packState' in value_json else 'N/A' }}"
+  device:
+    name: SolarFlow
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: Zendure
+    model: SmartPV Hub 1200 Controller
