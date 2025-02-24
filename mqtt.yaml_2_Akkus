@@ -5,7 +5,7 @@ sensor:
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Akku_Seriennummer1>" %}
+        {% if i.sn == "<Seriennummer AKKU1>" %}
           {{ (i.maxTemp | float - 273.15) | round(2) }}
         {% endif %}
       {% endfor %}
@@ -24,7 +24,7 @@ sensor:
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Akku_Seriennummer2>" %}
+        {% if i.sn == "<Seriennummer AKKU2>" %}
           {{ (i.maxTemp | float - 273.15) | round(2) }}
         {% endif %}
       {% endfor %}
@@ -43,7 +43,7 @@ sensor:
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Akku_Seriennummer1>" %}
+        {% if i.sn == "<Seriennummer AKKU1>" %}
           {{ i.socLevel | int }}
         {% endif %}
       {% endfor %}
@@ -62,7 +62,7 @@ sensor:
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Akku_Seriennummer2>" %}
+        {% if i.sn == "<Seriennummer AKKU2>" %}
           {{ i.socLevel | int }}
         {% endif %}
       {% endfor %}
@@ -82,6 +82,7 @@ sensor:
   device_class: power
   value_template: '{{ value_json.solarInputPower | int(0) }}'
   state_class: measurement
+  availability_template: "{{ 'solarInputPower' in value_json }}"
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -95,6 +96,7 @@ sensor:
   device_class: power
   value_template: '{{ value_json.outputHomePower | int(0) }}'
   state_class: measurement
+  availability_template: "{{ 'outputHomePower' in value_json }}"
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -134,6 +136,7 @@ sensor:
   device_class: power
   value_template: '{{ value_json.packInputPower | int(0) }}'
   state_class: measurement
+  availability_template: "{{ 'packInputPower' in value_json }}"
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -147,6 +150,7 @@ sensor:
   device_class: power
   value_template: '{{ value_json.outputPackPower | int(0) }}'
   state_class: measurement
+  availability_template: "{{ 'outputPackPower' in value_json }}"
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -165,10 +169,11 @@ sensor:
     manufacturer: Zendure
     model: SmartPV Hub 1200 Controller
 
-- name: Pack Data1
-  unique_id: <deviceID>SFpackData1
+- name: Pack Data
+  unique_id: <deviceID>SFpackData
   state_topic: <appKey>/<deviceID>/state
-  value_template: '{{ value_json.packData[0] }}'
+  ##value_template: '{{ value_json.packData }}'
+  value_template: "{{ value_json.packData | default('unknown') }}"
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -189,7 +194,13 @@ sensor:
   unique_id: <deviceID>SFpackState
   state_topic: <appKey>/<deviceID>/state
   ## value_template: '{{ value_json.packState | 'N/A' }}'
-  value_template: "{{ value_json.packState if 'packState' in value_json else 'N/A' }}"
+  ## value_template: "{{ value_json.packState if 'packState' in value_json else 'N/A' }}"
+  value_template: >-
+    {% if value_json.packState is defined and value_json.packState | string != "" %}
+      {{ value_json.packState }}
+    {% else %}
+      {{ states('sensor.solarflow_pack_state') | default('N/A') }}
+    {% endif %} 
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -199,75 +210,75 @@ sensor:
 - name: "Batterie 1 maxVol"
   unique_id: <deviceID>Batterie1maxVol
   state_topic: <appKey>/<deviceID>/state
-  ## value_template: '{{ value_json.packData[0].maxVol | float / 100 }}'  
-  value_template: >-
-    {% if value_json.packData[0].maxVol is not none and value_json.packData[0].maxVol | float != 0 %}
-      {{ value_json.packData[0].maxVol | float / 100 }}
-    {% else %}
-      states('sensor.batterie_1_maxVol')
-    {% endif %}
+  value_template: >
+    {% set packs = value_json.packData | default([]) %}
+    {% for i in packs %}
+      {% if i.sn == "<Seriennummer AKKU1>" %}
+        {{ i.maxVol | float / 100 }}
+      {% endif %}
+    {% endfor %}
   unit_of_measurement: "V"
   state_class: measurement
-  device_class: voltage
-  device:
-    name: SolarFlow
+  device_class: "voltage"
+  device: 
+    name: "SolarFlow"
     identifiers: <EurePVHubSeriennummer>
-    manufacturer: Zendure
-    model: SmartPV Hub 1200 Controller
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
 
 - name: "Batterie 1 minVol"
-  unique_id: <deviceID>Batterie1minVol
+  unique_id: "<deviceID>Batterie1minVol"
   state_topic: <appKey>/<deviceID>/state
-  ##value_template: '{{ value_json.packData[0].minVol | float / 100 }}'
-  value_template: >-
-    {% if value_json.packData[0].minVol is not none and value_json.packData[0].minVol | float != 0 %}
-      {{ value_json.packData[0].minVol | float / 100 }}
-    {% else %}
-      states('sensor.batterie_1_minVol')
-    {% endif %}
+  value_template: >
+    {% set packs = value_json.packData | default([]) %}
+    {% for i in packs %}
+      {% if i.sn == "<Seriennummer AKKU1>" %}
+        {{ i.minVol | float / 100 }}
+      {% endif %}
+    {% endfor %}
   unit_of_measurement: "V"
   state_class: measurement
-  device_class: voltage
-  device:
-    name: SolarFlow
+  device_class: "voltage"
+  device: 
+    name: "SolarFlow"
     identifiers: <EurePVHubSeriennummer>
-    manufacturer: Zendure
-    model: SmartPV Hub 1200 Controller    
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
 
 - name: "Batterie 2 maxVol"
   unique_id: <deviceID>Batterie2maxVol
   state_topic: <appKey>/<deviceID>/state
-  ## value_template: '{{ value_json.packData[1].maxVol | float / 100 }}'  
-  value_template: >-
-    {% if value_json.packData[1].maxVol is not none and value_json.packData[1].maxVol | float != 0 %}
-      {{ value_json.packData[1].maxVol | float / 100 }}
-    {% else %}
-      states('sensor.batterie_2_maxVol')
-    {% endif %}
+  value_template: >
+    {% set packs = value_json.packData | default([]) %}
+    {% for i in packs %}
+      {% if i.sn == "<Seriennummer AKKU2>" %}
+        {{ i.maxVol | float / 100 }}
+      {% endif %}
+    {% endfor %}
   unit_of_measurement: "V"
   state_class: measurement
-  device_class: voltage
-  device:
-    name: SolarFlow
+  device_class: "voltage"
+  device: 
+    name: "SolarFlow"
     identifiers: <EurePVHubSeriennummer>
-    manufacturer: Zendure
-    model: SmartPV Hub 1200 Controller
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
 
 - name: "Batterie 2 minVol"
-  unique_id: <deviceID>Batterie2minVol
+  unique_id: "<deviceID>Batterie2minVol"
   state_topic: <appKey>/<deviceID>/state
-  ##value_template: '{{ value_json.packData[1].minVol | float / 100 }}'
-  value_template: >-
-    {% if value_json.packData[1].minVol is not none and value_json.packData[1].minVol | float != 0 %}
-      {{ value_json.packData[1].minVol | float / 100 }}
-    {% else %}
-      states('sensor.batterie_2_minVol')
-    {% endif %}
+  value_template: >
+    {% set packs = value_json.packData | default([]) %}
+    {% for i in packs %}
+      {% if i.sn == "<Seriennummer AKKU2>" %}
+        {{ i.minVol | float / 100 }}
+      {% endif %}
+    {% endfor %}
   unit_of_measurement: "V"
   state_class: measurement
-  device_class: voltage
-  device:
-    name: SolarFlow
+  device_class: "voltage"
+  device: 
+    name: "SolarFlow"
     identifiers: <EurePVHubSeriennummer>
-    manufacturer: Zendure
-    model: SmartPV Hub 1200 Controller
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
