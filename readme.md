@@ -7,6 +7,7 @@ Hier findet Ihr
 * [Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
 * [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 * [Umgang mit diversen yaml-Dateien im HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Yaml-&-Co)
+* [Das Daten Nullen-Problem](https://github.com/surfer1264/Zendure-Stuff/wiki/yaml-Profi-Tricks-für-Zendure)
 
   
 ## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
