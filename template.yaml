@@ -6,10 +6,13 @@
     state_class: measurement
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') %}
-        {% if pack_state in ['2', '0'] %}
-          0
+      {% set output_power = states('sensor.solarflow_sf_output_pack_power') %}
+      {% if pack_state in ['2', '0'] %}
+        0
+      {% elif output_power is not none and output_power | float(default=0) >= 0 %}
+        {{ output_power | float }}
       {% else %}
-        {{ states('sensor.solarflow_sf_output_pack_power') }}
+        0
       {% endif %}
   - name: "SF Pack Input Power Filtered"
     unique_id: sf_pack_input_power_filtered
@@ -18,8 +21,11 @@
     state_class: measurement
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') %}
-        {% if pack_state in ['1', '0'] %}
-          0
+      {% set input_power = states('sensor.solarflow_sf_pack_input_power') %}
+      {% if pack_state in ['1', '0'] %}
+        0
+      {% elif input_power is not none and input_power | float(default=0) >= 0 %}
+        {{ input_power | float }}
       {% else %}
-          {{ states('sensor.solarflow_sf_pack_input_power') }}
+        0
       {% endif %}
