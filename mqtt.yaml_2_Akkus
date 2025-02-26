@@ -106,7 +106,7 @@ sensor:
 - name: Solar Power 1
   unique_id: <deviceID>SFsolarPower1
   state_topic: <appKey>/<deviceID>/state
-  value_template: '{{ value_json.solarPower1 | default(0) | int }}'
+  value_template: '{{ value_json.solarPower1 | int(0) }}'
   unit_of_measurement: 'W'
   device_class: power
   state_class: measurement
@@ -121,7 +121,7 @@ sensor:
 - name: Solar Power 2
   unique_id: <deviceID>SFsolarPower2
   state_topic: <appKey>/<deviceID>/state
-  value_template: '{{ value_json.solarPower2 | default(0) | int }}'
+  value_template: '{{ value_json.solarPower2 | int(0) }}'
   unit_of_measurement: 'W'
   device_class: power
   state_class: measurement
