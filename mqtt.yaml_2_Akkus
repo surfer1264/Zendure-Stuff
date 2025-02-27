@@ -254,9 +254,14 @@ sensor:
   state_topic: <appKey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
+    {% set previous_value = states('sensor.batterie_2_maxvol') | float(none) %}
     {% for i in packs %}
       {% if i.sn == "<Seriennummer AKKU2>" %}
-        {{ i.maxVol | float / 100 }}
+        {% if i.maxVol | float > 0 %}
+          {{ i.maxVol | float / 100 }}
+        {% else %}
+          {{ previous_value }}
+        {% endif %}
       {% endif %}
     {% endfor %}
   unit_of_measurement: "V"
@@ -273,9 +278,14 @@ sensor:
   state_topic: <appKey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
+    {% set previous_value = states('sensor.batterie_2_minvol') | float(none) %}
     {% for i in packs %}
       {% if i.sn == "<Seriennummer AKKU2>" %}
-        {{ i.minVol | float / 100 }}
+        {% if i.minVol | float > 0 %}
+          {{ i.minVol | float / 100 }}
+        {% else %}
+          {{ previous_value }}
+        {% endif %}
       {% endif %}
     {% endfor %}
   unit_of_measurement: "V"
