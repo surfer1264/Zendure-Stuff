@@ -14,6 +14,7 @@ Hier findet Ihr
 Hier findet Ihr 
 * [Grundlagenwissen zu LiFEPO4 und AB2000](https://github.com/surfer1264/ZendureWiki/wiki/Der-AB2000)
 * [Lademenagement und Kalibrierung](https://github.com/surfer1264/ZendureWiki/wiki/Lademanagement-und-Kalibrierung)
+* [Laden auf 100% im Detail](https://github.com/surfer1264/ZendureWiki/wiki/Laden-auf-100%25-‐-Details)
 * [Bypass](https://github.com/surfer1264/Zendure-Stuff/wiki/ByPass)
 * [Erfahrungsbericht 30.11.2024](https://github.com/surfer1264/ZendureWiki/wiki/Erfahrungsbericht-30.11.2024)
 * [Winterbetrieb](https://github.com/surfer1264/ZendureWiki/wiki/Winterbetrieb)
