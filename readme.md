@@ -1,5 +1,5 @@
 
-![Flow](/Bild1_HA1.jpeg)
+![Flow](/Bild1_HA.jpeg)
 
 
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
