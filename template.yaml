@@ -29,3 +29,10 @@
       {% else %}
         0
       {% endif %}
+  - name: "Batterie OUT/IN"
+    unique_id: "batterie out in"
+    unit_of_measurement: 'W'
+    device_class: "power"
+    state_class: "measurement"
+    state: >
+      {{ (float(states('sensor.solarflow_sf_output_pack_power'))) - (float(states('sensor.solarflow_sf_pack_input_power')))  }}
