@@ -36,7 +36,7 @@
     device_class: "power"
     state_class: "measurement"
     state: >
-      {{ (states('sensor.sensor.sf_output_pack_power_filtered_2') | float(default=0)) - (states('sensor.sf_pack_input_power_filtered') | float(default=0)) }}
+      {{ (states('sensor.sf_output_pack_power_filtered_2') | float(default=0)) - (states('sensor.sf_pack_input_power_filtered') | float(default=0)) }}
 
   - name: "SF Output Home Power Filtered"
     unique_id: sf_output_home_power_filtered
