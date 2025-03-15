@@ -49,7 +49,7 @@
       {% set output_pack = states('sensor.sf_output_pack_power_filtered_2') | float(default=0) %}
       {% set solar_input = states('sensor.solarflow_sf_solar_input_power') | float(default=0) %}
       {% set surplus = solar_input - output_pack %}
-      {% if pack_state in ['0', '1'] and surplus < 21 %}
+      {% if pack_state in ['0', '1'] and surplus < 15 %}
         0
       {% else %}
         {{ output_home  }}
