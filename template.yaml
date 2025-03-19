@@ -36,7 +36,7 @@
     device_class: "power"
     state_class: "measurement"
     state: >
-      {{ (states('sensor.sf_output_pack_power_filtered_2') | float(default=0)) - (states('sensor.sf_pack_input_power_filtered') | float(default=0)) }}
+      {{ (states('sensor.sf_output_pack_power_filtered') | float(default=0)) - (states('sensor.sf_pack_input_power_filtered') | float(default=0)) }}
 
   - name: "SF Output Home Power Filtered"
     unique_id: sf_output_home_power_filtered
@@ -46,7 +46,7 @@
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') | string %}
       {% set output_home = states('sensor.solarflow_output_home_power') | float(default=0)  %}
-      {% set output_pack = states('sensor.sf_output_pack_power_filtered_2') | float(default=0) %}
+      {% set output_pack = states('sensor.sf_output_pack_power_filtered') | float(default=0) %}
       {% set solar_input = states('sensor.solarflow_sf_solar_input_power') | float(default=0) %}
       {% set surplus = solar_input - output_pack %}
       {% if pack_state in ['0', '1'] and surplus < 15 %}
