@@ -1,12 +1,12 @@
 sensor:
-- name: "Batterie 1 maxTemp"
-  unique_id: <deviceID>Batterie1maxTemp
+- name: "Batterie 1 Temp"
+  unique_id: <deviceID>Batterie1Temp
   state_topic: <appKey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
         {% if i.sn == "<Seriennummer AKKU1>" %}
-          {{ (i.maxTemp | float - 273.15) | round(2) }}
+          {{ (i.maxTemp | float - 273.1) | round(2) }}
         {% endif %}
       {% endfor %}
     {% endif %}
@@ -18,14 +18,14 @@ sensor:
     manufacturer: "Zendure"
     model: "SmartPV Hub 1200 Controller"
 
-- name: "Batterie 2 maxTemp"
-  unique_id: <deviceID>Batterie2maxTemp
+- name: "Batterie 2 Temp"
+  unique_id: <deviceID>Batterie2Temp
   state_topic: <appKey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
         {% if i.sn == "<Seriennummer AKKU2>" %}
-          {{ (i.maxTemp | float - 273.15) | round(2) }}
+          {{ (i.maxTemp | float - 273.1) | round(2) }}
         {% endif %}
       {% endfor %}
     {% endif %}
