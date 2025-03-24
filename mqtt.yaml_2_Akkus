@@ -1,11 +1,53 @@
 sensor:
+- name: "SN Batterie 1"
+  unique_id: <deviceID>SNBatterie1
+  state_topic: <appkey>/<deviceID>/state
+  value_template: >-
+    {% if value_json.packData is defined and value_json.packData | length > 0 %}
+      {% set found = namespace(value = none) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Seriennummer Akku1>" and i.sn | string not in ["", "none", "unknown", "unavailable"] %}
+          {% set found.value = i.sn %}
+        {% endif %}
+      {% endfor %}
+      {{ found.value if found.value else states('sensor.solarflow_sn_batterie_1') | default('N/A') }}
+    {% else %}
+      {{ states('sensor.solarflow_sn_batterie_1') | default('N/A') }}
+    {% endif %}
+  device:
+    name: "SolarFlow"
+    identifiers: ["<EurePVHubSeriennummer>"]
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
+- name: "SN Batterie 2"
+  unique_id: <deviceID>SNBatterie2
+  state_topic: <appkey>/<deviceID>/state
+  value_template: >-
+    {% if value_json.packData is defined and value_json.packData | length > 0 %}
+      {% set found = namespace(value = none) %}
+      {% for i in value_json.packData %}
+        {% if i.sn == "<Seriennummer Akku2>" and i.sn | string not in ["", "none", "unknown", "unavailable"] %}
+          {% set found.value = i.sn %}
+        {% endif %}
+      {% endfor %}
+      {{ found.value if found.value else states('sensor.solarflow_sn_batterie_2') | default('N/A') }}
+    {% else %}
+      {{ states('sensor.solarflow_sn_batterie_2') | default('N/A') }}
+    {% endif %}
+  device:
+    name: "SolarFlow"
+    identifiers: ["<EurePVHubSeriennummer>"]
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
 - name: "Batterie 1 Temp"
   unique_id: <deviceID>Batterie1Temp
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Seriennummer AKKU1>" %}
+        {% if i.sn == "<Seriennummer Akku1>" %}
           {{ (i.maxTemp | float - 273.1) | round(2) }}
         {% endif %}
       {% endfor %}
@@ -20,11 +62,11 @@ sensor:
 
 - name: "Batterie 2 Temp"
   unique_id: <deviceID>Batterie2Temp
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Seriennummer AKKU2>" %}
+        {% if i.sn == "<Seriennummer Akku2>" %}
           {{ (i.maxTemp | float - 273.1) | round(2) }}
         {% endif %}
       {% endfor %}
@@ -39,11 +81,11 @@ sensor:
 
 - name: "Batterie 1 socLevel"
   unique_id: <deviceID>Batterie1socLevel
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Seriennummer AKKU1>" %}
+        {% if i.sn == "<Seriennummer Akku1>" %}
           {{ i.socLevel | int }}
         {% endif %}
       {% endfor %}
@@ -58,11 +100,11 @@ sensor:
 
 - name: "Batterie 2 socLevel"
   unique_id: <deviceID>Batterie2socLevel
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% if (value_json.packData | is_defined) %}
       {% for i in value_json.packData %}
-        {% if i.sn == "<Seriennummer AKKU2>" %}
+        {% if i.sn == "<Seriennummer Akku2>" %}
           {{ i.socLevel | int }}
         {% endif %}
       {% endfor %}
@@ -77,7 +119,7 @@ sensor:
 
 - name: SF Solar Input Power
   unique_id: <deviceID>SFsolarInputPower
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   unit_of_measurement: 'W'
   device_class: power
   value_template: '{{ value_json.solarInputPower | int(0) }}'
@@ -91,7 +133,7 @@ sensor:
 
 - name: Output Home Power
   unique_id: <deviceID>SFoutputHomePower
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   unit_of_measurement: 'W'
   device_class: power
   value_template: '{{ value_json.outputHomePower | int(0) }}'
@@ -105,14 +147,13 @@ sensor:
 
 - name: Solar Power 1
   unique_id: <deviceID>SFsolarPower1
-  state_topic: <appKey>/<deviceID>/state
-  ## value_template: '{{ value_json.solarPower1 | int(0) }}'  
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
-    {% if states('sensor.solarflow_solar_power_1') not in ['unknown'] %}
-      {{ value_json.solarPower1 | int(0) }}
-    {% else %}
-      {{ int (0) }}
-    {% endif %}
+      {% if states('sensor.solarflow_solar_power_1') not in ['unknown'] %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
+        {{ value_json.solarPower1 | int(0) }}
+      {% else %}
+        {{ int (0) }}
+      {% endif %}
   unit_of_measurement: 'W'
   device_class: power
   state_class: measurement
@@ -126,14 +167,13 @@ sensor:
 
 - name: Solar Power 2
   unique_id: <deviceID>SFsolarPower2
-  state_topic: <appKey>/<deviceID>/state
-  ## value_template: '{{ value_json.solarPower2 | int(0) }}'
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
-    {% if states('sensor.solarflow_solar_power_2') not in ['unknown'] %}
-      {{ value_json.solarPower2 | int(0) }}
-    {% else %}
-      0
-    {% endif %}
+      {% if states('sensor.solarflow_solar_power_2') not in ['unknown'] %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
+        {{ value_json.solarPower2 | int(0) }}
+      {% else %}
+        0
+      {% endif %}
   unit_of_measurement: 'W'
   device_class: power
   state_class: measurement
@@ -147,7 +187,7 @@ sensor:
 
 - name: SF Pack Input Power
   unique_id: <deviceID>SFpackInputPower
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   unit_of_measurement: 'W'
   device_class: power
   value_template: '{{ value_json.packInputPower | int(0) }}'
@@ -161,7 +201,7 @@ sensor:
 
 - name: SF Output Pack Power
   unique_id: <deviceID>SFoutputPackPower
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   unit_of_measurement: 'W'
   device_class: power
   value_template: '{{ value_json.outputPackPower | int(0) }}'
@@ -175,7 +215,7 @@ sensor:
 
 - name: Electric Level
   unique_id: <deviceID>SFelectricLevel
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   unit_of_measurement: '%'
   device_class: battery
   value_template: '{{ value_json.electricLevel | int }}'
@@ -187,9 +227,14 @@ sensor:
 
 - name: Pack Data
   unique_id: <deviceID>SFpackData
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   ##value_template: '{{ value_json.packData }}'
-  value_template: "{{ value_json.packData | default('unknown') }}"
+  value_template: >-
+    {% if value_json.packData is defined and value_json.packData not in [none, '', 'unknown', 'unavailable'] %}
+      {{ value_json.packData }}
+    {% else %}
+      none
+    {% endif %}
   device:
     name: SolarFlow
     identifiers: <EurePVHubSeriennummer>
@@ -198,7 +243,7 @@ sensor:
 
 - name: "Heat State"
   unique_id: "<deviceID>heatState"
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: "{{ value_json.heatState | int }}"
   device: 
     name: "SolarFlow"
@@ -208,14 +253,12 @@ sensor:
 
 - name: Pack State
   unique_id: <deviceID>SFpackState
-  state_topic: <appKey>/<deviceID>/state
-  ## value_template: '{{ value_json.packState | 'N/A' }}'
-  ## value_template: "{{ value_json.packState if 'packState' in value_json else 'N/A' }}"
+  state_topic: <appkey>/<deviceID>/state
   value_template: >-
     {% if value_json.packState is defined and value_json.packState | string != "" %}
       {{ value_json.packState }}
     {% else %}
-      {{ states('sensor.solarflow_pack_state') | default('N/A') }}
+      {{ states('sensor.solarflow_pack_state') | default('N/A') }} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
     {% endif %} 
   device:
     name: SolarFlow
@@ -225,12 +268,17 @@ sensor:
 
 - name: "Batterie 1 maxVol"
   unique_id: <deviceID>Batterie1maxVol
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
+    {% set previous_value = states('sensor.batterie_1_maxvol') | float(none) %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
     {% for i in packs %}
-      {% if i.sn == "<Seriennummer AKKU1>" %}
-        {{ i.maxVol | float / 100 }}
+      {% if i.sn == "<Seriennummer Akku1>" %}
+        {% if i.maxVol | float > 0 %}
+          {{ i.maxVol | float / 100 }}
+        {% else %}
+          {{ previous_value }}
+        {% endif %}
       {% endif %}
     {% endfor %}
   unit_of_measurement: "V"
@@ -244,12 +292,17 @@ sensor:
 
 - name: "Batterie 1 minVol"
   unique_id: "<deviceID>Batterie1minVol"
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
+    {% set previous_value = states('sensor.batterie_1_minvol') | float(none) %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
     {% for i in packs %}
-      {% if i.sn == "<Seriennummer AKKU1>" %}
-        {{ i.minVol | float / 100 }}
+      {% if i.sn == "<Seriennummer Akku1>" %}
+        {% if i.minVol | float > 0 %}
+          {{ i.minVol | float / 100 }}
+        {% else %}
+          {{ previous_value }}
+        {% endif %}
       {% endif %}
     {% endfor %}
   unit_of_measurement: "V"
@@ -263,12 +316,12 @@ sensor:
 
 - name: "Batterie 2 maxVol"
   unique_id: <deviceID>Batterie2maxVol
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
-    {% set previous_value = states('sensor.batterie_2_maxvol') | float(none) %}
+    {% set previous_value = states('sensor.batterie_2_maxvol') | float(none) %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
     {% for i in packs %}
-      {% if i.sn == "<Seriennummer AKKU2>" %}
+      {% if i.sn == "<Seriennummer Akku2>" %}
         {% if i.maxVol | float > 0 %}
           {{ i.maxVol | float / 100 }}
         {% else %}
@@ -287,12 +340,12 @@ sensor:
 
 - name: "Batterie 2 minVol"
   unique_id: "<deviceID>Batterie2minVol"
-  state_topic: <appKey>/<deviceID>/state
+  state_topic: <appkey>/<deviceID>/state
   value_template: >
     {% set packs = value_json.packData | default([]) %}
-    {% set previous_value = states('sensor.batterie_2_minvol') | float(none) %}
+    {% set previous_value = states('sensor.batterie_2_minvol') | float(none) %} {# Muss ggf. an euren Entitätsnamen angepasst werden. #}
     {% for i in packs %}
-      {% if i.sn == "<Seriennummer AKKU2>" %}
+      {% if i.sn == "<Seriennummer Akku2>" %}
         {% if i.minVol | float > 0 %}
           {{ i.minVol | float / 100 }}
         {% else %}
