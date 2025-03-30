@@ -13,6 +13,8 @@ Hier findet Ihr
 
 * [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 
+* [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
+
   
 ## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
 Hier findet Ihr 
