@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "Nulleinspeisung",
         "disabled": false,
-        "info": "# Einfacher PI Regler\r\nZiel ist Nulleinspeisunf mit Hysterese.\r\nDies bedeutet die Regelung arbeitet nicht absolut auf NULL sondern auf bringt den zu regelnden Wert in einen definierten Regelbereich.\r\n\r\n## Voraussetzungen\r\n - ein Shelly 3EM:` sensor.wohnung_channel_a_power` Dieser Sensor bildet den realen Bezug des Haushalts ab.\r\n - ein Hoymiles WR, dessen Ausgangssignal sich ändern lässt:` number.dtu_leistungsbegrenzung`. Dieser Sensor ist beim Hoymiles ein Prozentwert. 0% entspricht **geschlossen**; 100% entspricht **offen**\r\n\r\n## Initialisierung\r\n Hier werden nur Startwerte gesetzt, die in der Reglerroutine Verwendung finden.\r\n Der wichtigste anzupassende Wert, ist die Leistung des Wechserichters.\r\n\r\nDie Variable `WRLeistung` ist auf den Sollwert des WRs zu setzen.\r\nIch nutze einen HMS-800-2T mit 800W Ausgangsleistung.\r\n\r\nDie Variable `Sollwert` legt die zu regelnde ZIelgröße fest. Hier könnte also auch ein abweichender Wert als NULL definiert werden.\r\nZusmamen mit der Hysterese kann man so Regelbereiche defnieren. (z.B. von -10W..0...10W; oder 0W...10...20W).\r\n\r\nDie Variable `Hysterese` definiert den Regelbereich.\r\nBei einer Hysterese von 10(W) reagiert der Regler nicht, wenn der Sollwert zwischen z.B: +10W und -10W pendelt.\r\n\r\n## Arbeitsweise\r\nDer Flow startet alle drei Sekunden.\r\nEr prüft, ob der Solarflow überhaupt Online ist. (im WLAN: `device_tracker.solarhub` ). Dies ist ein Sensor, den die FritzBox zur Verfügung stellt.\r\nEr prüft, ob überhaupt schon Energie ausgeliefert wird. (`sensor.sf_output_home_power_filtered`). Dies ist ein Sensor des Zendure Solarflows.\r\n\r\nDer Flow ermittelt die Abweichung zum Sollwert.\r\n\r\nDer Sollwert wird umgerechnet auf die prozentuale Abweichung (**Delta**) zur maximalen WR-Leistung.\r\n\r\nBeispiel: Der Shelly3EM meldet einen Bezug von 100W. Dies entspricht einem **Delta** 12,5% der Wechselrichterleistung.\r\n\r\nIm Ergebnis wird der Wechselrichter um diesen Prozentwert **Delta**) beaufschlagt, im vorliegenden Beispiel um 12,5% weiter geöffnet, was eben genau 100W entspricht.\r\nDer hier berechnete Ausgabewert wird natürlich immer auf den Wertebereich 0..100% begrenzt.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "info": "# Einfacher Regler\r\nZiel ist Nulleinspeisung (oder Nullbezug) mit Hysterese. Dies bedeutet die Regelung arbeitet nicht absolut auf NULL sondern bringt den zu regelnden Wert in den durch die Hysterese definierten Regelbereich.\r\nDurch Definition des Sollwertes mit Offset lässt sich Nulleinspeisung (keine Einspeisung ins Netz) oder Nullbezug (kein Bezug aus dem Netz) realisieren.\r\n\r\n## Voraussetzungen\r\n- einen Shelly 3EM oder anderen Smartmeter, der das Verbrauchssignal im HA zur Verfügung stellt. Ich nutze den Shelly 3EM: `sensor.wohnung_channel_a_power` Dieser Sensor bildet den realen Bezug des Haushalts ab.\r\n- einen Wechselrichter, dessen Ausgangssignal man mit HA beeinflussen kann. Ich habe einen Hoymiles WR, dessen Ausgangssignal sich ändern lässt über den Sensor: `number.dtu_leistungsbegrenzung`. Dieser Sensor ist beim Hoymiles ein Prozentwert. 0% entspricht geschlossen; 100% entspricht offen\r\n\r\n## Initialisierung\r\n Hier werden nur Startwerte gesetzt, die in der Reglerroutine Verwendung finden.\r\n Der wichtigste anzupassende Wert, ist die Leistung des Wechserichters.\r\n\r\nDie Variable `WRLeistung` ist auf den Sollwert des WRs zu setzen.\r\nIch nutze einen HMS-800-2T mit 800W Ausgangsleistung.\r\n\r\nDie Variable `Sollwert` legt die zu regelnde ZIelgröße fest. Hier könnte also auch ein abweichender Wert als NULL definiert werden.\r\nZusmamen mit der Hysterese kann man so Regelbereiche defnieren. (z.B. von -10W..0...10W; oder 0W...10...20W).\r\n\r\nDie Variable `Hysterese` definiert den Regelbereich.\r\nBei einer Hysterese von 10(W) reagiert der Regler nicht, wenn der Sollwert zwischen z.B: +10W und -10W pendelt (bei Sollwert von Null).\r\n\r\nDie Variable `MAXEinspeisung` begrenzt die Ausgabe auf einen Prozentwert.\r\nBeispiel: MAXEinspeisung = 50\r\n\r\n50 bedeutet Begrenzung auf 50% der Leistung des WR (bei einem 800W WR also auf 400W).\r\nLiegt der Hausbedarf unterhalb der 400W, greift die Regelung. Liegt der Hausbedarf oberhalb der 400W, wird die Lieferung auf 400W begrenzt.\r\n\r\n## Arbeitsweise\r\nDer Flow startet alle drei Sekunden.\r\nEr prüft, ob der Solarflow überhaupt Online ist. (im WLAN: device_tracker.solarhub ). Dies ist ein Sensor, den die FritzBox zur Verfügung stellt. \r\nEr prüft, ob überhaupt schon Energie ausgeliefert wird. (sensor.sf_output_home_power_filtered). Dies ist ein Sensor des Zendure Solarflows. \r\nDiese ersten zwei Schritte sollen sicherstellen, dass der Flow überhaupt nur arbeitet, wenn sinnvoll (z.B. Hub ist nachts ausgeschaltet, oder Hub liefert noch keine Energie, weil Entladegrenze erreicht)\r\n\r\nDer Flow ermittelt die Abweichung zum Sollwert.\r\n\r\nDer Sollwert wird umgerechnet auf die prozentuale Abweichung (**Delta**) zur maximalen WR-Leistung.\r\n\r\nBeispiel: Der Shelly3EM meldet einen Bezug von 100W. Dies entspricht einem **Delta** 12,5% der Wechselrichterleistung.\r\n\r\nIm Ergebnis wird der Wechselrichter um diesen Prozentwert **Delta**) beaufschlagt, im vorliegenden Beispiel um 12,5% weiter geöffnet, was eben genau 100W entspricht.\r\nDer hier berechnete Ausgabewert wird natürlich immer auf den Wertebereich 0..100% begrenzt.\r\n\r\nSollte eine Begrenzung konfiguriert sein, wird diese ggf. berücksichtigt.\r\n\r\nDie Regelgenauigkeit (oder der Regelfehler) liegt bei 8W (bei Verwendung eines Hoymiles WR mit 800W Sollleistung). Dies liegt daran, dass die Regelgrösse hier ein ganzzahliger Prozentwert ist. 1% von 800W ist damit die kleinste Regeländerung, die möglich ist.\r\n\r\n## Einstellung am SolarFlow\r\n\r\n* Alle Energiemodis deaktivieren\r\n* Nur Grundeinspeisung einstellen und den Ausgang des Hubs auf den maximalen Wert zum Wechselrichter einstellen.\r\n\r\n\r\n\r\n\r\n",
         "env": []
     },
     {
@@ -18,7 +18,6 @@
         "nodes": [
             "81141fb3bdeda68b",
             "c8834489133e6e2d",
-            "ccf3094869725777",
             "807d99b6b158e42f",
             "0d26d669eec255f1",
             "436cd61c383e13f5",
@@ -34,7 +33,7 @@
         "id": "10ee3e67e420e634",
         "type": "group",
         "z": "479e3443afedb613",
-        "name": "PI Regler",
+        "name": "Regler",
         "style": {
             "label": true
         },
@@ -77,7 +76,7 @@
         "z": "479e3443afedb613",
         "g": "10ee3e67e420e634",
         "name": "PI-Regler",
-        "func": "// Ziel: 0 W Bezug/Einspeisung\nlet leistung = Number(msg.payload); //vom Shelly3EM\nlet WRmax = flow.get (\"WRLeistung\"); //max. WR Leistung\nlet Soll = flow.get (\"Sollwert\"); //Sollwert\nlet max = flow.get (\"MAXEinspeisung\"); //max. Einspeisung\nlet hyst = flow.get (\"Hysterese\"); // Hysterese-Bereich\n\n//Wie groß ist die Abweichung von NULL?\nlet fehler = flow.get(\"fehler\");\nif (Math.abs(leistung-Soll) > (hyst)) {\n    fehler = Math.round(Soll - leistung);\n    flow.set(\"fehler\", fehler);\n}\nelse {\n    fehler = 0;\n    flow.set(\"fehler\", fehler);\n}\n\n// Regler-Parameter\nconst Kp = 1;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"letzteBegrenzung\");\n\n// Änderung des Regelsignals berechnen (PI-Regelung) \nlet delta = (Kp * Math.round((fehler)/WRmax*100));\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 0% (geschlossen) oder 100% (offen)\nneu = Math.max(0, Math.min(100, neu));\n\n\nflow.set(\"letzteBegrenzung\", neu);\nlet steuer = neu - vorher;\n\n// node.warn({\n//   steuer, \n//   vorher,\n//   neu\n// });\n\nif (steuer != 0){\n  msg.payload = neu;\n return msg;\n}\n",
+        "func": "// Ziel: 0 W Bezug/Einspeisung\nlet leistung = Number(msg.payload); //vom Shelly3EM\nlet WRmax = flow.get (\"WRLeistung\"); //max. WR Leistung\nlet Soll = flow.get (\"Sollwert\"); //Sollwert\nlet max = flow.get (\"MAXEinspeisung\"); //max. Einspeisung\nlet hyst = flow.get (\"Hysterese\"); // Hysterese-Bereich\n\n//Wie groß ist die Abweichung von NULL?\nlet fehler = flow.get(\"fehler\");\nif (Math.abs(leistung-Soll) > (hyst)) {\n    fehler = Math.round(Soll - leistung);\n    flow.set(\"fehler\", fehler);\n}\nelse {\n    fehler = 0;\n    flow.set(\"fehler\", fehler);\n}\n\n// Regler-Parameter\nconst Kp = 1;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"letzteBegrenzung\");\n\n// Änderung des Regelsignals berechnen (PI-Regelung) \nlet delta = (Kp * Math.round((fehler)/WRmax*100));\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 0% (geschlossen) oder 100% (offen)\nneu = Math.max(0, Math.min(100, neu));\nflow.set(\"letzteBegrenzung\", neu);\n\nlet steuer = neu - vorher; //hat sich das Signal verändert?\n\n// node.warn(\n//   {\n//   vorher,\n//   neu\n//   }\n//);\n\nif (steuer != 0){\n    if (neu > max) {\n        msg.payload = max;\n    }\n    else {\n        msg.payload = neu;\n    }\n return msg;\n}\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -224,39 +223,12 @@
         "wires": [
             [
                 "81141fb3bdeda68b",
-                "ccf3094869725777",
                 "807d99b6b158e42f",
                 "0d26d669eec255f1",
                 "436cd61c383e13f5",
                 "b70ed3aa940ae44f",
                 "d38ff4039bfd78e3"
             ]
-        ]
-    },
-    {
-        "id": "ccf3094869725777",
-        "type": "change",
-        "z": "479e3443afedb613",
-        "g": "0378d1e9a37ea9e1",
-        "name": "",
-        "rules": [
-            {
-                "t": "set",
-                "p": "iSumme",
-                "pt": "flow",
-                "to": "0",
-                "tot": "num"
-            }
-        ],
-        "action": "",
-        "property": "",
-        "from": "",
-        "to": "",
-        "reg": false,
-        "x": 430,
-        "y": 120,
-        "wires": [
-            []
         ]
     },
     {
@@ -280,7 +252,7 @@
         "to": "",
         "reg": false,
         "x": 460,
-        "y": 160,
+        "y": 120,
         "wires": [
             []
         ]
@@ -466,7 +438,7 @@
                 "t": "set",
                 "p": "MAXEinspeisung",
                 "pt": "flow",
-                "to": "25",
+                "to": "50",
                 "tot": "num"
             }
         ],
