@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "Nulleinspeisung",
         "disabled": false,
-        "info": "# Einfacher PI Regler\r\nZiel ist Nulleinspeisunf mit Hysterese.\r\nDies bedeutet die Regelung arbeitet nicht absolut auf NULL sondern auf bringt den zu regelnden Wert in einen definierten Regelbereich.\r\n\r\n\r\n## Voraussetzungen\r\n - ein Shelly 3EM:` sensor.wohnung_channel_a_power` Dieser Sensor bildet den realen Bezug des Haushalts ab.\r\n - ein Hoymiles WR, dessen Ausgangssignal sich ändern lässt:` number.dtu_leistungsbegrenzung`. Dieser Sensor ist beim Hoymiles ein Prozentwert. 0% entspricht **geschlossen**; 100% entspricht **offen**\r\n\r\n## Initialisierung\r\n Hier werden nur Startwerte gesetzt, die in der Reglerroutine Verwendung finden.\r\n Der wichtigste anzupassende Wert, ist die Leistung des Wechserichters.\r\n\r\nDie Variable `WRLeistung` ist auf den Sollwert des WRs zu setzen.\r\nIch nutze einen HMS-800-2T mit 800W Ausgangsleistung.\r\n\r\nDie Variable `Sollwert` legt die zu regelnde ZIelgröße fest. Hier könnte also auch ein abweichender Wert als NULL definiert werden.\r\nZusmamen mit der Hysterese kann man so Regelbereiche defnieren. (z.B. von -10W..0...10W; oder 0W...10...20W).\r\n\r\nDie Variable `Hysterese` definiert den Regelbereich.\r\nBei einer Hysterese von 10(W) reagiert der Regler nicht, wenn der Sollwert zwischen z.B: +10W und -10W pendelt.\r\n\r\n## Arbeitsweise\r\nDer Flow startet alle drei Sekunden.\r\n\r\nDer Flow ermittelt die Abweichung zum Sollwert.\r\n\r\nDer Sollwert wird umgerechnet auf die prozentuale Abweichung (**Delta**) zur maximalen WR-Leistung.\r\n\r\nBeispiel: Der Shelly3EM meldet einen Bezug von 100W. Dies entspricht einem **Delta** 12,5% der Wechselrichterleistung.\r\n\r\nIm Ergebnis wird der Wechselrichter um diesen Prozentwert **Delta**) beaufschlagt, im vorliegenden Beispiel um 12,5% weiter geöffnet, was eben genau 100W entspricht.\r\nDer hier berechnete Ausgabewert wird natürlich immer auf den Wertebereich 0..100% begrenzt.\r\n\r\nOntop wird der verbleibende Fehler zum Regelbereich regelmäßig kumuliert und führt je nach Vorzeichen des Fehlers zu einer Verstärkung oder Reduktion des **Delta-Wertes**.\r\n\r\n\r\n\r\n\r\n\r\n",
+        "info": "# Einfacher PI Regler\r\nZiel ist Nulleinspeisunf mit Hysterese.\r\nDies bedeutet die Regelung arbeitet nicht absolut auf NULL sondern auf bringt den zu regelnden Wert in einen definierten Regelbereich.\r\n\r\n\r\n## Voraussetzungen\r\n - ein Shelly 3EM:` sensor.wohnung_channel_a_power` Dieser Sensor bildet den realen Bezug des Haushalts ab.\r\n - ein Hoymiles WR, dessen Ausgangssignal sich ändern lässt:` number.dtu_leistungsbegrenzung`. Dieser Sensor ist beim Hoymiles ein Prozentwert. 0% entspricht **geschlossen**; 100% entspricht **offen**\r\n\r\n## Initialisierung\r\n Hier werden nur Startwerte gesetzt, die in der Reglerroutine Verwendung finden.\r\n Der wichtigste anzupassende Wert, ist die Leistung des Wechserichters.\r\n\r\nDie Variable `WRLeistung` ist auf den Sollwert des WRs zu setzen.\r\nIch nutze einen HMS-800-2T mit 800W Ausgangsleistung.\r\n\r\nDie Variable `Sollwert` legt die zu regelnde ZIelgröße fest. Hier könnte also auch ein abweichender Wert als NULL definiert werden.\r\nZusmamen mit der Hysterese kann man so Regelbereiche defnieren. (z.B. von -10W..0...10W; oder 0W...10...20W).\r\n\r\nDie Variable `Hysterese` definiert den Regelbereich.\r\nBei einer Hysterese von 10(W) reagiert der Regler nicht, wenn der Sollwert zwischen z.B: +10W und -10W pendelt.\r\n\r\n## Arbeitsweise\r\nDer Flow startet alle drei Sekunden.\r\nEr prüft, ob der Solarflow überhaupt Online ist. (im WLAN: `device_tracker.solarhub` ). Dies ist ein Sensor, den die FritzBox zur Verfügung stellt.\r\nEr prüft, ob überhaupt schon Energie ausgeliefert wird. (`sensor.sf_output_home_power_filtered`). Dies ist ein Sensor des Zendure Solarflows.\r\n\r\nDer Flow ermittelt die Abweichung zum Sollwert.\r\n\r\nDer Sollwert wird umgerechnet auf die prozentuale Abweichung (**Delta**) zur maximalen WR-Leistung.\r\n\r\nBeispiel: Der Shelly3EM meldet einen Bezug von 100W. Dies entspricht einem **Delta** 12,5% der Wechselrichterleistung.\r\n\r\nIm Ergebnis wird der Wechselrichter um diesen Prozentwert **Delta**) beaufschlagt, im vorliegenden Beispiel um 12,5% weiter geöffnet, was eben genau 100W entspricht.\r\nDer hier berechnete Ausgabewert wird natürlich immer auf den Wertebereich 0..100% begrenzt.\r\n\r\nOntop wird der verbleibende Fehler zum Regelbereich regelmäßig kumuliert und führt je nach Vorzeichen des Fehlers zu einer Verstärkung oder Reduktion des **Delta-Wertes**.\r\n\r\n\r\n\r\n\r\n\r\n",
         "env": []
     },
     {
@@ -22,36 +22,33 @@
             "807d99b6b158e42f",
             "0d26d669eec255f1",
             "436cd61c383e13f5",
-            "b70ed3aa940ae44f"
+            "b70ed3aa940ae44f",
+            "d38ff4039bfd78e3"
         ],
-        "x": 54,
+        "x": 74,
         "y": 39,
-        "w": 552,
-        "h": 282
+        "w": 532,
+        "h": 362
     },
     {
         "id": "10ee3e67e420e634",
         "type": "group",
         "z": "479e3443afedb613",
+        "name": "PI Regler",
         "style": {
-            "stroke": "#999999",
-            "stroke-opacity": "1",
-            "fill": "none",
-            "fill-opacity": "1",
-            "label": true,
-            "label-position": "nw",
-            "color": "#a4a4a4"
+            "label": true
         },
         "nodes": [
             "1",
             "3",
             "4",
             "12b4b149cb437718",
-            "aa6c47c92470d76f"
+            "aa6c47c92470d76f",
+            "8b72519e2008be83"
         ],
-        "x": 54,
-        "y": 359,
-        "w": 1052,
+        "x": 74,
+        "y": 439,
+        "w": 1372,
         "h": 142
     },
     {
@@ -59,15 +56,15 @@
         "type": "inject",
         "z": "479e3443afedb613",
         "g": "10ee3e67e420e634",
-        "name": "Alle 2 Sekunden",
+        "name": "Alle 3 Sekunden",
         "props": [],
         "repeat": "3",
         "crontab": "",
         "once": true,
-        "onceDelay": "4",
+        "onceDelay": "6",
         "topic": "",
-        "x": 190,
-        "y": 400,
+        "x": 210,
+        "y": 480,
         "wires": [
             [
                 "aa6c47c92470d76f"
@@ -80,15 +77,15 @@
         "z": "479e3443afedb613",
         "g": "10ee3e67e420e634",
         "name": "PI-Regler",
-        "func": "// Ziel: 0 W Bezug/Einspeisung\nlet leistung = Number(msg.payload); //vom Shelly3EM\nlet WRmax = flow.get (\"WRLeistung\"); //max. WR Leistung\nlet Soll = flow.get (\"Sollwert\"); //max. WR Leistung\n\n// Regelabweichung = Ziel - Ist\n// Hysterese-Bereich\nlet hyst = flow.get (\"Hysterese\");\n\n//Wie groß ist die Abweichung von NULL?\nlet fehler = flow.get(\"fehler\");\nif (Math.abs(leistung) > hyst) {\n    fehler = Math.round(Soll - leistung);\n}\n// Regler-Parameter\nconst Kp = 1;\nconst Ki = 0.02;\n\n// Historie laden \nlet iSumme = flow.get(\"iSumme\") || 0;\n// Fehlerabweichung aktualisieren\nif (fehler > WRmax) {\n  iSumme += fehler;\n  flow.set(\"iSumme\", iSumme);\n}\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"letzteBegrenzung\") || 50;\n\n// Änderung des Regelsignals berechnen (PI-Regelung) \nlet delta = (Kp * Math.round(fehler/WRmax*100)) + (Ki * iSumme/WRmax*100);\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 0% (geschlossen) oder 100% (offen)\nneu = Math.max(0, Math.min(100, neu));\nflow.set(\"letzteBegrenzung\", neu);\n\n//node.warn({\n//  vorher,\n//  neu\n//});\n\n\nmsg.payload = neu;\nreturn msg;\n",
+        "func": "// Ziel: 0 W Bezug/Einspeisung\nlet leistung = Number(msg.payload); //vom Shelly3EM\nlet WRmax = flow.get (\"WRLeistung\"); //max. WR Leistung\nlet Soll = flow.get (\"Sollwert\"); //Sollwert\nlet max = flow.get (\"MAXEinspeisung\"); //max. Einspeisung\n\n// Regelabweichung = Ziel - Ist\n// Hysterese-Bereich\nlet hyst = flow.get (\"Hysterese\");\n\n//Wie groß ist die Abweichung von NULL?\nlet fehler = flow.get(\"fehler\");\nif (Math.abs(leistung) > hyst) {\n    fehler = Math.round(Soll - leistung);\n}\n// Regler-Parameter\nconst Kp = 1;\nconst Ki = 0.04;\n\n// Historie laden \nlet iSumme = flow.get(\"iSumme\") || 0;\n// Fehlerabweichung aktualisieren\nif (Math.abs(fehler) < WRmax) {\n  iSumme += fehler;\n  flow.set(\"iSumme\", iSumme);\n}\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"letzteBegrenzung\") || 50;\n\n// Änderung des Regelsignals berechnen (PI-Regelung) \nlet delta = (Kp * Math.round(fehler/WRmax*100)) + (Ki * iSumme/WRmax*100);\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 0% (geschlossen) oder 100% (offen)\nneu = Math.max(0, Math.min(100, neu));\n\n\nflow.set(\"letzteBegrenzung\", neu);\n\nnode.warn({\n  fehler,\n  iSumme,\n  vorher,\n  neu\n});\n\n\nmsg.payload = neu;\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 780,
-        "y": 460,
+        "x": 1140,
+        "y": 540,
         "wires": [
             [
                 "4"
@@ -123,8 +120,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 990,
-        "y": 460,
+        "x": 1330,
+        "y": 540,
         "wires": [
             []
         ]
@@ -166,8 +163,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 560,
-        "y": 460,
+        "x": 940,
+        "y": 540,
         "wires": [
             [
                 "3"
@@ -218,12 +215,12 @@
         "repeat": "",
         "crontab": "",
         "once": true,
-        "onceDelay": "2",
+        "onceDelay": "1",
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 170,
-        "y": 100,
+        "x": 190,
+        "y": 180,
         "wires": [
             [
                 "81141fb3bdeda68b",
@@ -231,7 +228,8 @@
                 "807d99b6b158e42f",
                 "0d26d669eec255f1",
                 "436cd61c383e13f5",
-                "b70ed3aa940ae44f"
+                "b70ed3aa940ae44f",
+                "d38ff4039bfd78e3"
             ]
         ]
     },
@@ -272,7 +270,7 @@
                 "t": "set",
                 "p": "letzteBegrenzung",
                 "pt": "flow",
-                "to": "50",
+                "to": "40",
                 "tot": "num"
             }
         ],
@@ -308,7 +306,7 @@
         "to": "",
         "reg": false,
         "x": 440,
-        "y": 200,
+        "y": 240,
         "wires": [
             []
         ]
@@ -334,7 +332,7 @@
         "to": "",
         "reg": false,
         "x": 440,
-        "y": 240,
+        "y": 280,
         "wires": [
             []
         ]
@@ -360,7 +358,7 @@
         "to": "",
         "reg": false,
         "x": 430,
-        "y": 280,
+        "y": 320,
         "wires": [
             []
         ]
@@ -402,12 +400,84 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 330,
-        "y": 460,
+        "x": 450,
+        "y": 540,
+        "wires": [
+            [
+                "8b72519e2008be83"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "8b72519e2008be83",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "10ee3e67e420e634",
+        "name": "liefert Energie?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "0",
+        "halt_if_type": "num",
+        "halt_if_compare": "gt",
+        "entity_id": "sensor.sf_output_home_power_filtered",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 680,
+        "y": 540,
         "wires": [
             [
                 "12b4b149cb437718"
             ],
+            []
+        ]
+    },
+    {
+        "id": "d38ff4039bfd78e3",
+        "type": "change",
+        "z": "479e3443afedb613",
+        "g": "0378d1e9a37ea9e1",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "MAXEinspeisung",
+                "pt": "flow",
+                "to": "25",
+                "tot": "num"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 460,
+        "y": 360,
+        "wires": [
             []
         ]
     },
