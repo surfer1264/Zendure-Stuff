@@ -266,6 +266,17 @@ sensor:
     manufacturer: Zendure
     model: SmartPV Hub 1200 Controller
 
+- name: Pass Mode
+  unique_id: <deviceID>passMode
+  state_topic: <appkey>/<deviceID>/state
+  value_template: "{{ value_json.passMode | int }}"
+  icon: mdi:auto-mode
+  device: 
+    name: "SolarFlow"
+    identifiers: <EurePVHubSeriennummer>
+    manufacturer: "Zendure"
+    model: "SmartPV Hub 1200 Controller"
+
 - name: "Batterie 1 maxVol"
   unique_id: <deviceID>Batterie1maxVol
   state_topic: <appkey>/<deviceID>/state
