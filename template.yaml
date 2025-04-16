@@ -4,28 +4,31 @@
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
+    icon: mdi:battery-arrow-up-outline
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') %}
       {% set output_power = states('sensor.solarflow_sf_output_pack_power') %}
       {% if pack_state in ['2', '0'] %}
         0
       {% elif output_power is not none and output_power | float(default=0) >= 0 %}
-        {{ output_power | float }}
+        {{ output_power | float(default=0)}}
       {% else %}
         0
       {% endif %}
+
   - name: "SF Pack Input Power Filtered"
     unique_id: sf_pack_input_power_filtered
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
+    icon: mdi:battery-arrow-down-outline
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') %}
       {% set input_power = states('sensor.solarflow_sf_pack_input_power') %}
       {% if pack_state in ['1', '0'] %}
         0
       {% elif input_power is not none and input_power | float(default=0) >= 0 %}
-        {{ input_power | float }}
+        {{ input_power | float(default=0)}}
       {% else %}
         0
       {% endif %}
@@ -38,19 +41,38 @@
     state: >
       {{ (states('sensor.sf_output_pack_power_filtered') | float(default=0)) - (states('sensor.sf_pack_input_power_filtered') | float(default=0)) }}
 
+  - name: "Solarflow Surplus Power"
+    unique_id: solarflow_surplus_power
+    unit_of_measurement: "W"
+    state: >-
+      {% set solar_input = states('sensor.solarflow_sf_solar_input_power') | float(default=0) %}
+      {% set output_pack = states('sensor.sf_output_pack_power_filtered') | float(default=0) %}
+      {{ solar_input - output_pack }}
+
   - name: "SF Output Home Power Filtered"
     unique_id: sf_output_home_power_filtered
     unit_of_measurement: "W"
     device_class: power
     state_class: measurement
+    icon: mdi:home-import-outline
     state: >-
       {% set pack_state = states('sensor.solarflow_pack_state') | string %}
       {% set output_home = states('sensor.solarflow_output_home_power') | float(default=0)  %}
-      {% set output_pack = states('sensor.sf_output_pack_power_filtered') | float(default=0) %}
-      {% set solar_input = states('sensor.solarflow_sf_solar_input_power') | float(default=0) %}
-      {% set surplus = solar_input - output_pack %}
-      {% if pack_state in ['0', '1'] and surplus < 15 %}
+      {% set surplus_low = states('input_boolean.sf_surplus_low') == 'on' %}
+      {% if surplus_low and pack_state in ['0', '1'] %}
         0
       {% else %}
-        {{ output_home  }}
+        {{ output_home }}
+      {% endif %}
+
+  - name: "SF Bypass"
+    unique_id: sf_bypass
+    device_class: enum
+    state: >-
+      {% set electriclevel = states('sensor.solarflow_electric_level') | int(0) %}
+      {% set pack_state = states('sensor.solarflow_pack_state') | string %}
+      {% if electriclevel == 100 and pack_state == '0' %}
+        1
+      {% else %}
+        0
       {% endif %}
