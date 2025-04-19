@@ -1,0 +1,109 @@
+views:
+  - title: Mein BKW
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Einstellungen
+            heading_style: title
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_aktiv
+                name: Regler An/Aus
+              - entity: input_number.regler_maximale_einspeisung
+                name: Einspeisebegrenzung
+          - type: entities
+            entities:
+              - entity: input_number.regler_hysterese
+                name: Hysterese
+                secondary_info: none
+              - entity: input_number.regler_sollwert
+                name: Sollwert
+                secondary_info: none
+            visibility:
+              - condition: state
+                entity: input_boolean.regler_aktiv
+                state: 'on'
+          - type: tile
+            entity: switch.solar_wechselrichterstatus
+            features_position: bottom
+            vertical: false
+            visibility:
+              - condition: state
+                entity: switch.solar_wechselrichterstatus
+                state_not: unavailable
+            grid_options:
+              columns: 12
+              rows: 1
+            hide_state: false
+            show_entity_picture: false
+            icon_tap_action:
+              action: none
+      - type: grid
+        cards:
+          - type: heading
+            heading: Kennzahlen
+            heading_style: title
+          - type: gauge
+            entity: sensor.wohnung_channel_a_power
+            min: -600
+            needle: true
+            max: 3000
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            tap_action:
+              action: none
+            grid_options:
+              columns: 9
+              rows: auto
+            name: Bezug
+          - type: gauge
+            entity: sensor.solarhub_power
+            needle: true
+            grid_options:
+              columns: 9
+              rows: auto
+            name: Einspeisung
+          - type: gauge
+            entity: sensor.batterie_out_in
+            min: -800
+            max: 800
+            needle: true
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            grid_options:
+              columns: 9
+              rows: auto
+            name: Entladen/Laden
+    type: sections
+    cards: []
+    badges:
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.sf_bypass
+        name: Bypass
+        show_entity_picture: false
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.solarflow_pack_state
+        name: Status
+        show_entity_picture: false
+    icon: mdi:solar-panel
+    path: http://homeassistant.local:8123/regler-bkw/0?edit=1
+    theme: ios-dark-mode-blue-red
+    max_columns: 2
+    header:
+      card:
+        type: markdown
+        text_only: true
+        content: |-
+          # Hallo {{ user }} 
+          Konfiguriere Dein Balkonkraftwerk ! ✨
