@@ -6,12 +6,8 @@
 Hier findet Ihr
 **Beschreibungen:**
 * [Motivation und Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
-  * [Umgang mit diversen yaml-Dateien im HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Yaml-&-Co)
-  * [Das Daten Nullen-Problem](https://github.com/surfer1264/Zendure-Stuff/wiki/yaml-Profi-Tricks-für-Zendure)
-  * [outputhome Nullen](https://github.com/surfer1264/Zendure-Stuff/wiki/Spezialbehandlung:-Nullen-von-OutputHomePower)
-* [Übersicht der verwendeten Sensoren ](https://github.com/surfer1264/Zendure-Stuff/wiki/%C3%9Cbersicht-der-Sensoren-in-meiner-HA-Konfiguration)
-
 * [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
+* Nulleinspeisung
   * [Nulleinspeisung](https://github.com/surfer1264/Zendure-Stuff/wiki/Nulleinspeisung-(Demo))
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
