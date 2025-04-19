@@ -12,7 +12,7 @@ Hier findet Ihr
 * [Übersicht der verwendeten Sensoren ](https://github.com/surfer1264/Zendure-Stuff/wiki/%C3%9Cbersicht-der-Sensoren-in-meiner-HA-Konfiguration)
 
 * [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
-  * [Nulleinspeisung (Demo)](https://github.com/surfer1264/Zendure-Stuff/wiki/Nulleinspeisung-(Demo))
+  * [Nulleinspeisung](https://github.com/surfer1264/Zendure-Stuff/wiki/Nulleinspeisung-(Demo))
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
   
