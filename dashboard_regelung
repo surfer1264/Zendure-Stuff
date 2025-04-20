@@ -48,24 +48,23 @@ views:
             entity: sensor.wohnung_channel_a_power
             min: -600
             needle: true
-            max: 3000
+            max: 3500
             severity:
               green: 0
               yellow: 0
               red: 0
-            tap_action:
-              action: none
             grid_options:
-              columns: 9
+              columns: 6
               rows: auto
             name: Bezug
           - type: gauge
             entity: sensor.solarhub_power
             needle: true
             grid_options:
-              columns: 9
+              columns: 6
               rows: auto
-            name: Einspeisung
+            name: Einspeisung von PV
+            max: 800
           - type: gauge
             entity: sensor.batterie_out_in
             min: -800
@@ -76,9 +75,14 @@ views:
               yellow: 0
               red: 0
             grid_options:
-              columns: 9
+              columns: 6
               rows: auto
             name: Entladen/Laden
+          - type: gauge
+            entity: sensor.solarflow_electric_level
+            grid_options:
+              columns: 6
+              rows: auto
     type: sections
     cards: []
     badges:
