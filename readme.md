@@ -9,6 +9,7 @@ Hier findet Ihr
 * [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 * Nulleinspeisung
   * [Nulleinspeisung](https://github.com/surfer1264/Zendure-Stuff/wiki/Nulleinspeisung-(Demo))
+  * (https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
   
