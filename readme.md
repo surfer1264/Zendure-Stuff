@@ -7,7 +7,7 @@ Hier findet Ihr
 **Beschreibungen:**
 * [Hub-Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
 * [Monitoring der HubDaten mit HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
-* [wxterne Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
+* [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
   
