@@ -9,9 +9,14 @@ views:
           - type: entities
             entities:
               - entity: input_boolean.regler_aktiv
-                name: Regler An/Aus
+          - type: entities
+            entities:
               - entity: input_number.regler_maximale_einspeisung
                 name: Einspeisebegrenzung
+            visibility:
+              - condition: state
+                entity: input_boolean.regler_terminmodus
+                state: 'off'
           - type: entities
             entities:
               - entity: input_number.regler_hysterese
@@ -24,21 +29,28 @@ views:
               - condition: state
                 entity: input_boolean.regler_aktiv
                 state: 'on'
-          - type: tile
-            entity: switch.solar_wechselrichterstatus
-            features_position: bottom
-            vertical: false
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_terminmodus
+                name: Terminmodus aktiv
+          - type: entities
+            entities:
+              - entity: input_datetime.regler1
+                name: Uhrzeit1
+              - entity: input_number.regler_wert1_termin1
+                name: Begrenzung1
+              - entity: input_datetime.regler2
+                name: Uhrzeit2
+              - entity: input_number.regler_wert2_termin2
+                name: Begrenzung2
+              - entity: input_datetime.regler3
+                name: Uhrzeit3
+              - entity: input_number.regler_wert3_termin3
+                name: Begrenzung3
             visibility:
               - condition: state
-                entity: switch.solar_wechselrichterstatus
-                state_not: unavailable
-            grid_options:
-              columns: 12
-              rows: 1
-            hide_state: false
-            show_entity_picture: false
-            icon_tap_action:
-              action: none
+                entity: input_boolean.regler_terminmodus
+                state: 'on'
       - type: grid
         cards:
           - type: heading
@@ -83,6 +95,21 @@ views:
             grid_options:
               columns: 6
               rows: auto
+          - type: tile
+            entity: switch.solar_wechselrichterstatus
+            features_position: bottom
+            vertical: false
+            visibility:
+              - condition: state
+                entity: switch.solar_wechselrichterstatus
+                state_not: unavailable
+            grid_options:
+              columns: 12
+              rows: 1
+            hide_state: false
+            show_entity_picture: false
+            icon_tap_action:
+              action: none
     type: sections
     cards: []
     badges:
@@ -100,6 +127,21 @@ views:
         entity: sensor.solarflow_pack_state
         name: Status
         show_entity_picture: false
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: counter.regler_zahler
+        icon: ''
+        show_entity_picture: true
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.regler_initialisiere
+        name: INIT
+        tap_action:
+          action: toggle
     icon: mdi:solar-panel
     path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
