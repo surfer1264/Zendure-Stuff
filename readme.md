@@ -5,11 +5,9 @@
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
 Hier findet Ihr
 **Beschreibungen:**
-* [Motivation und Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
-* [Das Node Red Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
-* Nulleinspeisung
-  * [Nulleinspeisung](https://github.com/surfer1264/Zendure-Stuff/wiki/Nulleinspeisung-(Demo))
-  * [echte Regelung](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
+* [Hub-Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
+* [Monitoring der HubDaten mit HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
+* [wxterne Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
   
