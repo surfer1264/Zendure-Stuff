@@ -4,7 +4,7 @@
         "type": "tab",
         "label": "Solarflow",
         "disabled": false,
-        "info": "## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki\r\n\r\n# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel\r\nLiFePO-Akkus müssen regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) aber keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nMein Ziel war es über eine externe Automatisierung die Ladung auf 100% zu erzwingen, wenn x Tage (x = konfigurierbar) kein Zellableich stattgefunden hat.\r\nWenn x Tage keine Kalibierung stattfand, wird die Einspeisung über den Wechselrichter unterbunden. Damit findet keine Entladung statt. Jegliche Energie der Panels wird in die Akkus eingespeist. \r\nNach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\nMittlerweile hat sich mein Ansatz leicht gewandelt. **Die Zellspannung ist der entscheidende Faktor.** Mein Akku konnte im Dezember 2024 26 Tage ohne das Aufladen auf 100% überleben.\r\nDie Überwachung der unteren Zellspannung ist zielführender (über 3V zu halten).\r\n\r\nDie folgende Überwachung und Steuerung orintiert sich daher ehr an der unteren Zellspannung, als der zurückliegenden Dauer der letzten Kalibrierung auf 100%.\r\n\r\n## Disclaimer\r\nDies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr.\r\nAnpassungen werden ggf erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000/AB1000S\r\n - Hoymiles HMS8002T\r\n - Shelly 3EM\r\n - HomeAssistent-HW: [Home Assistent Green](https://www.home-assistant.io/green/)\r\n\r\n## Vorbereitungen im HA\r\nUm meine Flows verwenden zu können, sind im HomeAssistent folgende Helfervariablen anzulegen (Bereich Geräte und Dienste):\r\n\r\n|Name|Helfer-Typ|Bemerkung|\r\n|---|---|---|\r\n|Letzte Kalibrierung|Zahlenwerteingabe|Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibrierung. Diese Variable wird in den Flows überprüft (Zeitüberschreitung)|\r\n|Akku voll|Zähler|Wenn Akku voll, dann +1.  Ich will damit zählen, wie oft der Akku auf 100% geht (nur Information, Anzeige im HA Dashboard)|\r\n|Ladung erreicht|Schalter|Am Tag der 100% Ladung wird die Variable auf TRUE gesetzt, ansonsten FALSE. Die Variable wird nur für den Export benutzt für eine externe Statistik.|\r\n|Batterie kritisch|Schalter|Die Variable wird auf _True_ gesetzt, wenn minVol unter einen Schwellwert fällt und die letzte Kalibrierung einen Wert überschreitet. Diese Variable steuert den Wechselrichter (An oder Aus)|\r\n\r\n\r\nFolgende Entities der HA-Integrationen werden verwendet:\r\n - electriclevel (Akku-Ladezustand (alle relevanten Akkus, MQTT)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, AB1000S, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgt mit Node-Red. Mein Ziel mit dem Project war auch ein paar Konzepte mit Node-Red auszuprobieren (E-Mail versenden, Dateien schreiben, join-Node, function-Node, etc.). Auf die Konzepte selbst gehe ich nicht im Detail ein. Ein paar Dinge sind ggf. überflüssig geworden. Bedient Euch und passt an. \r\n\r\n### Konfigurationsflow\r\nIn diesem FLow werden zwei FLow-Variablen gesetzt.\r\n - _minVol_SOLL_ gegen diesen Wert wird die untere Zellspannung der Akkus geprüft. Wird der Wert von einem Akku unterschritten wird die Variabe _Batterie kritisch_ auf \"on\" gesetzt.\r\n - _check_kalibrierung_ gegen diesen Wert wird der Wert der letzten Kalibrierung geprüft. Wird der Wert überschritten wird die Variabe _Batterie kritisch_ auf \"on\" gesetzt.\r\n\r\n Dieser FLow ist dafür gedacht, eine individuelle Konfiguration zu ermöglichen, ohne in den einzelnen Nodes/FLows nach diesen Werten zu suchen.\r\n\r\n### 1. Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n\r\n Alle drei **Hilfsflows** sind experimentell, anpassbar und werden für den Betrieb **nicht** benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen.\r\n\r\nIst _electriclevel_ = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt. (Wird in diversen Flows abgefragt)\r\n - wird der Helfer _ladung_erreicht_ auf TRUE gesetzt. (Nutze ich zum Rausschreiben in eine Datei)\r\n - wird der Counter-Helfer _akku_voll_ inkementiert. (Ich will damit zählen wie oft der Akku auf 100% geht.)\r\n - wird _batterie_kritisch_ auf _Off_ gesetzt. (Hiermit wird der WR gsteuert (An/Aus), indem Flow 6 \"WR Steuerung\" aufgerufen wird))\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird der Kommunikationsflow aufgerufen\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 5 \"Überprüfung kritischer Werte\" und FLow 6 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Inkrementiere _Letzte Kalibrierung_ täglich\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%?\r\nHier wird der Helfer _Letzte Kalibierung_ \r\n- um den Wert 1 erhöht\r\n- der Kommunikationsflow wird aufgerufen\r\n\r\n### 4. Kommunikationsflow\r\nIn diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:\r\n -  _minVol_\r\n -  _akku_voll_\r\n -  _electriclevel_\r\n -  _letzte_Kalibierung_\r\n -  _ladung_erreicht_\r\n\r\n Es wird eine Mail aufbereitet und versendet. Die Node müsst ihr mit Euren Zugangsdaten konfigurieren. Fragt mal ChatGPT.\r\n \r\n Es wird eine Nachricht in die Konsole geschrieben.\r\n\r\n Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung.\r\n\r\n### 5. Akku fällt unter Min-Wert; letzte Kalibrierung zu lange her\r\n\r\nDieser Flow wird automatisch angestoßen, wenn die Zellspannung(en) _minVol_ und die _letzte Kalibrierung_ die konfigurierten Werte über-/unetrschreiten (Siehe Konfigurationsflow)).\r\n -  wird _batterie_kritisch_ auf _on_ gesetzt\r\n \r\nDieser Flow setzt natürlich voraus, dass die Zellspannungsdaten der Akkus im HA verfügbar gemacht wurden !! (siehe Vorbereitungen)\r\n\r\n(Bemerkung: Dieser Flow wurde bei mir noch nie ausgelöst!)\r\n\r\n### 6. Wechselrichter Steuerung\r\n\r\nDieser Flow wird automatisch aufgerufen, wenn sich _batterie_kritisch_ ändert\r\n - wird _batterie_kritisch_ \"on\" (Ergebnis von Flow 5), wird der Wechselrichter deaktiviert\r\n - wird _batterie_kritisch_ \"off\", (Ergebnis von FLow 2) wird der Wechselrichter aktiviert\r\n - der Kommunikationsflow wird aufgerufen\r\n - wird eine Nachricht in die Konsole geschrieben\r\n\r\n\r\n### 7. Überprüfung kritischer Werte\r\n\r\nOb dieser Flow (noch) sinnvoll ist, ist fraglich.\r\nDer Wert Wechselrichter AN/AUS scheint flüchtig zu sein (zumindest war er es mal).\r\nDer WR  geht z.B. in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\nWenn das so wäre, würde der WR aufwachen und wieder Energie einspeisen, \r\n\r\nUm die Funktion sicherzustellen, wird dieser Flow daher alle 120 Minuten aufgerufen und überprüft _batterie_kritisch_== \"on\". Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen (WR AUS) daher aufgefrischt.\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des [Node-red_flow](https://github.com/surfer1264/Zendure-Stuff/blob/main/Node-red_flow) in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an. "
+        "info": "## Mein Wiki: https://github.com/surfer1264/Zendure-Stuff/wiki\r\n\r\n# Herbeiführen einer Kalibrierung und Überwachung der Zellspannung\r\n## Ziel und Motivation\r\nLiFePO-Akkus sollten regelmäßig kalibriert werden. Dies bedeutet ein Zellabgleich ist herbeizuführen durch das Laden der Akkus auf 100%.\r\nEs gibt in den Zendure Systemen (SF1200/SF2000) keinen Mechanismus, der dies automatisch organisiert. \r\nErzwungen werden kann das Laden auf 100% nur (insbesondere im Winter) durch Deaktivieren aller Einspeisemodis.\r\n\r\nGefährlich sind auch Tiefentladungen, wenn man sie nicht frühzeitig bemerkt.\r\n\r\nFolgendes Projekt überwacht:\r\n- die unteren Zellspannungen der Akkus\r\n- überwacht den Zeitraum seit letzter Kalibrierung auf 100%\r\n- riegelt bei Überschreiten bzw. Unterschreiten der Zielwerte den Wechselrichter ab. \r\n\r\nErreicht wird damit:\r\n- Entladung wird unterbunden\r\n- Tiefentladung der Akkus wird unterbunden\r\n- das Aufladen auf 100% forciert\r\n- nach Erreichen der 100% Grenze wird die Einspeisung wieder freigegeben.\r\n\r\n\r\n## Disclaimer\r\nDies ist ein experimentelles Projekt. Anwendung auf eigene Gefahr und Verantwortung. Testet gut, macht Euch mit dem Projekt vertraut und konfiguriert es nach Euren Wünschen. \r\nAnpassungen werden ggf. erforderlich sein bezugnehmend auf Eure Gesamtkonfiguration.\r\n\r\n\r\n## Meine Konfiguration\r\n - SF1200\r\n - AB2000/AB1000S\r\n - Hoymiles HMS8002T\r\n - Shelly 3EM\r\n - HomeAssistent-HW: [Home Assistent Green](https://www.home-assistant.io/green/)\r\n\r\n## Vorbereitungen im HA\r\nUm meine Flows verwenden zu können, sind im HomeAssistent folgende Helfervariablen anzulegen (Bereich Geräte und Dienste):\r\n\r\n|Name|Helfer-Typ|Bemerkung|\r\n|---|---|---|\r\n|Letzte Kalibrierung|Zahlenwerteingabe|Diese Variable gibt die Anzahl der Tage wieder, die vergangen sind, seit der letzten Kalibrierung. Diese Variable wird in den Flows überprüft (Zeitüberschreitung)|\r\n|Akku voll|Zähler|Wenn Akku voll, dann +1.  Ich will damit zählen, wie oft der Akku auf 100% geht (nur Information, Anzeige im HA Dashboard)|\r\n|Ladung erreicht|Schalter|Am Tag der 100% Ladung wird die Variable auf TRUE gesetzt, ansonsten FALSE. Die Variable wird nur für den Export benutzt für eine externe Statistik.|\r\n|Batterie kritisch|Schalter|Die Variable wird auf _True_ gesetzt, wenn minVol unter einen Schwellwert fällt und die letzte Kalibrierung einen Wert überschreitet. Diese Variable steuert den Wechselrichter (An oder Aus)|\r\n\r\n\r\nFolgende Entities der HA-Integrationen werden verwendet:\r\n - electriclevel (Akku-Ladezustand (alle relevanten Akkus, MQTT)\r\n - button.wechselrichter_ausschalten (Hoymiles WR)\r\n - button.wechselrichter_ansschalten (Hoymiles WR)\r\n - minVol (AB2000, AB1000S, MQTT)\r\n\r\n## Dokumentation\r\nDie Umsetzung erfolgt mit Node-Red. Mein Ziel mit dem Project war auch ein paar Konzepte mit Node-Red auszuprobieren (E-Mail versenden, Dateien schreiben, join-Node, function-Node, etc.). Auf die Konzepte selbst gehe ich nicht im Detail ein. Ein paar Dinge sind ggf. überflüssig geworden. Bedient Euch und passt an. \r\n\r\n### Konfigurationsflow\r\nIn diesem FLow werden zwei FLow-Variablen gesetzt.\r\n - _minVol_SOLL_ gegen diesen Wert wird die untere Zellspannung der Akkus geprüft. Wird der Wert von einem Akku unterschritten wird die Variabe _Batterie kritisch_ auf \"on\" gesetzt.\r\n - _check_kalibrierung_ gegen diesen Wert wird der Wert der letzten Kalibrierung geprüft. Wird der Wert überschritten wird die Variabe _Batterie kritisch_ auf \"on\" gesetzt.\r\n\r\n Dieser FLow ist dafür gedacht, eine individuelle Konfiguration zu ermöglichen, ohne in den einzelnen Nodes/FLows nach diesen Werten zu suchen.\r\n\r\n### 1. Hilfsflows\r\n 1. Der erste Hilfsflow setzt den Helfer _Letzte Kalibrierung_ auf den Wert 0 (eine Art Reset). Dieser Flow kann auch verwendet werden, um jeden anderen Wert einzustellen.\r\n 2. Mit dem zweiten Hilfsflow wird der WR auf AUS gesetzt. (_button.wechselrichter_ausschalten_)\r\n 3. Mit dem dritten Hilfsflow lässt sich der Akku abfragen (_electriclevel_)\r\n\r\n Alle drei **Hilfsflows** sind experimentell, anpassbar und werden für den Betrieb **nicht** benötigt.\r\n\r\n### 2. Überwachungsflow Akku 100%\r\nDer Flow wird mit Statuswechsel des Akkus auf 100% automatisch angestoßen.\r\n\r\nIst _electriclevel_ = 100% \r\n - wird der Helfer _Letzte Kalibierung_ auf \"0\" (heute) gesetzt. (Wird in diversen Flows abgefragt)\r\n - wird der Helfer _ladung_erreicht_ auf TRUE gesetzt. (Nutze ich zum Rausschreiben in eine Datei)\r\n - wird der Counter-Helfer _akku_voll_ inkementiert. (Ich will damit zählen wie oft der Akku auf 100% geht.)\r\n - wird _batterie_kritisch_ auf _Off_ gesetzt. (Hiermit wird der WR gsteuert (An/Aus), indem Flow 6 \"WR Steuerung\" aufgerufen wird))\r\n - wird eine Nachricht in die Konsole geschrieben zum Akkustand 100%\r\n - wird der Kommunikationsflow aufgerufen\r\n\r\nDieser Flow hebt damit eine (mögliche) Einspeisesperre auf, die im FLow 5 \"Überprüfung kritischer Werte\" und FLow 6 \"kritische Zellspannung\" gesetzt wird.\r\n\r\n### 3. Inkrementiere _Letzte Kalibrierung_ täglich\r\nDieser FLow wird täglich eine Stunde nach Sonnenaufgang ausgeführt.\r\nBedeutung: Wieviel Tage sind vergangen seit letzter Ladung auf 100%?\r\nHier wird der Helfer _Letzte Kalibierung_ \r\n- um den Wert 1 erhöht\r\n- der Kommunikationsflow wird aufgerufen\r\n\r\n### 4. Kommunikationsflow\r\nIn diesem FLow werden folgende Daten zu einer Nachricht zusammengefasst:\r\n -  _minVol_\r\n -  _akku_voll_\r\n -  _electriclevel_\r\n -  _letzte_Kalibierung_\r\n -  _ladung_erreicht_\r\n\r\n Es wird eine Mail aufbereitet und versendet. Die Node müsst ihr mit Euren Zugangsdaten konfigurieren. Fragt mal ChatGPT.\r\n \r\n Es wird eine Nachricht in die Konsole geschrieben.\r\n\r\n Es wird ein Datensatz (CSV-Datei) erzeugt im Verzeichnis: /addon_configs/a0d7b954_nodered zur externen Weiterverarbeitung.\r\n\r\n### 5. Akku fällt unter Min-Wert; letzte Kalibrierung zu lange her\r\n\r\nDieser Flow wird automatisch angestoßen, wenn die Zellspannung(en) _minVol_ und die _letzte Kalibrierung_ die konfigurierten Werte über-/unetrschreiten (Siehe Konfigurationsflow)).\r\n -  wird _batterie_kritisch_ auf _on_ gesetzt\r\n \r\nDieser Flow setzt natürlich voraus, dass die Zellspannungsdaten der Akkus im HA verfügbar gemacht wurden !! (siehe Vorbereitungen)\r\n\r\n(Bemerkung: Dieser Flow wurde bei mir noch nie ausgelöst!)\r\n\r\n### 6. Wechselrichter Steuerung\r\n\r\nDieser Flow wird automatisch aufgerufen, wenn sich _batterie_kritisch_ ändert\r\n - wird _batterie_kritisch_ \"on\" (Ergebnis von Flow 5), wird der Wechselrichter deaktiviert\r\n - wird _batterie_kritisch_ \"off\", (Ergebnis von FLow 2) wird der Wechselrichter aktiviert\r\n - der Kommunikationsflow wird aufgerufen\r\n - wird eine Nachricht in die Konsole geschrieben\r\n\r\n\r\n### 7. Überprüfung kritischer Werte\r\n\r\nOb dieser Flow (noch) sinnvoll ist, ist fraglich.\r\nDer Wert Wechselrichter AN/AUS scheint flüchtig zu sein (zumindest war er es mal).\r\nDer WR  geht z.B. in den Standby wenn keine Eingangsspannung anliegt. Die Einstellungen sind daher flüchtig. \r\nWenn das so wäre, würde der WR aufwachen und wieder Energie einspeisen, \r\n\r\nUm die Funktion sicherzustellen, wird dieser Flow daher alle 120 Minuten aufgerufen und überprüft _batterie_kritisch_== \"on\". Sind die Eingangsvoraussetzungen unverändert, werden die Einstellungen (WR AUS) daher aufgefrischt.\r\n\r\n\r\n## Installation\r\nImportiere den Quellcode des [Node-red_flow](https://github.com/surfer1264/Zendure-Stuff/blob/main/Node-red_flow) in Deine Node-Red-Instanz und passe die Namen der Entitäten an die NAmensgebung in Deiner HA-Instanz an.\r\nPasse die Parameter nach Deinen Wünschen an. "
     },
     {
         "id": "103dc338d37dba19",
@@ -64,7 +64,7 @@
             "b1dc413f2cea219e"
         ],
         "x": 54,
-        "y": 2099,
+        "y": 2679,
         "w": 1012,
         "h": 122
     },
@@ -82,7 +82,7 @@
             "a9d6cf072911476e"
         ],
         "x": 54,
-        "y": 2239,
+        "y": 2819,
         "w": 1012,
         "h": 82
     },
@@ -101,7 +101,7 @@
             "6a8c3d50ceb3b125"
         ],
         "x": 54,
-        "y": 2339,
+        "y": 2919,
         "w": 1012,
         "h": 82
     },
@@ -173,15 +173,15 @@
             "ccb234400dd0e7bf",
             "1f55218028a52d9a",
             "7f91280f58edff6c",
-            "b429db5074ec392e",
             "973bd53ae465fbb9",
             "038a64c29fb6a891",
             "53c3eecd451fabec",
             "8869cb43ad658030",
-            "1e52c8b74ffc0a6f"
+            "1e52c8b74ffc0a6f",
+            "81ed38a49ed9e06e"
         ],
         "x": 54,
-        "y": 1539,
+        "y": 1479,
         "w": 1372,
         "h": 382
     },
@@ -201,7 +201,6 @@
             "307f7e413ce0a262",
             "9c6addc4dd042acf",
             "7111c0f7e731715d",
-            "68559c84c2152c52",
             "f58d2e2ca20e61e8",
             "27f5a9de8f7c7fdc",
             "e6e72507e440b763",
@@ -213,9 +212,9 @@
             "171868be30064c07"
         ],
         "x": 54,
-        "y": 819,
+        "y": 859,
         "w": 1392,
-        "h": 362
+        "h": 262
     },
     {
         "id": "8195af41fa3ed202",
@@ -258,6 +257,49 @@
         "y": 39,
         "w": 552,
         "h": 122
+    },
+    {
+        "id": "afc07ea79271275f",
+        "type": "group",
+        "z": "3d2a81e3c1ae2c8c",
+        "name": "Schreibe Akkudaten",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "5808ce5ee02c73b6",
+            "5181771141913edd",
+            "25a46cb877db8a5e",
+            "0eb40855ce898b07",
+            "65522dd146beb8f6",
+            "ad69641832e6ef86",
+            "cbb767e99a9247f8",
+            "e4c8bd0cd024ecb6",
+            "d2070215d6183230",
+            "b5e33ac617cea56b",
+            "ed2e466f9c6067c4",
+            "dc0530cf8cd46216",
+            "0b087478af1cb016",
+            "9b07c735a471dddb",
+            "b8da52f6476675cf",
+            "8b7a33c7d3093285",
+            "f7b990153f520f0e",
+            "7a55db2657277d86",
+            "3aa3f344d706dcc0",
+            "0a7ec2ddfcbf51bd",
+            "ed504166b0d201c8",
+            "120d16c0900b3222",
+            "ae7c35e56cc7ddd4",
+            "e59de9099849d6c2",
+            "aa6b68c35e10f4fe",
+            "f0ce05f5279cba21",
+            "5b62681509ac63d8",
+            "677322602c74d36b"
+        ],
+        "x": 54,
+        "y": 1959,
+        "w": 1332,
+        "h": 582
     },
     {
         "id": "ece1b5e242f568da",
@@ -322,7 +364,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 970,
+        "x": 950,
         "y": 340,
         "wires": [
             [
@@ -423,7 +465,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 2180,
+        "y": 2760,
         "wires": [
             [
                 "c5fddd2b82d992db"
@@ -464,7 +506,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 710,
-        "y": 2180,
+        "y": 2760,
         "wires": [
             [
                 "6b425c4a990d179d"
@@ -509,7 +551,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 410,
-        "y": 2180,
+        "y": 2760,
         "wires": [
             [
                 "e1600020487b026c"
@@ -531,7 +573,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 960,
-        "y": 2180,
+        "y": 2760,
         "wires": []
     },
     {
@@ -542,7 +584,7 @@
         "name": "manuell",
         "info": "eine in HA definierte Helfer Entität",
         "x": 150,
-        "y": 2140,
+        "y": 2720,
         "wires": []
     },
     {
@@ -553,7 +595,7 @@
         "name": "Setze auf Null = Heute",
         "info": "eine in HA definierte Helfer Entität",
         "x": 700,
-        "y": 2140,
+        "y": 2720,
         "wires": []
     },
     {
@@ -613,7 +655,7 @@
         "name": "Hole letzte Kalibrierung",
         "info": "eine in HA definierte Helfer Entität",
         "x": 420,
-        "y": 2140,
+        "y": 2720,
         "wires": []
     },
     {
@@ -782,7 +824,7 @@
         "domain": "button",
         "service": "press",
         "x": 380,
-        "y": 2280,
+        "y": 2860,
         "wires": [
             [
                 "a9d6cf072911476e"
@@ -812,7 +854,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 2280,
+        "y": 2860,
         "wires": [
             [
                 "69066ef11a95215a"
@@ -834,7 +876,7 @@
         "statusVal": "payload",
         "statusType": "auto",
         "x": 960,
-        "y": 2280,
+        "y": 2860,
         "wires": []
     },
     {
@@ -905,7 +947,7 @@
         "to": "",
         "reg": false,
         "x": 760,
-        "y": 2380,
+        "y": 2960,
         "wires": [
             [
                 "6a8c3d50ceb3b125"
@@ -950,7 +992,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 470,
-        "y": 2380,
+        "y": 2960,
         "wires": [
             [
                 "3e4b250991ed9237"
@@ -980,7 +1022,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 160,
-        "y": 2380,
+        "y": 2960,
         "wires": [
             [
                 "a7070e875e5ce758"
@@ -1002,7 +1044,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 960,
-        "y": 2380,
+        "y": 2960,
         "wires": []
     },
     {
@@ -1499,7 +1541,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 170,
-        "y": 1720,
+        "y": 1660,
         "wires": [
             [
                 "3023a9e90f38de23",
@@ -1554,7 +1596,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 360,
-        "y": 1640,
+        "y": 1580,
         "wires": [
             [
                 "07797668f029553f"
@@ -1605,7 +1647,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 380,
-        "y": 1700,
+        "y": 1640,
         "wires": [
             [
                 "07797668f029553f"
@@ -1656,7 +1698,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 350,
-        "y": 1760,
+        "y": 1700,
         "wires": [
             [
                 "07797668f029553f"
@@ -1686,7 +1728,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 630,
-        "y": 1720,
+        "y": 1660,
         "wires": [
             [
                 "6627db713e4c648b"
@@ -1707,15 +1749,15 @@
         "finalize": "",
         "libs": [],
         "x": 840,
-        "y": 1700,
+        "y": 1640,
         "wires": [
             [
                 "bda4f360660715c2",
                 "038a64c29fb6a891"
             ],
             [
-                "b429db5074ec392e",
-                "973bd53ae465fbb9"
+                "973bd53ae465fbb9",
+                "81ed38a49ed9e06e"
             ]
         ]
     },
@@ -1728,12 +1770,12 @@
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
-        "action": "button.press",
+        "action": "switch.turn_off",
         "floorId": [],
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "button.wechselrichter_ausschalten"
+            "switch.solar_wechselrichterstatus"
         ],
         "labelId": [],
         "data": "",
@@ -1743,10 +1785,10 @@
         "outputProperties": [],
         "queue": "none",
         "blockInputOverrides": false,
-        "domain": "button",
-        "service": "press",
+        "domain": "switch",
+        "service": "turn_off",
         "x": 1340,
-        "y": 1680,
+        "y": 1620,
         "wires": [
             []
         ]
@@ -1759,7 +1801,7 @@
         "name": "Kritisch==True?",
         "info": "",
         "x": 780,
-        "y": 1660,
+        "y": 1600,
         "wires": []
     },
     {
@@ -1770,7 +1812,7 @@
         "name": "alle 120 Minuten",
         "info": "",
         "x": 160,
-        "y": 1680,
+        "y": 1620,
         "wires": []
     },
     {
@@ -1915,7 +1957,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 540,
-        "y": 900,
+        "y": 940,
         "wires": [
             [
                 "307f7e413ce0a262"
@@ -1966,7 +2008,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 560,
-        "y": 960,
+        "y": 980,
         "wires": [
             [
                 "307f7e413ce0a262"
@@ -2040,7 +2082,7 @@
         "useparts": true,
         "accumulate": false,
         "timeout": "",
-        "count": "6",
+        "count": "5",
         "reduceRight": false,
         "reduceExp": "",
         "reduceInit": "",
@@ -2062,7 +2104,7 @@
         "z": "3d2a81e3c1ae2c8c",
         "g": "7d21c588e9ce2984",
         "name": "Baue Ausgabe in Datei",
-        "func": "// Aktuelles Datum\n//const datum = new Date().toLocaleDateString();\n\nconst date = new Date(); // aktuelles Datum\nconst day = String(date.getDate()).padStart(2, '0'); // Tag mit führender Null\nconst month = String(date.getMonth() + 1).padStart(2, '0'); // Monat (0-basiert, daher +1) mit führender Null\nconst year = date.getFullYear(); // Jahr\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload\nconst { minVol1, minVol2, electriclevel, letzteKalibrierung, akkuvoll, ladung } = msg.payload;\n// Boolean to String\nvar ladung1 = true\nif (msg.payload.ladung_erreicht == true)\n{\n    ladung1 = true\n}\nelse\n{\n    ladung1 = false\n}\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${minVol1};${minVol2};${electriclevel};${letzteKalibrierung};${akkuvoll};${ladung1}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
+        "func": "// Aktuelles Datum\n//const datum = new Date().toLocaleDateString();\n\nconst date = new Date(); // aktuelles Datum\nconst day = String(date.getDate()).padStart(2, '0'); // Tag mit führender Null\nconst month = String(date.getMonth() + 1).padStart(2, '0'); // Monat (0-basiert, daher +1) mit führender Null\nconst year = date.getFullYear(); // Jahr\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload\nconst { minVol1, minVol2, electriclevel, letzteKalibrierung, ladung } = msg.payload;\n// Boolean to String\nvar ladung1 = true\nif (msg.payload.ladung_erreicht == true)\n{\n    ladung1 = true\n}\nelse\n{\n    ladung1 = false\n}\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${minVol1};${minVol2};${electriclevel};${letzteKalibrierung};${ladung1}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2095,57 +2137,6 @@
             []
         ],
         "info": "/addon_configs/a0d7b954_nodered/zendure.csv"
-    },
-    {
-        "id": "68559c84c2152c52",
-        "type": "api-current-state",
-        "z": "3d2a81e3c1ae2c8c",
-        "g": "7d21c588e9ce2984",
-        "name": "akkuvoll",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 1,
-        "halt_if": "",
-        "halt_if_type": "str",
-        "halt_if_compare": "is",
-        "entity_id": "counter.akku_voll",
-        "state_type": "num",
-        "blockInputOverrides": true,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            },
-            {
-                "property": "topic",
-                "propertyType": "msg",
-                "value": "akkuvoll",
-                "valueType": "str"
-            }
-        ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 540,
-        "y": 1080,
-        "wires": [
-            [
-                "307f7e413ce0a262"
-            ]
-        ]
     },
     {
         "id": "f58d2e2ca20e61e8",
@@ -2191,7 +2182,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 560,
-        "y": 1140,
+        "y": 1060,
         "wires": [
             [
                 "307f7e413ce0a262"
@@ -2231,7 +2222,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "MAIL@DOMAIN:DE",
+        "name": "MAIL@DOMAIN.de",
         "dname": "send",
         "x": 1370,
         "y": 1020,
@@ -2270,7 +2261,6 @@
                 "5cf355dfdf9f69d2",
                 "2d4f52b741e39b7a",
                 "93c70cc51a50ce30",
-                "68559c84c2152c52",
                 "f58d2e2ca20e61e8",
                 "171868be30064c07"
             ]
@@ -2490,7 +2480,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 380,
-        "y": 1820,
+        "y": 1760,
         "wires": [
             [
                 "07797668f029553f"
@@ -2528,39 +2518,6 @@
         ]
     },
     {
-        "id": "b429db5074ec392e",
-        "type": "api-call-service",
-        "z": "3d2a81e3c1ae2c8c",
-        "d": true,
-        "g": "363c9ee96829a2aa",
-        "name": "WR ein",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "button.press",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "button.wechselrichter_einschalten"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "button",
-        "service": "press",
-        "x": 1340,
-        "y": 1740,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "973bd53ae465fbb9",
         "type": "debug",
         "z": "3d2a81e3c1ae2c8c",
@@ -2575,7 +2532,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1060,
-        "y": 1760,
+        "y": 1700,
         "wires": []
     },
     {
@@ -2593,7 +2550,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1060,
-        "y": 1640,
+        "y": 1580,
         "wires": []
     },
     {
@@ -2737,7 +2694,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 540,
-        "y": 860,
+        "y": 900,
         "wires": [
             [
                 "307f7e413ce0a262"
@@ -2788,7 +2745,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 360,
-        "y": 1580,
+        "y": 1520,
         "wires": [
             [
                 "07797668f029553f"
@@ -2832,7 +2789,7 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 760,
+        "x": 740,
         "y": 340,
         "wires": [
             [],
@@ -2921,7 +2878,7 @@
         "name": "Dient nur zum Einsammeln der Werte",
         "info": "",
         "x": 450,
-        "y": 1880,
+        "y": 1820,
         "wires": []
     },
     {
@@ -2932,7 +2889,7 @@
         "name": "Hier werden die Bedingungen geprüft",
         "info": "",
         "x": 870,
-        "y": 1880,
+        "y": 1820,
         "wires": []
     },
     {
@@ -3037,12 +2994,12 @@
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
-        "action": "button.press",
+        "action": "switch.turn_off",
         "floorId": [],
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "button.wechselrichter_ausschalten"
+            "switch.solar_wechselrichterstatus"
         ],
         "labelId": [],
         "data": "",
@@ -3052,8 +3009,8 @@
         "outputProperties": [],
         "queue": "none",
         "blockInputOverrides": false,
-        "domain": "button",
-        "service": "press",
+        "domain": "switch",
+        "service": "turn_off",
         "x": 1140,
         "y": 1300,
         "wires": [
@@ -3071,12 +3028,12 @@
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
-        "action": "button.press",
+        "action": "switch.turn_on",
         "floorId": [],
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "button.wechselrichter_einschalten"
+            "switch.solar_wechselrichterstatus"
         ],
         "labelId": [],
         "data": "",
@@ -3086,8 +3043,8 @@
         "outputProperties": [],
         "queue": "none",
         "blockInputOverrides": false,
-        "domain": "button",
-        "service": "press",
+        "domain": "switch",
+        "service": "turn_on",
         "x": 1140,
         "y": 1360,
         "wires": [
@@ -3297,6 +3254,1111 @@
         "reg": false,
         "x": 460,
         "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5808ce5ee02c73b6",
+        "type": "inject",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 2120,
+        "wires": [
+            [
+                "dc0530cf8cd46216"
+            ]
+        ]
+    },
+    {
+        "id": "5181771141913edd",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "minVol1",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_1_minvol",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "minVol1",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2240,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "25a46cb877db8a5e",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Letzte mal 100?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "letzteKalibrierung",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 560,
+        "y": 2420,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "0eb40855ce898b07",
+        "type": "join",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "",
+        "mode": "custom",
+        "build": "object",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": true,
+        "accumulate": false,
+        "timeout": "",
+        "count": "13",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 750,
+        "y": 2240,
+        "wires": [
+            [
+                "65522dd146beb8f6",
+                "e4c8bd0cd024ecb6",
+                "ed2e466f9c6067c4",
+                "120d16c0900b3222"
+            ]
+        ]
+    },
+    {
+        "id": "65522dd146beb8f6",
+        "type": "function",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Akku1 Baue Ausgabe in Datei",
+        "func": "// Aktuelles Datum\n//const datum = new Date().toLocaleDateString();\n\nconst date = new Date(); // aktuelles Datum\nconst day = String(date.getDate()).padStart(2, '0'); // Tag mit führender Null\nconst month = String(date.getMonth() + 1).padStart(2, '0'); // Monat (0-basiert, daher +1) mit führender Null\nconst year = date.getFullYear(); // Jahr\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload\nconst { snbat1, snbat2, maxVol1, maxVol2, minVol1, minVol2, temp1, temp2, soclevel1, soclevel2, letzteKalibrierung} = msg.payload;\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${snbat1};${minVol1};${maxVol1};${temp1};${soclevel1};${letzteKalibrierung}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 2180,
+        "wires": [
+            [
+                "ad69641832e6ef86"
+            ]
+        ]
+    },
+    {
+        "id": "ad69641832e6ef86",
+        "type": "file",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "In Datei schreiben",
+        "filename": "/config/akku.csv",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1270,
+        "y": 2180,
+        "wires": [
+            []
+        ],
+        "info": "/addon_configs/a0d7b954_nodered/zendure.csv"
+    },
+    {
+        "id": "cbb767e99a9247f8",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Ladung erreicht",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_boolean.ladung_erreicht",
+        "state_type": "habool",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "ladung_erreicht",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 560,
+        "y": 2460,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "e4c8bd0cd024ecb6",
+        "type": "function",
+        "z": "3d2a81e3c1ae2c8c",
+        "d": true,
+        "g": "afc07ea79271275f",
+        "name": "Nachricht formatieren",
+        "func": "msg.payload = `Systemstatus:\\n\\n` +\n              `- SOC Level: ${msg.payload.electriclevel}% \\n` +\n              `- Minimale Zellspannung1: ${msg.payload.minVol1}V \\n` +\n              `- Minimale Zellspannung2: ${msg.payload.minVol2}V \\n` +\n              `- Letzte Kalibrierung: vor ${msg.payload.letzteKalibrierung} Tag(en) \\n` +\n              `- 100% Ladung erreicht: ${msg.payload.ladung_erreicht}`;\nlet mailsubject = flow.get (\"mailsubject\");\n//msg.mailsubject = mailsubject;\nmsg.topic = mailsubject;\n//msg.topic = \"Systemstatus\"; // Betreff der E-Mail\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 2280,
+        "wires": [
+            [
+                "d2070215d6183230"
+            ]
+        ]
+    },
+    {
+        "id": "d2070215d6183230",
+        "type": "e-mail",
+        "z": "3d2a81e3c1ae2c8c",
+        "d": true,
+        "g": "afc07ea79271275f",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": true,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": false,
+        "name": "MAIL@DOMAIN.de",
+        "dname": "send",
+        "x": 1270,
+        "y": 2280,
+        "wires": []
+    },
+    {
+        "id": "b5e33ac617cea56b",
+        "type": "link out",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "link out 5",
+        "mode": "link",
+        "links": [
+            "f0ce05f5279cba21"
+        ],
+        "x": 315,
+        "y": 2280,
+        "wires": []
+    },
+    {
+        "id": "ed2e466f9c6067c4",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "d": true,
+        "g": "afc07ea79271275f",
+        "name": "Notify",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"message\":\"SOC {{payload.electriclevel}}%,\\n minVol1 {{payload.minVol1}}V,\\n minVol2 {{payload.minVol2}}V,\\n letzte Kalibrierung vor {{payload.letzteKalibrierung}} Tag(en), \\n Akkuladung heute {{payload.ladung_erreicht}}\",\"title\":\"Zustand\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 930,
+        "y": 2320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "dc0530cf8cd46216",
+        "type": "function",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Set MailSubject",
+        "func": "flow.set (\"mailsubject\", \"Status Solarflow\");\n//let mailsubject = flow.get (\"mailsubject\");\n// msg.payload = `Der Status ist: ${mailsubject}`\n//msg.mailsubject = mailsubject\nreturn msg",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 2180,
+        "wires": [
+            [
+                "b5e33ac617cea56b"
+            ]
+        ]
+    },
+    {
+        "id": "0b087478af1cb016",
+        "type": "comment",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Testauslösung",
+        "info": "",
+        "x": 170,
+        "y": 2080,
+        "wires": []
+    },
+    {
+        "id": "9b07c735a471dddb",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "minVol2",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_2_minvol",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "minVol2",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2280,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "b8da52f6476675cf",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "maxVol1",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_1_maxvol",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "maxVol1",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2160,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "8b7a33c7d3093285",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "maxVol2",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_2_maxvol",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "maxVol2",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2200,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "f7b990153f520f0e",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "SNBat1",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_sn_batterie_1",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "snbat1",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2080,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "7a55db2657277d86",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "SNBat2",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_sn_batterie_2",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "snbat2",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2120,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "3aa3f344d706dcc0",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "electriclevel",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_electric_level",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "electriclevel",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 550,
+        "y": 2500,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "0a7ec2ddfcbf51bd",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "soclevel1",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_1_soclevel",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "soclevel1",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2320,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "ed504166b0d201c8",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "soclevel2",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_2_soclevel",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "soclevel2",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 2360,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "120d16c0900b3222",
+        "type": "function",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Akku2 Baue Ausgabe in Datei",
+        "func": "// Aktuelles Datum\n//const datum = new Date().toLocaleDateString();\n\nconst date = new Date(); // aktuelles Datum\nconst day = String(date.getDate()).padStart(2, '0'); // Tag mit führender Null\nconst month = String(date.getMonth() + 1).padStart(2, '0'); // Monat (0-basiert, daher +1) mit führender Null\nconst year = date.getFullYear(); // Jahr\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload\nconst { snbat1, snbat2, maxVol1, maxVol2, minVol1, minVol2, temp1, temp2, soclevel1, soclevel2, letzteKalibrierung} = msg.payload;\n// CSV-Zeile erstellen\nconst csvLine = `${datum};${snbat2};${minVol2};${maxVol2};${temp2};${soclevel2};${letzteKalibrierung}\\n`;\n// Payload mit der CSV-Zeile zurückgeben\nmsg.payload = csvLine;\nreturn msg;\n\n\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1010,
+        "y": 2220,
+        "wires": [
+            [
+                "ae7c35e56cc7ddd4"
+            ]
+        ]
+    },
+    {
+        "id": "ae7c35e56cc7ddd4",
+        "type": "file",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "In Datei schreiben",
+        "filename": "/config/akku.csv",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1270,
+        "y": 2220,
+        "wires": [
+            []
+        ],
+        "info": "/addon_configs/a0d7b954_nodered/zendure.csv"
+    },
+    {
+        "id": "e59de9099849d6c2",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Temp2",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_2_temp",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "temp2",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 530,
+        "y": 2040,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "aa6b68c35e10f4fe",
+        "type": "api-current-state",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "Temp1",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_batterie_1_temp",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "temp1",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 530,
+        "y": 2000,
+        "wires": [
+            [
+                "0eb40855ce898b07"
+            ]
+        ]
+    },
+    {
+        "id": "f0ce05f5279cba21",
+        "type": "link in",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "link in 5",
+        "links": [
+            "b5e33ac617cea56b"
+        ],
+        "x": 405,
+        "y": 2280,
+        "wires": [
+            [
+                "aa6b68c35e10f4fe",
+                "e59de9099849d6c2",
+                "f7b990153f520f0e",
+                "7a55db2657277d86",
+                "b8da52f6476675cf",
+                "8b7a33c7d3093285",
+                "5181771141913edd",
+                "9b07c735a471dddb",
+                "0a7ec2ddfcbf51bd",
+                "ed504166b0d201c8",
+                "25a46cb877db8a5e",
+                "cbb767e99a9247f8",
+                "3aa3f344d706dcc0"
+            ]
+        ]
+    },
+    {
+        "id": "5b62681509ac63d8",
+        "type": "server-state-changed",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_rising"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "60",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 230,
+        "y": 2400,
+        "wires": [
+            [
+                "b5e33ac617cea56b"
+            ]
+        ]
+    },
+    {
+        "id": "677322602c74d36b",
+        "type": "server-state-changed",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "afc07ea79271275f",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.solarflow_electric_level"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "100",
+        "ifStateType": "num",
+        "ifStateOperator": "gte",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 250,
+        "y": 2460,
+        "wires": [
+            [
+                "b5e33ac617cea56b"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "81ed38a49ed9e06e",
+        "type": "api-call-service",
+        "z": "3d2a81e3c1ae2c8c",
+        "d": true,
+        "g": "363c9ee96829a2aa",
+        "name": "WR ein",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "switch.turn_on",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "switch.solar_wechselrichterstatus"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "switch",
+        "service": "turn_on",
+        "x": 1340,
+        "y": 1660,
         "wires": [
             []
         ]
