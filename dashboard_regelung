@@ -33,6 +33,7 @@ views:
             entities:
               - entity: input_boolean.regler_terminmodus
                 name: Terminmodus aktiv
+                icon: mdi:sun-compass
           - type: entities
             entities:
               - entity: input_datetime.regler1
@@ -95,24 +96,26 @@ views:
             grid_options:
               columns: 6
               rows: auto
-          - type: tile
-            entity: switch.solar_wechselrichterstatus
-            features_position: bottom
-            vertical: false
+          - type: heading
+            icon: mdi:battery-arrow-up-outline
+            heading_style: subtitle
+            heading: Akkupriorität ( nur Laden)
             visibility:
               - condition: state
                 entity: switch.solar_wechselrichterstatus
                 state_not: unavailable
-            grid_options:
-              columns: 12
-              rows: 1
-            hide_state: false
-            show_entity_picture: false
-            icon_tap_action:
-              action: none
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_wr_aus
+                icon: mdi:toggle-switch-variant
     type: sections
     cards: []
     badges:
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: input_boolean.regler_aus
       - type: entity
         show_name: true
         show_state: true
@@ -135,13 +138,7 @@ views:
         icon: ''
         show_entity_picture: true
       - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.regler_initialisiere
-        name: INIT
-        tap_action:
-          action: toggle
+        entity: input_number.regler_maximale_einspeisung
     icon: mdi:solar-panel
     path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
