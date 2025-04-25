@@ -37,15 +37,15 @@ views:
           - type: entities
             entities:
               - entity: input_datetime.regler1
-                name: Uhrzeit1
+                name: Date1
               - entity: input_number.regler_wert1_termin1
                 name: Begrenzung1
               - entity: input_datetime.regler2
-                name: Uhrzeit2
+                name: Date2
               - entity: input_number.regler_wert2_termin2
                 name: Begrenzung2
               - entity: input_datetime.regler3
-                name: Uhrzeit3
+                name: Date3
               - entity: input_number.regler_wert3_termin3
                 name: Begrenzung3
             visibility:
@@ -108,6 +108,8 @@ views:
             entities:
               - entity: input_boolean.regler_wr_aus
                 icon: mdi:toggle-switch-variant
+                name: Wechselrichter EIN/AUS
+                secondary_info: last-changed
     type: sections
     cards: []
     badges:
@@ -139,6 +141,8 @@ views:
         show_entity_picture: true
       - type: entity
         entity: input_number.regler_maximale_einspeisung
+      - type: entity
+        entity: input_text.regler_timer_auswahl
     icon: mdi:solar-panel
     path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
