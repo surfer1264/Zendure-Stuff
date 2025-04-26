@@ -9,6 +9,7 @@ views:
           - type: entities
             entities:
               - entity: input_boolean.regler_aktiv
+            state_color: true
           - type: entities
             entities:
               - entity: input_number.regler_maximale_einspeisung
@@ -57,6 +58,12 @@ views:
           - type: heading
             heading: Kennzahlen
             heading_style: title
+          - clock_size: medium
+            show_seconds: true
+            type: clock
+            grid_options:
+              columns: 12
+              rows: 2
           - type: gauge
             entity: sensor.wohnung_channel_a_power
             min: -600
@@ -110,6 +117,7 @@ views:
                 icon: mdi:toggle-switch-variant
                 name: Wechselrichter EIN/AUS
                 secondary_info: last-changed
+            state_color: true
     type: sections
     cards: []
     badges:
