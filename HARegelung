@@ -118,7 +118,7 @@
         "id": "0ebb8e7b772678cd",
         "type": "group",
         "z": "479e3443afedb613",
-        "name": "(7) Wechselrichter: Ansteuern",
+        "name": "(7.1) Wechselrichter: Ansteuern",
         "style": {
             "label": true
         },
@@ -129,12 +129,13 @@
             "5496fa05034dd5e0",
             "13971ddb6ad995e2",
             "d923bb434f86503e",
-            "54372a43b72a9c3a"
+            "54372a43b72a9c3a",
+            "e1823dbb1fbb80f7"
         ],
-        "x": 1034,
+        "x": 1024,
         "y": 1119,
-        "w": 792,
-        "h": 202
+        "w": 802,
+        "h": 222
     },
     {
         "id": "d926ab42ae07f620",
@@ -364,7 +365,7 @@
         "id": "b6cbd1ee551c690b",
         "type": "group",
         "z": "479e3443afedb613",
-        "name": "(7) Wechselrichter: AN/AUS",
+        "name": "(7.2) Wechselrichter: AN/AUS",
         "style": {
             "label": true
         },
@@ -1442,8 +1443,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1700,
-        "y": 1200,
+        "x": 1660,
+        "y": 1280,
         "wires": [
             []
         ]
@@ -1462,12 +1463,11 @@
             "9c1f091862872c3f",
             "f9c28e57357fbedd"
         ],
-        "x": 1075,
-        "y": 1220,
+        "x": 1065,
+        "y": 1180,
         "wires": [
             [
-                "d923bb434f86503e",
-                "54372a43b72a9c3a"
+                "e1823dbb1fbb80f7"
             ]
         ]
     },
@@ -1655,8 +1655,8 @@
         "blockInputOverrides": true,
         "domain": "counter",
         "service": "increment",
-        "x": 1470,
-        "y": 1200,
+        "x": 1590,
+        "y": 1220,
         "wires": [
             [
                 "b953e67eb0d97091"
@@ -3908,8 +3908,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1240,
-        "y": 1240,
+        "x": 1380,
+        "y": 1260,
         "wires": [
             [
                 "5496fa05034dd5e0"
@@ -3989,8 +3989,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1180,
-        "y": 1180,
+        "x": 1300,
+        "y": 1220,
         "wires": [
             [
                 "13971ddb6ad995e2"
@@ -4286,8 +4286,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1240,
-        "y": 1280,
+        "x": 1300,
+        "y": 1300,
         "wires": []
     },
     {
@@ -4695,6 +4695,28 @@
         "y": 700,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "e1823dbb1fbb80f7",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "0ebb8e7b772678cd",
+        "name": "Umwandeln",
+        "func": "let regelwert = msg.payload.einspeisewert;\n// WRs mit relativer Regelung folgende Zeile aktivieren.\n// let wrmax = flow.get(\"WRLeistung\");\n// regelwert = (regelwert / wrmax * 100);\nmsg.payload = { einspeisewert: regelwert };\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1130,
+        "y": 1240,
+        "wires": [
+            [
+                "54372a43b72a9c3a",
+                "d923bb434f86503e"
+            ]
         ]
     },
     {
