@@ -1,6 +1,9 @@
 
 ![Flow](/Bild1_HA.jpeg)
 
+<img width="1118" alt="image" src="https://github.com/user-attachments/assets/9d3821af-6bda-42b6-95e7-b6a41e40c868" />
+
+
 
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
 Hier findet Ihr
