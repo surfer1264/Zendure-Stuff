@@ -1,0 +1,163 @@
+views:
+  - title: Mein BKW
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Einstellungen
+            heading_style: title
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_aktiv
+            state_color: true
+          - type: entities
+            entities:
+              - entity: input_number.regler_maximale_einspeisung
+                name: Einspeisebegrenzung
+            visibility:
+              - condition: state
+                entity: input_boolean.regler_terminmodus
+                state: 'off'
+          - type: entities
+            entities:
+              - entity: input_number.regler_hysterese
+                name: Hysterese
+                secondary_info: none
+              - entity: input_number.regler_sollwert
+                name: Sollwert
+                secondary_info: none
+            visibility:
+              - condition: state
+                entity: input_boolean.regler_aktiv
+                state: 'on'
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_terminmodus
+                name: Terminmodus aktiv
+                icon: mdi:sun-compass
+          - type: entities
+            entities:
+              - entity: input_datetime.regler1
+                name: Date1
+              - entity: input_number.regler_wert1_termin1
+                name: Begrenzung1
+              - entity: input_datetime.regler2
+                name: Date2
+              - entity: input_number.regler_wert2_termin2
+                name: Begrenzung2
+              - entity: input_datetime.regler3
+                name: Date3
+              - entity: input_number.regler_wert3_termin3
+                name: Begrenzung3
+            visibility:
+              - condition: state
+                entity: input_boolean.regler_terminmodus
+                state: 'on'
+      - type: grid
+        cards:
+          - type: heading
+            heading: Kennzahlen
+            heading_style: title
+          - clock_size: medium
+            show_seconds: true
+            type: clock
+            grid_options:
+              columns: 12
+              rows: 2
+          - type: tile
+            entity: sensor.solarhub_power
+          - type: tile
+            entity: sensor.dachsolar_switch_0_power
+          - type: gauge
+            entity: sensor.wohnung_channel_a_power
+            needle: true
+            max: 3500
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            grid_options:
+              columns: 6
+              rows: auto
+            name: Bezug
+            min: -700
+          - type: gauge
+            entity: sensor.batterie_out_in
+            min: -800
+            max: 800
+            needle: true
+            severity:
+              green: 0
+              yellow: 0
+              red: 0
+            grid_options:
+              columns: 6
+              rows: auto
+            name: Entladen/Laden
+          - type: heading
+            icon: mdi:battery-arrow-up-outline
+            heading_style: subtitle
+            heading: Akkupriorität ( nur Laden)
+            visibility:
+              - condition: state
+                entity: switch.solar_wechselrichterstatus
+                state_not: unavailable
+          - type: entities
+            entities:
+              - entity: input_boolean.regler_wr_aus
+                icon: mdi:toggle-switch-variant
+                name: Wechselrichter EIN/AUS
+                secondary_info: last-changed
+            state_color: true
+    type: sections
+    cards: []
+    badges:
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: input_boolean.regler_aus
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: input_boolean.ignorebypass
+        name: Ignore Bypass
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.sf_bypass
+        name: Bypass
+        show_entity_picture: false
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: sensor.solarflow_pack_state
+        name: Status
+        show_entity_picture: false
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: counter.regler_zahler
+        icon: ''
+        show_entity_picture: true
+      - type: entity
+        entity: input_number.regler_maximale_einspeisung
+      - type: entity
+        entity: input_text.regler_timer_auswahl
+      - type: entity
+        entity: sensor.solarflow_electric_level
+    icon: mdi:solar-panel
+    path: http://homeassistant.local:8123/regler-bkw/0?edit=0
+    theme: ios-dark-mode-blue-red
+    max_columns: 2
+    header:
+      card:
+        type: markdown
+        text_only: true
+        content: |-
+          # Hallo {{ user }} 
+          Konfiguriere Dein Balkonkraftwerk ! ✨
