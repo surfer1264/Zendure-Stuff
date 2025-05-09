@@ -127,6 +127,8 @@ views:
         show_icon: true
         entity: input_boolean.regler_aus
       - type: entity
+        entity: input_boolean.ignorebypass
+      - type: entity
         show_name: true
         show_state: true
         show_icon: true
@@ -151,6 +153,8 @@ views:
         entity: input_number.regler_maximale_einspeisung
       - type: entity
         entity: input_text.regler_timer_auswahl
+      - type: entity
+        entity: sensor.solarflow_electric_level
     icon: mdi:solar-panel
     path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
