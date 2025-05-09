@@ -139,9 +139,9 @@
             "e1823dbb1fbb80f7"
         ],
         "x": 1074,
-        "y": 1199,
+        "y": 1159,
         "w": 872,
-        "h": 222
+        "h": 302
     },
     {
         "id": "d926ab42ae07f620",
@@ -436,6 +436,22 @@
         "x": 434,
         "y": 699,
         "w": 452,
+        "h": 82
+    },
+    {
+        "id": "ff7301cc19b4a05c",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "Setze Hoymiles WR",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "cbb235a6ce3af856"
+        ],
+        "x": 1674,
+        "y": 1359,
+        "w": 252,
         "h": 82
     },
     {
@@ -1337,8 +1353,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1780,
-        "y": 1380,
+        "x": 1800,
+        "y": 1320,
         "wires": [
             []
         ]
@@ -1358,7 +1374,7 @@
             "750f877240f66bc6"
         ],
         "x": 1115,
-        "y": 1320,
+        "y": 1300,
         "wires": [
             [
                 "e1823dbb1fbb80f7"
@@ -1442,7 +1458,7 @@
         "name": "HIER: Sensornamen des WR überprüfen",
         "info": "",
         "x": 1760,
-        "y": 1240,
+        "y": 1200,
         "wires": []
     },
     {
@@ -1494,10 +1510,11 @@
         "domain": "counter",
         "service": "increment",
         "x": 1710,
-        "y": 1300,
+        "y": 1260,
         "wires": [
             [
-                "b953e67eb0d97091"
+                "b953e67eb0d97091",
+                "cbb235a6ce3af856"
             ]
         ]
     },
@@ -3754,7 +3771,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1510,
-        "y": 1320,
+        "y": 1300,
         "wires": [
             [
                 "5496fa05034dd5e0"
@@ -3835,7 +3852,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1420,
-        "y": 1260,
+        "y": 1240,
         "wires": [
             [
                 "13971ddb6ad995e2"
@@ -4101,8 +4118,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1420,
-        "y": 1380,
+        "x": 1440,
+        "y": 1420,
         "wires": []
     },
     {
@@ -4360,7 +4377,7 @@
         "z": "479e3443afedb613",
         "g": "0ebb8e7b772678cd",
         "name": "Umwandeln",
-        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\n// WRs mit relativer Regelung folgende Zeile aktivieren.\n// let wrmax = flow.get(\"WRLeistung\");\n// regelwert = (regelwert / wrmax * 100);\nif (debug) {\n    node.warn (regelwert);\n    }\nmsg.payload = { einspeisewert: regelwert };\n\nreturn msg;",
+        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\n// WRs mit relativer Regelung (Hoymiles) folgende zwei Zeilen aktivieren.\n// let wrmax = flow.get(\"WRLeistung\");\n// regelwert = (regelwert / wrmax * 100);\nif (debug) {\n    node.warn (regelwert);\n    }\nmsg.payload = { einspeisewert: regelwert };\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4368,7 +4385,7 @@
         "finalize": "",
         "libs": [],
         "x": 1250,
-        "y": 1320,
+        "y": 1300,
         "wires": [
             [
                 "54372a43b72a9c3a",
@@ -5175,6 +5192,39 @@
         "x": 1830,
         "y": 220,
         "wires": []
+    },
+    {
+        "id": "cbb235a6ce3af856",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "ff7301cc19b4a05c",
+        "name": "Setze Hoymiles WR",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.dtu_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload}}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 1800,
+        "y": 1400,
+        "wires": [
+            []
+        ]
     },
     {
         "id": "285afb99.5208c4",
