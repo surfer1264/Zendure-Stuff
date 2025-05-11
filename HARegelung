@@ -115,8 +115,8 @@
             "f4b2dde004f0757a",
             "240b1ea3948dee0a"
         ],
-        "x": 114,
-        "y": 899,
+        "x": 134,
+        "y": 879,
         "w": 892,
         "h": 282
     },
@@ -230,12 +230,13 @@
             "897887bd91ab47a3",
             "7a35a4cb11438e99",
             "9e1f30a6ad96c325",
-            "2a3d8831dcef494e"
+            "2a3d8831dcef494e",
+            "a0f16c5abc5d653d"
         ],
         "x": 114,
         "y": 419,
         "w": 892,
-        "h": 388
+        "h": 428
     },
     {
         "id": "035acd6f5889242d",
@@ -262,12 +263,14 @@
             "0d56421cb0e22b14",
             "f75a8d621c76d26e",
             "f9c28e57357fbedd",
-            "909de9d9437f09c6"
+            "909de9d9437f09c6",
+            "f76cb1b980c3bdf2",
+            "924fcf53aa0acbdc"
         ],
         "x": 94,
         "y": 1939,
         "w": 1272,
-        "h": 282
+        "h": 322
     },
     {
         "id": "6e708c215cdbfc98",
@@ -289,9 +292,9 @@
             "5485cb51b64e87ef"
         ],
         "x": 94,
-        "y": 2579,
-        "w": 1262,
-        "h": 222
+        "y": 2599,
+        "w": 1252,
+        "h": 202
     },
     {
         "id": "3b8b8c73f8c2f645",
@@ -416,6 +419,22 @@
         "h": 122
     },
     {
+        "id": "ff7301cc19b4a05c",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "Setze Hoymiles WR",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "cbb235a6ce3af856"
+        ],
+        "x": 1674,
+        "y": 1359,
+        "w": 252,
+        "h": 82
+    },
+    {
         "id": "2a3d8831dcef494e",
         "type": "group",
         "z": "479e3443afedb613",
@@ -434,24 +453,8 @@
             "60b5b7b848171b52"
         ],
         "x": 434,
-        "y": 699,
+        "y": 739,
         "w": 452,
-        "h": 82
-    },
-    {
-        "id": "ff7301cc19b4a05c",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "Setze Hoymiles WR",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "cbb235a6ce3af856"
-        ],
-        "x": 1674,
-        "y": 1359,
-        "w": 252,
         "h": 82
     },
     {
@@ -466,8 +469,8 @@
         "once": true,
         "onceDelay": "8",
         "topic": "",
-        "x": 250,
-        "y": 940,
+        "x": 270,
+        "y": 920,
         "wires": [
             [
                 "168148af37ed1368"
@@ -480,15 +483,15 @@
         "z": "479e3443afedb613",
         "g": "30d8b562194d1371",
         "name": "Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet bypass = flow.get (\"Bypass\");\nlet ignore = flow.get (\"IgnoreBypass\"); //bedeutet regele weiter\nlet regeln;\n\nif (bypass)\n    {\n    if (ignore == \"on\")\n        {\n            regeln = 0; //regeln\n        }\n        else\n        {\n            regeln = 1; //bypass durchlassen und nicht ausregeleln\n        }\n    }\n    else\n    {\n        regeln = 0; //regeln\n    }\n// node.warn ({regeln, bypass, ignore});\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu;\n\n\nif (bypass) \n    { \n    neu = vorher + 50;\n    neu = Math.min( wrmax, neu);\n    //neu = wrmax;\n    flow.set(\"Regelwert\", neu);\n    }\nelse \n    {\n    //Hole aktuellen Verbrauchswert vom Shelly3EM\n    //let leistung = Number(msg.payload.power);\n    let leistung = Number(msg.payload);\n\n    //Wie groß ist die Abweichung von Soll und Hysterese?\n    let fehler = flow.get(\"fehler\");\n    if (Math.abs(leistung-soll) > (hyst)) \n        {\n        fehler = Math.round(soll - leistung);\n        flow.set(\"fehler\", fehler);\n        }\n    else {\n        fehler = 0;\n        flow.set(\"fehler\", fehler);\n        }\n\n    // Absolutue Abweichung ist der fehler\n    let delta = Math.round(fehler);\n    // Neue WR-Begrenzung berechnen\n    neu = Math.round(vorher - delta);\n\n    // Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\n    neu = Math.max(wrmin, Math.min( wrmax, neu));\n\n    // Berücksichtige eine mögliche Begrenzung\n    // Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\n    neu = Math.min(neu, grenze);\n    flow.set(\"Regelwert\", neu);\n    }\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet steuer = neu - vorher; \n\nif (debug) {\nnode.warn ({steuer, vorher, neu});\n}\n\nif (steuer != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet bypass = flow.get (\"Bypass\"); //Hub ist im Bypass\nlet ignore = flow.get (\"IgnoreBypass\"); //bedeutet regele weiter\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nlet regeln;\nlet fehler;\n\nif (bypass)\n    {\n    if (ignore == \"on\")\n        {\n            regeln = 0; //regeln\n        }\n        else\n        {\n            regeln = 1; //bypass durchlassen und nicht ausregeleln\n        }\n    }\n    else\n    {\n        regeln = 0; //regeln\n    }\n// node.warn ({regeln, bypass, ignore});\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu;\n\n\nif (bypass) \n    { \n    neu = vorher + 50;\n    neu = Math.min( wrmax, neu);\n    neu = Math.min(neu, wertbypass);\n    //neu = wrmax;\n    flow.set(\"Regelwert\", neu);\n    }\nelse \n    {\n    //Hole aktuellen Verbrauchswert vom Shelly3EM\n    //let leistung = Number(msg.payload.power);\n    let leistung = Number(msg.payload);\n\n    //Wie groß ist die Abweichung von Soll und Hysterese?\n    fehler = flow.get(\"fehler\");\n    if (Math.abs(leistung-soll) > (hyst)) \n        {\n        fehler = Math.round(soll - leistung);\n        flow.set(\"fehler\", fehler);\n        }\n    else {\n        fehler = 0;\n        flow.set(\"fehler\", fehler);\n        }\n\n    // Absolutue Abweichung ist der fehler\n    let delta = Math.round(fehler);\n    // Neue WR-Begrenzung berechnen\n    neu = Math.round(vorher - delta);\n\n    // Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\n    neu = Math.max(wrmin, Math.min( wrmax, neu));\n\n    // Berücksichtige eine mögliche Begrenzung\n    // Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\n    neu = Math.min(neu, grenze);\n    flow.set(\"Regelwert\", neu);\n    }\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet steuer = neu - vorher; \n\nif (debug) {\nnode.warn ({steuer, vorher, fehler, neu});\n}\n\nif (steuer != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 850,
-        "y": 1100,
+        "x": 870,
+        "y": 1080,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -533,8 +536,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 340,
-        "y": 1100,
+        "x": 360,
+        "y": 1080,
         "wires": [
             [
                 "bae021af7ad4d4ea"
@@ -887,7 +890,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "Flowvariablen setzen",
-        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv,total, ignore} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"Sollwert\", soll);\nglobal.set(\"Hysterese\", hyst);\nflow.set(\"ReglerAktiv\", aktiv);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"Total\", total);\nflow.set(\"AktiverTermin\", last);\nflow.set(\"IgnoreBypass\", ignore);\n\n\n//Internal Used\nflow.set(\"Regelwert\", 100);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  })\n}\nreturn msg;\n",
+        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv,total, ignore} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"Sollwert\", soll);\nglobal.set(\"Hysterese\", hyst);\nflow.set(\"ReglerAktiv\", aktiv);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"Total\", total);\nflow.set(\"AktiverTermin\", last);\nflow.set(\"IgnoreBypass\", ignore);\n\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  })\n}\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1210,8 +1213,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 480,
-        "y": 940,
+        "x": 500,
+        "y": 920,
         "wires": [
             [
                 "8b72519e2008be83"
@@ -1353,7 +1356,7 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1800,
+        "x": 1820,
         "y": 1320,
         "wires": [
             []
@@ -1391,8 +1394,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 965,
-        "y": 1100,
+        "x": 985,
+        "y": 1080,
         "wires": []
     },
     {
@@ -1468,8 +1471,8 @@
         "g": "30d8b562194d1371",
         "name": "HIER: Sensornamen des Einspeisesensors",
         "info": "",
-        "x": 340,
-        "y": 1060,
+        "x": 360,
+        "y": 1040,
         "wires": []
     },
     {
@@ -1606,8 +1609,8 @@
                 "valueValue": ""
             }
         ],
-        "x": 560,
-        "y": 1020,
+        "x": 580,
+        "y": 1000,
         "wires": [
             [
                 "131eec9fbd309862"
@@ -1621,8 +1624,8 @@
         "g": "30d8b562194d1371",
         "name": "HIER: Sensor des Smartmeters anpassen",
         "info": "",
-        "x": 660,
-        "y": 1060,
+        "x": 680,
+        "y": 1040,
         "wires": []
     },
     {
@@ -1995,7 +1998,7 @@
         "z": "479e3443afedb613",
         "g": "acff453100dcbbc9",
         "name": "Setze Flowvariablen",
-        "func": "// Initialisiere\nflow.set(\"Date1\", msg.payload.date1.substring(0,5));\nflow.set(\"Date2\", msg.payload.date2.substring(0,5));\nflow.set(\"Date3\", msg.payload.date3.substring(0,5));\n\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nflow.set(\"Wert1\", Math.min(msg.payload.wert1, wrmax));\nflow.set(\"Wert2\", Math.min(msg.payload.wert2, wrmax));\nflow.set(\"Wert3\", Math.min(msg.payload.wert3, wrmax));\n\n//Bypass Sensor angelegt?, Wenn JA:\nflow.set(\"Terminmodus\", \"on\");\n\nreturn msg;",
+        "func": "// Initialisiere\nflow.set(\"Date1\", msg.payload.date1.substring(0,5));\nflow.set(\"Date2\", msg.payload.date2.substring(0,5));\nflow.set(\"Date3\", msg.payload.date3.substring(0,5));\n\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nflow.set(\"Wert1\", Math.min(msg.payload.wert1, wrmax));\nflow.set(\"Wert2\", Math.min(msg.payload.wert2, wrmax));\nflow.set(\"Wert3\", Math.min(msg.payload.wert3, wrmax));\nflow.set(\"WertBypass\", Math.min(msg.payload.wertbypass, wrmax));\n\n//Bypass Sensor angelegt?, Wenn JA:\nflow.set(\"Terminmodus\", \"on\");\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2179,7 +2182,7 @@
         "useparts": false,
         "accumulate": false,
         "timeout": "",
-        "count": "6",
+        "count": "7",
         "reduceRight": false,
         "reduceExp": "",
         "reduceInit": "",
@@ -2813,11 +2816,13 @@
         "finalize": "",
         "libs": [],
         "x": 690,
-        "y": 2720,
+        "y": 2760,
         "wires": [
             [
                 "13698f3c995b927e",
-                "5485cb51b64e87ef"
+                "5485cb51b64e87ef",
+                "ca349456294f5c38",
+                "f8a44280bd222a9e"
             ]
         ]
     },
@@ -2859,7 +2864,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 410,
-        "y": 2720,
+        "y": 2760,
         "wires": [
             [
                 "46d329ad8dd32a6a"
@@ -2923,8 +2928,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1200,
-        "y": 2720,
+        "x": 1140,
+        "y": 2640,
         "wires": [
             []
         ]
@@ -3087,7 +3092,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1180,
-        "y": 2680,
+        "y": 2760,
         "wires": [
             [],
             [
@@ -3105,8 +3110,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1315,
-        "y": 2680,
+        "x": 1305,
+        "y": 2760,
         "wires": []
     },
     {
@@ -3129,7 +3134,8 @@
                 "43418775b6507be1",
                 "cac27145bbce8069",
                 "076b4e7072e40b12",
-                "60b5b7b848171b52"
+                "60b5b7b848171b52",
+                "a0f16c5abc5d653d"
             ]
         ]
     },
@@ -3236,7 +3242,8 @@
         "y": 2140,
         "wires": [
             [
-                "909de9d9437f09c6"
+                "909de9d9437f09c6",
+                "0d56421cb0e22b14"
             ]
         ]
     },
@@ -3266,7 +3273,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1220,
+        "x": 1120,
         "y": 2160,
         "wires": [
             []
@@ -3294,7 +3301,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1200,
-        "y": 2080,
+        "y": 2100,
         "wires": [
             [],
             [
@@ -3313,7 +3320,7 @@
             "60df30044c929c46"
         ],
         "x": 1325,
-        "y": 2060,
+        "y": 2100,
         "wires": []
     },
     {
@@ -3420,8 +3427,8 @@
         "blockInputOverrides": true,
         "domain": "input_text",
         "service": "set_value",
-        "x": 1180,
-        "y": 2760,
+        "x": 1120,
+        "y": 2680,
         "wires": [
             []
         ]
@@ -3500,7 +3507,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 210,
-        "y": 2720,
+        "y": 2760,
         "wires": [
             [
                 "b521fd91073a57a3"
@@ -4100,8 +4107,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 940,
-        "y": 2620,
+        "x": 860,
+        "y": 2660,
         "wires": []
     },
     {
@@ -4257,14 +4264,11 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 980,
-        "y": 2140,
+        "x": 1020,
+        "y": 2100,
         "wires": [
+            [],
             [
-                "0d56421cb0e22b14"
-            ],
-            [
-                "0d56421cb0e22b14",
                 "f75a8d621c76d26e"
             ]
         ]
@@ -4290,13 +4294,11 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 960,
-        "y": 2720,
+        "x": 1000,
+        "y": 2760,
         "wires": [
             [],
             [
-                "f8a44280bd222a9e",
-                "ca349456294f5c38",
                 "9e041a2a129bd5d1"
             ]
         ]
@@ -4345,7 +4347,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 530,
-        "y": 740,
+        "y": 780,
         "wires": [
             [
                 "2717c849e2440723"
@@ -4366,7 +4368,7 @@
         "finalize": "",
         "libs": [],
         "x": 760,
-        "y": 740,
+        "y": 780,
         "wires": [
             []
         ]
@@ -4511,7 +4513,7 @@
         "z": "479e3443afedb613",
         "g": "4e7901031e717127",
         "name": "Setze WR auf FIX (80W)",
-        "func": "msg.payload = {einspeisewert: 80};\nreturn msg; \n\n",
+        "func": "msg.payload = {einspeisewert: 70};\nreturn msg; \n\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -4681,7 +4683,7 @@
         "halt_if": "",
         "halt_if_type": "str",
         "halt_if_compare": "is",
-        "entity_id": "sensor.wohnung_channel_a_power",
+        "entity_id": "sensor.shellypro3em_phase_a_active_power",
         "state_type": "str",
         "blockInputOverrides": true,
         "outputProperties": [
@@ -4706,8 +4708,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 590,
-        "y": 1100,
+        "x": 610,
+        "y": 1080,
         "wires": [
             [
                 "f4b2dde004f0757a",
@@ -4730,8 +4732,8 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 720,
-        "y": 1020,
+        "x": 740,
+        "y": 1000,
         "wires": []
     },
     {
@@ -4748,8 +4750,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 760,
-        "y": 1140,
+        "x": 780,
+        "y": 1120,
         "wires": []
     },
     {
@@ -4910,7 +4912,7 @@
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
-                "device_tracker.shellyem3_349454718efc"
+                "device_tracker.wohnung_3em_pro"
             ],
             "substring": [],
             "regex": []
@@ -5064,8 +5066,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 900,
-        "y": 1020,
+        "x": 920,
+        "y": 1000,
         "wires": []
     },
     {
@@ -5222,6 +5224,135 @@
         "service": "set_value",
         "x": 1800,
         "y": 1400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a0f16c5abc5d653d",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "acff453100dcbbc9",
+        "name": "Wert Bypass",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.regler_bypass",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "wertbypass",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 530,
+        "y": 700,
+        "wires": [
+            [
+                "958b193833400787"
+            ]
+        ]
+    },
+    {
+        "id": "f76cb1b980c3bdf2",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "035acd6f5889242d",
+        "name": "WertBypass",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "input_number.regler_bypass"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "num",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 190,
+        "y": 2220,
+        "wires": [
+            [
+                "924fcf53aa0acbdc"
+            ]
+        ]
+    },
+    {
+        "id": "924fcf53aa0acbdc",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "035acd6f5889242d",
+        "name": "Setze Flow-Variable WertBypass",
+        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"WertBypass\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\n//flow.set(\"WertBypass\", msg.payload);\nmsg.topic = \"WertBypass\";\nmsg.payload = flow.get(\"WertBypass\");\nreturn msg",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 2220,
         "wires": [
             []
         ]
