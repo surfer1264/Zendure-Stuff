@@ -1,0 +1,200 @@
+[
+    {
+        "id": "751d674923918db6",
+        "type": "tab",
+        "label": "Flow 2",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "67c9f8254f469e01",
+        "type": "function",
+        "z": "751d674923918db6",
+        "name": "Setze WR auf 100W Ausgang",
+        "func": "let regelwert = 266; // in Watt\nlet wrmax = 800; //MAX- WR\nregelwert = (regelwert / wrmax * 100); // in %\nmsg.payload = regelwert;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 570,
+        "y": 300,
+        "wires": [
+            [
+                "92c1a8342fc57193",
+                "43e1109ca5eb0c1e"
+            ]
+        ]
+    },
+    {
+        "id": "92c1a8342fc57193",
+        "type": "api-call-service",
+        "z": "751d674923918db6",
+        "name": "Setze Hoymiles WR",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.dtu_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload}}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 860,
+        "y": 300,
+        "wires": [
+            [
+                "0325042832e6b3f8"
+            ]
+        ]
+    },
+    {
+        "id": "4835592db4a0b676",
+        "type": "api-current-state",
+        "z": "751d674923918db6",
+        "name": "Shelly3EM Power",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.shellypro3em_phase_a_active_power",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 310,
+        "y": 300,
+        "wires": [
+            [
+                "67c9f8254f469e01",
+                "7739a3e64a5a4fb6"
+            ]
+        ]
+    },
+    {
+        "id": "e0d5b1a87380a08f",
+        "type": "inject",
+        "z": "751d674923918db6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 220,
+        "wires": [
+            [
+                "4835592db4a0b676"
+            ]
+        ]
+    },
+    {
+        "id": "7739a3e64a5a4fb6",
+        "type": "debug",
+        "z": "751d674923918db6",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 460,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "43e1109ca5eb0c1e",
+        "type": "debug",
+        "z": "751d674923918db6",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 720,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "0325042832e6b3f8",
+        "type": "debug",
+        "z": "751d674923918db6",
+        "name": "debug 14",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 980,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "285afb99.5208c4",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "",
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "statusSeparator": "",
+        "enableGlobalContextStore": false
+    }
+]
