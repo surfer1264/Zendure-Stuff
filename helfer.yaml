@@ -1,9 +1,3 @@
-counter:
-  regler_zahler:
-    name: Regler Zähler
-    icon: mdi:numeric
-    initial: 0
-    step: 1
 input_boolean:
   ignorebypass:
     name: IgnoreBypass
@@ -99,3 +93,9 @@ input_number:
     max: 800
     step: 10
     unit_of_measurement: "W"
+  regler_inkrement:
+    name: Regler Inkrement
+    initial: 0
+    min: 0
+    max: 100000
+    step: 1
