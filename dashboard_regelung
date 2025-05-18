@@ -1,5 +1,5 @@
 views:
-  - title: Mein TEST BKW
+  - title: Mein BKW
     sections:
       - type: grid
         cards:
@@ -58,12 +58,6 @@ views:
           - type: heading
             heading: Kennzahlen
             heading_style: title
-          - clock_size: medium
-            show_seconds: true
-            type: clock
-            grid_options:
-              columns: 12
-              rows: 2
           - type: gauge
             min: -600
             needle: true
@@ -154,9 +148,9 @@ views:
         show_name: false
         show_state: true
         show_icon: true
-        entity: counter.regler_zahler
         icon: ''
         show_entity_picture: true
+        entity: input_number.regler_inkrement
       - type: entity
         entity: input_number.regler_maximale_einspeisung
       - type: entity
