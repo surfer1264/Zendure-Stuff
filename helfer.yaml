@@ -99,3 +99,14 @@ input_number:
     min: 0
     max: 100000
     step: 1
+input_select:
+  regler_ausgang:
+    name: Regler Ausgang
+    icon: mdi:format-list-bulleted
+    options:
+      - EZ1
+      - HMS
+      - OUT
+      - MAN
+      - SMT
+    initial: EZ1
