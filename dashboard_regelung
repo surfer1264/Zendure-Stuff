@@ -127,9 +127,12 @@ views:
         show_name: false
         show_state: true
         show_icon: true
-        entity: input_boolean.regler_aus
+        entity: input_select.regler_ausgang
       - type: entity
-        entity: input_boolean.ignorebypass
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: input_boolean.regler_aus
       - type: entity
         show_name: true
         show_state: true
