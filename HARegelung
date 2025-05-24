@@ -475,12 +475,15 @@
             "7c0ee195207fa59d",
             "41f46826bd3b190e",
             "9ccce898d90dc4aa",
-            "68eb3e92f051ff26"
+            "68eb3e92f051ff26",
+            "e6c67233c1c5b911",
+            "a2cb5c9db4ce66b6",
+            "ec84cf4771cfbcac"
         ],
         "x": 94,
         "y": 939,
-        "w": 1172,
-        "h": 722
+        "w": 1212,
+        "h": 782
     },
     {
         "id": "2a3d8831dcef494e",
@@ -6210,7 +6213,7 @@
         "repair": false,
         "outputs": 5,
         "x": 710,
-        "y": 1220,
+        "y": 1260,
         "wires": [
             [
                 "80276a25567d0ce3",
@@ -6271,7 +6274,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 200,
-        "y": 1180,
+        "y": 1220,
         "wires": [
             [
                 "dd3a208eb767c579"
@@ -6316,7 +6319,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 250,
-        "y": 1060,
+        "y": 1100,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -6350,7 +6353,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1030,
-        "y": 1020,
+        "y": 1060,
         "wires": [
             []
         ]
@@ -6384,7 +6387,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 1020,
-        "y": 1320,
+        "y": 1360,
         "wires": [
             []
         ]
@@ -6416,7 +6419,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 1010,
-        "y": 1460,
+        "y": 1540,
         "wires": [
             []
         ]
@@ -6448,7 +6451,7 @@
         "domain": "input_boolean",
         "service": "turn_off",
         "x": 1010,
-        "y": 1580,
+        "y": 1640,
         "wires": [
             []
         ]
@@ -6480,7 +6483,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 1010,
-        "y": 1100,
+        "y": 1140,
         "wires": [
             []
         ]
@@ -6512,7 +6515,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1010,
-        "y": 1060,
+        "y": 1100,
         "wires": [
             []
         ]
@@ -6544,7 +6547,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 720,
-        "y": 1000,
+        "y": 1040,
         "wires": [
             []
         ]
@@ -6576,7 +6579,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1000,
-        "y": 1420,
+        "y": 1500,
         "wires": [
             []
         ]
@@ -6595,7 +6598,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 980,
+        "y": 1020,
         "wires": [
             [
                 "6c8baf7e8d7d3313"
@@ -6616,7 +6619,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1160,
+        "y": 1240,
         "wires": [
             [
                 "48a6bc6356baf738"
@@ -6637,7 +6640,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1240,
+        "y": 1280,
         "wires": [
             [
                 "05e32bbbf59691fd"
@@ -6658,7 +6661,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1380,
+        "y": 1460,
         "wires": [
             [
                 "7c0ee195207fa59d"
@@ -6717,7 +6720,7 @@
             }
         ],
         "x": 260,
-        "y": 1260,
+        "y": 1300,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -6738,7 +6741,7 @@
         "finalize": "",
         "libs": [],
         "x": 520,
-        "y": 1220,
+        "y": 1260,
         "wires": [
             [
                 "df27770545d213b5"
@@ -6759,7 +6762,7 @@
         "finalize": "",
         "libs": [],
         "x": 450,
-        "y": 980,
+        "y": 1020,
         "wires": [
             [
                 "df27770545d213b5"
@@ -6776,7 +6779,7 @@
             "06635f54085d96a3"
         ],
         "x": 165,
-        "y": 980,
+        "y": 1020,
         "wires": [
             [
                 "dd3a208eb767c579"
@@ -6825,7 +6828,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1010,
-        "y": 1280,
+        "y": 1320,
         "wires": [
             []
         ]
@@ -6857,9 +6860,11 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1140,
-        "y": 980,
+        "y": 1020,
         "wires": [
-            []
+            [
+                "e6c67233c1c5b911"
+            ]
         ]
     },
     {
@@ -6889,9 +6894,11 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1140,
-        "y": 1160,
+        "y": 1240,
         "wires": [
-            []
+            [
+                "a2cb5c9db4ce66b6"
+            ]
         ]
     },
     {
@@ -6921,7 +6928,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1150,
-        "y": 1240,
+        "y": 1280,
         "wires": [
             []
         ]
@@ -6953,9 +6960,11 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1150,
-        "y": 1380,
+        "y": 1460,
         "wires": [
-            []
+            [
+                "ec84cf4771cfbcac"
+            ]
         ]
     },
     {
@@ -7041,7 +7050,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1540,
+        "y": 1600,
         "wires": [
             [
                 "9ccce898d90dc4aa"
@@ -7053,7 +7062,7 @@
         "type": "api-call-service",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Manual als Default",
+        "name": "smart als Default",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -7075,7 +7084,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1150,
-        "y": 1540,
+        "y": 1600,
         "wires": [
             []
         ]
@@ -7137,7 +7146,105 @@
         "domain": "select",
         "service": "select_option",
         "x": 1000,
-        "y": 1620,
+        "y": 1680,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e6c67233c1c5b911",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Setze WR EZ1 auf 70W",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.solar_maximale_leistung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": 70 }",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "number.dtu_leistungsbegrenzung"
+        },
+        "x": 1170,
+        "y": 980,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a2cb5c9db4ce66b6",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Setze HMS auf 20%",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.dtu_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\":20}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 1160,
+        "y": 1200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ec84cf4771cfbcac",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Zendure Manual 70W",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.zendure_manager_manual_power"
+        ],
+        "labelId": [],
+        "data": "{\"value\":70}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 1140,
+        "y": 1420,
         "wires": [
             []
         ]
