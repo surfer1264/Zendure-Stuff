@@ -423,12 +423,13 @@
             "4f2a4b1d2bb4a50a",
             "8809a7068736e805",
             "82e6e623f87b357b",
-            "66a15f5adc0815dc"
+            "66a15f5adc0815dc",
+            "be89d5ddb5c4de40"
         ],
         "x": 94,
         "y": 1799,
-        "w": 892,
-        "h": 282
+        "w": 952,
+        "h": 322
     },
     {
         "id": "0ded3f6e0d781a4e",
@@ -4788,7 +4789,7 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 880,
+        "x": 940,
         "y": 1920,
         "wires": []
     },
@@ -5184,7 +5185,8 @@
             [
                 "3",
                 "82e6e623f87b357b",
-                "66a15f5adc0815dc"
+                "66a15f5adc0815dc",
+                "be89d5ddb5c4de40"
             ]
         ]
     },
@@ -7065,6 +7067,29 @@
         "x": 680,
         "y": 1920,
         "wires": []
+    },
+    {
+        "id": "be89d5ddb5c4de40",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "46a88bad508d3778",
+        "name": "PID-Regler",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet soll = flow.get(\"Sollwert\");\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet hyst = global.get(\"Hysterese\");\n\n// Reglerparameter\nlet Kp = 1.0;       // Proportional\nlet Ki = 0.1;       // Integral\nlet Kd = 0.5;       // Derivativ\nlet D_Filter = 0.2; // Glättungsfaktor (0.0 = stark gefiltert, 1.0 = roh)\n\n// Historische Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = flow.get(\"I_summe\") || 0;\nlet letzterFehler = flow.get(\"letzterFehler\") || 0;\nlet letzterD = flow.get(\"letzterD\") || 0;\n\n// Aktueller Messwert\nlet leistung = Number(msg.payload.total_act_power);\nlet fehler = Math.round(soll - leistung);\n\n// Hysteresezone beachten\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\n\n// I-Anteil: Fehler aufsummieren\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// D-Anteil: Änderung des Fehlers berechnen\nlet dFehler = Math.round(fehler - letzterFehler);\nlet D_roh = Kd * dFehler;\n\n// Glättung (D-Filter, gegen Rauschen)\nlet D = D_Filter * D_roh + (1 - D_Filter) * letzterD;\nflow.set(\"letzterD\", D);\nflow.set(\"letzterFehler\", fehler);\n\n// PID-Regelung\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe + D);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Anti-Windup\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= Math.round(fehler);\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Änderung prüfen\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, D, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 2080,
+        "wires": [
+            [
+                "68c44e68d8a62aa4",
+                "240b1ea3948dee0a"
+            ]
+        ]
     },
     {
         "id": "285afb99.5208c4",
