@@ -110,3 +110,7 @@ input_select:
       - MAN
       - SMT
     initial: EZ1
+input_button:
+  regler_init:
+    name: Regler Init
+    icon: mdi:toggle-switch
