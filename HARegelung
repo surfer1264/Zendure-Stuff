@@ -152,24 +152,13 @@
             "label": true
         },
         "nodes": [
-            "0d41ca32514a5efc",
-            "9ed0fc54557ee587",
-            "20222ca13bc9b53e",
-            "ebd7ac0ae5f2bc1f",
-            "20a3affb8011b34f",
-            "8f9b783fa3938c44",
-            "26d1bf8b43e8aa6b",
-            "11ef7754d1525dd9",
-            "e5ffd47811e4d212",
-            "9e462a91d512b9a2",
-            "8f9b4e519ec89d8e",
             "e1165b70369f2b1d",
             "3c31d8008dcaffaa"
         ],
-        "x": 94,
-        "y": 3779,
-        "w": 1252,
-        "h": 408
+        "x": 88,
+        "y": 3913,
+        "w": 804,
+        "h": 234
     },
     {
         "id": "a1160eda259de3ef",
@@ -189,8 +178,8 @@
             "2fc53edc55cab48e"
         ],
         "x": 94,
-        "y": 2099,
-        "w": 902,
+        "y": 2119,
+        "w": 892,
         "h": 162
     },
     {
@@ -428,18 +417,18 @@
             "314e9040ad8fb689",
             "5110fa7591c84b6b",
             "bae021af7ad4d4ea",
-            "131eec9fbd309862",
-            "f4b2dde004f0757a",
             "240b1ea3948dee0a",
             "1f11ef02984634d4",
             "db71458988a0ae4a",
             "4f2a4b1d2bb4a50a",
-            "8809a7068736e805"
+            "8809a7068736e805",
+            "82e6e623f87b357b",
+            "66a15f5adc0815dc"
         ],
         "x": 94,
-        "y": 1779,
+        "y": 1799,
         "w": 892,
-        "h": 302
+        "h": 282
     },
     {
         "id": "0ded3f6e0d781a4e",
@@ -524,8 +513,8 @@
             "041e921ba09a57a6",
             "3c960d972905ddd8"
         ],
-        "x": 134,
-        "y": 3979,
+        "x": 114,
+        "y": 3939,
         "w": 752,
         "h": 82
     },
@@ -543,8 +532,8 @@
             "e7e9befaa8453b4d",
             "0ec176a2fa37ecc0"
         ],
-        "x": 134,
-        "y": 4079,
+        "x": 114,
+        "y": 4039,
         "w": 752,
         "h": 82
     },
@@ -561,7 +550,7 @@
         "onceDelay": "8",
         "topic": "",
         "x": 230,
-        "y": 1820,
+        "y": 1840,
         "wires": [
             [
                 "168148af37ed1368"
@@ -573,16 +562,16 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
-        "name": "Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet bypass = flow.get (\"Bypass\"); //Hub ist im Bypass\nlet ignore = flow.get (\"IgnoreBypass\"); //bedeutet regele weiter\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nlet fehler;\nlet neu;\nlet kp = 1;\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.a_act_power);\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nfehler = flow.get(\"fehler\");\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    flow.set(\"fehler\", fehler);\n    }\nelse {\n    fehler = 0;\n    flow.set(\"fehler\", fehler);\n    }\n\n// Absolutue Abweichung ist der fehler\nlet delta = Math.round(fehler);\n// Neue WR-Begrenzung berechnen\nneu = Math.round(kp* (vorher - delta));\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
+        "name": "P-Regler",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler;\nlet kp = 1; //Dämpfungsfaktor\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.total_act_power);\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\nlet delta = kp * fehler;\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 830,
-        "y": 1980,
+        "x": 820,
+        "y": 2000,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -628,7 +617,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 320,
-        "y": 1980,
+        "y": 2000,
         "wires": [
             [
                 "bae021af7ad4d4ea",
@@ -1306,7 +1295,7 @@
         "repair": false,
         "outputs": 2,
         "x": 260,
-        "y": 1860,
+        "y": 1880,
         "wires": [
             [
                 "db71458988a0ae4a"
@@ -1366,7 +1355,7 @@
             }
         ],
         "x": 240,
-        "y": 2200,
+        "y": 2220,
         "wires": [
             [
                 "b8a01439a12704f4"
@@ -1414,7 +1403,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 520,
-        "y": 2220,
+        "y": 2240,
         "wires": [
             [
                 "9413afc1555f6ee5"
@@ -1490,7 +1479,7 @@
             "60df30044c929c46"
         ],
         "x": 945,
-        "y": 1980,
+        "y": 2000,
         "wires": []
     },
     {
@@ -1567,7 +1556,7 @@
         "name": "HIER: Sensornamen des Einspeisesensors",
         "info": "",
         "x": 320,
-        "y": 1940,
+        "y": 1960,
         "wires": []
     },
     {
@@ -1578,7 +1567,7 @@
         "name": "HIER: Sensornamen des Einspeisesensors",
         "info": "",
         "x": 580,
-        "y": 2140,
+        "y": 2160,
         "wires": []
     },
     {
@@ -1686,264 +1675,7 @@
         "name": "HIER: Sensor des Smartmeters anpassen",
         "info": "",
         "x": 640,
-        "y": 1940,
-        "wires": []
-    },
-    {
-        "id": "0d41ca32514a5efc",
-        "type": "inject",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Abfrage starten",
-        "props": [],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payloadType": "date",
-        "x": 220,
-        "y": 3900,
-        "wires": [
-            [
-                "9ed0fc54557ee587",
-                "20222ca13bc9b53e",
-                "ebd7ac0ae5f2bc1f"
-            ]
-        ]
-    },
-    {
-        "id": "9ed0fc54557ee587",
-        "type": "http request",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Phase L1 (id=0)",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://192.168.178.49/emeter/0",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "other",
-                "valueValue": ""
-            }
-        ],
-        "x": 420,
-        "y": 3860,
-        "wires": [
-            [
-                "20a3affb8011b34f"
-            ]
-        ]
-    },
-    {
-        "id": "20222ca13bc9b53e",
-        "type": "http request",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Phase L2 (id=1)",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://192.168.178.49/emeter/1",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "other",
-                "valueValue": ""
-            }
-        ],
-        "x": 420,
-        "y": 3900,
-        "wires": [
-            [
-                "8f9b783fa3938c44"
-            ]
-        ]
-    },
-    {
-        "id": "ebd7ac0ae5f2bc1f",
-        "type": "http request",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Phase L3 (id=2)",
-        "method": "POST",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://192.168.178.49/emeter/2",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [
-            {
-                "keyType": "Content-Type",
-                "keyValue": "",
-                "valueType": "other",
-                "valueValue": ""
-            }
-        ],
-        "x": 420,
-        "y": 3940,
-        "wires": [
-            [
-                "26d1bf8b43e8aa6b"
-            ]
-        ]
-    },
-    {
-        "id": "20a3affb8011b34f",
-        "type": "change",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Setze topic: L1",
-        "rules": [
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "L1",
-                "tot": "str"
-            }
-        ],
-        "x": 630,
-        "y": 3860,
-        "wires": [
-            [
-                "11ef7754d1525dd9"
-            ]
-        ]
-    },
-    {
-        "id": "8f9b783fa3938c44",
-        "type": "change",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Setze topic: L2",
-        "rules": [
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "L2",
-                "tot": "str"
-            }
-        ],
-        "x": 630,
-        "y": 3900,
-        "wires": [
-            [
-                "11ef7754d1525dd9"
-            ]
-        ]
-    },
-    {
-        "id": "26d1bf8b43e8aa6b",
-        "type": "change",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Setze topic: L3",
-        "rules": [
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "L3",
-                "tot": "str"
-            }
-        ],
-        "x": 630,
-        "y": 3940,
-        "wires": [
-            [
-                "11ef7754d1525dd9"
-            ]
-        ]
-    },
-    {
-        "id": "11ef7754d1525dd9",
-        "type": "join",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Join L1+L2+L3",
-        "mode": "custom",
-        "build": "object",
-        "property": "payload",
-        "propertyType": "msg",
-        "key": "topic",
-        "joiner": "\\n",
-        "joinerType": "str",
-        "useparts": true,
-        "accumulate": false,
-        "timeout": "",
-        "count": "3",
-        "reduceRight": false,
-        "reduceExp": "",
-        "reduceInit": "",
-        "reduceInitType": "",
-        "reduceFixup": "",
-        "x": 830,
-        "y": 3900,
-        "wires": [
-            [
-                "e5ffd47811e4d212"
-            ]
-        ]
-    },
-    {
-        "id": "e5ffd47811e4d212",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Extrahiere Werte",
-        "func": "let d = msg.payload;\nmsg.payload = {\n  current_L1: d.L1.current,\n  current_L2: d.L2.current,\n  current_L3: d.L3.current,\n  voltage_L1: d.L1.voltage,\n  voltage_L2: d.L2.voltage,\n  voltage_L3: d.L3.voltage,\n  power_L1: d.L1.power,\n  power_L2: d.L2.power,\n  power_L3: d.L3.power,\n  total_power: d.L1.power + d.L2.power + d.L3.power\n};\nlet leistung = msg.payload.total_power;\n//totalpower als power weitergeben\nmsg.payload = {power: leistung};\n// node.warn ( leistung )\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1030,
-        "y": 3900,
-        "wires": [
-            [
-                "9e462a91d512b9a2"
-            ]
-        ]
-    },
-    {
-        "id": "9e462a91d512b9a2",
-        "type": "debug",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "📊 Ergebnis",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1230,
-        "y": 3900,
+        "y": 1960,
         "wires": []
     },
     {
@@ -1960,7 +1692,7 @@
         "finalize": "",
         "libs": [],
         "x": 760,
-        "y": 2220,
+        "y": 2240,
         "wires": [
             [
                 "d4a5eb77aa517589"
@@ -1977,8 +1709,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 955,
-        "y": 2200,
+        "x": 945,
+        "y": 2220,
         "wires": []
     },
     {
@@ -4243,17 +3975,6 @@
         "wires": []
     },
     {
-        "id": "8f9b4e519ec89d8e",
-        "type": "comment",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "SHELLY 3EM mit 3 Phasen auslesen",
-        "info": "",
-        "x": 490,
-        "y": 3820,
-        "wires": []
-    },
-    {
         "id": "5cfcf573718eb3d5",
         "type": "switch",
         "z": "479e3443afedb613",
@@ -4752,48 +4473,8 @@
         "x": 570,
         "y": 2040,
         "wires": [
-            [
-                "f4b2dde004f0757a",
-                "3"
-            ]
+            []
         ]
-    },
-    {
-        "id": "131eec9fbd309862",
-        "type": "debug",
-        "z": "479e3443afedb613",
-        "g": "46a88bad508d3778",
-        "name": "debug 19",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 680,
-        "y": 1900,
-        "wires": []
-    },
-    {
-        "id": "f4b2dde004f0757a",
-        "type": "debug",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "46a88bad508d3778",
-        "name": "debug 20",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 780,
-        "y": 2040,
-        "wires": []
     },
     {
         "id": "b1f2ddda67ab1775",
@@ -5108,7 +4789,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 880,
-        "y": 1900,
+        "y": 1920,
         "wires": []
     },
     {
@@ -5410,8 +5091,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 4020,
+        "x": 470,
+        "y": 3980,
         "wires": [
             [
                 "041e921ba09a57a6"
@@ -5444,8 +5125,8 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 760,
-        "y": 4020,
+        "x": 740,
+        "y": 3980,
         "wires": [
             []
         ]
@@ -5472,8 +5153,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 240,
-        "y": 4020,
+        "x": 220,
+        "y": 3980,
         "wires": [
             [
                 "ee29490c9c4b5005"
@@ -5498,11 +5179,12 @@
         "senderr": false,
         "headers": [],
         "x": 580,
-        "y": 1980,
+        "y": 2000,
         "wires": [
             [
-                "131eec9fbd309862",
-                "3"
+                "3",
+                "82e6e623f87b357b",
+                "66a15f5adc0815dc"
             ]
         ]
     },
@@ -5544,7 +5226,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 520,
-        "y": 2180,
+        "y": 2200,
         "wires": [
             [
                 "2fc53edc55cab48e"
@@ -5566,7 +5248,7 @@
         "finalize": "",
         "libs": [],
         "x": 760,
-        "y": 2180,
+        "y": 2200,
         "wires": [
             [
                 "d4a5eb77aa517589"
@@ -5601,8 +5283,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 760,
-        "y": 4120,
+        "x": 740,
+        "y": 4080,
         "wires": [
             []
         ]
@@ -5620,8 +5302,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 490,
-        "y": 4120,
+        "x": 470,
+        "y": 4080,
         "wires": [
             [
                 "e2258c6eea29d2b9"
@@ -5650,8 +5332,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 240,
-        "y": 4120,
+        "x": 220,
+        "y": 4080,
         "wires": [
             [
                 "e7e9befaa8453b4d"
@@ -6735,7 +6417,7 @@
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
         "name": "WRTyp ermitteln",
-        "func": "let typ = msg.payload;\nnode.warn (typ);\nswitch (typ)\n    {\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"OUT\":\n       {\n       flow.set(\"WRTyp\", 3)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    }",
+        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"OUT\":\n       {\n       flow.set(\"WRTyp\", 3)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = flow.get(\"WRTyp\");\n       return msg;\n       }\n    }",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -6995,7 +6677,7 @@
         "repair": false,
         "outputs": 2,
         "x": 440,
-        "y": 1860,
+        "y": 1880,
         "wires": [
             [
                 "4f2a4b1d2bb4a50a"
@@ -7010,7 +6692,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
-        "name": "Regler",
+        "name": "Bypass-Handling",
         "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
@@ -7018,8 +6700,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 830,
-        "y": 1840,
+        "x": 710,
+        "y": 1860,
         "wires": [
             [
                 "8809a7068736e805"
@@ -7037,7 +6719,7 @@
             "60df30044c929c46"
         ],
         "x": 945,
-        "y": 1840,
+        "y": 1860,
         "wires": []
     },
     {
@@ -7343,6 +7025,46 @@
                 "7097e2efb7e186dc"
             ]
         ]
+    },
+    {
+        "id": "82e6e623f87b357b",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "46a88bad508d3778",
+        "name": "PI-Regler",
+        "func": "// PI-Regler\nlet debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");       // max. WR-Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\");    // min. WR-Leistung in W\nlet soll = flow.get(\"Sollwert\");          // Sollwert in W\nlet grenze = flow.get(\"MaxEinspeisung\");  // max. Einspeisung in W\nlet hyst = global.get(\"Hysterese\");       // Hysteresebereich\n\n// Regler-Parameter\nlet Kp = 0.8;      // Proportionalanteil\nlet Ki = 0.1;      // Integralanteil (z. B. 0.1 für moderates Verhalten)\n\n// Hole bisherige Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = Math.round(flow.get(\"I_summe\")) || 0;\n\n// Messwert Smartmeter\nlet leistung = Number(msg.payload.total_act_power);\n\n// Fehlerberechnung\nlet fehler = Math.round(soll - leistung);\n\n// Optional: Hysterese einbauen (kein I-Update im Totband)\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// Integriere den Fehler (I-Anteil)\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// PI-Regelung: u = Kp * fehler + Ki * ∑fehler\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Optional: Anti-Windup → Wenn neu an Grenze, I-Anteil nicht weiter aufsummieren\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= fehler; // Fehler zurücknehmen\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Prüfe Änderung\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, grenze, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 2040,
+        "wires": [
+            [
+                "68c44e68d8a62aa4",
+                "240b1ea3948dee0a"
+            ]
+        ]
+    },
+    {
+        "id": "66a15f5adc0815dc",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "46a88bad508d3778",
+        "name": "debug 14",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 1920,
+        "wires": []
     },
     {
         "id": "285afb99.5208c4",
