@@ -70,7 +70,7 @@ views:
               columns: 6
               rows: auto
             name: Bezug
-            entity: sensor.shellypro3em_phase_a_active_power
+            entity: sensor.shellypro3em_power_actual_total
           - type: gauge
             entity: sensor.solarhub_power
             needle: true
@@ -120,6 +120,13 @@ views:
             entities:
               - entity: input_number.regler_bypass
             state_color: true
+            visibility:
+              - condition: state
+                entity: sensor.solarflow_electric_level
+                state: '100'
+              - condition: state
+                entity: input_select.regler_ausgang
+                state_not: MAN
           - type: markdown
             content: >-
               [Doku](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
