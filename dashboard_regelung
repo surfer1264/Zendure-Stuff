@@ -120,17 +120,21 @@ views:
             entities:
               - entity: input_number.regler_bypass
             state_color: true
+          - type: markdown
+            content: >-
+              [Doku](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
+            grid_options:
+              columns: 6
+              rows: auto
+          - type: markdown
+            content: >
+              [Schema](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/Schema%20HARegelung.jpg)
+            grid_options:
+              columns: 6
+              rows: auto
     type: sections
     cards: []
     badges:
-      - type: entity
-        show_name: true
-        show_state: false
-        show_icon: true
-        entity: input_button.regler_init
-        name: INIT
-        tap_action:
-          action: none
       - type: entity
         show_name: false
         show_state: true
@@ -145,9 +149,8 @@ views:
         show_name: true
         show_state: true
         show_icon: true
-        entity: sensor.sf_bypass
+        entity: binary_sensor.solarherwegh_pass
         name: Bypass
-        show_entity_picture: false
       - type: entity
         show_name: true
         show_state: true
@@ -156,18 +159,48 @@ views:
         name: Status
         show_entity_picture: false
       - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        icon: mdi:numeric
+        show_entity_picture: true
+        entity: input_number.regler_inkrement
+        name: Cnt
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: input_number.regler_maximale_einspeisung
+        name: Max
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: number.solarherwegh_output_limit
+        name: SF
+      - type: entity
         show_name: false
         show_state: true
         show_icon: true
-        icon: ''
-        show_entity_picture: true
-        entity: input_number.regler_inkrement
-      - type: entity
-        entity: input_number.regler_maximale_einspeisung
-      - type: entity
         entity: input_text.regler_timer_auswahl
+        visibility:
+          - condition: state
+            entity: input_boolean.regler_terminmodus
+            state: 'on'
       - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: sensor.solarflow_electric_level
+        name: SoC
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.regler_init
+        name: INIT
+        tap_action:
+          action: none
     icon: mdi:solar-panel
     path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
