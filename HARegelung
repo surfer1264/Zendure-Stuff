@@ -240,7 +240,9 @@
             "f9c28e57357fbedd",
             "909de9d9437f09c6",
             "f76cb1b980c3bdf2",
-            "924fcf53aa0acbdc"
+            "924fcf53aa0acbdc",
+            "5a619949abdec684",
+            "a49b021e5d1052d8"
         ],
         "x": 94,
         "y": 2839,
@@ -428,7 +430,7 @@
         ],
         "x": 94,
         "y": 1799,
-        "w": 952,
+        "w": 1052,
         "h": 322
     },
     {
@@ -562,9 +564,10 @@
         "id": "3",
         "type": "function",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler;\nlet kp = 1; //Dämpfungsfaktor\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.total_act_power);\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\nlet delta = kp * fehler;\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler;\nlet kp = 0.9; //Dämpfungsfaktor\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.total_act_power);\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\nlet delta = kp * fehler;\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1479,8 +1482,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 945,
-        "y": 2000,
+        "x": 995,
+        "y": 2020,
         "wires": []
     },
     {
@@ -4789,8 +4792,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 940,
-        "y": 1920,
+        "x": 1040,
+        "y": 2080,
         "wires": []
     },
     {
@@ -5076,7 +5079,9 @@
         "x": 470,
         "y": 3120,
         "wires": [
-            []
+            [
+                "5a619949abdec684"
+            ]
         ]
     },
     {
@@ -6695,7 +6700,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "Bypass-Handling",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nflow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -6720,7 +6725,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 945,
+        "x": 995,
         "y": 1860,
         "wires": []
     },
@@ -7072,10 +7077,9 @@
         "id": "be89d5ddb5c4de40",
         "type": "function",
         "z": "479e3443afedb613",
-        "d": true,
         "g": "46a88bad508d3778",
         "name": "PID-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet soll = flow.get(\"Sollwert\");\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet hyst = global.get(\"Hysterese\");\n\n// Reglerparameter\nlet Kp = 1.0;       // Proportional\nlet Ki = 0.1;       // Integral\nlet Kd = 0.5;       // Derivativ\nlet D_Filter = 0.2; // Glättungsfaktor (0.0 = stark gefiltert, 1.0 = roh)\n\n// Historische Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = flow.get(\"I_summe\") || 0;\nlet letzterFehler = flow.get(\"letzterFehler\") || 0;\nlet letzterD = flow.get(\"letzterD\") || 0;\n\n// Aktueller Messwert\nlet leistung = Number(msg.payload.total_act_power);\nlet fehler = Math.round(soll - leistung);\n\n// Hysteresezone beachten\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\n\n// I-Anteil: Fehler aufsummieren\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// D-Anteil: Änderung des Fehlers berechnen\nlet dFehler = Math.round(fehler - letzterFehler);\nlet D_roh = Kd * dFehler;\n\n// Glättung (D-Filter, gegen Rauschen)\nlet D = D_Filter * D_roh + (1 - D_Filter) * letzterD;\nflow.set(\"letzterD\", D);\nflow.set(\"letzterFehler\", fehler);\n\n// PID-Regelung\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe - D);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Anti-Windup\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= Math.round(fehler);\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Änderung prüfen\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, D, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet soll = flow.get(\"Sollwert\");\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet hyst = global.get(\"Hysterese\");\n\n// Reglerparameter\nlet Kp = 0.9;       // Proportional\nlet Ki = 0.1;       // Integral\nlet Kd = 0.3;       // Derivativ\nlet D_Filter = 0.2; // Glättungsfaktor (0.0 = stark gefiltert, 1.0 = roh)\n\n// Historische Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = flow.get(\"I_summe\") || 0;\nlet letzterFehler = flow.get(\"letzterFehler\") || 0;\nlet letzterD = flow.get(\"letzterD\") || 0;\n\n// Aktueller Messwert\nlet leistung = Number(msg.payload.total_act_power);\nlet fehler = Math.round(soll - leistung);\n\n// Hysteresezone beachten\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// I-Anteil: Fehler aufsummieren\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// D-Anteil: Änderung des Fehlers berechnen\nlet dFehler = Math.round(fehler - letzterFehler);\nlet D_roh = Kd * dFehler;\n\n// Glättung (D-Filter, gegen Rauschen)\nlet D = D_Filter * D_roh + (1 - D_Filter) * letzterD;\nflow.set(\"letzterD\", D);\nflow.set(\"letzterFehler\", fehler);\n\n// PID-Regelung\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe - D);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Anti-Windup\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= Math.round(fehler);\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Änderung prüfen\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, D, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -7090,6 +7094,45 @@
                 "240b1ea3948dee0a"
             ]
         ]
+    },
+    {
+        "id": "5a619949abdec684",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "035acd6f5889242d",
+        "name": "Einspeisgrenze neu setzen",
+        "func": "//Wenn AUS, dann stelle alten Wert wieder her.\nlet grenze = flow.get (\"WertBypass\"); //max.Einspeisung\nmsg.payload = {einspeisewert: grenze};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 3120,
+        "wires": [
+            [
+                "0d56421cb0e22b14",
+                "a49b021e5d1052d8"
+            ]
+        ]
+    },
+    {
+        "id": "a49b021e5d1052d8",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "035acd6f5889242d",
+        "name": "debug 24",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 3120,
+        "wires": []
     },
     {
         "id": "285afb99.5208c4",
