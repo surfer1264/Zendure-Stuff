@@ -241,12 +241,11 @@
             "909de9d9437f09c6",
             "f76cb1b980c3bdf2",
             "924fcf53aa0acbdc",
-            "5a619949abdec684",
-            "a49b021e5d1052d8"
+            "5a619949abdec684"
         ],
         "x": 94,
         "y": 2839,
-        "w": 1272,
+        "w": 1242,
         "h": 322
     },
     {
@@ -2895,7 +2894,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1080,
+        "x": 1160,
         "y": 3440,
         "wires": [
             [],
@@ -3079,7 +3078,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1120,
+        "x": 1200,
         "y": 3060,
         "wires": [
             []
@@ -3106,7 +3105,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1200,
+        "x": 1160,
         "y": 3000,
         "wires": [
             [],
@@ -3125,7 +3124,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1325,
+        "x": 1295,
         "y": 3000,
         "wires": []
     },
@@ -4029,7 +4028,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1020,
+        "x": 980,
         "y": 3000,
         "wires": [
             [],
@@ -4059,7 +4058,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 860,
+        "x": 980,
         "y": 3440,
         "wires": [
             [],
@@ -5069,7 +5068,7 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Setze Flow-Variable WertBypass",
-        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"WertBypass\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\n//flow.set(\"WertBypass\", msg.payload);\nmsg.topic = \"WertBypass\";\nmsg.payload = flow.get(\"WertBypass\");\nreturn msg",
+        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"WertBypass\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\nmsg.topic = \"WertBypass\";\nmsg.payload = flow.get(\"WertBypass\");\nreturn msg",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -5857,7 +5856,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
+        "x": 940,
         "y": 3380,
         "wires": [
             [
@@ -6700,7 +6699,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "Bypass-Handling",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nflow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\n//flow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -7111,28 +7110,8 @@
         "x": 760,
         "y": 3120,
         "wires": [
-            [
-                "0d56421cb0e22b14",
-                "a49b021e5d1052d8"
-            ]
+            []
         ]
-    },
-    {
-        "id": "a49b021e5d1052d8",
-        "type": "debug",
-        "z": "479e3443afedb613",
-        "g": "035acd6f5889242d",
-        "name": "debug 24",
-        "active": false,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "false",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 1010,
-        "y": 3120,
-        "wires": []
     },
     {
         "id": "285afb99.5208c4",
