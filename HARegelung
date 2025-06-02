@@ -119,7 +119,7 @@
             "7fdc472851f003ae",
             "fc7613a47a09c1a6"
         ],
-        "x": 1374,
+        "x": 1614,
         "y": 1759,
         "w": 1032,
         "h": 322
@@ -156,7 +156,7 @@
             "3c31d8008dcaffaa"
         ],
         "x": 88,
-        "y": 3913,
+        "y": 3853,
         "w": 804,
         "h": 234
     },
@@ -325,7 +325,7 @@
         ],
         "x": 94,
         "y": 3639,
-        "w": 752,
+        "w": 772,
         "h": 122
     },
     {
@@ -351,7 +351,7 @@
             "d75f80acac58c46f",
             "88f0ebf6669abe2f"
         ],
-        "x": 1374,
+        "x": 1614,
         "y": 1419,
         "w": 852,
         "h": 262
@@ -425,12 +425,16 @@
             "8809a7068736e805",
             "82e6e623f87b357b",
             "66a15f5adc0815dc",
-            "be89d5ddb5c4de40"
+            "be89d5ddb5c4de40",
+            "7e065cdfb6cd92bd",
+            "b856b169c4de6d02",
+            "f6b17c0a7515dc64",
+            "78dbc119241bb5d0"
         ],
         "x": 94,
-        "y": 1799,
-        "w": 1052,
-        "h": 322
+        "y": 1759,
+        "w": 1192,
+        "h": 362
     },
     {
         "id": "0ded3f6e0d781a4e",
@@ -471,11 +475,13 @@
             "e6c67233c1c5b911",
             "a2cb5c9db4ce66b6",
             "ec84cf4771cfbcac",
-            "b5724f7f21cc457f"
+            "b5724f7f21cc457f",
+            "f2c38054c68633ec",
+            "3343f4c606e7ff12"
         ],
         "x": 94,
-        "y": 959,
-        "w": 1212,
+        "y": 979,
+        "w": 1452,
         "h": 742
     },
     {
@@ -516,7 +522,7 @@
             "3c960d972905ddd8"
         ],
         "x": 114,
-        "y": 3939,
+        "y": 3879,
         "w": 752,
         "h": 82
     },
@@ -535,7 +541,7 @@
             "0ec176a2fa37ecc0"
         ],
         "x": 114,
-        "y": 4039,
+        "y": 3979,
         "w": 752,
         "h": 82
     },
@@ -552,10 +558,11 @@
         "onceDelay": "8",
         "topic": "",
         "x": 230,
-        "y": 1840,
+        "y": 1800,
         "wires": [
             [
-                "168148af37ed1368"
+                "168148af37ed1368",
+                "7e065cdfb6cd92bd"
             ]
         ]
     },
@@ -563,10 +570,9 @@
         "id": "3",
         "type": "function",
         "z": "479e3443afedb613",
-        "d": true,
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler;\nlet kp = 0.9; //Dämpfungsfaktor\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.total_act_power);\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\nlet delta = kp * fehler;\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler;\nlet kp = 1; //Dämpfungsfaktor\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\nlet delta = kp * fehler;\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen 30W (geschlossen) oder WRmax (offen)\nneu = Math.max(wrmin, Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, grenze, neu});\n}\n\nif (diff !== 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1442,7 +1448,7 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 2280,
+        "x": 2520,
         "y": 1880,
         "wires": [
             []
@@ -1463,7 +1469,7 @@
             "750f877240f66bc6",
             "8809a7068736e805"
         ],
-        "x": 1415,
+        "x": 1655,
         "y": 1840,
         "wires": [
             [
@@ -1547,7 +1553,7 @@
         "g": "0ebb8e7b772678cd",
         "name": "HIER: Sensornamen des WR überprüfen",
         "info": "",
-        "x": 2220,
+        "x": 2460,
         "y": 1800,
         "wires": []
     },
@@ -1599,7 +1605,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "increment",
-        "x": 1850,
+        "x": 2090,
         "y": 1960,
         "wires": [
             [
@@ -3323,12 +3329,13 @@
         "id": "304c27e2b8253ddc",
         "type": "catch",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "b5ff1f69caf7f3fb",
         "name": "",
         "scope": null,
         "uncaught": false,
         "x": 180,
-        "y": 3680,
+        "y": 3700,
         "wires": [
             [
                 "eaa3ee5eb626fc27",
@@ -3350,7 +3357,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 440,
+        "x": 420,
         "y": 3680,
         "wires": []
     },
@@ -3582,7 +3589,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1770,
+        "x": 2010,
         "y": 1900,
         "wires": [
             [
@@ -3757,7 +3764,7 @@
         "blockInputOverrides": false,
         "domain": "switch",
         "service": "turn_off",
-        "x": 2070,
+        "x": 2310,
         "y": 1600,
         "wires": [
             []
@@ -3789,7 +3796,7 @@
         "blockInputOverrides": false,
         "domain": "switch",
         "service": "turn_on",
-        "x": 2070,
+        "x": 2310,
         "y": 1500,
         "wires": [
             []
@@ -3846,7 +3853,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1470,
+        "x": 1710,
         "y": 1580,
         "wires": [
             [
@@ -3864,7 +3871,7 @@
         "g": "b6cbd1ee551c690b",
         "name": "HIER: WR Sensornamen prüfen",
         "info": "",
-        "x": 2070,
+        "x": 2310,
         "y": 1460,
         "wires": []
     },
@@ -3900,7 +3907,7 @@
         "targetType": "msg",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1720,
+        "x": 1960,
         "y": 1800,
         "wires": []
     },
@@ -4150,7 +4157,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1530,
+        "x": 1770,
         "y": 1840,
         "wires": [
             [
@@ -4179,7 +4186,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1700,
+        "x": 1940,
         "y": 1520,
         "wires": [
             [
@@ -4207,7 +4214,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1700,
+        "x": 1940,
         "y": 1620,
         "wires": [
             [
@@ -4702,7 +4709,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 450,
+        "x": 430,
         "y": 3720,
         "wires": [
             [
@@ -4722,7 +4729,7 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 730,
+        "x": 750,
         "y": 3720,
         "wires": [
             []
@@ -4774,7 +4781,7 @@
         "g": "b6cbd1ee551c690b",
         "name": "WR Schalter Aktion",
         "info": "",
-        "x": 1490,
+        "x": 1730,
         "y": 1480,
         "wires": []
     },
@@ -4946,7 +4953,7 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 2280,
+        "x": 2520,
         "y": 1980,
         "wires": [
             []
@@ -5097,7 +5104,7 @@
         "finalize": "",
         "libs": [],
         "x": 470,
-        "y": 3980,
+        "y": 3920,
         "wires": [
             [
                 "041e921ba09a57a6"
@@ -5131,7 +5138,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 740,
-        "y": 3980,
+        "y": 3920,
         "wires": [
             []
         ]
@@ -5159,7 +5166,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 220,
-        "y": 3980,
+        "y": 3920,
         "wires": [
             [
                 "ee29490c9c4b5005"
@@ -5290,7 +5297,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 740,
-        "y": 4080,
+        "y": 4020,
         "wires": [
             []
         ]
@@ -5309,7 +5316,7 @@
         "finalize": "",
         "libs": [],
         "x": 470,
-        "y": 4080,
+        "y": 4020,
         "wires": [
             [
                 "e2258c6eea29d2b9"
@@ -5339,7 +5346,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 220,
-        "y": 4080,
+        "y": 4020,
         "wires": [
             [
                 "e7e9befaa8453b4d"
@@ -5368,7 +5375,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1490,
+        "x": 1730,
         "y": 1640,
         "wires": [
             [
@@ -5398,7 +5405,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1490,
+        "x": 1730,
         "y": 1520,
         "wires": [
             [
@@ -5610,7 +5617,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 4,
-        "x": 2070,
+        "x": 2310,
         "y": 1960,
         "wires": [
             [
@@ -5653,7 +5660,7 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 2280,
+        "x": 2520,
         "y": 1940,
         "wires": [
             []
@@ -5685,7 +5692,7 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 2270,
+        "x": 2510,
         "y": 2040,
         "wires": [
             []
@@ -5719,7 +5726,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 3,
-        "x": 1890,
+        "x": 2130,
         "y": 1520,
         "wires": [
             [
@@ -5762,7 +5769,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 3,
-        "x": 1890,
+        "x": 2130,
         "y": 1620,
         "wires": [
             [
@@ -5804,7 +5811,7 @@
         "blockInputOverrides": true,
         "domain": "button",
         "service": "press",
-        "x": 2070,
+        "x": 2310,
         "y": 1540,
         "wires": [
             []
@@ -5837,7 +5844,7 @@
         "blockInputOverrides": true,
         "domain": "button",
         "service": "press",
-        "x": 2080,
+        "x": 2320,
         "y": 1640,
         "wires": [
             []
@@ -5903,7 +5910,7 @@
         "repair": false,
         "outputs": 5,
         "x": 710,
-        "y": 1280,
+        "y": 1300,
         "wires": [
             [
                 "80276a25567d0ce3",
@@ -5964,7 +5971,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 200,
-        "y": 1240,
+        "y": 1260,
         "wires": [
             [
                 "dd3a208eb767c579"
@@ -6009,7 +6016,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 250,
-        "y": 1120,
+        "y": 1140,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -6043,7 +6050,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1030,
-        "y": 1080,
+        "y": 1100,
         "wires": [
             []
         ]
@@ -6077,7 +6084,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 1060,
-        "y": 1420,
+        "y": 1440,
         "wires": [
             []
         ]
@@ -6109,7 +6116,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 1010,
-        "y": 1640,
+        "y": 1660,
         "wires": [
             []
         ]
@@ -6141,7 +6148,7 @@
         "domain": "input_boolean",
         "service": "turn_off",
         "x": 430,
-        "y": 1620,
+        "y": 1640,
         "wires": [
             []
         ]
@@ -6173,7 +6180,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 1010,
-        "y": 1160,
+        "y": 1180,
         "wires": [
             []
         ]
@@ -6205,7 +6212,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1010,
-        "y": 1120,
+        "y": 1140,
         "wires": [
             []
         ]
@@ -6237,7 +6244,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 720,
-        "y": 1060,
+        "y": 1080,
         "wires": [
             []
         ]
@@ -6269,7 +6276,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1000,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             []
         ]
@@ -6288,7 +6295,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1040,
+        "y": 1060,
         "wires": [
             [
                 "6c8baf7e8d7d3313"
@@ -6309,7 +6316,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1260,
+        "y": 1280,
         "wires": [
             [
                 "48a6bc6356baf738"
@@ -6330,7 +6337,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1340,
+        "y": 1360,
         "wires": [
             [
                 "05e32bbbf59691fd"
@@ -6351,7 +6358,7 @@
         "finalize": "",
         "libs": [],
         "x": 970,
-        "y": 1520,
+        "y": 1540,
         "wires": [
             [
                 "7c0ee195207fa59d"
@@ -6410,7 +6417,7 @@
             }
         ],
         "x": 260,
-        "y": 1320,
+        "y": 1340,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -6431,7 +6438,7 @@
         "finalize": "",
         "libs": [],
         "x": 520,
-        "y": 1280,
+        "y": 1300,
         "wires": [
             [
                 "df27770545d213b5"
@@ -6452,7 +6459,7 @@
         "finalize": "",
         "libs": [],
         "x": 450,
-        "y": 1040,
+        "y": 1060,
         "wires": [
             [
                 "df27770545d213b5"
@@ -6469,7 +6476,7 @@
             "06635f54085d96a3"
         ],
         "x": 165,
-        "y": 1040,
+        "y": 1060,
         "wires": [
             [
                 "dd3a208eb767c579"
@@ -6518,7 +6525,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1050,
-        "y": 1400,
+        "y": 1420,
         "wires": [
             []
         ]
@@ -6550,7 +6557,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1140,
-        "y": 1040,
+        "y": 1060,
         "wires": [
             [
                 "e6c67233c1c5b911"
@@ -6584,7 +6591,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1140,
-        "y": 1260,
+        "y": 1280,
         "wires": [
             [
                 "a2cb5c9db4ce66b6"
@@ -6618,7 +6625,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1150,
-        "y": 1340,
+        "y": 1360,
         "wires": [
             [
                 "b5724f7f21cc457f"
@@ -6652,7 +6659,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 1150,
-        "y": 1520,
+        "y": 1540,
         "wires": [
             [
                 "ec84cf4771cfbcac"
@@ -6742,7 +6749,7 @@
         "finalize": "",
         "libs": [],
         "x": 390,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             [
                 "9ccce898d90dc4aa"
@@ -6776,7 +6783,7 @@
         "domain": "input_select",
         "service": "select_option",
         "x": 590,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             []
         ]
@@ -6802,7 +6809,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1690,
+        "x": 1930,
         "y": 1840,
         "wires": [
             [
@@ -6838,7 +6845,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 420,
-        "y": 1660,
+        "y": 1680,
         "wires": [
             []
         ]
@@ -6872,7 +6879,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 1170,
-        "y": 1000,
+        "y": 1020,
         "wires": [
             []
         ]
@@ -6904,7 +6911,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1160,
-        "y": 1220,
+        "y": 1240,
         "wires": [
             []
         ]
@@ -6936,7 +6943,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1140,
-        "y": 1480,
+        "y": 1500,
         "wires": [
             []
         ]
@@ -6968,7 +6975,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1150,
-        "y": 1300,
+        "y": 1320,
         "wires": [
             []
         ]
@@ -7039,7 +7046,7 @@
         "d": true,
         "g": "46a88bad508d3778",
         "name": "PI-Regler",
-        "func": "// PI-Regler\nlet debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");       // max. WR-Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\");    // min. WR-Leistung in W\nlet soll = flow.get(\"Sollwert\");          // Sollwert in W\nlet grenze = flow.get(\"MaxEinspeisung\");  // max. Einspeisung in W\nlet hyst = global.get(\"Hysterese\");       // Hysteresebereich\n\n// Regler-Parameter\nlet Kp = 0.8;      // Proportionalanteil\nlet Ki = 0.1;      // Integralanteil (z. B. 0.1 für moderates Verhalten)\n\n// Hole bisherige Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = Math.round(flow.get(\"I_summe\")) || 0;\n\n// Messwert Smartmeter\nlet leistung = Number(msg.payload.total_act_power);\n\n// Fehlerberechnung\nlet fehler = Math.round(soll - leistung);\n\n// Optional: Hysterese einbauen (kein I-Update im Totband)\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// Integriere den Fehler (I-Anteil)\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// PI-Regelung: u = Kp * fehler + Ki * ∑fehler\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Optional: Anti-Windup → Wenn neu an Grenze, I-Anteil nicht weiter aufsummieren\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= fehler; // Fehler zurücknehmen\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Prüfe Änderung\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, grenze, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;",
+        "func": "// PI-Regler\nlet debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");       // max. WR-Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\");    // min. WR-Leistung in W\nlet soll = flow.get(\"Sollwert\");          // Sollwert in W\nlet grenze = flow.get(\"MaxEinspeisung\");  // max. Einspeisung in W\nlet hyst = global.get(\"Hysterese\");       // Hysteresebereich\n\n// Regler-Parameter\nlet Kp = 0.8;      // Proportionalanteil\nlet Ki = 0.1;      // Integralanteil (z. B. 0.1 für moderates Verhalten)\n\n// Hole bisherige Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = Math.round(flow.get(\"I_summe\")) || 0;\n\n// Messwert Smartmeter\nlet leistung = Number(msg.payload.total_act_power);\nflow.set(\"3em\", leistung);\n\n// Fehlerberechnung\nlet fehler = Math.round(soll - leistung);\n\n// Optional: Hysterese einbauen (kein I-Update im Totband)\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// Integriere den Fehler (I-Anteil)\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// PI-Regelung: u = Kp * fehler + Ki * ∑fehler\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Optional: Anti-Windup → Wenn neu an Grenze, I-Anteil nicht weiter aufsummieren\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= fehler; // Fehler zurücknehmen\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Prüfe Änderung\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, grenze, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -7076,9 +7083,10 @@
         "id": "be89d5ddb5c4de40",
         "type": "function",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "46a88bad508d3778",
         "name": "PID-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet soll = flow.get(\"Sollwert\");\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet hyst = global.get(\"Hysterese\");\n\n// Reglerparameter\nlet Kp = 0.9;       // Proportional\nlet Ki = 0.1;       // Integral\nlet Kd = 0.3;       // Derivativ\nlet D_Filter = 0.2; // Glättungsfaktor (0.0 = stark gefiltert, 1.0 = roh)\n\n// Historische Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = flow.get(\"I_summe\") || 0;\nlet letzterFehler = flow.get(\"letzterFehler\") || 0;\nlet letzterD = flow.get(\"letzterD\") || 0;\n\n// Aktueller Messwert\nlet leistung = Number(msg.payload.total_act_power);\nlet fehler = Math.round(soll - leistung);\n\n// Hysteresezone beachten\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// I-Anteil: Fehler aufsummieren\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// D-Anteil: Änderung des Fehlers berechnen\nlet dFehler = Math.round(fehler - letzterFehler);\nlet D_roh = Kd * dFehler;\n\n// Glättung (D-Filter, gegen Rauschen)\nlet D = D_Filter * D_roh + (1 - D_Filter) * letzterD;\nflow.set(\"letzterD\", D);\nflow.set(\"letzterFehler\", fehler);\n\n// PID-Regelung\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe - D);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Anti-Windup\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= Math.round(fehler);\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Änderung prüfen\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, D, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet soll = flow.get(\"Sollwert\");\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet hyst = global.get(\"Hysterese\");\n\n// Reglerparameter\nlet Kp = 0.9;       // Proportional\nlet Ki = 0.1;       // Integral\nlet Kd = 0.3;       // Derivativ\nlet D_Filter = 0.2; // Glättungsfaktor (0.0 = stark gefiltert, 1.0 = roh)\n\n// Historische Werte\nlet vorher = flow.get(\"Regelwert\") || 0;\nlet I_summe = flow.get(\"I_summe\") || 0;\nlet letzterFehler = flow.get(\"letzterFehler\") || 0;\nlet letzterD = flow.get(\"letzterD\") || 0;\n\n// Aktueller Messwert\nlet leistung = Number(msg.payload.total_act_power);\nflow.set(\"3em\", leistung);\nlet fehler = Math.round(soll - leistung);\n\n// Hysteresezone beachten\nif (Math.abs(fehler) < hyst) {\n    fehler = 0;\n}\nflow.set(\"fehler\", fehler);\n\n// I-Anteil: Fehler aufsummieren\nI_summe += fehler;\nflow.set(\"I_summe\", I_summe);\n\n// D-Anteil: Änderung des Fehlers berechnen\nlet dFehler = Math.round(fehler - letzterFehler);\nlet D_roh = Kd * dFehler;\n\n// Glättung (D-Filter, gegen Rauschen)\nlet D = D_Filter * D_roh + (1 - D_Filter) * letzterD;\nflow.set(\"letzterD\", D);\nflow.set(\"letzterFehler\", fehler);\n\n// PID-Regelung\nlet neu = Math.round(vorher - Kp * fehler - Ki * I_summe - D);\n\n// Sättigung\nneu = Math.max(wrmin, Math.min(wrmax, neu));\nneu = Math.min(neu, grenze);\n\n// Anti-Windup\nif (neu === wrmin || neu === wrmax || neu === grenze) {\n    I_summe -= Math.round(fehler);\n    flow.set(\"I_summe\", I_summe);\n}\n\nflow.set(\"Regelwert\", neu);\n\n// Änderung prüfen\nlet diff = neu - vorher;\n\nif (debug) {\n    node.warn({ diff, vorher, fehler, I_summe, D, neu });\n}\n\nif (diff !== 0) {\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\n\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -7110,6 +7118,171 @@
         "x": 760,
         "y": 3120,
         "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f2c38054c68633ec",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_button.press",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_button.regler_init"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_button",
+        "service": "press",
+        "x": 1430,
+        "y": 1060,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3343f4c606e7ff12",
+        "type": "delay",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1420,
+        "y": 1020,
+        "wires": [
+            [
+                "f2c38054c68633ec"
+            ]
+        ]
+    },
+    {
+        "id": "f6b17c0a7515dc64",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "46a88bad508d3778",
+        "name": "Debugzeile bauen",
+        "func": "let debug = flow.get(\"Debug\");\nlet einspeisewert = msg.payload;\nlet bypass = flow.get(\"Bypass\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet total = flow.get(\"Total\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet regelwert = flow.get(\"Regelwert\");\nlet drei_em = flow.get (\"3em\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get ( \"WRAktiv\");\nlet fehler = flow.get (\"fehler\");\n\nlet timestamp = new Date().toISOString();\n\nif (debug){\n    msg.payload = `${timestamp}, Bypass=${bypass}, WRTyp=${wrtyp}, WRMax=${wrmax}, WRMin=${wrmin}, WRAktiv=${wr_aktiv} , ReglerAktiv=${regler_aktiv}, Termin=${termin_on}, Total=${total}, MaxEinspeisung=${max_einspeisung}, Sollwert=${soll}, Fehler=${fehler}, Regelwert=${regelwert}, Einspeisewert=${einspeisewert}, Smartmeter=${drei_em}`;\n    return msg\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 1800,
+        "wires": [
+            [
+                "78dbc119241bb5d0"
+            ]
+        ]
+    },
+    {
+        "id": "78dbc119241bb5d0",
+        "type": "file",
+        "z": "479e3443afedb613",
+        "g": "46a88bad508d3778",
+        "name": "In Datei schreiben",
+        "filename": "/config/debug-log1.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1170,
+        "y": 1800,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b856b169c4de6d02",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "46a88bad508d3778",
+        "name": "Shelly Plus1PM liefert",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "num",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarhub_power",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 680,
+        "y": 1800,
+        "wires": [
+            [
+                "f6b17c0a7515dc64"
+            ]
+        ]
+    },
+    {
+        "id": "7e065cdfb6cd92bd",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "46a88bad508d3778",
+        "name": "if Debug?",
+        "func": "if (flow.get(\"Debug\") === true) {\n    return [msg, null]; // an Ausgang eins senden\n    }\nelse {\n    return; // nichts senden\n    }",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1800,
+        "wires": [
+            [
+                "b856b169c4de6d02"
+            ],
             []
         ]
     },
