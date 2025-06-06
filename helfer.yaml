@@ -110,6 +110,14 @@ input_select:
       - MAN
       - SMT
     initial: EZ1
+  regler_typ:
+    name: Regler Typ
+    icon: mdi:ev-plug-type1
+    options:
+      - P
+      - PI
+      - PID
+    initial: P
 input_button:
   regler_init:
     name: Regler Init
