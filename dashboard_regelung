@@ -151,6 +151,11 @@ views:
         show_name: false
         show_state: true
         show_icon: true
+        entity: input_select.regler_typ
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
         entity: input_boolean.regler_aus
       - type: entity
         show_name: true
