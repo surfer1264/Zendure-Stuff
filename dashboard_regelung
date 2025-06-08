@@ -1,5 +1,5 @@
 views:
-  - title: Mein BKW
+  - title: Mein  BKW
     sections:
       - type: grid
         cards:
@@ -116,6 +116,10 @@ views:
             icon: ''
             heading_style: subtitle
             heading: Bypass einschränken
+            visibility:
+              - condition: state
+                entity: sensor.solarflow_electric_level
+                state: '100'
           - type: entities
             entities:
               - entity: input_number.regler_bypass
@@ -152,6 +156,7 @@ views:
         show_state: true
         show_icon: true
         entity: input_select.regler_typ
+        icon: mdi:gauge
       - type: entity
         show_name: false
         show_state: true
