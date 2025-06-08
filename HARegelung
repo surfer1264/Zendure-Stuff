@@ -189,17 +189,12 @@
             "9413afc1555f6ee5",
             "d4a5eb77aa517589",
             "2fc53edc55cab48e",
-            "1cba86b5461a6be4",
-            "c22373abe5772c75",
-            "a0fa781c437eeaf3",
-            "04b0efcd4e5df5f1",
-            "661e5aff58fd6010",
-            "d99f91d38f05e8f6"
+            "661e5aff58fd6010"
         ],
-        "x": 94,
-        "y": 2199,
-        "w": 1232,
-        "h": 182
+        "x": 154,
+        "y": 2219,
+        "w": 1112,
+        "h": 162
     },
     {
         "id": "acff453100dcbbc9",
@@ -1355,14 +1350,14 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 240,
+        "x": 380,
         "y": 2320,
         "wires": [
             [
-                "c22373abe5772c75"
+                "2fc53edc55cab48e"
             ],
             [
-                "a0fa781c437eeaf3"
+                "9413afc1555f6ee5"
             ]
         ]
     },
@@ -1625,7 +1620,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1140,
+        "x": 960,
         "y": 2340,
         "wires": [
             [
@@ -1643,7 +1638,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1285,
+        "x": 1225,
         "y": 2320,
         "wires": []
     },
@@ -5131,7 +5126,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1140,
+        "x": 960,
         "y": 2280,
         "wires": [
             [
@@ -7239,7 +7234,7 @@
         "type": "comment",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "HIER: Sonsornamen anpassen",
+        "name": "HIER: Sensornamen anpassen",
         "info": "",
         "x": 430,
         "y": 1020,
@@ -7365,118 +7360,14 @@
         "wires": []
     },
     {
-        "id": "c22373abe5772c75",
-        "type": "ha-get-entities",
-        "z": "479e3443afedb613",
-        "g": "a1160eda259de3ef",
-        "name": "Hole Daten",
-        "server": "285afb99.5208c4",
-        "version": 1,
-        "rules": [
-            {
-                "condition": "state_object",
-                "property": "entity_id",
-                "logic": "is",
-                "value": "einspeiseSensor",
-                "valueType": "flow"
-            }
-        ],
-        "outputType": "array",
-        "outputEmptyResults": false,
-        "outputLocationType": "msg",
-        "outputLocation": "payload",
-        "outputResultsCount": 1,
-        "x": 650,
-        "y": 2300,
-        "wires": [
-            [
-                "1cba86b5461a6be4"
-            ]
-        ]
-    },
-    {
-        "id": "1cba86b5461a6be4",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "a1160eda259de3ef",
-        "name": "Sensor-ID aus Flow",
-        "func": "let power = Number(msg.payload[0].state);\n\n//node.warn (power);\n\nif (power > 2) {\n    return [msg , null];\n    }\nelse {\n    return [null ,msg];\n    }\n",
-        "outputs": 2,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 850,
-        "y": 2300,
-        "wires": [
-            [
-                "2fc53edc55cab48e"
-            ],
-            []
-        ]
-    },
-    {
-        "id": "a0fa781c437eeaf3",
-        "type": "ha-get-entities",
-        "z": "479e3443afedb613",
-        "g": "a1160eda259de3ef",
-        "name": "Hole Daten",
-        "server": "285afb99.5208c4",
-        "version": 1,
-        "rules": [
-            {
-                "condition": "state_object",
-                "property": "entity_id",
-                "logic": "is",
-                "value": "einspeiseSensor",
-                "valueType": "flow"
-            }
-        ],
-        "outputType": "array",
-        "outputEmptyResults": false,
-        "outputLocationType": "msg",
-        "outputLocation": "payload",
-        "outputResultsCount": 1,
-        "x": 650,
-        "y": 2340,
-        "wires": [
-            [
-                "04b0efcd4e5df5f1"
-            ]
-        ]
-    },
-    {
-        "id": "04b0efcd4e5df5f1",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "a1160eda259de3ef",
-        "name": "Sensor-ID aus Flow",
-        "func": "let power = Number(msg.payload[0].state);\n\n//node.warn (power);\n\nif (power > 2) {\n    return [msg , null];\n    }\nelse {\n    return [null ,msg];\n    }\n",
-        "outputs": 2,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 850,
-        "y": 2340,
-        "wires": [
-            [
-                "9413afc1555f6ee5"
-            ],
-            []
-        ]
-    },
-    {
         "id": "661e5aff58fd6010",
         "type": "comment",
         "z": "479e3443afedb613",
         "g": "a1160eda259de3ef",
         "name": "Es wird geprüft, ob überhaupt eine Einspeisung stattfindet!",
         "info": "",
-        "x": 330,
-        "y": 2240,
+        "x": 390,
+        "y": 2260,
         "wires": []
     },
     {
@@ -7530,17 +7421,6 @@
             ],
             []
         ]
-    },
-    {
-        "id": "d99f91d38f05e8f6",
-        "type": "comment",
-        "z": "479e3443afedb613",
-        "g": "a1160eda259de3ef",
-        "name": "Wenn Sensornamen in 1.3. gut gepflegt, dann läuft die Routine generisch",
-        "info": "",
-        "x": 840,
-        "y": 2240,
-        "wires": []
     },
     {
         "id": "6bd08e9d0b68c8e0",
