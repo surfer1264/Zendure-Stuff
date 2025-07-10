@@ -1,5 +1,5 @@
 views:
-  - title: Mein  BKW
+  - title: Mein TEST BKW
     sections:
       - type: grid
         cards:
@@ -26,6 +26,7 @@ views:
               - entity: input_number.regler_sollwert
                 name: Sollwert
                 secondary_info: none
+              - entity: input_number.regler_minimale_einspeisung
             visibility:
               - condition: state
                 entity: input_boolean.regler_aktiv
@@ -157,11 +158,6 @@ views:
         show_icon: true
         entity: input_select.regler_typ
         icon: mdi:gauge
-      - type: entity
-        show_name: false
-        show_state: true
-        show_icon: true
-        entity: input_boolean.regler_aus
       - type: entity
         show_name: true
         show_state: true
