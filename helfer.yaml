@@ -64,6 +64,14 @@ input_number:
     max: 800
     step: 10
     unit_of_measurement: "W"
+  regler_minimale_einspeisung:
+    name: Regler minimale Einspeisung
+    icon: mdi:numeric
+    initial: 0
+    min: 0
+    max: 800
+    step: 10
+    unit_of_measurement: "W"
   regler_sollwert:
     name: Regler Sollwert
     icon: mdi:numeric
