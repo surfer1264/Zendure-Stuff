@@ -112,6 +112,7 @@ input_select:
     name: Regler Ausgang
     icon: mdi:format-list-bulleted
     options:
+      - AUS
       - EZ1
       - HMS
       - OUT
