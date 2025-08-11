@@ -7,7 +7,7 @@
 Hier findet Ihr
 **Beschreibungen:**
 * [Monitoring des Zendure Hubs aufbauen](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
-* [Monitoring der HubDaten mit HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
+  * [das Node-Red-Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 * [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
 * [Zendure-HA Installation](https://github.com/surfer1264/Zendure-Stuff/wiki/Install-Zendure-HA-(SF1200))
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
