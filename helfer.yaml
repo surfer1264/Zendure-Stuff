@@ -121,10 +121,9 @@ input_select:
       - AUS
       - EZ1
       - HMS
-      - OUT
       - MAN
       - SMT
-    initial: EZ1
+    initial: AUS
   regler_typ:
     name: Regler Typ
     icon: mdi:ev-plug-type1
