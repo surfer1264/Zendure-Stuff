@@ -18,6 +18,9 @@ views:
               - condition: state
                 entity: input_boolean.regler_terminmodus
                 state: 'off'
+              - condition: state
+                entity: input_select.regler_ausgang
+                state_not: SMT
           - type: entities
             entities:
               - entity: input_number.regler_hysterese
@@ -144,6 +147,63 @@ views:
             grid_options:
               columns: 6
               rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Hinweise
+          - type: markdown
+            content: >-
+              In der Dashboardzeile kann man die Regelfunktion aktivieren durch
+              Auswahl von 
+
+
+              EZ1 - absolute ANsteruerung des WR
+
+              HMS - relative Ansteuerung des WR
+
+              MAN - Ansteuerung der Manzellen Leistungsregelunng der Z-HA
+              Integration
+
+              SMT - Start der Smarten Leistungssteuerung der Z-HA Integration
+
+              AUS - deaktiviert den Regelalgorithmus und versetzt das System in
+              einen definierten Zustand (Solarflow-Ausgang 100W)
+          - type: markdown
+            content: >
+              Der Schalter **Regel-Algorithmus** aktiviert oder deaktivert den
+              Regel-Algorithmus.
+
+
+              Die **Einspeisbegrenzung** begrenzt die Einspeisung auf den
+              eingestellten Wert. Alle Bedarfe unterhalb dieser Grenze werden
+              auf den Sollwert ausgeregelt.
+
+              Ist der Regel-Algorithmus deaktiviert wird dieser Wert als
+              Festeinspeisung interpretiert.
+
+
+              **Hysterese:** definiert den Bereich um den Sollwert, der nicht
+              mehr ausgeregelt wird.
+
+
+              **Sollwert:** definiert die Regelgröße. Ein Sollwert von 10W und
+              eine Hysterese von 15W definiert einen Regelbereich von -5W bis
+              +25W. Außerhalb dieses Bereiches werden Regleaktionen ausgelöst.
+              Bewegt sich der P1-Wert innerhalb des Bereiches, erfolgt keine
+              Regelaktion.
+
+
+              **Regler minimal:** Dieser Wert definiert eine Mindesteinspeisung.
+              Dieser Einspeisewert wird nicht unterschritten.
+
+
+              **Terminservice:** Hier können Uhrzeiten festgelehgt werden, an
+              denen die Einspeisbegrenzung verändert wird.
+
+
+              Die Einspeisbegrenzungen können "on the fly" angepasst werden und
+              wirken sofort.
     type: sections
     cards: []
     badges:
