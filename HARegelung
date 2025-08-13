@@ -492,8 +492,7 @@
             "5c36c0c1bfabe8e7",
             "3cd125758b237fce",
             "810f769ffce8a701",
-            "69c9aaf49d7fabba",
-            "f14903b8d8cafcf6"
+            "cf998755e26fe945"
         ],
         "x": 184,
         "y": 939,
@@ -599,6 +598,30 @@
         "y": 1959,
         "w": 292,
         "h": 142
+    },
+    {
+        "id": "cf998755e26fe945",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "style": {
+            "stroke": "#999999",
+            "stroke-opacity": "1",
+            "fill": "none",
+            "fill-opacity": "1",
+            "label": true,
+            "label-position": "nw",
+            "color": "#a4a4a4"
+        },
+        "nodes": [
+            "f14903b8d8cafcf6",
+            "69c9aaf49d7fabba",
+            "ea244f2be20330ad"
+        ],
+        "x": 574,
+        "y": 1439,
+        "w": 292,
+        "h": 162
     },
     {
         "id": "1",
@@ -5497,7 +5520,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.regler_aus"
+            "input_boolean.regler_aktiv"
         ],
         "labelId": [],
         "data": "",
@@ -5531,7 +5554,7 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_boolean.regler_aus"
+            "input_boolean.regler_aktiv"
         ],
         "labelId": [],
         "data": "",
@@ -5543,7 +5566,7 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_on",
-        "x": 1150,
+        "x": 1170,
         "y": 1140,
         "wires": [
             []
@@ -6411,7 +6434,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 890,
+        "x": 1010,
         "y": 1400,
         "wires": [
             [
@@ -7546,7 +7569,7 @@
         "id": "69c9aaf49d7fabba",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "cf998755e26fe945",
         "name": "Set SF out Max",
         "func": "// Wenn ty1 oder typ2 oder typ4 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = 100;\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
@@ -7556,7 +7579,7 @@
         "finalize": "",
         "libs": [],
         "x": 680,
-        "y": 1440,
+        "y": 1480,
         "wires": [
             [
                 "f14903b8d8cafcf6"
@@ -7567,7 +7590,7 @@
         "id": "f14903b8d8cafcf6",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "cf998755e26fe945",
         "name": "Setze Ausgansglimit 100",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -7589,10 +7612,12 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 750,
+        "x": 730,
         "y": 1520,
         "wires": [
-            []
+            [
+                "ea244f2be20330ad"
+            ]
         ]
     },
     {
@@ -7695,6 +7720,38 @@
         "service": "set_value",
         "x": 2160,
         "y": 660,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ea244f2be20330ad",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "cf998755e26fe945",
+        "name": "surfers Regelsystem OFF",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_boolean.turn_off",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_boolean.regler_aktiv"
+        ],
+        "labelId": [],
+        "data": "",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_boolean",
+        "service": "turn_off",
+        "x": 730,
+        "y": 1560,
         "wires": [
             []
         ]
