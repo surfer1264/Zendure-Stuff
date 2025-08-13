@@ -11,10 +11,6 @@ input_boolean:
     name: Regler Terminmodus
     initial: off
     icon: mdi:toggle-switch-variant
-  regler_aus:
-    name: Regler Total Aus
-    initial: off
-    icon: mdi:toggle-switch-variant
   regler_wr_aus:
     name: Regler WR Aus
     initial: off
