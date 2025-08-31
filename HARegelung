@@ -455,8 +455,7 @@
             "f6b17c0a7515dc64",
             "78dbc119241bb5d0",
             "3f77c130efc4805a",
-            "d8febfbf64f9a1dc",
-            "1e049cf62d58e43c"
+            "d8febfbf64f9a1dc"
         ],
         "x": 194,
         "y": 1799,
@@ -679,7 +678,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet minimal = flow.get (\"MinEinspeisung\"); //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler = 0;\nlet kp = flow.get (\"Reglerkp\"); //Dämpfungsfaktor\nlet delta = 0;\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nif (fehler < 0)\n    {\n    delta = kp * fehler;\n    }\nelse\n    {\n    delta = fehler;\n    }\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\nnode.warn ({leistung, diff, vorher, fehler, grenze, neu});\n}\n\nif (diff !== 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\"); //max. Einspeisung in W\nlet minimal = flow.get (\"MinEinspeisung\"); //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\"); // Hysterese-Bereich in W\nlet fehler = 0;\nlet kp = flow.get (\"Reglerkp\"); //Dämpfungsfaktor\nlet delta = 0;\nlet repeat = flow.get(\"WRRepeat\");\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n//let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nif (Math.abs(leistung-soll) > (hyst)) \n    {\n    fehler = Math.round(soll - leistung);\n    }\nelse {\n    fehler = 0;\n    }\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nif (fehler < 0)\n    {\n    delta = kp * fehler;\n    }\nelse\n    {\n    delta = fehler;\n    }\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\nnode.warn ({leistung, diff, vorher, fehler, grenze, neu, repeat});\n}\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad)\nif (diff !== 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    flow.set(\"WRRepeat\", 0);\n    return msg;\n    }\nelse {\n    flow.set(\"WRRepeat\", repeat+1);\n    if (repeat === 40)\n        {\n        msg.payload = {einspeisewert: neu};\n        flow.set(\"WRRepeat\", 0);\n        return msg;    \n        }\n    }\n//msg.payload = {einspeisewert: neu};\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1040,7 +1039,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "Flowvariablen setzen",
-        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv, ignore, typ, minimal, connected} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nglobal.set(\"Hysterese\", hyst);\nflow.set(\"Sollwert\", soll);\nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"ReglerAktiv\", aktiv);\nflow.set(\"AktiverTermin\", last);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\nflow.set(\"Connected\", connected);\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  wraktiv,\n  connected\n  })\n}\nreturn msg;\n",
+        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv, ignore, typ, minimal, connected} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nglobal.set(\"Hysterese\", hyst);\nflow.set(\"Sollwert\", soll);\nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"ReglerAktiv\", aktiv);\nflow.set(\"AktiverTermin\", last);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\nflow.set(\"Connected\", connected);\nflow.set(\"WRRepeat\",0);\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  wraktiv,\n  connected\n  })\n}\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1367,7 +1366,7 @@
         "y": 1920,
         "wires": [
             [
-                "1e049cf62d58e43c"
+                "db71458988a0ae4a"
             ],
             []
         ]
@@ -4072,7 +4071,7 @@
         "halt_if_type": "str",
         "halt_if_compare": "is",
         "entity_id": "input_boolean.ignorebypass",
-        "state_type": "str",
+        "state_type": "habool",
         "blockInputOverrides": true,
         "outputProperties": [
             {
@@ -5886,18 +5885,18 @@
             {
                 "t": "eq",
                 "v": "1",
-                "vt": "str"
+                "vt": "num"
             },
             {
                 "t": "eq",
                 "v": "0",
-                "vt": "str"
+                "vt": "num"
             }
         ],
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 700,
+        "x": 640,
         "y": 1920,
         "wires": [
             [
@@ -5921,7 +5920,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 890,
+        "x": 910,
         "y": 1900,
         "wires": [
             [
@@ -6167,7 +6166,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "debug 14",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -7690,38 +7689,6 @@
         "x": 510,
         "y": 1320,
         "wires": []
-    },
-    {
-        "id": "1e049cf62d58e43c",
-        "type": "switch",
-        "z": "479e3443afedb613",
-        "g": "46a88bad508d3778",
-        "name": "Bypass Ignore?",
-        "property": "IgnoreBypass",
-        "propertyType": "flow",
-        "rules": [
-            {
-                "t": "eq",
-                "v": "Off",
-                "vt": "str"
-            },
-            {
-                "t": "else"
-            }
-        ],
-        "checkall": "true",
-        "repair": false,
-        "outputs": 2,
-        "x": 500,
-        "y": 1920,
-        "wires": [
-            [
-                "db71458988a0ae4a"
-            ],
-            [
-                "2c22eb5a28b88af3"
-            ]
-        ]
     },
     {
         "id": "e01d8fa50d01f508",
