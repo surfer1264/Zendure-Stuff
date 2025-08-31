@@ -21,7 +21,7 @@
             "8168c7cbdb038c4d"
         ],
         "x": 574,
-        "y": 2159,
+        "y": 2179,
         "w": 452,
         "h": 122
     },
@@ -57,10 +57,13 @@
             "af1d76b72a7f2aca",
             "20e1d26f9cfcb4d0",
             "9bcffdcf2913b47b",
-            "15951ffac0a8ed47"
+            "15951ffac0a8ed47",
+            "b2900737df35050a",
+            "31aef1593af4b0d7",
+            "5e173fb39bf8170d"
         ],
-        "x": 94,
-        "y": 2399,
+        "x": 174,
+        "y": 2339,
         "w": 1172,
         "h": 402
     },
@@ -93,12 +96,13 @@
             "06635f54085d96a3",
             "edcb9390f933d4b7",
             "1a09bce668c12667",
-            "b4b07729dd9d31ee"
+            "b4b07729dd9d31ee",
+            "f64a874c50bdf191"
         ],
         "x": 174,
         "y": 19,
         "w": 992,
-        "h": 402
+        "h": 442
     },
     {
         "id": "0ebb8e7b772678cd",
@@ -106,7 +110,8 @@
         "z": "479e3443afedb613",
         "name": "(7.1) Wechselrichter: Ansteuern",
         "style": {
-            "label": true
+            "label": true,
+            "fill": "#c8e7a7"
         },
         "nodes": [
             "60df30044c929c46",
@@ -119,7 +124,7 @@
             "0d452cdc92314b7d"
         ],
         "x": 1484,
-        "y": 1899,
+        "y": 1879,
         "w": 1052,
         "h": 182
     },
@@ -139,8 +144,8 @@
             "bca937b53d8c28ae",
             "197d6f4154e77e99"
         ],
-        "x": 1394,
-        "y": 499,
+        "x": 1454,
+        "y": 479,
         "w": 912,
         "h": 202
     },
@@ -169,8 +174,8 @@
             "0a3fd6bcfaa113dc",
             "8670dc77189b5b5f"
         ],
-        "x": 88,
-        "y": 3933,
+        "x": 168,
+        "y": 3953,
         "w": 838,
         "h": 468
     },
@@ -188,8 +193,8 @@
             "d4a5eb77aa517589",
             "2fc53edc55cab48e"
         ],
-        "x": 1394,
-        "y": 99,
+        "x": 1454,
+        "y": 79,
         "w": 912,
         "h": 142
     },
@@ -219,7 +224,7 @@
             "7a35a4cb11438e99"
         ],
         "x": 174,
-        "y": 439,
+        "y": 479,
         "w": 898,
         "h": 468
     },
@@ -251,13 +256,12 @@
             "909de9d9437f09c6",
             "f76cb1b980c3bdf2",
             "924fcf53aa0acbdc",
-            "5a619949abdec684",
-            "ddfcefaa3e9612d1"
+            "5a619949abdec684"
         ],
-        "x": 94,
+        "x": 174,
         "y": 2819,
         "w": 1172,
-        "h": 362
+        "h": 322
     },
     {
         "id": "6e708c215cdbfc98",
@@ -279,9 +283,9 @@
             "5485cb51b64e87ef",
             "722460ce5b6e1c2d"
         ],
-        "x": 94,
+        "x": 174,
         "y": 3319,
-        "w": 1252,
+        "w": 1172,
         "h": 202
     },
     {
@@ -298,7 +302,7 @@
             "5dd4fe71b0a47034",
             "2b9f6a16b9c71e0b"
         ],
-        "x": 94,
+        "x": 174,
         "y": 3539,
         "w": 772,
         "h": 122
@@ -315,7 +319,7 @@
             "d5eeaf058038c14e",
             "cbe6d62869a9bbe6"
         ],
-        "x": 94,
+        "x": 174,
         "y": 3219,
         "w": 632,
         "h": 82
@@ -334,7 +338,7 @@
             "75c29f28532e7a32",
             "ec50ae1b2f62c5ed"
         ],
-        "x": 94,
+        "x": 174,
         "y": 3719,
         "w": 772,
         "h": 122
@@ -368,7 +372,7 @@
             "9c35e52d51caca37"
         ],
         "x": 1494,
-        "y": 2119,
+        "y": 2139,
         "w": 1692,
         "h": 322
     },
@@ -376,7 +380,7 @@
         "id": "4e7901031e717127",
         "type": "group",
         "z": "479e3443afedb613",
-        "name": "(3.3.) Spezial: Wenn der Shelly3EM ausfällt...",
+        "name": "(3.3.) Spezial: Wenn der Shelly3EM ausfällt...oder der Solarflow Offline ist",
         "style": {
             "label": true
         },
@@ -388,12 +392,16 @@
             "a62ebd85d47fee9f",
             "750f877240f66bc6",
             "b1f2ddda67ab1775",
-            "557b88a08fb680ad"
+            "557b88a08fb680ad",
+            "8546724667636606",
+            "1bdd52ee74cd6023",
+            "f6d4dc83056b836e",
+            "c4baeda9f9677e08"
         ],
-        "x": 1394,
-        "y": 279,
+        "x": 1454,
+        "y": 239,
         "w": 912,
-        "h": 202,
+        "h": 222,
         "info": "## Verbindungsverlust Shelly 3EM\r\nDer Shelly 3EM verliert manchmal seine Verbindung\r\n\r\ndann:\r\n - wird der WR-Ausgang  auf 80W gesetzt (auf einen sinnvollen Grundlastwert)\r\n - die Regelfunktion `ReglerAktiv=off` außer Kraft gesetzt\r\n - der WR-AUsgang angesteuert\r\n\r\nWenn der SHelly wieder online ist,\r\n\r\ndann:\r\n - die Regelfunktion `ReglerAktiv=on` gesetzt\r\n - werden alle Variablen des gesamten FLows erneut initialisiert.\r\n"
     },
     {
@@ -413,8 +421,8 @@
             "59f3b95dd2f0e022",
             "b78e47bc659c68e6"
         ],
-        "x": 1394,
-        "y": 739,
+        "x": 1454,
+        "y": 719,
         "w": 912,
         "h": 182
     },
@@ -447,10 +455,11 @@
             "f6b17c0a7515dc64",
             "78dbc119241bb5d0",
             "3f77c130efc4805a",
-            "d8febfbf64f9a1dc"
+            "d8febfbf64f9a1dc",
+            "1e049cf62d58e43c"
         ],
         "x": 194,
-        "y": 1779,
+        "y": 1799,
         "w": 1132,
         "h": 348
     },
@@ -472,7 +481,6 @@
             "7d0404303c8fad6d",
             "44725bc13c3d9599",
             "b79ae4256daf27f6",
-            "3aa0a4575778a25c",
             "e87564ebc6315033",
             "bf65d001e486db67",
             "51239912e3877c4d",
@@ -480,7 +488,6 @@
             "d9fb180bd5fd6ff8",
             "f988239e95dc5426",
             "e6c67233c1c5b911",
-            "a2cb5c9db4ce66b6",
             "ec84cf4771cfbcac",
             "f81801a182e992f9",
             "ae2d81258bd8fae4",
@@ -492,12 +499,38 @@
             "5c36c0c1bfabe8e7",
             "3cd125758b237fce",
             "810f769ffce8a701",
-            "cf998755e26fe945"
+            "cf998755e26fe945",
+            "f95d4fe5b1ba92c3",
+            "e01d8fa50d01f508",
+            "2945df02bcac2061"
         ],
         "x": 184,
-        "y": 939,
+        "y": 959,
         "w": 1222,
         "h": 788
+    },
+    {
+        "id": "72932590259c2eb2",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "(1.4) Setze SF-Entladegrenze nach Monat",
+        "style": {
+            "label": true,
+            "color": "#777777",
+            "stroke": "#777777",
+            "fill": "#ffffbf"
+        },
+        "nodes": [
+            "959c8c911e7fde10",
+            "10a5947e7b0e4bba",
+            "ee79553e2bee0ac5",
+            "fd9ffa19de35ef1b",
+            "40cd311eb34f8bec"
+        ],
+        "x": 1454,
+        "y": 939,
+        "w": 912,
+        "h": 142
     },
     {
         "id": "2a3d8831dcef494e",
@@ -518,7 +551,7 @@
             "60b5b7b848171b52"
         ],
         "x": 474,
-        "y": 799,
+        "y": 839,
         "w": 572,
         "h": 82
     },
@@ -536,8 +569,8 @@
             "041e921ba09a57a6",
             "3c960d972905ddd8"
         ],
-        "x": 114,
-        "y": 3959,
+        "x": 194,
+        "y": 3979,
         "w": 752,
         "h": 82
     },
@@ -555,8 +588,8 @@
             "e7e9befaa8453b4d",
             "0ec176a2fa37ecc0"
         ],
-        "x": 114,
-        "y": 4059,
+        "x": 194,
+        "y": 4079,
         "w": 752,
         "h": 82
     },
@@ -577,7 +610,7 @@
             "d36943bed8f6d1b6"
         ],
         "x": 254,
-        "y": 1499,
+        "y": 1519,
         "w": 272,
         "h": 202
     },
@@ -595,7 +628,7 @@
             "76f6c97f59e020a9"
         ],
         "x": 254,
-        "y": 1959,
+        "y": 1979,
         "w": 292,
         "h": 142
     },
@@ -604,14 +637,9 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
+        "name": "AUS",
         "style": {
-            "stroke": "#999999",
-            "stroke-opacity": "1",
-            "fill": "none",
-            "fill-opacity": "1",
-            "label": true,
-            "label-position": "nw",
-            "color": "#a4a4a4"
+            "label": true
         },
         "nodes": [
             "f14903b8d8cafcf6",
@@ -619,7 +647,7 @@
             "ea244f2be20330ad"
         ],
         "x": 574,
-        "y": 1439,
+        "y": 1459,
         "w": 292,
         "h": 162
     },
@@ -636,7 +664,7 @@
         "onceDelay": "8",
         "topic": "",
         "x": 330,
-        "y": 1820,
+        "y": 1840,
         "wires": [
             [
                 "168148af37ed1368",
@@ -658,7 +686,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 2000,
+        "y": 2020,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -685,7 +713,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 700,
-        "y": 2200,
+        "y": 2220,
         "wires": [
             [
                 "8168c7cbdb038c4d"
@@ -711,7 +739,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 700,
-        "y": 2240,
+        "y": 2260,
         "wires": [
             [
                 "8168c7cbdb038c4d"
@@ -739,7 +767,7 @@
         "to": "",
         "reg": false,
         "x": 910,
-        "y": 2220,
+        "y": 2240,
         "wires": [
             []
         ]
@@ -757,8 +785,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 2440,
+        "x": 590,
+        "y": 2380,
         "wires": [
             []
         ]
@@ -814,8 +842,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 210,
-        "y": 2440,
+        "x": 290,
+        "y": 2380,
         "wires": [
             [
                 "e9f9cd15a6862c4e"
@@ -991,13 +1019,13 @@
         "useparts": false,
         "accumulate": false,
         "timeout": "",
-        "count": "9",
+        "count": "10",
         "reduceRight": false,
         "reduceExp": "",
         "reduceInit": "",
         "reduceInitType": "",
         "reduceFixup": "",
-        "x": 920,
+        "x": 930,
         "y": 140,
         "wires": [
             [
@@ -1011,7 +1039,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "Flowvariablen setzen",
-        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv,total, ignore, typ, minimal} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"Sollwert\", soll);\nglobal.set(\"Hysterese\", hyst);\nflow.set(\"ReglerAktiv\", aktiv);\nglobal.set(\"WRAktiv\", wraktiv);\n//flow.set(\"Total\", total);\nflow.set(\"AktiverTermin\", last);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\n\n\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  })\n}\nreturn msg;\n",
+        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv, ignore, typ, minimal, connected} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nglobal.set(\"Hysterese\", hyst);\nflow.set(\"Sollwert\", soll);\nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", 200);\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"ReglerAktiv\", aktiv);\nflow.set(\"AktiverTermin\", last);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\nflow.set(\"Connected\", connected);\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nlet debug = flow.get(\"Debug\");\nif (debug) {\nnode.warn ({\n  hyst,\n  soll,\n  wrmax,\n  max,\n  aktiv,\n  wraktiv,\n  connected\n  })\n}\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1128,8 +1156,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 230,
-        "y": 2480,
+        "x": 310,
+        "y": 2420,
         "wires": [
             [
                 "0e480ca221581f95"
@@ -1149,8 +1177,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 2480,
+        "x": 590,
+        "y": 2420,
         "wires": [
             []
         ]
@@ -1206,8 +1234,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 220,
-        "y": 2520,
+        "x": 300,
+        "y": 2460,
         "wires": [
             [
                 "3449af90d583c750"
@@ -1227,8 +1255,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 2520,
+        "x": 590,
+        "y": 2460,
         "wires": [
             [
                 "5cfcf573718eb3d5"
@@ -1286,8 +1314,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 210,
-        "y": 2560,
+        "x": 290,
+        "y": 2500,
         "wires": [
             [
                 "40a4a90fc6cbd15d"
@@ -1307,8 +1335,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 2560,
+        "x": 580,
+        "y": 2500,
         "wires": [
             []
         ]
@@ -1334,11 +1362,11 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 380,
-        "y": 1900,
+        "x": 320,
+        "y": 1920,
         "wires": [
             [
-                "db71458988a0ae4a"
+                "1e049cf62d58e43c"
             ],
             []
         ]
@@ -1394,8 +1422,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1540,
-        "y": 180,
+        "x": 1600,
+        "y": 160,
         "wires": [
             [
                 "2fc53edc55cab48e"
@@ -1420,7 +1448,7 @@
             "750f877240f66bc6"
         ],
         "x": 1525,
-        "y": 1940,
+        "y": 1920,
         "wires": [
             [
                 "e1823dbb1fbb80f7"
@@ -1438,7 +1466,7 @@
             "60df30044c929c46"
         ],
         "x": 1215,
-        "y": 1940,
+        "y": 1960,
         "wires": []
     },
     {
@@ -1462,8 +1490,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1080,
-        "y": 2520,
+        "x": 1160,
+        "y": 2460,
         "wires": [
             [],
             [
@@ -1481,8 +1509,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1225,
-        "y": 2520,
+        "x": 1305,
+        "y": 2460,
         "wires": []
     },
     {
@@ -1523,7 +1551,7 @@
         "domain": "input_number",
         "service": "increment",
         "x": 2140,
-        "y": 2000,
+        "y": 1980,
         "wires": [
             [
                 "7f5bc6e47b11df44"
@@ -1552,8 +1580,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1510,
-        "y": 560,
+        "x": 1570,
+        "y": 540,
         "wires": [
             [
                 "1cf928d6ff176b91",
@@ -1589,8 +1617,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 2140,
-        "y": 540,
+        "x": 2200,
+        "y": 520,
         "wires": [
             []
         ]
@@ -1603,7 +1631,7 @@
         "name": "HIER: Sensor des Smartmeters anpassen",
         "info": "",
         "x": 680,
-        "y": 2000,
+        "y": 2020,
         "wires": []
     },
     {
@@ -1619,8 +1647,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1980,
-        "y": 200,
+        "x": 2040,
+        "y": 180,
         "wires": [
             [
                 "d4a5eb77aa517589"
@@ -1637,8 +1665,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 2265,
-        "y": 160,
+        "x": 2325,
+        "y": 140,
         "wires": []
     },
     {
@@ -1707,7 +1735,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 560,
-        "y": 480,
+        "y": 520,
         "wires": [
             [
                 "958b193833400787"
@@ -1728,7 +1756,7 @@
         "finalize": "",
         "libs": [],
         "x": 880,
-        "y": 600,
+        "y": 640,
         "wires": [
             [
                 "7a35a4cb11438e99"
@@ -1779,7 +1807,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 560,
-        "y": 560,
+        "y": 600,
         "wires": [
             [
                 "958b193833400787"
@@ -1830,7 +1858,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 550,
-        "y": 520,
+        "y": 560,
         "wires": [
             [
                 "958b193833400787"
@@ -1881,7 +1909,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 550,
-        "y": 600,
+        "y": 640,
         "wires": [
             [
                 "958b193833400787"
@@ -1911,7 +1939,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 790,
-        "y": 540,
+        "y": 580,
         "wires": [
             [
                 "42fc7acb14089ef4"
@@ -1962,7 +1990,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 560,
-        "y": 640,
+        "y": 680,
         "wires": [
             [
                 "958b193833400787"
@@ -2013,7 +2041,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 550,
-        "y": 680,
+        "y": 720,
         "wires": [
             [
                 "958b193833400787"
@@ -2071,7 +2099,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 2900,
         "wires": [
             [
@@ -2130,7 +2158,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 2940,
         "wires": [
             [
@@ -2189,7 +2217,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 2860,
         "wires": [
             [
@@ -2248,7 +2276,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 2980,
         "wires": [
             [
@@ -2307,7 +2335,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 3020,
         "wires": [
             [
@@ -2366,7 +2394,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 170,
+        "x": 250,
         "y": 3060,
         "wires": [
             [
@@ -2380,14 +2408,14 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Setze Flow-Variable Date1",
-        "func": "flow.set(\"Date1\", msg.payload.substring(0,5));\nmsg.topic = \"Date1\";\nmsg.payload = flow.get(\"Date1\");\nreturn msg",
+        "func": "flow.set(\"Date1\", msg.payload.substring(0,5));\n//msg.topic = \"Date1\";\n//msg.payload = flow.get(\"Date1\");\nreturn msg",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 2860,
         "wires": [
             []
@@ -2399,14 +2427,14 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Setze Flow-Variable Date2",
-        "func": "flow.set(\"Date2\", msg.payload.substring(0,5));\nmsg.topic = \"Date2\";\nmsg.payload = flow.get(\"Date2\");\nreturn msg",
+        "func": "flow.set(\"Date2\", msg.payload.substring(0,5));\n//msg.topic = \"Date2\";\n//msg.payload = flow.get(\"Date2\");\nreturn msg",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 2900,
         "wires": [
             []
@@ -2418,14 +2446,14 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Setze Flow-Variable Date3",
-        "func": "flow.set(\"Date3\", msg.payload.substring(0,5));\nmsg.topic = \"Date3\";\nmsg.payload = flow.get(\"Date3\");\nreturn msg",
+        "func": "flow.set(\"Date3\", msg.payload.substring(0,5));\n//msg.topic = \"Date3\";\n//msg.payload = flow.get(\"Date3\");\nreturn msg",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 2940,
         "wires": [
             []
@@ -2444,7 +2472,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 2980,
         "wires": [
             [
@@ -2465,7 +2493,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 3020,
         "wires": [
             [
@@ -2486,7 +2514,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
+        "x": 540,
         "y": 3060,
         "wires": [
             [
@@ -2537,7 +2565,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 310,
+        "x": 390,
         "y": 3420,
         "wires": [
             [
@@ -2590,7 +2618,7 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 630,
+        "x": 710,
         "y": 3420,
         "wires": [
             [
@@ -2683,7 +2711,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 210,
+        "x": 290,
         "y": 3600,
         "wires": [
             [
@@ -2707,7 +2735,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 440,
+        "x": 520,
         "y": 3620,
         "wires": [
             [
@@ -2741,7 +2769,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 730,
+        "x": 810,
         "y": 3600,
         "wires": [
             []
@@ -2760,7 +2788,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
+        "x": 510,
         "y": 3580,
         "wires": [
             [
@@ -2822,7 +2850,7 @@
             "e170bc624eacf9aa"
         ],
         "x": 345,
-        "y": 480,
+        "y": 520,
         "wires": [
             [
                 "645676e2f7f3e8cf",
@@ -2861,7 +2889,8 @@
                 "404d1730801695a8",
                 "108e0ec12c031ce4",
                 "1a09bce668c12667",
-                "b4b07729dd9d31ee"
+                "b4b07729dd9d31ee",
+                "f64a874c50bdf191"
             ]
         ]
     },
@@ -2892,7 +2921,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
+        "x": 840,
         "y": 3020,
         "wires": [
             [
@@ -2927,7 +2956,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1120,
+        "x": 1200,
         "y": 3040,
         "wires": [
             []
@@ -2954,7 +2983,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1080,
+        "x": 1160,
         "y": 2960,
         "wires": [
             [],
@@ -2973,7 +3002,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1225,
+        "x": 1305,
         "y": 2960,
         "wires": []
     },
@@ -3028,7 +3057,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 240,
+        "x": 320,
         "y": 3260,
         "wires": [
             [
@@ -3049,7 +3078,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 590,
+        "x": 670,
         "y": 3260,
         "wires": [
             []
@@ -3081,7 +3110,7 @@
         "blockInputOverrides": true,
         "domain": "input_text",
         "service": "set_value",
-        "x": 860,
+        "x": 940,
         "y": 3360,
         "wires": [
             []
@@ -3160,7 +3189,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 210,
+        "x": 290,
         "y": 3360,
         "wires": [
             [
@@ -3177,7 +3206,7 @@
         "name": "",
         "scope": null,
         "uncaught": false,
-        "x": 180,
+        "x": 260,
         "y": 3780,
         "wires": [
             [
@@ -3200,7 +3229,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 420,
+        "x": 500,
         "y": 3760,
         "wires": []
     },
@@ -3306,8 +3335,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 220,
-        "y": 2600,
+        "x": 300,
+        "y": 2540,
         "wires": [
             [
                 "ba6605545cfdfb18"
@@ -3327,8 +3356,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 520,
-        "y": 2600,
+        "x": 600,
+        "y": 2540,
         "wires": [
             []
         ]
@@ -3384,8 +3413,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 240,
-        "y": 2640,
+        "x": 320,
+        "y": 2580,
         "wires": [
             [
                 "6453649fc9e5f5f0"
@@ -3405,8 +3434,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 510,
-        "y": 2640,
+        "x": 590,
+        "y": 2580,
         "wires": [
             []
         ]
@@ -3433,7 +3462,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1920,
-        "y": 2000,
+        "y": 1980,
         "wires": [
             [
                 "5496fa05034dd5e0"
@@ -3449,7 +3478,7 @@
         "name": "HIER: Electriclevel Sensor prüfen",
         "info": "",
         "x": 330,
-        "y": 860,
+        "y": 900,
         "wires": []
     },
     {
@@ -3479,7 +3508,7 @@
         "domain": "switch",
         "service": "turn_off",
         "x": 2590,
-        "y": 2340,
+        "y": 2360,
         "wires": [
             []
         ]
@@ -3511,7 +3540,7 @@
         "domain": "switch",
         "service": "turn_on",
         "x": 2590,
-        "y": 2220,
+        "y": 2240,
         "wires": [
             [
                 "4ade168f633a49b7"
@@ -3570,7 +3599,7 @@
             }
         ],
         "x": 1830,
-        "y": 2340,
+        "y": 2360,
         "wires": [
             [
                 "05397794624406c5"
@@ -3588,7 +3617,7 @@
         "name": "HIER: WR Sensornamen für WR Ein/Aus prüfen",
         "info": "",
         "x": 2600,
-        "y": 2180,
+        "y": 2200,
         "wires": []
     },
     {
@@ -3605,7 +3634,7 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 600,
+        "x": 680,
         "y": 3360,
         "wires": []
     },
@@ -3624,7 +3653,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1850,
-        "y": 2040,
+        "y": 2020,
         "wires": []
     },
     {
@@ -3678,11 +3707,11 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1510,
-        "y": 400,
+        "x": 1570,
+        "y": 420,
         "wires": [
             [
-                "8556d367c4b1fac5"
+                "1bdd52ee74cd6023"
             ],
             [
                 "a62ebd85d47fee9f"
@@ -3696,8 +3725,8 @@
         "g": "4e7901031e717127",
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
-        "x": 1550,
-        "y": 360,
+        "x": 1610,
+        "y": 380,
         "wires": []
     },
     {
@@ -3721,8 +3750,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 900,
-        "y": 2520,
+        "x": 980,
+        "y": 2460,
         "wires": [
             [],
             [
@@ -3751,7 +3780,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 920,
+        "x": 1000,
         "y": 2960,
         "wires": [
             [],
@@ -3781,7 +3810,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 980,
+        "x": 1060,
         "y": 3480,
         "wires": [
             [],
@@ -3834,7 +3863,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 570,
-        "y": 840,
+        "y": 880,
         "wires": [
             [
                 "2717c849e2440723"
@@ -3855,7 +3884,7 @@
         "finalize": "",
         "libs": [],
         "x": 920,
-        "y": 840,
+        "y": 880,
         "wires": [
             []
         ]
@@ -3866,7 +3895,7 @@
         "z": "479e3443afedb613",
         "g": "0ebb8e7b772678cd",
         "name": "WR Aktion",
-        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet zielSensor;\n\nif (debug) {\n    node.warn (regelwert);\n    }\n\nswitch (wrtyp) {\n    case 1:\n        {\n            //absolute Einspeisung mit APSystem EZ1\n            zielSensor= flow.get (\"wrSensor_typ1\");\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            return msg;\n        }\n    case 2:\n        {\n            //relative Einspeisung mit Hoymiles HMS\n            regelwert = (regelwert / wrmax * 100);\n            zielSensor= flow.get (\"wrSensor_typ2\");\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            return msg;\n        }\n    case 3:\n        {\n            //absolute Einspeisung in Zendure Manager outputlimit\n            zielSensor= flow.get (\"wrSensor_typ3\");\n            //msg.payload = regelwert;\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            return msg;\n        }\n    case 4:\n            //absolute Einspeisung in Zendure Manuelle Leistung\n        {\n            zielSensor= flow.get (\"wrSensor_typ4\");\n            //msg.payload = regelwert;\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            return msg;\n        }\n    }\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet zielSensor;\n\nif (debug) {\n    node.warn (regelwert);\n    }\n\nswitch (wrtyp) {\n    case 1:\n        {\n            //absolute Einspeisung mit APSystem EZ1\n            zielSensor= flow.get (\"wrSensor_typ1\"); //Hole Sensorname\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            return msg;\n        }\n    case 2:\n        {\n            //relative Einspeisung mit Hoymiles HMS\n            regelwert = (regelwert / wrmax * 100);\n            zielSensor= flow.get (\"wrSensor_typ2\"); //Hole Sensorname\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            return msg;\n        }\n    case 3:\n        {\n            //absolute Einspeisung in Zendure Manager outputlimit\n            zielSensor= flow.get (\"wrSensor_typ3\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            return msg;\n        }\n    case 4:\n            //absolute Einspeisung in Zendure Manuelle Leistung\n        {\n            zielSensor= flow.get (\"wrSensor_typ4\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            return msg;\n        }\n    }\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3874,7 +3903,7 @@
         "finalize": "",
         "libs": [],
         "x": 1640,
-        "y": 1940,
+        "y": 1920,
         "wires": [
             [
                 "54372a43b72a9c3a",
@@ -3903,7 +3932,7 @@
         "to": "",
         "reg": false,
         "x": 2060,
-        "y": 2240,
+        "y": 2260,
         "wires": [
             [
                 "2986171de753aadb"
@@ -3931,7 +3960,7 @@
         "to": "",
         "reg": false,
         "x": 2060,
-        "y": 2380,
+        "y": 2400,
         "wires": [
             [
                 "113787982a56301f"
@@ -3958,8 +3987,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2040,
-        "y": 440,
+        "x": 2120,
+        "y": 420,
         "wires": [
             [
                 "750f877240f66bc6"
@@ -3986,8 +4015,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2040,
-        "y": 360,
+        "x": 2120,
+        "y": 320,
         "wires": [
             [
                 "b1f2ddda67ab1775"
@@ -3999,7 +4028,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "4e7901031e717127",
-        "name": "Setze WR auf FIX (80W)",
+        "name": "Setze WR auf FIX (70W)",
         "func": "msg.payload = {einspeisewert: 70};\nreturn msg; \n\n",
         "outputs": 1,
         "timeout": "",
@@ -4007,8 +4036,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1810,
-        "y": 440,
+        "x": 1850,
+        "y": 420,
         "wires": [
             [
                 "7a5d3ef92442a929"
@@ -4025,8 +4054,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 2245,
-        "y": 440,
+        "x": 2305,
+        "y": 420,
         "wires": []
     },
     {
@@ -4131,8 +4160,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 220,
-        "y": 2720,
+        "x": 300,
+        "y": 2660,
         "wires": [
             [
                 "af7cb14005ad7208"
@@ -4152,8 +4181,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 520,
-        "y": 2720,
+        "x": 600,
+        "y": 2660,
         "wires": [
             []
         ]
@@ -4197,7 +4226,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 650,
-        "y": 2080,
+        "y": 2100,
         "wires": [
             []
         ]
@@ -4212,8 +4241,8 @@
         "links": [
             "7b4e9c68d230dfef"
         ],
-        "x": 2245,
-        "y": 360,
+        "x": 2295,
+        "y": 320,
         "wires": []
     },
     {
@@ -4226,8 +4255,8 @@
         "links": [
             "7b4e9c68d230dfef"
         ],
-        "x": 1645,
-        "y": 600,
+        "x": 1705,
+        "y": 580,
         "wires": []
     },
     {
@@ -4281,8 +4310,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1530,
-        "y": 780,
+        "x": 1590,
+        "y": 760,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4307,8 +4336,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1870,
-        "y": 780,
+        "x": 1930,
+        "y": 760,
         "wires": [
             [
                 "03ed40ed26dd3a65"
@@ -4342,8 +4371,8 @@
         "target": {},
         "service_domain": "persistent_notification",
         "mergecontext": "",
-        "x": 2190,
-        "y": 780,
+        "x": 2250,
+        "y": 760,
         "wires": [
             []
         ]
@@ -4399,8 +4428,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1550,
-        "y": 820,
+        "x": 1610,
+        "y": 800,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4425,7 +4454,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
+        "x": 510,
         "y": 3800,
         "wires": [
             [
@@ -4445,7 +4474,7 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 750,
+        "x": 830,
         "y": 3800,
         "wires": [
             []
@@ -4464,8 +4493,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1850,
-        "y": 820,
+        "x": 1910,
+        "y": 800,
         "wires": [
             [
                 "59f3b95dd2f0e022"
@@ -4484,8 +4513,8 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 2190,
-        "y": 840,
+        "x": 2250,
+        "y": 820,
         "wires": [
             []
         ]
@@ -4504,7 +4533,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1220,
-        "y": 2080,
+        "y": 2100,
         "wires": []
     },
     {
@@ -4558,8 +4587,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 220,
-        "y": 2760,
+        "x": 300,
+        "y": 2700,
         "wires": [
             [
                 "45c911e07adc21ba"
@@ -4579,8 +4608,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 500,
-        "y": 2760,
+        "x": 580,
+        "y": 2700,
         "wires": [
             [],
             [
@@ -4595,8 +4624,8 @@
         "g": "4cd6e76302eb583f",
         "name": "HIER: Electriclevel Sensor prüfen",
         "info": "",
-        "x": 1110,
-        "y": 2760,
+        "x": 1190,
+        "y": 2700,
         "wires": []
     },
     {
@@ -4620,8 +4649,8 @@
         "g": "d926ab42ae07f620",
         "name": "Täglicher Reset",
         "info": "",
-        "x": 1500,
-        "y": 600,
+        "x": 1560,
+        "y": 580,
         "wires": []
     },
     {
@@ -4631,8 +4660,8 @@
         "g": "4e7901031e717127",
         "name": "RESET",
         "info": "",
-        "x": 2230,
-        "y": 320,
+        "x": 2290,
+        "y": 280,
         "wires": []
     },
     {
@@ -4679,7 +4708,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 570,
-        "y": 720,
+        "y": 760,
         "wires": [
             [
                 "958b193833400787"
@@ -4737,7 +4766,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 190,
+        "x": 270,
         "y": 3100,
         "wires": [
             [
@@ -4758,7 +4787,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 470,
+        "x": 550,
         "y": 3100,
         "wires": [
             [
@@ -4779,8 +4808,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 470,
-        "y": 4000,
+        "x": 550,
+        "y": 4020,
         "wires": [
             [
                 "041e921ba09a57a6"
@@ -4813,8 +4842,8 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 740,
-        "y": 4000,
+        "x": 820,
+        "y": 4020,
         "wires": [
             []
         ]
@@ -4841,8 +4870,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 220,
-        "y": 4000,
+        "x": 300,
+        "y": 4020,
         "wires": [
             [
                 "ee29490c9c4b5005"
@@ -4867,7 +4896,7 @@
         "senderr": false,
         "headers": [],
         "x": 660,
-        "y": 2040,
+        "y": 2060,
         "wires": [
             [
                 "66a15f5adc0815dc",
@@ -4888,8 +4917,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1980,
-        "y": 140,
+        "x": 2040,
+        "y": 120,
         "wires": [
             [
                 "d4a5eb77aa517589"
@@ -4924,8 +4953,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 740,
-        "y": 4100,
+        "x": 820,
+        "y": 4120,
         "wires": [
             []
         ]
@@ -4943,8 +4972,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 470,
-        "y": 4100,
+        "x": 550,
+        "y": 4120,
         "wires": [
             [
                 "e2258c6eea29d2b9"
@@ -4973,8 +5002,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 220,
-        "y": 4100,
+        "x": 300,
+        "y": 4120,
         "wires": [
             [
                 "e7e9befaa8453b4d"
@@ -5003,8 +5032,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1850,
-        "y": 2400,
+        "x": 1830,
+        "y": 2420,
         "wires": [
             [
                 "8a4a05751fdc343f"
@@ -5033,7 +5062,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1850,
+        "x": 1830,
         "y": 2240,
         "wires": [
             [
@@ -5145,7 +5174,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 550,
-        "y": 760,
+        "y": 800,
         "wires": [
             [
                 "958b193833400787"
@@ -5181,7 +5210,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2260,
-        "y": 2240,
+        "y": 2260,
         "wires": [
             [
                 "3f310be62393785c"
@@ -5223,7 +5252,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2260,
-        "y": 2380,
+        "y": 2400,
         "wires": [
             [
                 "4119817686335d91"
@@ -5263,7 +5292,7 @@
         "domain": "button",
         "service": "press",
         "x": 2590,
-        "y": 2260,
+        "y": 2280,
         "wires": [
             []
         ]
@@ -5295,7 +5324,7 @@
         "domain": "button",
         "service": "press",
         "x": 2600,
-        "y": 2380,
+        "y": 2400,
         "wires": [
             []
         ]
@@ -5313,7 +5342,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 940,
+        "x": 1020,
         "y": 3420,
         "wires": [
             [
@@ -5363,7 +5392,7 @@
         "repair": false,
         "outputs": 6,
         "x": 730,
-        "y": 1260,
+        "y": 1280,
         "wires": [
             [
                 "df1e2cb0ac09ba12",
@@ -5374,8 +5403,8 @@
             [
                 "df1e2cb0ac09ba12",
                 "7d0404303c8fad6d",
-                "3aa0a4575778a25c",
-                "5c36c0c1bfabe8e7"
+                "5c36c0c1bfabe8e7",
+                "b79ae4256daf27f6"
             ],
             [
                 "e87564ebc6315033",
@@ -5422,7 +5451,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 360,
-        "y": 1180,
+        "y": 1200,
         "wires": [
             [
                 "dd3a208eb767c579"
@@ -5467,7 +5496,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 410,
-        "y": 1100,
+        "y": 1120,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -5501,7 +5530,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1270,
-        "y": 1240,
+        "y": 1260,
         "wires": [
             []
         ]
@@ -5533,7 +5562,7 @@
         "domain": "input_boolean",
         "service": "turn_off",
         "x": 390,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             [
                 "68eb3e92f051ff26"
@@ -5566,8 +5595,8 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_on",
-        "x": 1170,
-        "y": 1140,
+        "x": 1110,
+        "y": 1120,
         "wires": [
             []
         ]
@@ -5598,7 +5627,7 @@
         "blockInputOverrides": true,
         "domain": "select",
         "service": "select_option",
-        "x": 1170,
+        "x": 1110,
         "y": 1080,
         "wires": [
             []
@@ -5631,7 +5660,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1240,
-        "y": 1600,
+        "y": 1620,
         "wires": [
             []
         ]
@@ -5641,40 +5670,19 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Set WRTyp 1: 80",
-        "func": "flow.set(\"WRTyp\", 1);\nflow.set(\"Regelwert\", 80);\nlet zielSensor = flow.get(\"wrSensor_typ1\");\nlet wrmax = 80; //80W\n\nmsg.payload = {\n    einspeisewert: wrmax,\n    sensor: zielSensor\n};\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
+        "name": "Set WR auf: 80W",
+        "func": "//Typ1 oder Typ2 WR\n//die WR sollen initialisiert werden mit einer Vorgabe\n//Regelwert wird auf 80W gesetzt\n//die Regelung übernimmt dann die Bildung des Regelwertes von diesem Ausgangswert\n\nflow.set(\"Regelwert\", 80); //80W\nlet wrmax = flow.get(\"WRLeistung\");\nlet leistung = flow.get(\"Regelwert\");\nlet wrhersteller = flow.get(\"WRHersteller\");\nlet zielSensor = \"ABS\";\n\nswitch (wrhersteller)\n    {\n    case \"ABS\":\n        zielSensor = flow.get(\"wrSensor_typ1\");\n        msg.payload = {\n        einspeisewert: leistung,\n        sensor: zielSensor};\n        // node.warn(leistung);\n        return msg;\n        \n    case \"REL\":\n        zielSensor = flow.get(\"wrSensor_typ2\");\n        leistung = Math.round((leistung / wrmax) * 100); //10% = 80W\n        msg.payload = {\n        einspeisewert: leistung,\n        sensor: zielSensor};\n        // node.warn(leistung);\n        return msg;\n        \n    }",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 890,
-        "y": 980,
+        "x": 990,
+        "y": 1000,
         "wires": [
             [
                 "e6c67233c1c5b911"
-            ]
-        ]
-    },
-    {
-        "id": "3aa0a4575778a25c",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Set WRTyp 2: 10%",
-        "func": "flow.set(\"WRTyp\", 2);\nflow.set(\"Regelwert\", 80);\nlet zielSensor = flow.get(\"wrSensor_typ2\");\nlet wrmax = 10; //10% = 80W\n\nmsg.payload = {\n    einspeisewert: wrmax,\n    sensor: zielSensor\n};\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 890,
-        "y": 1040,
-        "wires": [
-            [
-                "a2cb5c9db4ce66b6"
             ]
         ]
     },
@@ -5692,7 +5700,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1220,
+        "y": 1240,
         "wires": [
             [
                 "80276a25567d0ce3"
@@ -5773,7 +5781,7 @@
             }
         ],
         "x": 400,
-        "y": 1360,
+        "y": 1380,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -5786,7 +5794,7 @@
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
         "name": "WRTyp ermitteln",
-        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"AUS\":\n       {\n       flow.set(\"WRTyp\", 0)\n       msg.payload = 0;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = 1;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = 2;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"OUT\":\n       {\n       flow.set(\"WRTyp\", 3)\n       msg.payload = 3;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       flow.set(\"Reglerkp\", 0.9);\n       msg.payload = 4;\n       return msg;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = 5;\n       return msg;\n       }\n    }",
+        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"AUS\":\n       {\n       flow.set(\"WRTyp\", 0)\n       msg.payload = 0;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = 1;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = 2;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"OUT\":\n       {\n       flow.set(\"WRTyp\", 3)\n       msg.payload = 3;\n       flow.set(\"Reglerkp\", 1);\n       return msg;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       flow.set(\"Reglerkp\", 0.8);\n       msg.payload = 4;\n       return msg;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = 5;\n       return msg;\n       }\n    }",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5794,7 +5802,7 @@
         "finalize": "",
         "libs": [],
         "x": 560,
-        "y": 1260,
+        "y": 1280,
         "wires": [
             [
                 "df27770545d213b5"
@@ -5811,7 +5819,7 @@
             "06635f54085d96a3"
         ],
         "x": 225,
-        "y": 1020,
+        "y": 1040,
         "wires": [
             [
                 "dd3a208eb767c579",
@@ -5860,7 +5868,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1240,
-        "y": 1460,
+        "y": 1480,
         "wires": [
             []
         ]
@@ -5888,8 +5896,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 600,
-        "y": 1900,
+        "x": 700,
+        "y": 1920,
         "wires": [
             [
                 "4f2a4b1d2bb4a50a"
@@ -5913,7 +5921,7 @@
         "finalize": "",
         "libs": [],
         "x": 890,
-        "y": 1880,
+        "y": 1900,
         "wires": [
             [
                 "68c44e68d8a62aa4"
@@ -5934,7 +5942,7 @@
         "finalize": "",
         "libs": [],
         "x": 350,
-        "y": 1540,
+        "y": 1560,
         "wires": [
             [
                 "b2f2791b82ef1fd9"
@@ -5963,7 +5971,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1840,
-        "y": 1940,
+        "y": 1920,
         "wires": [
             [
                 "13971ddb6ad995e2"
@@ -5998,7 +6006,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 380,
-        "y": 1620,
+        "y": 1640,
         "wires": [
             [
                 "d36943bed8f6d1b6"
@@ -6010,7 +6018,7 @@
         "type": "api-call-service",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Setze WR EZ1 auf 80W",
+        "name": "Setze WR ",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -6033,40 +6041,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1170,
-        "y": 980,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "a2cb5c9db4ce66b6",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Setze HMS auf 10%",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "number",
-        "service": "set_value",
-        "x": 1160,
-        "y": 1040,
+        "x": 1200,
+        "y": 1000,
         "wires": [
             []
         ]
@@ -6098,7 +6074,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1240,
-        "y": 1560,
+        "y": 1580,
         "wires": [
             []
         ]
@@ -6176,7 +6152,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 2040,
+        "y": 2060,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -6197,8 +6173,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 800,
-        "y": 1940,
+        "x": 880,
+        "y": 1960,
         "wires": []
     },
     {
@@ -6215,7 +6191,7 @@
         "finalize": "",
         "libs": [],
         "x": 1010,
-        "y": 2080,
+        "y": 2100,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -6236,7 +6212,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
+        "x": 840,
         "y": 3100,
         "wires": [
             []
@@ -6256,7 +6232,7 @@
         "finalize": "",
         "libs": [],
         "x": 890,
-        "y": 1820,
+        "y": 1840,
         "wires": [
             [
                 "78dbc119241bb5d0"
@@ -6276,7 +6252,7 @@
         "overwriteFile": "false",
         "encoding": "none",
         "x": 1110,
-        "y": 1820,
+        "y": 1840,
         "wires": [
             []
         ]
@@ -6295,7 +6271,7 @@
         "finalize": "",
         "libs": [],
         "x": 580,
-        "y": 1820,
+        "y": 1840,
         "wires": [
             [
                 "f6b17c0a7515dc64"
@@ -6321,8 +6297,8 @@
         "drop": false,
         "allowrate": false,
         "outputs": 1,
-        "x": 770,
-        "y": 2760,
+        "x": 850,
+        "y": 2700,
         "wires": [
             [
                 "20e1d26f9cfcb4d0"
@@ -6339,8 +6315,8 @@
         "links": [
             "7b4e9c68d230dfef"
         ],
-        "x": 925,
-        "y": 2760,
+        "x": 1005,
+        "y": 2700,
         "wires": []
     },
     {
@@ -6367,7 +6343,7 @@
         "repair": false,
         "outputs": 2,
         "x": 2410,
-        "y": 2260,
+        "y": 2280,
         "wires": [
             [
                 "3f310be62393785c"
@@ -6401,7 +6377,7 @@
         "repair": false,
         "outputs": 2,
         "x": 2410,
-        "y": 2400,
+        "y": 2420,
         "wires": [
             [
                 "4119817686335d91"
@@ -6435,7 +6411,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1010,
-        "y": 1400,
+        "y": 1420,
         "wires": [
             [
                 "bd67f151a7c8bdbe"
@@ -6474,7 +6450,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 1260,
-        "y": 1340,
+        "y": 1360,
         "wires": [
             []
         ]
@@ -6559,7 +6535,7 @@
         "repair": false,
         "outputs": 3,
         "x": 850,
-        "y": 2040,
+        "y": 2060,
         "wires": [
             [
                 "3"
@@ -6570,63 +6546,6 @@
             [
                 "be89d5ddb5c4de40"
             ]
-        ]
-    },
-    {
-        "id": "ddfcefaa3e9612d1",
-        "type": "server-state-changed",
-        "z": "479e3443afedb613",
-        "g": "035acd6f5889242d",
-        "name": "Regler Typ",
-        "server": "285afb99.5208c4",
-        "version": 6,
-        "outputs": 1,
-        "exposeAsEntityConfig": "",
-        "entities": {
-            "entity": [
-                "input_select.regler_typ"
-            ],
-            "substring": [],
-            "regex": []
-        },
-        "outputInitially": false,
-        "stateType": "str",
-        "ifState": "",
-        "ifStateType": "str",
-        "ifStateOperator": "is",
-        "outputOnlyOnStateChange": true,
-        "for": "",
-        "forType": "num",
-        "forUnits": "minutes",
-        "ignorePrevStateNull": false,
-        "ignorePrevStateUnknown": false,
-        "ignorePrevStateUnavailable": false,
-        "ignoreCurrentStateUnknown": false,
-        "ignoreCurrentStateUnavailable": false,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "eventData"
-            },
-            {
-                "property": "ReglerTyp",
-                "propertyType": "flow",
-                "value": "",
-                "valueType": "entityState"
-            }
-        ],
-        "x": 180,
-        "y": 3140,
-        "wires": [
-            []
         ]
     },
     {
@@ -6642,8 +6561,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
-        "y": 4180,
+        "x": 510,
+        "y": 4200,
         "wires": [
             [
                 "e25dd8e781b3f57d"
@@ -6672,8 +6591,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 4180,
+        "x": 280,
+        "y": 4200,
         "wires": [
             [
                 "91570a4c78376cef"
@@ -6708,8 +6627,8 @@
         "target": {
             "entity_id": "{{ payload.sensor }}"
         },
-        "x": 740,
-        "y": 4180,
+        "x": 820,
+        "y": 4200,
         "wires": [
             []
         ]
@@ -6736,8 +6655,8 @@
         "outputLocationType": "msg",
         "outputLocation": "payload",
         "outputResultsCount": 1,
-        "x": 450,
-        "y": 4240,
+        "x": 530,
+        "y": 4260,
         "wires": [
             [
                 "e452733f940cf159"
@@ -6757,8 +6676,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
-        "y": 4240,
+        "x": 840,
+        "y": 4260,
         "wires": [
             [],
             []
@@ -6786,8 +6705,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 4240,
+        "x": 280,
+        "y": 4260,
         "wires": [
             [
                 "fc9dbf8b3b334185"
@@ -6800,17 +6719,19 @@
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
         "name": "Sensornamen setzen",
-        "func": "//Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n//typ3 und typ4 sind die Sensoren der FireSon-Integration\n//typ1 spricht Sensoren absolut an (in Watt)\n//typ2 spricht Sensoren relativ an (in %)\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // FireSon Integratiom, OUTPUT-Limit\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // FireSon Integratiom, Manuelle Leistungssteuerung\nreturn msg;",
+        "func": "//Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n//typ3 und typ4 sind die Sensoren der Z-HA-Integration\n//typ1 spricht Sensoren absolut an (in Watt)\n//typ2 spricht Sensoren relativ an (in %)\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAVolMinSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 460,
-        "y": 1020,
+        "x": 420,
+        "y": 1040,
         "wires": [
-            []
+            [
+                "e01d8fa50d01f508"
+            ]
         ]
     },
     {
@@ -6821,7 +6742,7 @@
         "name": "HIER: Sensornamen anpassen",
         "info": "",
         "x": 490,
-        "y": 980,
+        "y": 1000,
         "wires": []
     },
     {
@@ -6838,7 +6759,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1340,
+        "y": 1360,
         "wires": [
             [
                 "ae2d81258bd8fae4"
@@ -6859,7 +6780,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1460,
+        "y": 1480,
         "wires": [
             [
                 "f988239e95dc5426"
@@ -6880,7 +6801,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1260,
+        "y": 1280,
         "wires": [
             [
                 "80276a25567d0ce3"
@@ -6916,7 +6837,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 2390,
-        "y": 2000,
+        "y": 1980,
         "wires": [
             []
         ]
@@ -6928,8 +6849,8 @@
         "g": "70cc64c2bba0fbd9",
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
-        "x": 1550,
-        "y": 880,
+        "x": 1610,
+        "y": 860,
         "wires": []
     },
     {
@@ -6940,7 +6861,7 @@
         "name": "Wenn Sensornamen in 1.3. gut gepflegt, dann läuft die Routine generisch",
         "info": "",
         "x": 2250,
-        "y": 1940,
+        "y": 1920,
         "wires": []
     },
     {
@@ -6966,7 +6887,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 350,
-        "y": 2000,
+        "y": 2020,
         "wires": [
             [
                 "76f6c97f59e020a9"
@@ -6987,7 +6908,7 @@
         "finalize": "",
         "libs": [],
         "x": 430,
-        "y": 2060,
+        "y": 2080,
         "wires": [
             [
                 "1f11ef02984634d4"
@@ -7008,8 +6929,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 360,
-        "y": 4300,
+        "x": 440,
+        "y": 4320,
         "wires": [
             [
                 "3c8cabaa304bd745"
@@ -7033,8 +6954,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 560,
-        "y": 4300,
+        "x": 640,
+        "y": 4320,
         "wires": [
             [
                 "2940a6546713a79a"
@@ -7054,8 +6975,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 760,
-        "y": 4300,
+        "x": 840,
+        "y": 4320,
         "wires": [
             [],
             []
@@ -7083,8 +7004,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 4300,
+        "x": 280,
+        "y": 4320,
         "wires": [
             [
                 "6bd08e9d0b68c8e0"
@@ -7118,7 +7039,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 360,
-        "y": 1660,
+        "y": 1680,
         "wires": [
             [
                 "3cd125758b237fce"
@@ -7139,7 +7060,7 @@
         "finalize": "",
         "libs": [],
         "x": 640,
-        "y": 1660,
+        "y": 1680,
         "wires": [
             [
                 "810f769ffce8a701"
@@ -7173,7 +7094,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 870,
-        "y": 1660,
+        "y": 1680,
         "wires": [
             []
         ]
@@ -7191,8 +7112,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 430,
-        "y": 4360,
+        "x": 510,
+        "y": 4380,
         "wires": [
             [
                 "ac712f39db9196a3"
@@ -7221,8 +7142,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 200,
-        "y": 4360,
+        "x": 280,
+        "y": 4380,
         "wires": [
             [
                 "0a3fd6bcfaa113dc"
@@ -7257,8 +7178,8 @@
         "target": {
             "entity_id": "{{ payload.sensor }}"
         },
-        "x": 750,
-        "y": 4360,
+        "x": 830,
+        "y": 4380,
         "wires": [
             []
         ]
@@ -7291,7 +7212,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 930,
-        "y": 660,
+        "y": 700,
         "wires": [
             []
         ]
@@ -7347,8 +7268,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 210,
-        "y": 2680,
+        "x": 290,
+        "y": 2620,
         "wires": [
             [
                 "15951ffac0a8ed47"
@@ -7368,8 +7289,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 540,
-        "y": 2680,
+        "x": 620,
+        "y": 2620,
         "wires": [
             []
         ]
@@ -7477,7 +7398,7 @@
             }
         ],
         "x": 1610,
-        "y": 2300,
+        "y": 2320,
         "wires": [
             [
                 "36f3252fb4621270"
@@ -7559,8 +7480,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 2130,
-        "y": 600,
+        "x": 2190,
+        "y": 580,
         "wires": [
             []
         ]
@@ -7570,7 +7491,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "cf998755e26fe945",
-        "name": "Set SF out Max",
+        "name": "Set SF out 100",
         "func": "// Wenn ty1 oder typ2 oder typ4 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = 100;\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
@@ -7579,7 +7500,7 @@
         "finalize": "",
         "libs": [],
         "x": 680,
-        "y": 1480,
+        "y": 1500,
         "wires": [
             [
                 "f14903b8d8cafcf6"
@@ -7613,7 +7534,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 730,
-        "y": 1520,
+        "y": 1540,
         "wires": [
             [
                 "ea244f2be20330ad"
@@ -7658,7 +7579,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 2810,
-        "y": 2220,
+        "y": 2240,
         "wires": [
             [],
             [
@@ -7685,7 +7606,7 @@
         "allowrate": false,
         "outputs": 1,
         "x": 3070,
-        "y": 2160,
+        "y": 2180,
         "wires": [
             [
                 "2986171de753aadb"
@@ -7718,8 +7639,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 2160,
-        "y": 660,
+        "x": 2220,
+        "y": 640,
         "wires": [
             []
         ]
@@ -7751,7 +7672,644 @@
         "domain": "input_boolean",
         "service": "turn_off",
         "x": 730,
-        "y": 1560,
+        "y": 1580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f95d4fe5b1ba92c3",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "HIER: kP Regler Verstärkung anpassen",
+        "info": "",
+        "x": 510,
+        "y": 1320,
+        "wires": []
+    },
+    {
+        "id": "1e049cf62d58e43c",
+        "type": "switch",
+        "z": "479e3443afedb613",
+        "g": "46a88bad508d3778",
+        "name": "Bypass Ignore?",
+        "property": "IgnoreBypass",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "Off",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 500,
+        "y": 1920,
+        "wires": [
+            [
+                "db71458988a0ae4a"
+            ],
+            [
+                "2c22eb5a28b88af3"
+            ]
+        ]
+    },
+    {
+        "id": "e01d8fa50d01f508",
+        "type": "ha-get-entities",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Hole Daten SFMax",
+        "server": "285afb99.5208c4",
+        "version": 1,
+        "rules": [
+            {
+                "condition": "state_object",
+                "property": "entity_id",
+                "logic": "is",
+                "value": "wrSensor_typ3",
+                "valueType": "flow"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 650,
+        "y": 1040,
+        "wires": [
+            [
+                "2945df02bcac2061"
+            ]
+        ]
+    },
+    {
+        "id": "2945df02bcac2061",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Set SFMax",
+        "func": "let sfmax = Number(msg.payload[0].state);\nflow.set(\"SFMax\", sfmax);\nreturn;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 1100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f64a874c50bdf191",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "fdb0ce097a97065d",
+        "name": "connected",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarherwegh_connection_status",
+        "state_type": "num",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "connected",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 730,
+        "y": 420,
+        "wires": [
+            [
+                "180ce22f05ebcd8b"
+            ]
+        ]
+    },
+    {
+        "id": "b2900737df35050a",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "4cd6e76302eb583f",
+        "name": "Regler Typ",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "input_select.regler_typ"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "ReglerTyp",
+                "propertyType": "flow",
+                "value": "",
+                "valueType": "entityState"
+            }
+        ],
+        "x": 960,
+        "y": 2540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "31aef1593af4b0d7",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "4cd6e76302eb583f",
+        "name": "SFMax",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "number.solarherwegh_output_limit"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "num",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "SFMax",
+                "propertyType": "flow",
+                "value": "",
+                "valueType": "entityState"
+            }
+        ],
+        "x": 950,
+        "y": 2580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5e173fb39bf8170d",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "4cd6e76302eb583f",
+        "name": "ConnectionStatus",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.solarherwegh_connection_status"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "num",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "Connected",
+                "propertyType": "flow",
+                "value": "",
+                "valueType": "entityState"
+            }
+        ],
+        "x": 990,
+        "y": 2620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8546724667636606",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "4e7901031e717127",
+        "name": "Hub ist Online WLAN",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "device_tracker.solarhub"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "home",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            }
+        ],
+        "x": 1580,
+        "y": 320,
+        "wires": [
+            [
+                "1bdd52ee74cd6023"
+            ],
+            [
+                "7a5d3ef92442a929"
+            ]
+        ]
+    },
+    {
+        "id": "1bdd52ee74cd6023",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "4e7901031e717127",
+        "name": "aktiv",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "on",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_boolean.regler_aktiv",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "aktiv",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 1950,
+        "y": 320,
+        "wires": [
+            [
+                "8556d367c4b1fac5"
+            ],
+            [
+                "7a5d3ef92442a929"
+            ]
+        ]
+    },
+    {
+        "id": "f6d4dc83056b836e",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "4e7901031e717127",
+        "name": "HIER: WR DeviceTracker prüfen",
+        "info": "",
+        "x": 1610,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "959c8c911e7fde10",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Sonnaufgang +30",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_rising"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "30",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1570,
+        "y": 1040,
+        "wires": [
+            [
+                "10a5947e7b0e4bba"
+            ]
+        ]
+    },
+    {
+        "id": "10a5947e7b0e4bba",
+        "type": "change",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Monat",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "$moment().month() + 1",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1810,
+        "y": 1040,
+        "wires": [
+            [
+                "fd9ffa19de35ef1b"
+            ]
+        ]
+    },
+    {
+        "id": "ee79553e2bee0ac5",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1600,
+        "y": 980,
+        "wires": [
+            [
+                "10a5947e7b0e4bba"
+            ]
+        ]
+    },
+    {
+        "id": "fd9ffa19de35ef1b",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Set Entladegrenze",
+        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet volmin = flow.get (\"zHAVolMinSensor\");\n//node.warn (monat);\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        break;\n        }\n    }\nflow.set(\"Akku_min\", akku_min);\nmsg.payload = {\n    einspeisewert: akku_min,\n    sensor: volmin\n};\n//msg.payload = akku_min;\n//node.warn ( msg.payload);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2010,
+        "y": 1040,
+        "wires": [
+            [
+                "40cd311eb34f8bec"
+            ]
+        ]
+    },
+    {
+        "id": "c4baeda9f9677e08",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "4e7901031e717127",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1820,
+        "y": 280,
+        "wires": [
+            [
+                "1bdd52ee74cd6023"
+            ]
+        ]
+    },
+    {
+        "id": "40cd311eb34f8bec",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Setze Ausgang",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "number.dtu_leistungsbegrenzung"
+        },
+        "x": 2260,
+        "y": 1040,
         "wires": [
             []
         ]
