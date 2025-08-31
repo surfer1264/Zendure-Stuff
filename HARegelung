@@ -644,12 +644,13 @@
         "nodes": [
             "f14903b8d8cafcf6",
             "69c9aaf49d7fabba",
-            "ea244f2be20330ad"
+            "ea244f2be20330ad",
+            "9d7ca67058014a92"
         ],
         "x": 574,
         "y": 1459,
         "w": 292,
-        "h": 162
+        "h": 202
     },
     {
         "id": "1",
@@ -7674,7 +7675,9 @@
         "x": 730,
         "y": 1580,
         "wires": [
-            []
+            [
+                "9d7ca67058014a92"
+            ]
         ]
     },
     {
@@ -8310,6 +8313,38 @@
         },
         "x": 2260,
         "y": 1040,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "9d7ca67058014a92",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "cf998755e26fe945",
+        "name": "Setze Zendure Off",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "select.select_option",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "select.zendure_manager_operation"
+        ],
+        "labelId": [],
+        "data": "{\"option\":\"off\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "select",
+        "service": "select_option",
+        "x": 710,
+        "y": 1620,
         "wires": [
             []
         ]
