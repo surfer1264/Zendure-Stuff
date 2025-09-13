@@ -97,7 +97,8 @@
             "edcb9390f933d4b7",
             "1a09bce668c12667",
             "b4b07729dd9d31ee",
-            "f64a874c50bdf191"
+            "f64a874c50bdf191",
+            "a63607adfff3fead"
         ],
         "x": 174,
         "y": 19,
@@ -127,25 +128,6 @@
         "y": 1879,
         "w": 1112,
         "h": 182
-    },
-    {
-        "id": "d926ab42ae07f620",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "(3.4) Spezial:  Counter Regleraktionen zurücksetzen",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "4a08cb7d49d66609",
-            "1cf928d6ff176b91",
-            "b35e0d2710be813a",
-            "0cf6f523d136f7e5"
-        ],
-        "x": 1454,
-        "y": 479,
-        "w": 852,
-        "h": 142
     },
     {
         "id": "3ce9227ad71245e3",
@@ -178,25 +160,6 @@
         "h": 468
     },
     {
-        "id": "a1160eda259de3ef",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "(3.2) Was passiert, wenn der Reglungsalgorithmus ausgeschaltet wird?",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "c7ec3eef7ebbbfbe",
-            "9413afc1555f6ee5",
-            "d4a5eb77aa517589",
-            "2fc53edc55cab48e"
-        ],
-        "x": 1454,
-        "y": 79,
-        "w": 912,
-        "h": 142
-    },
-    {
         "id": "acff453100dcbbc9",
         "type": "group",
         "z": "479e3443afedb613",
@@ -218,12 +181,11 @@
             "9e1f30a6ad96c325",
             "2a3d8831dcef494e",
             "a0f16c5abc5d653d",
-            "25c2c1d8b0140bb9",
-            "7a35a4cb11438e99"
+            "25c2c1d8b0140bb9"
         ],
         "x": 174,
         "y": 479,
-        "w": 898,
+        "w": 998,
         "h": 468
     },
     {
@@ -379,56 +341,6 @@
         "h": 322
     },
     {
-        "id": "4e7901031e717127",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "(3.3.) Spezial: Wenn der Shelly3EM ausfällt...oder der Solarflow Offline ist",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "b39b705f55bc143a",
-            "354e9d385e0e7a12",
-            "7a5d3ef92442a929",
-            "8556d367c4b1fac5",
-            "a62ebd85d47fee9f",
-            "750f877240f66bc6",
-            "b1f2ddda67ab1775",
-            "557b88a08fb680ad",
-            "8546724667636606",
-            "1bdd52ee74cd6023",
-            "f6d4dc83056b836e",
-            "c4baeda9f9677e08"
-        ],
-        "x": 1454,
-        "y": 239,
-        "w": 912,
-        "h": 222,
-        "info": "## Verbindungsverlust Shelly 3EM\r\nDer Shelly 3EM verliert manchmal seine Verbindung\r\n\r\ndann:\r\n - wird der WR-Ausgang  auf 80W gesetzt (auf einen sinnvollen Grundlastwert)\r\n - die Regelfunktion `ReglerAktiv=off` außer Kraft gesetzt\r\n - der WR-AUsgang angesteuert\r\n\r\nWenn der SHelly wieder online ist,\r\n\r\ndann:\r\n - die Regelfunktion `ReglerAktiv=on` gesetzt\r\n - werden alle Variablen des gesamten FLows erneut initialisiert.\r\n"
-    },
-    {
-        "id": "70cc64c2bba0fbd9",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "(3.6) Spezial: Verfügbarkit der Shellys melden",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "9b85d89c5ecbfb58",
-            "93030162d5c5a12c",
-            "03ed40ed26dd3a65",
-            "d99b35c545ee754a",
-            "919fb03d28bf7aba",
-            "59f3b95dd2f0e022",
-            "b78e47bc659c68e6"
-        ],
-        "x": 1454,
-        "y": 719,
-        "w": 912,
-        "h": 182
-    },
-    {
         "id": "46a88bad508d3778",
         "type": "group",
         "z": "479e3443afedb613",
@@ -459,9 +371,9 @@
             "3f77c130efc4805a",
             "d8febfbf64f9a1dc"
         ],
-        "x": 194,
-        "y": 1799,
-        "w": 1132,
+        "x": 174,
+        "y": 1819,
+        "w": 1252,
         "h": 348
     },
     {
@@ -475,44 +387,165 @@
         },
         "nodes": [
             "df27770545d213b5",
-            "aebca2fa91b04224",
             "dd3a208eb767c579",
-            "80276a25567d0ce3",
             "df1e2cb0ac09ba12",
             "7d0404303c8fad6d",
-            "44725bc13c3d9599",
-            "b79ae4256daf27f6",
-            "bf65d001e486db67",
             "51239912e3877c4d",
             "039ee9a7ab711a33",
             "d9fb180bd5fd6ff8",
-            "f988239e95dc5426",
-            "e6c67233c1c5b911",
-            "ec84cf4771cfbcac",
-            "f81801a182e992f9",
-            "ae2d81258bd8fae4",
             "7d73a67d14204ea2",
             "25fc412c23c1d980",
             "4d018375ab818129",
-            "bd67f151a7c8bdbe",
-            "9e26b0c7a7787d25",
-            "5c36c0c1bfabe8e7",
-            "3cd125758b237fce",
-            "810f769ffce8a701",
             "cf998755e26fe945",
             "f95d4fe5b1ba92c3",
             "e01d8fa50d01f508",
-            "2945df02bcac2061"
+            "2945df02bcac2061",
+            "0a94c4e6766e62c9",
+            "4cb2b580c2b15ca9",
+            "5429a937f7d4fe2f",
+            "a0b4a6e2b0bd2354",
+            "2f8099592faddc79"
         ],
-        "x": 184,
-        "y": 959,
-        "w": 1222,
-        "h": 788
+        "x": 174,
+        "y": 973,
+        "w": 1258,
+        "h": 814,
+        "info": "# hkhjk\r\n|Regler Auswahl| Smart Modus Typ 5|SYSTEM Aus |WR Typ1 (EZ1)|WR Typ2 (HMS) | WR Typ4 Man|\r\n|---|---|---|---|---|---|\r\n|Bedeutung|Smarte Leistungssteuerung der Z-HA Integration aktiv|Regelsystem komplett AUS|Absolute Ansteuerung eines WR|relative Ansteuerung eines WR|manuelle Leistungssteuerung der Z-HA Integration aktiv|\r\n|WR Hersteller | | |ABS |REL | |\r\n| | | | | | |\r\n|**Sensor** | | | | | |\r\n|Regler Algorithmis aktiv |off |off |on |on |on |\r\n|Zendure Manager Betriebsmodus |smart |off |off |off |manuell |\r\n|Regler WR Aus |on | | | | |\r\n|WR Typ 1 |wrmax |wrmax |80 | |wrmax |\r\n|WR Typ 2 |wrmax |wrmax | |80/wrmax*100 |wrmax/wrmax*100  |\r\n|WR Typ 4 | | | | |80    |"
+    },
+    {
+        "id": "0a438837db6c47d2",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "Morgentliche Initialisierung",
+        "style": {
+            "label": true,
+            "stroke": "#92d04f"
+        },
+        "nodes": [
+            "d926ab42ae07f620",
+            "72932590259c2eb2",
+            "313a12776bf9f44c"
+        ],
+        "x": 1568,
+        "y": 773,
+        "w": 964,
+        "h": 554
+    },
+    {
+        "id": "e504044664a57b4e",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "Verfügbarkeiten von Sensoren prüfen",
+        "style": {
+            "stroke": "#ff0000",
+            "label": true
+        },
+        "nodes": [
+            "a1160eda259de3ef",
+            "4e7901031e717127",
+            "70cc64c2bba0fbd9"
+        ],
+        "x": 1568,
+        "y": 53,
+        "w": 964,
+        "h": 654
+    },
+    {
+        "id": "d926ab42ae07f620",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0a438837db6c47d2",
+        "name": "(1.5) Spezial:  Counter Regleraktionen zurücksetzen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "4a08cb7d49d66609",
+            "1cf928d6ff176b91",
+            "0cf6f523d136f7e5"
+        ],
+        "x": 1594,
+        "y": 1019,
+        "w": 912,
+        "h": 122
+    },
+    {
+        "id": "a1160eda259de3ef",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "e504044664a57b4e",
+        "name": "(3.2) Was passiert, wenn der Reglungsalgorithmus ausgeschaltet wird?",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "c7ec3eef7ebbbfbe",
+            "9413afc1555f6ee5",
+            "d4a5eb77aa517589",
+            "2fc53edc55cab48e"
+        ],
+        "x": 1594,
+        "y": 79,
+        "w": 912,
+        "h": 142
+    },
+    {
+        "id": "4e7901031e717127",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "e504044664a57b4e",
+        "name": "(3.3.) Spezial: Wenn der Shelly3EM ausfällt...oder der Solarflow Offline ist",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "b39b705f55bc143a",
+            "354e9d385e0e7a12",
+            "7a5d3ef92442a929",
+            "8556d367c4b1fac5",
+            "a62ebd85d47fee9f",
+            "750f877240f66bc6",
+            "b1f2ddda67ab1775",
+            "557b88a08fb680ad",
+            "8546724667636606",
+            "1bdd52ee74cd6023",
+            "f6d4dc83056b836e",
+            "c4baeda9f9677e08"
+        ],
+        "x": 1594,
+        "y": 239,
+        "w": 912,
+        "h": 222,
+        "info": "## Verbindungsverlust Shelly 3EM\r\nDer Shelly 3EM verliert manchmal seine Verbindung\r\n\r\ndann:\r\n - wird der WR-Ausgang  auf 80W gesetzt (auf einen sinnvollen Grundlastwert)\r\n - die Regelfunktion `ReglerAktiv=off` außer Kraft gesetzt\r\n - der WR-AUsgang angesteuert\r\n\r\nWenn der SHelly wieder online ist,\r\n\r\ndann:\r\n - die Regelfunktion `ReglerAktiv=on` gesetzt\r\n - werden alle Variablen des gesamten FLows erneut initialisiert.\r\n"
+    },
+    {
+        "id": "70cc64c2bba0fbd9",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "e504044664a57b4e",
+        "name": "(3.6) Spezial: Verfügbarkit der Shellys melden",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "9b85d89c5ecbfb58",
+            "93030162d5c5a12c",
+            "03ed40ed26dd3a65",
+            "d99b35c545ee754a",
+            "919fb03d28bf7aba",
+            "59f3b95dd2f0e022",
+            "b78e47bc659c68e6"
+        ],
+        "x": 1594,
+        "y": 499,
+        "w": 912,
+        "h": 182
     },
     {
         "id": "72932590259c2eb2",
         "type": "group",
         "z": "479e3443afedb613",
+        "g": "0a438837db6c47d2",
         "name": "(1.4) Setze SF-Entladegrenze nach Monat",
         "style": {
             "label": true,
@@ -526,14 +559,13 @@
             "ee79553e2bee0ac5",
             "fd9ffa19de35ef1b",
             "40cd311eb34f8bec",
-            "2ec01d4f64660e3e",
-            "34dfeb5c4a6a025d",
-            "b9cb5a9fa7a442e4"
+            "3a896cce6e31964b",
+            "98eedc884b02a91c"
         ],
-        "x": 1454,
-        "y": 939,
-        "w": 1072,
-        "h": 162
+        "x": 1594,
+        "y": 799,
+        "w": 912,
+        "h": 202
     },
     {
         "id": "2a3d8831dcef494e",
@@ -553,9 +585,9 @@
             "2717c849e2440723",
             "60b5b7b848171b52"
         ],
-        "x": 474,
+        "x": 434,
         "y": 839,
-        "w": 572,
+        "w": 712,
         "h": 82
     },
     {
@@ -601,7 +633,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Smart Modus der FIreSon Integration",
+        "name": "Smart Modus der Z-HA Integration",
         "style": {
             "label": true,
             "fill": "#e3f3d3"
@@ -612,8 +644,8 @@
             "b2f2791b82ef1fd9",
             "d36943bed8f6d1b6"
         ],
-        "x": 254,
-        "y": 1519,
+        "x": 274,
+        "y": 1559,
         "w": 272,
         "h": 202
     },
@@ -631,7 +663,7 @@
             "76f6c97f59e020a9"
         ],
         "x": 254,
-        "y": 1979,
+        "y": 1999,
         "w": 292,
         "h": 142
     },
@@ -640,7 +672,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "AUS",
+        "name": "HA-Implementierung daktivieren: AUS",
         "style": {
             "label": true
         },
@@ -651,9 +683,105 @@
             "9d7ca67058014a92"
         ],
         "x": 574,
-        "y": 1459,
+        "y": 1559,
         "w": 292,
         "h": 202
+    },
+    {
+        "id": "0a94c4e6766e62c9",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Outputlimit Hub auf SFMax setzen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "80276a25567d0ce3",
+            "5c36c0c1bfabe8e7"
+        ],
+        "x": 914,
+        "y": 1259,
+        "w": 492,
+        "h": 82
+    },
+    {
+        "id": "4cb2b580c2b15ca9",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Wechselrichter Grenze auf MAX setzen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "f81801a182e992f9",
+            "ae2d81258bd8fae4",
+            "bd67f151a7c8bdbe",
+            "9e26b0c7a7787d25"
+        ],
+        "x": 914,
+        "y": 1359,
+        "w": 492,
+        "h": 202
+    },
+    {
+        "id": "5429a937f7d4fe2f",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Initialisiere die WR mit 80W (Typ1 und 2)",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "b79ae4256daf27f6",
+            "e6c67233c1c5b911"
+        ],
+        "x": 934,
+        "y": 999,
+        "w": 452,
+        "h": 82
+    },
+    {
+        "id": "a0b4a6e2b0bd2354",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": "Initialisiere Man-Leist.steuerung mit 80W",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "44725bc13c3d9599",
+            "bf65d001e486db67",
+            "ec84cf4771cfbcac"
+        ],
+        "x": 914,
+        "y": 1599,
+        "w": 492,
+        "h": 122
+    },
+    {
+        "id": "313a12776bf9f44c",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0a438837db6c47d2",
+        "name": "(1.6) Kalibriere SOLL-Werte der Regelung zum Sonnenuntergang",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "d8aad289353f949c",
+            "5283ca39c5b5ed10",
+            "bb94db99200bab27",
+            "1cfab2d550d339ae",
+            "f251eebcf0f8ca69"
+        ],
+        "x": 1594,
+        "y": 1159,
+        "w": 912,
+        "h": 142
     },
     {
         "id": "1",
@@ -667,8 +795,8 @@
         "once": true,
         "onceDelay": "8",
         "topic": "",
-        "x": 330,
-        "y": 1840,
+        "x": 310,
+        "y": 1860,
         "wires": [
             [
                 "168148af37ed1368",
@@ -690,7 +818,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -1367,7 +1495,7 @@
         "repair": false,
         "outputs": 2,
         "x": 320,
-        "y": 1920,
+        "y": 1940,
         "wires": [
             [
                 "db71458988a0ae4a"
@@ -1426,7 +1554,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1600,
+        "x": 1740,
         "y": 160,
         "wires": [
             [
@@ -1470,7 +1598,7 @@
             "60df30044c929c46"
         ],
         "x": 1215,
-        "y": 1960,
+        "y": 1980,
         "wires": []
     },
     {
@@ -1494,7 +1622,7 @@
         "g": "fdb0ce097a97065d",
         "name": "HIER: WR Parameter setzen",
         "info": "",
-        "x": 400,
+        "x": 420,
         "y": 180,
         "wires": []
     },
@@ -1554,12 +1682,11 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1570,
-        "y": 540,
+        "x": 1710,
+        "y": 1060,
         "wires": [
             [
-                "1cf928d6ff176b91",
-                "b35e0d2710be813a"
+                "1cf928d6ff176b91"
             ]
         ]
     },
@@ -1589,8 +1716,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 2200,
-        "y": 520,
+        "x": 2400,
+        "y": 1060,
         "wires": [
             []
         ]
@@ -1603,7 +1730,7 @@
         "name": "HIER: Sensor des Smartmeters anpassen",
         "info": "",
         "x": 680,
-        "y": 2020,
+        "y": 2040,
         "wires": []
     },
     {
@@ -1619,7 +1746,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2040,
+        "x": 2180,
         "y": 180,
         "wires": [
             [
@@ -1637,7 +1764,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 2325,
+        "x": 2465,
         "y": 140,
         "wires": []
     },
@@ -1647,7 +1774,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "WR Paramater setzen",
-        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\n\n// flow.set(\"WRHersteller\", \"HOY\")\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 3: OUT: Zendure Manager: AUS, outputlimit absolute Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
+        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1727,12 +1854,10 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 880,
+        "x": 1020,
         "y": 640,
         "wires": [
-            [
-                "7a35a4cb11438e99"
-            ]
+            []
         ]
     },
     {
@@ -2815,7 +2940,6 @@
         "name": "link in 13",
         "links": [
             "f5ac4859d53b8c34",
-            "b35e0d2710be813a",
             "b1f2ddda67ab1775",
             "20e1d26f9cfcb4d0"
         ],
@@ -3392,7 +3516,7 @@
         "name": "HIER: Electriclevel Sensor prüfen",
         "info": "",
         "x": 330,
-        "y": 900,
+        "y": 860,
         "wires": []
     },
     {
@@ -3621,7 +3745,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1570,
+        "x": 1710,
         "y": 420,
         "wires": [
             [
@@ -3639,7 +3763,7 @@
         "g": "4e7901031e717127",
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
-        "x": 1610,
+        "x": 1750,
         "y": 380,
         "wires": []
     },
@@ -3776,7 +3900,7 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 570,
+        "x": 530,
         "y": 880,
         "wires": [
             [
@@ -3797,7 +3921,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 920,
+        "x": 1020,
         "y": 880,
         "wires": [
             []
@@ -3901,7 +4025,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2120,
+        "x": 2260,
         "y": 420,
         "wires": [
             [
@@ -3929,7 +4053,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2120,
+        "x": 2260,
         "y": 320,
         "wires": [
             [
@@ -3950,7 +4074,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1850,
+        "x": 1990,
         "y": 420,
         "wires": [
             [
@@ -3968,7 +4092,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 2305,
+        "x": 2445,
         "y": 420,
         "wires": []
     },
@@ -4140,7 +4264,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 650,
-        "y": 2100,
+        "y": 2120,
         "wires": [
             []
         ]
@@ -4155,22 +4279,8 @@
         "links": [
             "7b4e9c68d230dfef"
         ],
-        "x": 2295,
+        "x": 2435,
         "y": 320,
-        "wires": []
-    },
-    {
-        "id": "b35e0d2710be813a",
-        "type": "link out",
-        "z": "479e3443afedb613",
-        "g": "d926ab42ae07f620",
-        "name": "link out 25",
-        "mode": "link",
-        "links": [
-            "7b4e9c68d230dfef"
-        ],
-        "x": 1705,
-        "y": 580,
         "wires": []
     },
     {
@@ -4224,8 +4334,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1590,
-        "y": 760,
+        "x": 1730,
+        "y": 540,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4250,8 +4360,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1930,
-        "y": 760,
+        "x": 2070,
+        "y": 540,
         "wires": [
             [
                 "03ed40ed26dd3a65"
@@ -4285,8 +4395,8 @@
         "target": {},
         "service_domain": "persistent_notification",
         "mergecontext": "",
-        "x": 2250,
-        "y": 760,
+        "x": 2390,
+        "y": 540,
         "wires": [
             []
         ]
@@ -4342,8 +4452,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1610,
-        "y": 800,
+        "x": 1750,
+        "y": 580,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4407,8 +4517,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1910,
-        "y": 800,
+        "x": 2050,
+        "y": 580,
         "wires": [
             [
                 "59f3b95dd2f0e022"
@@ -4427,8 +4537,8 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 2250,
-        "y": 820,
+        "x": 2390,
+        "y": 600,
         "wires": [
             []
         ]
@@ -4446,8 +4556,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 1220,
-        "y": 2100,
+        "x": 1320,
+        "y": 2120,
         "wires": []
     },
     {
@@ -4563,8 +4673,8 @@
         "g": "d926ab42ae07f620",
         "name": "Täglicher Reset",
         "info": "",
-        "x": 1560,
-        "y": 580,
+        "x": 1700,
+        "y": 1100,
         "wires": []
     },
     {
@@ -4574,7 +4684,7 @@
         "g": "4e7901031e717127",
         "name": "RESET",
         "info": "",
-        "x": 2290,
+        "x": 2430,
         "y": 280,
         "wires": []
     },
@@ -4810,7 +4920,7 @@
         "senderr": false,
         "headers": [],
         "x": 660,
-        "y": 2060,
+        "y": 2080,
         "wires": [
             [
                 "66a15f5adc0815dc",
@@ -4831,7 +4941,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2040,
+        "x": 2180,
         "y": 120,
         "wires": [
             [
@@ -5301,7 +5411,7 @@
         "repair": false,
         "outputs": 5,
         "x": 730,
-        "y": 1280,
+        "y": 1320,
         "wires": [
             [
                 "df1e2cb0ac09ba12",
@@ -5323,41 +5433,12 @@
             ],
             [
                 "41f46826bd3b190e",
-                "f81801a182e992f9"
+                "f81801a182e992f9",
+                "5c36c0c1bfabe8e7"
             ],
             [
                 "69c9aaf49d7fabba",
                 "f81801a182e992f9"
-            ]
-        ]
-    },
-    {
-        "id": "aebca2fa91b04224",
-        "type": "inject",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 360,
-        "y": 1200,
-        "wires": [
-            [
-                "dd3a208eb767c579"
             ]
         ]
     },
@@ -5399,7 +5480,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 410,
-        "y": 1120,
+        "y": 1160,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -5410,7 +5491,7 @@
         "id": "80276a25567d0ce3",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "0a94c4e6766e62c9",
         "name": "Setze Ausgansglimit SF",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -5433,7 +5514,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 1270,
-        "y": 1260,
+        "y": 1300,
         "wires": [
             []
         ]
@@ -5464,8 +5545,8 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_off",
-        "x": 390,
-        "y": 1600,
+        "x": 410,
+        "y": 1640,
         "wires": [
             [
                 "68eb3e92f051ff26"
@@ -5499,7 +5580,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 1110,
-        "y": 1140,
+        "y": 1180,
         "wires": [
             []
         ]
@@ -5531,7 +5612,7 @@
         "domain": "select",
         "service": "select_option",
         "x": 1110,
-        "y": 1080,
+        "y": 1120,
         "wires": [
             []
         ]
@@ -5540,7 +5621,7 @@
         "id": "44725bc13c3d9599",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "a0b4a6e2b0bd2354",
         "name": "Setze Zendure Manual",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -5562,8 +5643,8 @@
         "blockInputOverrides": true,
         "domain": "select",
         "service": "select_option",
-        "x": 1240,
-        "y": 1620,
+        "x": 1280,
+        "y": 1680,
         "wires": [
             []
         ]
@@ -5572,7 +5653,7 @@
         "id": "b79ae4256daf27f6",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "5429a937f7d4fe2f",
         "name": "Set WR auf: 80W",
         "func": "//Typ1 oder Typ2 WR\n//die WR sollen initialisiert werden mit einer Vorgabe\n//Regelwert wird auf 80W gesetzt\n//die Regelung übernimmt dann die Bildung des Regelwertes von diesem Ausgangswert\n\nflow.set(\"Regelwert\", 80); //80W\nlet wrmax = flow.get(\"WRLeistung\");\nlet leistung = flow.get(\"Regelwert\");\nlet wrhersteller = flow.get(\"WRHersteller\");\nlet zielSensor = \"ABS\";\n\nswitch (wrhersteller)\n    {\n    case \"ABS\":\n        zielSensor = flow.get(\"wrSensor_typ1\");\n        msg.payload = {\n        einspeisewert: leistung,\n        sensor: zielSensor};\n        // node.warn(leistung);\n        return msg;\n        \n    case \"REL\":\n        zielSensor = flow.get(\"wrSensor_typ2\");\n        leistung = Math.round((leistung / wrmax) * 100); //10% = 80W\n        msg.payload = {\n        einspeisewert: leistung,\n        sensor: zielSensor};\n        // node.warn(leistung);\n        return msg;\n        \n    }",
         "outputs": 1,
@@ -5581,8 +5662,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1030,
-        "y": 1000,
+        "x": 1050,
+        "y": 1040,
         "wires": [
             [
                 "e6c67233c1c5b911"
@@ -5593,7 +5674,7 @@
         "id": "bf65d001e486db67",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "a0b4a6e2b0bd2354",
         "name": "Set WRTyp 4: 80",
         "func": "flow.set(\"WRTyp\", 4);\nflow.set(\"Regelwert\", 80);\nlet zielSensor = flow.get(\"wrSensor_typ4\");\nlet wrmax = flow.get (\"Regelwert\");\n\nmsg.payload = {\n    einspeisewert: wrmax,\n    sensor: zielSensor\n};\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
@@ -5603,7 +5684,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1580,
+        "y": 1660,
         "wires": [
             [
                 "44725bc13c3d9599",
@@ -5663,7 +5744,7 @@
             }
         ],
         "x": 400,
-        "y": 1380,
+        "y": 1420,
         "wires": [
             [
                 "039ee9a7ab711a33"
@@ -5684,7 +5765,7 @@
         "finalize": "",
         "libs": [],
         "x": 560,
-        "y": 1280,
+        "y": 1320,
         "wires": [
             [
                 "df27770545d213b5"
@@ -5700,8 +5781,8 @@
         "links": [
             "06635f54085d96a3"
         ],
-        "x": 225,
-        "y": 1040,
+        "x": 215,
+        "y": 1120,
         "wires": [
             [
                 "dd3a208eb767c579",
@@ -5722,38 +5803,6 @@
         "x": 515,
         "y": 280,
         "wires": []
-    },
-    {
-        "id": "f988239e95dc5426",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Set HMS MAX",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "number",
-        "service": "set_value",
-        "x": 1240,
-        "y": 1480,
-        "wires": [
-            []
-        ]
     },
     {
         "id": "db71458988a0ae4a",
@@ -5779,7 +5828,7 @@
         "repair": false,
         "outputs": 2,
         "x": 640,
-        "y": 1920,
+        "y": 1940,
         "wires": [
             [
                 "4f2a4b1d2bb4a50a"
@@ -5803,7 +5852,7 @@
         "finalize": "",
         "libs": [],
         "x": 910,
-        "y": 1900,
+        "y": 1920,
         "wires": [
             [
                 "68c44e68d8a62aa4"
@@ -5823,8 +5872,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 350,
-        "y": 1560,
+        "x": 370,
+        "y": 1600,
         "wires": [
             [
                 "b2f2791b82ef1fd9"
@@ -5887,8 +5936,8 @@
         "blockInputOverrides": true,
         "domain": "select",
         "service": "select_option",
-        "x": 380,
-        "y": 1640,
+        "x": 400,
+        "y": 1680,
         "wires": [
             [
                 "d36943bed8f6d1b6"
@@ -5899,7 +5948,7 @@
         "id": "e6c67233c1c5b911",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "5429a937f7d4fe2f",
         "name": "Setze WR ",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -5923,8 +5972,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1240,
-        "y": 1000,
+        "x": 1300,
+        "y": 1040,
         "wires": [
             []
         ]
@@ -5933,7 +5982,7 @@
         "id": "ec84cf4771cfbcac",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "a0b4a6e2b0bd2354",
         "name": "Zendure Manual 80W",
         "server": "285afb99.5208c4",
         "version": 7,
@@ -5955,8 +6004,8 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 1240,
-        "y": 1580,
+        "x": 1280,
+        "y": 1640,
         "wires": [
             []
         ]
@@ -6013,7 +6062,7 @@
             }
         ],
         "x": 290,
-        "y": 280,
+        "y": 360,
         "wires": [
             [
                 "7097e2efb7e186dc"
@@ -6034,7 +6083,7 @@
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 2060,
+        "y": 2080,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -6056,7 +6105,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 880,
-        "y": 1960,
+        "y": 1980,
         "wires": []
     },
     {
@@ -6073,7 +6122,7 @@
         "finalize": "",
         "libs": [],
         "x": 1010,
-        "y": 2100,
+        "y": 2120,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -6114,7 +6163,7 @@
         "finalize": "",
         "libs": [],
         "x": 890,
-        "y": 1840,
+        "y": 1860,
         "wires": [
             [
                 "78dbc119241bb5d0"
@@ -6134,7 +6183,7 @@
         "overwriteFile": "false",
         "encoding": "none",
         "x": 1110,
-        "y": 1840,
+        "y": 1860,
         "wires": [
             []
         ]
@@ -6153,7 +6202,7 @@
         "finalize": "",
         "libs": [],
         "x": 580,
-        "y": 1840,
+        "y": 1860,
         "wires": [
             [
                 "f6b17c0a7515dc64"
@@ -6273,7 +6322,7 @@
         "id": "f81801a182e992f9",
         "type": "switch",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "4cb2b580c2b15ca9",
         "name": "",
         "property": "WRHersteller",
         "propertyType": "flow",
@@ -6292,8 +6341,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 1010,
-        "y": 1420,
+        "x": 990,
+        "y": 1460,
         "wires": [
             [
                 "bd67f151a7c8bdbe"
@@ -6307,8 +6356,8 @@
         "id": "ae2d81258bd8fae4",
         "type": "api-call-service",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Setze WR EZ1 MAX",
+        "g": "4cb2b580c2b15ca9",
+        "name": "Setze WR to  MAX",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -6331,8 +6380,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 1260,
-        "y": 1360,
+        "x": 1290,
+        "y": 1460,
         "wires": [
             []
         ]
@@ -6417,7 +6466,7 @@
         "repair": false,
         "outputs": 3,
         "x": 850,
-        "y": 2060,
+        "y": 2080,
         "wires": [
             [
                 "3"
@@ -6608,8 +6657,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 420,
-        "y": 1040,
+        "x": 400,
+        "y": 1120,
         "wires": [
             [
                 "e01d8fa50d01f508"
@@ -6623,15 +6672,15 @@
         "g": "0ded3f6e0d781a4e",
         "name": "HIER: Sensornamen anpassen",
         "info": "",
-        "x": 490,
-        "y": 1000,
+        "x": 430,
+        "y": 1080,
         "wires": []
     },
     {
         "id": "bd67f151a7c8bdbe",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "4cb2b580c2b15ca9",
         "name": "Set WR Typ 1: Max",
         "func": "let zielSensor = flow.get(\"wrSensor_typ1\");\nlet wrmax = flow.get (\"WRLeistung\");\n\nmsg.payload = {\n    einspeisewert: wrmax,\n    sensor: zielSensor\n};\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
@@ -6641,7 +6690,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1360,
+        "y": 1400,
         "wires": [
             [
                 "ae2d81258bd8fae4"
@@ -6652,7 +6701,7 @@
         "id": "9e26b0c7a7787d25",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "4cb2b580c2b15ca9",
         "name": "Set WR Typ 2: Max",
         "func": "let zielSensor = flow.get(\"wrSensor_typ2\");\nlet wrmax = 100;\n\nmsg.payload = {\n    einspeisewert: wrmax,\n    sensor: zielSensor\n};\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
@@ -6662,10 +6711,10 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1480,
+        "y": 1520,
         "wires": [
             [
-                "f988239e95dc5426"
+                "ae2d81258bd8fae4"
             ]
         ]
     },
@@ -6673,9 +6722,9 @@
         "id": "5c36c0c1bfabe8e7",
         "type": "function",
         "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
+        "g": "0a94c4e6766e62c9",
         "name": "Set WR Typ 3: Max",
-        "func": "// Wenn ty1 oder typ2 oder typ4 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = flow.get (\"SFMax\");\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
+        "func": "// Wenn ty1 oder typ2 oder typ4 oder 5 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = flow.get (\"WRLeistung\") +10;\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -6683,7 +6732,7 @@
         "finalize": "",
         "libs": [],
         "x": 1030,
-        "y": 1260,
+        "y": 1300,
         "wires": [
             [
                 "80276a25567d0ce3"
@@ -6731,8 +6780,8 @@
         "g": "70cc64c2bba0fbd9",
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
-        "x": 1610,
-        "y": 860,
+        "x": 1750,
+        "y": 640,
         "wires": []
     },
     {
@@ -6769,7 +6818,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 350,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "76f6c97f59e020a9"
@@ -6790,7 +6839,7 @@
         "finalize": "",
         "libs": [],
         "x": 430,
-        "y": 2080,
+        "y": 2100,
         "wires": [
             [
                 "1f11ef02984634d4"
@@ -6920,63 +6969,8 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_on",
-        "x": 360,
-        "y": 1680,
-        "wires": [
-            [
-                "3cd125758b237fce"
-            ]
-        ]
-    },
-    {
-        "id": "3cd125758b237fce",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Set SF out Max",
-        "func": "// Wenn ty1 oder typ2 oder typ4 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = flow.get (\"SFMax\");\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1020,
-        "y": 1680,
-        "wires": [
-            [
-                "810f769ffce8a701"
-            ]
-        ]
-    },
-    {
-        "id": "810f769ffce8a701",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "0ded3f6e0d781a4e",
-        "name": "Setze Ausgansglimit SF",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "number",
-        "service": "set_value",
-        "x": 1250,
-        "y": 1680,
+        "x": 380,
+        "y": 1720,
         "wires": [
             []
         ]
@@ -7062,39 +7056,6 @@
         },
         "x": 830,
         "y": 4380,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "7a35a4cb11438e99",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "acff453100dcbbc9",
-        "name": "Terminmodus An",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "input_boolean.turn_on",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "input_boolean.regler_terminmodus"
-        ],
-        "labelId": [],
-        "data": "",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "input_boolean",
-        "service": "turn_on",
-        "x": 930,
-        "y": 700,
         "wires": [
             []
         ]
@@ -7350,7 +7311,7 @@
         "finalize": "",
         "libs": [],
         "x": 680,
-        "y": 1500,
+        "y": 1600,
         "wires": [
             [
                 "f14903b8d8cafcf6"
@@ -7384,7 +7345,7 @@
         "domain": "number",
         "service": "set_value",
         "x": 730,
-        "y": 1540,
+        "y": 1640,
         "wires": [
             [
                 "ea244f2be20330ad"
@@ -7490,7 +7451,7 @@
         "domain": "input_boolean",
         "service": "turn_off",
         "x": 730,
-        "y": 1580,
+        "y": 1680,
         "wires": [
             [
                 "9d7ca67058014a92"
@@ -7505,7 +7466,7 @@
         "name": "HIER: kP Regler Verstärkung anpassen",
         "info": "",
         "x": 510,
-        "y": 1320,
+        "y": 1280,
         "wires": []
     },
     {
@@ -7530,8 +7491,8 @@
         "outputLocationType": "msg",
         "outputLocation": "payload",
         "outputResultsCount": 1,
-        "x": 650,
-        "y": 1040,
+        "x": 670,
+        "y": 1080,
         "wires": [
             [
                 "2945df02bcac2061"
@@ -7551,8 +7512,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 710,
-        "y": 1100,
+        "x": 730,
+        "y": 1140,
         "wires": [
             []
         ]
@@ -7824,7 +7785,7 @@
                 "valueType": "eventData"
             }
         ],
-        "x": 1580,
+        "x": 1720,
         "y": 320,
         "wires": [
             [
@@ -7878,7 +7839,7 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 1950,
+        "x": 2090,
         "y": 320,
         "wires": [
             [
@@ -7896,7 +7857,7 @@
         "g": "4e7901031e717127",
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
-        "x": 1610,
+        "x": 1750,
         "y": 280,
         "wires": []
     },
@@ -7951,12 +7912,11 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1570,
-        "y": 1000,
+        "x": 1710,
+        "y": 900,
         "wires": [
             [
-                "10a5947e7b0e4bba",
-                "2ec01d4f64660e3e"
+                "10a5947e7b0e4bba"
             ]
         ]
     },
@@ -7980,8 +7940,8 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 1810,
-        "y": 1040,
+        "x": 1930,
+        "y": 900,
         "wires": [
             [
                 "fd9ffa19de35ef1b"
@@ -7993,7 +7953,7 @@
         "type": "inject",
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
-        "name": "",
+        "name": "Manuell",
         "props": [
             {
                 "p": "payload"
@@ -8010,8 +7970,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1560,
-        "y": 1060,
+        "x": 1690,
+        "y": 960,
         "wires": [
             [
                 "10a5947e7b0e4bba"
@@ -8023,19 +7983,25 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
-        "name": "Set Entladegrenze",
-        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet volmin = flow.get (\"zHAVolMinSensor\");\n//node.warn (monat);\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 20;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        break;\n        }\n    }\nflow.set(\"Akku_min\", akku_min);\nmsg.payload = {\n    einspeisewert: akku_min,\n    sensor: volmin\n};\n//msg.payload = akku_min;\n//node.warn ( msg.payload);\nreturn msg;",
-        "outputs": 1,
+        "name": "Set Values",
+        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet volmin = flow.get (\"zHAVolMinSensor\");\n//node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\n\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: volmin } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
+        "outputs": 3,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2010,
-        "y": 1040,
+        "x": 2130,
+        "y": 900,
         "wires": [
             [
                 "40cd311eb34f8bec"
+            ],
+            [
+                "3a896cce6e31964b"
+            ],
+            [
+                "98eedc884b02a91c"
             ]
         ]
     },
@@ -8061,7 +8027,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1820,
+        "x": 1960,
         "y": 280,
         "wires": [
             [
@@ -8074,7 +8040,7 @@
         "type": "api-call-service",
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
-        "name": "Setze Ausgang WR",
+        "name": "Setze MinVol",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -8086,7 +8052,7 @@
             "{{ payload.sensor }}"
         ],
         "labelId": [],
-        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
+        "data": "{\"value\": \"{{ payload.value }}\"}",
         "dataType": "json",
         "mergeContext": "",
         "mustacheAltTags": false,
@@ -8097,8 +8063,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 2270,
-        "y": 1040,
+        "x": 2350,
+        "y": 840,
         "wires": [
             []
         ]
@@ -8130,77 +8096,9 @@
         "domain": "select",
         "service": "select_option",
         "x": 710,
-        "y": 1620,
+        "y": 1720,
         "wires": [
             []
-        ]
-    },
-    {
-        "id": "2ec01d4f64660e3e",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "72932590259c2eb2",
-        "name": "Sollwert = 5",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "input_number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "input_number.regler_sollwert"
-        ],
-        "labelId": [],
-        "data": "{\"value\":5}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "input_number",
-        "service": "set_value",
-        "x": 1830,
-        "y": 980,
-        "wires": [
-            [
-                "34dfeb5c4a6a025d"
-            ]
-        ]
-    },
-    {
-        "id": "34dfeb5c4a6a025d",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "72932590259c2eb2",
-        "name": "Einspeisebegrenzung = 400",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "input_number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "input_number.regler_maximale_einspeisung"
-        ],
-        "labelId": [],
-        "data": "{\"value\":400}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": true,
-        "domain": "input_number",
-        "service": "set_value",
-        "x": 2080,
-        "y": 980,
-        "wires": [
-            [
-                "b9cb5a9fa7a442e4"
-            ]
         ]
     },
     {
@@ -8385,11 +8283,100 @@
         ]
     },
     {
-        "id": "b9cb5a9fa7a442e4",
+        "id": "3c38f71e3abb6567",
+        "type": "http request",
+        "z": "479e3443afedb613",
+        "name": "Shelly 3EM Pro http",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.178.117/rpc/EM.GetStatus?id=0",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 520,
+        "y": 4500,
+        "wires": [
+            [
+                "bdf7929968ea7a52"
+            ]
+        ]
+    },
+    {
+        "id": "5a942abc7cd65d2e",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 260,
+        "y": 4500,
+        "wires": [
+            [
+                "3c38f71e3abb6567"
+            ]
+        ]
+    },
+    {
+        "id": "bdf7929968ea7a52",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "name": "P-Regler",
+        "func": "//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nmsg.payload = leistung\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 4500,
+        "wires": [
+            [
+                "5439dc35407ecda1"
+            ]
+        ]
+    },
+    {
+        "id": "5439dc35407ecda1",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "name": "debug 28",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 4500,
+        "wires": []
+    },
+    {
+        "id": "3a896cce6e31964b",
         "type": "api-call-service",
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
-        "name": "MIN Einspeisebegrenzung = 0",
+        "name": "Set Sollwert",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -8398,10 +8385,42 @@
         "areaId": [],
         "deviceId": [],
         "entityId": [
-            "input_number.regler_minimale_einspeisung"
+            "input_number.regler_sollwert"
         ],
         "labelId": [],
-        "data": "{\"value\":0}",
+        "data": "{\"value\": \"{{ payload }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_number",
+        "service": "set_value",
+        "x": 2350,
+        "y": 900,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "98eedc884b02a91c",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Set Einspeisebegrenzung",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_number.regler_maximale_einspeisung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload }}\"}",
         "dataType": "json",
         "mergeContext": "",
         "mustacheAltTags": false,
@@ -8411,7 +8430,216 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 2370,
-        "y": 980,
+        "y": 960,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "a63607adfff3fead",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "fdb0ce097a97065d",
+        "name": "INIT vom Dashboard",
+        "info": "",
+        "x": 310,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "2f8099592faddc79",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "0ded3f6e0d781a4e",
+        "name": " Dashboard-Wahl",
+        "info": "",
+        "x": 360,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "d8aad289353f949c",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "313a12776bf9f44c",
+        "name": "Sonnenuntergang",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_setting"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "num",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1710,
+        "y": 1260,
+        "wires": [
+            [
+                "5283ca39c5b5ed10"
+            ]
+        ]
+    },
+    {
+        "id": "5283ca39c5b5ed10",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "313a12776bf9f44c",
+        "name": "ElectricLevel",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "sensor.solarflow_electric_level",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 1950,
+        "y": 1260,
+        "wires": [
+            [
+                "bb94db99200bab27"
+            ]
+        ]
+    },
+    {
+        "id": "bb94db99200bab27",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "313a12776bf9f44c",
+        "name": "Calculate SOLL",
+        "func": "let soc = Number(msg.payload);\nlet soll;\n//node.warn (soc);\n\nif (soc > 85) {\n  soll = 0;  //  block of code to be executed if condition1 is true\n  msg.payload = {soll: soll};\n} else if (soc > 70) {\n  soll = 5;  //  block of code to be executed if the condition1 is false and condition2 is true\n  msg.payload = {soll: soll};\n} else {\n  soll = +10;//  block of code to be executed if the condition1 is false and condition2 is false\n  msg.payload = {soll: soll};\n}\n//node.warn (soll);\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2140,
+        "y": 1260,
+        "wires": [
+            [
+                "f251eebcf0f8ca69"
+            ]
+        ]
+    },
+    {
+        "id": "1cfab2d550d339ae",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "313a12776bf9f44c",
+        "name": "Check 18:30",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "30 18 * * *",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1720,
+        "y": 1200,
+        "wires": [
+            [
+                "5283ca39c5b5ed10"
+            ]
+        ]
+    },
+    {
+        "id": "f251eebcf0f8ca69",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "313a12776bf9f44c",
+        "name": "Set Sollwert",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "input_number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "input_number.regler_sollwert"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload.soll }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "input_number",
+        "service": "set_value",
+        "x": 2410,
+        "y": 1260,
         "wires": [
             []
         ]
