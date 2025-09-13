@@ -1774,7 +1774,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "WR Paramater setzen",
-        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
+        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\nflow.set (\"Release\", 2.5)\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
