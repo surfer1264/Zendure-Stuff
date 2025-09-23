@@ -39,10 +39,10 @@ input_datetime:
 input_number:
   regler_kp:
     name: Regler kp
-    intial: 1
+    initial: 1
     min: 0
     max: 1
-    step: 0,1
+    step: 0.1
   regler_bypass:
     name: Regler Bypass
     initial: 150
