@@ -1,0 +1,712 @@
+[
+    {
+        "id": "3ce9227ad71245e3",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "(8) Testflows",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "e1165b70369f2b1d",
+            "3c31d8008dcaffaa",
+            "e25dd8e781b3f57d",
+            "91570a4c78376cef",
+            "1c1b6369a59eabbe",
+            "fc9dbf8b3b334185",
+            "e452733f940cf159",
+            "bb929c7f2e0a7c3f",
+            "a056e94e32dc397e",
+            "2940a6546713a79a",
+            "6bd08e9d0b68c8e0",
+            "3c8cabaa304bd745",
+            "ac712f39db9196a3",
+            "0a3fd6bcfaa113dc",
+            "8670dc77189b5b5f",
+            "46ac14d1f3bb7a07"
+        ],
+        "x": 168,
+        "y": 3933,
+        "w": 854,
+        "h": 594
+    },
+    {
+        "id": "e1165b70369f2b1d",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Hoymiles testen / relative Ansteuerung",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "ee29490c9c4b5005",
+            "041e921ba09a57a6",
+            "3c960d972905ddd8"
+        ],
+        "x": 194,
+        "y": 3959,
+        "w": 742,
+        "h": 82
+    },
+    {
+        "id": "ee29490c9c4b5005",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "e1165b70369f2b1d",
+        "name": "Setze WR auf 100W Ausgang",
+        "func": "let regelwert = 100; // in Watt\nlet wrmax = 400; //MAX- WR\nregelwert = (regelwert / wrmax * 100); // in %\nmsg.payload = regelwert;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 4000,
+        "wires": [
+            [
+                "041e921ba09a57a6"
+            ]
+        ]
+    },
+    {
+        "id": "041e921ba09a57a6",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "e1165b70369f2b1d",
+        "name": "Setze Hoymiles WR",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.dtu_leistungsbegrenzung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload}}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "number",
+        "service": "set_value",
+        "x": 820,
+        "y": 4000,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3c960d972905ddd8",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "e1165b70369f2b1d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 300,
+        "y": 4000,
+        "wires": [
+            [
+                "ee29490c9c4b5005"
+            ]
+        ]
+    },
+    {
+        "id": "285afb99.5208c4",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "",
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "statusSeparator": "",
+        "enableGlobalContextStore": false
+    },
+    {
+        "id": "3c31d8008dcaffaa",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "APSysem EZ1 testen / absolute Ansteuerung",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "e2258c6eea29d2b9",
+            "e7e9befaa8453b4d",
+            "0ec176a2fa37ecc0"
+        ],
+        "x": 194,
+        "y": 4059,
+        "w": 752,
+        "h": 82
+    },
+    {
+        "id": "e2258c6eea29d2b9",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "3c31d8008dcaffaa",
+        "name": "Setze WR EZ1 Output",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": true,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "number.solar_maximale_leistung"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload.einspeisewert }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "number.dtu_leistungsbegrenzung"
+        },
+        "x": 820,
+        "y": 4100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e7e9befaa8453b4d",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3c31d8008dcaffaa",
+        "name": "Setze WR auf 600W Ausgang",
+        "func": "let regelwert = 600;\nmsg.payload = { einspeisewert: regelwert };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 4100,
+        "wires": [
+            [
+                "e2258c6eea29d2b9"
+            ]
+        ]
+    },
+    {
+        "id": "0ec176a2fa37ecc0",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "3c31d8008dcaffaa",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 300,
+        "y": 4100,
+        "wires": [
+            [
+                "e7e9befaa8453b4d"
+            ]
+        ]
+    },
+    {
+        "id": "e25dd8e781b3f57d",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Setze WR EZ1 Output (dynamisch)",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
+        ],
+        "labelId": [],
+        "data": "{\"value\": {{ payload.einspeisewert }}}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "{{ payload.sensor }}"
+        },
+        "x": 820,
+        "y": 4180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "91570a4c78376cef",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Setze WR auf 600W Ausgang",
+        "func": "let regelwert = 600;\n\nlet zielSensor = \"number.solar_maximale_leistung\";\n\nmsg.payload = {\n    einspeisewert: regelwert,\n    sensor: zielSensor\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 4180,
+        "wires": [
+            [
+                "e25dd8e781b3f57d"
+            ]
+        ]
+    },
+    {
+        "id": "1c1b6369a59eabbe",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "timestamp",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 4180,
+        "wires": [
+            [
+                "91570a4c78376cef"
+            ]
+        ]
+    },
+    {
+        "id": "fc9dbf8b3b334185",
+        "type": "ha-get-entities",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Hole Sensor",
+        "server": "285afb99.5208c4",
+        "version": 1,
+        "rules": [
+            {
+                "condition": "state_object",
+                "property": "entity_id",
+                "logic": "is",
+                "value": "einspeiseSensor",
+                "valueType": "flow"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 530,
+        "y": 4240,
+        "wires": [
+            [
+                "e452733f940cf159"
+            ]
+        ]
+    },
+    {
+        "id": "e452733f940cf159",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Ausgabe",
+        "func": "let power = Number(msg.payload[0].state);\n\nnode.warn (power);\n\nif (power > 2) {\n    node.warn (\">2\")\n    return [msg , null];\n    }\nelse {\n    node.warn (\"<2\")\n    return [null ,msg];\n    }\n",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 4240,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "bb929c7f2e0a7c3f",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 4240,
+        "wires": [
+            [
+                "fc9dbf8b3b334185"
+            ]
+        ]
+    },
+    {
+        "id": "a056e94e32dc397e",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 4300,
+        "wires": [
+            [
+                "6bd08e9d0b68c8e0"
+            ]
+        ]
+    },
+    {
+        "id": "2940a6546713a79a",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Ausgabe",
+        "func": "let leistung = Number(msg.payload.total_act_power);\n\nnode.warn (leistung);\n\nreturn",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 4300,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "6bd08e9d0b68c8e0",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Setz URL",
+        "func": "flow.set (\"Smartmeter\", \"http://192.168.178.117/rpc/EM.GetStatus?id=0\")\nmsg.url = flow.get (\"Smartmeter\");\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 440,
+        "y": 4300,
+        "wires": [
+            [
+                "3c8cabaa304bd745"
+            ]
+        ]
+    },
+    {
+        "id": "3c8cabaa304bd745",
+        "type": "http request",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Shelly 3EM Pro http",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 640,
+        "y": 4300,
+        "wires": [
+            [
+                "2940a6546713a79a"
+            ]
+        ]
+    },
+    {
+        "id": "ac712f39db9196a3",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Setze WR HMS Output (dynamisch)",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
+        ],
+        "labelId": [],
+        "data": "{\"value\": {{ payload.einspeisewert }}}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "{{ payload.sensor }}"
+        },
+        "x": 830,
+        "y": 4360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0a3fd6bcfaa113dc",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Setze WR auf 100W Ausgang",
+        "func": "let regelwert = 100;\nlet wrmax = 400; //MAX- WR\n\nregelwert = regelwert/wrmax * 100;\n\nlet zielSensor = \"number.dtu_leistungsbegrenzung\";\n\nmsg.payload = {\n    einspeisewert: regelwert,\n    sensor: zielSensor\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 4360,
+        "wires": [
+            [
+                "ac712f39db9196a3"
+            ]
+        ]
+    },
+    {
+        "id": "8670dc77189b5b5f",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "timestamp",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 280,
+        "y": 4360,
+        "wires": [
+            [
+                "0a3fd6bcfaa113dc"
+            ]
+        ]
+    },
+    {
+        "id": "46ac14d1f3bb7a07",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "3c38f71e3abb6567",
+            "5a942abc7cd65d2e",
+            "bdf7929968ea7a52",
+            "5439dc35407ecda1"
+        ],
+        "x": 194,
+        "y": 4419,
+        "w": 802,
+        "h": 82
+    },
+    {
+        "id": "3c38f71e3abb6567",
+        "type": "http request",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "Shelly 3EM Pro http",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.178.117/rpc/EM.GetStatus?id=0",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 500,
+        "y": 4460,
+        "wires": [
+            [
+                "bdf7929968ea7a52"
+            ]
+        ]
+    },
+    {
+        "id": "5a942abc7cd65d2e",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 300,
+        "y": 4460,
+        "wires": [
+            [
+                "3c38f71e3abb6567"
+            ]
+        ]
+    },
+    {
+        "id": "bdf7929968ea7a52",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "Auswerten",
+        "func": "//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nmsg.payload = leistung\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 4460,
+        "wires": [
+            [
+                "5439dc35407ecda1"
+            ]
+        ]
+    },
+    {
+        "id": "5439dc35407ecda1",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "debug 28",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 4460,
+        "wires": []
+    }
+]
