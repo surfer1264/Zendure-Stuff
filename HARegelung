@@ -152,12 +152,13 @@
             "3c8cabaa304bd745",
             "ac712f39db9196a3",
             "0a3fd6bcfaa113dc",
-            "8670dc77189b5b5f"
+            "8670dc77189b5b5f",
+            "46ac14d1f3bb7a07"
         ],
         "x": 168,
         "y": 3953,
-        "w": 838,
-        "h": 468
+        "w": 854,
+        "h": 594
     },
     {
         "id": "acff453100dcbbc9",
@@ -264,7 +265,7 @@
         ],
         "x": 174,
         "y": 3539,
-        "w": 772,
+        "w": 762,
         "h": 122
     },
     {
@@ -332,13 +333,15 @@
             "a3802b99388a73e1",
             "30471465b9e6510f",
             "36f3252fb4621270",
-            "4ade168f633a49b7",
-            "9c35e52d51caca37"
+            "9c35e52d51caca37",
+            "7893c8dbb115ef93",
+            "02ecee97db19ba57",
+            "318c162604820738"
         ],
         "x": 1494,
         "y": 2139,
-        "w": 1692,
-        "h": 322
+        "w": 1712,
+        "h": 382
     },
     {
         "id": "46a88bad508d3778",
@@ -449,6 +452,45 @@
         "y": 53,
         "w": 964,
         "h": 654
+    },
+    {
+        "id": "b759be1778ad269d",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "Verfügbarkeit WR",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "e3472deef8161dec",
+            "2f8986cbd151a9ec",
+            "6b62e9f5107a01db",
+            "2dc24ace9b912ba2"
+        ],
+        "x": 194,
+        "y": 4599,
+        "w": 792,
+        "h": 142
+    },
+    {
+        "id": "46ac14d1f3bb7a07",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "3c38f71e3abb6567",
+            "5a942abc7cd65d2e",
+            "bdf7929968ea7a52",
+            "5439dc35407ecda1"
+        ],
+        "x": 194,
+        "y": 4439,
+        "w": 802,
+        "h": 82
     },
     {
         "id": "d926ab42ae07f620",
@@ -606,7 +648,7 @@
         ],
         "x": 194,
         "y": 3979,
-        "w": 752,
+        "w": 742,
         "h": 82
     },
     {
@@ -810,7 +852,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\n\nif (repeat >= 40) {\n    if (neu < wrmax) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\n\nif (repeat >= 60) {\n    if (neu <= wrmax && neu > wrmin) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    if (neu <= wrmin) {\n        neu = neu + (2 * hyst);\n        flow.set (\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1774,7 +1816,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "WR Paramater setzen",
-        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\nflow.set (\"Release\", 2.5)\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
+        "func": "//Wechselrichterparameter:Anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\nflow.set(\"SFMax\", 660); //SolarflowMax Output, wie eingestellt\nflow.set (\"Release\", 2.6);\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus\n\n//wrtyp wird über das Dashboard ermittelt\n// wrtyp 1: EZ1: APSYstemEZ1 absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles HMS relative Einspeisung\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1847,7 +1889,7 @@
         "z": "479e3443afedb613",
         "g": "acff453100dcbbc9",
         "name": "Setze Flowvariablen",
-        "func": "// Initialisiere\nflow.set(\"Date1\", msg.payload.date1.substring(0,5));\nflow.set(\"Date2\", msg.payload.date2.substring(0,5));\nflow.set(\"Date3\", msg.payload.date3.substring(0,5));\n\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nflow.set(\"Wert1\", Math.min(msg.payload.wert1, wrmax));\nflow.set(\"Wert2\", Math.min(msg.payload.wert2, wrmax));\nflow.set(\"Wert3\", Math.min(msg.payload.wert3, wrmax));\nflow.set(\"WertBypass\", Math.min(msg.payload.wertbypass, wrmax));\nflow.set(\"Terminmodus\", msg.payload.termin);\nflow.set(\"MinimalEinspeisung\", msg.payload.minimal);\n\n//Bypass Sensor angelegt?, Wenn JA:\n//flow.set(\"Terminmodus\", \"on\");\n\nreturn msg;",
+        "func": "// Initialisiere\nflow.set(\"Date1\", msg.payload.date1.substring(0,5));\nflow.set(\"Date2\", msg.payload.date2.substring(0,5));\nflow.set(\"Date3\", msg.payload.date3.substring(0,5));\n\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nflow.set(\"Wert1\", Math.max(wrmin,Math.min(msg.payload.wert1, wrmax)));\nflow.set(\"Wert2\", Math.max(wrmin,Math.min(msg.payload.wert2, wrmax)));\nflow.set(\"Wert3\", Math.max(wrmin,Math.min(msg.payload.wert3, wrmax)));\nflow.set(\"WertBypass\", Math.min(msg.payload.wertbypass, wrmax));\nflow.set(\"Terminmodus\", msg.payload.termin);\nflow.set(\"MinimalEinspeisung\", msg.payload.minimal);\n\n//Bypass Sensor angelegt?, Wenn JA:\n//flow.set(\"Terminmodus\", \"on\");\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3545,10 +3587,12 @@
         "blockInputOverrides": false,
         "domain": "switch",
         "service": "turn_off",
-        "x": 2590,
-        "y": 2360,
+        "x": 2630,
+        "y": 2400,
         "wires": [
-            []
+            [
+                "02ecee97db19ba57"
+            ]
         ]
     },
     {
@@ -3577,11 +3621,11 @@
         "blockInputOverrides": false,
         "domain": "switch",
         "service": "turn_on",
-        "x": 2590,
+        "x": 2630,
         "y": 2240,
         "wires": [
             [
-                "4ade168f633a49b7"
+                "318c162604820738"
             ]
         ]
     },
@@ -3636,7 +3680,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 1830,
+        "x": 1810,
         "y": 2360,
         "wires": [
             [
@@ -3654,8 +3698,8 @@
         "g": "b6cbd1ee551c690b",
         "name": "HIER: WR Sensornamen für WR Ein/Aus prüfen",
         "info": "",
-        "x": 2600,
-        "y": 2200,
+        "x": 2620,
+        "y": 2180,
         "wires": []
     },
     {
@@ -3969,7 +4013,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2060,
+        "x": 2080,
         "y": 2260,
         "wires": [
             [
@@ -3997,7 +4041,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2060,
+        "x": 2080,
         "y": 2400,
         "wires": [
             [
@@ -4957,7 +5001,7 @@
         "name": "Setze WR EZ1 Output",
         "server": "285afb99.5208c4",
         "version": 7,
-        "debugenabled": false,
+        "debugenabled": true,
         "action": "number.set_value",
         "floorId": [],
         "areaId": [],
@@ -5057,7 +5101,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1830,
-        "y": 2420,
+        "y": 2480,
         "wires": [
             [
                 "8a4a05751fdc343f"
@@ -5086,7 +5130,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 1830,
+        "x": 1850,
         "y": 2240,
         "wires": [
             [
@@ -5233,8 +5277,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 3,
-        "x": 2260,
-        "y": 2260,
+        "x": 2280,
+        "y": 2240,
         "wires": [
             [
                 "3f310be62393785c"
@@ -5275,8 +5319,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 3,
-        "x": 2260,
-        "y": 2400,
+        "x": 2280,
+        "y": 2380,
         "wires": [
             [
                 "4119817686335d91"
@@ -5315,8 +5359,8 @@
         "blockInputOverrides": true,
         "domain": "button",
         "service": "press",
-        "x": 2590,
-        "y": 2280,
+        "x": 2650,
+        "y": 2300,
         "wires": [
             []
         ]
@@ -5347,8 +5391,8 @@
         "blockInputOverrides": true,
         "domain": "button",
         "service": "press",
-        "x": 2600,
-        "y": 2400,
+        "x": 2660,
+        "y": 2460,
         "wires": [
             []
         ]
@@ -6273,8 +6317,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 2410,
-        "y": 2280,
+        "x": 2390,
+        "y": 2300,
         "wires": [
             [
                 "3f310be62393785c"
@@ -6307,8 +6351,8 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 2410,
-        "y": 2420,
+        "x": 2390,
+        "y": 2440,
         "wires": [
             [
                 "4119817686335d91"
@@ -6650,7 +6694,7 @@
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
         "name": "Sensornamen setzen",
-        "func": "//Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n//typ3 und typ4 sind die Sensoren der Z-HA-Integration\n//typ1 spricht Sensoren absolut an (in Watt)\n//typ2 spricht Sensoren relativ an (in %)\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAVolMinSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nreturn msg;",
+        "func": "//Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n//typ3 und typ4 sind die Sensoren der Z-HA-Integration\n//typ1 spricht Sensoren absolut an (in Watt)\n//typ2 spricht Sensoren relativ an (in %)\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7241,7 +7285,7 @@
             }
         ],
         "x": 1610,
-        "y": 2320,
+        "y": 2280,
         "wires": [
             [
                 "36f3252fb4621270"
@@ -7353,52 +7397,6 @@
         ]
     },
     {
-        "id": "4ade168f633a49b7",
-        "type": "api-current-state",
-        "z": "479e3443afedb613",
-        "g": "b6cbd1ee551c690b",
-        "name": "APSystem home?",
-        "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 2,
-        "halt_if": "home",
-        "halt_if_type": "str",
-        "halt_if_compare": "is",
-        "entity_id": "device_tracker.apsystems_2",
-        "state_type": "str",
-        "blockInputOverrides": true,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            }
-        ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 2810,
-        "y": 2240,
-        "wires": [
-            [],
-            [
-                "9c35e52d51caca37"
-            ]
-        ]
-    },
-    {
         "id": "9c35e52d51caca37",
         "type": "delay",
         "z": "479e3443afedb613",
@@ -7416,7 +7414,7 @@
         "drop": false,
         "allowrate": false,
         "outputs": 1,
-        "x": 3070,
+        "x": 3090,
         "y": 2180,
         "wires": [
             [
@@ -7984,7 +7982,7 @@
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
         "name": "Set Values",
-        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet volmin = flow.get (\"zHAVolMinSensor\");\n//node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\n\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: volmin } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
+        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet socsensor = flow.get (\"zHAMinSoCSensor\");\n//node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\n\nnode.warn(`SetAkkuMin=${akku_min}, SetSoll=${sollwert}, SetMax=${maxeinspeisung}`);\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: socsensor } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
         "outputs": 3,
         "timeout": 0,
         "noerr": 0,
@@ -8286,6 +8284,7 @@
         "id": "3c38f71e3abb6567",
         "type": "http request",
         "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
         "name": "Shelly 3EM Pro http",
         "method": "GET",
         "ret": "obj",
@@ -8298,8 +8297,8 @@
         "authType": "",
         "senderr": false,
         "headers": [],
-        "x": 520,
-        "y": 4500,
+        "x": 500,
+        "y": 4480,
         "wires": [
             [
                 "bdf7929968ea7a52"
@@ -8310,6 +8309,7 @@
         "id": "5a942abc7cd65d2e",
         "type": "inject",
         "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
         "name": "",
         "props": [
             {
@@ -8327,8 +8327,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 260,
-        "y": 4500,
+        "x": 300,
+        "y": 4480,
         "wires": [
             [
                 "3c38f71e3abb6567"
@@ -8339,7 +8339,8 @@
         "id": "bdf7929968ea7a52",
         "type": "function",
         "z": "479e3443afedb613",
-        "name": "P-Regler",
+        "g": "46ac14d1f3bb7a07",
+        "name": "Auswerten",
         "func": "//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nmsg.payload = leistung\nreturn msg;",
         "outputs": 1,
         "timeout": "",
@@ -8347,8 +8348,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 720,
-        "y": 4500,
+        "x": 710,
+        "y": 4480,
         "wires": [
             [
                 "5439dc35407ecda1"
@@ -8359,16 +8360,17 @@
         "id": "5439dc35407ecda1",
         "type": "debug",
         "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
         "name": "debug 28",
-        "active": true,
+        "active": false,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 870,
-        "y": 4500,
+        "x": 890,
+        "y": 4480,
         "wires": []
     },
     {
@@ -8441,7 +8443,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "INIT vom Dashboard",
-        "info": "",
+        "info": "1",
         "x": 310,
         "y": 320,
         "wires": []
@@ -8641,6 +8643,237 @@
         "x": 2410,
         "y": 1260,
         "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7893c8dbb115ef93",
+        "type": "delay",
+        "z": "479e3443afedb613",
+        "g": "b6cbd1ee551c690b",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "100",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 3090,
+        "y": 2320,
+        "wires": [
+            [
+                "113787982a56301f"
+            ]
+        ]
+    },
+    {
+        "id": "e3472deef8161dec",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "b759be1778ad269d",
+        "name": "EZ1 available?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "unavailable",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "switch.solar_wechselrichterstatus",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 540,
+        "y": 4680,
+        "wires": [
+            [
+                "2dc24ace9b912ba2"
+            ],
+            [
+                "6b62e9f5107a01db"
+            ]
+        ]
+    },
+    {
+        "id": "2f8986cbd151a9ec",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "b759be1778ad269d",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 300,
+        "y": 4680,
+        "wires": [
+            [
+                "e3472deef8161dec"
+            ]
+        ]
+    },
+    {
+        "id": "6b62e9f5107a01db",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "b759be1778ad269d",
+        "name": "debug 24",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 4700,
+        "wires": []
+    },
+    {
+        "id": "2dc24ace9b912ba2",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "b759be1778ad269d",
+        "name": "debug 29",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 4640,
+        "wires": []
+    },
+    {
+        "id": "02ecee97db19ba57",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "b6cbd1ee551c690b",
+        "name": "EZ1 available?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "unavailable",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "switch.solar_wechselrichterstatus",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 2860,
+        "y": 2380,
+        "wires": [
+            [
+                "7893c8dbb115ef93"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "318c162604820738",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "b6cbd1ee551c690b",
+        "name": "EZ1 available?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "unavailable",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "switch.solar_wechselrichterstatus",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 2860,
+        "y": 2240,
+        "wires": [
+            [
+                "9c35e52d51caca37"
+            ],
             []
         ]
     },
