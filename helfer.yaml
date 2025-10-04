@@ -62,7 +62,7 @@ input_number:
     name: Regler maximale Einspeisung
     icon: mdi:numeric
     initial: 200
-    min: 30
+    min: 0
     max: 800
     step: 10
     unit_of_measurement: "W"
@@ -84,22 +84,22 @@ input_number:
     unit_of_measurement: "W"
   regler_wert1_termin1:
     name: Regler Wert1 Termin1
-    initial: 30
-    min: 30
+    initial: 100
+    min: 0
     max: 800
     step: 10
     unit_of_measurement: "W"
   regler_wert2_termin2:
     name: Regler Wert2 Termin2
-    initial: 30
-    min: 30
+    initial: 100
+    min: 0
     max: 800
     step: 10
     unit_of_measurement: "W"
   regler_wert3_termin3:
     name: Regler Wert3 Termin3
-    initial: 30
-    min: 30
+    initial: 100
+    min: 0
     max: 800
     step: 10
     unit_of_measurement: "W"
