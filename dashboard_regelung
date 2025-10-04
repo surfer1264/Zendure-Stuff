@@ -6,6 +6,14 @@ views:
           - type: heading
             heading: Einstellungen
             heading_style: title
+          - clock_style: digital
+            clock_size: small
+            show_seconds: true
+            no_background: false
+            type: clock
+            grid_options:
+              columns: 12
+              rows: 1
           - type: entities
             entities:
               - entity: input_boolean.regler_aktiv
@@ -154,25 +162,29 @@ views:
             heading: Hinweise
           - type: markdown
             content: >-
-              In der Dashboardzeile kann man die Regelfunktion aktivieren durch
+              In der Badgezeile kann man die Regelfunktion aktivieren durch
               Auswahl von 
 
 
-              EZ1 - absolute ANsteruerung des WR
+              EZ1 - absolute Ansteruerung des WR (APSystem)
 
-              HMS - relative Ansteuerung des WR
+              HMS - relative Ansteuerung des WR (HMS)
 
-              MAN - Ansteuerung der Manzellen Leistungsregelunng der Z-HA
+              MAN - Ansteuerung der Manuellen Leistungsregelunng der Z-HA
               Integration
 
               SMT - Start der Smarten Leistungssteuerung der Z-HA Integration
 
-              AUS - deaktiviert den Regelalgorithmus und versetzt das System in
-              einen definierten Zustand (Solarflow-Ausgang 100W)
+              AUS - deaktiviert das Regelsystem und versetzt das System in einen
+              definierten Zustand (Solarflow-Ausgang 100W)
+
+
+              Ganz rechts gibt es einen INIT-Knopf, der initialisiert das
+              gesamte Regelsystem, wie bei einem Neustart
           - type: markdown
             content: >
               Der Schalter **Regel-Algorithmus** aktiviert oder deaktivert den
-              Regel-Algorithmus.
+              Regel-Algorithmus. (Wechsel zw. Regeln und Fixeinspeisung)
 
 
               Die **Einspeisbegrenzung** begrenzt die Einspeisung auf den
@@ -198,12 +210,14 @@ views:
               Dieser Einspeisewert wird nicht unterschritten.
 
 
-              **Terminservice:** Hier können Uhrzeiten festgelehgt werden, an
-              denen die Einspeisbegrenzung verändert wird.
+              **Terminmodus:** Hier können Uhrzeiten festgelegt werden, an denen
+              die Einspeisbegrenzung verändert wird.
 
 
               Die Einspeisbegrenzungen können "on the fly" angepasst werden und
               wirken sofort.
+
+              der jeweils aktive Termin wurd oben in der Badgezeile angezeigt.
     type: sections
     cards: []
     badges:
@@ -252,7 +266,7 @@ views:
         entity: number.solarherwegh_output_limit
         name: SF
       - type: entity
-        show_name: false
+        show_name: true
         show_state: true
         show_icon: true
         entity: input_text.regler_timer_auswahl
@@ -260,12 +274,13 @@ views:
           - condition: state
             entity: input_boolean.regler_terminmodus
             state: 'on'
+        name: Time
       - type: entity
         show_name: true
         show_state: true
         show_icon: true
-        entity: sensor.solarflow_electric_level
-        name: SoC
+        entity: number.zendure_manager_manual_power
+        name: Man
       - type: entity
         show_name: true
         show_state: false
