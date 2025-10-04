@@ -6,6 +6,14 @@ views:
           - type: heading
             heading: Einstellungen
             heading_style: title
+          - clock_style: digital
+            clock_size: small
+            show_seconds: true
+            no_background: false
+            type: clock
+            grid_options:
+              columns: 12
+              rows: 1
           - type: entities
             entities:
               - entity: input_boolean.regler_aktiv
@@ -18,6 +26,9 @@ views:
               - condition: state
                 entity: input_boolean.regler_terminmodus
                 state: 'off'
+              - condition: state
+                entity: input_select.regler_ausgang
+                state_not: SMT
           - type: entities
             entities:
               - entity: input_number.regler_hysterese
@@ -26,6 +37,7 @@ views:
               - entity: input_number.regler_sollwert
                 name: Sollwert
                 secondary_info: none
+              - entity: input_number.regler_minimale_einspeisung
             visibility:
               - condition: state
                 entity: input_boolean.regler_aktiv
@@ -58,18 +70,8 @@ views:
           - type: heading
             heading: Kennzahlen
             heading_style: title
-          - clock_size: medium
-            show_seconds: true
-            type: clock
-            grid_options:
-              columns: 12
-              rows: 2
-          - type: tile
-            entity: sensor.solarhub_power
-          - type: tile
-            entity: sensor.dachsolar_switch_0_power
           - type: gauge
-            entity: sensor.wohnung_channel_a_power
+            min: -600
             needle: true
             max: 3500
             severity:
@@ -80,7 +82,15 @@ views:
               columns: 6
               rows: auto
             name: Bezug
-            min: -700
+            entity: sensor.shellypro3em_power_actual_total
+          - type: gauge
+            entity: sensor.solarhub_power
+            needle: true
+            grid_options:
+              columns: 6
+              rows: auto
+            name: Einspeisung von PV
+            max: 800
           - type: gauge
             entity: sensor.batterie_out_in
             min: -800
@@ -94,6 +104,11 @@ views:
               columns: 6
               rows: auto
             name: Entladen/Laden
+          - type: gauge
+            entity: sensor.solarflow_electric_level
+            grid_options:
+              columns: 6
+              rows: auto
           - type: heading
             icon: mdi:battery-arrow-up-outline
             heading_style: subtitle
@@ -109,6 +124,100 @@ views:
                 name: Wechselrichter EIN/AUS
                 secondary_info: last-changed
             state_color: true
+          - type: heading
+            icon: ''
+            heading_style: subtitle
+            heading: Bypass einschränken
+            visibility:
+              - condition: state
+                entity: sensor.solarflow_electric_level
+                state: '100'
+          - type: entities
+            entities:
+              - entity: input_number.regler_bypass
+            state_color: true
+            visibility:
+              - condition: state
+                entity: sensor.solarflow_electric_level
+                state: '100'
+              - condition: state
+                entity: input_select.regler_ausgang
+                state_not: MAN
+          - type: markdown
+            content: >-
+              [Doku](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
+            grid_options:
+              columns: 6
+              rows: auto
+          - type: markdown
+            content: >
+              [Schema](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/Schema%20HARegelung.jpg)
+            grid_options:
+              columns: 6
+              rows: auto
+      - type: grid
+        cards:
+          - type: heading
+            heading_style: title
+            heading: Hinweise
+          - type: markdown
+            content: >-
+              In der Badgezeile kann man die Regelfunktion aktivieren durch
+              Auswahl von 
+
+
+              EZ1 - absolute Ansteruerung des WR (APSystem)
+
+              HMS - relative Ansteuerung des WR (HMS)
+
+              MAN - Ansteuerung der Manuellen Leistungsregelunng der Z-HA
+              Integration
+
+              SMT - Start der Smarten Leistungssteuerung der Z-HA Integration
+
+              AUS - deaktiviert das Regelsystem und versetzt das System in einen
+              definierten Zustand (Solarflow-Ausgang 100W)
+
+
+              Ganz rechts gibt es einen INIT-Knopf, der initialisiert das
+              gesamte Regelsystem, wie bei einem Neustart
+          - type: markdown
+            content: >
+              Der Schalter **Regel-Algorithmus** aktiviert oder deaktivert den
+              Regel-Algorithmus. (Wechsel zw. Regeln und Fixeinspeisung)
+
+
+              Die **Einspeisbegrenzung** begrenzt die Einspeisung auf den
+              eingestellten Wert. Alle Bedarfe unterhalb dieser Grenze werden
+              auf den Sollwert ausgeregelt.
+
+              Ist der Regel-Algorithmus deaktiviert wird dieser Wert als
+              Festeinspeisung interpretiert.
+
+
+              **Hysterese:** definiert den Bereich um den Sollwert, der nicht
+              mehr ausgeregelt wird.
+
+
+              **Sollwert:** definiert die Regelgröße. Ein Sollwert von 10W und
+              eine Hysterese von 15W definiert einen Regelbereich von -5W bis
+              +25W. Außerhalb dieses Bereiches werden Regleaktionen ausgelöst.
+              Bewegt sich der P1-Wert innerhalb des Bereiches, erfolgt keine
+              Regelaktion.
+
+
+              **Regler minimal:** Dieser Wert definiert eine Mindesteinspeisung.
+              Dieser Einspeisewert wird nicht unterschritten.
+
+
+              **Terminmodus:** Hier können Uhrzeiten festgelegt werden, an denen
+              die Einspeisbegrenzung verändert wird.
+
+
+              Die Einspeisbegrenzungen können "on the fly" angepasst werden und
+              wirken sofort.
+
+              der jeweils aktive Termin wurd oben in der Badgezeile angezeigt.
     type: sections
     cards: []
     badges:
@@ -116,20 +225,19 @@ views:
         show_name: false
         show_state: true
         show_icon: true
-        entity: input_boolean.regler_aus
+        entity: input_select.regler_ausgang
+      - type: entity
+        show_name: false
+        show_state: true
+        show_icon: true
+        entity: input_select.regler_typ
+        icon: mdi:gauge
       - type: entity
         show_name: true
         show_state: true
         show_icon: true
-        entity: input_boolean.ignorebypass
-        name: Ignore Bypass
-      - type: entity
-        show_name: true
-        show_state: true
-        show_icon: true
-        entity: sensor.sf_bypass
+        entity: binary_sensor.solarherwegh_pass
         name: Bypass
-        show_entity_picture: false
       - type: entity
         show_name: true
         show_state: true
@@ -138,22 +246,53 @@ views:
         name: Status
         show_entity_picture: false
       - type: entity
-        show_name: false
+        show_name: true
         show_state: true
         show_icon: true
-        entity: counter.regler_zahler
-        icon: ''
+        icon: mdi:numeric
         show_entity_picture: true
+        entity: input_number.regler_inkrement
+        name: Cnt
       - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: input_number.regler_maximale_einspeisung
+        name: Max
       - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: number.solarherwegh_output_limit
+        name: SF
+      - type: entity
+        show_name: true
+        show_state: true
+        show_icon: true
         entity: input_text.regler_timer_auswahl
+        visibility:
+          - condition: state
+            entity: input_boolean.regler_terminmodus
+            state: 'on'
+        name: Time
       - type: entity
-        entity: sensor.solarflow_electric_level
+        show_name: true
+        show_state: true
+        show_icon: true
+        entity: number.zendure_manager_manual_power
+        name: Man
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_button.regler_init
+        name: INIT
+        tap_action:
+          action: none
     icon: mdi:solar-panel
-    path: http://homeassistant.local:8123/regler-bkw/0?edit=0
+    path: http://homeassistant.local:8123/regler-bkw/0?edit=1
     theme: ios-dark-mode-blue-red
-    max_columns: 2
+    max_columns: 3
     header:
       card:
         type: markdown
