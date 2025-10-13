@@ -115,7 +115,8 @@
             "e1823dbb1fbb80f7",
             "fc7613a47a09c1a6",
             "7f5bc6e47b11df44",
-            "0d452cdc92314b7d"
+            "0d452cdc92314b7d",
+            "09573f0766e9b699"
         ],
         "x": 1494,
         "y": 1899,
@@ -396,7 +397,8 @@
             "4cb2b580c2b15ca9",
             "5429a937f7d4fe2f",
             "a0b4a6e2b0bd2354",
-            "2f8099592faddc79"
+            "2f8099592faddc79",
+            "7bf578a419c26122"
         ],
         "x": 194,
         "y": 973,
@@ -590,12 +592,13 @@
             "fd9ffa19de35ef1b",
             "40cd311eb34f8bec",
             "3a896cce6e31964b",
-            "98eedc884b02a91c"
+            "98eedc884b02a91c",
+            "234ef51db2f69154"
         ],
         "x": 1614,
         "y": 739,
         "w": 952,
-        "h": 202
+        "h": 209.5
     },
     {
         "id": "e1165b70369f2b1d",
@@ -879,7 +882,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\nnode.status({ text: 'Regelwert: ' + neu });\n\nif (repeat >= 60) {\n    if (neu <= wrmax && neu > wrmin) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    if (neu <= wrmin) {\n        neu = neu + (2 * hyst);\n        flow.set (\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\nnode.status({ text: 'Regelwert: ' + neu });\nsetTimeout(() => node.status({}), 9000);\n\nif (repeat >= 60) {\n    if (neu <= wrmax && neu > wrmin) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    if (neu <= wrmin) {\n        neu = neu + (2 * hyst);\n        flow.set (\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1585,10 +1588,11 @@
             "e646756010d9f10c"
         ],
         "x": 1535,
-        "y": 1940,
+        "y": 2000,
         "wires": [
             [
-                "e1823dbb1fbb80f7"
+                "e1823dbb1fbb80f7",
+                "09573f0766e9b699"
             ]
         ]
     },
@@ -1671,7 +1675,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"2.6.3\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"2.6.4\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n//flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS8002T\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3735,7 +3739,7 @@
         "z": "479e3443afedb613",
         "g": "acff453100dcbbc9",
         "name": "Setze Flowvariablen",
-        "func": "let level = Number(msg.payload[0].state);\n//let level = msg.payload;\nnode.status({fill:\"green\",shape:\"ring\",text:\"SOC\" +level});\nif (level < 100)\n    {\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus    \n    }\nelse \n    {\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    }\n ",
+        "func": "let level = Number(msg.payload[0].state);\n//let level = msg.payload;\nnode.status({fill:\"green\",shape:\"ring\",text:\"SOC: \" +level});\nif (level < 100)\n    {\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus    \n    }\nelse \n    {\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    }\n ",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3752,9 +3756,10 @@
         "id": "e1823dbb1fbb80f7",
         "type": "function",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "0ebb8e7b772678cd",
         "name": "WR Aktion",
-        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet zielSensor;\n\nif (debug) {\n    node.warn (`RegelwertWR=${regelwert}`);\n    }\n\nswitch (wrtyp) {\n    case 1:\n        {\n            //absolute Einspeisung mit APSystem EZ1\n            zielSensor= flow.get (\"wrSensor_typ1\"); //Hole Sensorname\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    case 2:\n        {\n            //relative Einspeisung mit Hoymiles HMS\n            //hier wird regelwert umgerechnet in Prozent anhand wrmax\n            regelwert = (regelwert / wrmax * 100);\n            zielSensor= flow.get (\"wrSensor_typ2\"); //Hole Sensorname\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break;\n        }\n    case 3:\n        {\n            //absolute Einspeisung in Zendure Manager outputlimit\n            zielSensor= flow.get (\"wrSensor_typ3\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break; \n        }\n    case 4:\n        {\n            //absolute Einspeisung in Zendure Manuelle Leistung\n            zielSensor= flow.get (\"wrSensor_typ4\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    }\nnode.status({ text: 'Regelwert: ' + regelwert })\nreturn msg;",
+        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\nconst wrmax = flow.get(\"WRLeistung\");\nconst wrtyp = flow.get(\"WRTyp\");\nlet zielSensor;\n\nif (debug) {\n    node.warn (`RegelwertWR=${regelwert}`);\n    }\n\nswitch (wrtyp) {\n    case 1:\n        {\n            //absolute Einspeisung mit APSystem EZ1\n            zielSensor= flow.get (\"wrSensor_typ1\"); //Hole Sensorname\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    case 2:\n        {\n            //relative Einspeisung mit Hoymiles HMS\n            //hier wird regelwert umgerechnet in Prozent anhand wrmax\n            regelwert = (regelwert / wrmax * 100);\n            zielSensor= flow.get (\"wrSensor_typ2\"); //Hole Sensorname\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break;\n        }\n    case 3:\n        {\n            //absolute Einspeisung in Zendure Manager outputlimit\n            zielSensor= flow.get (\"wrSensor_typ3\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break; \n        }\n    case 4:\n        {\n            //absolute Einspeisung in Zendure Manuelle Leistung\n            zielSensor= flow.get (\"wrSensor_typ4\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    }\n//node.status({ text: 'Regelwert: ' + regelwert })\nnode.status({\n  text: `WR-Typ: ${wrtyp} | Regelwert: ${regelwert}`\n});\nsetTimeout(() => node.status({}), 4500);\n\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3764,10 +3769,7 @@
         "x": 1650,
         "y": 1940,
         "wires": [
-            [
-                "54372a43b72a9c3a",
-                "fc7613a47a09c1a6"
-            ]
+            []
         ]
     },
     {
@@ -5442,14 +5444,14 @@
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
         "name": "WRTyp ermitteln",
-        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"AUS\":\n       {\n       flow.set(\"WRTyp\", 0)\n       msg.payload = 0;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = 1;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = 2;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       flow.set(\"Reglerkp\", 0.8);\n       msg.payload = 4;\n       break;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = 5;\n       break;\n       }\n    }\n    node.status({fill:\"green\",shape:\"ring\",text:\"typ: \" +typ});\n    return msg;",
+        "func": "// Den empfangenen Typ aus der Nachricht holen\nlet typ = msg.payload;\n\n// Tabelle mit allen Typen und ihren zugehörigen Einstellungen\n// Jede Eigenschaft enthält, was gesetzt werden soll\nconst typen = {\n   \"AUS\": { WRTyp: 0, payload: 0, Reglerkp: 1 },\n   \"EZ1\": { WRTyp: 1, payload: 1, Reglerkp: 1 },\n   \"HMS\": { WRTyp: 2, payload: 2, Reglerkp: 1 },\n   \"MAN\": { WRTyp: 4, payload: 4, Reglerkp: 0.8 },\n   \"SMT\": { WRTyp: 5, payload: 5 }\n};\n\n// Prüfen, ob der empfangene Typ in der Tabelle existiert\nif (typen[typ]) {\n   const einstellung = typen[typ];\n\n   // Den passenden Wechselrichter-Typ im Flow-Speicher ablegen\n   flow.set(\"WRTyp\", einstellung.WRTyp);\n\n   // Die neue Payload in der Nachricht speichern (wird an den nächsten Node weitergegeben)\n   msg.payload = einstellung.payload;\n\n   // Falls für diesen Typ ein Regler-Kp-Wert definiert ist, diesen ebenfalls speichern\n   if (einstellung.Reglerkp !== undefined) {\n      flow.set(\"Reglerkp\", einstellung.Reglerkp);\n   }\n} else {\n   // Optional: Wenn der Typ unbekannt ist, eine Warnung ausgeben\n   node.warn(\"Unbekannter Typ: \" + typ);\n}\n\n// Statusanzeige im Node aktualisieren (sichtbar im Flow)\nnode.status({ fill: \"green\", shape: \"ring\", text: \"WRTyp: \" + typ });\n\n// Nachricht zurückgeben, damit der Flow weiterläuft\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
+        "x": 600,
         "y": 1320,
         "wires": [
             [
@@ -6367,7 +6369,7 @@
         "type": "comment",
         "z": "479e3443afedb613",
         "g": "0ebb8e7b772678cd",
-        "name": "Wenn Sensornamen in 1.3. gut gepflegt, dann läuft die Routine generisch",
+        "name": "Wenn Sensornamen in 1.1. gut gepflegt, dann läuft die Routine generisch",
         "info": "",
         "x": 2260,
         "y": 1940,
@@ -6998,7 +7000,7 @@
         "name": "HIER: kP Regler Verstärkung anpassen",
         "info": "",
         "x": 530,
-        "y": 1280,
+        "y": 1260,
         "wires": []
     },
     {
@@ -7516,7 +7518,7 @@
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
         "name": "Set Values",
-        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet socsensor = flow.get (\"zHAMinSoCSensor\");\n// node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 30;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: socsensor } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
+        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 30, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    12: { akku_min: 50, sollwert: 10, maxeinspeisung: 200 }\n};\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\nflow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3];\n",
         "outputs": 3,
         "timeout": 0,
         "noerr": 0,
@@ -9082,6 +9084,70 @@
             [
                 "19c87395473efe5b"
             ]
+        ]
+    },
+    {
+        "id": "09573f0766e9b699",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "0ebb8e7b772678cd",
+        "name": "WR Aktion2",
+        "func": "const debug = flow.get(\"Debug\");\nlet { einspeisewert: regelwert } = msg.payload;\nconst wrmax = flow.get(\"WRLeistung\");\nconst wrtyp = flow.get(\"WRTyp\");\n\nif (debug) node.warn(`RegelwertWR=${regelwert}`);\n\nconst sensormap = {\n  1: \"wrSensor_typ1\",\n  2: \"wrSensor_typ2\",\n  3: \"wrSensor_typ3\",\n  4: \"wrSensor_typ4\"\n};\n\n// Berechne ggf. prozentualen Wert für Typ 2\nif (wrtyp === 2 && wrmax) regelwert = regelwert / wrmax * 100;\n\n// Hole zugehörigen Sensornamen\nconst zielSensor = flow.get(sensormap[wrtyp]);\n\nmsg.payload = { einspeisewert: regelwert, sensor: zielSensor };\n\n//node.status({ text: `Regelwert: ${regelwert}` });\n\nnode.status({\n  text: `WR-Typ: ${wrtyp} | Regelwert: ${regelwert}`\n});\nsetTimeout(() => node.status({}), 9000);\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1650,
+        "y": 2000,
+        "wires": [
+            [
+                "fc7613a47a09c1a6",
+                "54372a43b72a9c3a"
+            ]
+        ]
+    },
+    {
+        "id": "7bf578a419c26122",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "0ded3f6e0d781a4e",
+        "name": "WRTyp ermitteln",
+        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"AUS\":\n       {\n       flow.set(\"WRTyp\", 0)\n       msg.payload = 0;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = 1;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = 2;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       flow.set(\"Reglerkp\", 0.8);\n       msg.payload = 4;\n       break;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = 5;\n       break;\n       }\n    }\n    node.status({fill:\"green\",shape:\"ring\",text:\"typ: \" +typ});\n    return msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 1220,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "234ef51db2f69154",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "72932590259c2eb2",
+        "name": "Set Values",
+        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet socsensor = flow.get (\"zHAMinSoCSensor\");\n// node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 30;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: socsensor } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2110,
+        "y": 900,
+        "wires": [
+            [],
+            [],
+            []
         ]
     },
     {
