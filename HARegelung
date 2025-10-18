@@ -240,9 +240,9 @@
             "7d77488ed7442808"
         ],
         "x": 194,
-        "y": 3399,
+        "y": 3379,
         "w": 1172,
-        "h": 308
+        "h": 328
     },
     {
         "id": "3b8b8c73f8c2f645",
@@ -261,7 +261,7 @@
         "x": 194,
         "y": 3739,
         "w": 1172,
-        "h": 122
+        "h": 142
     },
     {
         "id": "fa899eab480fd056",
@@ -827,13 +827,11 @@
         },
         "nodes": [
             "e962ca54b4872db1",
-            "c74815a7ace7eac8",
-            "280cb59d730c177e",
-            "1fb9aed01d6aba29"
+            "c74815a7ace7eac8"
         ],
         "x": 274,
         "y": 3599,
-        "w": 782,
+        "w": 452,
         "h": 82
     },
     {
@@ -1450,7 +1448,7 @@
         "z": "479e3443afedb613",
         "g": "4cd6e76302eb583f",
         "name": "Setze Flow-Variable Max Power",
-        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\n//flow.set (\"Regelwert\", msg.payload); \nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\nmsg.payload = {einspeisewert: flow.get(\"MaxEinspeisung\")};\nreturn msg;",
+        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\n//flow.set (\"Regelwert\", msg.payload); \nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\nlet max = flow.get(\"MaxEinspeisung\");\nnode.status({fill:\"yellow\",shape:\"dot\",text:\"Max \" +max});\nmsg.payload = {einspeisewert: max};\nreturn msg;",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1675,7 +1673,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"3.0.0\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"3.0.1\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2555,7 +2553,7 @@
         "z": "479e3443afedb613",
         "g": "6e708c215cdbfc98",
         "name": "aktuelles DateX ermitteln",
-        "func": "let date1 = flow.get(\"Date1\");\nlet date2 = flow.get(\"Date2\");\nlet date3 = flow.get(\"Date3\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\n\nlet grenze = flow.get(\"MaxEinspeisung\");\n\nvar currentTime = new Date();\n// Umwandeln in Format hh:mm\nvar hours = currentTime.getHours();\nvar minutes = currentTime.getMinutes();\nvar timeString = (hours<10 ? \"0\" + hours : hours) + \":\" + (minutes < 10 ? \"0\" + minutes : minutes);\nlet time = timeString;\n//node.warn (time);\n\nlet debug = flow.get(\"Debug\");\nif (debug) \n    {\n    node.warn({grenze, time, date1, date2, date3});\n    }\n\nswitch (time){\n    case date1:\n    {\n    let grenze = flow.get(\"Wert1\");\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date1\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date1\"\n            };\n    return msg;\n    }\n    case date2:\n    {\n    let grenze = flow.get(\"Wert2\");\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date2\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date2\"\n            };\n    return msg;\n    }\n    case date3:\n    {\n    let grenze = flow.get(\"Wert3\");\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date3\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date3\"\n            };\n    return msg;\n    }\n}\nreturn;",
+        "func": "//Schaltzeiten Format \"hh:mm\"\nconst date1 = flow.get(\"Date1\");\nconst date2 = flow.get(\"Date2\");\nconst date3 = flow.get(\"Date3\");\n//Einspeisewerte Format: number\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\n\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet ac = flow.get(\"AktiverTermin\")\n\n\nvar currentTime = new Date();\n// Umwandeln in Format hh:mm\nvar hours = currentTime.getHours();\nvar minutes = currentTime.getMinutes();\nvar timeString = (hours<10 ? \"0\" + hours : hours) + \":\" + (minutes < 10 ? \"0\" + minutes : minutes);\n\nlet debug = flow.get(\"Debug\");\nif (debug) \n    {\n    node.warn({grenze, timeString, ac, date1, date2, date3});\n    }\n\nswitch (timeString){\n    case date1:\n    {\n    grenze = wert1;\n    flow.set(\"MaxEinspeisung\", wert1);\n    flow.set(\"AktiverTermin\", \"Date1\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date1\"\n            };\n    node.status({\n    text: `Date1 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n    case date2:\n    {\n    grenze = wert2;\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date2\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date2\"\n            };\n    node.status({\n    text: `Date2 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n    case date3:\n    {\n    grenze = wert3;\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date3\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date3\"\n            };\n    node.status({\n    text: `Date3 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n}\nnode.status({\n    text: `Date: ${ac} | Wert: ${grenze}`\n    });\nreturn;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2724,7 +2722,7 @@
         "z": "479e3443afedb613",
         "g": "3b8b8c73f8c2f645",
         "name": "Setze Grenze",
-        "func": "//Wenn AUS, dann stelle alten Wert wieder her.\nlet grenze = flow.get (\"MaxEinspeisungSave\"); //max.Einspeisung\nmsg.payload = grenze;\nreturn msg;\n\n",
+        "func": "//Wenn AUS, dann stelle alten Wert wieder her.\nlet grenze = flow.get (\"MaxEinspeisungSave\"); //max.Einspeisung\nflow.set(\"MaxEinspeisung\",grenze);\nmsg.payload = grenze;\nnode.status({fill:\"yellow\",shape:\"dot\",text:\"Wert: \" +grenze});\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -2732,7 +2730,7 @@
         "finalize": "",
         "libs": [],
         "x": 540,
-        "y": 3820,
+        "y": 3840,
         "wires": [
             [
                 "5dd4fe71b0a47034"
@@ -2766,7 +2764,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 1230,
-        "y": 3800,
+        "y": 3780,
         "wires": [
             []
         ]
@@ -2777,14 +2775,14 @@
         "z": "479e3443afedb613",
         "g": "3b8b8c73f8c2f645",
         "name": "Save letzte Grenze",
-        "func": "//Wenn AN: Sichere die gesetzte MaxEInspeisung des Reglerbetriebes\nlet grenze = flow.get(\"MaxEinspeisung\");\nflow.set(\"MaxEinspeisungSave\",grenze);\n\n//Hole passende EInspeisegrene passend zum Termin\nlet aktiv = flow.get(\"AktiverTermin\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\n\nswitch (aktiv)\n    {\n    case \"Date1\":\n        flow.set(\"MaxEinspeisung\", wert1);\n        msg.payload = wert1;\n        break\n    case \"Date2\":\n        flow.set(\"MaxEinspeisung\", wert2);\n        msg.payload = wert2;\n        break\n    case \"Date3\":\n        flow.set(\"MaxEinspeisung\", wert3);\n        msg.payload = wert3;\n        break\n    }\n\n\nreturn msg;\n",
+        "func": "//Wenn AN: Sichere die gesetzte MaxEInspeisung des Reglerbetriebes\nlet grenze = flow.get(\"MaxEinspeisung\");\nflow.set(\"MaxEinspeisungSave\",grenze);\n\n//Hole passende EInspeisegrene passend zum Termin\nlet aktiv = flow.get(\"AktiverTermin\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\nlet wert = grenze;\n\nswitch (aktiv)\n    {\n    case \"Date1\":\n        wert = wert1; \n        break\n    case \"Date2\":\n        wert = wert2; \n        break\n    case \"Date3\":\n        wert = wert3; \n        break\n    }\nflow.set(\"MaxEinspeisung\", wert);\nnode.status({\n    text: `Date: ${aktiv} | Wert: ${wert}`\n    });\nmsg.payload = wert;\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 530,
+        "x": 550,
         "y": 3780,
         "wires": [
             [
@@ -2839,8 +2837,7 @@
         "name": "link in 13",
         "links": [
             "f5ac4859d53b8c34",
-            "b1f2ddda67ab1775",
-            "1fb9aed01d6aba29"
+            "b1f2ddda67ab1775"
         ],
         "x": 635,
         "y": 180,
@@ -2882,7 +2879,7 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Einspeisgrenze neu setzen",
-        "func": "let terminmodus = flow.get (\"Terminmodus\");\n\n//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\");\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        msg.payload = {einspeisewert: wert1};\n        node.status({ text: 'Wert1: ' + wert1 });\n        break;\n        }\n    case \"Date2\":\n        {\n        msg.payload = {einspeisewert: wert2};\n        node.status({ text: 'Wert2: ' + wert2 });\n        break;\n        }\n    case \"Date3\":\n        {\n        msg.payload = {einspeisewert: wert3};\n        node.status({ text: 'Wert3: ' + wert3 });\n        break;\n        }\n    }\nreturn msg;",
+        "func": "//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\"); // Date1 oder Date2 oder Date3\n\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\nlet wert = flow.get(\"MaxEinspeisung\");\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        wert = wert1;\n        break;\n        }\n    case \"Date2\":\n        {\n        wert = wert2;\n        break;\n        }\n    case \"Date3\":\n        {\n        wert = wert3\n        break;\n        }\n    }\nmsg.payload = {einspeisewert: wert};\nnode.status(`Date=${ac}, Wert=${wert}`);\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3048,8 +3045,8 @@
         "blockInputOverrides": true,
         "domain": "input_text",
         "service": "set_value",
-        "x": 720,
-        "y": 3440,
+        "x": 800,
+        "y": 3420,
         "wires": [
             []
         ]
@@ -4294,7 +4291,7 @@
         "z": "479e3443afedb613",
         "g": "b5ff1f69caf7f3fb",
         "name": "Formatieren",
-        "func": "// Debugnachricht erzeugen\n// node.warn(msg.payload);\n\n//let log = {\n//    timestamp: new Date().toISOString(),\n//    nodeName: msg.error?.source?.name || \"unknown\",\n//    nodeId: msg.error?.source?.id || \"\",\n//    nodeType: msg.error?.source?.type || \"\",\n//    message: msg.error?.message || \"\"\n//};\n\n// Für die Datei als JSON-String\n//msg.payload = JSON.stringify(log) + \"\\n\";\n//return msg;\n\n\n// --- Kontextdaten lesen ---\nlet wrtyp = flow.get(\"WRTyp\");\nlet wrher = flow.get(\"WRHersteller\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get(\"WRAktiv\");\nlet release = flow.get(\"Release\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\n//let isostring = new Date().toISOString();\n//let timestamp = new Date(isostring);\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\nlet logType = isError ? \"Error\" : \"Init\";\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"System\";\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"Initialisierung erfolgreich\";\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType};` +\n    `Release=${release};WRTyp=${wrtyp};WRHersteller=${wrher};WRMax=${wrmax};WRMin=${wrmin};` +\n    `WRAktiv=${wr_aktiv};ReglerAktiv=${regler_aktiv};Termin=${termin_on};MaxEinspeisung=${max_einspeisung};` +\n    `Sollwert=${soll};Wert1Time=${wert1};Wert2Time=${wert2};Wert3Time=${wert3};${message}\\n`;\n\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nreturn msg;\n",
+        "func": "\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\n// Wenn isError true ist → wir haben einen Fehlerfall\n// Sonst → Initialisierung (kein Fehler)\nlet logType = isError ? \"Error\" : \"Init\";\n\n// Im Fehlerfall: Name des Node aus msg.error.source.name übernehmen\n// Wenn kein Name vorhanden → \"unknown\"\n// Sonst (kein Fehler): festen Namen \"System\" setzen\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"System\";\n\n// Im Fehlerfall: Node-ID aus msg.error.source.id übernehmen (oder leeren String, falls undefiniert)\n// Sonst leerer String\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\n\n// Im Fehlerfall: Node-Typ aus msg.error.source.type übernehmen (oder leerer String)\n// Sonst leerer String\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\n\n// Im Fehlerfall: Fehlermeldung aus msg.error.message übernehmen\n// Wenn keine vorhanden → \"Unbekannter Fehler\"\n// Sonst (kein Fehler): Erfolgsmeldung \"Initialisierung erfolgreich\"\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"Initialisierung erfolgreich\";\n\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType}\\n`;\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -4341,7 +4338,7 @@
         "finalize": "",
         "libs": [],
         "x": 2070,
-        "y": 540,
+        "y": 560,
         "wires": [
             [
                 "59f3b95dd2f0e022"
@@ -5044,7 +5041,7 @@
         "z": "479e3443afedb613",
         "g": "6e708c215cdbfc98",
         "name": "Einspeisgrenze neu setzen",
-        "func": "let terminmodus = flow.get (\"Terminmodus\");\n\n//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\");\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\nlet wert = 0;\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        wert = wert1;\n        //flow.set (\"MaxEinspeisung\", wert1);\n        //node.status({ text: 'Wert1: ' + wert1 })\n        break;\n        }\n    case \"Date2\":\n        {\n        wert = wert2;\n        //flow.set (\"MaxEinspeisung\", wert2);\n        //node.status({ text: 'Wert2: ' + wert2 })\n        break;\n        }\n    case \"Date3\":\n        {\n        wert = wert3\n        //flow.set (\"MaxEinspeisung\", wert3);\n        //node.status({ text: 'Wert3: ' + wert3 })\n        break;\n        }\n    }\nmsg.payload = {einspeisewert: wert};\nnode.status(`Zeit=${ac}, Wert=${wert}`);\nreturn msg;",
+        "func": "//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\"); // Date1 oder Date2 oder Date3\n\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\nlet wert = flow.get(\"MaxEinspeisung\");\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        wert = wert1;\n        break;\n        }\n    case \"Date2\":\n        {\n        wert = wert2;\n        break;\n        }\n    case \"Date3\":\n        {\n        wert = wert3\n        break;\n        }\n    }\nmsg.payload = {einspeisewert: wert};\nnode.status(`Date=${ac}, Wert=${wert}`);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5517,7 +5514,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "Bypass-Handling",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\n//flow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( wrmax, neu);\nneu = Math.min(neu, wertbypass);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nif (debug) {\nnode.warn ({diff, vorher, fehler, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\n//flow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\nlet max = Math.min (wertbypass, wrmax);\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( max, neu);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nnode.status({\n  text: `Regelwert: ${neu}`\n});\n\nif (debug) {\nnode.warn ({max, diff, vorher, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -8790,7 +8787,7 @@
         "z": "479e3443afedb613",
         "g": "3d36f3e8b8cb3fe0",
         "name": "Setze Flow-Variable Bypass",
-        "func": "// Variable aus Flow oder globalem Speicher\nlet level = Number(msg.payload[0].state);\n    if (level < 100) \n    {\n    node.status({fill:\"green\",shape:\"ring\",text:\"SoC \" +level});\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus   \n    return; //nichts senden \n    }\n    else \n    {\n    node.status({ fill: \"red\", shape: \"ring\", text: \"SoC \" + level });\n    flow.set(\"Regelwert\", 0); // Wenn Akku voll WR zunächst runterregeln\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    return [null, msg]; // nur an Ausgang zwei senden\n    }",
+        "func": "// Variable aus Flow oder globalem Speicher\nlet level = Number(msg.payload[0].state);\n    if (level < 100) \n    {\n    node.status({fill:\"green\",shape:\"ring\",text:\"SoC \" +level});\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus   \n    return; //nichts senden \n    }\n    else \n    {\n    node.status({ fill: \"red\", shape: \"ring\", text: \"SoC \" + level });\n    //flow.set(\"Regelwert\", 0); // Wenn Akku voll WR zunächst runterregeln\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    return [null, msg]; // nur an Ausgang zwei senden\n    }",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -8801,50 +8798,8 @@
         "y": 3640,
         "wires": [
             [],
-            [
-                "280cb59d730c177e"
-            ]
+            []
         ]
-    },
-    {
-        "id": "280cb59d730c177e",
-        "type": "delay",
-        "z": "479e3443afedb613",
-        "g": "3d36f3e8b8cb3fe0",
-        "name": "",
-        "pauseType": "delay",
-        "timeout": "120",
-        "timeoutUnits": "seconds",
-        "rate": "1",
-        "nbRateUnits": "1",
-        "rateUnits": "second",
-        "randomFirst": "1",
-        "randomLast": "5",
-        "randomUnits": "seconds",
-        "drop": false,
-        "allowrate": false,
-        "outputs": 1,
-        "x": 830,
-        "y": 3640,
-        "wires": [
-            [
-                "1fb9aed01d6aba29"
-            ]
-        ]
-    },
-    {
-        "id": "1fb9aed01d6aba29",
-        "type": "link out",
-        "z": "479e3443afedb613",
-        "g": "3d36f3e8b8cb3fe0",
-        "name": "link out 9",
-        "mode": "link",
-        "links": [
-            "7b4e9c68d230dfef"
-        ],
-        "x": 1015,
-        "y": 3640,
-        "wires": []
     },
     {
         "id": "7d77488ed7442808",
@@ -8928,7 +8883,7 @@
             }
         ],
         "x": 340,
-        "y": 2420,
+        "y": 2400,
         "wires": [
             [
                 "512302055eac88b8"
@@ -8944,14 +8899,14 @@
         "z": "479e3443afedb613",
         "g": "d0a61549998e4f87",
         "name": "Setze Grenze",
-        "func": "let grenze = flow.get (\"MaxEinspeisung\"); //max.Einspeisung\nflow.set (\"MaxEinspeisungSave\", grenze);\nflow.set (\"Regelwert\", grenze);\nnode.status({ text: 'Grenze: ' + grenze });\nmsg.payload = {einspeisewert: grenze};\nreturn msg;\n",
+        "func": "// Regleung wurde ausgeschaltet\n// Fixeinspeisung wird gesetzt\nlet grenze = flow.get (\"MaxEinspeisung\"); //max.Einspeisung\n// flow.set (\"MaxEinspeisungSave\", grenze);\nflow.set (\"Regelwert\", grenze);\nnode.status({ text: 'Grenze: ' + grenze });\nmsg.payload = {einspeisewert: grenze};\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1020,
+        "x": 800,
         "y": 2420,
         "wires": [
             [
@@ -8977,16 +8932,17 @@
         "id": "512302055eac88b8",
         "type": "function",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "d0a61549998e4f87",
         "name": "Setze Grenze",
-        "func": "let grenze = flow.get (\"MaxEinspeisungSave\")\nnode.status({ text: 'Grenze: ' + grenze });\nmsg.payload = {einspeisewert: grenze};\nreturn msg;\n",
+        "func": "let grenze = flow.get (\"MaxEinspeisungSave\")\n//flow.set (\"MaxEinspeisung\", grenze);\nnode.status({ text: 'Grenze: ' + grenze });\nmsg.payload = {einspeisewert: grenze};\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1020,
+        "x": 800,
         "y": 2380,
         "wires": [
             []
