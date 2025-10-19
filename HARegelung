@@ -112,7 +112,6 @@
             "5496fa05034dd5e0",
             "13971ddb6ad995e2",
             "54372a43b72a9c3a",
-            "e1823dbb1fbb80f7",
             "fc7613a47a09c1a6",
             "7f5bc6e47b11df44",
             "0d452cdc92314b7d",
@@ -237,7 +236,8 @@
             "722460ce5b6e1c2d",
             "d77905c6e4e680d6",
             "3d36f3e8b8cb3fe0",
-            "7d77488ed7442808"
+            "7d77488ed7442808",
+            "8496bc1bbddd520a"
         ],
         "x": 194,
         "y": 3379,
@@ -397,8 +397,7 @@
             "4cb2b580c2b15ca9",
             "5429a937f7d4fe2f",
             "a0b4a6e2b0bd2354",
-            "2f8099592faddc79",
-            "7bf578a419c26122"
+            "2f8099592faddc79"
         ],
         "x": 194,
         "y": 973,
@@ -472,7 +471,6 @@
             "label": true
         },
         "nodes": [
-            "0be17c62f054df5b",
             "19c87395473efe5b",
             "63174e4704cb40ac",
             "01c5ad8c136ab28c",
@@ -880,7 +878,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\nnode.status({\n  text: `Regelwert: ${neu} | Repeat: ${repeat}`\n});\nsetTimeout(() => node.status({}), 5000);\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\n\nif (repeat >= 60) {\n    if (neu <= wrmax && neu > wrmin) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    if (neu <= wrmin) {\n        neu = neu + (2 * hyst);\n        flow.set (\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = flow.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(Number(msg.payload.total_act_power).toFixed(1));\nflow.set (\"3em\" , leistung);\n\n// Hole aktuelle Verbrauchswerte vom Shelly3EM event Knoten \n// let leistung = Number(msg.payload);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\nnode.status({\n  text: `Regelwert: ${neu} | Repeat: ${repeat}`\n});\nsetTimeout(() => node.status({}), 5000);\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejusrierung zu erreichen.\nif (diff !== 0)\n    {\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\nflow.set(\"WRRepeat\", repeat);\n\nif (repeat >= 60) {\n    if (neu <= wrmax && neu > wrmin) {\n        neu = Math.max(wrmin, neu - (2 * hyst));\n        flow.set(\"Regelwert\", neu);\n    }\n    if (neu <= wrmin) {\n        neu = neu + (2 * hyst);\n        flow.set (\"Regelwert\", neu);\n    }\n    flow.set(\"WRRepeat\", 0);\n    msg.payload = { einspeisewert: neu };\n    return msg;\n}\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1241,7 +1239,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "Flowvariablen setzen",
-        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv, ignore, typ, minimal, connected} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nglobal.set(\"Hysterese\", hyst);\nflow.set(\"Sollwert\", soll);\nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"ReglerAktiv\", aktiv);\nflow.set(\"AktiverTermin\", last);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\nflow.set(\"Connected\", connected);\nflow.set(\"WRRepeat\",0);\n\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nreturn msg;\n",
+        "func": "//Konfiguration aus dem dem Dashboard initial übernehmen\nconst { hyst, soll, max, aktiv, last, wraktiv, ignore, typ, minimal, connected} = msg.payload;\nlet wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nglobal.set(\"Hysterese\", hyst);\nflow.set(\"Sollwert\", soll);\nflow.set(\"MaxEinspeisung\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MaxEinspeisungSave\", Math.max(wrmin,Math.min(wrmax,max)));\nflow.set(\"MinEinspeisung\", Math.max(wrmin, minimal));\nflow.set(\"ReglerAktiv\", aktiv);\nflow.set(\"AktiverTermin\", last);\nglobal.set(\"WRAktiv\", wraktiv);\nflow.set(\"IgnoreBypass\", ignore);\nflow.set(\"ReglerTyp\", typ);\nflow.set(\"Connected\", connected);\nflow.set(\"WRRepeat\",0);\nnode.warn (max);\n//Internal Used\nflow.set(\"Regelwert\", 70);\nflow.set(\"Debug\", false);\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -1589,7 +1587,6 @@
         "y": 2000,
         "wires": [
             [
-                "e1823dbb1fbb80f7",
                 "09573f0766e9b699"
             ]
         ]
@@ -1604,8 +1601,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1235,
-        "y": 2120,
+        "x": 1255,
+        "y": 2140,
         "wires": []
     },
     {
@@ -1673,7 +1670,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 2880); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"3.0.1\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt\nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Es kann ur einen geben: entweder REL oder ABS\nflow.set(\"WRHersteller\", \"ABS\"); //Ich nutze einen WR mit absoluter Ansteuerung in Watt\n//flow.set(\"WRHersteller\", \"REL\"); //Ich nutze einen WR mit relativer Ansteuerung in %\n\n\nflow.set(\"SFMax\", 660); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"3.0.2\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// Doku: wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: APSystemEZ1 für absolute Einspeisung\n// wrtyp 2: HMS: Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs \n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\nflow.set (\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set (\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2553,7 +2550,7 @@
         "z": "479e3443afedb613",
         "g": "6e708c215cdbfc98",
         "name": "aktuelles DateX ermitteln",
-        "func": "//Schaltzeiten Format \"hh:mm\"\nconst date1 = flow.get(\"Date1\");\nconst date2 = flow.get(\"Date2\");\nconst date3 = flow.get(\"Date3\");\n//Einspeisewerte Format: number\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\n\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet ac = flow.get(\"AktiverTermin\")\n\n\nvar currentTime = new Date();\n// Umwandeln in Format hh:mm\nvar hours = currentTime.getHours();\nvar minutes = currentTime.getMinutes();\nvar timeString = (hours<10 ? \"0\" + hours : hours) + \":\" + (minutes < 10 ? \"0\" + minutes : minutes);\n\nlet debug = flow.get(\"Debug\");\nif (debug) \n    {\n    node.warn({grenze, timeString, ac, date1, date2, date3});\n    }\n\nswitch (timeString){\n    case date1:\n    {\n    grenze = wert1;\n    flow.set(\"MaxEinspeisung\", wert1);\n    flow.set(\"AktiverTermin\", \"Date1\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date1\"\n            };\n    node.status({\n    text: `Date1 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n    case date2:\n    {\n    grenze = wert2;\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date2\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date2\"\n            };\n    node.status({\n    text: `Date2 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n    case date3:\n    {\n    grenze = wert3;\n    flow.set(\"MaxEinspeisung\", grenze);\n    flow.set(\"AktiverTermin\", \"Date3\");\n    msg.payload = {\n                einspeisewert: grenze,\n                aktivertermin: \"Date3\"\n            };\n    node.status({\n    text: `Date3 | Wert: ${grenze}`\n    });\n    return msg;\n    }\n}\nnode.status({\n    text: `Date: ${ac} | Wert: ${grenze}`\n    });\nreturn;",
+        "func": "// Schaltzeiten & Werte (Formate: \"hh:mm\" und number)\nconst dates = [\n    { key: \"Date1\", time: flow.get(\"Date1\"), value: flow.get(\"Wert1\") },\n    { key: \"Date2\", time: flow.get(\"Date2\"), value: flow.get(\"Wert2\") },\n    { key: \"Date3\", time: flow.get(\"Date3\"), value: flow.get(\"Wert3\") }\n];\n\nconst grenze = flow.get(\"MaxEinspeisung\");\nconst ac = flow.get(\"AktiverTermin\");\nconst debug = flow.get(\"Debug\");\n\n// Aktuelle Uhrzeit im Format hh:mm\nconst now = new Date();\nconst timeString = now.toTimeString().slice(0, 5); // z.B. \"14:07\"\n\nif (debug) {\n    node.warn({ grenze, timeString, ac, dates });\n}\n\n// Prüfen, ob aktuelle Zeit einer Schaltzeit entspricht\nconst match = dates.find(d => d.time === timeString);\n\n// match liefert exakt eine Zeile aus dates zurück oder \"undefined\"\nif (match) {\n    flow.set(\"AktiverTermin\", match.key);\n    msg.payload = { aktivertermin: match.key };\n    node.status({ text: `${match.key} | Wert: ${match.value}` });\n    return msg;\n}\n\n// Kein Treffer\nnode.status({ text: `Date: ${ac} | Wert: ${grenze}` });\nreturn;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -2764,7 +2761,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 1230,
-        "y": 3780,
+        "y": 3800,
         "wires": [
             []
         ]
@@ -3721,7 +3718,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1020,
+        "x": 940,
         "y": 3560,
         "wires": [
             [],
@@ -3745,26 +3742,6 @@
         "libs": [],
         "x": 1080,
         "y": 860,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "e1823dbb1fbb80f7",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "0ebb8e7b772678cd",
-        "name": "WR Aktion",
-        "func": "let debug = flow.get(\"Debug\");\nlet regelwert = msg.payload.einspeisewert;\nconst wrmax = flow.get(\"WRLeistung\");\nconst wrtyp = flow.get(\"WRTyp\");\nlet zielSensor;\n\nif (debug) {\n    node.warn (`RegelwertWR=${regelwert}`);\n    }\n\nswitch (wrtyp) {\n    case 1:\n        {\n            //absolute Einspeisung mit APSystem EZ1\n            zielSensor= flow.get (\"wrSensor_typ1\"); //Hole Sensorname\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    case 2:\n        {\n            //relative Einspeisung mit Hoymiles HMS\n            //hier wird regelwert umgerechnet in Prozent anhand wrmax\n            regelwert = (regelwert / wrmax * 100);\n            zielSensor= flow.get (\"wrSensor_typ2\"); //Hole Sensorname\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break;\n        }\n    case 3:\n        {\n            //absolute Einspeisung in Zendure Manager outputlimit\n            zielSensor= flow.get (\"wrSensor_typ3\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n               einspeisewert: regelwert,\n               sensor: zielSensor \n               };\n            break; \n        }\n    case 4:\n        {\n            //absolute Einspeisung in Zendure Manuelle Leistung\n            zielSensor= flow.get (\"wrSensor_typ4\"); //Hole Sensorname\n            //msg.payload = regelwert;\n            msg.payload = { \n                einspeisewert: regelwert,\n                sensor: zielSensor \n                };\n            break;\n        }\n    }\n//node.status({ text: 'Regelwert: ' + regelwert })\nnode.status({\n  text: `WR-Typ: ${wrtyp} | Regelwert: ${regelwert}`\n});\nsetTimeout(() => node.status({}), 4500);\n\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 1650,
-        "y": 1940,
         "wires": [
             []
         ]
@@ -5041,7 +5018,7 @@
         "z": "479e3443afedb613",
         "g": "6e708c215cdbfc98",
         "name": "Einspeisgrenze neu setzen",
-        "func": "//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\"); // Date1 oder Date2 oder Date3\n\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\nlet wert = flow.get(\"MaxEinspeisung\");\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        wert = wert1;\n        break;\n        }\n    case \"Date2\":\n        {\n        wert = wert2;\n        break;\n        }\n    case \"Date3\":\n        {\n        wert = wert3\n        break;\n        }\n    }\nmsg.payload = {einspeisewert: wert};\nnode.status(`Date=${ac}, Wert=${wert}`);\nreturn msg;",
+        "func": "//Welcher Termin ist der Aktive?\nlet ac = flow.get(\"AktiverTermin\"); // Date1 oder Date2 oder Date3\n\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\nlet wert = flow.get(\"MaxEinspeisung\");\n\n    switch (ac)\n    {\n    case \"Date1\":\n        {\n        wert = wert1;\n        break;\n        }\n    case \"Date2\":\n        {\n        wert = wert2;\n        break;\n        }\n    case \"Date3\":\n        {\n        wert = wert3\n        break;\n        }\n    }\nflow.set(\"MaxEinspeisung\", wert);\nmsg.payload = {einspeisewert: wert};\nnode.status(`Date=${ac}, Wert=${wert}`);\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7515,7 +7492,7 @@
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
         "name": "Set Values",
-        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 30, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    12: { akku_min: 50, sollwert: 10, maxeinspeisung: 200 }\n};\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\nflow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3];\n",
+        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    12: { akku_min: 50, sollwert: 10, maxeinspeisung: 200 }\n};\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\nflow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3];\n",
         "outputs": 3,
         "timeout": 0,
         "noerr": 0,
@@ -7746,7 +7723,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1200,
+        "x": 1120,
         "y": 3560,
         "wires": [
             [],
@@ -8305,28 +8282,6 @@
                 "9c35e52d51caca37"
             ],
             []
-        ]
-    },
-    {
-        "id": "0be17c62f054df5b",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "33fc19028d8c92bf",
-        "name": "Debugzeile bauen",
-        "func": "let wrtyp = flow.get(\"WRTyp\");\nlet wrher = flow.get (\"WRHersteller\")\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get ( \"WRAktiv\");\nlet release = flow.get (\"Release\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\nlet timestamp = new Date().toISOString();\n\nnode.status({text:'Debug gebaut'});\nsetTimeout(() => node.status({}), 3000);  // nach 3 Sekunden löschen\n\nmsg.payload = `${timestamp}, Init, Release=${release}, WRTyp=${wrtyp}, WRHersteller=${wrher}; WRMax=${wrmax}, WRMin=${wrmin}, WRAktiv=${wr_aktiv} , ReglerAktiv=${regler_aktiv}, Termin=${termin_on}, MaxEinspeisung=${max_einspeisung}, Sollwert=${soll}, Wert1Time=${wert1}, Wert2Time=${wert2}, Wert3Time=${wert3}`;\nreturn msg\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 590,
-        "y": 1840,
-        "wires": [
-            [
-                "19c87395473efe5b"
-            ]
         ]
     },
     {
@@ -9065,26 +9020,6 @@
         ]
     },
     {
-        "id": "7bf578a419c26122",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "0ded3f6e0d781a4e",
-        "name": "WRTyp ermitteln",
-        "func": "let typ = msg.payload;\n//node.warn (typ);\nswitch (typ)\n    {\n    case \"AUS\":\n       {\n       flow.set(\"WRTyp\", 0)\n       msg.payload = 0;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"EZ1\":\n       {\n       flow.set(\"WRTyp\", 1)\n       msg.payload = 1;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"HMS\":\n       {\n       flow.set(\"WRTyp\", 2)\n       msg.payload = 2;\n       flow.set(\"Reglerkp\", 1);\n       break;\n       }\n    case \"MAN\":\n       {\n       flow.set(\"WRTyp\", 4)\n       flow.set(\"Reglerkp\", 0.8);\n       msg.payload = 4;\n       break;\n       }\n    case \"SMT\":\n       {\n       flow.set(\"WRTyp\", 5)\n       msg.payload = 5;\n       break;\n       }\n    }\n    node.status({fill:\"green\",shape:\"ring\",text:\"typ: \" +typ});\n    return msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 660,
-        "y": 1220,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "234ef51db2f69154",
         "type": "function",
         "z": "479e3443afedb613",
@@ -9103,6 +9038,26 @@
         "wires": [
             [],
             [],
+            []
+        ]
+    },
+    {
+        "id": "8496bc1bbddd520a",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "d": true,
+        "g": "6e708c215cdbfc98",
+        "name": "aktuelles DateX ermitteln",
+        "func": "//Schaltzeiten Format \"hh:mm\"\nconst date1 = flow.get(\"Date1\");\nconst date2 = flow.get(\"Date2\");\nconst date3 = flow.get(\"Date3\");\n//Einspeisewerte Format: number\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\n\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet ac = flow.get(\"AktiverTermin\")\n\n\nvar currentTime = new Date();\n// Umwandeln in Format hh:mm\nvar hours = currentTime.getHours();\nvar minutes = currentTime.getMinutes();\nvar timeString = (hours<10 ? \"0\" + hours : hours) + \":\" + (minutes < 10 ? \"0\" + minutes : minutes);\n\nlet debug = flow.get(\"Debug\");\nif (debug) \n    {\n    node.warn({grenze, timeString, ac, date1, date2, date3});\n    }\n\nswitch (timeString){\n    case date1:\n    {\n    flow.set(\"AktiverTermin\", \"Date1\");\n    msg.payload = {aktivertermin: \"Date1\"};\n    node.status({text: `Date1 | Wert: ${wert1}`});\n    return msg;\n    }\n    case date2:\n    {\n    flow.set(\"AktiverTermin\", \"Date2\");\n    msg.payload = {aktivertermin: \"Date2\"};\n    node.status({text: `Date2 | Wert: ${wert2}`});\n    return msg;\n    }\n    case date3:\n    {\n    flow.set(\"AktiverTermin\", \"Date3\");\n    msg.payload = {aktivertermin: \"Date3\"};\n    node.status({text: `Date3 | Wert: ${wert3}`});\n    return msg;\n    }\n}\nnode.status({\n    text: `Date: ${ac} | Wert: ${grenze}`\n    });\nreturn;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 550,
+        "y": 3420,
+        "wires": [
             []
         ]
     },
