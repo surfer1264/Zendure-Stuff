@@ -59,7 +59,7 @@
         ],
         "x": 194,
         "y": 2519,
-        "w": 1172,
+        "w": 1192,
         "h": 362
     },
     {
@@ -210,11 +210,12 @@
             "f76cb1b980c3bdf2",
             "924fcf53aa0acbdc",
             "5a619949abdec684",
-            "2d86efd2574df8ec"
+            "2d86efd2574df8ec",
+            "652351a92f1a3d4b"
         ],
         "x": 194,
         "y": 2899,
-        "w": 1172,
+        "w": 1192,
         "h": 322
     },
     {
@@ -236,12 +237,11 @@
             "722460ce5b6e1c2d",
             "d77905c6e4e680d6",
             "3d36f3e8b8cb3fe0",
-            "7d77488ed7442808",
-            "8496bc1bbddd520a"
+            "7d77488ed7442808"
         ],
         "x": 194,
         "y": 3379,
-        "w": 1172,
+        "w": 1192,
         "h": 328
     },
     {
@@ -590,13 +590,12 @@
             "fd9ffa19de35ef1b",
             "40cd311eb34f8bec",
             "3a896cce6e31964b",
-            "98eedc884b02a91c",
-            "234ef51db2f69154"
+            "98eedc884b02a91c"
         ],
         "x": 1614,
         "y": 739,
         "w": 952,
-        "h": 209.5
+        "h": 202
     },
     {
         "id": "e1165b70369f2b1d",
@@ -1615,7 +1614,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1325,
+        "x": 1345,
         "y": 2640,
         "wires": []
     },
@@ -2468,7 +2467,7 @@
         "y": 3060,
         "wires": [
             [
-                "17d9fef67944a9b4"
+                "652351a92f1a3d4b"
             ]
         ]
     },
@@ -2489,7 +2488,7 @@
         "y": 3100,
         "wires": [
             [
-                "17d9fef67944a9b4"
+                "652351a92f1a3d4b"
             ]
         ]
     },
@@ -2510,7 +2509,7 @@
         "y": 3140,
         "wires": [
             [
-                "17d9fef67944a9b4"
+                "652351a92f1a3d4b"
             ]
         ]
     },
@@ -2645,7 +2644,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1240,
+        "x": 1260,
         "y": 3500,
         "wires": [
             []
@@ -2797,7 +2796,7 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1325,
+        "x": 1345,
         "y": 3560,
         "wires": []
     },
@@ -2883,11 +2882,10 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 860,
-        "y": 3100,
+        "x": 980,
+        "y": 3020,
         "wires": [
             [
-                "909de9d9437f09c6",
                 "0d56421cb0e22b14"
             ]
         ]
@@ -2918,8 +2916,8 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1220,
-        "y": 3120,
+        "x": 1240,
+        "y": 3020,
         "wires": [
             []
         ]
@@ -2934,8 +2932,8 @@
         "links": [
             "60df30044c929c46"
         ],
-        "x": 1325,
-        "y": 3040,
+        "x": 1345,
+        "y": 3120,
         "wires": []
     },
     {
@@ -3042,7 +3040,7 @@
         "blockInputOverrides": true,
         "domain": "input_text",
         "service": "set_value",
-        "x": 800,
+        "x": 720,
         "y": 3420,
         "wires": [
             []
@@ -3688,8 +3686,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1020,
-        "y": 3040,
+        "x": 1040,
+        "y": 3120,
         "wires": [
             [],
             [
@@ -3718,7 +3716,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 940,
+        "x": 1040,
         "y": 3560,
         "wires": [
             [],
@@ -6278,7 +6276,7 @@
         "z": "479e3443afedb613",
         "g": "0a94c4e6766e62c9",
         "name": "Set WR Typ 3: Max",
-        "func": "// Wenn ty1 oder typ2 oder typ4 oder 5 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = flow.get (\"WRLeistung\") +10;\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
+        "func": "// Wenn ty1 oder typ2 oder typ4 oder 5 dann Solarflow Outputlimit setzen auf MAX\n\nlet zielSensor = flow.get(\"wrSensor_typ3\");\nlet sflimit = flow.get (\"WRLeistung\");\n\nmsg.payload = { \n    einspeisewert: sflimit,\n    sensor: zielSensor \n    };\n//msg.payload = {sensor: zielSensor};\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -7492,7 +7490,7 @@
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
         "name": "Set Values",
-        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    12: { akku_min: 50, sollwert: 10, maxeinspeisung: 200 }\n};\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\nflow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3];\n",
+        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    12: { akku_min: 50, sollwert: 10, maxeinspeisung: 200 }\n};\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\nflow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3];\n",
         "outputs": 3,
         "timeout": 0,
         "noerr": 0,
@@ -7692,8 +7690,8 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1200,
-        "y": 3040,
+        "x": 1220,
+        "y": 3120,
         "wires": [
             [],
             [
@@ -7723,7 +7721,7 @@
         "checkall": "true",
         "repair": false,
         "outputs": 2,
-        "x": 1120,
+        "x": 1220,
         "y": 3560,
         "wires": [
             [],
@@ -7814,7 +7812,7 @@
         "z": "479e3443afedb613",
         "g": "46ac14d1f3bb7a07",
         "name": "debug 28",
-        "active": false,
+        "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
@@ -9020,44 +9018,55 @@
         ]
     },
     {
-        "id": "234ef51db2f69154",
-        "type": "function",
+        "id": "652351a92f1a3d4b",
+        "type": "api-current-state",
         "z": "479e3443afedb613",
-        "d": true,
-        "g": "72932590259c2eb2",
-        "name": "Set Values",
-        "func": "let monat = msg.payload;\nlet akku_min = 15;\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet socsensor = flow.get (\"zHAMinSoCSensor\");\n// node.warn (monat);\n// FÜr jeden Monat kann festgelegt werden:\n// der Sollwert\n// die Entladegrenze\n// die Einspeisgrenze\n\nswitch (monat)\n    {\n    case 1:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 2:\n        {\n        akku_min = 30;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 3:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 4:\n        {\n        akku_min = 20;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 5:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 6:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 7:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 8:\n        {\n        akku_min = 14;\n        sollwert = 0;\n        maxeinspeisung = 500;\n        break;\n        }\n    case 9:\n        {\n        akku_min = 15;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 10:\n        {\n        akku_min = 30;\n        sollwert = 5;\n        maxeinspeisung = 400;\n        break;\n        }\n    case 11:\n        {\n        akku_min = 40;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    case 12:\n        {\n        akku_min = 50;\n        sollwert = 10;\n        maxeinspeisung = 200;\n        break;\n        }\n    }\nflow.set (\"Akku_min\", akku_min);\nflow.set (\"Sollwert\", sollwert);\nflow.set (\"MaxEinspeisung\", maxeinspeisung);\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten zurückgeben (je Ausgang eine)\nlet msg1 = { \n    payload: { value: akku_min, sensor: socsensor } // Ausgang 1 = Akku_min + Sensorname\n    };\nlet msg2 = { payload: sollwert };                 // Ausgang 2 = Sollwert\nlet msg3 = { payload: maxeinspeisung };           // Ausgang 3 = Maxeinspeisung\n\nreturn [msg1, msg2, msg3];",
-        "outputs": 3,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2110,
-        "y": 900,
+        "g": "035acd6f5889242d",
+        "name": "Terminmodus an?",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 2,
+        "halt_if": "on",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_boolean.regler_terminmodus",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "originalpayload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 830,
+        "y": 3100,
         "wires": [
-            [],
-            [],
-            []
-        ]
-    },
-    {
-        "id": "8496bc1bbddd520a",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "d": true,
-        "g": "6e708c215cdbfc98",
-        "name": "aktuelles DateX ermitteln",
-        "func": "//Schaltzeiten Format \"hh:mm\"\nconst date1 = flow.get(\"Date1\");\nconst date2 = flow.get(\"Date2\");\nconst date3 = flow.get(\"Date3\");\n//Einspeisewerte Format: number\nconst wert1 = flow.get(\"Wert1\");\nconst wert2 = flow.get(\"Wert2\");\nconst wert3 = flow.get(\"Wert3\");\n\nlet grenze = flow.get(\"MaxEinspeisung\");\nlet ac = flow.get(\"AktiverTermin\")\n\n\nvar currentTime = new Date();\n// Umwandeln in Format hh:mm\nvar hours = currentTime.getHours();\nvar minutes = currentTime.getMinutes();\nvar timeString = (hours<10 ? \"0\" + hours : hours) + \":\" + (minutes < 10 ? \"0\" + minutes : minutes);\n\nlet debug = flow.get(\"Debug\");\nif (debug) \n    {\n    node.warn({grenze, timeString, ac, date1, date2, date3});\n    }\n\nswitch (timeString){\n    case date1:\n    {\n    flow.set(\"AktiverTermin\", \"Date1\");\n    msg.payload = {aktivertermin: \"Date1\"};\n    node.status({text: `Date1 | Wert: ${wert1}`});\n    return msg;\n    }\n    case date2:\n    {\n    flow.set(\"AktiverTermin\", \"Date2\");\n    msg.payload = {aktivertermin: \"Date2\"};\n    node.status({text: `Date2 | Wert: ${wert2}`});\n    return msg;\n    }\n    case date3:\n    {\n    flow.set(\"AktiverTermin\", \"Date3\");\n    msg.payload = {aktivertermin: \"Date3\"};\n    node.status({text: `Date3 | Wert: ${wert3}`});\n    return msg;\n    }\n}\nnode.status({\n    text: `Date: ${ac} | Wert: ${grenze}`\n    });\nreturn;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 550,
-        "y": 3420,
-        "wires": [
+            [
+                "17d9fef67944a9b4",
+                "909de9d9437f09c6"
+            ],
             []
         ]
     },
