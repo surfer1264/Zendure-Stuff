@@ -1,0 +1,116 @@
+// ========== Anfang AkkuVolt =======
+// AkkuVoltCheck
+print("VORSICHT! DIESES SCRIPT SCHAUT NUR ZU, WENN DU DEINEN AKKU KAPUTT MACHST!");
+
+// INITIALISIERUNG
+let Zen = 0;      // Akkuzustand unbekannt
+let bat = 9;      // Akku-Arbeitsmodus unbekannt
+let modus = "OPEN "; // Akku-Arbeitsmodus unbekannt
+
+// Globale Datenstruktur für alle Batterien/Zellen
+let packs = {};   // Objekt mit sn als Schlüssel
+
+// ---------- Druckfunktion für EINEN Akku ----------
+function Druck(sn) {
+	let daten = packs[sn];
+	if (!daten) return;
+	print(modus +
+		  sn + ": " +
+		  (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " +
+		  (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
+		  (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
+		  (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
+}
+
+// ---------- Druckfunktion für ALLE Akkus ----------
+function DruckAlle() {
+	for (let sn in packs) {
+		Druck(sn);
+	}
+}
+
+// ---------- MQTT Listener ----------
+MQTT.subscribe("MYAppKEY/#", function (topic, msg) {
+	let data = JSON.parse(msg);
+
+	// --- PACKDATEN verarbeiten ---
+	if (data.packData) {
+		for (let i = 0; i < data.packData.length; i++) {
+			let pack = data.packData[i];
+			let sn = pack.sn;
+
+			// Falls noch nicht vorhanden, neuen Eintrag mit leeren Defaults anlegen
+			if (!packs[sn]) {
+				packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+			}
+
+			// Werte nur überschreiben, wenn sie geliefert werden
+			if (pack.maxVol !== undefined) {
+				packs[sn].maxV = pack.maxVol / 100;
+			}
+			if (pack.minVol !== undefined) {
+				packs[sn].minV = pack.minVol / 100;
+			}
+			if (pack.maxTemp !== undefined) {
+				packs[sn].maxT = pack.maxTemp - 273.1;
+			}
+			if (pack.socLevel !== undefined) {
+				packs[sn].soc = pack.socLevel;
+			}
+
+			// Ausgabe für diese Zelle
+			Druck(sn);
+		}
+	}
+
+	// --- PACKZUSTAND ---
+	if (data.packState !== undefined) {
+		if (bat !== data.packState) {
+			bat = data.packState;
+			switch (bat) {
+				case 0: modus = "STBY "; break; // Standby
+				case 1: modus = "LOAD "; break; // Last aktiv
+				case 2: modus = "UNLD "; break; // Entladen
+			}
+			// alle Akkus neu ausgeben
+			DruckAlle();
+		}
+	}
+
+	// --- GESAMTLADEZUSTAND ---
+	if (data.electricLevel !== undefined) {
+		if (Zen !== data.electricLevel) {
+			Zen = data.electricLevel;
+			// alle Akkus neu ausgeben
+			DruckAlle();
+
+			// Prüfen, ob Akku voll ist (z.B. >= 99%)
+			if (Zen >= 99) {
+				// Nachricht nur einmal senden (nicht bei jedem MQTT-Update)
+				if (!packs.messageSent) {
+					packs.messageSent = true;
+
+					let url = "https://api.callmebot.com/signal/send.php" +
+							  "?phone=PHONE-STRING" +
+							  "&apikey=YOUR_API_KEY" +
+							  "&text=Akku_ist_jetzt_voll_" + Zen + "_Prozent";
+
+					print("Sende Benachrichtigung über Signal: " + url);
+
+					Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
+						if (error_code === 0) {
+							print("✅ Signal-Nachricht erfolgreich gesendet.");
+						} else {
+							print("❌ Fehler beim Senden über Signal: " + error_msg);
+						}
+					});
+				}
+			} else {
+				// Wenn Akku wieder unter 95% fällt, darf die Nachricht später erneut gesendet werden
+				if (Zen < 95) {
+					packs.messageSent = false;
+				}
+			}
+		}
+	}
+}); // <-- Schließt MQTT.subscribe sauber
