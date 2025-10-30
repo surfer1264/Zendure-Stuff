@@ -1,0 +1,45 @@
+// ========== MQTT Inspector ==========
+// Erkennt automatisch alle Felder (Keys) in empfangenen MQTT-Daten
+// Ideal, um herauszufinden, was dein BMS oder Akku alles sendet
+
+let mqttTopic = "YOUR_AppKey/#";   // Dein MQTT-Topic hier eintragen
+print("📡 Starte MQTT-Inspector auf Topic:", mqttTopic);
+
+let knownKeys = {};  // speichert alle bisher gefundenen Felder
+
+// ---------- Hilfsfunktion: Schlüssel rekursiv sammeln ----------
+function collectKeys(obj, prefix) {
+    for (let key in obj) {
+        let fullKey = prefix ? prefix + "." + key : key;
+        if (typeof obj[key] === "object" && obj[key] !== null) {
+            collectKeys(obj[key], fullKey);
+        } else {
+            if (!knownKeys[fullKey]) {
+                knownKeys[fullKey] = true;
+                print("➕ Neues Feld erkannt:", fullKey, "=", obj[key]);
+            }
+        }
+    }
+}
+
+// ---------- MQTT Listener ----------
+MQTT.subscribe(mqttTopic, function (topic, msg) {
+    print("======================================");
+    print("📨 Neues MQTT-Event empfangen:");
+    print("Topic:", topic);
+
+    let data = null;
+    try {
+        data = JSON.parse(msg);
+    } catch (e) {
+        print("❌ Nachricht ist kein JSON:", msg);
+        return;
+    }
+
+    // Neue Felder erkennen
+    collectKeys(data, "");
+
+    print("------ Komplette Daten ------");
+    print(JSON.stringify(data, null, 2));
+    print("======================================");
+});
