@@ -1,16 +1,53 @@
-// ========== Anfang AkkuVolt =======
-// AkkuVoltCheck
-print("VORSICHT! DIESES SCRIPT SCHAUT NUR ZU, WENN DU DEINEN AKKU KAPUTT MACHST!");
+// ========== AkkuVolt Watchdog mit Signal-Benachrichtigungen ==========
+// Erkennt Akku-Zustand und sendet Nachrichten bei:
+//  - Akku voll (>= 99 %)
+//  - Unterspannung einzelner Zellen (< 3.0 V)
 
-// INITIALISIERUNG
-let Zen = 0;      // Akkuzustand unbekannt
-let bat = 9;      // Akku-Arbeitsmodus unbekannt
-let modus = "OPEN "; // Akku-Arbeitsmodus unbekannt
+print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
-// Globale Datenstruktur für alle Batterien/Zellen
-let packs = {};   // Objekt mit sn als Schlüssel
+// ==================== EINSTELLUNGEN ====================
 
-// ---------- Druckfunktion für EINEN Akku ----------
+// MQTT-Topic deines BMS oder Gateways:
+let mqttTopic   = "MYAppKEY/#";
+
+// Signal (CallMeBot) Einstellungen:
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalKey   = "YOUR_API_KEY";    // dein API Key
+
+// Schwellwerte:
+let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
+let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
+let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
+
+// ==================== VARIABLEN ====================
+let Zen = 0;                         // Gesamt-Ladezustand
+let bat = 9;                         // Akku-Arbeitsmodus
+let modus = "OPEN ";                 // Textdarstellung Modus
+let packs = {};                      // Datenstruktur für alle Zellen
+let lowVoltMsgSent = false;          // Warnung über Unterspannung gesendet?
+
+// ==================== HILFSFUNKTIONEN ====================
+
+// Signal-Nachricht senden:
+function sendSignalMessage(text) {
+	let url = "https://api.callmebot.com/signal/send.php" +
+			  "?phone=" + signalPhone +
+			  "&apikey=" + signalKey +
+			  "&text=" + text;
+
+	print("📨 Sende Signal-Nachricht: " + url);
+
+	Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
+		if (error_code === 0) {
+			print("✅ Nachricht erfolgreich gesendet.");
+		} else {
+			print("❌ Fehler beim Senden: " + error_msg);
+		}
+	});
+}
+
+// Ausgabe eines einzelnen Akkus:
 function Druck(sn) {
 	let daten = packs[sn];
 	if (!daten) return;
@@ -22,43 +59,46 @@ function Druck(sn) {
 		  (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
 }
 
-// ---------- Druckfunktion für ALLE Akkus ----------
+// Ausgabe aller Akkus:
 function DruckAlle() {
 	for (let sn in packs) {
 		Druck(sn);
 	}
 }
 
-// ---------- MQTT Listener ----------
-MQTT.subscribe("MYAppKEY/#", function (topic, msg) {
+// ==================== MQTT HANDLER ====================
+
+MQTT.subscribe(mqttTopic, function (topic, msg) {
 	let data = JSON.parse(msg);
 
-	// --- PACKDATEN verarbeiten ---
+	// --- PACKDATEN ---
 	if (data.packData) {
 		for (let i = 0; i < data.packData.length; i++) {
 			let pack = data.packData[i];
 			let sn = pack.sn;
 
-			// Falls noch nicht vorhanden, neuen Eintrag mit leeren Defaults anlegen
 			if (!packs[sn]) {
 				packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
 			}
 
-			// Werte nur überschreiben, wenn sie geliefert werden
-			if (pack.maxVol !== undefined) {
-				packs[sn].maxV = pack.maxVol / 100;
-			}
+			// Werte übernehmen
+			if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
 			if (pack.minVol !== undefined) {
 				packs[sn].minV = pack.minVol / 100;
-			}
-			if (pack.maxTemp !== undefined) {
-				packs[sn].maxT = pack.maxTemp - 273.1;
-			}
-			if (pack.socLevel !== undefined) {
-				packs[sn].soc = pack.socLevel;
-			}
 
-			// Ausgabe für diese Zelle
+				// --- Unterspannung prüfen ---
+				if (packs[sn].minV < minVoltWarn) {
+					if (!lowVoltMsgSent) {
+						lowVoltMsgSent = true;
+						sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + " V!");
+					}
+				} else if (packs[sn].minV > minVoltReset) {
+					lowVoltMsgSent = false;
+				}
+			}
+			if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
+			if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
+
 			Druck(sn);
 		}
 	}
@@ -68,11 +108,10 @@ MQTT.subscribe("MYAppKEY/#", function (topic, msg) {
 		if (bat !== data.packState) {
 			bat = data.packState;
 			switch (bat) {
-				case 0: modus = "STBY "; break; // Standby
-				case 1: modus = "LOAD "; break; // Last aktiv
-				case 2: modus = "UNLD "; break; // Entladen
+				case 0: modus = "STBY "; break;
+				case 1: modus = "LOAD "; break;
+				case 2: modus = "UNLD "; break;
 			}
-			// alle Akkus neu ausgeben
 			DruckAlle();
 		}
 	}
@@ -81,36 +120,18 @@ MQTT.subscribe("MYAppKEY/#", function (topic, msg) {
 	if (data.electricLevel !== undefined) {
 		if (Zen !== data.electricLevel) {
 			Zen = data.electricLevel;
-			// alle Akkus neu ausgeben
 			DruckAlle();
 
-			// Prüfen, ob Akku voll ist (z.B. >= 99%)
-			if (Zen >= 99) {
-				// Nachricht nur einmal senden (nicht bei jedem MQTT-Update)
+			if (Zen >= vollSchwelle) {
 				if (!packs.messageSent) {
 					packs.messageSent = true;
-
-					let url = "https://api.callmebot.com/signal/send.php" +
-							  "?phone=PHONE-STRING" +
-							  "&apikey=YOUR_API_KEY" +
-							  "&text=Akku_ist_jetzt_voll_" + Zen + "_Prozent";
-
-					print("Sende Benachrichtigung über Signal: " + url);
-
-					Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
-						if (error_code === 0) {
-							print("✅ Signal-Nachricht erfolgreich gesendet.");
-						} else {
-							print("❌ Fehler beim Senden über Signal: " + error_msg);
-						}
-					});
+					sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
 				}
-			} else {
-				// Wenn Akku wieder unter 95% fällt, darf die Nachricht später erneut gesendet werden
-				if (Zen < 95) {
-					packs.messageSent = false;
-				}
+			} else if (Zen < entladeReset) {
+				packs.messageSent = false;
 			}
 		}
 	}
-}); // <-- Schließt MQTT.subscribe sauber
+});
+
+print("📡 MQTT-Überwachung aktiv auf Topic:", mqttTopic);
