@@ -14,14 +14,15 @@ let mqttTopic   = "MYAppKEY/#";
 let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
 let signalKey   = "YOUR_API_KEY";    // dein API Key
 
+
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
-let entladeReset = 90;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
 let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
 let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 
 // ==================== VARIABLEN ====================
-let Zen = 1;                         // Gesamt-Ladezustand
+let Zen = 0;                         // Gesamt-Ladezustand
 let bat = 9;                         // Akku-Arbeitsmodus
 let modus = "OPEN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Zellen
@@ -32,112 +33,135 @@ let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannu
 
 // ==================== HILFSFUNKTIONEN ====================
 
-// Signal-Nachricht senden:
+// ---- Einfache URL-Encoding-Funktion (ohne RegEx, Espruino-kompatibel) ----
+function simpleEncode(str) {
+    let out = "";
+    for (let i = 0; i < str.length; i++) {
+        let ch = str.charAt(i);
+        if (ch === " ") out += "%20";
+        else if (ch === "ö") out += "oe";
+        else if (ch === "ä") out += "ae";
+        else if (ch === "ü") out += "ue";
+        else if (ch === "ß") out += "ss";
+        else if (ch === "°") out += "%C2%B0";
+        else if (ch === "%") out += "%25";
+        else if (ch === "!") out += "%21";
+        else if (ch === "(") out += "%28";
+        else if (ch === ")") out += "%29";
+        else if (ch === "€") out += "EUR";
+        else out += ch;
+    }
+    return out;
+}
+
+// ---- Signal-Nachricht senden ----
 function sendSignalMessage(text) {
-	let url = "https://api.callmebot.com/signal/send.php" +
-			  "?phone=" + signalPhone +
-			  "&apikey=" + signalKey +
-			  "&text=" + text;
+    let safeText = simpleEncode(text);
+    let url = "https://api.callmebot.com/signal/send.php" +
+              "?phone=" + signalPhone +
+              "&apikey=" + signalKey +
+              "&text=" + safeText;
 
-	print("📨 Sende Signal-Nachricht: " + url);
+    print("📨 Sende Signal-Nachricht: " + url);
 
-	Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
-		if (error_code === 0) {
-			print("✅ Nachricht erfolgreich gesendet.");
-		} else {
-			print("❌ Fehler beim Senden: " + error_msg);
-		}
-	});
+    Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
+        if (error_code === 0) {
+            print("✅ Nachricht erfolgreich gesendet.");
+        } else {
+            print("❌ Fehler beim Senden: " + error_msg);
+        }
+    });
 }
 
-// Ausgabe eines einzelnen Akkus:
+// ---- Ausgabe eines einzelnen Akkus ----
 function Druck(sn) {
-	let daten = packs[sn];
-	if (!daten) return;
-	print(modus +
-		  sn + ": " +
-		  (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " +
-		  (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
-		  (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
-		  (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
+    let daten = packs[sn];
+    if (!daten) return;
+    print(modus +
+          sn + ": " +
+          (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " +
+          (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
+          (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
+          (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
 }
 
-// Ausgabe aller Akkus:
+// ---- Ausgabe aller Akkus ----
 function DruckAlle() {
-	for (let sn in packs) {
-		Druck(sn);
-	}
+    for (let sn in packs) {
+        Druck(sn);
+    }
 }
 
 // ==================== MQTT HANDLER ====================
 
 MQTT.subscribe(mqttTopic, function (topic, msg) {
-	let data = JSON.parse(msg);
+    let data = JSON.parse(msg);
 
-	// --- PACKDATEN ---
-	if (data.packData) {
-		for (let i = 0; i < data.packData.length; i++) {
-			let pack = data.packData[i];
-			let sn = pack.sn;
+    // --- PACKDATEN ---
+    if (data.packData) {
+        for (let i = 0; i < data.packData.length; i++) {
+            let pack = data.packData[i];
+            let sn = pack.sn;
 
-			if (!packs[sn]) {
-				packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
-				lowVoltMsgSent[sn] = false; // pro Zelle initialisieren
-			}
+            if (!packs[sn]) {
+                packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+                lowVoltMsgSent[sn] = false; // pro Zelle initialisieren
+            }
 
-			// Werte übernehmen
-			if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
-			if (pack.minVol !== undefined) {
-				packs[sn].minV = pack.minVol / 100;
+            // Werte übernehmen
+            if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
+            if (pack.minVol !== undefined) {
+                packs[sn].minV = pack.minVol / 100;
 
-				// --- Unterspannung prüfen ---
-				if (packs[sn].minV < minVoltWarn) {
-					if (!lowVoltMsgSent[sn]) {
-						lowVoltMsgSent[sn] = true;
-						sendSignalMessage("Zelle_" + sn + "hat_nur_" + packs[sn].minV + "_V!");
-					}
-				} else if (packs[sn].minV > minVoltReset) {
-					lowVoltMsgSent[sn] = false;
-				}
-			}
-			if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
-			if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
+                // --- Unterspannung prüfen ---
+                if (packs[sn].minV < minVoltWarn) {
+                    if (!lowVoltMsgSent[sn]) {
+                        lowVoltMsgSent[sn] = true;
+                        sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
+                    }
+                } else if (packs[sn].minV > minVoltReset) {
+                    lowVoltMsgSent[sn] = false;
+                }
+            }
+            if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
+            if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
 
-			Druck(sn);
-		}
-	}
+            Druck(sn);
+        }
+    }
 
-	// --- PACKZUSTAND ---
-	if (data.packState !== undefined) {
-		if (bat !== data.packState) {
-			bat = data.packState;
-			switch (bat) {
-				case 0: modus = "STBY "; break;
-				case 1: modus = "LOAD "; break;
-				case 2: modus = "UNLD "; break;
-			}
-			DruckAlle();
-		}
-	}
+    // --- PACKZUSTAND ---
+    if (data.packState !== undefined) {
+        if (bat !== data.packState) {
+            bat = data.packState;
+            switch (bat) {
+                case 0: modus = "STBY "; break;
+                case 1: modus = "LOAD "; break;
+                case 2: modus = "UNLD "; break;
+            }
+            DruckAlle();
+        }
+    }
 
-	// --- GESAMTLADEZUSTAND ---
-	if (data.electricLevel !== undefined) {
-		if (Zen !== data.electricLevel) {
-			Zen = data.electricLevel;
-			DruckAlle();
+    // --- GESAMTLADEZUSTAND ---
+    if (data.electricLevel !== undefined) {
+        if (Zen !== data.electricLevel) {
+            Zen = data.electricLevel;
+            DruckAlle();
 
-			if (Zen >= vollSchwelle) {
-				if (!akkuVollMsgSent) {
-					akkuVollMsgSent = true;
-					sendSignalMessage("Akku_ist_jetzt_voll_(" + Zen + "%)");
-				}
-			} else if (Zen < entladeReset) {
-				akkuVollMsgSent = false;
-			}
-		}
-	}
+            if (Zen >= vollSchwelle) {
+                if (!akkuVollMsgSent) {
+                    akkuVollMsgSent = true;
+                    sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
+                }
+            } else if (Zen < entladeReset) {
+                akkuVollMsgSent = false;
+            }
+        }
+    }
 });
 
 print("📡 MQTT-Überwachung aktiv auf Topic:", mqttTopic);
-//Test einer Nachricht
-//sendSignalMessage("ONLY_A_TEST_Akku_ist_jetzt_voll_(" + Zen + "%)");
+
+// Testnachricht zum Verifizieren:
+sendSignalMessage("✅ Testnachricht vom Shelly erfolgreich gestartet");
