@@ -16,16 +16,19 @@ let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
-let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let entladeReset = 90;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
 let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
 let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 
 // ==================== VARIABLEN ====================
-let Zen = 0;                         // Gesamt-Ladezustand
+let Zen = 1;                         // Gesamt-Ladezustand
 let bat = 9;                         // Akku-Arbeitsmodus
 let modus = "OPEN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Zellen
-let lowVoltMsgSent = false;          // Warnung über Unterspannung gesendet?
+
+// Flags für Nachrichten
+let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wurde
+let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
 
 // ==================== HILFSFUNKTIONEN ====================
 
@@ -79,6 +82,7 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 
 			if (!packs[sn]) {
 				packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+				lowVoltMsgSent[sn] = false; // pro Zelle initialisieren
 			}
 
 			// Werte übernehmen
@@ -88,12 +92,12 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 
 				// --- Unterspannung prüfen ---
 				if (packs[sn].minV < minVoltWarn) {
-					if (!lowVoltMsgSent) {
-						lowVoltMsgSent = true;
-						sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + " V!");
+					if (!lowVoltMsgSent[sn]) {
+						lowVoltMsgSent[sn] = true;
+						sendSignalMessage("Zelle_" + sn + "hat_nur_" + packs[sn].minV + "_V!");
 					}
 				} else if (packs[sn].minV > minVoltReset) {
-					lowVoltMsgSent = false;
+					lowVoltMsgSent[sn] = false;
 				}
 			}
 			if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
@@ -123,15 +127,17 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 			DruckAlle();
 
 			if (Zen >= vollSchwelle) {
-				if (!packs.messageSent) {
-					packs.messageSent = true;
-					sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
+				if (!akkuVollMsgSent) {
+					akkuVollMsgSent = true;
+					sendSignalMessage("Akku_ist_jetzt_voll_(" + Zen + "%)");
 				}
 			} else if (Zen < entladeReset) {
-				packs.messageSent = false;
+				akkuVollMsgSent = false;
 			}
 		}
 	}
 });
 
 print("📡 MQTT-Überwachung aktiv auf Topic:", mqttTopic);
+//Test einer Nachricht
+//sendSignalMessage("ONLY_A_TEST_Akku_ist_jetzt_voll_(" + Zen + "%)");
