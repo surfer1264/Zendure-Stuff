@@ -1,0 +1,192 @@
+// ========== AkkuVolt + HyperTemp Watchdog mit Signal-Benachrichtigungen ==========
+// Erkennt Akku-Zustand und Hyper-Temperatur und sendet Nachrichten bei:
+//  - Akku voll (>= 99 %)
+//  - Unterspannung einzelner Zellen (< 3.0 V)
+//  - Übertemperatur (HyperTemp > 40 °C, Reset < 30 °C)
+
+print("⚡ Starte AkkuVolt + HyperTemp Watchdog — bitte vorsichtig benutzen!");
+
+// ==================== EINSTELLUNGEN ====================
+
+// MQTT-Topic deines BMS oder Gateways:
+let mqttTopic   = "MYAppKEY/#";
+
+// Signal (CallMeBot) Einstellungen:
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalKey   = "YOUR_API_KEY";    // dein API Key
+
+
+// Schwellwerte:
+let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
+let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
+let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
+let tempWarn     = 40.0;             // °C, Temperaturgrenze für Alarm
+let tempReset    = 30.0;             // °C, Grenze für Rücksetzen der Warnung
+
+// ==================== VARIABLEN ====================
+let Zen = 0;                         // Gesamt-Ladezustand
+let bat = 9;                         // Akku-Arbeitsmodus
+let modus = "OPEN ";                 // Textdarstellung Modus
+let packs = {};                      // Datenstruktur für alle Zellen
+let HT = 0;                          // Hyper Temperatur
+
+// Flags für Nachrichten
+let akkuVollMsgSent = false;         // Akku voll Meldung
+let lowVoltMsgSent = {};             // Unterspannung je Zelle
+let hyperTempMsgSent = false;        // Übertemperaturmeldung
+
+// ==================== HILFSFUNKTIONEN ====================
+
+// ---- Einfache URL-Encoding-Funktion (Espruino-kompatibel) ----
+function simpleEncode(str) {
+	let out = "";
+	for (let i = 0; i < str.length; i++) {
+		let ch = str.charAt(i);
+		if (ch === " ") out += "%20";
+		else if (ch === "ö") out += "oe";
+		else if (ch === "ä") out += "ae";
+		else if (ch === "ü") out += "ue";
+		else if (ch === "ß") out += "ss";
+		else if (ch === "°") out += "%C2%B0";
+		else if (ch === "%") out += "%25";
+		else if (ch === "!") out += "%21";
+		else if (ch === "(") out += "%28";
+		else if (ch === ")") out += "%29";
+		else out += ch;
+	}
+	return out;
+}
+
+// ---- Signal-Nachricht senden ----
+function sendSignalMessage(text) {
+	let safeText = simpleEncode(text);
+	let url = "https://api.callmebot.com/signal/send.php" +
+			  "?phone=" + signalPhone +
+			  "&apikey=" + signalKey +
+			  "&text=" + safeText;
+
+	print("📨 Sende Signal-Nachricht: " + url);
+
+	Shelly.call("HTTP.GET", { url: url }, function (result, error_code, error_msg) {
+		if (error_code === 0) {
+			print("✅ Nachricht erfolgreich gesendet.");
+		} else {
+			print("❌ Fehler beim Senden: " + error_msg);
+		}
+	});
+}
+
+// ---- Akku-Druckfunktion ----
+function Druck(sn) {
+	let daten = packs[sn];
+	if (!daten) return;
+	print(modus +
+		  sn + ": " +
+		  (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " +
+		  (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
+		  (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
+		  (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
+}
+
+// ---- Alle Akkus ausgeben ----
+function DruckAlle() {
+	for (let sn in packs) {
+		Druck(sn);
+	}
+}
+
+// ---- HyperTemp ausgeben ----
+function DruckHyperTemp() {
+	print("🌡️ Hyper Temperatur: " + HT.toFixed(1) + " °C");
+}
+
+// ==================== MQTT HANDLER ====================
+
+MQTT.subscribe(mqttTopic, function (topic, msg) {
+	let data = JSON.parse(msg);
+
+	// --- PACKDATEN ---
+	if (data.packData) {
+		for (let i = 0; i < data.packData.length; i++) {
+			let pack = data.packData[i];
+			let sn = pack.sn;
+
+			if (!packs[sn]) {
+				packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+				lowVoltMsgSent[sn] = false;
+			}
+
+			// Werte übernehmen
+			if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
+			if (pack.minVol !== undefined) {
+				packs[sn].minV = pack.minVol / 100;
+
+				// --- Unterspannung prüfen ---
+				if (packs[sn].minV < minVoltWarn) {
+					if (!lowVoltMsgSent[sn]) {
+						lowVoltMsgSent[sn] = true;
+						sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
+					}
+				} else if (packs[sn].minV > minVoltReset) {
+					lowVoltMsgSent[sn] = false;
+				}
+			}
+			if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
+			if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
+
+			Druck(sn);
+		}
+	}
+
+	// --- PACKZUSTAND ---
+	if (data.packState !== undefined) {
+		if (bat !== data.packState) {
+			bat = data.packState;
+			switch (bat) {
+				case 0: modus = "STBY "; break;
+				case 1: modus = "LOAD "; break;
+				case 2: modus = "UNLD "; break;
+			}
+			DruckAlle();
+		}
+	}
+
+	// --- GESAMTLADEZUSTAND ---
+	if (data.electricLevel !== undefined) {
+		if (Zen !== data.electricLevel) {
+			Zen = data.electricLevel;
+			DruckAlle();
+
+			if (Zen >= vollSchwelle) {
+				if (!akkuVollMsgSent) {
+					akkuVollMsgSent = true;
+					sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
+				}
+			} else if (Zen < entladeReset) {
+				akkuVollMsgSent = false;
+			}
+		}
+	}
+
+	// --- HYPER TEMPERATUR (global) ---
+	if (data.hyperTmp !== undefined) {
+		let newHT = data.hyperTmp / 10 - 273.1;
+		if (HT !== newHT) {
+			HT = newHT;
+			DruckHyperTemp();
+
+			if (HT > tempWarn) {
+				if (!hyperTempMsgSent) {
+					hyperTempMsgSent = true;
+					sendSignalMessage("🔥 Achtung! Hyper-Temperatur zu hoch: " + HT.toFixed(1) + " °C");
+				}
+			} else if (HT < tempReset) {
+				hyperTempMsgSent = false;
+			}
+		}
+	}
+});
+
+print("📡 MQTT-Überwachung aktiv auf Topic:", mqttTopic);
+sendSignalMessage("✅ Watchdog gestartet – Shelly-Überwachung aktiv.");
