@@ -9,6 +9,7 @@ Hier findet Ihr
 * [Monitoring des Zendure Hubs aufbauen](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
   * [das Node-Red-Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 * [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
+* [mit Shelly ein Monitoring aufbauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
 * [Zendure-HA Installation](https://github.com/surfer1264/Zendure-Stuff/wiki/Install-Zendure-HA)
 * [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
