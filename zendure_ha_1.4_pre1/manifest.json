@@ -1,0 +1,21 @@
+{
+  "domain": "zendure_ha",
+  "name": "Zendure Home Assistant Integration",
+  "codeowners": [
+    "@fireson"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "bluetooth",
+    "mqtt"
+  ],
+  "documentation": "https://github.com/zendure/zendure-ha",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/zendure/zendure-ha/issues",
+  "requirements": [
+    "paho-mqtt==2.1.0",
+    "stringcase==1.2.0"
+  ],
+  "single_config_entry": true,
+  "version": "1.1.4-pre1"
+}

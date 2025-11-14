@@ -1,0 +1,358 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "reconfigure_successful": "Reconfiguration successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "token": "Zendure Token",
+          "p1meter": "P1 Sensor for smart matching",
+          "mqttlog": "Log MQTT communication",
+          "mqttlocal": "Use local MQTT",
+          "wifissid": "Wifi SSID",
+          "wifipsw": "Wifi Password"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "token": "Zendure Token",
+          "p1meter": "P1 Sensor for smart matching",
+          "mqttlog": "Log MQTT communication",
+          "mqttlocal": "Use local Mosquitto MQTT AddOn",
+          "wifissid": "Wifi SSID",
+          "wifipsw": "Wifi Password"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "p1meter": "P1 Sensor for smart matching",
+          "mqttlog": "Log MQTT communication"
+        },
+        "description": "Amend your options.",
+        "title": "Zendure Integration Options"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mqtt_reset": {
+        "name": "Reset connection"
+      }
+    },
+    "binary_sensor": {
+      "master_switch": {
+        "name": "Master Switch"
+      },
+      "wifi_state": {
+        "name": "Wifi State"
+      },
+      "pass": {
+        "name": "Bypass"
+      },
+      "heat_state": {
+        "name": "Heat State"
+      },
+      "hems_state": {
+        "name": "HEMS State"
+      }
+    },
+    "number": {
+      "input_limit": {
+        "name": "Input Limit"
+      },
+      "output_limit": {
+        "name": "Output Limit"
+      },
+      "manual_power": {
+        "name": "Manual Power"
+      },
+      "min_soc": {
+        "name": "SoC Minimum"
+      },
+      "soc_set": {
+        "name": "SoC Maximum"
+      }
+    },
+    "sensor": {
+      "ambient_light_color": {
+        "name": "Ambient light color"
+      },
+      "available_kwh": {
+        "name": "Available Energy"
+      },
+      "auto_model": {
+        "name": "Battery Program",
+        "state": {
+          "0": "None",
+          "6": "Battery Priority Mode",
+          "7": "Appointment Mode",
+          "8": "Smart Matching Mode",
+          "9": "Smart CT Mode",
+          "10": "Electricity Price"
+        }
+      },
+      "aggr_charge_total": {
+        "name": "Battery Total Charged"
+      },
+      "aggr_discharge_total": {
+        "name": "Battery Total Discharged"
+      },
+      "aggr_solar_total": {
+        "name": "Total Solar"
+      },
+      "connection_status": {
+        "name": "Connection Status",
+        "state": {
+          "0": "Unknown",
+          "1": "Connected",
+          "2": "HEMS",
+          "3": "No FuseGroup"
+        }
+      },
+      "soh": {
+        "name": "SoH"
+      },
+      "soc_status": {
+        "name": "SoC State",
+        "state": {
+          "0": "Operation",
+          "1": "Auto-Calibration"
+        }
+      },
+      "hub_state": {
+        "name": "Hub Status",
+        "state": {
+          "0": "Stop output and standby",
+          "1": "Stop output and switch off"
+        }
+      },
+      "pack_num": {
+        "name": "Battery Count"
+      },
+      "bat_volt": {
+        "name": "Battery Voltage"
+      },
+      "electric_level": {
+        "name": "Battery (SoC)"
+      },
+      "charging_mode": {
+        "name": "Charging Mode",
+        "state": {
+          "0": "Nothing",
+          "1": "Mode 1",
+          "2": "Mode 2"
+        }
+      },
+      "charging_type": {
+        "name": "Charging Type",
+        "state": {
+          "0": "Type 0",
+          "1": "Type 1",
+          "2": "Type 2"
+        }
+      },
+      "charging_time": {
+        "name": "Charging Time"
+      },
+      "pack_state": {
+        "name": "Battery State",
+        "state": {
+          "0": "Sleeping",
+          "1": "Charging",
+          "2": "Discharging"
+        }
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "0": "Sleeping",
+          "1": "Charging",
+          "2": "Discharging"
+        }
+      },
+      "soc_level": {
+        "name": "Electricity Level (SoC)"
+      },
+      "max_temp": {
+        "name": "Highest Cell Temperature"
+      },
+      "total_vol": {
+        "name": "Total Voltage"
+      },
+      "max_vol": {
+        "name": "Highest Cell Voltage"
+      },
+      "min_vol": {
+        "name": "Lowest Cell Voltage"
+      },
+      "batcur": {
+        "name": "Current"
+      },
+      "pack_input_power": {
+        "name": "Battery Output Power"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "pass": {
+        "name": "Bypass",
+        "state": {
+          "0": "Off",
+          "1": "On",
+          "2": "Auto On"
+        }
+      },
+      "hyper_2000_pass": {
+        "name": "Bypass State"
+      },
+      "output_pack_power": {
+        "name": "Battery Input Power"
+      },
+      "solar_input_power": {
+        "name": "Solar Input Power"
+      },
+      "solar_power1": {
+        "name": "PV1 Solar Power"
+      },
+      "solar_power2": {
+        "name": "PV2 Solar Power"
+      },
+      "solar_power3": {
+        "name": "PV3 Solar Power"
+      },
+      "solar_power4": {
+        "name": "PV4 Solar Power"
+      },
+      "output_home_power": {
+        "name": "Output Power"
+      },
+      "hyper_tmp": {
+        "name": "Device Temperature"
+      },
+      "strength": {
+        "name": "Wifi Signal Strength"
+      },
+      "remain_out_time": {
+        "name": "Remaining Discharge Time"
+      },
+      "remain_input_time": {
+        "name": "Remaining Charge Time"
+      },
+      "soft_version": {
+        "name": "BMS Firmware"
+      },
+      "dspversion": {
+        "name": "AC Firmware"
+      },
+      "master_soft_version": {
+        "name": "Master Firmware"
+      },
+      "masterhaer_version": {
+        "name": "Hardware Version"
+      },
+      "inverse_max_power": {
+        "name": "Maximum Inverter Power"
+      },
+      "grid_power": {
+        "name": "Grid Power"
+      },
+      "pv_brand": {
+        "name": "Inverter Brand",
+        "state": {
+          "0": "Other/Integrated",
+          "1": "Hoymiles",
+          "2": "Enphase",
+          "3": "APsystems",
+          "4": "Anker",
+          "5": "Deye",
+          "6": "BossWerk",
+          "7": "TSun"
+        }
+      }
+    },
+    "select": {
+      "ac_mode": {
+        "name": "AC Operation Mode",
+        "state": {
+          "input": "AC Input Mode",
+          "output": "AC Output Mode"
+        }
+      },
+      "fuse_group": {
+        "name": "Device fusegroup",
+        "state": {
+          "unused": "Unused, device has No FuseGroup",
+          "owncircuit": "Device has its own circuit or phase",
+          "group800": "FuseGroup max. 800w",
+          "group1200": "FuseGroup max. 1200w",
+          "group2000": "FuseGroup max. 2000w",
+          "group2400": "FuseGroup max. 2400w",
+          "group3600": "FuseGroup max. 3600w"
+        }
+      },
+      "connection": {
+        "name": "Connection Mode",
+        "state": {
+          "local": "Local",
+          "cloud": "Cloud"
+        }
+      },
+      "operation": {
+        "name": "Operation Mode",
+        "state": {
+          "off": "Off",
+          "manual": "Manual Power",
+          "smart": "Smart Matching",
+          "smart_discharging": "Smart discharge only",
+          "smart_charging": "Smart charge only"
+        }
+      },
+      "pass_mode": {
+        "name": "Bypass Mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Always-Off",
+          "on": "Always-On"
+        }
+      },
+      "grid_reverse": {
+        "name": "Bypass Mode",
+        "state": {
+          "auto": "Auto",
+          "off": "Always-Off",
+          "on": "Always-On"
+        }
+      }
+    },
+    "switch": {
+      "lamp_switch": {
+        "name": "LED"
+      },
+      "buzzer_switch": {
+        "name": "Buzzer"
+      },
+      "auto_recover": {
+        "name": "Bypass-Mode Reset"
+      }
+    }
+  },
+  "exceptions": {
+    "no_zendure_token": {
+      "message": "Zendure token not provided."
+    },
+    "no_user_password": {
+      "message": "Username or password not provided."
+    }
+  }
+}
