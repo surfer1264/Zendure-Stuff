@@ -273,7 +273,6 @@
         },
         "nodes": [
             "304c27e2b8253ddc",
-            "75c29f28532e7a32",
             "ec50ae1b2f62c5ed",
             "fa35dabff235479a",
             "294af22fccee50c1",
@@ -281,9 +280,9 @@
             "0a77a411bae6d6a8"
         ],
         "x": 2774,
-        "y": 1999,
+        "y": 2019,
         "w": 872,
-        "h": 182
+        "h": 162
     },
     {
         "id": "b6cbd1ee551c690b",
@@ -596,9 +595,9 @@
             "93030162d5c5a12c",
             "03ed40ed26dd3a65",
             "d99b35c545ee754a",
-            "919fb03d28bf7aba",
-            "59f3b95dd2f0e022",
-            "b78e47bc659c68e6"
+            "b78e47bc659c68e6",
+            "b138b5f3c8a549f7",
+            "1333b1823dfb600e"
         ],
         "x": 1654,
         "y": 319,
@@ -1879,7 +1878,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"4.2.2\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: Typ1 steht IMMER für absolute Ansteuerung, APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: Typ2 steht IMMER für relative Ansteuerung, Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to On or Off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"messenger\", \"on\");\n\n//Empfängername des Dienstes aus der Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinVol\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\n// PV Sensoren\nflow.set(\"PVForecast\", \"on\");\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n\nreturn msg;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"4.2.3\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: Typ1 steht IMMER für absolute Ansteuerung, APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: Typ2 steht IMMER für relative Ansteuerung, Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to On or Off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"messenger\", \"on\");\n\n//Empfängername des Dienstes aus der Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinVol\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\n// PV Sensoren\nflow.set(\"PVForecast\", \"on\");\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3349,10 +3348,9 @@
         ],
         "uncaught": false,
         "x": 2920,
-        "y": 2080,
+        "y": 2060,
         "wires": [
             [
-                "75c29f28532e7a32",
                 "fa35dabff235479a",
                 "294af22fccee50c1"
             ]
@@ -4326,11 +4324,11 @@
         "wires": [
             [
                 "93030162d5c5a12c",
-                "919fb03d28bf7aba"
+                "b138b5f3c8a549f7"
             ],
             [
                 "93030162d5c5a12c",
-                "919fb03d28bf7aba"
+                "b138b5f3c8a549f7"
             ]
         ]
     },
@@ -4444,32 +4442,11 @@
         "wires": [
             [
                 "93030162d5c5a12c",
-                "919fb03d28bf7aba"
+                "b138b5f3c8a549f7"
             ],
             [
                 "93030162d5c5a12c",
-                "919fb03d28bf7aba"
-            ]
-        ]
-    },
-    {
-        "id": "75c29f28532e7a32",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "b5ff1f69caf7f3fb",
-        "name": "Formatieren",
-        "func": "\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\n// Wenn isError true ist → wir haben einen Fehlerfall\n// Sonst → Initialisierung (kein Fehler)\nlet logType = isError ? \"Error\" : \"Init\";\n\n// Im Fehlerfall: Name des Node aus msg.error.source.name übernehmen\n// Wenn kein Name vorhanden → \"unknown\"\n// Sonst (kein Fehler): festen Namen \"System\" setzen\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"System\";\n\n// Im Fehlerfall: Node-ID aus msg.error.source.id übernehmen (oder leeren String, falls undefiniert)\n// Sonst leerer String\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\n\n// Im Fehlerfall: Node-Typ aus msg.error.source.type übernehmen (oder leerer String)\n// Sonst leerer String\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\n\n// Im Fehlerfall: Fehlermeldung aus msg.error.message übernehmen\n// Wenn keine vorhanden → \"Unbekannter Fehler\"\n// Sonst (kein Fehler): Erfolgsmeldung \"Initialisierung erfolgreich\"\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"System\";\n\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType}\\n`;\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 3210,
-        "y": 2080,
-        "wires": [
-            [
-                "ec50ae1b2f62c5ed"
+                "b138b5f3c8a549f7"
             ]
         ]
     },
@@ -4486,46 +4463,7 @@
         "overwriteFile": "false",
         "encoding": "utf8",
         "x": 3440,
-        "y": 2080,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "919fb03d28bf7aba",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "70cc64c2bba0fbd9",
-        "name": "Debug & Log",
-        "func": "// Debugnachricht erzeugen\n// node.warn(msg.payload);\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2110,
-        "y": 420,
-        "wires": [
-            [
-                "59f3b95dd2f0e022"
-            ]
-        ]
-    },
-    {
-        "id": "59f3b95dd2f0e022",
-        "type": "file",
-        "z": "479e3443afedb613",
-        "g": "70cc64c2bba0fbd9",
-        "name": "In Datei schreiben",
-        "filename": "/config/debug-log.txt",
-        "filenameType": "str",
-        "appendNewline": true,
-        "createDir": true,
-        "overwriteFile": "false",
-        "encoding": "none",
-        "x": 2450,
-        "y": 420,
+        "y": 2140,
         "wires": [
             []
         ]
@@ -6020,6 +5958,7 @@
         "id": "7e065cdfb6cd92bd",
         "type": "function",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "46a88bad508d3778",
         "name": "if Debug?",
         "func": "if (flow.get(\"Debug\") === true) {\n    return [msg, null]; // an Ausgang eins senden\n    }\nelse {\n    return; // nichts senden\n    }",
@@ -7836,7 +7775,7 @@
         "domain": "notify",
         "service": "persistent_notification",
         "x": 3190,
-        "y": 2040,
+        "y": 2060,
         "wires": [
             []
         ]
@@ -9273,8 +9212,8 @@
         "z": "479e3443afedb613",
         "g": "b5ff1f69caf7f3fb",
         "name": "Messenger",
-        "func": "const messenger = flow.get (\"messenger\");\nconst msg_service = global.get (\"msgDienst\");\nlet isError = msg.error !== undefined;\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"System\";\nlet nachricht =  \"WR aus: \";\n\nif (messenger === \"on\") {\n  msg.payload = {\n    data: {\n      message: `❌\\nNodeName: ${nodeName}\\nNachricht: ${nachricht}\\n`\n    },\n    sensor: msg_service\n  };\n  return msg;\n}\nelse {\n  return null;  // kein Output, wenn messenger \"off\" ist\n}\n\n",
-        "outputs": 1,
+        "func": "// --- Fehlerdaten aus dem Catch-Node lesen ---\nlet error = msg.error || {};\nlet source = error.source || {};\n\nlet nodeName = source.name || \"Unbekannter Node\";\nlet nodeId   = source.id   || \"-\";\nlet nodeType = source.type || \"-\";\nlet errMsg   = error.message || \"Unbekannter Fehler\";\n\n// --- Icons / Markierung ---\nlet icon = \"❌\";  \nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n`${icon} *Node-RED Fehler*\n🔧 Node: ${nodeName}\n🆔 ID: ${nodeId}\n🔍 Typ: ${nodeType}\n\n📄 Fehler:\n${errMsg}\n\n⏱️ Zeit: ${timestamp}\n`;\n\n// --- CSV-Logzeile ---\nlet csvLine = `${timestamp};Error;${nodeName};${nodeId};${nodeType};${errMsg}\\n`;\n\n// --- SIGNAL-KONFIGURATION ---\nconst messenger  = flow.get(\"messenger\");       // \"on\" / \"off\"\nconst msg_service = global.get(\"msgDienst\");    // Signal-Service\n\n// --- Nachrichtenstruktur aufteilen ---\n// msg (Hauptausgang): Signal-Nachricht, falls aktiviert\n// msg.log (2. Ausgang): CSV Log\nmsg.log = {\n    payload: csvLine\n};\n\n// --- Signal aktiv? ---\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message: nachricht\n        },\n        sensor: msg_service\n    };\n    return [msg, msg.log];\n}\n\n// Wenn Signal aus → kein Signal, nur Log\nmsg.payload = { info: \"Signal ausgeschaltet, nur Log geschrieben\" };\nreturn [msg, msg.log];\n\n",
+        "outputs": 2,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -9285,6 +9224,9 @@
         "wires": [
             [
                 "0a77a411bae6d6a8"
+            ],
+            [
+                "ec50ae1b2f62c5ed"
             ]
         ]
     },
@@ -9293,7 +9235,7 @@
         "type": "inject",
         "z": "479e3443afedb613",
         "g": "b5ff1f69caf7f3fb",
-        "name": "",
+        "name": "Test",
         "props": [
             {
                 "p": "payload"
@@ -9310,7 +9252,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 2960,
+        "x": 2910,
         "y": 2140,
         "wires": [
             [
@@ -9346,7 +9288,7 @@
         "target": {},
         "mergecontext": "",
         "x": 3480,
-        "y": 2140,
+        "y": 2060,
         "wires": [
             []
         ]
@@ -10102,99 +10044,57 @@
         ]
     },
     {
-        "id": "e7431e50ba82ccbc",
-        "type": "inject",
+        "id": "b138b5f3c8a549f7",
+        "type": "function",
         "z": "479e3443afedb613",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 1780,
-        "y": 1880,
+        "g": "70cc64c2bba0fbd9",
+        "name": "Formatieren",
+        "func": "// --- Quelle erkennen ---\nlet nodeName =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||       // viele HA/Fritzbox Nodes nutzen das\n    msg.data?.entity_id ||          // alternative Struktur\n    msg.friendly_name ||            // falls vorhanden\n    msg.name ||                     // häufig verwendetes Attribut\n    msg.payload?.name ||            // Name im Payload\n    \"unknown\";\n\n// --- aktuellen Status lesen ---\nlet current = msg.payload;     // \"home\" oder \"not_home\"\n\n// --- Icon bestimmen ---\nconst ICONS = {\n    \"home\": \"🏠\",\n    \"not_home\": \"🚶‍♂️💨\",\n    \"unknown\": \"❓\"\n};\n\nlet iconCurrent = ICONS[current] || ICONS.unknown;\n\n// --- bisherige Status aller Geräte laden ---\nlet states = context.get(\"states\") || {};\nlet previous = states[nodeName];\n\n// --- Icon für vorherigen Status (falls vorhanden) ---\nlet iconPrevious = ICONS[previous] || ICONS.unknown;\n\n// --- erster Durchlauf → Status speichern ---\nif (previous === undefined) {\n    states[nodeName] = current;\n    context.set(\"states\", states);\n    node.status({ text: `Init: ${nodeName} = ${iconCurrent} ${current}` });\n    return null;\n}\n\n// --- kein Statuswechsel → abbrechen ---\nif (current === previous) {\n    return null;\n}\n\n// --- Statuswechsel erkannt → neuen Status speichern ---\nstates[nodeName] = current;\ncontext.set(\"states\", states);\n\n// --- Zeitstempel erzeugen ---\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n    `${iconPrevious} → ${iconCurrent}\\n` +\n    `Status: ${previous} → ${current}\\n` +\n    `Zeit: ${timestamp}`;\n\n// Node-Status anzeigen\nnode.status({ text: `${nodeName}: ${iconPrevious} → ${iconCurrent}` });\nsetTimeout(() => node.status({}), 3000);\n\n// --- SIGNAL-NACHRICHT EINBAUEN ---\nconst messenger = flow.get(\"messenger\");\nconst msg_service = global.get(\"msgDienst\");\n\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message:\n                `📡 *Statuswechsel Gerät*\n🔧 NodeName: ${nodeName}\n${nachricht}`\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\n// --- falls Signal aus ist → normale Ausgabe ---\nmsg.statusChange = {\n    device: nodeName,\n    from: previous,\n    to: current,\n    icons: { from: iconPrevious, to: iconCurrent },\n    timestamp: timestamp\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2110,
+        "y": 420,
         "wires": [
             [
-                "6180510a99fd8539"
+                "1333b1823dfb600e"
             ]
         ]
     },
     {
-        "id": "7630193425de09c8",
-        "type": "debug",
+        "id": "1333b1823dfb600e",
+        "type": "api-call-service",
         "z": "479e3443afedb613",
-        "name": "debug 5",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "true",
-        "targetType": "full",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 2380,
-        "y": 1880,
-        "wires": []
-    },
-    {
-        "id": "6180510a99fd8539",
-        "type": "api-current-state",
-        "z": "479e3443afedb613",
-        "name": "",
+        "g": "70cc64c2bba0fbd9",
+        "name": "Sende Nachricht via WhatSigram",
         "server": "285afb99.5208c4",
-        "version": 3,
-        "outputs": 1,
-        "halt_if": "",
-        "halt_if_type": "str",
-        "halt_if_compare": "is",
-        "entity_id": "sensor.solarherwegh_pack_state",
-        "state_type": "str",
-        "blockInputOverrides": true,
-        "outputProperties": [
-            {
-                "property": "payload",
-                "propertyType": "msg",
-                "value": "number",
-                "valueType": "entityState"
-            },
-            {
-                "property": "data",
-                "propertyType": "msg",
-                "value": "",
-                "valueType": "entity"
-            },
-            {
-                "property": "topic",
-                "propertyType": "msg",
-                "value": "packstate",
-                "valueType": "str"
-            }
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.send_message",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
         ],
-        "for": "0",
-        "forType": "num",
-        "forUnits": "minutes",
-        "override_topic": false,
-        "state_location": "payload",
-        "override_payload": "msg",
-        "entity_location": "data",
-        "override_data": "msg",
-        "x": 2080,
-        "y": 1880,
+        "labelId": [],
+        "data": "{}",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "notify",
+        "service": "send_message",
+        "target": {},
+        "mergecontext": "",
+        "x": 2400,
+        "y": 420,
         "wires": [
-            [
-                "7630193425de09c8"
-            ]
+            []
         ]
     },
     {
@@ -10212,11 +10112,11 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "3b4486cd97deba4b",
+        "id": "e2c6a63a6be9f165",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-contrib-home-assistant-websocket": "0.80.1"
+            "node-red-contrib-home-assistant-websocket": "0.80.2"
         }
     }
 ]
