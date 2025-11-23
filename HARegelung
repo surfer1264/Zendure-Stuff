@@ -220,7 +220,8 @@
             "f8a44280bd222a9e",
             "77e722feaad4dffe",
             "3d36f3e8b8cb3fe0",
-            "4a0e658896e45770"
+            "4a0e658896e45770",
+            "9dfb8cc7c0b01eb3"
         ],
         "x": 194,
         "y": 3379,
@@ -239,7 +240,8 @@
             "fca9127a7f61a1b8",
             "e6ea1346bc547904",
             "5dd4fe71b0a47034",
-            "2b9f6a16b9c71e0b"
+            "2b9f6a16b9c71e0b",
+            "cb0836157b467777"
         ],
         "x": 194,
         "y": 3739,
@@ -427,8 +429,8 @@
         ],
         "x": 1628,
         "y": 33,
-        "w": 964,
-        "h": 494
+        "w": 1004,
+        "h": 554
     },
     {
         "id": "33fc19028d8c92bf",
@@ -486,7 +488,8 @@
             "91a6dcfc70106acb",
             "fedc91bc44cbd434",
             "62532c236f10aa32",
-            "b41f6643294c0f56"
+            "b41f6643294c0f56",
+            "f50ad5817518a6e2"
         ],
         "x": 1654,
         "y": 1379,
@@ -563,7 +566,6 @@
         },
         "nodes": [
             "b39b705f55bc143a",
-            "354e9d385e0e7a12",
             "7a5d3ef92442a929",
             "8556d367c4b1fac5",
             "a62ebd85d47fee9f",
@@ -586,7 +588,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "e504044664a57b4e",
-        "name": "(3.6) Monitor: Verfügbarkit der Shellys melden",
+        "name": "(3.6) Monitor: Verfügbarkit  melden",
         "style": {
             "label": true
         },
@@ -597,12 +599,14 @@
             "d99b35c545ee754a",
             "b78e47bc659c68e6",
             "b138b5f3c8a549f7",
-            "1333b1823dfb600e"
+            "1333b1823dfb600e",
+            "b445f55929b38209",
+            "de0a32070dcc265a"
         ],
         "x": 1654,
         "y": 319,
-        "w": 912,
-        "h": 182
+        "w": 952,
+        "h": 242
     },
     {
         "id": "72932590259c2eb2",
@@ -622,7 +626,8 @@
             "fd9ffa19de35ef1b",
             "40cd311eb34f8bec",
             "3a896cce6e31964b",
-            "98eedc884b02a91c"
+            "98eedc884b02a91c",
+            "63546f5330c76ed4"
         ],
         "x": 1654,
         "y": 639,
@@ -700,10 +705,10 @@
             "2c22eb5a28b88af3",
             "76f6c97f59e020a9"
         ],
-        "x": 254,
-        "y": 2159,
-        "w": 292,
-        "h": 142
+        "x": 234,
+        "y": 2139,
+        "w": 312,
+        "h": 162
     },
     {
         "id": "cf998755e26fe945",
@@ -1788,7 +1793,6 @@
             "1b49fc372d8175f7",
             "9c1f091862872c3f",
             "f9c28e57357fbedd",
-            "750f877240f66bc6",
             "e646756010d9f10c"
         ],
         "x": 1665,
@@ -1878,15 +1882,15 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"4.2.3\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: Typ1 steht IMMER für absolute Ansteuerung, APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: Typ2 steht IMMER für relative Ansteuerung, Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to On or Off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"messenger\", \"on\");\n\n//Empfängername des Dienstes aus der Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinVol\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\n// PV Sensoren\nflow.set(\"PVForecast\", \"on\");\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n\nreturn msg;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der Akkus (noch nicht verwendet)\nflow.set (\"Release\", \"5.0.0\"); //nur Info\n\n// Hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: Typ1 steht IMMER für absolute Ansteuerung, APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: Typ2 steht IMMER für relative Ansteuerung, Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n// flow.set(\"WRTyp\", 4); //Startkonfiguration / Default\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to On or Off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"messenger\", \"on\");\n\n//Empfängername des Dienstes aus der Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinVol\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\n// PV Sensoren\nflow.set(\"PVForecast\", \"on\");\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 390,
-        "y": 280,
+        "x": 410,
+        "y": 300,
         "wires": [
             [
                 "f5ac4859d53b8c34"
@@ -2911,7 +2915,7 @@
             }
         ],
         "x": 310,
-        "y": 3800,
+        "y": 3780,
         "wires": [
             [
                 "2b9f6a16b9c71e0b"
@@ -3804,7 +3808,7 @@
             }
         ],
         "x": 1770,
-        "y": 240,
+        "y": 160,
         "wires": [
             [
                 "1bdd52ee74cd6023"
@@ -3813,17 +3817,6 @@
                 "a62ebd85d47fee9f"
             ]
         ]
-    },
-    {
-        "id": "354e9d385e0e7a12",
-        "type": "comment",
-        "z": "479e3443afedb613",
-        "g": "4e7901031e717127",
-        "name": "HIER: WR DeviceTracker prüfen",
-        "info": "",
-        "x": 1810,
-        "y": 200,
-        "wires": []
     },
     {
         "id": "5cfcf573718eb3d5",
@@ -4010,7 +4003,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 2320,
+        "x": 2360,
         "y": 240,
         "wires": [
             [
@@ -4059,7 +4052,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2050,
+        "x": 2090,
         "y": 240,
         "wires": [
             [
@@ -4074,9 +4067,7 @@
         "g": "4e7901031e717127",
         "name": "link out 23",
         "mode": "link",
-        "links": [
-            "60df30044c929c46"
-        ],
+        "links": [],
         "x": 2505,
         "y": 240,
         "wires": []
@@ -4276,7 +4267,7 @@
         "name": "Einspeise Plus1PM ist da?",
         "server": "285afb99.5208c4",
         "version": 6,
-        "outputs": 2,
+        "outputs": 1,
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
@@ -4287,7 +4278,7 @@
         },
         "outputInitially": false,
         "stateType": "str",
-        "ifState": "home",
+        "ifState": "",
         "ifStateType": "str",
         "ifStateOperator": "is",
         "outputOnlyOnStateChange": true,
@@ -4303,7 +4294,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -4325,10 +4316,6 @@
             [
                 "93030162d5c5a12c",
                 "b138b5f3c8a549f7"
-            ],
-            [
-                "93030162d5c5a12c",
-                "b138b5f3c8a549f7"
             ]
         ]
     },
@@ -4338,7 +4325,7 @@
         "z": "479e3443afedb613",
         "g": "70cc64c2bba0fbd9",
         "name": "Erstelle Nachricht",
-        "func": "//const entityId = msg.entity_id;\n//const entityId = msg.data.entity_id;\nconst entityId = msg.topic;\nconst payload = msg.payload;\n\nmsg.payload = {\n    title: \"Status ShellyDevices\",\n    message: `Entity: ${entityId} hat den Status '${payload}' erreicht.`\n};\n\nreturn msg;",
+        "func": "const entityId =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||\n    msg.data?.entity_id ||\n    msg.friendly_name ||\n    msg.name ||\n    msg.payload?.name ||\n    \"unknown\";\n\nconst payloadValue =\n    typeof msg.payload === \"object\" ? msg.payload.state : msg.payload;\n\nmsg.payload = {\n    title: \"Status Devices\",\n    message: `Entity: ${entityId} hat den Status '${payloadValue}' erreicht.`\n};\n\nnode.status({ text: `${entityId}: ${payloadValue}` });\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -4394,7 +4381,7 @@
         "name": "Shelly3EM ist da?",
         "server": "285afb99.5208c4",
         "version": 6,
-        "outputs": 2,
+        "outputs": 1,
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
@@ -4405,7 +4392,7 @@
         },
         "outputInitially": false,
         "stateType": "str",
-        "ifState": "home",
+        "ifState": "",
         "ifStateType": "str",
         "ifStateOperator": "is",
         "outputOnlyOnStateChange": true,
@@ -4421,7 +4408,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -4440,10 +4427,6 @@
         "x": 1810,
         "y": 400,
         "wires": [
-            [
-                "93030162d5c5a12c",
-                "b138b5f3c8a549f7"
-            ],
             [
                 "93030162d5c5a12c",
                 "b138b5f3c8a549f7"
@@ -6476,7 +6459,7 @@
         "name": "HIER: WR DeviceTracker prüfen",
         "info": "",
         "x": 1810,
-        "y": 460,
+        "y": 520,
         "wires": []
     },
     {
@@ -6512,8 +6495,8 @@
         "outputLocationType": "msg",
         "outputLocation": "payload",
         "outputResultsCount": 1,
-        "x": 350,
-        "y": 2200,
+        "x": 330,
+        "y": 2180,
         "wires": [
             [
                 "76f6c97f59e020a9"
@@ -7435,7 +7418,7 @@
             }
         ],
         "x": 1780,
-        "y": 140,
+        "y": 240,
         "wires": [
             [
                 "1bdd52ee74cd6023"
@@ -7489,7 +7472,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 2150,
-        "y": 140,
+        "y": 160,
         "wires": [
             [
                 "8556d367c4b1fac5"
@@ -8530,7 +8513,7 @@
         "z": "479e3443afedb613",
         "g": "c59bd969b0f7900c",
         "name": "SetzeMaxEinspeisung",
-        "func": "let level = msg.payload.ele;\nlet min = msg.payload.min;\nlet msg1;\n\nlet maxeinspeisung =150;\n\nlet grenze = flow.get(\"MaxEinspeisung\"); \n//node.warn(level);\n//node.warn(min);\n\n// Wenn nach Sonnenuntergang der SocLevel nur noch 10% weg ist vom eingestellten minimalen Ladezustand,\n// dann wird die Einspeisung auf den Wert maxeinspeisung begrenzt\n// damit wird die Last reduziert und ein kleiner Spannungsabfall erreicht\n// Routine kann gelöscht werden oder der Inject-Node kann deaktiviert werden.\n\nif (level < (min + 10)) {\n    msg1 = { payload: maxeinspeisung }; \n    flow.set (\"MaxEinspeisungSave\", grenze);\n    node.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Level: ${level} | < | SocMin: ${min} + 10 `})\n    return [msg1, null];\n} else {\n    node.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `Level: ${level} | > | SocMin: ${min} + 10 `})\n    return [null, null];\n}",
+        "func": "let level = msg.payload.ele;\nlet min = msg.payload.min;\nlet msg1;\n\nlet maxeinspeisung =130;\n\nlet grenze = flow.get(\"MaxEinspeisung\"); \n//node.warn(level);\n//node.warn(min);\n\n// Wenn nach Sonnenuntergang der SocLevel nur noch 15% weg ist vom eingestellten minimalen Ladezustand,\n// dann wird die Einspeisung auf den Wert maxeinspeisung begrenzt\n// damit wird die Last reduziert und ein kleiner Spannungsabfall erreicht\n// Routine kann gelöscht werden oder der Inject-Node kann deaktiviert werden.\n\nif (level < (min + 15)) {\n    msg1 = { payload: maxeinspeisung }; \n    flow.set (\"MaxEinspeisungSave\", grenze);\n    node.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Level: ${level} | < | SocMin: ${min} + 10 `})\n    return [msg1, null];\n} else {\n    node.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `Level: ${level} | > | SocMin: ${min} + 10 `})\n    return [null, null];\n}",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -9298,7 +9281,7 @@
         "type": "inject",
         "z": "479e3443afedb613",
         "g": "3f3b4e5f643e30d1",
-        "name": "18:30",
+        "name": "19:00",
         "props": [
             {
                 "p": "payload"
@@ -9309,7 +9292,7 @@
             }
         ],
         "repeat": "",
-        "crontab": "30 18 * * *",
+        "crontab": "0 19-20 * * *",
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
@@ -9430,7 +9413,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "c59bd969b0f7900c",
-        "name": "minVolSet",
+        "name": "minSoc",
         "func": "let minsoc = Number(msg.payload[0].state);\nmsg.topic = \"min\";\nmsg.payload = minsoc;\nnode.status({fill:\"green\",shape:\"ring\",text:\"Soc: \" +minsoc});\nreturn msg;",
         "outputs": 1,
         "timeout": 0,
@@ -9582,7 +9565,7 @@
         "checkall": "false",
         "repair": false,
         "outputs": 2,
-        "x": 1870,
+        "x": 1890,
         "y": 1460,
         "wires": [
             [
@@ -10049,7 +10032,7 @@
         "z": "479e3443afedb613",
         "g": "70cc64c2bba0fbd9",
         "name": "Formatieren",
-        "func": "// --- Quelle erkennen ---\nlet nodeName =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||       // viele HA/Fritzbox Nodes nutzen das\n    msg.data?.entity_id ||          // alternative Struktur\n    msg.friendly_name ||            // falls vorhanden\n    msg.name ||                     // häufig verwendetes Attribut\n    msg.payload?.name ||            // Name im Payload\n    \"unknown\";\n\n// --- aktuellen Status lesen ---\nlet current = msg.payload;     // \"home\" oder \"not_home\"\n\n// --- Icon bestimmen ---\nconst ICONS = {\n    \"home\": \"🏠\",\n    \"not_home\": \"🚶‍♂️💨\",\n    \"unknown\": \"❓\"\n};\n\nlet iconCurrent = ICONS[current] || ICONS.unknown;\n\n// --- bisherige Status aller Geräte laden ---\nlet states = context.get(\"states\") || {};\nlet previous = states[nodeName];\n\n// --- Icon für vorherigen Status (falls vorhanden) ---\nlet iconPrevious = ICONS[previous] || ICONS.unknown;\n\n// --- erster Durchlauf → Status speichern ---\nif (previous === undefined) {\n    states[nodeName] = current;\n    context.set(\"states\", states);\n    node.status({ text: `Init: ${nodeName} = ${iconCurrent} ${current}` });\n    return null;\n}\n\n// --- kein Statuswechsel → abbrechen ---\nif (current === previous) {\n    return null;\n}\n\n// --- Statuswechsel erkannt → neuen Status speichern ---\nstates[nodeName] = current;\ncontext.set(\"states\", states);\n\n// --- Zeitstempel erzeugen ---\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n    `${iconPrevious} → ${iconCurrent}\\n` +\n    `Status: ${previous} → ${current}\\n` +\n    `Zeit: ${timestamp}`;\n\n// Node-Status anzeigen\nnode.status({ text: `${nodeName}: ${iconPrevious} → ${iconCurrent}` });\nsetTimeout(() => node.status({}), 3000);\n\n// --- SIGNAL-NACHRICHT EINBAUEN ---\nconst messenger = flow.get(\"messenger\");\nconst msg_service = global.get(\"msgDienst\");\n\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message:\n                `📡 *Statuswechsel Gerät*\n🔧 NodeName: ${nodeName}\n${nachricht}`\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\n// --- falls Signal aus ist → normale Ausgabe ---\nmsg.statusChange = {\n    device: nodeName,\n    from: previous,\n    to: current,\n    icons: { from: iconPrevious, to: iconCurrent },\n    timestamp: timestamp\n};\n\nreturn msg;\n",
+        "func": "// --- Quelle erkennen ---\nlet nodeName =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||       // viele HA/Fritzbox Nodes nutzen das\n    msg.data?.entity_id ||          // alternative Struktur\n    msg.friendly_name ||            // falls vorhanden\n    msg.name ||                     // häufig verwendetes Attribut\n    msg.payload?.name ||            // Name im Payload\n    \"unknown\";\n\n// --- aktuellen Status lesen ---\nlet current = msg.payload;     // \"home\" oder \"not_home\"\n\n// --- Icon bestimmen ---\nconst ICONS = {\n    \"home\": \"🏠\",\n    \"not_home\": \"🚶‍♂️💨\",\n    \"unknown\": \"❓\"\n};\n\nlet iconCurrent = ICONS[current] || ICONS.unknown;\n\n// --- bisherige Status aller Geräte laden ---\nlet states = context.get(\"states\") || {};\nlet previous = states[nodeName];\n\n// --- Icon für vorherigen Status (falls vorhanden) ---\nlet iconPrevious = ICONS[previous] || ICONS.unknown;\n\n// --- erster Durchlauf → Status speichern ---\nif (previous === undefined) {\n    states[nodeName] = current;\n    context.set(\"states\", states);\n    node.status({ text: `Init: ${nodeName} = ${iconCurrent} ${current}` });\n//  return null;\n}\n\n// --- kein Statuswechsel → abbrechen ---\nif (current === previous) {\n    return null;\n}\n\n// --- Statuswechsel erkannt → neuen Status speichern ---\nstates[nodeName] = current;\ncontext.set(\"states\", states);\n\n// --- Zeitstempel erzeugen ---\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n    `${iconPrevious} → ${iconCurrent}\\n` +\n    `Status: ${previous} → ${current}\\n` +\n    `Zeit: ${timestamp}`;\n\n// Node-Status anzeigen\nnode.status({ text: `${nodeName}: ${iconPrevious} → ${iconCurrent}` });\nsetTimeout(() => node.status({}), 3000);\n\n// --- SIGNAL-NACHRICHT EINBAUEN ---\nconst messenger = flow.get(\"messenger\");\nconst msg_service = global.get(\"msgDienst\");\n\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message:\n                `📡 *Statuswechsel Gerät*\n🔧 NodeName: ${nodeName}\n${nachricht}`\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\n// --- falls Signal aus ist → normale Ausgabe ---\nmsg.statusChange = {\n    device: nodeName,\n    from: previous,\n    to: current,\n    icons: { from: iconPrevious, to: iconCurrent },\n    timestamp: timestamp\n};\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -10057,7 +10040,7 @@
         "finalize": "",
         "libs": [],
         "x": 2110,
-        "y": 420,
+        "y": 440,
         "wires": [
             [
                 "1333b1823dfb600e"
@@ -10091,10 +10074,311 @@
         "service": "send_message",
         "target": {},
         "mergecontext": "",
-        "x": 2400,
+        "x": 2440,
         "y": 420,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "63546f5330c76ed4",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Initialisierung",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "input_button.regler_init"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1750,
+        "y": 680,
+        "wires": [
+            [
+                "10a5947e7b0e4bba"
+            ]
+        ]
+    },
+    {
+        "id": "b445f55929b38209",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "70cc64c2bba0fbd9",
+        "name": "Hub ist Online WLAN",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "device_tracker.solarhub"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            }
+        ],
+        "x": 1800,
+        "y": 440,
+        "wires": [
+            [
+                "93030162d5c5a12c"
+            ]
+        ]
+    },
+    {
+        "id": "de0a32070dcc265a",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "70cc64c2bba0fbd9",
+        "name": "Wechselrichter",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "device_tracker.apsystems_2"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1820,
+        "y": 480,
+        "wires": [
+            [
+                "93030162d5c5a12c"
+            ]
+        ]
+    },
+    {
+        "id": "9dfb8cc7c0b01eb3",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "6e708c215cdbfc98",
+        "name": "Bypass wird hier signalisiert",
+        "info": "",
+        "x": 860,
+        "y": 3660,
+        "wires": []
+    },
+    {
+        "id": "cb0836157b467777",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "3b8b8c73f8c2f645",
+        "name": "Bypass geht AUS",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 2,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sf_bypass"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "0",
+        "ifStateType": "num",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 300,
+        "y": 3840,
+        "wires": [
+            [
+                "e6ea1346bc547904"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "f50ad5817518a6e2",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "3f3b4e5f643e30d1",
+        "name": "Sundown",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_setting"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1740,
+        "y": 1420,
+        "wires": [
+            [
+                "b41f6643294c0f56"
+            ]
         ]
     },
     {
@@ -10112,11 +10396,11 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "e2c6a63a6be9f165",
+        "id": "54b616b5cb5dd6c4",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-contrib-home-assistant-websocket": "0.80.2"
+            "node-red-contrib-home-assistant-websocket": "0.80.3"
         }
     }
 ]
