@@ -8,7 +8,7 @@ print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 // ==================== EINSTELLUNGEN ====================
 
 // MQTT-Topic deines BMS oder Gateways:
-let mqttTopic   = "MYAppKEY/#";
+let mqttTopic   = "MYAppKEY/#";      // dein API Key von Zendure
 
 // Signal (CallMeBot) Einstellungen:
 let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
