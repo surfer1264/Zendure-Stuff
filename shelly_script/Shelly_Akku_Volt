@@ -175,5 +175,5 @@ if (!useSignal) {
     }
 else {
     // Testnachricht zum Verifizieren:
-    sendSignalMessage("✅ Testnachricht vom Shelly erfolgreich gestartet");
+    sendSignalMessage("✅ AkkuWatchDog vom Shelly erfolgreich gestartet");
     }
