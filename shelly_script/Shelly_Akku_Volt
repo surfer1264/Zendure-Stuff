@@ -15,7 +15,7 @@ let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
 let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Signalsteuerung:
-let useSignal = true;        // Signal-Benachrichtigungen aktivieren/deaktivieren
+let useSignal = true;                // Signal-Benachrichtigungen aktivieren/deaktivieren
 
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
@@ -59,7 +59,7 @@ function simpleEncode(str) {
 // ---- Signal-Nachricht senden ----
 function sendSignalMessage(text) {
     if (!useSignal) {
-        print("📨 Signal deaktiviert – Nachricht NICHT gesendet: " + text);
+        // print("📨 Signal deaktiviert – Nachricht NICHT gesendet: " + text);
         return;
     }
 
