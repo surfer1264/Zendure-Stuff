@@ -26,7 +26,7 @@ let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen 
 // ==================== VARIABLEN ====================
 let Zen = 0;                         // Gesamt-Ladezustand
 let bat = 9;                         // Akku-Arbeitsmodus
-let modus = "OPEN ";                 // Textdarstellung Modus
+let modus = "UNKN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Zellen
 
 // Flags für Nachrichten
@@ -170,5 +170,10 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 
 print("📡 MQTT-Überwachung aktiv auf Topic:", mqttTopic);
 
-// Testnachricht zum Verifizieren:
-sendSignalMessage("✅ Testnachricht vom Shelly erfolgreich gestartet");
+if (!useSignal) {
+    print("📨 AkkuWatchDog ohne Signalisierung gestartet");
+    }
+else {
+    // Testnachricht zum Verifizieren:
+    sendSignalMessage("✅ Testnachricht vom Shelly erfolgreich gestartet");
+    }
