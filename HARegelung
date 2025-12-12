@@ -200,7 +200,6 @@
             "8126e6438578eab3",
             "f76cb1b980c3bdf2",
             "924fcf53aa0acbdc",
-            "5a619949abdec684",
             "b9d168c1fa77f22a"
         ],
         "x": 194,
@@ -212,7 +211,7 @@
         "id": "6e708c215cdbfc98",
         "type": "group",
         "z": "479e3443afedb613",
-        "name": "(5.2) Terminmodus: Steuerung, Prüfe Termine",
+        "name": "(5.2) Terminmodus: Steuerung, Prüfe Termine, Set Bypass",
         "style": {
             "label": true
         },
@@ -411,12 +410,13 @@
             "c59bd969b0f7900c",
             "caf11d3b06226cb7",
             "3f3b4e5f643e30d1",
-            "53919dc8bb6fc625"
+            "53919dc8bb6fc625",
+            "a0dda035b1c733c9"
         ],
         "x": 1628,
         "y": 613,
         "w": 1264,
-        "h": 1214
+        "h": 1354
     },
     {
         "id": "e504044664a57b4e",
@@ -479,22 +479,19 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0a438837db6c47d2",
-        "name": "(1.8) Forecast Tomorrow auswerten und Entladegrenze ggf. justieren",
+        "name": "(1.8.0) Forecast Tomorrow auswerten und Entladegrenze ggf. justieren",
         "style": {
             "label": true
         },
         "nodes": [
             "3ac00ebeea2b8c5c",
-            "939f0aa5e8a71cef",
-            "91a6dcfc70106acb",
             "fedc91bc44cbd434",
-            "62532c236f10aa32",
             "b41f6643294c0f56",
             "f50ad5817518a6e2"
         ],
         "x": 1654,
-        "y": 1379,
-        "w": 1212,
+        "y": 1339,
+        "w": 532,
         "h": 142
     },
     {
@@ -613,7 +610,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0a438837db6c47d2",
-        "name": "(1.4) Service: Setze SF-Entladegrenze nach Monat",
+        "name": "(1.4) Service: Setze Regler-Parameter nach Monat",
         "style": {
             "label": true,
             "color": "#777777",
@@ -624,11 +621,11 @@
             "10a5947e7b0e4bba",
             "ee79553e2bee0ac5",
             "fd9ffa19de35ef1b",
-            "40cd311eb34f8bec",
             "3a896cce6e31964b",
             "98eedc884b02a91c",
             "63546f5330c76ed4",
-            "bf7b6deb12c5705e"
+            "bf7b6deb12c5705e",
+            "40cd311eb34f8bec"
         ],
         "x": 1654,
         "y": 639,
@@ -823,7 +820,7 @@
             "f5fa4b9134667e5d"
         ],
         "x": 1654,
-        "y": 1019,
+        "y": 999,
         "w": 952,
         "h": 142
     },
@@ -848,7 +845,7 @@
             "1327d2c0642ca6cc"
         ],
         "x": 1654,
-        "y": 1199,
+        "y": 1159,
         "w": 1212,
         "h": 142
     },
@@ -1061,9 +1058,32 @@
             "86a77d9cd1ee7650"
         ],
         "x": 1654,
-        "y": 1559,
+        "y": 1699,
         "w": 1212,
         "h": 242
+    },
+    {
+        "id": "a0dda035b1c733c9",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "0a438837db6c47d2",
+        "name": "(1.8.1) Forecast Today auswerten und Entladegrenze ggf. justieren",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "c656f5c1fa199ddc",
+            "c745888225c961c2",
+            "8cb74e82316aefa5",
+            "0b72c54b88dee5ab",
+            "3123e1f270536855",
+            "b23663aebeeae77c",
+            "3144fc6da5617956"
+        ],
+        "x": 1654,
+        "y": 1499,
+        "w": 1212,
+        "h": 142
     },
     {
         "id": "1",
@@ -1883,7 +1903,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der angeschlossenen Akkus\nflow.set (\"Release\", \"5.0.3\"); //nur Info\n\n// In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to on or off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nflow.set (\"messenger\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinSoC\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecast\", \"on\");\n// PV Sensoren hier konfigurieren\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n\nreturn;\n\n",
+        "func": "// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n//Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// nur INFO\nglobal.set (\"Capacity\", 1920); //System Kapzität der angeschlossenen Akkus\nflow.set (\"Release\", \"5.1.0\"); //nur Info\n\n// In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung\n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1 \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in %\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// folgendes wird benötigt aus der Z-HA Integration\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für des Ladezustandes der Akkus des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den STatus des Hubs, Laden, Entladen, Standby\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Set to on or off\nflow.set (\"EinspeiseSensorExist\", \"on\");\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n//Whatsigram Messenger installiert?\n//Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nflow.set (\"messenger\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinSoC\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecast\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n\n // Bypasswert\n // Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf\n flow.set(\"ResetByPassWert\", 150)\n\nreturn;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -4472,7 +4492,7 @@
         "halt_if_type": "str",
         "halt_if_compare": "is",
         "entity_id": "input_number.regler_bypass",
-        "state_type": "num",
+        "state_type": "str",
         "blockInputOverrides": true,
         "outputProperties": [
             {
@@ -4575,7 +4595,7 @@
         "z": "479e3443afedb613",
         "g": "035acd6f5889242d",
         "name": "Setze Flow-Variable WertBypass",
-        "func": "let wrmax = flow.get (\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\"); \nflow.set(\"WertBypass\", Math.max(wrmin,Math.min(msg.payload,wrmax)));\nmsg.topic = \"WertBypass\";\nmsg.payload = flow.get(\"WertBypass\");\nreturn msg",
+        "func": "const wrmax = flow.get (\"WRLeistung\");\nconst wrmin = flow.get(\"WRminLeistung\"); \nlet grenze = msg.payload;\nflow.set(\"WertBypass\", Math.max(wrmin,Math.min(grenze,wrmax)));\nnode.status(`WertBypass=${grenze}`);\n//msg.topic = \"WertBypass\";\n//msg.payload = flow.get(\"WertBypass\");\nreturn msg",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -4585,9 +4605,7 @@
         "x": 530,
         "y": 3180,
         "wires": [
-            [
-                "5a619949abdec684"
-            ]
+            []
         ]
     },
     {
@@ -5596,7 +5614,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "Bypass-Handling",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\n//flow.set (\"MaxEinspeisung\", wertbypass);\nlet fehler;\nlet max = Math.min (wertbypass, wrmax);\n\n//letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( max, neu);\n//neu = wrmax;\nflow.set(\"Regelwert\", neu);\n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nnode.status({\n  text: `Regelwert: ${neu}`\n});\n\nif (debug) {\nnode.warn ({max, diff, vorher, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wertbypass = flow.get (\"WertBypass\"); //Begrenzung im Bypass\nlet fehler;\n// Justiere\nlet max = Math.min (wertbypass, wrmax);\n\n// letzte Einstellung des WR laden\nlet vorher = flow.get(\"Regelwert\");\nlet neu = vorher + 50;\nneu = Math.min( max, neu);\n// neu = wrmax;\nflow.set(\"Regelwert\", neu);\n// Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \n\nnode.status({\n  text: `Regelwert: ${neu}`\n});\n\nif (debug) {\nnode.warn ({max, diff, vorher, wertbypass, neu});\n}\n\nif (diff != 0)\n    {\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -5859,25 +5877,6 @@
                 "68c44e68d8a62aa4",
                 "240b1ea3948dee0a"
             ]
-        ]
-    },
-    {
-        "id": "5a619949abdec684",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "035acd6f5889242d",
-        "name": "Einspeisgrenze neu setzen",
-        "func": "//Wenn AUS, dann stelle alten Wert wieder her.\nlet grenze = flow.get (\"WertBypass\"); //max.Einspeisung\nnode.status({ text: 'Einspeisegrenze: ' + grenze })\nmsg.payload = {einspeisewert: grenze};\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 860,
-        "y": 3180,
-        "wires": [
-            []
         ]
     },
     {
@@ -7600,7 +7599,7 @@
         "z": "479e3443afedb613",
         "g": "72932590259c2eb2",
         "name": "Set Values",
-        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = flow.get (\"AbsoluteMinSoC\");\nlet sollwert = 0;\nlet maxeinspeisung = 400;\nlet wertbypass = 150;\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nlet config = flow.get(\"ConfigValues\");\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\n// flow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\nlet msg4 = { payload: wertbypass };\n\n// Drei Ausgänge zurückgeben\nreturn [msg1, msg2, msg3, msg4];\n",
+        "func": "// Monat aus der Nachricht lesen\nlet monat = msg.payload;\n\n// Standardwerte definieren (falls Monat ungültig)\nlet akku_min = flow.get (\"AbsoluteMinSoC\");\nlet sollwert = 0;\nlet maxeinspeisung = 400;\n// Wenn Bypass, dann MaxEinspeisung auf folgende nWert setzen\nlet wertbypass = flow.get(\"ResetByPassWert\");\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// Hole Konfigurationstabelle für jeden Monat\n// Format: Monat: { Akku_min, Sollwert, MaxEinspeisung }\nlet config = flow.get(\"ConfigValues\");\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Werte im Flow speichern\n// flow.set(\"Akku_min\", akku_min);\nflow.set(\"Sollwert\", sollwert);\nflow.set(\"MaxEinspeisung\", maxeinspeisung);\nflow.set (\"MaxEinspeisungSave\", maxeinspeisung);\n\n\n// Node-Status anzeigen\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Monat: ${monat} | Akku_Min: ${akku_min} | Soll: ${sollwert} | Max: ${maxeinspeisung}`\n});\n\n// Drei Nachrichten für die Ausgänge erstellen\nlet msg1 = { payload: { value: akku_min, sensor: socsensor } };\nlet msg2 = { payload: sollwert };\nlet msg3 = { payload: maxeinspeisung };\nlet msg4 = { payload: wertbypass };\n\n// Vier Ausgänge zurückgeben\nconst pvfc=flow.get (\"PVForecast\");\nif (pvfc === \"on\"){\n    return [null, msg2, msg3, msg4]\n    }\nelse {\n    return [msg1, msg2, msg3, msg4]\n    }    \n\n\n\n",
         "outputs": 4,
         "timeout": 0,
         "noerr": 0,
@@ -7652,40 +7651,6 @@
             [
                 "1bdd52ee74cd6023"
             ]
-        ]
-    },
-    {
-        "id": "40cd311eb34f8bec",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "72932590259c2eb2",
-        "name": "Setze MinVol",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{\"value\": \"{{ payload.value }}\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "blockInputOverrides": false,
-        "domain": "number",
-        "service": "set_value",
-        "target": {
-            "entity_id": "number.dtu_leistungsbegrenzung"
-        },
-        "x": 2490,
-        "y": 680,
-        "wires": [
-            []
         ]
     },
     {
@@ -8074,7 +8039,7 @@
             }
         ],
         "x": 1770,
-        "y": 1120,
+        "y": 1100,
         "wires": [
             [
                 "f5fa4b9134667e5d"
@@ -8095,7 +8060,7 @@
         "finalize": "",
         "libs": [],
         "x": 2260,
-        "y": 1080,
+        "y": 1060,
         "wires": [
             [
                 "f251eebcf0f8ca69"
@@ -8125,7 +8090,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1780,
-        "y": 1060,
+        "y": 1040,
         "wires": [
             [
                 "f5fa4b9134667e5d"
@@ -8159,7 +8124,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 2510,
-        "y": 1080,
+        "y": 1060,
         "wires": [
             []
         ]
@@ -8501,7 +8466,7 @@
         "z": "479e3443afedb613",
         "g": "c59bd969b0f7900c",
         "name": "SetzeMaxEinspeisung",
-        "func": "let level = msg.payload.ele;\nlet min = msg.payload.min;\nlet msg1;\n\nlet maxeinspeisung =130;\n\nlet grenze = flow.get(\"MaxEinspeisung\"); \n//node.warn(level);\n//node.warn(min);\n\n// Wenn nach Sonnenuntergang der SocLevel nur noch 15% weg ist vom eingestellten minimalen Ladezustand,\n// dann wird die Einspeisung auf den Wert maxeinspeisung begrenzt\n// damit wird die Last reduziert und ein kleiner Spannungsabfall erreicht\n// Routine kann gelöscht werden oder der Inject-Node kann deaktiviert werden.\n\nif (level < (min + 15)) {\n    msg1 = { payload: maxeinspeisung }; \n    flow.set (\"MaxEinspeisungSave\", grenze);\n    node.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Level: ${level} | < | SocMin: ${min} + 10 `})\n    return [msg1, null];\n} else {\n    node.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `Level: ${level} | > | SocMin: ${min} + 10 `})\n    return [null, null];\n}",
+        "func": "let level = msg.payload.ele;\nlet min = msg.payload.min;\nlet msg1;\n\nlet maxeinspeisung =150;\n\nlet grenze = flow.get(\"MaxEinspeisung\"); \n\n// Wenn nach Sonnenuntergang der SocLevel nur noch 15% weg ist vom eingestellten minimalen Ladezustand,\n// dann wird die Einspeisung auf den Wert maxeinspeisung begrenzt\n// damit wird die Last reduziert und ein kleiner Spannungsabfall erreicht\n// Routine kann gelöscht werden oder der Inject-Node kann deaktiviert werden.\n\nif (level < (min + 15)) {\n    msg1 = { payload: maxeinspeisung }; \n    flow.set (\"MaxEinspeisungSave\", grenze);\n    node.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `Level: ${level} | < | SocMin: ${min} + 10 `})\n    return [msg1, null];\n} else {\n    node.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `Level: ${level} | > | SocMin: ${min} + 10 `})\n    return [null, null];\n}",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -8509,7 +8474,7 @@
         "finalize": "",
         "libs": [],
         "x": 2660,
-        "y": 1300,
+        "y": 1260,
         "wires": [
             [
                 "1fdeb8e2804338d9"
@@ -8544,7 +8509,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 2760,
-        "y": 1240,
+        "y": 1200,
         "wires": [
             []
         ]
@@ -8572,7 +8537,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 2490,
-        "y": 1300,
+        "y": 1260,
         "wires": [
             [
                 "7b996172714a688c"
@@ -8602,7 +8567,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1810,
-        "y": 1280,
+        "y": 1240,
         "wires": [
             [
                 "15c60a8cea285214"
@@ -8647,7 +8612,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 2030,
-        "y": 1280,
+        "y": 1240,
         "wires": [
             [
                 "f27d62e96ecd8f9c",
@@ -8709,7 +8674,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2030,
-        "y": 1080,
+        "y": 1060,
         "wires": [
             [
                 "bb94db99200bab27"
@@ -8739,7 +8704,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2200,
-        "y": 1240,
+        "y": 1200,
         "wires": [
             [
                 "f7f1469c0b78556d"
@@ -8760,7 +8725,7 @@
         "finalize": "",
         "libs": [],
         "x": 2360,
-        "y": 1240,
+        "y": 1200,
         "wires": [
             [
                 "9d729c1d1740d366"
@@ -9287,31 +9252,10 @@
         "payload": "",
         "payloadType": "date",
         "x": 1750,
-        "y": 1480,
+        "y": 1440,
         "wires": [
             [
                 "b41f6643294c0f56"
-            ]
-        ]
-    },
-    {
-        "id": "939f0aa5e8a71cef",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "3f3b4e5f643e30d1",
-        "name": "Neue DoC ermitteln",
-        "func": "const pvfc=flow.get (\"PVForecast\");\nconst now = new Date();\nconst monat = now.getMonth() + 1;\n\n// Konfigurationstabelle für jeden Monat\nlet config = flow.get(\"ConfigValues\");\n\n// Variablen vor der Verwendung deklarieren\nlet akku_min =  flow.get(\"AbsoluteMinSoC\");\nlet sollwert = flow.get(\"Sollwert\");\nlet maxeinspeisung =  flow.get(\"MaxEinspeisung\");\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config && config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// PV Forecast in Wh\nlet tomorrow = Number(msg.payload) * 1000;\n\n// Eingestellte Entladegrenze\n// const socmin = Number(msg.payload.min);\nconst socmin = akku_min;\n\n// Absolut Minimum Entladegrenze\nconst socminmin = flow.get(\"AbsoluteMinSoC\");\n\n// aktuell konfigurierte Kapazität der Akkus\nconst capacity = global.get(\"Capacity\");\n\n// wie tief ist die eingestellte (gewünschte) Depth Of Charge des Akkus\nlet netto = Math.round(capacity * (100 - socmin) / 100);\n\nlet doc;\nlet newsocmin;\n\n// hier wird FC aus Erfahrungswerten justiert\ntomorrow = Math.round(tomorrow * 1.7);\n\n// Wenn der aktuelle FC größer ist als die aktuelle DoC ...\nif (tomorrow > netto) {\n    doc = Math.round(Math.min(tomorrow / capacity * 100, 100));\n    newsocmin = Math.min(Math.max(100 - doc, socminmin), akku_min);\n} else {\n    // keine Änderung der Entladegrenze\n    newsocmin = socmin;\n}\n\nnode.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `FC: ${tomorrow} | SocMin: ${socmin} | Netto: ${netto} | NewSocMin: ${newsocmin}`\n});\n\nif (pvfc === \"on\"){\n    msg = { payload: { value: newsocmin, sensor: socsensor } };\n    return msg}\nreturn;\n\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2530,
-        "y": 1480,
-        "wires": [
-            [
-                "91a6dcfc70106acb"
             ]
         ]
     },
@@ -9329,7 +9273,7 @@
         "finalize": "",
         "libs": [],
         "x": 2360,
-        "y": 1300,
+        "y": 1260,
         "wires": [
             [
                 "9d729c1d1740d366"
@@ -9359,45 +9303,11 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2200,
-        "y": 1300,
+        "y": 1260,
         "wires": [
             [
                 "9c6d4b41b2750d05"
             ]
-        ]
-    },
-    {
-        "id": "91a6dcfc70106acb",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "3f3b4e5f643e30d1",
-        "name": "Setze MinVol",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "number.set_value",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{\"value\": \"{{ payload.value }}\"}",
-        "dataType": "json",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "blockInputOverrides": false,
-        "domain": "number",
-        "service": "set_value",
-        "target": {
-            "entity_id": "number.dtu_leistungsbegrenzung"
-        },
-        "x": 2770,
-        "y": 1420,
-        "wires": [
-            []
         ]
     },
     {
@@ -9423,31 +9333,10 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2070,
-        "y": 1480,
+        "y": 1440,
         "wires": [
             [
-                "62532c236f10aa32"
-            ]
-        ]
-    },
-    {
-        "id": "62532c236f10aa32",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "3f3b4e5f643e30d1",
-        "name": "PV Tomorrow",
-        "func": "let tomorrow = Number(msg.payload[0].state);\nmsg.topic = \"fc\";\nmsg.payload = tomorrow;\nnode.status({fill:\"green\",shape:\"ring\",text:\"PV FC day: \" +tomorrow});\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2300,
-        "y": 1480,
-        "wires": [
-            [
-                "939f0aa5e8a71cef"
+                "0b72c54b88dee5ab"
             ]
         ]
     },
@@ -9473,7 +9362,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1890,
-        "y": 1480,
+        "y": 1440,
         "wires": [
             [
                 "fedc91bc44cbd434"
@@ -9639,7 +9528,7 @@
             }
         ],
         "x": 1750,
-        "y": 1640,
+        "y": 1780,
         "wires": [
             [
                 "395871e478bb0ab9"
@@ -9699,7 +9588,7 @@
             }
         ],
         "x": 1750,
-        "y": 1700,
+        "y": 1840,
         "wires": [
             [
                 "395871e478bb0ab9"
@@ -9730,7 +9619,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 1950,
-        "y": 1680,
+        "y": 1820,
         "wires": [
             [
                 "399f8fa0c8c1bdaa"
@@ -9751,7 +9640,7 @@
         "finalize": "",
         "libs": [],
         "x": 2220,
-        "y": 1680,
+        "y": 1820,
         "wires": [
             [
                 "e4728aefa51cf817",
@@ -9767,7 +9656,7 @@
         "name": "Sensornamen anpassen",
         "info": "",
         "x": 1790,
-        "y": 1600,
+        "y": 1740,
         "wires": []
     },
     {
@@ -9785,7 +9674,7 @@
         "finalize": "",
         "libs": [],
         "x": 2540,
-        "y": 1680,
+        "y": 1820,
         "wires": [
             [
                 "b51c8956498c64eb"
@@ -9819,7 +9708,7 @@
         "domain": "input_number",
         "service": "set_value",
         "x": 2760,
-        "y": 1660,
+        "y": 1800,
         "wires": [
             []
         ]
@@ -9847,7 +9736,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1970,
-        "y": 1600,
+        "y": 1740,
         "wires": [
             [
                 "399f8fa0c8c1bdaa"
@@ -9869,7 +9758,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 2500,
-        "y": 1600,
+        "y": 1740,
         "wires": []
     },
     {
@@ -9924,7 +9813,7 @@
             }
         ],
         "x": 1740,
-        "y": 1760,
+        "y": 1900,
         "wires": [
             [
                 "395871e478bb0ab9"
@@ -10280,7 +10169,7 @@
             }
         ],
         "x": 1740,
-        "y": 1420,
+        "y": 1380,
         "wires": [
             [
                 "b41f6643294c0f56"
@@ -10395,6 +10284,265 @@
         ]
     },
     {
+        "id": "c656f5c1fa199ddc",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "Neue MinVol ermitteln",
+        "func": "const pvfc=flow.get (\"PVForecast\");\nconst now = new Date();\nconst monat = now.getMonth() + 1;\n\n// Konfigurationstabelle für jeden Monat\nlet config = flow.get(\"ConfigValues\");\n\n// Variablen vor der Verwendung deklarieren\nlet akku_min =  flow.get(\"AbsoluteMinSoC\");\nlet sollwert = flow.get(\"Sollwert\");\nlet maxeinspeisung =  flow.get(\"MaxEinspeisung\");\n\n// Wenn der Monat gültig ist, Werte übernehmen\nif (config && config[monat]) {\n    ({ akku_min, sollwert, maxeinspeisung } = config[monat]);\n} else {\n    node.warn(`Ungültiger Monat: ${monat} — Standardwerte werden verwendet`);\n}\n\n// Sensorname aus dem Flow-Speicher holen\nlet socsensor = flow.get(\"zHAMinSoCSensor\");\n\n// PV Forecast in Wh\nlet fc = Number(msg.payload) * 1000;\n\n// Eingestellte Entladegrenze\n// const socmin = Number(msg.payload.min);\nconst socmin = akku_min;\n\n// Absolut Minimum Entladegrenze\nconst socminmin = flow.get(\"AbsoluteMinSoC\");\n\n// aktuell konfigurierte Kapazität der Akkus\nconst capacity = global.get(\"Capacity\");\n\n// wie tief ist die eingestellte (gewünschte) Depth Of Charge des Akkus\nlet netto = Math.round(capacity * (100 - socmin) / 100);\n\nlet doc;\nlet newsocmin;\n\n// hier wird FC aus Erfahrungswerten justiert\nfc = Math.round(fc * 1.7);\n\n// Wenn der aktuelle FC größer ist als die aktuelle DoC ...\nif (fc > netto) {\n    doc = Math.round(Math.min(fc / capacity * 100, 100));\n    newsocmin = Math.min(Math.max(100 - doc, socminmin), akku_min);\n} else {\n    // keine Änderung der Entladegrenze\n    newsocmin = socmin;\n}\n\nnode.status({\n    fill: \"yellow\",\n    shape: \"dot\",\n    text: `FC: ${fc} | SocMin: ${socmin} | Netto: ${netto} | NewSocMin: ${newsocmin}`\n});\n\nif (pvfc === \"on\"){\n    msg = { payload: { value: newsocmin, sensor: socsensor } };\n    return msg}\nreturn;\n\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2540,
+        "y": 1600,
+        "wires": [
+            [
+                "c745888225c961c2"
+            ]
+        ]
+    },
+    {
+        "id": "c745888225c961c2",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "Setze MinVol",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload.value }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "number.dtu_leistungsbegrenzung"
+        },
+        "x": 2770,
+        "y": 1540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8cb74e82316aefa5",
+        "type": "ha-get-entities",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "Get TodayRemain",
+        "server": "285afb99.5208c4",
+        "version": 1,
+        "rules": [
+            {
+                "condition": "state_object",
+                "property": "entity_id",
+                "logic": "is",
+                "value": "PV_today_remaining",
+                "valueType": "flow"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 2070,
+        "y": 1600,
+        "wires": [
+            [
+                "0b72c54b88dee5ab"
+            ]
+        ]
+    },
+    {
+        "id": "0b72c54b88dee5ab",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "PV Today Remain",
+        "func": "let today = Number(msg.payload[0].state);\nmsg.topic = \"fc\";\nmsg.payload = today;\nnode.status({fill:\"green\",shape:\"ring\",text:\"PV FC day: \" +today});\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2310,
+        "y": 1600,
+        "wires": [
+            [
+                "c656f5c1fa199ddc"
+            ]
+        ]
+    },
+    {
+        "id": "3123e1f270536855",
+        "type": "switch",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "",
+        "property": "PVForecast",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "on",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "false",
+        "repair": false,
+        "outputs": 2,
+        "x": 1890,
+        "y": 1600,
+        "wires": [
+            [
+                "8cb74e82316aefa5"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "b23663aebeeae77c",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "SunRise +45",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "sensor.sun_next_rising"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "45",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1750,
+        "y": 1600,
+        "wires": [
+            [
+                "3123e1f270536855"
+            ]
+        ]
+    },
+    {
+        "id": "3144fc6da5617956",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "a0dda035b1c733c9",
+        "name": "Test",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1750,
+        "y": 1540,
+        "wires": [
+            [
+                "3123e1f270536855"
+            ]
+        ]
+    },
+    {
+        "id": "40cd311eb34f8bec",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "72932590259c2eb2",
+        "name": "Setze MinVol",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "number.set_value",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [
+            "{{ payload.sensor }}"
+        ],
+        "labelId": [],
+        "data": "{\"value\": \"{{ payload.value }}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "blockInputOverrides": false,
+        "domain": "number",
+        "service": "set_value",
+        "target": {
+            "entity_id": "number.dtu_leistungsbegrenzung"
+        },
+        "x": 2490,
+        "y": 680,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -10409,7 +10557,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "d1c34c5f2009e526",
+        "id": "d001c6e3ca629a3e",
         "type": "global-config",
         "env": [],
         "modules": {
