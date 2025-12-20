@@ -1,0 +1,33 @@
+- trigger:
+    - platform: state
+      entity_id: sensor.shellypro3em_power_actual_total
+      for:
+        seconds: 3
+
+  sensor:
+    - name: "P1-Sensor Virtuell"
+      unique_id: shellypro3em_p1_virtual_power
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% if trigger.from_state is none or trigger.to_state is none %}
+          0
+        {% else %}
+          {% set nullbereich = 10 %}
+          {% set sprungschwelle = 30 %}
+
+          {% set alt = trigger.from_state.state | float(0) %}
+          {% set neu = trigger.to_state.state | float(0) %}
+          {% set diff = neu - alt %}
+          {% set aktuell = this.state | float(0) %}
+
+          {# --- Logik --- #}
+          {% if -nullbereich < neu < nullbereich %}
+            0
+          {% elif diff | abs > sprungschwelle %}
+            {{ neu }}
+          {% else %}
+            {{ aktuell }}
+          {% endif %}
+        {% endif %}
