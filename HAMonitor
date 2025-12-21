@@ -211,7 +211,8 @@
             "358f5a7d017e388c",
             "165bdf82c6ad2fe2",
             "171868be30064c07",
-            "106617b6a14f601e"
+            "106617b6a14f601e",
+            "bb147b70120f61d6"
         ],
         "x": 54,
         "y": 859,
@@ -298,7 +299,7 @@
         "x": 114,
         "y": 1559,
         "w": 1332,
-        "h": 542
+        "h": 502
     },
     {
         "id": "ece1b5e242f568da",
@@ -1406,7 +1407,7 @@
         "type": "server-state-changed",
         "z": "3d2a81e3c1ae2c8c",
         "g": "48fbdb692109f9bf",
-        "name": "",
+        "name": "Sonnenaufgang",
         "server": "285afb99.5208c4",
         "version": 6,
         "outputs": 1,
@@ -1436,7 +1437,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -1452,7 +1453,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 250,
+        "x": 180,
         "y": 700,
         "wires": [
             [
@@ -2075,16 +2076,19 @@
         "z": "3d2a81e3c1ae2c8c",
         "g": "7d21c588e9ce2984",
         "name": "Baue Ausgabe in Datei",
-        "func": "// Aktuelles Datum erzeugen\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload holen\n//let { minVol1, minVol2, electriclevel, letzteKalibrierung, ladung_erreicht } = msg.payload;\nlet { minVol1, electriclevel, letzteKalibrierung, ladung_erreicht } = msg.payload;\n\n// Zahlen mit deutschem Dezimaltrennzeichen formatieren\nminVol1 = Number(minVol1).toLocaleString('de-DE');\n//minVol2 = Number(minVol2).toLocaleString('de-DE');\n\n// Boolean für CSV in String umwandeln\nlet ladung1 = (ladung_erreicht === true);\n\n// CSV-Zeile erstellen (Semikolon als Trenner)\n//const csvLine = `${datum};${minVol1};${minVol2};${electriclevel};${letzteKalibrierung};${ladung1}\\n`;\nconst csvLine = `${datum};${minVol1};;${electriclevel};${letzteKalibrierung};${ladung1}\\n`;\n\n// Payload mit der CSV-Zeile zurückgeben\nnode.status({fill:\"green\",shape:\"ring\",text:\"Send \" +datum});\nmsg.payload = csvLine;\nreturn msg;",
-        "outputs": 1,
+        "func": "// Aktuelles Datum erzeugen\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${year}/${month}/${day}`;\n\n// Entitäten aus der Payload holen\nlet { minVol1, minVol2, electriclevel, letzteKalibrierung, ladung_erreicht } = msg.payload;\n//let { minVol1, electriclevel, letzteKalibrierung, ladung_erreicht } = msg.payload;\n\n// Zahlen mit deutschem Dezimaltrennzeichen formatieren\nminVol1 = Number(minVol1).toLocaleString('de-DE');\nminVol2 = Number(minVol2).toLocaleString('de-DE');\n\n// Boolean für CSV in String umwandeln\nlet ladung1 = (ladung_erreicht === true);\n\n// CSV-Zeile erstellen (Semikolon als Trenner)\nconst csvLine = `${datum};${minVol1};${minVol2};${electriclevel};${letzteKalibrierung}\\n`;\n//const csvLine = `${datum};${minVol1};${minVol2};${electriclevel};${letzteKalibrierung}\\n`;\n\n// Payload mit der CSV-Zeile zurückgeben\nnode.status({ fill: \"green\", shape: \"ring\", text: \"Send \" + datum });\n\nmsg.payload = csvLine;\n\nif (electriclevel === 100) {\n    return [msg, null];\n} else {\n    return [null, msg];\n}\n",
+        "outputs": 2,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
         "x": 1000,
-        "y": 960,
+        "y": 940,
         "wires": [
+            [
+                "bb147b70120f61d6"
+            ],
             [
                 "7111c0f7e731715d"
             ]
@@ -2102,7 +2106,7 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 1230,
+        "x": 1330,
         "y": 960,
         "wires": [
             []
@@ -2164,6 +2168,7 @@
         "id": "27f5a9de8f7c7fdc",
         "type": "function",
         "z": "3d2a81e3c1ae2c8c",
+        "d": true,
         "g": "7d21c588e9ce2984",
         "name": "Nachricht formatieren",
         "func": "msg.payload = `Systemstatus:\\n\\n` +\n              `- SOC Level: ${msg.payload.electriclevel}% \\n` +\n              `- Minimale Zellspannung1: ${msg.payload.minVol1}V \\n` +\n              `- Minimale Zellspannung2: ${msg.payload.minVol2}V \\n` +\n              `- Letzte Kalibrierung: vor ${msg.payload.letzteKalibrierung} Tag(en) \\n` +\n              `- 100% Ladung erreicht: ${msg.payload.ladung_erreicht}`;\nlet mailsubject = flow.get (\"mailsubject\");\n//msg.mailsubject = mailsubject;\nmsg.topic = mailsubject;\n//msg.topic = \"Systemstatus\"; // Betreff der E-Mail\nreturn msg;",
@@ -3152,7 +3157,7 @@
                 "t": "set",
                 "p": "minVol_SOLL",
                 "pt": "flow",
-                "to": "3.05",
+                "to": "3.03",
                 "tot": "num"
             }
         ],
@@ -3161,7 +3166,7 @@
         "from": "",
         "to": "",
         "reg": false,
-        "x": 450,
+        "x": 470,
         "y": 80,
         "wires": [
             []
@@ -3209,7 +3214,7 @@
                 "t": "set",
                 "p": "check_kalibrierung",
                 "pt": "flow",
-                "to": "20",
+                "to": "30",
                 "tot": "num"
             }
         ],
@@ -3401,7 +3406,7 @@
         "finalize": "",
         "libs": [],
         "x": 1070,
-        "y": 1780,
+        "y": 1800,
         "wires": [
             [
                 "ad69641832e6ef86"
@@ -3414,14 +3419,14 @@
         "z": "3d2a81e3c1ae2c8c",
         "g": "afc07ea79271275f",
         "name": "In Datei schreiben",
-        "filename": "/config/akku.csv",
+        "filename": "/config/akku1.csv",
         "filenameType": "str",
         "appendNewline": false,
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
         "x": 1330,
-        "y": 1780,
+        "y": 1800,
         "wires": [
             []
         ],
@@ -3857,7 +3862,7 @@
         "z": "3d2a81e3c1ae2c8c",
         "g": "afc07ea79271275f",
         "name": "In Datei schreiben",
-        "filename": "/config/akku.csv",
+        "filename": "/config/akku2.csv",
         "filenameType": "str",
         "appendNewline": false,
         "createDir": true,
@@ -4004,7 +4009,7 @@
         "type": "server-state-changed",
         "z": "3d2a81e3c1ae2c8c",
         "g": "afc07ea79271275f",
-        "name": "",
+        "name": "SunRise +60Min",
         "server": "285afb99.5208c4",
         "version": 6,
         "outputs": 1,
@@ -4034,7 +4039,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -4050,8 +4055,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 290,
-        "y": 2000,
+        "x": 220,
+        "y": 1960,
         "wires": [
             [
                 "b5e33ac617cea56b"
@@ -4063,7 +4068,7 @@
         "type": "server-state-changed",
         "z": "3d2a81e3c1ae2c8c",
         "g": "afc07ea79271275f",
-        "name": "",
+        "name": "ELectricLevel =100",
         "server": "285afb99.5208c4",
         "version": 6,
         "outputs": 2,
@@ -4093,7 +4098,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -4109,8 +4114,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 310,
-        "y": 2060,
+        "x": 230,
+        "y": 2020,
         "wires": [
             [
                 "b5e33ac617cea56b"
@@ -4328,6 +4333,25 @@
         ]
     },
     {
+        "id": "bb147b70120f61d6",
+        "type": "file",
+        "z": "3d2a81e3c1ae2c8c",
+        "g": "7d21c588e9ce2984",
+        "name": "In Datei schreiben",
+        "filename": "/config/zendure100.csv",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": true,
+        "overwriteFile": "false",
+        "encoding": "none",
+        "x": 1330,
+        "y": 920,
+        "wires": [
+            []
+        ],
+        "info": "/addon_configs/a0d7b954_nodered/zendure.csv"
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -4342,12 +4366,12 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "ada7ac8eb5254e73",
+        "id": "4e6f59b3ed097cce",
         "type": "global-config",
         "env": [],
         "modules": {
-            "node-red-contrib-home-assistant-websocket": "0.80.1",
-            "node-red-node-email": "5.0.0"
+            "node-red-contrib-home-assistant-websocket": "0.80.3",
+            "node-red-node-email": "5.0.1"
         }
     }
 ]
