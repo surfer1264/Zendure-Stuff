@@ -6,12 +6,13 @@
 ## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
 Hier findet Ihr
 **Beschreibungen:**
-* [Monitoring des Zendure Hubs aufbauen](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
-  * [das Node-Red-Projekt](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
+* [Monitoring / Hub Zendure Integration](https://github.com/surfer1264/Zendure-Stuff/wiki/AB2000-Überwachung-mit-HA-und-NodeRed)
+* [Zellspannungen mit HA überwachen](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
+* [Zellspannungen mit Shelly überwachen](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
 * [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-zur-Nulleinspeisung-Nullbezug)
-* [mit Shelly ein Monitoring aufbauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
-* [Zendure-HA Installation](https://github.com/surfer1264/Zendure-Stuff/wiki/Install-Zendure-HA)
-* [diverse Quellen](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
+* [Z-HA Grundlagen](https://github.com/surfer1264/Zendure-Stuff/wiki/Zendure-HA-Basics)
+* [Quellen rund um das Thema und HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
+
 
   
 ## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
