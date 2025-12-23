@@ -449,7 +449,8 @@
             "19c87395473efe5b",
             "63174e4704cb40ac",
             "01c5ad8c136ab28c",
-            "1f6df3bd52dc3303"
+            "1f6df3bd52dc3303",
+            "c4d375f88457bc5a"
         ],
         "x": 194,
         "y": 1799,
@@ -749,7 +750,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Wechselrichter Grenze auf MAX setzen",
+        "name": "Wechselrichter Grenze auf MAX setzen / für Hyper deaktivieren",
         "style": {
             "label": true
         },
@@ -769,7 +770,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Initialisiere die WR mit 80W (Typ1 und 2)",
+        "name": "Initialisiere die WR Typ1 und 2 mit 80W (Typ1 und 2)",
         "style": {
             "label": true
         },
@@ -787,7 +788,7 @@
         "type": "group",
         "z": "479e3443afedb613",
         "g": "0ded3f6e0d781a4e",
-        "name": "Initialisiere Man-Leist.steuerung mit 80W",
+        "name": "Typ4: Initialisiere Man-Leist.steuerung mit 80W",
         "style": {
             "label": true
         },
@@ -1875,7 +1876,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// nur INFO\nflow.set(\"Release\", \"5.2.1\"); //nur Info\n\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \n// für Hyper, SF800 und Co nicht relevant, Ignore\nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// mein Akku-Stack\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack);\n// Folgende Variable wird in Routine (1.2) re-initialisiert je nach Anzahl erkannter Akkus\nglobal.set (\"Capacity\", accustack[1]); //Initialisierung Default mit Akku1\n\n// WICHTIG!!\n// In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// folgendes wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und tauscht aus\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als NAchrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nflow.set (\"messenger\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinSoC\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecast\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\nglobal.set (\"PV_factor\", 1.45); //Justieren des Forecast um Faktor x (muss man ein wenig mit spielen)\n\n // Bypasswert\n // Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n // Wert im Dashboard änderbar\n flow.set(\"ResetByPassWert\", 150);\n\nreturn msg;\n\n",
+        "func": "// nur INFO\nflow.set(\"Release\", \"5.2.1\"); //nur Info\n\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \n// für Hyper, SF800 und Co nicht relevant, Ignore\nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //SolarflowMax Output der Z-HA Integratiom, hier vorgeben\n\n// mein Akku-Stack\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack);\n// Folgende Variable wird in Routine (1.2) re-initialisiert je nach Anzahl erkannter Akkus\nglobal.set (\"Capacity\", accustack[1]); //Initialisierung Default mit Akku1\n\n// WICHTIG!!\n// In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// folgendes wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und tauscht aus\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als NAchrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nflow.set (\"messenger\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\nconst config = {\n    1:  { akku_min: 40, sollwert: 10, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 10, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 10, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// Minimaleinstellung der Entladegrenze der Akkus\nflow.set (\"AbsoluteMinSoC\", 13);\n\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecast\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration\nflow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\nflow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\nglobal.set (\"PV_factor\", 1.45); //Justieren des Forecast um Faktor x (muss man ein wenig mit spielen)\n\n // Bypasswert\n // Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n // Wert im Dashboard änderbar\n flow.set(\"ResetByPassWert\", 150);\n\nreturn;\n//return msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -8280,12 +8281,13 @@
         "id": "63174e4704cb40ac",
         "type": "link in",
         "z": "479e3443afedb613",
+        "d": true,
         "g": "33fc19028d8c92bf",
         "name": "link in 17",
         "links": [
             "f5ac4859d53b8c34"
         ],
-        "x": 365,
+        "x": 345,
         "y": 1840,
         "wires": [
             [
@@ -8850,7 +8852,6 @@
         "id": "1f6df3bd52dc3303",
         "type": "function",
         "z": "479e3443afedb613",
-        "d": true,
         "g": "33fc19028d8c92bf",
         "name": "Debugzeile bauen V2",
         "func": "// --- Kontextdaten lesen ---\nlet wrtyp = flow.get(\"WRTyp\");\nlet wrher = flow.get(\"WRHersteller\");\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get(\"WRAktiv\");\nlet release = flow.get(\"Release\");\nlet wert1 = flow.get(\"Wert1\");\nlet wert2 = flow.get(\"Wert2\");\nlet wert3 = flow.get(\"Wert3\");\n//let isostring = new Date().toISOString();\n//let timestamp = new Date(isostring);\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\nlet logType = isError ? \"Error\" : \"Init\";\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"System\";\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"Initialisierung erfolgreich\";\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType};` +\n    `Release=${release};WRAusgang=${wrtyp};WRArt=${wrher};WRMax=${wrmax};WRMin=${wrmin};` +\n    `WRAktiv=${wr_aktiv};ReglerAktiv=${regler_aktiv};TerminMod=${termin_on};MaxEinspeisung=${max_einspeisung};` +\n    `Sollwert=${soll};Wert1Time=${wert1};Wert2Time=${wert2};Wert3Time=${wert3};${message}\\n`;\n\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nreturn msg;",
@@ -10591,6 +10592,17 @@
         "wires": []
     },
     {
+        "id": "c4d375f88457bc5a",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "33fc19028d8c92bf",
+        "name": "Activate/Deactivate here",
+        "info": "",
+        "x": 490,
+        "y": 1840,
+        "wires": []
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -10605,7 +10617,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "aefd123719f6e28e",
+        "id": "98db092e10d09d2e",
         "type": "global-config",
         "env": [],
         "modules": {
