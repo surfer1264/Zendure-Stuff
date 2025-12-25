@@ -92,7 +92,7 @@ views:
             name: Einspeisung von PV
             max: 800
           - type: gauge
-            entity: sensor.batterie_out_in
+            entity: sensor.batterie_out_in_2
             min: -800
             max: 800
             needle: true
@@ -232,6 +232,17 @@ views:
         show_icon: true
         entity: input_select.regler_typ
         icon: mdi:gauge
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
+        entity: input_boolean.batterie_kritisch
+        name: AKKU LOW
+        color: red
+        visibility:
+          - condition: state
+            entity: input_boolean.batterie_kritisch
+            state: 'on'
       - type: entity
         show_name: true
         show_state: true
