@@ -618,7 +618,8 @@
             "1333b1823dfb600e",
             "b445f55929b38209",
             "de0a32070dcc265a",
-            "e1c92e2ed1373bdf"
+            "e1c92e2ed1373bdf",
+            "6279a738e536bd7e"
         ],
         "x": 1654,
         "y": 299,
@@ -4368,7 +4369,7 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "utf8",
-        "x": 3440,
+        "x": 3520,
         "y": 2140,
         "wires": [
             []
@@ -9049,7 +9050,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "b5ff1f69caf7f3fb",
-        "name": "Messenger",
+        "name": "Fehlernachricht (generisch)",
         "func": "// --- Fehlerdaten aus dem Catch-Node lesen ---\nlet error = msg.error || {};\nlet source = error.source || {};\n\nlet nodeName = source.name || \"Unbekannter Node\";\nlet nodeId   = source.id   || \"-\";\nlet nodeType = source.type || \"-\";\nlet errMsg   = error.message || \"Unbekannter Fehler\";\n\n// --- Icons / Markierung ---\nlet icon = \"❌\";  \nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n`${icon} *Node-RED Fehler*\n🔧 Node: ${nodeName}\n🆔 ID: ${nodeId}\n🔍 Typ: ${nodeType}\n\n📄 Fehler:\n${errMsg}\n\n⏱️ Zeit: ${timestamp}\n`;\n\n// --- CSV-Logzeile ---\nlet csvLine = `${timestamp};Error;${nodeName};${nodeId};${nodeType};${errMsg}\\n`;\n\n// --- SIGNAL-KONFIGURATION ---\nconst messenger  = global.get(\"messengerExist\");       // \"on\" / \"off\"\nconst msg_service = global.get(\"msgDienst\");    // Signal-Service\n\n// --- Nachrichtenstruktur aufteilen ---\n// msg (Hauptausgang): Signal-Nachricht, falls aktiviert\n// msg.log (2. Ausgang): CSV Log\nmsg.log = {\n    payload: csvLine\n};\n\n// --- Signal aktiv? ---\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message: nachricht\n        },\n        sensor: msg_service\n    };\n    return [msg, msg.log];\n}\n\n// Wenn Signal aus → kein Signal, nur Log\nmsg.payload = { info: \"Signal ausgeschaltet, nur Log geschrieben\" };\nreturn [msg, msg.log];\n\n",
         "outputs": 2,
         "timeout": 0,
@@ -9057,7 +9058,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 3210,
+        "x": 3220,
         "y": 2140,
         "wires": [
             [
@@ -9090,7 +9091,7 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 2910,
+        "x": 2870,
         "y": 2140,
         "wires": [
             [
@@ -9728,15 +9729,15 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "70cc64c2bba0fbd9",
-        "name": "Formatieren",
-        "func": "// --- Quelle erkennen ---\nlet nodeName =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||       // viele HA/Fritzbox Nodes nutzen das\n    msg.data?.entity_id ||          // alternative Struktur\n    msg.friendly_name ||            // falls vorhanden\n    msg.name ||                     // häufig verwendetes Attribut\n    msg.payload?.name ||            // Name im Payload\n    \"unknown\";\n\n// --- aktuellen Status lesen ---\nlet current = msg.payload;     // \"home\" oder \"not_home\"\n\n// --- Icon bestimmen ---\nconst ICONS = {\n    \"home\": \"🏠\",\n    \"not_home\": \"🚶‍♂️💨\",\n    \"unknown\": \"❓\"\n};\n\nlet iconCurrent = ICONS[current] || ICONS.unknown;\n\n// --- bisherige Status aller Geräte laden ---\nlet states = context.get(\"states\") || {};\nlet previous = states[nodeName];\n\n// --- Icon für vorherigen Status (falls vorhanden) ---\nlet iconPrevious = ICONS[previous] || ICONS.unknown;\n\n// --- erster Durchlauf → Status speichern ---\nif (previous === undefined) {\n    states[nodeName] = current;\n    context.set(\"states\", states);\n    node.status({ text: `Init: ${nodeName} = ${iconCurrent} ${current}` });\n//  return null;\n}\n\n// --- kein Statuswechsel → abbrechen ---\nif (current === previous) {\n    return null;\n}\n\n// --- Statuswechsel erkannt → neuen Status speichern ---\nstates[nodeName] = current;\ncontext.set(\"states\", states);\n\n// --- Zeitstempel erzeugen ---\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n    `${iconPrevious} → ${iconCurrent}\\n` +\n    `Status: ${previous} → ${current}\\n` +\n    `Zeit: ${timestamp}`;\n\n// Node-Status anzeigen\nnode.status({ text: `${nodeName}: ${iconPrevious} → ${iconCurrent}` });\nsetTimeout(() => node.status({}), 3000);\n\n// --- SIGNAL-NACHRICHT EINBAUEN ---\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\n\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message:\n                `📡 *Statuswechsel Gerät*\n🔧 NodeName: ${nodeName}\n${nachricht}`\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\n// --- falls Signal aus ist → normale Ausgabe ---\nmsg.statusChange = {\n    device: nodeName,\n    from: previous,\n    to: current,\n    icons: { from: iconPrevious, to: iconCurrent },\n    timestamp: timestamp\n};\n\nreturn msg;\n",
+        "name": "Message Device Tracker",
+        "func": "// --- Quelle erkennen ---\nlet nodeName =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||       // viele HA/Fritzbox Nodes nutzen das\n    msg.data?.entity_id ||          // alternative Struktur\n    msg.friendly_name ||            // falls vorhanden\n    msg.name ||                     // häufig verwendetes Attribut\n    msg.payload?.name ||            // Name im Payload\n    \"unknown\";\n\n// --- aktuellen Status lesen ---\nlet current = msg.payload;     // \"home\" oder \"not_home\"\n\n// --- Icon bestimmen ---\nconst ICONS = {\n    \"home\": \"🏠\",\n    \"not_home\": \"🚶‍♂️💨\",\n    \"unknown\": \" ⁉️ \"\n};\n\nlet iconCurrent = ICONS[current] || ICONS.unknown;\n\n// --- bisherige Status aller Geräte laden ---\nlet states = context.get(\"states\") || {};\nlet previous = states[nodeName];\n\n// --- Icon für vorherigen Status (falls vorhanden) ---\nlet iconPrevious = ICONS[previous] || ICONS.unknown;\n\n// --- erster Durchlauf → Status speichern ---\nif (previous === undefined) {\n    states[nodeName] = current;\n    context.set(\"states\", states);\n    node.status({ text: `Init: ${nodeName} = ${iconCurrent} ${current}` });\n//  return null;\n}\n\n// --- kein Statuswechsel → abbrechen ---\nif (current === previous) {\n    return null;\n}\n\n// --- Statuswechsel erkannt → neuen Status speichern ---\nstates[nodeName] = current;\ncontext.set(\"states\", states);\n\n// --- Zeitstempel erzeugen ---\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Nachrichtentext für Signal ---\nlet nachricht =\n    `${iconPrevious} → ${iconCurrent}\\n` +\n    `Status: ${previous} → ${current}\\n` +\n    `Zeit: ${timestamp}`;\n\n// Node-Status anzeigen\nnode.status({ text: `${nodeName}: ${iconPrevious} → ${iconCurrent}` });\nsetTimeout(() => node.status({}), 3000);\n\n// --- SIGNAL-NACHRICHT EINBAUEN ---\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\n\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message:\n                `📡 *Statuswechsel Gerät*\n🔧 NodeName: ${nodeName}\n${nachricht}`\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\n// --- falls Signal aus ist → normale Ausgabe ---\nmsg.statusChange = {\n    device: nodeName,\n    from: previous,\n    to: current,\n    icons: { from: iconPrevious, to: iconCurrent },\n    timestamp: timestamp\n};\n\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2110,
+        "x": 2130,
         "y": 420,
         "wires": [
             [
@@ -9772,7 +9773,7 @@
         "target": {},
         "mergecontext": "",
         "x": 2440,
-        "y": 400,
+        "y": 480,
         "wires": [
             []
         ]
@@ -10199,7 +10200,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2480,
+        "x": 2520,
         "y": 1500,
         "wires": [
             [
@@ -10930,9 +10931,30 @@
         "wires": [
             [
                 "93030162d5c5a12c",
-                "b138b5f3c8a549f7"
+                "6279a738e536bd7e"
             ],
             []
+        ]
+    },
+    {
+        "id": "6279a738e536bd7e",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "70cc64c2bba0fbd9",
+        "name": "Normale Message (generisch)",
+        "func": "const messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\n\n// Hilfsfunktion\nfunction safe(val, fallback = \"—\") {\n    return (val !== undefined && val !== null && val !== \"\") ? val : fallback;\n}\n\n// 🔍 ENTITY-ID ERMITTELN (Priorität!)\nlet knoten =\n    msg.data?.entity_id ||\n    msg.payload?.entity_id ||\n    msg.topic ||\n    msg.entity_id ||\n    \"—\";\n\n// Standardwerte\nlet status = \"unbekannt\";\nlet wert = \"—\";\n\n// 1️⃣ state_changed Event (BESTER FALL)\nif (msg.data?.new_state) {\n    const ns = msg.data.new_state;\n\n    status = safe(ns.state);\n\n    // Einheit anhängen, falls vorhanden\n    const unit = ns.attributes?.unit_of_measurement;\n    wert = unit ? `${ns.state} ${unit}` : ns.state;\n}\n\n// 2️⃣ Payload Objekt\nelse if (typeof msg.payload === \"object\") {\n    status = safe(msg.payload.state);\n    wert = safe(msg.payload.value, status);\n}\n\n// 3️⃣ Payload einfacher Wert (Boolean, String)\nelse {\n    status = safe(msg.payload);\n    wert = safe(msg.payload);\n}\n\n// 📡 Nachricht\nlet message =\n    `📡 *Home Assistant Meldung*\n🧩 Knoten: ${knoten}\n⚙️ Status: ${status}\n📊 Wert: ${wert}\n🕒 Zeit: ${new Date().toLocaleString(\"de-DE\")}`;\n\n// 📤 Whatsigram\nif (messenger === \"on\") {\n    msg.payload = {\n        data: {\n            message\n        },\n        sensor: msg_service\n    };\n    return msg;\n}\n\nreturn;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2150,
+        "y": 560,
+        "wires": [
+            [
+                "1333b1823dfb600e"
+            ]
         ]
     },
     {
@@ -10950,7 +10972,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "b3f9c88bb99bcbf6",
+        "id": "fb709b539770db10",
         "type": "global-config",
         "env": [],
         "modules": {
