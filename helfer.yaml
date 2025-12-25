@@ -15,6 +15,9 @@ input_boolean:
     name: Regler WR Aus
     initial: off
     icon: mdi:toggle-switch-variant
+  batterie_kritisch:
+    name: Batterie kritisch
+    initial: off
 input_text:
   regler_timer_auswahl:
     name: Regler Timer Auswahl
