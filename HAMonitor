@@ -123,7 +123,7 @@
             "bf5f64d46ad15208",
             "31c34653915c9e30"
         ],
-        "x": 94,
+        "x": 54,
         "y": 1219,
         "w": 672,
         "h": 242
@@ -159,7 +159,7 @@
         "id": "363c9ee96829a2aa",
         "type": "group",
         "z": "3d2a81e3c1ae2c8c",
-        "name": "Überwachung kritischer Werte",
+        "name": "Überwachung kritischer Werte (deaktiviert)",
         "style": {
             "label": true
         },
@@ -242,7 +242,7 @@
         ],
         "x": 814,
         "y": 1159,
-        "w": 792,
+        "w": 672,
         "h": 302
     },
     {
@@ -296,8 +296,8 @@
             "5b62681509ac63d8",
             "677322602c74d36b"
         ],
-        "x": 114,
-        "y": 1559,
+        "x": 54,
+        "y": 1539,
         "w": 1332,
         "h": 502
     },
@@ -1054,7 +1054,7 @@
         "g": "11222a957a603e3f",
         "name": "Automatischer Auslöser durch Statuswechsel",
         "info": "",
-        "x": 290,
+        "x": 250,
         "y": 1260,
         "wires": []
     },
@@ -1169,7 +1169,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 200,
+        "x": 160,
         "y": 1300,
         "wires": [
             [
@@ -2198,7 +2198,7 @@
         "token": "oauth2Response.access_token",
         "secure": true,
         "tls": false,
-        "name": "ronline1@jihlefeld.de",
+        "name": "MAIL@MAIL.DE",
         "dname": "send",
         "x": 1370,
         "y": 1020,
@@ -2373,7 +2373,7 @@
         "blockInputOverrides": true,
         "domain": "input_boolean",
         "service": "turn_on",
-        "x": 660,
+        "x": 620,
         "y": 1360,
         "wires": [
             []
@@ -2563,7 +2563,7 @@
         "g": "11222a957a603e3f",
         "name": "<3.05V",
         "info": "",
-        "x": 630,
+        "x": 590,
         "y": 1320,
         "wires": []
     },
@@ -2571,7 +2571,6 @@
         "id": "6bd6a52418380fb4",
         "type": "server-state-changed",
         "z": "3d2a81e3c1ae2c8c",
-        "d": true,
         "g": "11222a957a603e3f",
         "name": "Minvol2 ?",
         "server": "285afb99.5208c4",
@@ -2603,7 +2602,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -2619,7 +2618,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 200,
+        "x": 160,
         "y": 1360,
         "wires": [
             [
@@ -2828,7 +2827,7 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 230,
+        "x": 190,
         "y": 1420,
         "wires": [
             [
@@ -2844,7 +2843,7 @@
         "g": "11222a957a603e3f",
         "name": ">21 Tage",
         "info": "",
-        "x": 640,
+        "x": 600,
         "y": 1400,
         "wires": []
     },
@@ -3112,7 +3111,7 @@
         "links": [
             "b1d69b92cd238b15"
         ],
-        "x": 1455,
+        "x": 1435,
         "y": 1200,
         "wires": []
     },
@@ -3251,8 +3250,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 220,
-        "y": 1720,
+        "x": 160,
+        "y": 1700,
         "wires": [
             [
                 "dc0530cf8cd46216"
@@ -3302,8 +3301,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1840,
+        "x": 540,
+        "y": 1820,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3353,8 +3352,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 620,
-        "y": 2020,
+        "x": 560,
+        "y": 2000,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3383,8 +3382,8 @@
         "reduceInit": "",
         "reduceInitType": "",
         "reduceFixup": "",
-        "x": 810,
-        "y": 1840,
+        "x": 750,
+        "y": 1820,
         "wires": [
             [
                 "65522dd146beb8f6",
@@ -3405,8 +3404,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1070,
-        "y": 1800,
+        "x": 1010,
+        "y": 1780,
         "wires": [
             [
                 "ad69641832e6ef86"
@@ -3425,8 +3424,8 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 1330,
-        "y": 1800,
+        "x": 1270,
+        "y": 1780,
         "wires": [
             []
         ],
@@ -3442,8 +3441,8 @@
         "links": [
             "f0ce05f5279cba21"
         ],
-        "x": 375,
-        "y": 1880,
+        "x": 315,
+        "y": 1860,
         "wires": []
     },
     {
@@ -3459,8 +3458,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 300,
-        "y": 1780,
+        "x": 240,
+        "y": 1760,
         "wires": [
             [
                 "b5e33ac617cea56b"
@@ -3474,8 +3473,8 @@
         "g": "afc07ea79271275f",
         "name": "Testauslösung",
         "info": "",
-        "x": 230,
-        "y": 1680,
+        "x": 170,
+        "y": 1660,
         "wires": []
     },
     {
@@ -3521,8 +3520,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1880,
+        "x": 540,
+        "y": 1860,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3572,8 +3571,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1760,
+        "x": 540,
+        "y": 1740,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3623,8 +3622,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1800,
+        "x": 540,
+        "y": 1780,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3674,8 +3673,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1680,
+        "x": 540,
+        "y": 1660,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3725,8 +3724,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1720,
+        "x": 540,
+        "y": 1700,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3776,8 +3775,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1920,
+        "x": 540,
+        "y": 1900,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3827,8 +3826,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 600,
-        "y": 1960,
+        "x": 540,
+        "y": 1940,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3848,8 +3847,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1070,
-        "y": 1860,
+        "x": 1010,
+        "y": 1840,
         "wires": [
             [
                 "ae7c35e56cc7ddd4"
@@ -3868,8 +3867,8 @@
         "createDir": true,
         "overwriteFile": "false",
         "encoding": "none",
-        "x": 1330,
-        "y": 1860,
+        "x": 1270,
+        "y": 1840,
         "wires": [
             []
         ],
@@ -3918,8 +3917,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 590,
-        "y": 1640,
+        "x": 530,
+        "y": 1620,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3969,8 +3968,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 590,
-        "y": 1600,
+        "x": 530,
+        "y": 1580,
         "wires": [
             [
                 "0eb40855ce898b07"
@@ -3986,8 +3985,8 @@
         "links": [
             "b5e33ac617cea56b"
         ],
-        "x": 465,
-        "y": 1880,
+        "x": 405,
+        "y": 1860,
         "wires": [
             [
                 "aa6b68c35e10f4fe",
@@ -4055,8 +4054,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 220,
-        "y": 1960,
+        "x": 160,
+        "y": 1940,
         "wires": [
             [
                 "b5e33ac617cea56b"
@@ -4067,6 +4066,7 @@
         "id": "677322602c74d36b",
         "type": "server-state-changed",
         "z": "3d2a81e3c1ae2c8c",
+        "d": true,
         "g": "afc07ea79271275f",
         "name": "ELectricLevel =100",
         "server": "285afb99.5208c4",
@@ -4114,8 +4114,8 @@
                 "valueType": "triggerId"
             }
         ],
-        "x": 230,
-        "y": 2020,
+        "x": 170,
+        "y": 2000,
         "wires": [
             [
                 "b5e33ac617cea56b"
@@ -4303,8 +4303,9 @@
         "id": "33cdda6a82d2707d",
         "type": "api-call-service",
         "z": "3d2a81e3c1ae2c8c",
+        "d": true,
         "g": "8195af41fa3ed202",
-        "name": "Sende Nachricht via WhatSigram",
+        "name": " WhatSigram",
         "server": "285afb99.5208c4",
         "version": 7,
         "debugenabled": false,
@@ -4316,7 +4317,7 @@
             "notify.whatsigram_recipient_1"
         ],
         "labelId": [],
-        "data": "{\"message\":\"Wechselrichter aus\",\"title\":\"Akkuladung priorisiert\"}",
+        "data": "{\"message\":\"Batterie kritisch, Wechselrichter aus\",\"title\":\"Akkuladung priorisiert\"}",
         "dataType": "json",
         "mergeContext": "",
         "mustacheAltTags": false,
@@ -4326,7 +4327,7 @@
         "service": "send_message",
         "target": {},
         "mergecontext": "",
-        "x": 1440,
+        "x": 1370,
         "y": 1260,
         "wires": [
             []
@@ -4366,7 +4367,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "4e6f59b3ed097cce",
+        "id": "3dd4607508f8ef3d",
         "type": "global-config",
         "env": [],
         "modules": {
