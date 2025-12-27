@@ -1116,15 +1116,15 @@
             "573c5ca307da6215",
             "91c650bb07387836",
             "6a3caaeb504dccce",
-            "eab91cd4cbbe03e5",
-            "395701d1b7da7c5a",
             "cabe719dfaacaaa8",
             "00997a4452a57bfc",
             "bbd97221abe56b6f",
             "520d6b3cac7e66f1",
             "7a0bdc247a6fd73d",
             "83b33976393ab12b",
-            "15e04c62903f0787"
+            "15e04c62903f0787",
+            "de63067b06565cdb",
+            "0d64858f35253c14"
         ],
         "x": 1654,
         "y": 379,
@@ -11173,9 +11173,9 @@
         "y": 500,
         "wires": [
             [
-                "eab91cd4cbbe03e5",
                 "cabe719dfaacaaa8",
-                "520d6b3cac7e66f1"
+                "520d6b3cac7e66f1",
+                "de63067b06565cdb"
             ]
         ]
     },
@@ -11206,57 +11206,6 @@
         "x": 1995,
         "y": 540,
         "wires": []
-    },
-    {
-        "id": "eab91cd4cbbe03e5",
-        "type": "ha-get-entities",
-        "z": "479e3443afedb613",
-        "g": "2783efc48dd85623",
-        "name": "El.Level",
-        "server": "285afb99.5208c4",
-        "version": 1,
-        "rules": [
-            {
-                "condition": "state_object",
-                "property": "entity_id",
-                "logic": "is",
-                "value": "electricLevel",
-                "valueType": "flow"
-            }
-        ],
-        "outputType": "array",
-        "outputEmptyResults": false,
-        "outputLocationType": "msg",
-        "outputLocation": "payload",
-        "outputResultsCount": 1,
-        "x": 2200,
-        "y": 440,
-        "wires": [
-            [
-                "395701d1b7da7c5a"
-            ]
-        ]
-    },
-    {
-        "id": "395701d1b7da7c5a",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "2783efc48dd85623",
-        "name": "Soc Level",
-        "func": "let level = Number(msg.payload[0].state);\nmsg.topic = \"soc\";\nmsg.payload = level;\nnode.status({fill:\"green\",shape:\"ring\",text:\"Soc: \" +level});\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2380,
-        "y": 440,
-        "wires": [
-            [
-                "0a0a4ff2e1382e59"
-            ]
-        ]
     },
     {
         "id": "cabe719dfaacaaa8",
@@ -11475,6 +11424,57 @@
         ]
     },
     {
+        "id": "de63067b06565cdb",
+        "type": "ha-get-entities",
+        "z": "479e3443afedb613",
+        "g": "2783efc48dd85623",
+        "name": "MinSoc",
+        "server": "285afb99.5208c4",
+        "version": 1,
+        "rules": [
+            {
+                "condition": "state_object",
+                "property": "entity_id",
+                "logic": "is",
+                "value": "zHAMinSoCSensor",
+                "valueType": "flow"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 2200,
+        "y": 440,
+        "wires": [
+            [
+                "0d64858f35253c14"
+            ]
+        ]
+    },
+    {
+        "id": "0d64858f35253c14",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "2783efc48dd85623",
+        "name": "minSoc",
+        "func": "let minsoc = Number(msg.payload[0].state);\nmsg.topic = \"min\";\nmsg.payload = minsoc;\nnode.status({fill:\"green\",shape:\"ring\",text:\"Soc: \" +minsoc});\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2380,
+        "y": 440,
+        "wires": [
+            [
+                "0a0a4ff2e1382e59"
+            ]
+        ]
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -11489,7 +11489,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "c1d2f5cfdca57bba",
+        "id": "214f22cc3fb712ef",
         "type": "global-config",
         "env": [],
         "modules": {
