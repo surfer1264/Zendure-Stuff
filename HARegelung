@@ -511,7 +511,8 @@
             "6b89f35a0decbb10",
             "b6d8638d52a85b2f",
             "2ae71be3294d4008",
-            "872d488cac969d42"
+            "872d488cac969d42",
+            "7fd3b2ebf773e635"
         ],
         "x": 2614,
         "y": 59,
@@ -10702,7 +10703,7 @@
         "name": "MinVol1 ?",
         "server": "285afb99.5208c4",
         "version": 6,
-        "outputs": 2,
+        "outputs": 1,
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
@@ -10713,11 +10714,11 @@
         },
         "outputInitially": false,
         "stateType": "str",
-        "ifState": "minVolLimit",
-        "ifStateType": "flow",
-        "ifStateOperator": "lt",
+        "ifState": "",
+        "ifStateType": "entity",
+        "ifStateOperator": "is",
         "outputOnlyOnStateChange": true,
-        "for": "1",
+        "for": "",
         "forType": "num",
         "forUnits": "minutes",
         "ignorePrevStateNull": false,
@@ -10741,23 +10742,16 @@
             {
                 "property": "topic",
                 "propertyType": "msg",
-                "value": "minvol1",
+                "value": "akku1",
                 "valueType": "str"
-            },
-            {
-                "property": "lowminVol",
-                "propertyType": "flow",
-                "value": "string",
-                "valueType": "entityState"
             }
         ],
         "x": 2720,
-        "y": 200,
+        "y": 160,
         "wires": [
             [
-                "b6d8638d52a85b2f"
-            ],
-            []
+                "7fd3b2ebf773e635"
+            ]
         ]
     },
     {
@@ -10787,7 +10781,7 @@
         "domain": "input_boolean",
         "service": "turn_on",
         "x": 2940,
-        "y": 220,
+        "y": 240,
         "wires": [
             []
         ]
@@ -10800,7 +10794,7 @@
         "name": "Minvol2 ?",
         "server": "285afb99.5208c4",
         "version": 6,
-        "outputs": 2,
+        "outputs": 1,
         "exposeAsEntityConfig": "",
         "entities": {
             "entity": [
@@ -10811,11 +10805,11 @@
         },
         "outputInitially": false,
         "stateType": "str",
-        "ifState": "minVolLimit",
-        "ifStateType": "flow",
+        "ifState": "",
+        "ifStateType": "entity",
         "ifStateOperator": "lt",
         "outputOnlyOnStateChange": true,
-        "for": "1",
+        "for": "",
         "forType": "num",
         "forUnits": "minutes",
         "ignorePrevStateNull": false,
@@ -10839,23 +10833,16 @@
             {
                 "property": "topic",
                 "propertyType": "msg",
-                "value": "minvol2",
+                "value": "akku2",
                 "valueType": "str"
-            },
-            {
-                "property": "lowminVol",
-                "propertyType": "flow",
-                "value": "string",
-                "valueType": "entityState"
             }
         ],
         "x": 2720,
-        "y": 240,
+        "y": 200,
         "wires": [
             [
-                "b6d8638d52a85b2f"
-            ],
-            []
+                "7fd3b2ebf773e635"
+            ]
         ]
     },
     {
@@ -11521,6 +11508,27 @@
         ]
     },
     {
+        "id": "7fd3b2ebf773e635",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "df24757803f1f131",
+        "name": "lowminVol",
+        "func": "let minVolLimit = flow.get(\"minVolLimit\");\nlet timeoutMs = flow.get(\"batteryTimeoutMs\") || 10800000; // 3h\n\n// Limit prüfen\nif (typeof minVolLimit !== \"number\") {\n    node.status({ fill: \"red\", shape: \"ring\", text: \"minVolLimit fehlt\" });\n    return null;\n}\n\n// Akkus aus Context holen\nlet batteries = context.get(\"batteries\") || {};\n\nlet value = Number(msg.payload);\nif (isNaN(value)) {\n    return null;\n}\n\n// Akku aktualisieren\nbatteries[msg.topic] = {\n    value: value,\n    ts: Date.now()\n};\n\n// Veraltete Akkus entfernen\nlet now = Date.now();\nlet removed = 0;\n\nfor (let id in batteries) {\n    if (now - batteries[id].ts > timeoutMs) {\n        delete batteries[id];\n        removed++;\n    }\n}\n\ncontext.set(\"batteries\", batteries);\n\n// Aktive Werte sammeln\nlet entries = Object.entries(batteries);\n\nif (entries.length === 0) {\n    node.status({ fill: \"yellow\", shape: \"ring\", text: \"keine aktiven Akkus\" });\n    return null;\n}\n\n// Minimum bestimmen\nlet lowEntry = entries.reduce((a, b) => a[1].value < b[1].value ? a : b);\nlet lowminVol = lowEntry[1].value;\n\nflow.set(\"lowminVol\", lowminVol);\n\n// Statusanzeige\nlet statusText = `min=${lowminVol} (${entries.length} aktiv`;\nif (removed > 0) statusText += `, ${removed} entfernt`;\nstatusText += \")\";\n\nnode.status({\n    fill: lowminVol < minVolLimit ? \"green\" : \"grey\",\n    shape: \"dot\",\n    text: statusText\n});\n\n// Ausgang nur bei Unterschreitung\nif (lowminVol < minVolLimit) {\n    msg.lowminVol = lowminVol;\n    msg.lowBattery = {\n        id: lowEntry[0],\n        value: lowminVol\n    };\n    msg.activeBatteries = batteries;\n    return msg;\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2920,
+        "y": 180,
+        "wires": [
+            [
+                "b6d8638d52a85b2f"
+            ]
+        ]
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -11535,7 +11543,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "daae178be8703d77",
+        "id": "2b0e46b5f7d8b4e9",
         "type": "global-config",
         "env": [],
         "modules": {
