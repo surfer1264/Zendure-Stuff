@@ -1124,14 +1124,12 @@
             "520d6b3cac7e66f1",
             "7a0bdc247a6fd73d",
             "83b33976393ab12b",
-            "15e04c62903f0787",
-            "f423f1405dc38be9",
-            "d296014dcd0ca5cc"
+            "15e04c62903f0787"
         ],
         "x": 1654,
-        "y": 339,
+        "y": 379,
         "w": 1392,
-        "h": 262
+        "h": 222
     },
     {
         "id": "1",
@@ -8717,7 +8715,7 @@
         "z": "479e3443afedb613",
         "g": "3d36f3e8b8cb3fe0",
         "name": "Setze Flow-Variable Bypass",
-        "func": "// Variable aus Flow oder globalem Speicher\nlet level = Number(msg.payload[0].state);\n    if (level < 100) \n    {\n    node.status({fill:\"green\",shape:\"ring\",text:\"SoC \" +level});\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus   \n    return [null, null];  //nichts senden \n    }\n    else \n    {\n    node.status({ fill: \"red\", shape: \"ring\", text: \"SoC \" + level });\n    //flow.set(\"Regelwert\", 0); // Wenn Akku voll WR zunächst runterregeln\n    //Akku voll\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    return [null, msg]; //Ausgang 2 senden \n    }",
+        "func": "// Variable aus Flow oder globalem Speicher\nlet level = Number(msg.payload[0].state);\nflow.set (\"currentSoC\", level);\n    if (level < 100) \n    {\n    node.status({fill:\"green\",shape:\"ring\",text:\"SoC \" +level});\n    flow.set(\"Bypass\", 0); //1 An; 0: Aus   \n    return [null, null];  //nichts senden \n    }\n    else \n    {\n    node.status({ fill: \"red\", shape: \"ring\", text: \"SoC \" + level });\n    //flow.set(\"Regelwert\", 0); // Wenn Akku voll WR zunächst runterregeln\n    //Akku voll\n    flow.set(\"Bypass\", 1); //1 An; 0: Aus    \n    return [null, msg]; //Ausgang 2 senden \n    }",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -11039,7 +11037,7 @@
         "useparts": false,
         "accumulate": false,
         "timeout": "",
-        "count": "4",
+        "count": "3",
         "reduceRight": false,
         "reduceExp": "",
         "reduceInit": "",
@@ -11060,7 +11058,7 @@
         "z": "479e3443afedb613",
         "g": "2783efc48dd85623",
         "name": "Forecastdaten ",
-        "func": "// ===============================\n// Messenger / Whatsigram\n// ===============================\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\nconst pvforecastexist = flow.get (\"PVForecastOn\");\n\n// ===============================\n// Datum\n// ===============================\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${day}.${month}.${year}`;\n\n// ===============================\n// Globale Werte\n// ===============================\nconst maxcapacity = Number(global.get(\"Capacity\"));\nconst fc_factor = Number(global.get(\"PV_factor\"));\n\n// ===============================\n// Payload aus Eingang\n// ===============================\nconst {min, soc, rest, today } = msg.payload;\nlet lowminvol = Number(flow.get (\"lowminVol\")) || 0 ;\n\n// ===============================\n// Berechnungen\n// ===============================\nconst remain_fc = Math.round(Number(rest) * 1000 * fc_factor); // Wh\nconst fc_today = Math.round(Number(today) * 1000);            // Wh\nconst remain_load = Math.round(maxcapacity * (100 - soc) / 100); // Wh\n\n// ===============================\n// Node-Status\n// ===============================\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `${datum} | SoC ${soc}% | FC rest ${remain_fc}Wh | Load ${remain_load}Wh | MinVol ${lowminvol}V`\n});\n\n// ===============================\n// Whatsagram Nachricht\n// ===============================\nconst message =\n    `☀️ *PV / Akku Forecast*\\n📅 Datum: ${datum}\\n\\n` +\n    `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n` +\n    `🌤️ PV Forecast heute: ${fc_today} Wh\\n⏳ PV Forecast Resttag: ${remain_fc} Wh`;\n\n// ===============================\n// CSV-Zeile\n// ===============================\nlet csvLine = null;\nif (pvforecastexist === \"on\")  {\n    csvLine = `${datum};${remain_fc};${fc_today};${soc};${remain_load};${lowminvol}\\n`;\n    }\nelse {\n    csvLine = `${datum};;;${soc};${remain_load};${lowminvol}\\n`;\n    }\n\n\n// ===============================\n// OUTPUTS\n// ===============================\n\n// Output 1 → Whatsagram\nlet outWhatsagram = null;\nif (messenger === \"on\") {\n    outWhatsagram = {\n        payload: {\n            data: {\n                message\n            },\n            sensor: msg_service\n        }\n    };\n}\n\n// Output 2 → CSV\nlet outCSV = { payload: csvLine };\n\n\n// Output 3 → Persistent Notification (Home Assistant Notify Node)\nlet outNotification = null;\nif (pvforecastexist === \"on\")  {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `PV heute=${fc_today}Wh | MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\nelse {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\n\n\n// ===============================\n// Rückgabe der 3 Outputs\n// ===============================\nreturn [outWhatsagram, outCSV, outNotification];\n",
+        "func": "// ===============================\n// Messenger / Whatsigram\n// ===============================\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\nconst pvforecastexist = flow.get (\"PVForecastOn\");\n\n// ===============================\n// Datum\n// ===============================\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${day}.${month}.${year}`;\n\n// ===============================\n// Globale Werte\n// ===============================\nconst maxcapacity = Number(global.get(\"Capacity\"));\nconst fc_factor = Number(global.get(\"PV_factor\"));\n\n// ===============================\n// Payload aus Eingang\n// ===============================\nconst {min, rest, today } = msg.payload;\nlet lowminvol = Number(flow.get (\"lowminVol\")) || 0 ;\nlet soc = flow.get (\"currentSoC\");\n\n// ===============================\n// Berechnungen\n// ===============================\nconst remain_fc = Math.round(Number(rest) * 1000 * fc_factor); // Wh\nconst fc_today = Math.round(Number(today) * 1000);            // Wh\nconst remain_load = Math.round(maxcapacity * (100 - soc) / 100); // Wh\n\n// ===============================\n// Node-Status\n// ===============================\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `${datum} | SoC ${soc}% | FC rest ${remain_fc}Wh | Load ${remain_load}Wh | MinVol ${lowminvol}V`\n});\n\n// ===============================\n// Whatsagram Nachricht\n// ===============================\nconst message =\n    `☀️ *PV / Akku Forecast*\\n📅 Datum: ${datum}\\n\\n` +\n    `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n` +\n    `🌤️ PV Forecast heute: ${fc_today} Wh\\n⏳ PV Forecast Resttag: ${remain_fc} Wh`;\n\n// ===============================\n// CSV-Zeile\n// ===============================\nlet csvLine = null;\nif (pvforecastexist === \"on\")  {\n    csvLine = `${datum};${remain_fc};${fc_today};${soc};${remain_load};${lowminvol}\\n`;\n    }\nelse {\n    csvLine = `${datum};;;${soc};${remain_load};${lowminvol}\\n`;\n    }\n\n\n// ===============================\n// OUTPUTS\n// ===============================\n\n// Output 1 → Whatsagram\nlet outWhatsagram = null;\nif (messenger === \"on\") {\n    outWhatsagram = {\n        payload: {\n            data: {\n                message\n            },\n            sensor: msg_service\n        }\n    };\n}\n\n// Output 2 → CSV\nlet outCSV = { payload: csvLine };\n\n\n// Output 3 → Persistent Notification (Home Assistant Notify Node)\nlet outNotification = null;\nif (pvforecastexist === \"on\")  {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `PV heute=${fc_today}Wh | MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\nelse {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\n\n\n// ===============================\n// Rückgabe der 3 Outputs\n// ===============================\nreturn [outWhatsagram, outCSV, outNotification];\n",
         "outputs": 3,
         "timeout": "",
         "noerr": 0,
@@ -11177,8 +11175,7 @@
             [
                 "eab91cd4cbbe03e5",
                 "cabe719dfaacaaa8",
-                "520d6b3cac7e66f1",
-                "f423f1405dc38be9"
+                "520d6b3cac7e66f1"
             ]
         ]
     },
@@ -11457,57 +11454,6 @@
         ]
     },
     {
-        "id": "f423f1405dc38be9",
-        "type": "ha-get-entities",
-        "z": "479e3443afedb613",
-        "g": "2783efc48dd85623",
-        "name": "MinSoc",
-        "server": "285afb99.5208c4",
-        "version": 1,
-        "rules": [
-            {
-                "condition": "state_object",
-                "property": "entity_id",
-                "logic": "is",
-                "value": "zHAMinSoCSensor",
-                "valueType": "flow"
-            }
-        ],
-        "outputType": "array",
-        "outputEmptyResults": false,
-        "outputLocationType": "msg",
-        "outputLocation": "payload",
-        "outputResultsCount": 1,
-        "x": 2200,
-        "y": 380,
-        "wires": [
-            [
-                "d296014dcd0ca5cc"
-            ]
-        ]
-    },
-    {
-        "id": "d296014dcd0ca5cc",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "2783efc48dd85623",
-        "name": "minSoc",
-        "func": "let minsoc = Number(msg.payload[0].state);\nmsg.topic = \"min\";\nmsg.payload = minsoc;\nnode.status({fill:\"green\",shape:\"ring\",text:\"Soc: \" +minsoc});\nreturn msg;",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 2380,
-        "y": 380,
-        "wires": [
-            [
-                "0a0a4ff2e1382e59"
-            ]
-        ]
-    },
-    {
         "id": "7fd3b2ebf773e635",
         "type": "function",
         "z": "479e3443afedb613",
@@ -11543,7 +11489,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "2b0e46b5f7d8b4e9",
+        "id": "c1d2f5cfdca57bba",
         "type": "global-config",
         "env": [],
         "modules": {
