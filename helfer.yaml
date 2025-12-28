@@ -40,6 +40,12 @@ input_datetime:
     has_date: false
     has_time: true
 input_number:
+  letzte_kalibrierung:
+    name: Letzte Kalibrierung
+    initial: 0
+    min: 0
+    max: 1
+    step: 1
   regler_kp:
     name: Regler kp
     initial: 1
