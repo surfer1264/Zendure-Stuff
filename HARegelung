@@ -480,6 +480,24 @@
         "h": 82
     },
     {
+        "id": "50b4f58a24c2f256",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "name": "(8.1)  AdHoc Message an Messenger schicken",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "a10e19704f6f0128",
+            "3405486d31eae70f",
+            "6510f41ac1c3a100"
+        ],
+        "x": 194,
+        "y": 4039,
+        "w": 812,
+        "h": 82
+    },
+    {
         "id": "caf11d3b06226cb7",
         "type": "group",
         "z": "479e3443afedb613",
@@ -1028,24 +1046,6 @@
         "h": 82
     },
     {
-        "id": "50b4f58a24c2f256",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "name": "(8.1)  AdHoc Message an Messenger schicken",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "a10e19704f6f0128",
-            "3405486d31eae70f",
-            "6510f41ac1c3a100"
-        ],
-        "x": 194,
-        "y": 4039,
-        "w": 812,
-        "h": 82
-    },
-    {
         "id": "53919dc8bb6fc625",
         "type": "group",
         "z": "479e3443afedb613",
@@ -1122,7 +1122,8 @@
             "83b33976393ab12b",
             "15e04c62903f0787",
             "de63067b06565cdb",
-            "0d64858f35253c14"
+            "0d64858f35253c14",
+            "40d78a447519cb3d"
         ],
         "x": 1654,
         "y": 379,
@@ -1176,7 +1177,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "P-Regler",
-        "func": "let debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\"); //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\"); //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\"); //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax; //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;; //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;  // Hysterese-Bereich in W\nlet kp = flow.get (\"Reglerkp\")|| 1; //Dämpfungsfaktor\nlet repeat = context.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\"); ////letzte Einstellung des WR laden\n\n//Hole aktuellen Verbrauchswert vom P1 Sensor\nlet leistung = Math.round(Number(msg.payload));\nflow.set(\"3em\", leistung);\n\n//Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\n// Neue WR-Begrenzung berechnen\nlet neu = Math.round(vorher - delta);\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\nflow.set(\"Regelwert\", neu);\n    \n//Wenn sich der Reglewert nicht gändert hat: Ignore\nlet diff = neu - vorher; \nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\nnode.status({\n  text: `Regelwert: ${neu} | Repeat: ${repeat}`\n});\nsetTimeout(() => node.status({}), 5000);\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\nif (diff !== 0)\n    {\n    context.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\n//Falls das Regelsignal nicht beim WR durch kommt (aus welchen Gründen auch immer) und sich gleichzeitig aber auch nicht mehr ändert\n//bleibt die Regelung im Zweifel hängen. \n//Ein Zähler stellt sicher, dass der WR regelämßig angesprochen wird (else Pfad), dabei wird der Einspeisewert leicht verändert um eine Rejustierung zu erreichen.\n//repeat++;\n//context.set(\"WRRepeat\", repeat);\n\n//if (repeat >= 180) {\n//    if (neu <= wrmax && neu > wrmin) {\n//        neu = Math.max(wrmin, neu - (2 * hyst));\n//        flow.set(\"Regelwert\", neu);\n//    }\n//    if (neu <= wrmin) {\n//        neu = neu + (2 * hyst);\n//        flow.set (\"Regelwert\", neu);\n//    }\n//    context.set(\"WRRepeat\", 0);\n//    msg.payload = { einspeisewert: neu };\n//    return msg;\n//}\nreturn;\n",
+        "func": "/*\n Regelung der WR-Einspeisung anhand des Netzbezugs (P1)\n - Hysterese verhindert Takten\n - Negative Abweichung (=Bezug) wird gedämpft (kp) korrigiert, Leistungssteigerung erfolgt langsam\n - Positive Abweichung (Einspiesung wird direkt korrigiert\n - Regelwert wird nur gesendet, wenn er sich ändert\n*/\n//*************************\n//Parameter\n//*************************\nlet debug = flow.get(\"Debug\");\nlet wrmax = flow.get (\"WRLeistung\");    //max. WR Leistung in W\nlet wrmin = flow.get(\"WRminLeistung\");  //min WR Leistung in W\nlet soll = flow.get (\"Sollwert\");       //Sollwert in W\nlet grenze = flow.get (\"MaxEinspeisung\") || wrmax;  //max. Einspeisung in W\nlet minimal = flow.get(\"MinEinspeisung\") || wrmin;  //Mindest Einspeisung\nlet hyst = global.get (\"Hysterese\") || 15;          //Hysterese-Bereich in W\nconst kp = flow.get (\"Reglerkp\")|| 1;               //Dämpfungsfaktor\nlet repeat = context.get(\"WRRepeat\") || 0;\nlet vorher = flow.get(\"Regelwert\") ?? wrmin;\n\n// Hole aktuellen Verbrauchswert vom P1 Sensor\nlet leistung = Math.round(Number(msg.payload));\nflow.set(\"3em\", leistung);\n\n// Wie groß ist die Abweichung von Soll und Hysterese?\nlet fehler = (Math.abs(leistung - soll) > hyst) ? Math.round(soll - leistung) : 0;\nflow.set(\"fehler\", fehler);\n\n// Absolutue Abweichung ist der fehler\n// wenn fehler negativ, dann mit Dämpfung (kp) hochfahren\n// wenn fehler positiv, dann so schnell wie möglich Einspeisung zurücknehmen\nlet delta = (fehler < 0) ? kp * fehler : fehler;\n\nlet neu = Math.round(vorher - delta);\n\n\n// Begrenzung auf gültige Werte zwischen WRmin (geschlossen) oder WRmax (offen) kalibrieren\nneu = Math.max(Math.max(wrmin, minimal), Math.min( wrmax, neu));\n\n// Berücksichtige eine mögliche Einspeise-Begrenzung\n// Wenn neuer Regelwert, dann setzte Regelwert, wenn Regelwert größer Begrenzung, dann Setzte ´Begrenzung\nneu = Math.min(neu, grenze);\n\n// Rundung auf 5-Watt-Stufen\nconst step = 5;\nneu = Math.round(neu / step) * step;\n\nflow.set(\"Regelwert\", neu);    \n// Finale Regelabweichung\nlet diff = neu - vorher; \n\nif (debug) {\n    node.warn(`Leistung=${leistung}, Fehler=${fehler}, Neu=${neu}, Vorher=${vorher}, Diff=${diff}, Grenze=${grenze}, Repeat=${repeat}`);\n}\n\nnode.status({\n  text: `Regelwert: ${neu} | Repeat: ${repeat}`\n});\n\n//wenn das Regelsignal sich nicht verändert (diff = 0)  soll der Wechselrichter nicht angesprochen werden.\nif (diff !== 0)\n    {\n    context.set(\"WRRepeat\", 0);\n    msg.payload = {einspeisewert: neu};\n    return msg;\n    }\n\nrepeat++;\ncontext.set(\"WRRepeat\", repeat);\n\nreturn;\n",
         "outputs": 1,
         "timeout": "",
         "noerr": 0,
@@ -1184,7 +1185,7 @@
         "finalize": "",
         "libs": [],
         "x": 1140,
-        "y": 2160,
+        "y": 2180,
         "wires": [
             [
                 "68c44e68d8a62aa4",
@@ -1956,7 +1957,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// ===============================\n// INFO\nflow.set(\"Release\", \"5.4.0\"); //nur Info\n// ===============================\n\n// ===============================\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\n// ===============================\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //Solarflow Outputlimit der Z-HA Integratiom, hier vorgeben\n\n// ===============================\n// Was für eine Art WR wird eingesetzt\n// ===============================\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n//flow.set(\"WRHersteller\", \"INT\"); //nutze einen Hub mit integriertem WR (Hyper/SF800)\n\n// ===============================\n// meine Akku-Daten\n// ===============================\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen !!!\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack); // nicht ändern\nglobal.set (\"Capacity\", accustack[1]); // nicht ändern, nur Initialisierung (siehe auch 1.2)\n\n// ===============================\n// WICHTIG!! In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// ===============================\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// Achtung: wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und aktualisiert\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze Akkustack\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\n// weird nur verwendet, wenn in (2) der Sensorweg verfolgt wird und nicht die http-Abfrage \nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als Nachrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nglobal.set (\"messengerExist\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// ===============================\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\n// Pass Werte nach Deinen Bedürfnissen an\n// ===============================\nconst config = {\n    1:  { akku_min: 40, sollwert: 15, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 15, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 15, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// ===============================\n// Akkugrenzwerte\n// ===============================\n// Minimaleinstellung der Entladegrenze der Akkus; siehe (1.8)\n// Empfehlung NIE unter 10% gehen\n// Für die Monate 3 bis 10\nflow.set (\"AbsoluteMinSoC_Summer\", 13);\n// Für die Monate 11 bis 2\nflow.set (\"AbsoluteMinSoC_Winter\", 20);\n// Untere Zellspannung für Warnung\n// Empfehlung NIE unter 3.0 gehen\nflow.set (\"minVolLimit\", 3.0);\n\nflow.set (\"lowminVol\", 0); // nur Deklaration\n\n// ===============================\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecastOn\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (forecast.solar)\n//flow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\n//flow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n//flow.set(\"PV_today\", \"sensor.energy_production_today\");\n\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (Solcast)\nflow.set(\"PV_tomorrow\", \"sensor.solcast_pv_forecast_prognose_morgen\");\nflow.set(\"PV_today_remaining\", \"sensor.solcast_pv_forecast_prognose_verbleibende_leistung_heute\");\nflow.set(\"PV_today\", \"sensor.solcast_pv_forecast_prognose_heute\");\nglobal.set(\"PV_factor\", 0.8); //Justieren der Forecast-Genauigkeit um Faktor x (muss man ein wenig mit spielen)\n\n// ===============================\n// Bypasswert\n// Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n// ===============================\n// Wert im Dashboard änderbar\nflow.set(\"ResetByPassWert\", 150);\n\nreturn msg;\n\n",
+        "func": "// ===============================\n// INFO\nflow.set(\"Release\", \"5.4.1\"); //nur Info\n// ===============================\n\n// ===============================\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\n// ===============================\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //Solarflow Outputlimit der Z-HA Integratiom, hier vorgeben\n\n// ===============================\n// Was für eine Art WR wird eingesetzt\n// ===============================\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n//flow.set(\"WRHersteller\", \"INT\"); //nutze einen Hub mit integriertem WR (Hyper/SF800)\n\n// ===============================\n// meine Akku-Daten\n// ===============================\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen !!!\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack); // nicht ändern\nglobal.set (\"Capacity\", accustack[1]); // nicht ändern, nur Initialisierung (siehe auch 1.2)\n\n// ===============================\n// WICHTIG!! In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// ===============================\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// Achtung: wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und aktualisiert\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze Akkustack\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\n// weird nur verwendet, wenn in (2) der Sensorweg verfolgt wird und nicht die http-Abfrage \nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als Nachrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nglobal.set (\"messengerExist\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// ===============================\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\n// Pass Werte nach Deinen Bedürfnissen an\n// ===============================\nconst config = {\n    1:  { akku_min: 40, sollwert: 15, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 15, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 15, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// ===============================\n// Akkugrenzwerte\n// ===============================\n// Minimaleinstellung der Entladegrenze der Akkus; siehe (1.8)\n// Empfehlung NIE unter 10% gehen\n// Für die Monate 3 bis 10\nflow.set (\"AbsoluteMinSoC_Summer\", 13);\n// Für die Monate 11 bis 2\nflow.set (\"AbsoluteMinSoC_Winter\", 20);\n// Untere Zellspannung für Warnung\n// Empfehlung NIE unter 3.0 gehen\nflow.set (\"minVolLimit\", 3.0);\n\nflow.set (\"lowminVol\", 0); // nur Deklaration\n\n// ===============================\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecastOn\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (forecast.solar)\n//flow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\n//flow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n//flow.set(\"PV_today\", \"sensor.energy_production_today\");\n\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (Solcast)\nflow.set(\"PV_tomorrow\", \"sensor.solcast_pv_forecast_prognose_morgen\");\nflow.set(\"PV_today_remaining\", \"sensor.solcast_pv_forecast_prognose_verbleibende_leistung_heute\");\nflow.set(\"PV_today\", \"sensor.solcast_pv_forecast_prognose_heute\");\nglobal.set(\"PV_factor\", 0.8); //Justieren der Forecast-Genauigkeit um Faktor x (muss man ein wenig mit spielen)\n\n// ===============================\n// Bypasswert\n// Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n// ===============================\n// Wert im Dashboard änderbar\nflow.set(\"ResetByPassWert\", 150);\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -5850,7 +5851,7 @@
         "z": "479e3443afedb613",
         "g": "46a88bad508d3778",
         "name": "Debugzeile bauen",
-        "func": "let debug = flow.get(\"Debug\");\nlet einspeisewert = flow.get (\"Plus1pm\");\nlet bypass = flow.get(\"Bypass\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet wrher = flow.get (\"WRHersteller\")\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet regelwert = flow.get(\"Regelwert\");\nlet drei_em = flow.get (\"3em\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get ( \"WRAktiv\");\nlet fehler = flow.get (\"fehler\");\n//let repeat = flow.get (\"WRRepeat\");\n//let isostring = new Date().toISOString();\n//let timestamp = new Date(isostring);\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\nlet logType = isError ? \"Error\" : \"DEBUG\";\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"DEBUG\";\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"DEBUG\";\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType};` +\n    `Bypass=${bypass}; WRAusgang=${wrtyp}; WRArt=${wrher}; WRMax=${wrmax}; WRMin=${wrmin};` +\n    `WRAktiv=${wr_aktiv};ReglerAktiv=${regler_aktiv};TerminMod=${termin_on};MaxEinspeisung=${max_einspeisung};` +\n    `Sollwert=${soll};Fehler=${fehler};Regelwert=${regelwert};Einspeisewert=${einspeisewert};Smartmeter=${drei_em};${message}\\n`;\n\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nif (debug){\n//    msg.payload = `${timestamp}, Bypass=${bypass}, WRTyp=${wrtyp}, WRHersteller=${wrher}; WRMax=${wrmax}, WRMin=${wrmin}, WRAktiv=${wr_aktiv} , ReglerAktiv=${regler_aktiv}, Termin=${termin_on}, MaxEinspeisung=${max_einspeisung}, Sollwert=${soll}, Fehler=${fehler}, Regelwert=${regelwert}, Einspeisewert=${einspeisewert}, Smartmeter=${drei_em}, WRRepeat=${repeat}`;\n    return msg\n}\n",
+        "func": "let debug = flow.get(\"Debug\");\nlet einspeisewert = flow.get (\"Plus1pm\");\nlet bypass = flow.get(\"Bypass\");\nlet wrtyp = flow.get(\"WRTyp\");\nlet wrher = flow.get (\"WRHersteller\")\nlet wrmax = flow.get(\"WRLeistung\");\nlet wrmin = flow.get(\"WRminLeistung\");\nlet regler_aktiv = flow.get(\"ReglerAktiv\");\nlet termin_on = flow.get(\"Terminmodus\");\nlet max_einspeisung = flow.get(\"MaxEinspeisung\");\nlet regelwert = flow.get(\"Regelwert\");\nlet drei_em = flow.get (\"3em\");\nlet soll = flow.get(\"Sollwert\");\nlet wr_aktiv = global.get ( \"WRAktiv\");\nlet fehler = flow.get (\"fehler\");\nlet timestamp = new Date().toLocaleString(\"de-DE\");\n\n// --- Erkennen, ob Fehler oder Status ---\nlet isError = msg.error !== undefined;\n\n// --- Felder für CSV ---\nlet logType = isError ? \"Error\" : \"DEBUG\";\nlet nodeName = isError ? (msg.error?.source?.name || \"unknown\") : \"DEBUG\";\nlet nodeId = isError ? (msg.error?.source?.id || \"\") : \"\";\nlet nodeType = isError ? (msg.error?.source?.type || \"\") : \"\";\nlet message = isError ? (msg.error?.message || \"Unbekannter Fehler\") : \"DEBUG\";\n\n// --- CSV-Zeile zusammenbauen ---\nmsg.payload =\n    `${timestamp};${logType};${nodeName};${nodeId};${nodeType};` +\n    `Bypass=${bypass}; WRAusgang=${wrtyp}; WRArt=${wrher}; WRMax=${wrmax}; WRMin=${wrmin};` +\n    `WRAktiv=${wr_aktiv};ReglerAktiv=${regler_aktiv};TerminMod=${termin_on};MaxEinspeisung=${max_einspeisung};` +\n    `Sollwert=${soll};Fehler=${fehler};Regelwert=${regelwert};Einspeisewert=${einspeisewert};Smartmeter=${drei_em};${message}\\n`;\n\n// --- Status im Editor anzeigen ---\nnode.status({ text: `${logType} Log geschrieben` });\nsetTimeout(() => node.status({}), 3000);\n\nif (debug){\n//    msg.payload = `${timestamp}, Bypass=${bypass}, WRTyp=${wrtyp}, WRHersteller=${wrher}; WRMax=${wrmax}, WRMin=${wrmin}, WRAktiv=${wr_aktiv} , ReglerAktiv=${regler_aktiv}, Termin=${termin_on}, MaxEinspeisung=${max_einspeisung}, Sollwert=${soll}, Fehler=${fehler}, Regelwert=${regelwert}, Einspeisewert=${einspeisewert}, Smartmeter=${drei_em}`;\n    return msg\n}\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -6403,7 +6404,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 2570,
-        "y": 2520,
+        "y": 2500,
         "wires": [
             []
         ]
@@ -8028,7 +8029,7 @@
         "z": "479e3443afedb613",
         "g": "313a12776bf9f44c",
         "name": "Calculate SOLL",
-        "func": "let level = Number(msg.payload[0].state);\nlet capacity = global.get (\"Capacity\");\nlet soll;\n\n// In Abhängigkeit von AKkukapazität soll SOLL Level gesetzt werden\n// Im Winter wird meist Akku abgebaut...dann mehr Nullbezug\nif (capacity > 2000) {\n    soll = level > 85 ? -5 : level > 70 ? 0 : 10}\nelse {\n    soll = level > 85 ? 5 : level > 70 ? 10 : 10\n}\n\nmsg.payload = { soll };\nnode.status({ fill: \"green\", shape: \"ring\", text: \"SoC: \" + level });\nreturn msg;\n",
+        "func": "// Der Sollwert soll in Abhängigkeit von der Kapazität des Akkustacks angepasst werden\n// Ein limit definiert higCapacity (Sommer) oder lowCapacity (Winter)\n// Die rules können frei angewendet/angepasst werden\n// Die rules können einfach erweitert werden um weitere Zeilen, wenn sinnvoll\nlet level = Number(msg.payload[0].state);\nlet capacity = global.get(\"Capacity\");\nconst limit = 2000;\n\n// Konfiguration\nconst rules = {\n    highCapacity: [\n        { minLevel: 85, soll: -5 },\n        { minLevel: 70, soll: 0 },\n        { minLevel: 0, soll: 10 }\n    ],\n    lowCapacity: [\n        { minLevel: 85, soll: 10 },\n        { minLevel: 70, soll: 15 },\n        { minLevel: 0, soll: 15 }\n    ]\n};\n\n// Auswahl der passenden Regelgruppe\nconst activeRules = capacity > limit ? rules.highCapacity : rules.lowCapacity;\n\n// Regel anwenden\nlet soll;\nfor (const rule of activeRules) {\n    if (level > rule.minLevel) {\n        soll = rule.soll;\n        break;\n    }\n}\n\nmsg.payload = { soll };\nnode.status({ fill: \"green\", shape: \"ring\", text: \"Soll: \" + soll});\nreturn msg;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -10229,7 +10230,7 @@
         "z": "479e3443afedb613",
         "g": "a0dda035b1c733c9",
         "name": "Neue MinVol ermitteln",
-        "func": "/*************************************************\n * PV Forecast → dynamische SoC-Mindestgrenze\n *************************************************/\n\n// ---------- Konstanten ----------\nconst PERCENT = 100;\nconst WH_PER_KWH = 1000;\nconst WINTER_REDUCTION = 0.1;\n\n// ---------- Eingangs­werte ----------\nlet fc = Number(msg.payload?.[0]?.state ?? 0) * WH_PER_KWH;\nconst pvForecastEnabled = flow.get(\"PVForecastOn\") === \"on\";\nconst now = new Date();\nconst month = now.getMonth() + 1;\n\n// ---------- Konfiguration ----------\nlet pvFactor = global.get(\"PV_factor\") ?? 1;\nconst config = flow.get(\"ConfigValues\");\n\n// Fallback-Werte\nlet akkuMin = 10;\nlet sollwert = 10;\nlet maxEinspeisung = 100;\n\n// Monatswerte übernehmen\nif (config?.[month]) {\n    ({ akku_min: akkuMin, sollwert, maxeinspeisung: maxEinspeisung } = config[month]);\n} else {\n    node.warn(`Ungültiger Monat (${month}) – Standardwerte werden verwendet`);\n}\n\n// ---------- Sensor ----------\nconst socSensor = flow.get(\"zHAMinSoCSensor\");\n\n// ---------- Winter / Sommer ----------\nconst isWinter = (month >= 11 || month <= 2);\n\nconst socMinAbsolute = isWinter\n    ? flow.get(\"AbsoluteMinSoC_Winter\")\n    : flow.get(\"AbsoluteMinSoC_Summer\");\n\nif (isWinter) {\n    pvFactor *= (1 - WINTER_REDUCTION);\n}\n\n// ---------- Kapazität ----------\nconst capacity = Number(global.get(\"Capacity\")) || 0;\nif (capacity <= 0) {\n    node.warn(\"Ungültige Akku-Kapazität\");\n    return null;\n}\n\n// ---------- Berechnungen ----------\n\n// aktuell nutzbare Energie bis SoC-Min\nconst nettoWh = Math.round(capacity * (PERCENT - akkuMin) / PERCENT);\n\n// Forecast korrigieren\nfc = Math.round(fc * pvFactor);\n\nlet newSocMin = akkuMin;\n\n// Wenn Forecast größer als verfügbare Kapazität\nif (fc > nettoWh) {\n    const doc = Math.min(Math.round(fc / capacity * PERCENT), PERCENT);\n    newSocMin = Math.min(\n        Math.max(PERCENT - doc, socMinAbsolute),\n        akkuMin\n    );\n}\n\n// ---------- Status ----------\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `FC:${fc}Wh | SoCmin:${akkuMin}% | Netto:${nettoWh}Wh | Neu:${newSocMin}%`\n});\n\n// ---------- Output ----------\nif (pvForecastEnabled) {\n    return {\n        payload: {\n            value: newSocMin,\n            sensor: socSensor\n        }\n    };\n}\n\nreturn null;\n\n\n",
+        "func": "// ---------- Konstanten ----------\nconst PERCENT = 100;\nconst WH_PER_KWH = 1000;\nconst WINTER_REDUCTION = 0.1;       // 10%\nconst WINTER_START_MONTH = 11;      // November\nconst WINTER_END_MONTH = 3;         // März\n\n// ---------- Eingangs­werte ----------\nlet fc = Number(msg.payload?.[0]?.state ?? 0) * WH_PER_KWH;\nconst pvForecastEnabled = flow.get(\"PVForecastOn\") === \"on\";\nconst now = new Date();\nconst month = now.getMonth() + 1;\n\n// ---------- Konfiguration ----------\nlet pvFactor = global.get(\"PV_factor\") ?? 1;\nconst config = flow.get(\"ConfigValues\"); //Monatstabelle aus (1.1)\n\n// Fallback-Werte zur Initialisierung\nlet akkuMin = 10;\nlet sollwert = 10;\nlet maxEinspeisung = 100;\n\n// Monatswerte für aktuellen Monat übernehmen\nif (config?.[month]) {\n    ({ akku_min: akkuMin, sollwert, maxeinspeisung: maxEinspeisung } = config[month]);\n} else {\n    node.warn(`Ungültiger Monat (${month}) – Standardwerte werden verwendet`);\n}\n\n// ---------- Sensor ----------\nconst socSensor = flow.get(\"zHAMinSoCSensor\");\n\n// ---------- Winter / Sommer ----------\nconst isWinter = (month >= WINTER_START_MONTH || month <= WINTER_END_MONTH);\n\nconst socMinAbsolute = isWinter\n    ? flow.get(\"AbsoluteMinSoC_Winter\")\n    : flow.get(\"AbsoluteMinSoC_Summer\");\n\nif (isWinter) {\n    pvFactor *= (1 - WINTER_REDUCTION);\n}\n\n// ---------- Kapazität ----------\nconst capacity = Number(global.get(\"Capacity\")) || 0;\nif (capacity <= 0) {\n    node.warn(\"Ungültige Akku-Kapazität\");\n    return null;\n}\n\n// ---------- Berechnungen ----------\n\n// aktuell nutzbare Energie bis SoC-Min\nconst nettoWh = Math.round(capacity * (PERCENT - akkuMin) / PERCENT);\n\n// Forecast korrigieren\nfc = Math.round(fc * pvFactor);\n\nlet newSocMin = akkuMin;\n\n// Wenn Forecast größer als verfügbare Kapazität\nif (fc > nettoWh) {\n    const doc = Math.min(Math.round(fc / capacity * PERCENT), PERCENT);\n    newSocMin = Math.min(\n        Math.max(PERCENT - doc, socMinAbsolute),\n        akkuMin\n    );\n}\n\n// ---------- Status ----------\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `FC:${fc}Wh | SoCmin:${akkuMin}% | Netto:${nettoWh}Wh | Neu:${newSocMin}%`\n});\n\n// ---------- Output ----------\nif (pvForecastEnabled) {\n    return {\n        payload: {\n            value: newSocMin,\n            sensor: socSensor\n        }\n    };\n}\n\nreturn null;\n\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -11068,14 +11069,14 @@
         "useparts": false,
         "accumulate": false,
         "timeout": "",
-        "count": "3",
+        "count": "4",
         "reduceRight": false,
         "reduceExp": "",
         "reduceInit": "",
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 2530,
-        "y": 500,
+        "y": 460,
         "wires": [
             [
                 "4d084316026dde14",
@@ -11089,7 +11090,7 @@
         "z": "479e3443afedb613",
         "g": "2783efc48dd85623",
         "name": "Forecastdaten ",
-        "func": "// ===============================\n// Messenger / Whatsigram\n// ===============================\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\n\n// ===============================\n// PVForecast\n// ===============================\nconst pvforecastexist = flow.get (\"PVForecastOn\");\n\n// ===============================\n// Datum\n// ===============================\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${day}.${month}.${year}`;\n\n// ===============================\n// Globale Werte\n// ===============================\nconst maxcapacity = Number(global.get(\"Capacity\"));\nconst fc_factor = Number(global.get(\"PV_factor\"));\n\n// ===============================\n// Payload aus Eingang\n// ===============================\nconst {min, rest, today } = msg.payload;\nlet lowminvol = Number(flow.get (\"lowminVol\")) || 0 ;\nlet soc = flow.get (\"currentSoC\");\n\n// ===============================\n// Berechnungen\n// ===============================\nconst remain_fc = Math.round(Number(rest) * 1000 * fc_factor); // Wh\nconst fc_today = Math.round(Number(today) * 1000);            // Wh\nconst remain_load = Math.round(maxcapacity * (100 - soc) / 100); // Wh\n\n// ===============================\n// Node-Status\n// ===============================\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `${datum} | SoC ${soc}% | FC rest ${remain_fc}Wh | Load ${remain_load}Wh | MinVol ${lowminvol}V`\n});\n\n// ===============================\n// Whatsagram Nachricht\n// ===============================\nlet message = null;\nif (pvforecastexist === \"on\") {\n    message =\n    `☀️ *PV / Akku Forecast*\\n📅 Datum: ${datum}\\n\\n` +\n    `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n` +\n    `🌤️ PV Forecast heute: ${fc_today} Wh\\n⏳ PV Forecast Resttag: ${remain_fc} Wh`;\n}\nelse {\n    message =\n        `☀️ *Akku Status*\\n📅 Datum: ${datum}\\n\\n` +\n        `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n`;\n}\n\n\n// ===============================\n// CSV-Zeile\n// ===============================\nlet csvLine = null;\nif (pvforecastexist === \"on\")  {\n    csvLine = `${datum};${remain_fc};${fc_today};${soc};${remain_load};${lowminvol}\\n`;\n    }\nelse {\n    csvLine = `${datum};;;${soc};${remain_load};${lowminvol}\\n`;\n    }\n\n\n// ===============================\n// OUTPUTS\n// ===============================\n\n// Output 1 → Whatsagram\nlet outWhatsagram = null;\nif (messenger === \"on\") {\n    outWhatsagram = {\n        payload: {\n            data: {\n                message\n            },\n            sensor: msg_service\n        }\n    };\n}\n\n// Output 2 → CSV\nlet outCSV = { payload: csvLine };\n\n\n// Output 3 → Persistent Notification (Home Assistant Notify Node)\nlet outNotification = null;\nif (pvforecastexist === \"on\")  {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `PV heute=${fc_today}Wh | MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\nelse {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `MinSoc=${min}% | MinVol=${lowminvol}`\n        }\n    };\n}\n\n\n// ===============================\n// Rückgabe der 3 Outputs\n// ===============================\nreturn [outWhatsagram, outCSV, outNotification];\n",
+        "func": "// ===============================\n// Messenger / Whatsigram\n// ===============================\nconst messenger = global.get(\"messengerExist\");\nconst msg_service = global.get(\"msgDienst\");\n\n// ===============================\n// PVForecast\n// ===============================\nconst pvforecastexist = flow.get (\"PVForecastOn\");\n\n// ===============================\n// Datum\n// ===============================\nconst date = new Date();\nconst day = String(date.getDate()).padStart(2, '0');\nconst month = String(date.getMonth() + 1).padStart(2, '0');\nconst year = date.getFullYear();\nconst datum = `${day}.${month}.${year}`;\n\n// ===============================\n// Globale Werte\n// ===============================\nconst maxcapacity = Number(global.get(\"Capacity\"));\nconst fc_factor = Number(global.get(\"PV_factor\"));\n\n// ===============================\n// Payload aus Eingang\n// ===============================\nconst {cal, min, rest, today } = msg.payload;\nlet lowminvol = Number(flow.get (\"lowminVol\")) || 0 ;\nlet soc = flow.get (\"currentSoC\");\n\n// ===============================\n// Berechnungen\n// ===============================\nconst remain_fc = Math.round(Number(rest) * 1000); // Wh\nconst fc_today = Math.round(Number(today) * 1000);            // Wh\nconst remain_load = Math.round(maxcapacity * (100 - soc) / 100); // Wh\n\n// ===============================\n// Node-Status\n// ===============================\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: `${datum} | SoC ${soc}% | FC rest ${remain_fc}Wh | Load ${remain_load}Wh | MinVol ${lowminvol}V`\n});\n\n// ===============================\n// Whatsagram Nachricht\n// ===============================\nlet message = null;\nif (pvforecastexist === \"on\") {\n    message =\n    `☀️ *PV / Akku Forecast*\\n📅 Datum: ${datum}\\n Letzte Kalibrierung vor ${cal} Tagen\\n\\n` +\n    `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n` +\n    `🌤️ PV Forecast heute: ${fc_today} Wh\\n⏳ PV Forecast Resttag: ${remain_fc} Wh`;\n}\nelse {\n    message =\n        `☀️ *Akku Status*\\n📅 Datum: ${datum}\\n Letzte Kalibrierung vor ${cal} Tagen\\n\\n` +\n        `🔋 SoC: ${soc} %\\n⚡ Restladung Akku: ${remain_load} Wh\\n🔋 MinSoC: ${min} %\\n🔋 MinVol: ${lowminvol} V\\n\\n`;\n}\n\n\n// ===============================\n// CSV-Zeile\n// ===============================\nlet csvLine = null;\nif (pvforecastexist === \"on\")  {\n    csvLine = `${datum};${remain_fc};${fc_today};${soc};${remain_load};${lowminvol}\\n`;\n    }\nelse {\n    csvLine = `${datum};;;${soc};${remain_load};${lowminvol}\\n`;\n    }\n\n\n// ===============================\n// OUTPUTS\n// ===============================\n\n// Output 1 → Whatsagram\nlet outWhatsagram = null;\nif (messenger === \"on\") {\n    outWhatsagram = {\n        payload: {\n            data: {\n                message\n            },\n            sensor: msg_service\n        }\n    };\n}\n\n// Output 2 → CSV\nlet outCSV = { payload: csvLine };\n\n\n// Output 3 → Persistent Notification (Home Assistant Notify Node)\nlet outNotification = null;\nif (pvforecastexist === \"on\")  {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `PV heute=${fc_today}Wh | MinSoc=${min}% | MinVol=${lowminvol} | letzte Kalibrierung vor ${cal} Tagen`\n        }\n    };\n}\nelse {\n    outNotification = {\n        payload: {\n            title: \"PV-Akku-Forecast\",\n            message:\n                `Datum=${datum} | SoC=${soc}% | AkkuRest=${remain_load}Wh | ` +\n                `MinSoc=${min}% | MinVol=${lowminvol} | letzte Kalibrierung vor ${cal} Tagen`\n        }\n    };\n}\n\n\n// ===============================\n// Rückgabe der 3 Outputs\n// ===============================\nreturn [outWhatsagram, outCSV, outNotification];\n",
         "outputs": 3,
         "timeout": "",
         "noerr": 0,
@@ -11205,7 +11206,8 @@
             [
                 "cabe719dfaacaaa8",
                 "520d6b3cac7e66f1",
-                "de63067b06565cdb"
+                "de63067b06565cdb",
+                "40d78a447519cb3d"
             ]
         ]
     },
@@ -11266,7 +11268,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2380,
+        "x": 2360,
         "y": 500,
         "wires": [
             [
@@ -11317,7 +11319,7 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2380,
+        "x": 2360,
         "y": 560,
         "wires": [
             [
@@ -11432,7 +11434,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2200,
-        "y": 440,
+        "y": 420,
         "wires": [
             [
                 "0d64858f35253c14"
@@ -11452,8 +11454,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2380,
-        "y": 440,
+        "x": 2360,
+        "y": 420,
         "wires": [
             [
                 "0a0a4ff2e1382e59"
@@ -11581,6 +11583,57 @@
         "wires": []
     },
     {
+        "id": "40d78a447519cb3d",
+        "type": "api-current-state",
+        "z": "479e3443afedb613",
+        "g": "2783efc48dd85623",
+        "name": "letzte_kalibrierung",
+        "server": "285afb99.5208c4",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.letzte_kalibrierung",
+        "state_type": "str",
+        "blockInputOverrides": true,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "number",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "cal",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 2230,
+        "y": 460,
+        "wires": [
+            [
+                "0a0a4ff2e1382e59"
+            ]
+        ]
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -11595,7 +11648,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "6926c9cb7e9a7b29",
+        "id": "c857ab629625989b",
         "type": "global-config",
         "env": [],
         "modules": {
