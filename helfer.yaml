@@ -44,7 +44,7 @@ input_number:
     name: Letzte Kalibrierung
     initial: 0
     min: 0
-    max: 1
+    max: 100
     step: 1
   regler_kp:
     name: Regler kp
