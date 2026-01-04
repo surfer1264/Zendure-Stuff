@@ -141,3 +141,6 @@ input_button:
   regler_init:
     name: Regler Init
     icon: mdi:toggle-switch
+  regler_adhocmsg:
+    name: Regler AdHocMsg
+    icon: mdi:toggle-switch
