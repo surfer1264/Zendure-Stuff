@@ -296,6 +296,15 @@ views:
         show_name: true
         show_state: false
         show_icon: true
+        entity: input_button.regler_adhocmsg
+        name: AdHocMsg
+        tap_action:
+          action: toggle
+        icon: mdi:send
+      - type: entity
+        show_name: true
+        show_state: false
+        show_icon: true
         entity: input_button.regler_init
         name: INIT
         tap_action:
