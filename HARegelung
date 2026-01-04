@@ -702,7 +702,7 @@
         ],
         "x": 1654,
         "y": 119,
-        "w": 952,
+        "w": 922,
         "h": 222,
         "info": "## Verbindungsverlust Shelly 3EM\r\nDer Shelly 3EM verliert manchmal seine Verbindung\r\n\r\ndann:\r\n - wird der WR-Ausgang  auf 80W gesetzt (auf einen sinnvollen Grundlastwert)\r\n - die Regelfunktion `ReglerAktiv=off` außer Kraft gesetzt\r\n - der WR-AUsgang angesteuert\r\n\r\nWenn der SHelly wieder online ist,\r\n\r\ndann:\r\n - die Regelfunktion `ReglerAktiv=on` gesetzt\r\n - werden alle Variablen des gesamten FLows erneut initialisiert.\r\n"
     },
@@ -4279,7 +4279,7 @@
         "links": [
             "7b4e9c68d230dfef"
         ],
-        "x": 2565,
+        "x": 2535,
         "y": 200,
         "wires": []
     },
@@ -9373,7 +9373,7 @@
         "z": "479e3443afedb613",
         "g": "50b4f58a24c2f256",
         "name": "Build Notify Message",
-        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\nconst lowminvol = flow.get(\"lowminVol\");\nlet outNotification = null;\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: ${lowminvol} V`\n            },\n    sensor: msg_service\n    };\n    return [msg, null];\n    } \nelse \n    {\n    outNotification = {\n    payload: {\n        title: \"PV-Status\",\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: ${lowminvol} V`\n        }\n    }\n    return [null, msg];\n    }",
+        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\nconst lowminvol = flow.get(\"lowminVol\");\nlet outNotification = null;\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: ${lowminvol} V`\n            },\n    sensor: msg_service\n    };\n    return [msg, null];\n    } \nelse \n    {\n    outNotification = {\n    payload: {\n        title: \"PV-Status\",\n        message: `⚙️ Reglertyp: ${actor} | Hub Online: ${connected} | Regelung aktiv: ${aktiv} | Sollwert: ${sollwert} W | Max. Einspeisung: ${maxeinspeisung} W | MinVol: ${lowminvol} V`\n        }\n    }\n    return [null, outNotification];\n    }",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -11651,7 +11651,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "51c3a727baddad47",
+        "id": "a5d555ff46ec5902",
         "type": "global-config",
         "env": [],
         "modules": {
