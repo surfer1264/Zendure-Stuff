@@ -67,7 +67,7 @@
             "d5e2c6eb62b0e16c"
         ],
         "x": 1634,
-        "y": 1879,
+        "y": 1899,
         "w": 1112,
         "h": 222
     },
@@ -90,12 +90,12 @@
             "46ac14d1f3bb7a07",
             "02ed511c2d909f2f",
             "e9d26e262bcf32c1",
-            "50b4f58a24c2f256"
+            "fd1163c8e40fda7b"
         ],
         "x": 228,
-        "y": 4453,
+        "y": 4499,
         "w": 864,
-        "h": 1214
+        "h": 1168
     },
     {
         "id": "acff453100dcbbc9",
@@ -162,10 +162,11 @@
             "02ecee97db19ba57",
             "318c162604820738",
             "4f65f3f722598fdb",
-            "a44f34595be8069f"
+            "a44f34595be8069f",
+            "f7123a05d6880245"
         ],
         "x": 1634,
-        "y": 2139,
+        "y": 2179,
         "w": 1712,
         "h": 369.5
     },
@@ -285,12 +286,13 @@
             "df24757803f1f131",
             "2783efc48dd85623",
             "3d36f3e8b8cb3fe0",
-            "5ba77bca738d9547"
+            "5ba77bca738d9547",
+            "50b4f58a24c2f256"
         ],
         "x": 1628,
         "y": 39,
         "w": 1444,
-        "h": 1128
+        "h": 1188
     },
     {
         "id": "5f9705c6260e6617",
@@ -331,7 +333,7 @@
             "dad5b69e30b0d499"
         ],
         "x": 1628,
-        "y": 1219,
+        "y": 1239,
         "w": 924,
         "h": 628
     },
@@ -352,7 +354,7 @@
             "8168c7cbdb038c4d"
         ],
         "x": 1654,
-        "y": 1299,
+        "y": 1319,
         "w": 872,
         "h": 142
     },
@@ -468,7 +470,7 @@
         ],
         "x": 234,
         "y": 3999,
-        "w": 1232,
+        "w": 1252,
         "h": 142
     },
     {
@@ -510,7 +512,7 @@
             "0a77a411bae6d6a8"
         ],
         "x": 1654,
-        "y": 1659,
+        "y": 1679,
         "w": 872,
         "h": 162
     },
@@ -533,7 +535,7 @@
             "c4d375f88457bc5a"
         ],
         "x": 1654,
-        "y": 1479,
+        "y": 1499,
         "w": 872,
         "h": 142
     },
@@ -553,7 +555,7 @@
             "e646756010d9f10c"
         ],
         "x": 234,
-        "y": 3439,
+        "y": 3459,
         "w": 1252,
         "h": 82
     },
@@ -561,20 +563,22 @@
         "id": "50b4f58a24c2f256",
         "type": "group",
         "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "(8.1)  AdHoc Message an Messenger schicken",
+        "g": "e504044664a57b4e",
+        "name": "(3.7)  AdHoc Message an Messenger schicken",
         "style": {
             "label": true
         },
         "nodes": [
             "a10e19704f6f0128",
             "3405486d31eae70f",
-            "6510f41ac1c3a100"
+            "6510f41ac1c3a100",
+            "bc9610db8bd0f855",
+            "bd720c39829d1bf7"
         ],
-        "x": 254,
-        "y": 4479,
-        "w": 812,
-        "h": 82
+        "x": 1654,
+        "y": 1099,
+        "w": 1392,
+        "h": 102
     },
     {
         "id": "caf11d3b06226cb7",
@@ -725,7 +729,7 @@
             "6279a738e536bd7e"
         ],
         "x": 1654,
-        "y": 839,
+        "y": 779,
         "w": 1392,
         "h": 302
     },
@@ -1129,7 +1133,7 @@
             "75761554bc22bbaf"
         ],
         "x": 1654,
-        "y": 539,
+        "y": 519,
         "w": 1392,
         "h": 242
     },
@@ -1266,7 +1270,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 1780,
-        "y": 1340,
+        "y": 1360,
         "wires": [
             [
                 "8168c7cbdb038c4d"
@@ -1292,7 +1296,7 @@
         "onceDelay": 0.1,
         "topic": "",
         "x": 1780,
-        "y": 1400,
+        "y": 1420,
         "wires": [
             [
                 "8168c7cbdb038c4d"
@@ -1320,7 +1324,7 @@
         "to": "",
         "reg": false,
         "x": 2410,
-        "y": 1380,
+        "y": 1400,
         "wires": [
             []
         ]
@@ -1936,7 +1940,7 @@
             "e646756010d9f10c"
         ],
         "x": 1675,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "09573f0766e9b699"
@@ -1998,7 +2002,7 @@
         "domain": "input_number",
         "service": "increment",
         "x": 2290,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "7f5bc6e47b11df44"
@@ -2011,7 +2015,7 @@
         "z": "479e3443afedb613",
         "g": "fdb0ce097a97065d",
         "name": "KONFIGURIEREN",
-        "func": "// ===============================\n// INFO\nflow.set(\"Release\", \"5.4.1\"); //nur Info\n// ===============================\n\n// ===============================\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\n// ===============================\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //Solarflow Outputlimit der Z-HA Integratiom, hier vorgeben\n\n// ===============================\n// Was für eine Art WR wird eingesetzt\n// ===============================\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n//flow.set(\"WRHersteller\", \"INT\"); //nutze einen Hub mit integriertem WR (Hyper/SF800)\n\n// ===============================\n// meine Akku-Daten\n// ===============================\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen !!!\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack); // nicht ändern\nglobal.set (\"Capacity\", accustack[1]); // nicht ändern, nur Initialisierung (siehe auch 1.2)\n\n// ===============================\n// WICHTIG!! In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// ===============================\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// Achtung: wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und aktualisiert\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze Akkustack\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\n// weird nur verwendet, wenn in (2) der Sensorweg verfolgt wird und nicht die http-Abfrage \nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als Nachrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nglobal.set (\"messengerExist\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// ===============================\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\n// Pass Werte nach Deinen Bedürfnissen an\n// ===============================\nconst config = {\n    1:  { akku_min: 40, sollwert: 15, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 15, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 15, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// ===============================\n// Akkugrenzwerte\n// ===============================\n// Minimaleinstellung der Entladegrenze der Akkus; siehe (1.8)\n// Empfehlung NIE unter 10% gehen\n// Für die Monate 3 bis 10\nflow.set (\"AbsoluteMinSoC_Summer\", 13);\n// Für die Monate 11 bis 2\nflow.set (\"AbsoluteMinSoC_Winter\", 20);\n// Untere Zellspannung für Warnung\n// Empfehlung NIE unter 3.0 gehen\nflow.set (\"minVolLimit\", 3.0);\n\nflow.set (\"lowminVol\", 0); // nur Deklaration, speichert die kleinste Zellspannung\n\n// ===============================\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecastOn\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (forecast.solar)\n//flow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\n//flow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n//flow.set(\"PV_today\", \"sensor.energy_production_today\");\n\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (Solcast)\nflow.set(\"PV_tomorrow\", \"sensor.solcast_pv_forecast_prognose_morgen\");\nflow.set(\"PV_today_remaining\", \"sensor.solcast_pv_forecast_prognose_verbleibende_leistung_heute\");\nflow.set(\"PV_today\", \"sensor.solcast_pv_forecast_prognose_heute\");\n\nglobal.set(\"PV_factor\", 0.9); //Justieren der Forecast-Genauigkeit um Faktor x (muss man ein wenig mit spielen)\n\n// ===============================\n// Bypasswert\n// Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n// ===============================\n// Wert im Dashboard änderbar\nflow.set(\"ResetByPassWert\", 150);\nflow.set(\"ResetMinEinspeisung\", 0);\n\nreturn msg;\n\n",
+        "func": "// ===============================\n// INFO\nflow.set(\"Release\", \"5.5.0\"); //nur Info\n// ===============================\n\n// ===============================\n// Wechselrichterparameter hier anpassen\n// Maximalleistung, die in der Regelung genutzt werden soll <= WR System Leistung \n// auch hier MAX Leistung von Hyper, SF800 und Co angeben\n// ===============================\nflow.set(\"WRLeistung\", 650); //Maxleistung des WR in Watt, die in der Regelung berücksichtigt werden soll \nflow.set(\"WRminLeistung\", 35); //Minleistung des WR in Watt, ACHTUNG: 0 kann falsch sein und wird von einigen WR nicht angenommen!!\n// Maximalleistung am Ausgang des Hubs, die im Hub eingestellt ist; sollte >=WRLeistung sein\nflow.set(\"SFMax\", 700); //Solarflow Outputlimit der Z-HA Integratiom, hier vorgeben\n\n// ===============================\n// Was für eine Art WR wird eingesetzt\n// ===============================\n// Je nach WR Typ gibt es unterschiedliche Pfade in den Routinen, die angesteuert werden müssen, diese Unterscheidung wird hier getroffen \nflow.set(\"WRHersteller\", \"EZ1\"); //nutze einen APSystemEZ1\n//flow.set(\"WRHersteller\", \"HMS\"); //nutze einen HMS8002T\n//flow.set(\"WRHersteller\", \"INT\"); //nutze einen Hub mit integriertem WR (Hyper/SF800)\n\n// ===============================\n// meine Akku-Daten\n// ===============================\n// kumuliert aufbauen (Position 2 ist also die Summe von Akku1 und Akku2, usw.)\n// Anpassen !!!\nconst accustack = {\n  1: 1920,\n  2: 2880,\n  3: 3840,\n  4: 4800\n};\nflow.set (\"AccuStack\", accustack); // nicht ändern\nglobal.set (\"Capacity\", accustack[1]); // nicht ändern, nur Initialisierung (siehe auch 1.2)\n\n// ===============================\n// WICHTIG!! In Folge hier die exakten Sensornamen Eurer Ausgabegeräte eintragen\n// ===============================\n// wrtyp wird über das Dashboard ermittelt\n// wrtyp 0: AUS: keine Regelung, Kontrolle durch Hub \n// wrtyp 1: EZ1: dieser Typ1 steht IMMER für absolute Ansteuerung, z.B. APSystemEZ1 für absolute Einspeisung, \n// wrtyp 2: HMS: dieser Typ2 steht IMMER für relative Ansteuerung, z.B. Hoymiles für relative Einspeisung\n// wrtyp 3: OUT: Ausgangsleistung Eures des Hubs (nur interne Nutzung, aber wichtig)\n// wrtyp 4: MAN: Zendure Manager Manuelle Leistungssteuerung \n// wrtyp 5: SMT: Zendure Manager Smarte Leistungssteuerung\n\n// Achtung typ1 nur für WR mit absoluter Einspeisung in W (NICHT Hyper, SF800 und Co: IGNORE )\nflow.set (\"wrSensor_typ1\", \"number.solar_maximale_leistung\"); // mein APSystemEZ1  \n\n// Achtung typ2 nur für WR mit relativer Einspeisung in % (NICHT Hyper, SF800 und Co: : IGNORE )\nflow.set(\"wrSensor_typ2\", \"number.dtu_leistungsbegrenzung\"); // mein HMS800xx \n\n// Achtung: wird benötigt aus der Z-HA Integration, überprüft ALLE Sensornamen und aktualisiert\nflow.set (\"wrSensor_typ3\", \"number.solarherwegh_output_limit\"); // Z-HA Integratiom, Sensor für OUTPUT-Limit des Hubs\nflow.set (\"wrSensor_typ4\", \"number.zendure_manager_manual_power\"); // Z-HA Integratiom, Sensor für manuelle Leistungssteuerung\nflow.set (\"zHAMinSoCSensor\", \"number.solarherwegh_min_soc\" ); // Z-HA Integration, Sensor für Entladegrenze Akkustack\nflow.set (\"electricLevel\", \"sensor.solarherwegh_electric_level\"); // Z-HA Integration, Sensor für den Ladezustandes des Akkustapels des Systems\nflow.set (\"Hubstatus\", \"sensor.solarherwegh_pack_state\"); // Z-HA Integration, Sensor für den Status des Hubs, Laden, Entladen, Standby\nflow.set (\"CountAccu\", \"sensor.solarherwegh_pack_num\"); // Z-HA Integration, Anzahl Akkus\n\n// P1 Sensorm Shelly3EMPro oder ähnlich\n// weird nur verwendet, wenn in (2) der Sensorweg verfolgt wird und nicht die http-Abfrage \nflow.set(\"P1Sensor\", \"sensor.shellypro3em_power_actual_total\");\n\n// Hast Du einen Einspeisesensor hinter Deinem Hub?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert\nflow.set (\"EinspeiseSensorExist\", \"on\");\n// Wie heißt der Einspeisesensor?\nflow.set(\"einspeiseSensor\", \"sensor.solarhub_power\"); // mein ShellyPlus1PM hinterm Hub/Wechselrichter\n\n// Hast Du Whatsigram Messenger als Nachrichtenkomponente installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert, oder Nutzung nicht gewollt\nglobal.set (\"messengerExist\", \"on\");\n//Empfängername des Dienstes aus der Whatsigram Integration hier einfügen \nglobal.set (\"msgDienst\", \"notify.whatsigram_recipient_1\");\n\n// ===============================\n// Konfigurationstabelle Hubparameter für jeden Monat\n// Format: Monat: { Akku_min %, Sollwert W, MaxEinspeisung W }\n// Pass Werte nach Deinen Bedürfnissen an\n// ===============================\nconst config = {\n    1:  { akku_min: 40, sollwert: 15, maxeinspeisung: 200 },\n    2:  { akku_min: 30, sollwert: 10, maxeinspeisung: 200 },\n    3:  { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    4:  { akku_min: 20, sollwert:  5, maxeinspeisung: 400 },\n    5:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    6:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    7:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    8:  { akku_min: 14, sollwert:  0, maxeinspeisung: 500 },\n    9:  { akku_min: 15, sollwert:  5, maxeinspeisung: 400 },\n    10: { akku_min: 25, sollwert:  5, maxeinspeisung: 400 },\n    11: { akku_min: 25, sollwert: 15, maxeinspeisung: 300 },\n    12: { akku_min: 40, sollwert: 15, maxeinspeisung: 200 }\n};\nflow.set (\"ConfigValues\", config);\n\n// ===============================\n// Akkugrenzwerte\n// ===============================\n// Minimaleinstellung der Entladegrenze der Akkus; siehe (1.8)\n// Empfehlung NIE unter 10% gehen\n// Für die Monate 3 bis 10\nflow.set (\"AbsoluteMinSoC_Summer\", 13);\n// Für die Monate 11 bis 2\nflow.set (\"AbsoluteMinSoC_Winter\", 20);\n// Untere Zellspannung für Warnung\n// Empfehlung NIE unter 3.0 gehen\nflow.set (\"minVolLimit\", 3.0);\n\nflow.set (\"lowminVol\", 0); // nur Deklaration, speichert die kleinste Zellspannung\n\n// ===============================\n// PV Forecast installiert?\n// Setze auf \"on\" wenn installiert, Setze auf \"off\" wenn nicht installiert oder Nutzung nicht gewollt\nflow.set(\"PVForecastOn\", \"on\");\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (forecast.solar)\n//flow.set(\"PV_tomorrow\", \"sensor.energy_production_tomorrow\");\n//flow.set (\"PV_today_remaining\", \"sensor.energy_production_today_remaining\");\n//flow.set(\"PV_today\", \"sensor.energy_production_today\");\n\n// PV Sensoren hier konfigurieren aus der HA Forecast Integration (Solcast)\nflow.set(\"PV_tomorrow\", \"sensor.solcast_pv_forecast_prognose_morgen\");\nflow.set(\"PV_today_remaining\", \"sensor.solcast_pv_forecast_prognose_verbleibende_leistung_heute\");\nflow.set(\"PV_today\", \"sensor.solcast_pv_forecast_prognose_heute\");\n\nglobal.set(\"PV_factor\", 0.9); //Justieren der Forecast-Genauigkeit um Faktor x (muss man ein wenig mit spielen)\n\n// ===============================\n// Bypasswert\n// Wenn der Hub in den Bypass geht, soll die Einspeisung begrenzt werden, auf Defaultwert\n// ===============================\n// Wert im Dashboard änderbar\nflow.set(\"ResetByPassWert\", 150);\nflow.set(\"ResetMinEinspeisung\", 0);\n\nreturn msg;\n\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
@@ -3071,7 +3075,7 @@
         "blockInputOverrides": true,
         "domain": "input_number",
         "service": "set_value",
-        "x": 1330,
+        "x": 1350,
         "y": 4060,
         "wires": [
             []
@@ -3451,7 +3455,7 @@
         ],
         "uncaught": false,
         "x": 1800,
-        "y": 1700,
+        "y": 1720,
         "wires": [
             [
                 "fa35dabff235479a",
@@ -3688,7 +3692,7 @@
         "repair": false,
         "outputs": 2,
         "x": 2070,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "5496fa05034dd5e0"
@@ -3723,7 +3727,7 @@
         "domain": "switch",
         "service": "turn_off",
         "x": 2770,
-        "y": 2400,
+        "y": 2440,
         "wires": [
             [
                 "02ecee97db19ba57"
@@ -3757,7 +3761,7 @@
         "domain": "switch",
         "service": "turn_on",
         "x": 2910,
-        "y": 2240,
+        "y": 2280,
         "wires": [
             [
                 "318c162604820738"
@@ -3786,7 +3790,7 @@
         "ifState": "on",
         "ifStateType": "str",
         "ifStateOperator": "is",
-        "outputOnlyOnStateChange": true,
+        "outputOnlyOnStateChange": false,
         "for": "0",
         "forType": "num",
         "forUnits": "minutes",
@@ -3799,7 +3803,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -3816,7 +3820,7 @@
             }
         ],
         "x": 1950,
-        "y": 2360,
+        "y": 2400,
         "wires": [
             [
                 "05397794624406c5"
@@ -3834,7 +3838,7 @@
         "name": "HIER: WR Sensornamen für WR Ein/Aus prüfen",
         "info": "",
         "x": 2900,
-        "y": 2180,
+        "y": 2220,
         "wires": []
     },
     {
@@ -3852,7 +3856,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 1980,
-        "y": 2060,
+        "y": 2080,
         "wires": []
     },
     {
@@ -4047,7 +4051,7 @@
         "to": "",
         "reg": false,
         "x": 2220,
-        "y": 2260,
+        "y": 2300,
         "wires": [
             [
                 "2986171de753aadb"
@@ -4075,7 +4079,7 @@
         "to": "",
         "reg": false,
         "x": 2220,
-        "y": 2400,
+        "y": 2440,
         "wires": [
             [
                 "113787982a56301f"
@@ -4331,7 +4335,7 @@
             }
         ],
         "x": 1790,
-        "y": 880,
+        "y": 820,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4344,7 +4348,7 @@
         "type": "function",
         "z": "479e3443afedb613",
         "g": "70cc64c2bba0fbd9",
-        "name": "HA Nachricht erstellen",
+        "name": "HA Notification",
         "func": "const entityId =\n    msg.entity_id ||\n    msg.topic ||\n    msg.device ||\n    msg.payload?.entity_id ||\n    msg.data?.entity_id ||\n    msg.friendly_name ||\n    msg.name ||\n    msg.payload?.name ||\n    \"unknown\";\n\nconst payloadValue =\n    typeof msg.payload === \"object\" ? msg.payload.state : msg.payload;\n\nmsg.payload = {\n    title: \"Status Devices\",\n    message: `Entity: ${entityId} hat den Status '${payloadValue}' erreicht.`\n};\n\nnode.status({ text: `${entityId}: ${payloadValue}` });\nreturn msg;\n",
         "outputs": 1,
         "timeout": "",
@@ -4352,8 +4356,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2140,
-        "y": 880,
+        "x": 2380,
+        "y": 820,
         "wires": [
             [
                 "03ed40ed26dd3a65"
@@ -4388,7 +4392,7 @@
         "service_domain": "persistent_notification",
         "mergecontext": "",
         "x": 2930,
-        "y": 880,
+        "y": 820,
         "wires": [
             []
         ]
@@ -4445,7 +4449,7 @@
             }
         ],
         "x": 1810,
-        "y": 920,
+        "y": 860,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -4466,7 +4470,7 @@
         "overwriteFile": "false",
         "encoding": "utf8",
         "x": 2400,
-        "y": 1780,
+        "y": 1800,
         "wires": [
             []
         ]
@@ -4844,7 +4848,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1970,
-        "y": 2440,
+        "y": 2480,
         "wires": [
             [
                 "8a4a05751fdc343f"
@@ -4874,7 +4878,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1970,
-        "y": 2240,
+        "y": 2280,
         "wires": [
             [
                 "05397794624406c5"
@@ -5021,7 +5025,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2420,
-        "y": 2240,
+        "y": 2280,
         "wires": [
             [
                 "4f65f3f722598fdb"
@@ -5063,7 +5067,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2420,
-        "y": 2380,
+        "y": 2420,
         "wires": [
             [
                 "4119817686335d91"
@@ -5103,7 +5107,7 @@
         "domain": "button",
         "service": "press",
         "x": 2790,
-        "y": 2300,
+        "y": 2340,
         "wires": [
             []
         ]
@@ -5135,7 +5139,7 @@
         "domain": "button",
         "service": "press",
         "x": 2800,
-        "y": 2460,
+        "y": 2500,
         "wires": [
             []
         ]
@@ -5669,7 +5673,7 @@
         "repair": false,
         "outputs": 2,
         "x": 1990,
-        "y": 1960,
+        "y": 1980,
         "wires": [
             [
                 "13971ddb6ad995e2"
@@ -5985,7 +5989,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2540,
-        "y": 2300,
+        "y": 2340,
         "wires": [
             [
                 "4f65f3f722598fdb"
@@ -6023,7 +6027,7 @@
         "repair": false,
         "outputs": 3,
         "x": 2540,
-        "y": 2460,
+        "y": 2500,
         "wires": [
             [
                 "4119817686335d91"
@@ -6456,7 +6460,7 @@
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
         "x": 2590,
-        "y": 2000,
+        "y": 2020,
         "wires": [
             []
         ]
@@ -6469,7 +6473,7 @@
         "name": "HIER: WR DeviceTracker prüfen Knoten de-/aktivieren / Verbindungen herstellen",
         "info": "",
         "x": 1980,
-        "y": 1040,
+        "y": 980,
         "wires": []
     },
     {
@@ -6480,7 +6484,7 @@
         "name": "Wenn Sensornamen in 1.1. gut gepflegt, dann läuft die Routine generisch",
         "info": "",
         "x": 2400,
-        "y": 1960,
+        "y": 1980,
         "wires": []
     },
     {
@@ -6928,7 +6932,7 @@
             }
         ],
         "x": 1750,
-        "y": 2280,
+        "y": 2320,
         "wires": [
             [
                 "36f3252fb4621270"
@@ -6974,7 +6978,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 1960,
-        "y": 2300,
+        "y": 2340,
         "wires": [
             [
                 "05397794624406c5"
@@ -7058,7 +7062,7 @@
         "allowrate": false,
         "outputs": 1,
         "x": 3230,
-        "y": 2180,
+        "y": 2220,
         "wires": [
             [
                 "2986171de753aadb"
@@ -7687,7 +7691,7 @@
         "domain": "notify",
         "service": "persistent_notification",
         "x": 2070,
-        "y": 1700,
+        "y": 1720,
         "wires": [
             []
         ]
@@ -7951,7 +7955,7 @@
         "name": "INIT vom Dashboard",
         "info": "1",
         "x": 430,
-        "y": 220,
+        "y": 240,
         "wires": []
     },
     {
@@ -8126,7 +8130,7 @@
         "allowrate": false,
         "outputs": 1,
         "x": 3230,
-        "y": 2320,
+        "y": 2360,
         "wires": [
             [
                 "113787982a56301f"
@@ -8251,7 +8255,7 @@
         "type": "api-current-state",
         "z": "479e3443afedb613",
         "g": "b6cbd1ee551c690b",
-        "name": "EZ1 available?",
+        "name": "EZ1 unavailable? ",
         "server": "285afb99.5208c4",
         "version": 3,
         "outputs": 2,
@@ -8265,7 +8269,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -8283,8 +8287,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 3000,
-        "y": 2380,
+        "x": 3010,
+        "y": 2420,
         "wires": [
             [
                 "7893c8dbb115ef93"
@@ -8297,7 +8301,7 @@
         "type": "api-current-state",
         "z": "479e3443afedb613",
         "g": "b6cbd1ee551c690b",
-        "name": "EZ1 available?",
+        "name": "EZ1 unavailable?",
         "server": "285afb99.5208c4",
         "version": 3,
         "outputs": 2,
@@ -8311,7 +8315,7 @@
             {
                 "property": "payload",
                 "propertyType": "msg",
-                "value": "",
+                "value": "string",
                 "valueType": "entityState"
             },
             {
@@ -8329,8 +8333,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 3100,
-        "y": 2240,
+        "x": 3110,
+        "y": 2280,
         "wires": [
             [
                 "9c35e52d51caca37"
@@ -8351,7 +8355,7 @@
         "overwriteFile": "false",
         "encoding": "none",
         "x": 2410,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             []
         ]
@@ -8367,7 +8371,7 @@
             "f5ac4859d53b8c34"
         ],
         "x": 1805,
-        "y": 1520,
+        "y": 1540,
         "wires": [
             [
                 "1f6df3bd52dc3303"
@@ -8397,7 +8401,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1760,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             [
                 "1f6df3bd52dc3303"
@@ -8814,7 +8818,7 @@
             }
         ],
         "x": 380,
-        "y": 3480,
+        "y": 3500,
         "wires": [
             [],
             [
@@ -8836,7 +8840,7 @@
         "finalize": "",
         "libs": [],
         "x": 840,
-        "y": 3480,
+        "y": 3500,
         "wires": [
             [
                 "e646756010d9f10c"
@@ -8854,7 +8858,7 @@
             "60df30044c929c46"
         ],
         "x": 1445,
-        "y": 3480,
+        "y": 3500,
         "wires": []
     },
     {
@@ -8944,7 +8948,7 @@
         "finalize": "",
         "libs": [],
         "x": 2060,
-        "y": 1580,
+        "y": 1600,
         "wires": [
             [
                 "19c87395473efe5b"
@@ -8965,7 +8969,7 @@
         "finalize": "",
         "libs": [],
         "x": 1790,
-        "y": 2020,
+        "y": 2040,
         "wires": [
             [
                 "fc7613a47a09c1a6",
@@ -9114,7 +9118,7 @@
         "finalize": "",
         "libs": [],
         "x": 2100,
-        "y": 1780,
+        "y": 1800,
         "wires": [
             [
                 "0a77a411bae6d6a8"
@@ -9147,7 +9151,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1750,
-        "y": 1780,
+        "y": 1800,
         "wires": [
             [
                 "294af22fccee50c1"
@@ -9182,7 +9186,7 @@
         "target": {},
         "mergecontext": "",
         "x": 2360,
-        "y": 1700,
+        "y": 1720,
         "wires": [
             []
         ]
@@ -9357,8 +9361,8 @@
         "domain": "notify",
         "service": "send_message",
         "mergecontext": "",
-        "x": 900,
-        "y": 4520,
+        "x": 2880,
+        "y": 1140,
         "wires": [
             []
         ]
@@ -9369,18 +9373,21 @@
         "z": "479e3443afedb613",
         "g": "50b4f58a24c2f256",
         "name": "Build Notify Message",
-        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W`\n            },\n    sensor: msg_service\n    };\n    return msg;\n    } \nelse \n    {\n    return null;  // kein Output, wenn messenger \"off\" ist\n    }",
-        "outputs": 1,
+        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\nconst lowminvol = flow.get(\"lowminVol\");\nlet outNotification = null;\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: {lowminvol} V`\n            },\n    sensor: msg_service\n    };\n    return [msg, null];\n    } \nelse \n    {\n    outNotification = {\n    payload: {\n        title: \"PV-Status\",\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: {lowminvol} V`\n        }\n    }\n    return [null, msg];\n    }",
+        "outputs": 2,
         "timeout": "",
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 4520,
+        "x": 2400,
+        "y": 1140,
         "wires": [
             [
                 "a10e19704f6f0128"
+            ],
+            [
+                "bd720c39829d1bf7"
             ]
         ]
     },
@@ -9396,8 +9403,8 @@
         "once": false,
         "onceDelay": "",
         "topic": "",
-        "x": 350,
-        "y": 4520,
+        "x": 1890,
+        "y": 1160,
         "wires": [
             [
                 "3405486d31eae70f"
@@ -9417,8 +9424,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2130,
-        "y": 960,
+        "x": 2410,
+        "y": 900,
         "wires": [
             [
                 "1333b1823dfb600e"
@@ -9453,7 +9460,7 @@
         "target": {},
         "mergecontext": "",
         "x": 2910,
-        "y": 1020,
+        "y": 960,
         "wires": [
             []
         ]
@@ -9563,7 +9570,7 @@
             }
         ],
         "x": 1800,
-        "y": 960,
+        "y": 900,
         "wires": [
             [
                 "93030162d5c5a12c"
@@ -9623,7 +9630,7 @@
             }
         ],
         "x": 1820,
-        "y": 1000,
+        "y": 940,
         "wires": [
             [
                 "93030162d5c5a12c"
@@ -10297,7 +10304,7 @@
         "name": "Activate/Deactivate here, wenn Restart eine Debugzeile schreiben soll",
         "info": "",
         "x": 2090,
-        "y": 1520,
+        "y": 1540,
         "wires": []
     },
     {
@@ -10338,7 +10345,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 2720,
-        "y": 2240,
+        "y": 2280,
         "wires": [
             [],
             [
@@ -10596,7 +10603,7 @@
             }
         ],
         "x": 1810,
-        "y": 1100,
+        "y": 1040,
         "wires": [
             [
                 "93030162d5c5a12c",
@@ -10618,8 +10625,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 2110,
-        "y": 1100,
+        "x": 2430,
+        "y": 1020,
         "wires": [
             [
                 "1333b1823dfb600e"
@@ -10678,7 +10685,7 @@
             }
         ],
         "x": 1770,
-        "y": 680,
+        "y": 660,
         "wires": [
             [
                 "6a3caaeb504dccce"
@@ -10708,7 +10715,7 @@
         "reduceInitType": "",
         "reduceFixup": "",
         "x": 2530,
-        "y": 620,
+        "y": 600,
         "wires": [
             [
                 "4d084316026dde14",
@@ -10730,7 +10737,7 @@
         "finalize": "",
         "libs": [],
         "x": 2700,
-        "y": 620,
+        "y": 600,
         "wires": [
             [
                 "83b33976393ab12b"
@@ -10756,7 +10763,7 @@
         "overwriteFile": "false",
         "encoding": "none",
         "x": 2930,
-        "y": 640,
+        "y": 620,
         "wires": [
             []
         ],
@@ -10785,7 +10792,7 @@
         "payload": "",
         "payloadType": "date",
         "x": 1750,
-        "y": 620,
+        "y": 600,
         "wires": [
             [
                 "6a3caaeb504dccce"
@@ -10818,7 +10825,7 @@
         "domain": "notify",
         "service": "persistent_notification",
         "x": 2670,
-        "y": 700,
+        "y": 680,
         "wires": [
             []
         ]
@@ -10833,7 +10840,7 @@
             "6a3caaeb504dccce"
         ],
         "x": 2045,
-        "y": 660,
+        "y": 640,
         "wires": [
             [
                 "cabe719dfaacaaa8",
@@ -10854,7 +10861,7 @@
             "573c5ca307da6215"
         ],
         "x": 1965,
-        "y": 660,
+        "y": 640,
         "wires": []
     },
     {
@@ -10880,7 +10887,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2200,
-        "y": 660,
+        "y": 640,
         "wires": [
             [
                 "00997a4452a57bfc"
@@ -10901,7 +10908,7 @@
         "finalize": "",
         "libs": [],
         "x": 2360,
-        "y": 660,
+        "y": 640,
         "wires": [
             [
                 "0a0a4ff2e1382e59"
@@ -10931,7 +10938,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2190,
-        "y": 720,
+        "y": 700,
         "wires": [
             [
                 "bbd97221abe56b6f"
@@ -10952,7 +10959,7 @@
         "finalize": "",
         "libs": [],
         "x": 2360,
-        "y": 720,
+        "y": 700,
         "wires": [
             [
                 "0a0a4ff2e1382e59"
@@ -10987,7 +10994,7 @@
         "target": {},
         "mergecontext": "",
         "x": 2910,
-        "y": 580,
+        "y": 560,
         "wires": [
             []
         ]
@@ -11017,7 +11024,7 @@
         "domain": "notify",
         "service": "persistent_notification",
         "x": 2890,
-        "y": 700,
+        "y": 680,
         "wires": [
             []
         ]
@@ -11066,7 +11073,7 @@
         "outputLocation": "payload",
         "outputResultsCount": 1,
         "x": 2200,
-        "y": 580,
+        "y": 560,
         "wires": [
             [
                 "0d64858f35253c14"
@@ -11087,7 +11094,7 @@
         "finalize": "",
         "libs": [],
         "x": 2360,
-        "y": 580,
+        "y": 560,
         "wires": [
             [
                 "0a0a4ff2e1382e59"
@@ -11258,7 +11265,7 @@
         "entity_location": "data",
         "override_data": "msg",
         "x": 2230,
-        "y": 620,
+        "y": 600,
         "wires": [
             [
                 "0a0a4ff2e1382e59"
@@ -11317,7 +11324,7 @@
             }
         ],
         "x": 1740,
-        "y": 740,
+        "y": 720,
         "wires": [
             [
                 "6a3caaeb504dccce"
@@ -11406,7 +11413,7 @@
         "name": "WHATSIGRAM ist zu konfigurieren",
         "info": "",
         "x": 1800,
-        "y": 1260,
+        "y": 1280,
         "wires": []
     },
     {
@@ -11428,7 +11435,7 @@
         "name": "keine Anpassunten nötig",
         "info": "",
         "x": 1790,
-        "y": 1920,
+        "y": 1940,
         "wires": []
     },
     {
@@ -11439,7 +11446,7 @@
         "name": "sehr spezifisch für die genutzten Wechselrichter ",
         "info": "",
         "x": 1840,
-        "y": 2180,
+        "y": 2220,
         "wires": []
     },
     {
@@ -11500,6 +11507,136 @@
         ]
     },
     {
+        "id": "f7123a05d6880245",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "b6cbd1ee551c690b",
+        "name": "Test",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1730,
+        "y": 2400,
+        "wires": [
+            [
+                "36f3252fb4621270"
+            ]
+        ]
+    },
+    {
+        "id": "fd1163c8e40fda7b",
+        "type": "comment",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Übungsspielwiese, einfache Routinen zum Austesten und Lernen",
+        "info": "",
+        "x": 490,
+        "y": 4540,
+        "wires": []
+    },
+    {
+        "id": "bc9610db8bd0f855",
+        "type": "server-state-changed",
+        "z": "479e3443afedb613",
+        "g": "50b4f58a24c2f256",
+        "name": "AdHocMsg",
+        "server": "285afb99.5208c4",
+        "version": 6,
+        "outputs": 1,
+        "exposeAsEntityConfig": "",
+        "entities": {
+            "entity": [
+                "input_button.regler_adhocmsg"
+            ],
+            "substring": [],
+            "regex": []
+        },
+        "outputInitially": false,
+        "stateType": "str",
+        "ifState": "",
+        "ifStateType": "str",
+        "ifStateOperator": "is",
+        "outputOnlyOnStateChange": true,
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "ignorePrevStateNull": false,
+        "ignorePrevStateUnknown": false,
+        "ignorePrevStateUnavailable": false,
+        "ignoreCurrentStateUnknown": false,
+        "ignoreCurrentStateUnavailable": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "string",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "eventData"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "triggerId"
+            }
+        ],
+        "x": 1740,
+        "y": 1140,
+        "wires": [
+            [
+                "3405486d31eae70f"
+            ]
+        ]
+    },
+    {
+        "id": "bd720c39829d1bf7",
+        "type": "api-call-service",
+        "z": "479e3443afedb613",
+        "g": "50b4f58a24c2f256",
+        "name": "Notify",
+        "server": "285afb99.5208c4",
+        "version": 7,
+        "debugenabled": false,
+        "action": "notify.persistent_notification",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{\"title\":\"{{payload.title}}\", \"message\":\"{{payload.message}}\"}",
+        "dataType": "json",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": true,
+        "domain": "notify",
+        "service": "persistent_notification",
+        "x": 2670,
+        "y": 1160,
+        "wires": [
+            []
+        ]
+    },
+    {
         "id": "285afb99.5208c4",
         "type": "server",
         "name": "Home Assistant",
@@ -11514,7 +11651,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "23c23046c3eef68b",
+        "id": "5541a997831aab5a",
         "type": "global-config",
         "env": [],
         "modules": {
