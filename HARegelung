@@ -9373,7 +9373,7 @@
         "z": "479e3443afedb613",
         "g": "50b4f58a24c2f256",
         "name": "Build Notify Message",
-        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\nconst lowminvol = flow.get(\"lowminVol\");\nlet outNotification = null;\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: {lowminvol} V`\n            },\n    sensor: msg_service\n    };\n    return [msg, null];\n    } \nelse \n    {\n    outNotification = {\n    payload: {\n        title: \"PV-Status\",\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: {lowminvol} V`\n        }\n    }\n    return [null, msg];\n    }",
+        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = global.get(\"messengerExist\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\nconst lowminvol = flow.get(\"lowminVol\");\nlet outNotification = null;\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: ${lowminvol} V`\n            },\n    sensor: msg_service\n    };\n    return [msg, null];\n    } \nelse \n    {\n    outNotification = {\n    payload: {\n        title: \"PV-Status\",\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W\\nMinVol: ${lowminvol} V`\n        }\n    }\n    return [null, msg];\n    }",
         "outputs": 2,
         "timeout": "",
         "noerr": 0,
@@ -11651,7 +11651,7 @@
         "enableGlobalContextStore": false
     },
     {
-        "id": "5541a997831aab5a",
+        "id": "51c3a727baddad47",
         "type": "global-config",
         "env": [],
         "modules": {
