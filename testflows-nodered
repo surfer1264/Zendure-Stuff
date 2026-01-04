@@ -13,16 +13,17 @@
             "d7ce31319e5242a2",
             "b759be1778ad269d",
             "0245b5a6cd994e5a",
-            "02ed511c2d909f2f",
             "da59e0c300a23601",
             "d6568f655d82ddea",
             "46ac14d1f3bb7a07",
-            "50b4f58a24c2f256"
+            "02ed511c2d909f2f",
+            "e9d26e262bcf32c1",
+            "fd1163c8e40fda7b"
         ],
-        "x": 188,
-        "y": 3933,
-        "w": 884,
-        "h": 1114
+        "x": 228,
+        "y": 4499,
+        "w": 864,
+        "h": 1168
     },
     {
         "id": "e1165b70369f2b1d",
@@ -38,8 +39,8 @@
             "041e921ba09a57a6",
             "3c960d972905ddd8"
         ],
-        "x": 214,
-        "y": 3959,
+        "x": 254,
+        "y": 4579,
         "w": 752,
         "h": 82
     },
@@ -56,8 +57,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 4000,
+        "x": 610,
+        "y": 4620,
         "wires": [
             [
                 "041e921ba09a57a6"
@@ -90,8 +91,8 @@
         "blockInputOverrides": true,
         "domain": "number",
         "service": "set_value",
-        "x": 840,
-        "y": 4000,
+        "x": 880,
+        "y": 4620,
         "wires": [
             []
         ]
@@ -118,8 +119,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4000,
+        "x": 360,
+        "y": 4620,
         "wires": [
             [
                 "ee29490c9c4b5005"
@@ -154,8 +155,8 @@
             "e7e9befaa8453b4d",
             "0ec176a2fa37ecc0"
         ],
-        "x": 214,
-        "y": 4059,
+        "x": 254,
+        "y": 4679,
         "w": 752,
         "h": 82
     },
@@ -187,8 +188,8 @@
         "target": {
             "entity_id": "number.dtu_leistungsbegrenzung"
         },
-        "x": 840,
-        "y": 4100,
+        "x": 880,
+        "y": 4720,
         "wires": [
             []
         ]
@@ -206,8 +207,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 4100,
+        "x": 610,
+        "y": 4720,
         "wires": [
             [
                 "e2258c6eea29d2b9"
@@ -236,8 +237,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4100,
+        "x": 360,
+        "y": 4720,
         "wires": [
             [
                 "e7e9befaa8453b4d"
@@ -258,8 +259,8 @@
             "2569cad207b467f7",
             "4f98968ddf42865a"
         ],
-        "x": 214,
-        "y": 4939,
+        "x": 254,
+        "y": 5459,
         "w": 792,
         "h": 82
     },
@@ -275,8 +276,8 @@
         "once": false,
         "onceDelay": 0.1,
         "topic": "",
-        "x": 340,
-        "y": 4980,
+        "x": 380,
+        "y": 5500,
         "wires": [
             [
                 "4f98968ddf42865a"
@@ -310,8 +311,8 @@
         "service": "send_message",
         "target": {},
         "mergecontext": "",
-        "x": 840,
-        "y": 4980,
+        "x": 880,
+        "y": 5500,
         "wires": [
             []
         ]
@@ -329,8 +330,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 570,
-        "y": 4980,
+        "x": 610,
+        "y": 5500,
         "wires": [
             [
                 "2569cad207b467f7"
@@ -352,8 +353,8 @@
             "6b62e9f5107a01db",
             "2dc24ace9b912ba2"
         ],
-        "x": 214,
-        "y": 4679,
+        "x": 254,
+        "y": 5299,
         "w": 812,
         "h": 142
     },
@@ -394,8 +395,8 @@
         "override_payload": "msg",
         "entity_location": "data",
         "override_data": "msg",
-        "x": 560,
-        "y": 4760,
+        "x": 600,
+        "y": 5380,
         "wires": [
             [
                 "2dc24ace9b912ba2"
@@ -427,8 +428,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4760,
+        "x": 360,
+        "y": 5380,
         "wires": [
             [
                 "e3472deef8161dec"
@@ -449,8 +450,8 @@
         "targetType": "full",
         "statusVal": "",
         "statusType": "auto",
-        "x": 920,
-        "y": 4780,
+        "x": 960,
+        "y": 5400,
         "wires": []
     },
     {
@@ -466,8 +467,8 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 920,
-        "y": 4720,
+        "x": 960,
+        "y": 5340,
         "wires": []
     },
     {
@@ -484,8 +485,8 @@
             "91570a4c78376cef",
             "1c1b6369a59eabbe"
         ],
-        "x": 214,
-        "y": 4159,
+        "x": 254,
+        "y": 4779,
         "w": 812,
         "h": 82
     },
@@ -517,8 +518,8 @@
         "target": {
             "entity_id": "{{ payload.sensor }}"
         },
-        "x": 860,
-        "y": 4200,
+        "x": 900,
+        "y": 4820,
         "wires": [
             []
         ]
@@ -536,8 +537,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 550,
-        "y": 4200,
+        "x": 590,
+        "y": 4820,
         "wires": [
             [
                 "e25dd8e781b3f57d"
@@ -566,13 +567,341 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4200,
+        "x": 360,
+        "y": 4820,
         "wires": [
             [
                 "91570a4c78376cef"
             ]
         ]
+    },
+    {
+        "id": "da59e0c300a23601",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "EInen Shelly per HTTP Request auslesen",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "2940a6546713a79a",
+            "3c8cabaa304bd745",
+            "6bd08e9d0b68c8e0",
+            "a056e94e32dc397e"
+        ],
+        "x": 254,
+        "y": 4999,
+        "w": 772,
+        "h": 82
+    },
+    {
+        "id": "2940a6546713a79a",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "da59e0c300a23601",
+        "name": "",
+        "func": "let leistung = Number(msg.payload.total_act_power);\n\nnode.warn (leistung);\nnode.status({fill:\"green\",shape:\"ring\",text:\"Leistung: \" +leistung});\n\nreturn",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 5040,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3c8cabaa304bd745",
+        "type": "http request",
+        "z": "479e3443afedb613",
+        "g": "da59e0c300a23601",
+        "name": "Shelly 3EM Pro http",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 720,
+        "y": 5040,
+        "wires": [
+            [
+                "2940a6546713a79a"
+            ]
+        ]
+    },
+    {
+        "id": "6bd08e9d0b68c8e0",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "da59e0c300a23601",
+        "name": "Setz URL",
+        "func": "flow.set (\"Smartmeter\", \"http://192.168.178.117/rpc/EM.GetStatus?id=0\")\nmsg.url = flow.get (\"Smartmeter\");\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 5040,
+        "wires": [
+            [
+                "3c8cabaa304bd745"
+            ]
+        ]
+    },
+    {
+        "id": "a056e94e32dc397e",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "da59e0c300a23601",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 360,
+        "y": 5040,
+        "wires": [
+            [
+                "6bd08e9d0b68c8e0"
+            ]
+        ]
+    },
+    {
+        "id": "d6568f655d82ddea",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Hole Daten eines Sensors, der in einer Variable definiert ist (hier der Einspeisesensor)",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "fc9dbf8b3b334185",
+            "bb929c7f2e0a7c3f",
+            "e452733f940cf159"
+        ],
+        "x": 254,
+        "y": 4879,
+        "w": 772,
+        "h": 82
+    },
+    {
+        "id": "fc9dbf8b3b334185",
+        "type": "ha-get-entities",
+        "z": "479e3443afedb613",
+        "g": "d6568f655d82ddea",
+        "name": "Hole Sensor",
+        "server": "285afb99.5208c4",
+        "version": 1,
+        "rules": [
+            {
+                "condition": "state_object",
+                "property": "entity_id",
+                "logic": "is",
+                "value": "einspeiseSensor",
+                "valueType": "flow"
+            }
+        ],
+        "outputType": "array",
+        "outputEmptyResults": false,
+        "outputLocationType": "msg",
+        "outputLocation": "payload",
+        "outputResultsCount": 1,
+        "x": 630,
+        "y": 4920,
+        "wires": [
+            [
+                "e452733f940cf159"
+            ]
+        ]
+    },
+    {
+        "id": "bb929c7f2e0a7c3f",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "d6568f655d82ddea",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 360,
+        "y": 4920,
+        "wires": [
+            [
+                "fc9dbf8b3b334185"
+            ]
+        ]
+    },
+    {
+        "id": "e452733f940cf159",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "d6568f655d82ddea",
+        "name": "Ausgabe",
+        "func": "let power = Number(msg.payload[0].state);\n\nnode.warn (power);\n\nif (power > 2) {\n    node.warn (\">2\")\n    return [msg , null];\n    }\nelse {\n    node.warn (\"<2\")\n    return [null ,msg];\n    }\n",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 940,
+        "y": 4920,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "46ac14d1f3bb7a07",
+        "type": "group",
+        "z": "479e3443afedb613",
+        "g": "3ce9227ad71245e3",
+        "name": "Shelly auslesen ",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "3c38f71e3abb6567",
+            "5a942abc7cd65d2e",
+            "bdf7929968ea7a52",
+            "5439dc35407ecda1"
+        ],
+        "x": 254,
+        "y": 5099,
+        "w": 802,
+        "h": 82
+    },
+    {
+        "id": "3c38f71e3abb6567",
+        "type": "http request",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "Shelly 3EM Pro http",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://192.168.178.117/rpc/EM.GetStatus?id=0",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 560,
+        "y": 5140,
+        "wires": [
+            [
+                "bdf7929968ea7a52"
+            ]
+        ]
+    },
+    {
+        "id": "5a942abc7cd65d2e",
+        "type": "inject",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": "1",
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 360,
+        "y": 5140,
+        "wires": [
+            [
+                "3c38f71e3abb6567"
+            ]
+        ]
+    },
+    {
+        "id": "bdf7929968ea7a52",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "Auswerten",
+        "func": "//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nmsg.payload = leistung\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 5140,
+        "wires": [
+            [
+                "5439dc35407ecda1"
+            ]
+        ]
+    },
+    {
+        "id": "5439dc35407ecda1",
+        "type": "debug",
+        "z": "479e3443afedb613",
+        "g": "46ac14d1f3bb7a07",
+        "name": "debug 28",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 950,
+        "y": 5140,
+        "wires": []
     },
     {
         "id": "02ed511c2d909f2f",
@@ -588,9 +917,9 @@
             "0a3fd6bcfaa113dc",
             "8670dc77189b5b5f"
         ],
-        "x": 214,
-        "y": 4479,
-        "w": 832,
+        "x": 254,
+        "y": 5199,
+        "w": 812,
         "h": 82
     },
     {
@@ -621,8 +950,8 @@
         "target": {
             "entity_id": "{{ payload.sensor }}"
         },
-        "x": 870,
-        "y": 4520,
+        "x": 890,
+        "y": 5240,
         "wires": [
             []
         ]
@@ -640,8 +969,8 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 550,
-        "y": 4520,
+        "x": 570,
+        "y": 5240,
         "wires": [
             [
                 "ac712f39db9196a3"
@@ -670,8 +999,8 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4520,
+        "x": 360,
+        "y": 5240,
         "wires": [
             [
                 "0a3fd6bcfaa113dc"
@@ -679,146 +1008,31 @@
         ]
     },
     {
-        "id": "da59e0c300a23601",
+        "id": "e9d26e262bcf32c1",
         "type": "group",
         "z": "479e3443afedb613",
         "g": "3ce9227ad71245e3",
-        "name": "EInen Shelly per HTTP Request auslesen",
+        "name": "P1-Sensor abfragen",
         "style": {
             "label": true
         },
         "nodes": [
-            "2940a6546713a79a",
-            "3c8cabaa304bd745",
-            "6bd08e9d0b68c8e0",
-            "a056e94e32dc397e"
+            "79568baaa60d17c9",
+            "b8632ac3ec7c50d9",
+            "1483b40b82ea82c3",
+            "06ee8b1f12d2a185"
         ],
-        "x": 214,
-        "y": 4379,
-        "w": 752,
+        "x": 254,
+        "y": 5559,
+        "w": 792,
         "h": 82
     },
     {
-        "id": "2940a6546713a79a",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "da59e0c300a23601",
-        "name": "",
-        "func": "let leistung = Number(msg.payload.total_act_power);\n\nnode.warn (leistung);\nnode.status({fill:\"green\",shape:\"ring\",text:\"Leistung: \" +leistung});\n\nreturn",
-        "outputs": 2,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 880,
-        "y": 4420,
-        "wires": [
-            [],
-            []
-        ]
-    },
-    {
-        "id": "3c8cabaa304bd745",
-        "type": "http request",
-        "z": "479e3443afedb613",
-        "g": "da59e0c300a23601",
-        "name": "Shelly 3EM Pro http",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 680,
-        "y": 4420,
-        "wires": [
-            [
-                "2940a6546713a79a"
-            ]
-        ]
-    },
-    {
-        "id": "6bd08e9d0b68c8e0",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "da59e0c300a23601",
-        "name": "Setz URL",
-        "func": "flow.set (\"Smartmeter\", \"http://192.168.178.117/rpc/EM.GetStatus?id=0\")\nmsg.url = flow.get (\"Smartmeter\");\nreturn msg;\n",
-        "outputs": 1,
-        "timeout": 0,
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 480,
-        "y": 4420,
-        "wires": [
-            [
-                "3c8cabaa304bd745"
-            ]
-        ]
-    },
-    {
-        "id": "a056e94e32dc397e",
-        "type": "inject",
-        "z": "479e3443afedb613",
-        "g": "da59e0c300a23601",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 320,
-        "y": 4420,
-        "wires": [
-            [
-                "6bd08e9d0b68c8e0"
-            ]
-        ]
-    },
-    {
-        "id": "d6568f655d82ddea",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Hole Daten eines Sensors, der in einer Variable definiert ist (hier der Einspeisesensor)",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "fc9dbf8b3b334185",
-            "bb929c7f2e0a7c3f",
-            "e452733f940cf159"
-        ],
-        "x": 214,
-        "y": 4259,
-        "w": 752,
-        "h": 82
-    },
-    {
-        "id": "fc9dbf8b3b334185",
+        "id": "79568baaa60d17c9",
         "type": "ha-get-entities",
         "z": "479e3443afedb613",
-        "g": "d6568f655d82ddea",
-        "name": "Hole Sensor",
+        "g": "e9d26e262bcf32c1",
+        "name": "P1Sensor",
         "server": "285afb99.5208c4",
         "version": 1,
         "rules": [
@@ -826,7 +1040,7 @@
                 "condition": "state_object",
                 "property": "entity_id",
                 "logic": "is",
-                "value": "einspeiseSensor",
+                "value": "P1Sensor",
                 "valueType": "flow"
             }
         ],
@@ -835,19 +1049,40 @@
         "outputLocationType": "msg",
         "outputLocation": "payload",
         "outputResultsCount": 1,
-        "x": 590,
-        "y": 4300,
+        "x": 660,
+        "y": 5600,
         "wires": [
             [
-                "e452733f940cf159"
+                "b8632ac3ec7c50d9"
             ]
         ]
     },
     {
-        "id": "bb929c7f2e0a7c3f",
+        "id": "b8632ac3ec7c50d9",
+        "type": "function",
+        "z": "479e3443afedb613",
+        "g": "e9d26e262bcf32c1",
+        "name": "P1",
+        "func": "let power = Number(msg.payload[0].state);\nnode.status({ text: 'P1Sensor: ' + power });\nmsg.payload = power;\nreturn msg\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 5600,
+        "wires": [
+            [
+                "06ee8b1f12d2a185"
+            ]
+        ]
+    },
+    {
+        "id": "1483b40b82ea82c3",
         "type": "inject",
         "z": "479e3443afedb613",
-        "g": "d6568f655d82ddea",
+        "g": "e9d26e262bcf32c1",
         "name": "",
         "props": [
             {
@@ -865,136 +1100,20 @@
         "topic": "",
         "payload": "",
         "payloadType": "date",
-        "x": 320,
-        "y": 4300,
+        "x": 360,
+        "y": 5600,
         "wires": [
             [
-                "fc9dbf8b3b334185"
+                "79568baaa60d17c9"
             ]
         ]
     },
     {
-        "id": "e452733f940cf159",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "d6568f655d82ddea",
-        "name": "Ausgabe",
-        "func": "let power = Number(msg.payload[0].state);\n\nnode.warn (power);\n\nif (power > 2) {\n    node.warn (\">2\")\n    return [msg , null];\n    }\nelse {\n    node.warn (\"<2\")\n    return [null ,msg];\n    }\n",
-        "outputs": 2,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 880,
-        "y": 4300,
-        "wires": [
-            [],
-            []
-        ]
-    },
-    {
-        "id": "46ac14d1f3bb7a07",
-        "type": "group",
-        "z": "479e3443afedb613",
-        "g": "3ce9227ad71245e3",
-        "name": "Shelly auslesen ",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "3c38f71e3abb6567",
-            "5a942abc7cd65d2e",
-            "bdf7929968ea7a52",
-            "5439dc35407ecda1"
-        ],
-        "x": 214,
-        "y": 4579,
-        "w": 802,
-        "h": 82
-    },
-    {
-        "id": "3c38f71e3abb6567",
-        "type": "http request",
-        "z": "479e3443afedb613",
-        "g": "46ac14d1f3bb7a07",
-        "name": "Shelly 3EM Pro http",
-        "method": "GET",
-        "ret": "obj",
-        "paytoqs": "ignore",
-        "url": "http://192.168.178.117/rpc/EM.GetStatus?id=0",
-        "tls": "",
-        "persist": false,
-        "proxy": "",
-        "insecureHTTPParser": false,
-        "authType": "",
-        "senderr": false,
-        "headers": [],
-        "x": 520,
-        "y": 4620,
-        "wires": [
-            [
-                "bdf7929968ea7a52"
-            ]
-        ]
-    },
-    {
-        "id": "5a942abc7cd65d2e",
-        "type": "inject",
-        "z": "479e3443afedb613",
-        "g": "46ac14d1f3bb7a07",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": "1",
-        "topic": "",
-        "payload": "",
-        "payloadType": "date",
-        "x": 320,
-        "y": 4620,
-        "wires": [
-            [
-                "3c38f71e3abb6567"
-            ]
-        ]
-    },
-    {
-        "id": "bdf7929968ea7a52",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "46ac14d1f3bb7a07",
-        "name": "Auswerten",
-        "func": "//Hole aktuellen Verbrauchswert vom Shelly3EM RPC Abfrage\nlet leistung = Number(msg.payload.total_act_power);\nmsg.payload = leistung\nreturn msg;",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 730,
-        "y": 4620,
-        "wires": [
-            [
-                "5439dc35407ecda1"
-            ]
-        ]
-    },
-    {
-        "id": "5439dc35407ecda1",
+        "id": "06ee8b1f12d2a185",
         "type": "debug",
         "z": "479e3443afedb613",
-        "g": "46ac14d1f3bb7a07",
-        "name": "debug 28",
+        "g": "e9d26e262bcf32c1",
+        "name": "debug 3",
         "active": true,
         "tosidebar": true,
         "console": false,
@@ -1002,101 +1121,27 @@
         "complete": "false",
         "statusVal": "",
         "statusType": "auto",
-        "x": 910,
-        "y": 4620,
+        "x": 940,
+        "y": 5600,
         "wires": []
     },
     {
-        "id": "50b4f58a24c2f256",
-        "type": "group",
+        "id": "fd1163c8e40fda7b",
+        "type": "comment",
         "z": "479e3443afedb613",
         "g": "3ce9227ad71245e3",
-        "name": "(3.7) AdHoc Message an Messenger schicken",
-        "style": {
-            "label": true
-        },
-        "nodes": [
-            "a10e19704f6f0128",
-            "3405486d31eae70f",
-            "6510f41ac1c3a100"
-        ],
-        "x": 214,
-        "y": 4839,
-        "w": 812,
-        "h": 82
+        "name": "Übungsspielwiese, einfache Routinen zum Austesten und Lernen",
+        "info": "",
+        "x": 490,
+        "y": 4540,
+        "wires": []
     },
     {
-        "id": "a10e19704f6f0128",
-        "type": "api-call-service",
-        "z": "479e3443afedb613",
-        "g": "50b4f58a24c2f256",
-        "name": "Sende Nachricht via WhatSigram",
-        "server": "285afb99.5208c4",
-        "version": 7,
-        "debugenabled": false,
-        "action": "notify.send_message",
-        "floorId": [],
-        "areaId": [],
-        "deviceId": [],
-        "entityId": [
-            "{{ payload.sensor }}"
-        ],
-        "labelId": [],
-        "data": "{}",
-        "dataType": "jsonata",
-        "mergeContext": "",
-        "mustacheAltTags": false,
-        "outputProperties": [],
-        "queue": "none",
-        "blockInputOverrides": false,
-        "domain": "notify",
-        "service": "send_message",
-        "mergecontext": "",
-        "x": 860,
-        "y": 4880,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "3405486d31eae70f",
-        "type": "function",
-        "z": "479e3443afedb613",
-        "g": "50b4f58a24c2f256",
-        "name": "Build Notify Message",
-        "func": "// Flow-Variablen abrufen\nconst msg_service = global.get(\"msgDienst\");\nconst messenger = flow.get(\"messenger\");\n\nconst sollwert = flow.get(\"Sollwert\");\nconst actor = flow.get(\"actor\")\nconst aktiv = flow.get (\"ReglerAktiv\");\nconst maxeinspeisung = flow.get(\"MaxEinspeisung\") || 0;\nlet connected = flow.get(\"Connected\") === 0 ? \"offline\" : \"online\";\n\n// Nachricht zusammenbauen\nif (messenger === \"on\") {\n    msg.payload = {\n    data:   {\n        message: `⚙️\\nReglertyp: ${actor}\\nHub Online: ${connected}\\nRegelung aktiv: ${aktiv}\\nSollwert: ${sollwert} W\\nMax. Einspeisung: ${maxeinspeisung} W`\n            },\n    sensor: msg_service\n    };\n    return msg;\n    } \nelse \n    {\n    return null;  // kein Output, wenn messenger \"off\" ist\n    }",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 540,
-        "y": 4880,
-        "wires": [
-            [
-                "a10e19704f6f0128"
-            ]
-        ]
-    },
-    {
-        "id": "6510f41ac1c3a100",
-        "type": "inject",
-        "z": "479e3443afedb613",
-        "g": "50b4f58a24c2f256",
-        "name": "Test",
-        "props": [],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": "",
-        "topic": "",
-        "x": 310,
-        "y": 4880,
-        "wires": [
-            [
-                "3405486d31eae70f"
-            ]
-        ]
+        "id": "ee185fa849b21271",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-home-assistant-websocket": "0.80.3"
+        }
     }
 ]
