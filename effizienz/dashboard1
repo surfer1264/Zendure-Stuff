@@ -1,0 +1,301 @@
+views:
+  - type: sections
+    max_columns: 3
+    title: ExtendedKPI
+    path: extendedkpi
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Stundenstatistik
+            heading_style: title
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.solarflow_dc_ac_wirkungsgrad_hour
+                name: DC→AC
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+              - type: gauge
+                entity: sensor.solarflow_pv_ac_systemwirkungsgrad_hour
+                name: PV→Haus Gesamt
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+          - type: entities
+            entities:
+              - entity: sensor.hourly_charging_energy
+                name: Stunde geladen (kWh)
+                icon: mdi:battery-charging
+              - entity: sensor.hourly_discharging_energy
+                name: Stunde entladen (kWh)
+                icon: mdi:battery-arrow-down
+            title: ⚡ Akku / Stundenwerte
+            grid_options:
+              columns: 12
+              rows: 3
+          - type: entities
+            title: ☀️ Haus PV / AC - Stundenwerte
+            entities:
+              - entity: sensor.hourly_solarpower_energy
+                name: PV Gesamt Monat (kWh)
+                icon: mdi:solar-power
+              - entity: sensor.hourly_ac_power_home_energy
+                name: Haus AC Monat (kWh)
+                icon: mdi:flash
+              - entity: sensor.solarflow_pv_ac_systemwirkungsgrad_hour
+                name: PV→Haus Gesamtwirkungsgrad (%)
+                icon: mdi:percent
+          - type: custom:gauge-card-pro
+            needle: true
+            segments:
+              - from: 0
+                color: blue
+              - from: 400
+                color: red
+            gradient: true
+            titles:
+              primary: Einspeisung
+              secondary: Laden/Entladen
+              primary_font_size: 14x
+              secondary_font_size: 10px
+            max: 800
+            hide_background: false
+            icon:
+              type: battery
+              value: sensor.solarherwegh_electric_level
+              hide_label: false
+            entity2: sensor.batterie_out_in_2
+            inner:
+              mode: needle
+              segments:
+                - pos: -650
+                  color: green
+                - pos: 0
+                  color: white
+                - pos: 650
+                  color: red
+              gradient: true
+              max: 650
+              min: -650
+              gradient_resolution: medium
+              setpoint:
+                type: number
+                value: 0
+            grid_options:
+              columns: 12
+              rows: 4
+            secondary_value_text_tap_action:
+              action: more-info
+            primary_value_text_tap_action:
+              action: more-info
+            entity: sensor.solarhub_power
+            min: 0
+            icon_tap_action:
+              action: more-info
+            gradient_resolution: very_low
+            header: Einspeisung & Akku
+      - type: grid
+        cards:
+          - type: heading
+            icon: ''
+            heading: Tagesstatistik
+            heading_style: title
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.solarflow_dc_ac_wirkungsgrad_day
+                name: DC→AC
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+              - type: gauge
+                entity: sensor.solarflow_pv_ac_systemwirkungsgrad_day
+                name: PV→Haus Gesamt
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+          - type: entities
+            title: ⚡ Akku / Tageswerte
+            entities:
+              - entity: sensor.sf_akku_laden_heute
+                name: Heute geladen (kWh)
+                icon: mdi:battery-charging
+              - entity: sensor.sf_akku_entladen_heute
+                name: Heute entladen (kWh)
+                icon: mdi:battery-arrow-down
+          - type: entities
+            title: ☀️ Haus PV / AC - Tageswerte
+            entities:
+              - entity: sensor.sf_pv_gesamt_heute
+                name: PV Gesamt heute (kWh)
+                icon: mdi:solar-power
+              - entity: sensor.sf_ac_haus_heute
+                name: Haus AC heute (kWh)
+                icon: mdi:flash
+              - entity: sensor.solarflow_pv_ac_systemwirkungsgrad_day
+                name: PV→Haus Gesamtwirkungsgrad (%)
+                icon: mdi:percent
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Solarflow – letzte 60 Stunden
+            graph_span: 60h
+            now:
+              show: false
+              label: Now
+            yaxis:
+              - id: power
+                min: 0
+                max: ~250
+                decimals: 0
+              - id: percent
+                min: 0
+                max: 100
+                decimals: 0
+                opposite: true
+            series:
+              - entity: sensor.solarflow_ac_energie_stunde
+                name: AC Energie (W)
+                type: column
+                yaxis_id: power
+                color: '#f39c12'
+                statistics:
+                  type: max
+                  period: hour
+              - entity: sensor.solarflow_stundendaten
+                name: Solarflow (%)
+                type: line
+                yaxis_id: percent
+                stroke_width: 3
+                color: '#3498db'
+                statistics:
+                  type: max
+                  period: hour
+            apex_config:
+              plotOptions:
+                bar:
+                  columnWidth: 100%
+              stroke:
+                curve: smooth
+              markers:
+                size: 1
+                strokeWidth: 2
+              xaxis:
+                labels:
+                  format: HH
+      - type: grid
+        cards:
+          - type: heading
+            icon: ''
+            heading: Monatsstatistik
+            heading_style: title
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.solarflow_dc_ac_wirkungsgrad_month
+                name: DC→AC
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+              - type: gauge
+                entity: sensor.solarflow_pv_ac_systemwirkungsgrad_month
+                name: PV→Haus Gesamt
+                min: 0
+                max: 100
+                severity:
+                  green: 90
+                  yellow: 75
+                  red: 0
+          - type: entities
+            entities:
+              - entity: sensor.monthly_charging_energy
+                name: Monat geladen (kWh)
+                icon: mdi:battery-charging
+              - entity: sensor.monthly_discharging_energy
+                name: Monat entladen (kWh)
+                icon: mdi:battery-arrow-down
+            title: ⚡ Akku / Monatswerte
+          - type: entities
+            title: ☀️ Haus PV / AC - Monatswerte
+            entities:
+              - entity: sensor.monthly_solarpower_energy
+                name: PV Gesamt Monat (kWh)
+                icon: mdi:solar-power
+              - entity: sensor.monthly_ac_power_home_energy
+                name: Haus AC Monat (kWh)
+                icon: mdi:flash
+              - entity: sensor.solarflow_pv_ac_systemwirkungsgrad_month
+                name: PV→Haus Gesamtwirkungsgrad (%)
+                icon: mdi:percent
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: Solarflow – letzte 12 Tage
+            graph_span: 12d
+            yaxis:
+              - id: power
+                min: 0
+                max: ~2500
+                decimals: 0
+              - id: percent
+                min: 0
+                max: 100
+                decimals: 0
+                opposite: true
+            series:
+              - entity: sensor.solarflow_ac_energie_tag
+                name: AC Energie (Tag)
+                type: column
+                yaxis_id: power
+                color: '#f39c12'
+                offset: '-1d'
+                statistics:
+                  type: max
+                  period: day
+              - entity: sensor.solarflow_tagesdaten
+                name: Solarflow (%)
+                type: line
+                yaxis_id: percent
+                color: '#3498db'
+                stroke_width: 4
+                offset: '-1d'
+                statistics:
+                  type: max
+                  period: day
+            apex_config:
+              plotOptions:
+                bar:
+                  columnWidth: 6
+                  borderRadius: 4
+              stroke:
+                curve: stepline
+              markers:
+                size: 4
+                strokeWidth: 1
+              xaxis:
+                type: datetime
+                labels:
+                  format: ddd
+                  rotate: -45
+      - type: grid
+        cards: []
+    theme: ios-dark-mode-blue-red
+    cards: []
+    dense_section_placement: true
