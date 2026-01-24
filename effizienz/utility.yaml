@@ -1,27 +1,27 @@
 # Stunden-Verbrauchs-Sensoren
 sf_akku_laden_hourly:
   unique_id: sf_akku_laden_hourly
-  source: sensor.solarherwegh_aggr_charge_total
+  source: sensor.solarherwegh_aggr_charge_total #Sensornamen anpassen
   name: Hourly Charging Energy
   cycle: hourly
 sf_akku_entladen_hourly:
   unique_id: sf_akku_entladen_hourly
-  source: sensor.solarherwegh_aggr_discharge_total
+  source: sensor.solarherwegh_aggr_discharge_total #Sensornamen anpassen
   name: Hourly Discharging Energy
   cycle: hourly
 sf_dc_haus_hourly:
   unique_id: sf_dc_haus_hourly
-  source: sensor.solarherwegh_aggr_output_home_total
+  source: sensor.solarherwegh_aggr_output_home_total #Sensornamen anpassen
   name: Hourly Output Home Energy
   cycle: hourly
 sf_pv_gesamt_hourly:
   unique_id: sf_pv_gesamt_hourly
-  source: sensor.solarherwegh_aggr_solar_total
+  source: sensor.solarherwegh_aggr_solar_total #Sensornamen anpassen
   name: Hourly SolarPower Energy
   cycle: hourly
 sf_ac_haus_hourly:
   unique_id: sf_ac_haus_hourly
-  source: sensor.solarhub_energy
+  source: sensor.solarhub_energy #Sensornamen anpassen
   name: Hourly AC Power Home Energy
   cycle: hourly
 
