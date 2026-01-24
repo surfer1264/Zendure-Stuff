@@ -1,0 +1,53 @@
+- sensor:
+# Wirkunsgrad Sensoren Tag
+    - name: "Solarflow DC→AC Wirkungsgrad Day"
+      unique_id: sf_dc_ac_wirkungsgrad_daily
+      unit_of_measurement: "%"
+      state: >
+        {% set dc = states('sensor.sf_dc_haus_heute')|float(0) %}
+        {% set ac = states('sensor.sf_ac_haus_heute')|float(0) %}
+        {% if dc > 0 %}
+          {{ (ac / dc * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %} 
+    - name: "Solarflow PV→AC Systemwirkungsgrad Day"
+      unique_id: sf_pv_ac_system_wirkungsgrad_daily
+      unit_of_measurement: "%"
+      state: >
+        {% set laden = states('sensor.sf_akku_laden_heute')|float(0) %}
+        {% set entladen = states('sensor.sf_akku_entladen_heute')|float(0) %}  
+        {% set pv = states('sensor.sf_pv_gesamt_heute')|float(0) %}
+        {% set ac = states('sensor.sf_ac_haus_heute')|float(0) %}
+        {% if (pv + entladen - laden) > 0 %}
+          {{ (ac / (pv +entladen - laden) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+# Wirkunsgrad Sensoren Monat        
+    - name: "Solarflow DC→AC Wirkungsgrad Month"
+      unique_id: sf_dc_ac_wirkungsgrad_monthly
+      unit_of_measurement: "%"
+      state: >
+        {% set dc = states('sensor.monthly_output_home_energy')|float(0)|round(2) %}
+        {% set ac = states('sensor.monthly_ac_power_home_energy')|float(0)|round(2) %}
+        {% if dc > 0 %}
+          {{ (ac / dc * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %} 
+    - name: "Solarflow PV→AC Systemwirkungsgrad Month"
+      unique_id: sf_pv_ac_system_wirkungsgrad_monthly
+      state_class: measurement
+      unit_of_measurement: "%"
+      state: >
+        {% set laden = states('sensor.monthly_charging_energy')|float(0)|round(2) %}
+        {% set entladen = states('sensor.monthly_discharging_energy')|float(0)|round(2) %}  
+        {% set pv = states('sensor.monthly_solarpower_energy')|float(0)|round(2) %}
+        {% set ac = states('sensor.monthly_ac_power_home_energy')|float(0)|round(2) %}
+        {% if (pv + entladen - laden)  > 0 %}
+          {{ (ac / (pv + entladen - laden) * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %} 
