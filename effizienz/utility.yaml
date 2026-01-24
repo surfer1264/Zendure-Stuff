@@ -1,0 +1,80 @@
+# Stunden-Verbrauchs-Sensoren
+sf_akku_laden_hourly:
+  unique_id: sf_akku_laden_hourly
+  source: sensor.solarherwegh_aggr_charge_total
+  name: Hourly Charging Energy
+  cycle: hourly
+sf_akku_entladen_hourly:
+  unique_id: sf_akku_entladen_hourly
+  source: sensor.solarherwegh_aggr_discharge_total
+  name: Hourly Discharging Energy
+  cycle: hourly
+sf_dc_haus_hourly:
+  unique_id: sf_dc_haus_hourly
+  source: sensor.solarherwegh_aggr_output_home_total
+  name: Hourly Output Home Energy
+  cycle: hourly
+sf_pv_gesamt_hourly:
+  unique_id: sf_pv_gesamt_hourly
+  source: sensor.solarherwegh_aggr_solar_total
+  name: Hourly SolarPower Energy
+  cycle: hourly
+sf_ac_haus_hourly:
+  unique_id: sf_ac_haus_hourly
+  source: sensor.solarhub_energy
+  name: Hourly AC Power Home Energy
+  cycle: hourly
+
+# Tages-Verbrauchs-Sensoren
+sf_akku_laden_heute:
+  unique_id: sf_akku_laden_heute
+  source: sensor.solarherwegh_aggr_charge_total
+  name: Daily Charging Energy
+  cycle: daily
+sf_akku_entladen_heute:
+  unique_id: sf_akku_entladen_heute
+  source: sensor.solarherwegh_aggr_discharge_total
+  name: Daily Discharging Energy
+  cycle: daily
+sf_dc_haus_heute:
+  unique_id: sf_dc_haus_heute
+  source: sensor.solarherwegh_aggr_output_home_total
+  name: Daily Output Home Energy
+  cycle: daily
+sf_pv_gesamt_heute:
+  unique_id: sf_pv_gesamt_heute
+  source: sensor.solarherwegh_aggr_solar_total
+  name: Daily SolarPower Energy
+  cycle: daily
+sf_ac_haus_heute:
+  unique_id: sf_ac_haus_heute
+  source: sensor.solarhub_energy
+  name: Daily AC Power Home Energy
+  cycle: daily
+  
+# Monats-Verbrauchs-Sensoren
+sf_akku_laden_monat:
+  unique_id: sf_akku_laden_monthly
+  source: sensor.solarherwegh_aggr_charge_total
+  name: Monthly Charging Energy
+  cycle: monthly
+sf_akku_entladen_monat:
+  unique_id: sf_akku_entladen_monthly
+  source: sensor.solarherwegh_aggr_discharge_total
+  name: Monthly Discharging Energy
+  cycle: monthly
+sf_dc_haus_monat:
+  unique_id: sf_dc_haus_monthly
+  source: sensor.solarherwegh_aggr_output_home_total
+  name: Monthly Output Home Energy
+  cycle: monthly
+sf_pv_gesamt_monat:
+  unique_id: sf_pv_gesamt_monthly
+  source: sensor.solarherwegh_aggr_solar_total
+  name: Monthly SolarPower Energy
+  cycle: monthly
+sf_ac_haus_monat:
+  unique_id: sf_ac_haus_monthly
+  source: sensor.solarhub_energy
+  name: Monthly AC Power Home Energy
+  cycle: monthly
