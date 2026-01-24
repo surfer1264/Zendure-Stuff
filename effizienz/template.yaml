@@ -1,4 +1,32 @@
 - sensor:
+# Wirkunsgrad Sensoren Stunde
+    - name: "Solarflow DC→AC Wirkungsgrad Hour"
+      unique_id: sf_dc_ac_wirkungsgrad_hourly
+      unit_of_measurement: "%"
+      state: >
+        {% set dc = states('sensor.hourly_output_home_energy')|float(0)|round(2) %}
+        {% set ac = states('sensor.hourly_ac_power_home_energy')|float(0)|round(2) %}
+        {% if dc > 0 %}
+          {{ (ac / dc * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %} 
+    - name: "Solarflow PV→AC Systemwirkungsgrad Hour"
+      unique_id: sf_pv_ac_system_wirkungsgrad_hourly
+      unit_of_measurement: "%"
+      state: >
+        {% set laden = states('sensor.hourly_charging_energy')|float(0)|round(2) %}
+        {% set entladen = states('sensor.hourly_discharging_energy')|float(0)|round(2) %}  
+        {% set pv = states('sensor.hourly_solarpower_energy')|float(0)|round(2) %}
+        {% set ac = states('sensor.hourly_ac_power_home_energy')|float(0)|round(2) %}
+        {% set input = (pv + entladen - laden)|float(0) %}
+        {% if (input > 0) %}
+          {{ (ac / input * 100) | round(1) }}
+        {% else %}
+          0
+        {% endif %}
+
+
 # Wirkunsgrad Sensoren Tag
     - name: "Solarflow DC→AC Wirkungsgrad Day"
       unique_id: sf_dc_ac_wirkungsgrad_daily
@@ -63,7 +91,6 @@
       state_class: measurement
       state: >
         {{ states('sensor.solarflow_pv_ac_systemwirkungsgrad_hour') | float(0) }}
-
 
 - trigger:
     - platform: time_pattern
