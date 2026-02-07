@@ -1,0 +1,194 @@
+type: custom:button-card
+variables:
+  soc_sensor: sensor.[AKKUSN]_soc_level
+  state_sensor: sensor.[AKKUSN]_state
+  power_sensor: sensor.[AKKUSN]_power
+  min_vol_sensor: sensor.[AKKUSN]_min_vol
+  max_vol_sensor: sensor.[AKKUSN]_max_vol
+  temp_sensor: sensor.[AKKUSN]_max_temp
+  heat_sensor: binary_sensor.[HUB]_heat_state
+  label_name: AB2000
+  max_power: 600
+entity: "[[[ return variables.soc_sensor ]]]"
+show_name: false
+theme: liquid glass
+font-family: monospace
+show_icon: false
+show_state: true
+state_display: |
+  [[[
+    const s = states[variables.soc_sensor];
+    const isOff = !s || ['unavailable', 'unknown'].includes(s.state);
+    const valText = isOff ? 'n/a' : parseFloat(s.state).toFixed(0) + ' %';
+    const textColor = isOff ? '#999999' : '#ffffff';
+    
+    return `
+      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; height: 16px; font-family: monospace; font-size: 16px; font-weight: 700; color: ${textColor};">
+        <span>${variables.label_name}:</span>
+        <span>${valText}</span>
+      </div>
+    `;
+  ]]]
+styles:
+  grid:
+    - grid-template-areas: "'header' 'batt' 'power' 'cells'"
+    - grid-template-columns: 1fr
+    - grid-template-rows: 16px auto 20px 16px
+  card:
+    - padding: 4px 8px 8px 8px
+    - border-radius: 16px
+    - background: var(--ha-card-background, var(--card-background-color, '#1c1c1e'))
+    - box-shadow: var(--ha-card-box-shadow, '0px 2px 8px rgba(0,0,0,0.3)')
+    - border: 1px solid rgba(255,255,255,0.05)
+    - height: 200px
+  state:
+    - grid-area: header
+    - align-self: start
+  custom_fields:
+    batt:
+      - grid-area: batt
+      - display: flex
+      - justify-content: center
+      - align-items: center
+      - margin-top: "-2px"
+      - margin-bottom: 2px
+    power:
+      - grid-area: power
+      - font-size: 16px
+      - font-weight: 600
+      - align-self: center
+    cells:
+      - grid-area: cells
+      - font-size: 12px
+      - align-self: center
+custom_fields:
+  cells: |
+    [[[
+      const minS = states[variables.min_vol_sensor];
+      const tmpS = states[variables.temp_sensor];
+      if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') return `<span style="color: #888888;">- / -</span>`;
+      
+      const temp = parseFloat(tmpS.state);
+      const tempCol = temp > 50 ? '#ff5252' : temp > 40 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
+      
+      const fmt = v => parseFloat(v).toFixed(2) + ' V';
+      const fmt1 = v => parseFloat(v).toFixed(0) + ' °C';
+      return `<span style="color: rgba(230,230,230,0.9);">${fmt(minS.state)} / </span><span style="color: ${tempCol}; font-weight: bold;">${fmt1(tmpS.state)}</span>`;
+    ]]]
+  batt: |
+    [[[
+      const sState = states[variables.soc_sensor];
+      const pState = states[variables.power_sensor];
+      const hState = states[variables.heat_sensor];
+      const isOff = !sState || ['unavailable', 'unknown'].includes(sState.state);
+      const isHeating = hState && (hState.state === 'on' || hState.state === '1');
+      const socVal = isOff ? 0 : Math.max(0, Math.min(100, parseFloat(sState.state)));
+      
+      const watt = pState ? Math.abs(parseFloat(pState.state)) : 0;
+      const maxP = variables.max_power;
+      
+      let pulseSpeed = '3s';
+      if (watt > (maxP * 0.75)) pulseSpeed = '0.6s';
+      else if (watt > (maxP * 0.5)) pulseSpeed = '1s';
+      else if (watt > (maxP * 0.25)) pulseSpeed = '1.8s';
+      else if (watt > 20) pulseSpeed = '2.5s';
+
+      const segCount = 5;
+      const hPerSeg = 100 / segCount;
+      const bColors = ['#ff0000', '#ff7f00', '#ffd600', '#c6ff00', '#00c853'];
+      const activeColor = isOff ? '#888888' : bColors[Math.min(Math.floor(socVal / 20), 4)];
+      
+      const bStatus = states[variables.state_sensor]?.state;
+      let bArrow = 'n/a';
+      let bArrowCol = '#888888';
+      let animation = 'none';
+
+      if (!isOff) {
+        if (isHeating) {
+          bArrow = '♨';
+          bArrowCol = '#ff9800';
+          animation = `batt-pulse-heat 1.5s infinite ease-in-out`;
+        } else if (bStatus === '1') {
+          bArrow = '↓'; 
+          bArrowCol = '#00e676';
+          animation = `batt-pulse-green ${pulseSpeed} infinite ease-in-out`;
+        } else if (bStatus === '2') {
+          bArrow = '↑'; 
+          bArrowCol = '#ff5252';
+          animation = `batt-pulse-red ${pulseSpeed} infinite ease-in-out`;
+        } else {
+          bArrow = 'Standby'; 
+          bArrowCol = '#ffffff';
+        }
+      }
+
+      let battHtml = `
+        <style>
+          @keyframes batt-pulse-green {
+            0% { box-shadow: 0px 0px 4px 1px rgba(0, 230, 118, 0.2); }
+            50% { box-shadow: 0px 0px 16px 3px rgba(0, 230, 118, 0.7); }
+            100% { box-shadow: 0px 0px 4px 1px rgba(0, 230, 118, 0.2); }
+          }
+          @keyframes batt-pulse-red {
+            0% { box-shadow: 0px 0px 4px 1px rgba(255, 82, 82, 0.2); }
+            50% { box-shadow: 0px 0px 16px 3px rgba(255, 82, 82, 0.7); }
+            100% { box-shadow: 0px 0px 4px 1px rgba(255, 82, 82, 0.2); }
+          }
+          @keyframes batt-pulse-heat {
+            0% { box-shadow: 0px 0px 4px 1px rgba(255, 152, 0, 0.2); }
+            50% { box-shadow: 0px 0px 16px 4px rgba(255, 152, 0, 0.8); }
+            100% { box-shadow: 0px 0px 4px 1px rgba(255, 152, 0, 0.2); }
+          }
+        </style>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+      `;
+      
+      battHtml += `<div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>`;
+      
+      battHtml += `
+        <div style="
+          position: relative; 
+          width: 60px; 
+          height: 100px; 
+          display: flex; 
+          flex-direction: column-reverse; 
+          gap: 3px; 
+          border: 2px solid ${activeColor}; 
+          border-radius: 6px; 
+          padding: 3px; 
+          box-sizing: border-box; 
+          background: rgba(0,0,0,0.2);
+          animation: ${animation};
+        ">
+          <div style="
+            position: absolute; 
+            top: 2px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 14px;
+            font-weight: 900;
+            color: ${bArrowCol}; 
+            z-index: 2; 
+            white-space: nowrap;
+            text-shadow: 0px 0px 3px rgba(0,0,0,0.5);
+          ">${bArrow}</div>`;
+      
+      for (let i = 0; i < segCount; i++) {
+        const sStart = i * hPerSeg;
+        const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - sStart) / hPerSeg));
+        battHtml += `
+          <div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; position: relative; overflow: hidden;">
+            <div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${bColors[i]}; transition: height 0.4s ease;"></div>
+          </div>`;
+      }
+      battHtml += `</div></div>`;
+      return battHtml;
+    ]]]
+  power: |
+    [[[
+      const pS = states[variables.power_sensor];
+      const isOff = !pS || ['unavailable', 'unknown'].includes(pS.state);
+      const pText = isOff ? '-' : parseFloat(pS.state).toFixed(0) + ' W';
+      const pCol = isOff ? '#888888' : 'rgba(230,230,230,0.9)';
+      return `<span style="color: ${pCol}">${pText}</span>`;
+    ]]]
