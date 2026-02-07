@@ -69,7 +69,7 @@ custom_fields:
       if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') return `<span style="color: #888888;">- / -</span>`;
       
       const temp = parseFloat(tmpS.state);
-      const tempCol = temp > 50 ? '#ff5252' : temp > 40 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
+      const tempCol = (temp > 50 || temp < 0) ? '#ff5252' : temp > 35 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
       
       const fmt = v => parseFloat(v).toFixed(2) + ' V';
       const fmt1 = v => parseFloat(v).toFixed(0) + ' °C';
