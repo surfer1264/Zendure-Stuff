@@ -6,15 +6,16 @@ variables:
   min_vol_sensor: sensor.AKKUSN_min_vol
   max_vol_sensor: sensor.AKKUSN_max_vol
   temp_sensor: sensor.AKKUSN_max_temp
-  heat_sensor: binary_sensor.HubName_heat_state
+  heat_sensor: binary_sensor.HUBNAME_heat_state
   label_name: AB2000
   max_power: 600
   battery_width: 63
   battery_height: 110
-  segment_count: 10
+  segment_count: 12
   power_inside_battery: true
   cells_display_type: temp
   battery_color_mode: multi
+  color_scheme: ocean
   font_size_header: 16px
   font_size_power: 13px
   font_size_cells: 12px
@@ -128,6 +129,7 @@ custom_fields:
       const colorMode = variables.battery_color_mode || 'multi';
       const segCount = parseInt(variables.segment_count) || 10;
       const wattFontCol = 'rgba(230,230,230,0.9)';
+      const scheme = variables.color_scheme || 'classic';
 
       const isOff = !sState || ['unavailable', 'unknown'].includes(sState.state);
       const isHeating = hState && (hState.state === 'on' || hState.state === '1');
@@ -141,13 +143,14 @@ custom_fields:
       else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
       else if (watt > 20) pulseSpeed = '2.5s';
 
-      // --- VERFEINERTE 10-STUFIGE FARBPALETTE ---
-      const bColors = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
+      // --- NEUE 10-STUFIGE FARBPALETTE ---
+      const classicPal = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
+      const oceanPal = ['#1a237e', '#283593', '#0277bd', '#00838f', '#0097a7', '#00bfa5', '#00c853', '#64dd17', '#76ff03', '#b2ff59'];
+      const bColors = scheme === 'ocean' ? oceanPal : classicPal;
       const hPerSeg = 100 / segCount;
       
       const getStepColor = (p) => {
-        if (p <= 0) return bColors[0];
-        const index = Math.min(Math.floor((p - 0.01) / 10), bColors.length - 1);
+        const index = Math.min(Math.floor(p / (100 / bColors.length)), bColors.length - 1);
         return bColors[index];
       };
       
@@ -192,9 +195,9 @@ custom_fields:
               ${bArrow}
             </div>
             ${Array.from({length: segCount}, (_, i) => {
-              const segLevel = (i + 1) * hPerSeg;
+              const currentMax = (i + 1) * hPerSeg;
               const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - i * hPerSeg) / hPerSeg));
-              const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(segLevel);
+              const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(currentMax);
               return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 1px; position: relative; overflow: hidden;">
                 <div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${segColor}; transition: height 0.4s ease;"></div>
               </div>`;
