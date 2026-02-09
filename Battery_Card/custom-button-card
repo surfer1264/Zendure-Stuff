@@ -164,9 +164,9 @@ custom_fields:
 
       return `
         <style>
-          @keyframes batt-pulse-green { 0%, 100% { box-shadow: 0 0 4px 1px rgba(0,230,118,0.2); } 50% { box-shadow: 0 0 16px 3px rgba(0,230,118,0.7); } }
-          @keyframes batt-pulse-red { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,82,82,0.2); } 50% { box-shadow: 0 0 16px 3px rgba(255,82,82,0.7); } }
-          @keyframes batt-pulse-heat { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,152,0,0.2); } 50% { box-shadow: 0 0 16px 4px rgba(255,152,0,0.8); } }
+          @keyframes batt-pulse-green { 0%, 100% { box-shadow: 0 0 4px 1px rgba(0,230,118,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(0,230,118,0.8); } }
+          @keyframes batt-pulse-red { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,82,82,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(255,82,82,0.8); } }
+          @keyframes batt-pulse-heat { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,152,0,0.2); } 50% { box-shadow: 0 0 25px 4px rgba(255,152,0,0.8); } }
         </style>
         <div style="display: flex; flex-direction: column; align-items: center;">
           <div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
