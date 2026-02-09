@@ -6,7 +6,7 @@ variables:
   min_vol_sensor: sensor.AKKUSN_min_vol
   max_vol_sensor: sensor.AKKUSN_max_vol
   temp_sensor: sensor.AKKUSN_max_temp
-  heat_sensor: binary_sensor.HUBNAME_heat_state
+  heat_sensor: binary_sensor.HubName_heat_state
   label_name: AB2000
   max_power: 600
   battery_width: 63
@@ -141,12 +141,13 @@ custom_fields:
       else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
       else if (watt > 20) pulseSpeed = '2.5s';
 
-      // --- NEUE 10-STUFIGE FARBPALETTE ---
+      // --- VERFEINERTE 10-STUFIGE FARBPALETTE ---
       const bColors = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
       const hPerSeg = 100 / segCount;
       
       const getStepColor = (p) => {
-        const index = Math.min(Math.floor(p / (100 / bColors.length)), bColors.length - 1);
+        if (p <= 0) return bColors[0];
+        const index = Math.min(Math.floor((p - 0.01) / 10), bColors.length - 1);
         return bColors[index];
       };
       
@@ -191,9 +192,9 @@ custom_fields:
               ${bArrow}
             </div>
             ${Array.from({length: segCount}, (_, i) => {
-              const currentMax = (i + 1) * hPerSeg;
+              const segLevel = (i + 1) * hPerSeg;
               const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - i * hPerSeg) / hPerSeg));
-              const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(currentMax);
+              const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(segLevel);
               return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 1px; position: relative; overflow: hidden;">
                 <div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${segColor}; transition: height 0.4s ease;"></div>
               </div>`;
