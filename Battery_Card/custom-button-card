@@ -147,18 +147,18 @@ custom_fields:
 
       if (!isOff) {
         if (isHeating) {
-          bArrow = `<ha-icon icon="mdi:fire" style="width: 20px; height: 20px; color: #ff9800;"></ha-icon>`;
+          bArrow = `<ha-icon icon="mdi:fire" style="width: 22px; height: 22px; color: #ff9800;"></ha-icon>`;
           animation = `batt-pulse-heat 1.5s infinite ease-in-out`;
         } else if (bStatus === '1') {
           const arrowCol = '#00e676';
-          const icon = `<ha-icon icon="mdi:chevron-double-down" style="width: 20px; height: 20px; color: ${arrowCol};"></ha-icon>`;
+          const icon = `<ha-icon icon="mdi:chevron-double-down" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
           bArrow = variables.power_inside_battery 
             ? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
             : icon;
           animation = `batt-pulse-green ${pulseSpeed} infinite ease-in-out`;
         } else if (bStatus === '2') {
           const arrowCol = '#ff5252';
-          const icon = `<ha-icon icon="mdi:chevron-double-up" style="width: 20px; height: 20px; color: ${arrowCol};"></ha-icon>`;
+          const icon = `<ha-icon icon="mdi:chevron-double-up" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
           bArrow = variables.power_inside_battery 
             ? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
             : icon;
