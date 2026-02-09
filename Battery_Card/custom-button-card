@@ -1,22 +1,21 @@
 type: custom:button-card
 variables:
-# Konfiguration Start
-  soc_sensor: sensor.AKKUSN_soc_level
-  state_sensor: sensor.AKKUSN_state
-  power_sensor: sensor.AKKUSN_power
-  min_vol_sensor: sensor.AKKUSN_min_vol
-  max_vol_sensor: sensor.AKKUSN_max_vol
-  temp_sensor: sensor.AKKUSN_max_temp
-  heat_sensor: binary_sensor.HUBNAME_heat_state
-  label_name: AB1000S
+  soc_sensor: sensor.co4hlmema800357_soc_level
+  state_sensor: sensor.co4hlmema800357_state
+  power_sensor: sensor.co4hlmema800357_power
+  min_vol_sensor: sensor.co4hlmema800357_min_vol
+  max_vol_sensor: sensor.co4hlmema800357_max_vol
+  temp_sensor: sensor.co4hlmema800357_max_temp
+  heat_sensor: binary_sensor.solarherwegh_heat_state
+  label_name: AB2000
   max_power: 600
-  battery_width: 65
+  battery_width: 63
   power_inside_battery: true
+  cells_display_type: vol
+  battery_color_mode: multi
   font_size_header: 16px
-  font_size_power: 14px
+  font_size_power: 13px
   font_size_cells: 12px
-  cells_display_type: temp
-# Konfiguration Ende
 entity: "[[[ return variables.soc_sensor ]]]"
 show_name: false
 show_icon: false
@@ -87,32 +86,19 @@ custom_fields:
       const maxS = states[variables.max_vol_sensor];
       const tmpS = states[variables.temp_sensor];
       const mode = variables.cells_display_type || 'temp';
-
-      // Prüfung ob Sensoren verfügbar sind
-      if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') {
-        return `<span style="color: #888888;">- / -</span>`;
-      }
-
+      if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') return `<span style="color: #888888;">- / -</span>`;
       const fmtV = v => parseFloat(v).toFixed(2) + ' V';
       const fmtT = v => parseFloat(v).toFixed(0) + ' °C';
-
       let secondValue = "";
       let secondColor = "rgba(230,230,230,0.9)";
-
       if (mode === 'vol') {
-        // Logik für Max Spannung
         secondValue = fmtV(maxS ? maxS.state : 0);
       } else {
-        // Logik für Temperatur (inkl. Farbwechsel)
         const temp = parseFloat(tmpS.state);
         secondColor = (temp > 50 || temp < 0) ? '#ff5252' : temp > 35 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
         secondValue = fmtT(tmpS.state);
       }
-
-      return `
-        <span style="color: rgba(230,230,230,0.9);">${fmtV(minS.state)} / </span>
-        <span style="color: ${secondColor}; font-weight: bold;">${secondValue}</span>
-      `;
+      return `<span style="color: rgba(230,230,230,0.9);">${fmtV(minS.state)} / </span><span style="color: ${secondColor}; font-weight: bold;">${secondValue}</span>`;
     ]]]
   power: |
     [[[
@@ -128,7 +114,9 @@ custom_fields:
       const hState = states[variables.heat_sensor];
       const bWidth = variables.battery_width || 60;
       const fSize = variables.font_size_power || '14px';
-      
+      const colorMode = variables.battery_color_mode || 'multi';
+      const wattFontCol = 'rgba(230,230,230,0.9)';
+
       const isOff = !sState || ['unavailable', 'unknown'].includes(sState.state);
       const isHeating = hState && (hState.state === 'on' || hState.state === '1');
       const socVal = isOff ? 0 : Math.max(0, Math.min(100, parseFloat(sState.state)));
@@ -144,6 +132,8 @@ custom_fields:
       const segCount = 5;
       const hPerSeg = 100 / segCount;
       const bColors = ['#ff0000', '#ff7f00', '#ffd600', '#c6ff00', '#00c853'];
+      
+      // Berechne die aktive Farbe basierend auf SOC
       const activeColor = isOff ? '#888888' : bColors[Math.min(Math.floor(socVal / 20), 4)];
       
       const bStatus = states[variables.state_sensor]?.state;
@@ -153,20 +143,22 @@ custom_fields:
 
       if (!isOff) {
         if (isHeating) {
-          bArrow = '♨';
-          bArrowCol = '#ff9800';
+          bArrow = `<span style="color: #ff9800;">♨</span>`;
           animation = `batt-pulse-heat 1.5s infinite ease-in-out`;
         } else if (bStatus === '1') {
-          bArrow = variables.power_inside_battery ? `↓${wattReal}W` : '↓'; 
           bArrowCol = '#00e676';
+          bArrow = variables.power_inside_battery 
+            ? `<span style="color: ${bArrowCol};">↓</span><span style="color: ${wattFontCol};">${wattReal}W</span>` 
+            : `<span style="color: ${bArrowCol};">↓</span>`;
           animation = `batt-pulse-green ${pulseSpeed} infinite ease-in-out`;
         } else if (bStatus === '2') {
-          bArrow = variables.power_inside_battery ? `↑${wattReal}W` : '↑'; 
           bArrowCol = '#ff5252';
+          bArrow = variables.power_inside_battery 
+            ? `<span style="color: ${bArrowCol};">↑</span><span style="color: ${wattFontCol};">${wattReal}W</span>` 
+            : `<span style="color: ${bArrowCol};">↑</span>`;
           animation = `batt-pulse-red ${pulseSpeed} infinite ease-in-out`;
         } else {
-          bArrow = 'St.by'; 
-          bArrowCol = '#ffffff';
+          bArrow = `<span style="color: #ffffff;">St.by</span>`;
         }
       }
 
@@ -179,10 +171,14 @@ custom_fields:
         <div style="display: flex; flex-direction: column; align-items: center;">
           <div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
           <div style="position: relative; width: ${bWidth}px; height: 100px; display: flex; flex-direction: column-reverse; gap: 3px; border: 2px solid ${activeColor}; border-radius: 6px; padding: 3px; box-sizing: border-box; background: rgba(0,0,0,0.2); animation: ${animation};">
-            <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: ${fSize}; font-weight: 900; color: ${bArrowCol}; z-index: 2; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${bArrow}</div>
+            <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: ${fSize}; font-weight: 900; z-index: 2; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);">${bArrow}</div>
             ${Array.from({length: segCount}, (_, i) => {
               const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - i * hPerSeg) / hPerSeg));
-              return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; position: relative; overflow: hidden;"><div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${bColors[i]}; transition: height 0.4s ease;"></div></div>`;
+              // Logik für einheitliche vs. bunte Segmente
+              const segColor = colorMode === 'dynamic' ? activeColor : bColors[i];
+              return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 2px; position: relative; overflow: hidden;">
+                <div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${segColor}; transition: height 0.4s ease;"></div>
+              </div>`;
             }).join('')}
           </div>
         </div>
