@@ -1,204 +1,204 @@
-	type: custom:button-card
-	variables:
-	  soc_sensor: sensor.AKKUSN_soc_level
-	  state_sensor: sensor.AKKUSN_state
-	  power_sensor: sensor.AKKUSN_power
-	  min_vol_sensor: sensor.AKKUSN_min_vol
-	  max_vol_sensor: sensor.AKKUSN_max_vol
-	  temp_sensor: sensor.AKKUSN_max_temp
-	  heat_sensor: binary_sensor.HUBNAME_heat_state
-	  label_name: AB2000
-	  max_power: 600
-	  battery_width: 65
-	  battery_height: 110
-	  segment_count: 6
-	  power_inside_battery: false
-	  cells_display_type: temp
-	  battery_color_mode: dynamic
-	  font_size_header: 16px
-	  font_size_power: 13px
-	  font_size_cells: 12px
-	entity: "[[[ return variables.soc_sensor ]]]"
-	show_name: false
-	show_icon: false
-	show_state: true
-	font-family: monospace
-	state_display: |
-	  [[[
-		const s = states[variables.soc_sensor];
-		const isOff = !s || ['unavailable', 'unknown'].includes(s.state);
-		const valText = isOff ? 'n/a' : parseFloat(s.state).toFixed(0) + ' %';
-		const textColor = isOff ? '#999999' : '#ffffff';
-		const fSize = variables.font_size_header || '16px';
-		return `
-		  <div style="display: flex; justify-content: center; align-items: center; gap: 8px; height: 16px; font-family: monospace; font-size: ${fSize}; font-weight: 700; color: ${textColor};">
-			<span>${variables.label_name}:</span>
-			<span>${valText}</span>
-		  </div>
-		`;
-	  ]]]
-	styles:
-	  grid:
-		- grid-template-areas: |
-			[[[ 
-			  return variables.power_inside_battery 
-			  ? "'header' 'batt' 'cells'" 
-			  : "'header' 'batt' 'power' 'cells'" 
-			]]]
-		- grid-template-columns: 1fr
-		- grid-template-rows: |
-			[[[ 
-			  return variables.power_inside_battery 
-			  ? "16px auto 16px" 
-			  : "16px auto 20px 16px" 
-			]]]
-	  card:
-		- padding: 4px 8px 8px 8px
-		- border-radius: 16px
-		- background: var(--ha-card-background, var(--card-background-color, '#1c1c1e'))
-		- box-shadow: var(--ha-card-box-shadow, '0px 2px 8px rgba(0,0,0,0.3)')
-		- border: 1px solid rgba(255,255,255,0.05)
-		- height: |
-			[[[ 
-			  const bH = parseInt(variables.battery_height) || 100;
-			  const baseHeight = bH + 65; 
-			  return variables.power_inside_battery ? (baseHeight) + 'px' : (baseHeight + 20) + 'px';
-			]]]
-	  state:
-		- grid-area: header
-		- align-self: start
-	  custom_fields:
-		batt:
-		  - grid-area: batt
-		  - display: flex
-		  - justify-content: center
-		  - align-items: center
-		  - margin-top: "-2px"
-		  - margin-bottom: 2px
-		power:
-		  - grid-area: power
-		  - font-size: "[[[ return variables.font_size_power ]]]"
-		  - font-weight: 600
-		  - align-self: center
-		  - display: "[[[ return variables.power_inside_battery ? 'none' : 'block' ]]]"
-		cells:
-		  - grid-area: cells
-		  - align-self: center
-	custom_fields:
-	  cells: |
-		[[[
-		  const minS = states[variables.min_vol_sensor];
-		  const maxS = states[variables.max_vol_sensor];
-		  const tmpS = states[variables.temp_sensor];
-		  const mode = variables.cells_display_type || 'temp';
-		  const fSize = variables.font_size_cells || '12px';
+type: custom:button-card
+variables:
+  soc_sensor: sensor.AKKUSN_soc_level
+  state_sensor: sensor.AKKUSN_state
+  power_sensor: sensor.AKKUSN_power
+  min_vol_sensor: sensor.AKKUSN_min_vol
+  max_vol_sensor: sensor.AKKUSN_max_vol
+  temp_sensor: sensor.AKKUSN_max_temp
+  heat_sensor: binary_sensor.HUBNAME_heat_state
+  label_name: AB2000
+  max_power: 600
+  battery_width: 63
+  battery_height: 110
+  segment_count: 10
+  power_inside_battery: true
+  cells_display_type: temp
+  battery_color_mode: multi
+  font_size_header: 16px
+  font_size_power: 13px
+  font_size_cells: 12px
+entity: "[[[ return variables.soc_sensor ]]]"
+show_name: false
+show_icon: false
+show_state: true
+font-family: monospace
+state_display: |
+  [[[
+    const s = states[variables.soc_sensor];
+    const isOff = !s || ['unavailable', 'unknown'].includes(s.state);
+    const valText = isOff ? 'n/a' : parseFloat(s.state).toFixed(0) + ' %';
+    const textColor = isOff ? '#999999' : '#ffffff';
+    const fSize = variables.font_size_header || '16px';
+    return `
+      <div style="display: flex; justify-content: center; align-items: center; gap: 8px; height: 16px; font-family: monospace; font-size: ${fSize}; font-weight: 700; color: ${textColor};">
+        <span>${variables.label_name}:</span>
+        <span>${valText}</span>
+      </div>
+    `;
+  ]]]
+styles:
+  grid:
+    - grid-template-areas: |
+        [[[ 
+          return variables.power_inside_battery 
+          ? "'header' 'batt' 'cells'" 
+          : "'header' 'batt' 'power' 'cells'" 
+        ]]]
+    - grid-template-columns: 1fr
+    - grid-template-rows: |
+        [[[ 
+          return variables.power_inside_battery 
+          ? "16px auto 16px" 
+          : "16px auto 20px 16px" 
+        ]]]
+  card:
+    - padding: 4px 8px 8px 8px
+    - border-radius: 16px
+    - background: var(--ha-card-background, var(--card-background-color, '#1c1c1e'))
+    - box-shadow: var(--ha-card-box-shadow, '0px 2px 8px rgba(0,0,0,0.3)')
+    - border: 1px solid rgba(255,255,255,0.05)
+    - height: |
+        [[[ 
+          const bH = parseInt(variables.battery_height) || 100;
+          const baseHeight = bH + 65; 
+          return variables.power_inside_battery ? (baseHeight) + 'px' : (baseHeight + 20) + 'px';
+        ]]]
+  state:
+    - grid-area: header
+    - align-self: start
+  custom_fields:
+    batt:
+      - grid-area: batt
+      - display: flex
+      - justify-content: center
+      - align-items: center
+      - margin-top: "-2px"
+      - margin-bottom: 2px
+    power:
+      - grid-area: power
+      - font-size: "[[[ return variables.font_size_power ]]]"
+      - font-weight: 600
+      - align-self: center
+      - display: "[[[ return variables.power_inside_battery ? 'none' : 'block' ]]]"
+    cells:
+      - grid-area: cells
+      - align-self: center
+custom_fields:
+  cells: |
+    [[[
+      const minS = states[variables.min_vol_sensor];
+      const maxS = states[variables.max_vol_sensor];
+      const tmpS = states[variables.temp_sensor];
+      const mode = variables.cells_display_type || 'temp';
+      const fSize = variables.font_size_cells || '12px';
 
-		  if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') 
-			return `<span style="color: #888888; font-size: ${fSize};">- / -</span>`;
-		  
-		  const fmtV = v => parseFloat(v).toFixed(2) + ' V';
-		  const fmtT = v => parseFloat(v).toFixed(0) + ' °C';
-		  let secondValue = "";
-		  let secondColor = "rgba(230,230,230,0.9)";
+      if (!minS || minS.state === 'unavailable' || !tmpS || tmpS.state === 'unavailable') 
+        return `<span style="color: #888888; font-size: ${fSize};">- / -</span>`;
+      
+      const fmtV = v => parseFloat(v).toFixed(2) + ' V';
+      const fmtT = v => parseFloat(v).toFixed(0) + ' °C';
+      let secondValue = "";
+      let secondColor = "rgba(230,230,230,0.9)";
 
-		  if (mode === 'vol') {
-			secondValue = fmtV(maxS ? maxS.state : 0);
-		  } else {
-			const temp = parseFloat(tmpS.state);
-			secondColor = (temp > 50 || temp < 0) ? '#ff5252' : temp > 35 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
-			secondValue = fmtT(tmpS.state);
-		  }
-		  return `<div style="font-size: ${fSize};"><span style="color: rgba(230,230,230,0.9);">${fmtV(minS.state)} / </span><span style="color: ${secondColor}; font-weight: bold;">${secondValue}</span></div>`;
-		]]]
-	  power: |
-		[[[
-		  const pS = states[variables.power_sensor];
-		  const fSize = variables.font_size_power || '14px';
-		  if (!pS || ['unavailable', 'unknown'].includes(pS.state)) return `<span style="color: #888888; font-size: ${fSize};">- W</span>`;
-		  return `<span style="color: rgba(230,230,230,0.9); font-size: ${fSize};">${parseFloat(pS.state).toFixed(0)} W</span>`;
-		]]]
-	  batt: |
-		[[[
-		  const sState = states[variables.soc_sensor];
-		  const pState = states[variables.power_sensor];
-		  const hState = states[variables.heat_sensor];
-		  const bWidth = variables.battery_width || 63;
-		  const bHeight = variables.battery_height || 100;
-		  const fSize = variables.font_size_power || '14px';
-		  const colorMode = variables.battery_color_mode || 'multi';
-		  const segCount = parseInt(variables.segment_count) || 5;
-		  const wattFontCol = 'rgba(230,230,230,0.9)';
+      if (mode === 'vol') {
+        secondValue = fmtV(maxS ? maxS.state : 0);
+      } else {
+        const temp = parseFloat(tmpS.state);
+        secondColor = (temp > 50 || temp < 0) ? '#ff5252' : temp > 35 ? '#ff7f00' : 'rgba(230,230,230,0.9)';
+        secondValue = fmtT(tmpS.state);
+      }
+      return `<div style="font-size: ${fSize};"><span style="color: rgba(230,230,230,0.9);">${fmtV(minS.state)} / </span><span style="color: ${secondColor}; font-weight: bold;">${secondValue}</span></div>`;
+    ]]]
+  power: |
+    [[[
+      const pS = states[variables.power_sensor];
+      const fSize = variables.font_size_power || '14px';
+      if (!pS || ['unavailable', 'unknown'].includes(pS.state)) return `<span style="color: #888888; font-size: ${fSize};">- W</span>`;
+      return `<span style="color: rgba(230,230,230,0.9); font-size: ${fSize};">${parseFloat(pS.state).toFixed(0)} W</span>`;
+    ]]]
+  batt: |
+    [[[
+      const sState = states[variables.soc_sensor];
+      const pState = states[variables.power_sensor];
+      const hState = states[variables.heat_sensor];
+      const bWidth = variables.battery_width || 63;
+      const bHeight = variables.battery_height || 100;
+      const fSize = variables.font_size_power || '14px';
+      const colorMode = variables.battery_color_mode || 'multi';
+      const segCount = parseInt(variables.segment_count) || 10;
+      const wattFontCol = 'rgba(230,230,230,0.9)';
 
-		  const isOff = !sState || ['unavailable', 'unknown'].includes(sState.state);
-		  const isHeating = hState && (hState.state === 'on' || hState.state === '1');
-		  const socVal = isOff ? 0 : Math.max(0, Math.min(100, parseFloat(sState.state)));
-		  const watt = pState ? Math.abs(parseFloat(pState.state)) : 0;
-		  const wattReal = pState ? parseFloat(pState.state).toFixed(0) : 0;
+      const isOff = !sState || ['unavailable', 'unknown'].includes(sState.state);
+      const isHeating = hState && (hState.state === 'on' || hState.state === '1');
+      const socVal = isOff ? 0 : Math.max(0, Math.min(100, parseFloat(sState.state)));
+      const watt = pState ? Math.abs(parseFloat(pState.state)) : 0;
+      const wattReal = pState ? parseFloat(pState.state).toFixed(0) : 0;
 
-		  let pulseSpeed = '3s';
-		  if (watt > (variables.max_power * 0.75)) pulseSpeed = '0.6s';
-		  else if (watt > (variables.max_power * 0.5)) pulseSpeed = '1s';
-		  else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
-		  else if (watt > 20) pulseSpeed = '2.5s';
+      let pulseSpeed = '3s';
+      if (watt > (variables.max_power * 0.75)) pulseSpeed = '0.6s';
+      else if (watt > (variables.max_power * 0.5)) pulseSpeed = '1s';
+      else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
+      else if (watt > 20) pulseSpeed = '2.5s';
 
-		  const hPerSeg = 100 / segCount;
-		  const getStepColor = (p) => {
-			if (p < 20) return '#ff0000';
-			if (p < 40) return '#ff7f00';
-			if (p < 60) return '#ffd600';
-			if (p < 80) return '#c6ff00';
-			return '#00c853';
-		  };
-		  
-		  const activeColor = isOff ? '#888888' : getStepColor(socVal);
-		  const bStatus = states[variables.state_sensor]?.state;
-		  let bArrow = 'n/a';
-		  let animation = 'none';
+      // --- NEUE 10-STUFIGE FARBPALETTE ---
+      const bColors = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
+      const hPerSeg = 100 / segCount;
+      
+      const getStepColor = (p) => {
+        const index = Math.min(Math.floor(p / (100 / bColors.length)), bColors.length - 1);
+        return bColors[index];
+      };
+      
+      const activeColor = isOff ? '#888888' : getStepColor(socVal);
+      const bStatus = states[variables.state_sensor]?.state;
+      let bArrow = 'n/a';
+      let animation = 'none';
 
-		  if (!isOff) {
-			if (isHeating) {
-			  bArrow = `<ha-icon icon="mdi:fire" style="width: 22px; height: 22px; color: #ff9800;"></ha-icon>`;
-			  animation = `batt-pulse-heat 1.5s infinite ease-in-out`;
-			} else if (bStatus === '1') {
-			  const arrowCol = '#00e676';
-			  const icon = `<ha-icon icon="mdi:chevron-double-down" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
-			  bArrow = variables.power_inside_battery 
-				? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
-				: icon;
-			  animation = `batt-pulse-green ${pulseSpeed} infinite ease-in-out`;
-			} else if (bStatus === '2') {
-			  const arrowCol = '#ff5252';
-			  const icon = `<ha-icon icon="mdi:chevron-double-up" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
-			  bArrow = variables.power_inside_battery 
-				? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
-				: icon;
-			  animation = `batt-pulse-red ${pulseSpeed} infinite ease-in-out`;
-			} else {
-			  bArrow = `<span style="color: #ffffff; font-size: 12px; font-weight: 700;">St.by</span>`;
-			}
-		  }
+      if (!isOff) {
+        if (isHeating) {
+          bArrow = `<ha-icon icon="mdi:fire" style="width: 22px; height: 22px; color: #ff9800;"></ha-icon>`;
+          animation = `batt-pulse-heat 1.5s infinite ease-in-out`;
+        } else if (bStatus === '1') {
+          const arrowCol = '#00e676';
+          const icon = `<ha-icon icon="mdi:chevron-double-down" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
+          bArrow = variables.power_inside_battery 
+            ? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
+            : icon;
+          animation = `batt-pulse-green ${pulseSpeed} infinite ease-in-out`;
+        } else if (bStatus === '2') {
+          const arrowCol = '#ff5252';
+          const icon = `<ha-icon icon="mdi:chevron-double-up" style="width: 15px; height: 20px; color: ${arrowCol};"></ha-icon>`;
+          bArrow = variables.power_inside_battery 
+            ? `<div style="display: flex; align-items: center;">${icon}<span style="color: ${wattFontCol}; margin-left: 2px;">${wattReal}W</span></div>` 
+            : icon;
+          animation = `batt-pulse-red ${pulseSpeed} infinite ease-in-out`;
+        } else {
+          bArrow = `<span style="color: #ffffff; font-size: 12px; font-weight: 700;">St.by</span>`;
+        }
+      }
 
-		  return `
-			<style>
-			  @keyframes batt-pulse-green { 0%, 100% { box-shadow: 0 0 4px 1px rgba(0,230,118,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(0,230,118,0.8); } }
-			  @keyframes batt-pulse-red { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,82,82,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(255,82,82,0.8); } }
-			  @keyframes batt-pulse-heat { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,152,0,0.2); } 50% { box-shadow: 0 0 25px 4px rgba(255,152,0,0.8); } }
-			</style>
-			<div style="display: flex; flex-direction: column; align-items: center;">
-			  <div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
-			  <div style="position: relative; width: ${bWidth}px; height: ${bHeight}px; display: flex; flex-direction: column-reverse; gap: 2px; border: 2px solid ${activeColor}; border-radius: 6px; padding: 2px; box-sizing: border-box; background: rgba(0,0,0,0.2); animation: ${animation};">
-				<div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: ${fSize}; font-weight: 900; z-index: 2; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;">
-				  ${bArrow}
-				</div>
-				${Array.from({length: segCount}, (_, i) => {
-				  const currentMax = (i + 1) * hPerSeg;
-				  const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - i * hPerSeg) / hPerSeg));
-				  const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(currentMax);
-				  return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 1px; position: relative; overflow: hidden;">
-					<div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${segColor}; transition: height 0.4s ease;"></div>
-				  </div>`;
-				}).join('')}
-			  </div>
-			</div>
-		  `;
-		]]]
+      return `
+        <style>
+          @keyframes batt-pulse-green { 0%, 100% { box-shadow: 0 0 4px 1px rgba(0,230,118,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(0,230,118,0.8); } }
+          @keyframes batt-pulse-red { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,82,82,0.2); } 50% { box-shadow: 0 0 25px 3px rgba(255,82,82,0.8); } }
+          @keyframes batt-pulse-heat { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,152,0,0.2); } 50% { box-shadow: 0 0 25px 4px rgba(255,152,0,0.8); } }
+        </style>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+          <div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
+          <div style="position: relative; width: ${bWidth}px; height: ${bHeight}px; display: flex; flex-direction: column-reverse; gap: 2px; border: 2px solid ${activeColor}; border-radius: 6px; padding: 2px; box-sizing: border-box; background: rgba(0,0,0,0.2); animation: ${animation};">
+            <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: ${fSize}; font-weight: 900; z-index: 2; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;">
+              ${bArrow}
+            </div>
+            ${Array.from({length: segCount}, (_, i) => {
+              const currentMax = (i + 1) * hPerSeg;
+              const sFill = isOff ? 0 : Math.max(0, Math.min(1, (socVal - i * hPerSeg) / hPerSeg));
+              const segColor = colorMode === 'dynamic' ? activeColor : getStepColor(currentMax);
+              return `<div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 1px; position: relative; overflow: hidden;">
+                <div style="position: absolute; bottom: 0; width: 100%; height: ${sFill * 100}%; background: ${segColor}; transition: height 0.4s ease;"></div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    ]]]
