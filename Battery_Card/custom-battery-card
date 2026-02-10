@@ -123,8 +123,8 @@ custom_fields:
       const sState = states[variables.soc_sensor];
       const pState = states[variables.power_sensor];
       const hState = states[variables.heat_sensor];
-      const bWidth = variables.battery_width || 63;
-      const bHeight = variables.battery_height || 100;
+      const bWidth = variables.battery_width || 65;
+      const bHeight = variables.battery_height || 110;
       const fSize = variables.font_size_power || '14px';
       const colorMode = variables.battery_color_mode || 'multi';
       const segCount = parseInt(variables.segment_count) || 10;
@@ -189,7 +189,7 @@ custom_fields:
           @keyframes batt-pulse-heat { 0%, 100% { box-shadow: 0 0 4px 1px rgba(255,152,0,0.2); } 50% { box-shadow: 0 0 25px 4px rgba(255,152,0,0.8); } }
         </style>
         <div style="display: flex; flex-direction: column; align-items: center;">
-          <div style="width: 18px; height: 5px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
+          <div style="width: 18px; height: 6px; background: ${activeColor}; border-radius: 2px 2px 0 0; margin-bottom: -1px;"></div>
           <div style="position: relative; width: ${bWidth}px; height: ${bHeight}px; display: flex; flex-direction: column-reverse; gap: 2px; border: 2px solid ${activeColor}; border-radius: 6px; padding: 2px; box-sizing: border-box; background: rgba(0,0,0,0.2); animation: ${animation};">
             <div style="position: absolute; top: 4px; left: 50%; transform: translateX(-50%); font-size: ${fSize}; font-weight: 900; z-index: 2; white-space: nowrap; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center;">
               ${bArrow}
