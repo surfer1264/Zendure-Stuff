@@ -146,7 +146,8 @@ custom_fields:
       // --- NEUE 10-STUFIGE FARBPALETTE ---
       const classicPal = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
       const oceanPal = ['#1a237e', '#283593', '#0277bd', '#00838f', '#0097a7', '#00bfa5', '#00c853', '#64dd17', '#76ff03', '#b2ff59'];
-      const bColors = scheme === 'ocean' ? oceanPal : classicPal;
+      const desertPal = ['#FFF5E1', '#F4E4BC', '#EEDC9A', '#D2B48C', '#C19A6B', '#A67B5B', '#8B5A2B', '#704214', '#5D3A1A', '#3E2723']
+      const bColors = variables.color_scheme === 'ocean' ? oceanPal : (variables.color_scheme === 'desert' ? desertPal : classicPal);
       const hPerSeg = 100 / segCount;
       
       const getStepColor = (p) => {
