@@ -116,7 +116,6 @@ custom_fields:
     [[[
       const pS = states[variables.power_sensor];
       const fSize = variables.font_size_power || '14px';
-      // ANPASSUNG 2: Nutzt die konfigurierte Farbe
       const fColor = variables.font_color_power || 'rgba(230,230,230,0.9)';
       if (!pS || ['unavailable', 'unknown'].includes(pS.state)) return `<span style="color: #888888; font-size: ${fSize};">- W</span>`;
       return `<span style="color: ${fColor}; font-size: ${fSize};">${parseFloat(pS.state).toFixed(0)} W</span>`;
@@ -131,7 +130,6 @@ custom_fields:
       const fSize = variables.font_size_power || '14px';
       const colorMode = variables.battery_color_mode || 'multi';
       const segCount = parseInt(variables.segment_count) || 10;
-      // ANPASSUNG 3: Hier wird wattFontCol dynamisch aus den Variablen gelesen
       const wattFontCol = variables.font_color_power || 'rgba(230,230,230,0.9)';
       const scheme = variables.color_scheme || 'classic';
 
@@ -147,6 +145,7 @@ custom_fields:
       else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
       else if (watt > 20) pulseSpeed = '2.5s';
 
+      // Fabpalette START
       const classicPal = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
       const oceanPal = ['#1a237e', '#283593', '#0277bd', '#00838f', '#0097a7', '#00bfa5', '#00c853', '#64dd17', '#76ff03', '#b2ff59'];
       const desertPal = ['#3E2723', '#5D3A1A', '#704214', '#8B5A2B', '#A67B5B', '#C19A6B', '#D2B48C', '#EEDC9A', '#F4E4BC', '#FFF5E1'];
@@ -156,7 +155,8 @@ custom_fields:
                 variables.color_scheme === 'ios' ? iosPal : 
                 classicPal;
       const hPerSeg = 100 / segCount;
-      
+      // // Fabpalette ENDE
+
       const getStepColor = (p) => {
         const index = Math.min(Math.floor(p / (100 / bColors.length)), bColors.length - 1);
         return bColors[index];
