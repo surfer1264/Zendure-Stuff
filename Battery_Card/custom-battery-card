@@ -145,17 +145,19 @@ custom_fields:
       else if (watt > (variables.max_power * 0.25)) pulseSpeed = '1.8s';
       else if (watt > 20) pulseSpeed = '2.5s';
 
-      // Farbpalette START
+      // Farbpaletten Start
       const classicPal = ['#8b0000', '#ff0000', '#ff4500', '#ff8c00', '#ffd700', '#d4ff00', '#99ff00', '#44ff44', '#00cd00', '#018c01'];
       const oceanPal = ['#1a237e', '#283593', '#0277bd', '#00838f', '#0097a7', '#00bfa5', '#00c853', '#64dd17', '#76ff03', '#b2ff59'];
       const desertPal = ['#3E2723', '#5D3A1A', '#704214', '#8B5A2B', '#A67B5B', '#C19A6B', '#D2B48C', '#EEDC9A', '#F4E4BC', '#FFF5E1'];
       const iosPal = ['#310031', '#4A004A', '#7B1FA2', '#C2185B', '#F06292', '#BA68C8', '#4FC3F7', '#00BCD4', '#64FFDA', '#E0F7FA'];
+      const azurePal = ['#001a33', '#003366', '#004d99', '#0066cc', '#0080ff', '#3399ff', '#66b2ff', '#99ccff', '#cce5ff', '#e6f2ff']
       const bColors = variables.color_scheme === 'ocean' ? oceanPal : 
                 variables.color_scheme === 'desert' ? desertPal : 
                 variables.color_scheme === 'ios' ? iosPal : 
+                variables.color_scheme === 'azure' ? azurePal : 
                 classicPal;
       const hPerSeg = 100 / segCount;
-      // // Farbpalette ENDE
+      // Farbpaletten Ende
 
       const getStepColor = (p) => {
         const index = Math.min(Math.floor(p / (100 / bColors.length)), bColors.length - 1);
