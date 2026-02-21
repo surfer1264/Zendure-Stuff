@@ -1,5 +1,6 @@
 
-<img width="1118" alt="image" src="https://github.com/user-attachments/assets/9d3821af-6bda-42b6-95e7-b6a41e40c868" />
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/543ef11f-5c50-478d-8968-51bc9828549f" />
+
 
 [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
