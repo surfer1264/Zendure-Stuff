@@ -2,9 +2,9 @@
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/543ef11f-5c50-478d-8968-51bc9828549f" />
 
 
-[Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
+## [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
-## Mein Wiki rund um HA und NodeRed: https://github.com/surfer1264/Zendure-Stuff/wiki
+## [Mein Wiki rund um HA und NodeRed](https://github.com/surfer1264/Zendure-Stuff/wiki)
 
 ausgewählte Links
 
@@ -18,7 +18,7 @@ ausgewählte Links
 
 
   
-## Mein Wissens-Wiki: https://github.com/surfer1264/ZendureWiki/wiki
+## [Mein Wissens-Wiki](https://github.com/surfer1264/ZendureWiki/wiki)
 
 ausgewählte Links:
 
@@ -32,3 +32,6 @@ ausgewählte Links:
 * [Winterbetrieb Reloaded](https://github.com/surfer1264/ZendureWiki/wiki/Winterbetrieb-Reloaded)
 * [Wintertest AB2000 (extern)](https://www.smartzone.de/zendure-ab2000-akku-test/)
 * [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
+
+
+## [Einstieg in NodeRed](https://github.com/surfer1264/Zendure_and_NodeRed/wiki)
