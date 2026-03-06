@@ -4,7 +4,7 @@
 
 ## [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
-## [Mein Wiki rund um HA und NodeRed](https://github.com/surfer1264/Zendure-Stuff/wiki)
+## [Mein Wiki rund um HA und NodeRed](https://github.com/surfer1264/Zendure_and_NodeRed/wiki))
 
 ausgewählte Links
 
