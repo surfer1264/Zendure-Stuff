@@ -14,6 +14,12 @@ views:
             grid_options:
               columns: 12
               rows: 1
+          - type: tile
+            entity: input_select.regler_ausgang
+            vertical: false
+            features:
+              - type: select-options
+            features_position: inline
           - type: entities
             entities:
               - entity: input_boolean.regler_aktiv
@@ -84,15 +90,15 @@ views:
             name: Bezug
             entity: sensor.shellypro3em_power_actual_total
           - type: gauge
-            entity: sensor.solarhub_power
             needle: true
             grid_options:
               columns: 6
               rows: auto
             name: Einspeisung von PV
             max: 800
+            entity: sensor.solarhubbalkon_leistung
           - type: gauge
-            entity: sensor.batterie_out_in_2
+            entity: sensor.solarherwegh_bat_in_out
             min: -800
             max: 800
             needle: true
@@ -221,17 +227,6 @@ views:
     type: sections
     cards: []
     badges:
-      - type: entity
-        show_name: false
-        show_state: true
-        show_icon: true
-        entity: input_select.regler_ausgang
-      - type: entity
-        show_name: false
-        show_state: true
-        show_icon: true
-        entity: input_select.regler_typ
-        icon: mdi:gauge
       - type: entity
         show_name: true
         show_state: false
