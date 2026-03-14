@@ -13,11 +13,11 @@ let signalPhone = "MYPHONESTRING";                           // Whatsigram-Phone
 let signalKey   = "PHONE-APPKEY";                            // Whatsigram APP-KEY
 let useSignal   = true;                                      // MESSAGING OR NOT
 
-// Schwellwerte
-let vollSchwelle = 99;
-let entladeReset = 90;
-let minVoltWarn  = 3.0;
-let minVoltReset = 3.1;
+// Schwellwerte:
+let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
+let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
+let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 let tempWarn     = 40.0;             // °C, Temperaturgrenze für Alarm
 let tempReset    = 30.0;             // °C, Grenze für Rücksetzen der Warnung
 
