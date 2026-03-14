@@ -7,10 +7,11 @@
 print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
-let mqttTopic   = "APPKEY/#";
-let signalPhone = "PHONE_NUMBER";
-let signalKey   = "PHONE_KEY";
+let mqttTopic   = "APPKEY/#"; // dein API Key von Zendure
+let signalPhone = "PHONE_NUMBER"; // z. B. +4917XXXXXXXX or PHONE-STRING from WHATSIGRAM
+let signalKey   = "PHONE_API_KEY"; // dein API Key
 let useSignal   = true;
+
 
 let vollSchwelle = 99;
 let entladeReset = 90;
