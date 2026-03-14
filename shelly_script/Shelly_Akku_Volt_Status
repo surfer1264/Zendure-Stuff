@@ -12,11 +12,11 @@ let signalPhone = "PHONE_NUMBER"; // z. B. +4917XXXXXXXX or PHONE-STRING from WH
 let signalKey   = "PHONE_API_KEY"; // dein API Key
 let useSignal   = true;
 
-
-let vollSchwelle = 99;
-let entladeReset = 90;
-let minVoltWarn  = 3.0;
-let minVoltReset = 3.1;
+// Schwellwerte:
+let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
+let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
+let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 
 // ==================== VARIABLEN ====================
 let Zen = 0;
