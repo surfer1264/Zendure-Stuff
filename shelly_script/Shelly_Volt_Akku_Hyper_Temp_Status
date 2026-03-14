@@ -1,0 +1,184 @@
+// ========== AkkuVolt Watchdog mit Signal-Benachrichtigungen ==========
+// Erkennt Akku-Zustand und sendet Nachrichten bei:
+//  - Akku voll (>= 99 %)
+//  - Unterspannung einzelner Zellen (< 3.0 V)
+//  - Hyper-Temperatur Alarm (> 40.0 °C)
+//  - Status-Updates bei Sonnenaufgang (+45m) und Sonnenuntergang
+
+print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
+
+// ==================== EINSTELLUNGEN ====================
+let mqttTopic   = "MYAPPKEY/#";                              // Zendure AppKey
+let signalPhone = "MYPHONESTRING";                           // Whatsigram-Phone-String or Number
+let signalKey   = "PHONE-APPKEY";                            // Whatsigram APP-KEY
+let useSignal   = true;                                      // MESSAGING OR NOT
+
+// Schwellwerte
+let vollSchwelle = 99;
+let entladeReset = 90;
+let minVoltWarn  = 3.0;
+let minVoltReset = 3.1;
+let tempWarn     = 40.0;             // °C, Temperaturgrenze für Alarm
+let tempReset    = 30.0;             // °C, Grenze für Rücksetzen der Warnung
+
+// ==================== VARIABLEN ====================
+let Zen = 0;
+let bat = 9;
+let HT = 0;                          // Hyper Temperatur
+let modus = "UNKN ";
+let packs = {};
+let akkuVollMsgSent = false;
+let hyperTempMsgSent = false;        // Flag für Übertemperaturmeldung
+let lowVoltMsgSent = {};
+
+// ==================== HILFSFUNKTIONEN ====================
+
+function simpleEncode(str) {
+    let out = "";
+    let map = { 
+        " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss", 
+        ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
+        "°": "%C2%B0", "!": "%21"
+    };
+    for (let i = 0; i < str.length; i++) {
+        let ch = str.charAt(i);
+        out += (map[ch] || ch);
+    }
+    return out;
+}
+
+function sendSignalMessage(text) {
+    if (!useSignal) return;
+
+    let safeText = simpleEncode(text);
+    let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone + "&apikey=" + signalKey + "&text=" + safeText;
+
+    print("📨 Sende Signal-Nachricht...");
+
+    Shelly.call("HTTP.GET", { url: url, timeout: 15 }, function (result, error_code, error_msg) {
+        if (error_code === 0) {
+            print("✅ Nachricht erfolgreich gesendet.");
+        } else if (error_code === -104) {
+            print("⚠️ Timeout (-104), Nachricht kam vermutlich trotzdem an.");
+        } else {
+            print("❌ Fehler beim Senden: " + error_msg);
+        }
+    });
+}
+
+function Druck(sn) {
+    let daten = packs[sn];
+    if (!daten) return;
+    print(modus + sn + ": " + (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " + (daten.minV !== undefined ? daten.minV + "V" : "-V"));
+}
+
+function DruckHyperTemp() {
+    print("🌡️ Hyper Temperatur: " + HT.toFixed(1) + " °C");
+}
+
+function DruckAlle() {
+    DruckHyperTemp();
+    for (let sn in packs) { Druck(sn); }
+}
+
+// ==================== STATUS-FUNKTION (ASTRO) ====================
+
+function sendAstroStatus(type) {
+    if (!useSignal) return;
+
+    let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update (+45 Min):";
+    let statusText = header + "\n";
+    statusText += "Gesamt-Ladung: " + Zen + "% \n";
+    statusText += "Hyper-Temp: " + HT.toFixed(1) + " °C \n";
+    
+    for (let sn in packs) {
+        let p = packs[sn];
+        statusText += "Pack " + sn + ": " + (p.soc !== undefined ? p.soc + "%" : "?%") + 
+                      " (Min: " + (p.minV !== undefined ? p.minV + "V" : "?V") + ")\n";
+    }
+    sendSignalMessage(statusText);
+}
+
+// ==================== MQTT HANDLER ====================
+
+MQTT.subscribe(mqttTopic, function (topic, msg) {
+    let data = JSON.parse(msg);
+
+    // --- HYPER TEMPERATUR (global) ---
+    if (data.hyperTmp !== undefined) {
+        let newHT = data.hyperTmp / 10 - 273.1;
+        if (HT !== newHT) {
+            HT = newHT;
+            DruckHyperTemp();
+
+            if (HT > tempWarn) {
+                if (!hyperTempMsgSent) {
+                    hyperTempMsgSent = true;
+                    sendSignalMessage("🔥 Achtung! Hyper-Temperatur zu hoch: " + HT.toFixed(1) + " °C");
+                }
+            } else if (HT < tempReset) {
+                hyperTempMsgSent = false;
+            }
+        }
+    }
+
+    // --- PACKDATEN ---
+    if (data.packData) {
+        for (let i = 0; i < data.packData.length; i++) {
+            let pack = data.packData[i];
+            let sn = pack.sn;
+            if (!packs[sn]) {
+                packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+                lowVoltMsgSent[sn] = false;
+            }
+            if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
+            if (pack.minVol !== undefined) {
+                packs[sn].minV = pack.minVol / 100;
+                if (packs[sn].minV < minVoltWarn && !lowVoltMsgSent[sn]) {
+                    lowVoltMsgSent[sn] = true;
+                    sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
+                } else if (packs[sn].minV > minVoltReset) {
+                    lowVoltMsgSent[sn] = false;
+                }
+            }
+            if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
+            if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
+            Druck(sn);
+        }
+    }
+
+    // --- ZUSTAND & LADUNG ---
+    if (data.packState !== undefined && bat !== data.packState) {
+        bat = data.packState;
+        modus = (bat === 0) ? "STBY " : (bat === 1) ? "LOAD " : "UNLD ";
+        DruckAlle();
+    }
+
+    if (data.electricLevel !== undefined && Zen !== data.electricLevel) {
+        Zen = data.electricLevel;
+        if (Zen >= vollSchwelle && !akkuVollMsgSent) {
+            akkuVollMsgSent = true;
+            sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
+        } else if (Zen < entladeReset) {
+            akkuVollMsgSent = false;
+        }
+    }
+});
+
+// ==================== SCHEDULES INITIALISIEREN ====================
+
+Shelly.call("Schedule.Create", {
+    "enable": true, "timespec": "@sunrise 2700",
+    "calls": [{ "method": "script.eval", "params": { "id": Shelly.getCurrentScriptId(), "code": "sendAstroStatus('sunrise')" } }]
+});
+
+Shelly.call("Schedule.Create", {
+    "enable": true, "timespec": "@sunset",
+    "calls": [{ "method": "script.eval", "params": { "id": Shelly.getCurrentScriptId(), "code": "sendAstroStatus('sunset')" } }]
+});
+
+if (useSignal) {
+    sendSignalMessage("✅ AkkuWatchDog inkl. Hyper-Temp Überwachung gestartet");
+}
+
+print("📡 Überwachung aktiv. Astro-Berichte & Hyper-Temp Logik bereit.");
