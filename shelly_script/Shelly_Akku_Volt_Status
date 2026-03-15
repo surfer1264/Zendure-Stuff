@@ -160,12 +160,13 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 // ==================== SCHEDULES INITIALISIEREN ====================
 
 function setupAstroSchedules() {
+    // 1. Alle alten Schedules dieses Skripts löschen
     Shelly.call("Schedule.DeleteAll", null);
 
-    // Format 3: Das kompakte Vorzeichen-Format (Minuten)
+    // 2. Sunrise + 45 Min
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunrise+45", // Direktes Pluszeichen ohne Leerzeichen
+        "timespec": "@sunrise+45",
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -174,32 +175,14 @@ function setupAstroSchedules() {
             }
         }]
     }, function(res, err, msg) {
-        if (err !== 0) {
-            print("❌ Format @sunrise+45 gescheitert. Letzter Versuch: Cron-Stil");
-            
-            // Format 4: Der "Cron-Style" mit astronomischem Trigger am Ende
-            Shelly.call("Schedule.Create", {
-                "enable": true,
-                "timespec": "0 45 * * * sun_rise", 
-                "calls": [{
-                    "method": "Script.Eval",
-                    "params": {
-                        "id": Shelly.getCurrentScriptId(),
-                        "code": "sendAstroStatus('sunrise')"
-                    }
-                }]
-            }, function(r, e, m) {
-                if (e !== 0) print("❌ Alle automatischen Formate gescheitert. Bitte manuell im Shelly-Menü prüfen.");
-                else print("✅ Sunrise Schedule mit Cron-Style (sun_rise) erstellt!");
-            });
-        }
-        else print("✅ Sunrise Schedule mit @sunrise+45 erstellt!");
+        if (err !== 0) print("❌ Fehler Sunrise Schedule:", msg);
+        else print("✅ Sunrise Schedule (@sunrise+45) erstellt");
     });
 
-    // Sunset (hat bereits funktioniert)
+    // 3. Sunset (exakt)
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunset", 
+        "timespec": "@sunset",
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -207,8 +190,12 @@ function setupAstroSchedules() {
                 "code": "sendAstroStatus('sunset')"
             }
         }]
+    }, function(res, err, msg) {
+        if (err !== 0) print("❌ Fehler Sunset Schedule:", msg);
+        else print("✅ Sunset Schedule erstellt");
     });
 }
+
 // Starte die Einrichtung
 setupAstroSchedules();
 
