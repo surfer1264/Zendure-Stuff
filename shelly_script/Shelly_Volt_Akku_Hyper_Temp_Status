@@ -66,10 +66,16 @@ function sendSignalMessage(text) {
     });
 }
 
+// ---- Ausgabe eines einzelnen Akkus ----
 function Druck(sn) {
     let daten = packs[sn];
     if (!daten) return;
-    print(modus + sn + ": " + (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " + (daten.minV !== undefined ? daten.minV + "V" : "-V"));
+    print(modus +
+          sn + ": " +
+          (daten.soc !== undefined ? daten.soc + "%" : "-%") + " " +
+          (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
+          (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
+          (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
 }
 
 function DruckHyperTemp() {
