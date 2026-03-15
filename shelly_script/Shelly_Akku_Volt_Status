@@ -23,6 +23,9 @@ let entladeReset = 95;               // Prozent, ab wann erneute Vollmeldung erl
 let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
 let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 
+let sunriseOffset = 0;  // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;   // Minuten
+
 // ==================== VARIABLEN ====================
 let Zen = 0;                         // Gesamt-Ladezustand
 let bat = 9;                         // Akku-Arbeitsmodus
@@ -32,10 +35,6 @@ let packs = {};                      // Datenstruktur für alle Zellen
 // Flags für Nachrichten
 let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wurde
 let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
-
-// ==================== EINSTELLUNGEN ====================
-let sunriseOffset = +45;  // Minuten (negativ = davor, positiv = danach)
-let sunsetOffset  = 0;    // Minuten
 
 // ==================== HILFSFUNKTIONEN ====================
 
