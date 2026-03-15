@@ -7,12 +7,11 @@
 print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
-
-// MQTT-Topic deines BMS oder Gateways:
+//MQTT-Topic deines BMS oder Gateways:
 let mqttTopic   = "MYAppKEY/#";      // dein API Key von Zendure
 
 // Signal (CallMeBot) Einstellungen:
-let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX or UUID in der Form 25a7d32b-0c51-44d8-b11b-c5bc73294abc
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
 let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Signalsteuerung:
@@ -33,6 +32,10 @@ let packs = {};                      // Datenstruktur für alle Zellen
 // Flags für Nachrichten
 let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wurde
 let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
+
+// ==================== EINSTELLUNGEN ====================
+let sunriseOffset = +45;  // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;    // Minuten
 
 // ==================== HILFSFUNKTIONEN ====================
 
@@ -160,13 +163,16 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 // ==================== SCHEDULES INITIALISIEREN ====================
 
 function setupAstroSchedules() {
-    // 1. Alle alten Schedules dieses Skripts löschen
     Shelly.call("Schedule.DeleteAll", null);
 
-    // 2. Sunrise + 45 Min
+    // Hilfsvariable für die Formatierung (z.B. "+45" oder "-45")
+    let sunriseSpec = "@sunrise" + (sunriseOffset >= 0 ? "+" : "") + sunriseOffset;
+    let sunsetSpec  = "@sunset"  + (sunsetOffset >= 0 ? "+" : "")  + sunsetOffset;
+
+    // Sunrise Schedule
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunrise+45",
+        "timespec": sunriseSpec,
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -175,14 +181,14 @@ function setupAstroSchedules() {
             }
         }]
     }, function(res, err, msg) {
-        if (err !== 0) print("❌ Fehler Sunrise Schedule:", msg);
-        else print("✅ Sunrise Schedule (@sunrise+45) erstellt");
+        if (err !== 0) print("❌ Fehler Sunrise (" + sunriseSpec + "):", msg);
+        else print("✅ Sunrise Schedule (" + sunriseSpec + ") erstellt");
     });
 
-    // 3. Sunset (exakt)
+    // Sunset Schedule
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunset",
+        "timespec": sunsetSpec,
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -191,11 +197,10 @@ function setupAstroSchedules() {
             }
         }]
     }, function(res, err, msg) {
-        if (err !== 0) print("❌ Fehler Sunset Schedule:", msg);
-        else print("✅ Sunset Schedule erstellt");
+        if (err !== 0) print("❌ Fehler Sunset (" + sunsetSpec + "):", msg);
+        else print("✅ Sunset Schedule (" + sunsetSpec + ") erstellt");
     });
 }
-
 // Starte die Einrichtung
 setupAstroSchedules();
 
