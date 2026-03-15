@@ -33,6 +33,10 @@ let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wur
 let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
 let hyperTempMsgSent = false;        // Flag für Übertemperaturmeldung
 
+// ==================== EINSTELLUNGEN ====================
+let sunriseOffset = 0;  // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;   // Minuten
+
 // ==================== HILFSFUNKTIONEN ====================
 
 function simpleEncode(str) {
@@ -180,17 +184,18 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
     }
 });
 
-
 // ==================== SCHEDULES INITIALISIEREN ====================
-
 function setupAstroSchedules() {
-    // 1. Alle alten Schedules dieses Skripts löschen
     Shelly.call("Schedule.DeleteAll", null);
 
-    // 2. Sunrise + 45 Min
+    // Hilfsvariable für die Formatierung (z.B. "+45" oder "-45")
+    let sunriseSpec = "@sunrise" + (sunriseOffset >= 0 ? "+" : "") + sunriseOffset;
+    let sunsetSpec  = "@sunset"  + (sunsetOffset >= 0 ? "+" : "")  + sunsetOffset;
+
+    // Sunrise Schedule
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunrise",
+        "timespec": sunriseSpec,
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -199,14 +204,14 @@ function setupAstroSchedules() {
             }
         }]
     }, function(res, err, msg) {
-        if (err !== 0) print("❌ Fehler Sunrise Schedule:", msg);
-        else print("✅ Sunrise Schedule erstellt");
+        if (err !== 0) print("❌ Fehler Sunrise (" + sunriseSpec + "):", msg);
+        else print("✅ Sunrise Schedule (" + sunriseSpec + ") erstellt");
     });
 
-    // 3. Sunset (exakt)
+    // Sunset Schedule
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunset",
+        "timespec": sunsetSpec,
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -215,11 +220,10 @@ function setupAstroSchedules() {
             }
         }]
     }, function(res, err, msg) {
-        if (err !== 0) print("❌ Fehler Sunset Schedule:", msg);
-        else print("✅ Sunset Schedule erstellt");
+        if (err !== 0) print("❌ Fehler Sunset (" + sunsetSpec + "):", msg);
+        else print("✅ Sunset Schedule (" + sunsetSpec + ") erstellt");
     });
 }
-
 // Starte die Einrichtung
 setupAstroSchedules();
 
