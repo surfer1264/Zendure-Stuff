@@ -12,7 +12,7 @@ print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 let mqttTopic   = "MYAppKEY/#";      // dein API Key von Zendure
 
 // Signal (CallMeBot) Einstellungen:
-let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX or UUID in der Form 25a7d32b-0c51-44d8-b11b-c5bc73294abc
 let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Signalsteuerung:
