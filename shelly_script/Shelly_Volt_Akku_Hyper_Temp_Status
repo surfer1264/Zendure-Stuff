@@ -9,7 +9,7 @@ print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
 let mqttTopic   = "MYAPPKEY/#";                              // Zendure AppKey
-let signalPhone = "MYPHONESTRING";                           // Whatsigram-Phone-String or Number
+let signalPhone = "MYPHONESTRING";                           // Whatsigram-Phone-String or UUID in der Form 25a7d32b-0c51-44d8-b11b-c5bc73294abc
 let signalKey   = "PHONE-APPKEY";                            // Whatsigram APP-KEY
 let useSignal   = true;                                      // MESSAGING OR NOT
 
