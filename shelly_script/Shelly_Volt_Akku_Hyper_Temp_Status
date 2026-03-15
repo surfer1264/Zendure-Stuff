@@ -21,6 +21,9 @@ let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen 
 let tempWarn     = 40.0;             // °C, Temperaturgrenze für Alarm
 let tempReset    = 30.0;             // °C, Grenze für Rücksetzen der Warnung
 
+let sunriseOffset = 0;  // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;   // Minuten
+
 // ==================== VARIABLEN ====================
 let Zen = 0;                         // Gesamt-Ladezustand
 let bat = 9;                         // Akku-Arbeitsmodus
@@ -32,10 +35,6 @@ let HT = 0;                          // Hyper Temperatur
 let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wurde
 let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
 let hyperTempMsgSent = false;        // Flag für Übertemperaturmeldung
-
-// ==================== EINSTELLUNGEN ====================
-let sunriseOffset = 0;  // Minuten (negativ = davor, positiv = danach)
-let sunsetOffset  = 0;   // Minuten
 
 // ==================== HILFSFUNKTIONEN ====================
 
