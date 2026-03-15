@@ -138,15 +138,22 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
                 lowVoltMsgSent[sn] = false;
             }
             if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
+
             if (pack.minVol !== undefined) {
                 packs[sn].minV = pack.minVol / 100;
-                if (packs[sn].minV < minVoltWarn && !lowVoltMsgSent[sn]) {
-                    lowVoltMsgSent[sn] = true;
-                    sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
-                } else if (packs[sn].minV > minVoltReset) {
+                // --- Unterspannung prüfen (nur wenn Wert > 0, um Fehlmessungen zu ignorieren) ---
+                if (packs[sn].minV > 0 && packs[sn].minV < minVoltWarn) {
+                    if (!lowVoltMsgSent[sn]) {
+                        lowVoltMsgSent[sn] = true;
+                        sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
+                    }
+                } 
+                // Reset der Warnung nur, wenn die Spannung wieder im sicheren Bereich ist
+                else if (packs[sn].minV > minVoltReset) {
                     lowVoltMsgSent[sn] = false;
                 }
             }
+
             if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
             if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
             Druck(sn);
