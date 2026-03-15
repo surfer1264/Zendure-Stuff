@@ -94,7 +94,7 @@ function DruckAlle() {
 function sendAstroStatus(type) {
     if (!useSignal) return;
 
-    let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update (+45 Min):";
+    let header = (type === "sunset") ? "🌇 Abend-Update:" : "🌅 Morgen-Update:";
     let statusText = header + "\n";
     statusText += "Gesamt-Ladung: " + Zen + "% \n";
     statusText += "Hyper-Temp: " + HT.toFixed(1) + " °C \n";
@@ -190,7 +190,7 @@ function setupAstroSchedules() {
     // 2. Sunrise + 45 Min
     Shelly.call("Schedule.Create", {
         "enable": true,
-        "timespec": "@sunrise+45",
+        "timespec": "@sunrise",
         "calls": [{
             "method": "Script.Eval",
             "params": {
@@ -200,7 +200,7 @@ function setupAstroSchedules() {
         }]
     }, function(res, err, msg) {
         if (err !== 0) print("❌ Fehler Sunrise Schedule:", msg);
-        else print("✅ Sunrise Schedule (@sunrise+45) erstellt");
+        else print("✅ Sunrise Schedule erstellt");
     });
 
     // 3. Sunset (exakt)
