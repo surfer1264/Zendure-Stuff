@@ -7,10 +7,16 @@
 print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
-let mqttTopic   = "APPKEY/#"; // dein API Key von Zendure
-let signalPhone = "PHONE_NUMBER"; // z. B. +4917XXXXXXXX or PHONE-STRING from WHATSIGRAM
-let signalKey   = "PHONE_API_KEY"; // dein API Key
-let useSignal   = true;
+
+// MQTT-Topic deines BMS oder Gateways:
+let mqttTopic   = "MYAppKEY/#";      // dein API Key von Zendure
+
+// Signal (CallMeBot) Einstellungen:
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalKey   = "YOUR_API_KEY";    // dein API Key
+
+// Signalsteuerung:
+let useSignal = true;                // Signal-Benachrichtigungen aktivieren/deaktivieren
 
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll“ gilt
@@ -19,12 +25,14 @@ let minVoltWarn  = 3.0;              // Volt, Unterspannungsgrenze
 let minVoltReset = 3.1;              // Volt, Erholungsgrenze zum Zurücksetzen der Warnung
 
 // ==================== VARIABLEN ====================
-let Zen = 0;
-let bat = 9;
-let modus = "UNKN ";
-let packs = {};
-let akkuVollMsgSent = false;
-let lowVoltMsgSent = {};
+let Zen = 0;                         // Gesamt-Ladezustand
+let bat = 9;                         // Akku-Arbeitsmodus
+let modus = "UNKN ";                 // Textdarstellung Modus
+let packs = {};                      // Datenstruktur für alle Zellen
+
+// Flags für Nachrichten
+let akkuVollMsgSent = false;         // ob Akku-Vollmeldung bereits gesendet wurde
+let lowVoltMsgSent = {};             // Objekt: pro Zelle merken, ob Unterspannungswarnung gesendet wurde
 
 // ==================== HILFSFUNKTIONEN ====================
 
@@ -74,6 +82,7 @@ function Druck(sn) {
 }
 
 
+// ---- Ausgabe aller Daten ----
 function DruckAlle() {
     for (let sn in packs) { Druck(sn); }
 }
@@ -109,7 +118,7 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
                 lowVoltMsgSent[sn] = false;
             }
             if (pack.maxVol !== undefined) packs[sn].maxV = pack.maxVol / 100;
-
+   
             if (pack.minVol !== undefined) {
                 packs[sn].minV = pack.minVol / 100;
                 // --- Unterspannung prüfen (nur wenn Wert > 0, um Fehlmessungen zu ignorieren) ---
@@ -124,7 +133,7 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
                     lowVoltMsgSent[sn] = false;
                 }
             }
-
+   
             if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
             if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
             Druck(sn);
