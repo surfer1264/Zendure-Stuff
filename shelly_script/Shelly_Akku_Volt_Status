@@ -150,17 +150,58 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
 
 // ==================== SCHEDULES INITIALISIEREN ====================
 
-// Sunrise + 45 Min
-Shelly.call("Schedule.Create", {
-    "enable": true, "timespec": "@sunrise 2700",
-    "calls": [{ "method": "script.eval", "params": { "id": Shelly.getCurrentScriptId(), "code": "sendAstroStatus('sunrise')" } }]
-});
+function setupAstroSchedules() {
+    Shelly.call("Schedule.DeleteAll", null);
 
-// Sunset
-Shelly.call("Schedule.Create", {
-    "enable": true, "timespec": "@sunset",
-    "calls": [{ "method": "script.eval", "params": { "id": Shelly.getCurrentScriptId(), "code": "sendAstroStatus('sunset')" } }]
-});
+    // Format 3: Das kompakte Vorzeichen-Format (Minuten)
+    Shelly.call("Schedule.Create", {
+        "enable": true,
+        "timespec": "@sunrise+45", // Direktes Pluszeichen ohne Leerzeichen
+        "calls": [{
+            "method": "Script.Eval",
+            "params": {
+                "id": Shelly.getCurrentScriptId(),
+                "code": "sendAstroStatus('sunrise')"
+            }
+        }]
+    }, function(res, err, msg) {
+        if (err !== 0) {
+            print("❌ Format @sunrise+45 gescheitert. Letzter Versuch: Cron-Stil");
+            
+            // Format 4: Der "Cron-Style" mit astronomischem Trigger am Ende
+            Shelly.call("Schedule.Create", {
+                "enable": true,
+                "timespec": "0 45 * * * sun_rise", 
+                "calls": [{
+                    "method": "Script.Eval",
+                    "params": {
+                        "id": Shelly.getCurrentScriptId(),
+                        "code": "sendAstroStatus('sunrise')"
+                    }
+                }]
+            }, function(r, e, m) {
+                if (e !== 0) print("❌ Alle automatischen Formate gescheitert. Bitte manuell im Shelly-Menü prüfen.");
+                else print("✅ Sunrise Schedule mit Cron-Style (sun_rise) erstellt!");
+            });
+        }
+        else print("✅ Sunrise Schedule mit @sunrise+45 erstellt!");
+    });
+
+    // Sunset (hat bereits funktioniert)
+    Shelly.call("Schedule.Create", {
+        "enable": true,
+        "timespec": "@sunset", 
+        "calls": [{
+            "method": "Script.Eval",
+            "params": {
+                "id": Shelly.getCurrentScriptId(),
+                "code": "sendAstroStatus('sunset')"
+            }
+        }]
+    });
+}
+// Starte die Einrichtung
+setupAstroSchedules();
 
 if (useSignal) {
     sendSignalMessage("✅ AkkuWatchDog erfolgreich gestartet");
