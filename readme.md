@@ -14,6 +14,7 @@ ausgewählte Links
 * [Zellspannungen mit HA überwachen](https://github.com/surfer1264/Zendure-Stuff/wiki/Das-Node-Red-Projekt)
 * [Zellspannungen mit Shelly überwachen](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
 * [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regeln-mit-HomeAssistent)
+* [Z-HA Verstehen](https://github.com/surfer1264/Zendure-Stuff/wiki/Z‐HA-verstehen)
 * [Z-HA Grundlagen](https://github.com/surfer1264/Zendure-Stuff/wiki/Zendure-HA-Basics)
 * [Quellen rund um das Thema und HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
