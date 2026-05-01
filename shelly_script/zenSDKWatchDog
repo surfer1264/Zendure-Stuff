@@ -17,8 +17,8 @@ let CONFIG = {
 };
 
 // Signal (CallMeBot) Einstellungen:
-// let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
-// let signalKey   = "YOUR_API_KEY";    // dein API Key
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Signalsteuerung:
 let useSignal = false;                // Signal-Benachrichtigungen aktivieren/deaktivieren
@@ -40,7 +40,7 @@ let Zen   = 0;                       // Gesamt-Ladezustand
 let bat   = 9;                       // Akku-Arbeitsmodus
 let modus = "UNKN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Packs
-let HT    = 0;                       // Hyper-Temperatur in °C
+let HT    = 0;                       // Geräte-Temperatur in °C
 
 let akkuVollMsgSent   = false;
 let lowVoltMsgSent    = {};
@@ -100,7 +100,7 @@ function DruckAlle() {
 
 // ---- Hyper-Temperatur ausgeben ----
 function DruckHyperTemp() {
-    print("🌡️ Hyper-Temperatur: " + HT.toFixed(1) + " °C");
+    print("🌡️ Geräte-Temperatur: " + HT.toFixed(1) + " °C");
 }
 
 // ==================== DATEN VERARBEITEN ====================
