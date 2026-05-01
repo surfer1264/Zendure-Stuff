@@ -127,7 +127,7 @@ function processData(data) {
             if (HT > tempWarn) {
                 if (!hyperTempMsgSent) {
                     hyperTempMsgSent = true;
-                    sendSignalMessage("🔥 Achtung! Hyper-Temperatur zu hoch: " + HT.toFixed(1) + " °C");
+                    sendSignalMessage("🔥 Achtung! Geräte-Temperatur zu hoch: " + HT.toFixed(1) + " °C");
                 }
             } else if (HT < tempReset) {
                 hyperTempMsgSent = false;
@@ -222,7 +222,7 @@ function sendAstroStatus(type) {
                                         "🚀 Startup-Status Hub:";
     let statusText = header + "\n";
     statusText += "Gesamt-Ladung: " + Zen + "%\n";
-    statusText += "Hyper-Temp: " + HT.toFixed(1) + " °C\n";
+    statusText += "Geräte-Temp: " + HT.toFixed(1) + " °C\n";
     for (let sn in packs) {
         let p = packs[sn];
         statusText += "Pack " + sn + ": " + (p.soc  !== undefined ? p.soc  + "%" : "?%") +
