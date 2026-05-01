@@ -2,7 +2,7 @@
 // Erkennt Akku-Zustand und sendet Nachrichten bei:
 //  - Akku voll (>= 99 %)
 //  - Unterspannung einzelner Zellen (< 3.0 V)
-//  - Status-Updates bei Sonnenaufgang (+45m) und Sonnenuntergang
+//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang (mit OffSet)
 
 print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
