@@ -95,6 +95,7 @@ function Druck(sn) {
 
 // ---- Ausgabe aller Packs ----
 function DruckAlle() {
+    DruckHyperTemp();
     for (let sn in packs) { Druck(sn); }
 }
 
