@@ -2,44 +2,50 @@
 // Erkennt Akku-Zustand und sendet Nachrichten bei:
 //  - Akku voll (>= vollSchwelle %)
 //  - Unterspannung einzelner Zellen (< minVoltWarn V)
-//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang (mit OffSet)
+//  - Übertemperatur Gerät (> tempWarn °C)
+//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang
 
-print("⚡ Starte AkkuVolt-Watchdog (Hub-zenSDK REST) — bitte vorsichtig benutzen!");
+print("⚡ Starte AkkuVolt-Watchdog (Hub REST-API) — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
 
 let CONFIG = {
-  url: "http://192.XXX.YYY.ZZZ/properties/report", // Change your IP HERE 
+  url: "http://192.YYY.XXX.ZZZ/properties/report", // CHANGE IP
   maxRetries: 3,
   retryDelayMs: 2000,
   pollIntervalMs: 60000        // Abfrageintervall in ms (60 Sekunden)
 };
 
 // Signal (CallMeBot) Einstellungen:
-let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
-let signalKey   = "YOUR_API_KEY";    // dein API Key
+// let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+// let signalKey   = "YOUR_API_KEY";    // dein API Key
 
 // Signalsteuerung:
-let useSignal = false;                // Signal-Benachrichtigungen aktivieren/deaktivieren true/false
+let useSignal = false;                // Signal-Benachrichtigungen aktivieren/deaktivieren
 
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll" gilt
 let entladeReset = 90;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
 let minVoltWarn  = 2.9;              // Volt, Unterspannungsgrenze
 let minVoltReset = 3.1;              // Volt, Erholungsgrenze
+let tempWarn     = 45.0;             // °C, Temperaturgrenze für Alarm
+let tempReset    = 30.0;             // °C, Grenze für Rücksetzen der Warnung
 
 let sunriseOffset = 0;               // Minuten (negativ = davor, positiv = danach)
-let sunsetOffset  = 0;               // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;
 
 // ==================== VARIABLEN ====================
 
-let Zen = 0;                         // Gesamt-Ladezustand
-let bat = 9;                         // Akku-Arbeitsmodus (packState / socStatus)
+let Zen   = 0;                       // Gesamt-Ladezustand
+let bat   = 9;                       // Akku-Arbeitsmodus
 let modus = "UNKN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Packs
+let HT    = 0;                       // Hyper-Temperatur in °C
 
-let akkuVollMsgSent = false;
-let lowVoltMsgSent  = {};
+let akkuVollMsgSent   = false;
+let lowVoltMsgSent    = {};
+let hyperTempMsgSent  = false;
+let startupStatusSent = false;
 
 let retryCount = 0;
 
@@ -92,6 +98,11 @@ function DruckAlle() {
     for (let sn in packs) { Druck(sn); }
 }
 
+// ---- Hyper-Temperatur ausgeben ----
+function DruckHyperTemp() {
+    print("🌡️ Hyper-Temperatur: " + HT.toFixed(1) + " °C");
+}
+
 // ==================== DATEN VERARBEITEN ====================
 
 function processData(data) {
@@ -104,6 +115,23 @@ function processData(data) {
             sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
         } else if (Zen < entladeReset) {
             akkuVollMsgSent = false;
+        }
+    }
+
+    // --- Hyper-Temperatur (Gerätetemperatur, Toplevel) ---
+    if (data.hyperTmp !== undefined) {
+        let newHT = (data.hyperTmp - 2731) / 10;
+        if (HT !== newHT) {
+            HT = newHT;
+            DruckHyperTemp();
+            if (HT > tempWarn) {
+                if (!hyperTempMsgSent) {
+                    hyperTempMsgSent = true;
+                    sendSignalMessage("🔥 Achtung! Hyper-Temperatur zu hoch: " + HT.toFixed(1) + " °C");
+                }
+            } else if (HT < tempReset) {
+                hyperTempMsgSent = false;
+            }
         }
     }
 
@@ -124,13 +152,12 @@ function processData(data) {
                 modus = (bat === 0) ? "STBY " : (bat === 1) ? "LOAD " : "UNLD ";
             }
 
-            if (pack.maxVol     !== undefined) packs[sn].maxV = pack.maxVol / 100;
-            if (pack.socLevel   !== undefined) packs[sn].soc  = pack.socLevel;
-            if (pack.maxTemp    !== undefined) packs[sn].maxT = (pack.maxTemp - 2731) / 10;  // Kelvin * 10 → °C
+            if (pack.maxVol   !== undefined) packs[sn].maxV = pack.maxVol / 100;
+            if (pack.socLevel !== undefined) packs[sn].soc  = pack.socLevel;
+            if (pack.maxTemp  !== undefined) packs[sn].maxT = (pack.maxTemp - 2731) / 10;
 
             if (pack.minVol !== undefined) {
                 packs[sn].minV = pack.minVol / 100;
-
                 if (packs[sn].minV > 0 && packs[sn].minV < minVoltWarn) {
                     if (!lowVoltMsgSent[sn]) {
                         lowVoltMsgSent[sn] = true;
@@ -143,6 +170,12 @@ function processData(data) {
 
             Druck(sn);
         }
+    }
+
+    // --- Einmaliger Startup-Status nach erstem erfolgreichen Poll ---
+    if (!startupStatusSent) {
+        startupStatusSent = true;
+        sendAstroStatus("startup");
     }
 }
 
@@ -165,8 +198,12 @@ function handleResponse(result, error_code, error_message) {
     retryCount = 0;
     let data = JSON.parse(result.body);
 
-    // API liefert { "properties": { "report": { ... } } } oder direkt das Objekt
-    let payload = (data.properties && data.properties.report) ? data.properties.report : data;
+    // API liefert { properties: { electricLevel, hyperTmp, ... }, packData: [...] }
+    let payload = (data.properties && data.properties.report) ? data.properties.report :
+                  (data.properties) ? data.properties : data;
+
+    // packData liegt auf oberster Ebene, parallel zu properties
+    if (!payload.packData && data.packData) payload.packData = data.packData;
 
     processData(payload);
 }
@@ -176,13 +213,16 @@ function attemptRequest() {
     Shelly.call("HTTP.GET", { url: CONFIG.url }, handleResponse);
 }
 
-// ==================== STATUS-FUNKTION (ASTRO) ====================
+// ==================== STATUS-FUNKTION (ASTRO + STARTUP) ====================
 
 function sendAstroStatus(type) {
     if (!useSignal) return;
-    let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update (+45 Min):";
+    let header = (type === "sunset")  ? "🌇 Abend-Update (Sonnenuntergang):" :
+                 (type === "sunrise") ? "🌅 Morgen-Update:" :
+                                        "🚀 Startup-Status Hub:";
     let statusText = header + "\n";
-    statusText += "Gesamt-Ladung: " + Zen + "% \n";
+    statusText += "Gesamt-Ladung: " + Zen + "%\n";
+    statusText += "Hyper-Temp: " + HT.toFixed(1) + " °C\n";
     for (let sn in packs) {
         let p = packs[sn];
         statusText += "Pack " + sn + ": " + (p.soc  !== undefined ? p.soc  + "%" : "?%") +
@@ -229,10 +269,10 @@ function setupAstroSchedules() {
 
 setupAstroSchedules();
 
-// Erster Abruf sofort, danach periodisch
+// Erster Abruf sofort (löst auch Startup-Status aus), danach periodisch
 attemptRequest();
 Timer.set(CONFIG.pollIntervalMs, true, attemptRequest);
 
 if (useSignal) {
-    sendSignalMessage("✅ AkkuWatchDog Hub2 erfolgreich gestartet");
+    sendSignalMessage("✅ AkkuWatchDog Hub (ZenSDK) erfolgreich gestartet");
 }
