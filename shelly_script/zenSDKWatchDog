@@ -1,0 +1,238 @@
+// ========== AkkuVolt Watchdog – Hub2 (SF2400Pro) via REST ==========
+// Erkennt Akku-Zustand und sendet Nachrichten bei:
+//  - Akku voll (>= vollSchwelle %)
+//  - Unterspannung einzelner Zellen (< minVoltWarn V)
+//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang
+
+print("⚡ Starte AkkuVolt-Watchdog (Hub-zenSDK REST) — bitte vorsichtig benutzen!");
+
+// ==================== EINSTELLUNGEN ====================
+
+let CONFIG = {
+  url: "http://192.168.178.143/properties/report", // Change your IP HERE 
+  maxRetries: 3,
+  retryDelayMs: 2000,
+  pollIntervalMs: 30000        // Abfrageintervall in ms (30 Sekunden)
+};
+
+// Signal (CallMeBot) Einstellungen:
+let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
+let signalKey   = "YOUR_API_KEY";    // dein API Key
+
+// Signalsteuerung:
+let useSignal = false;                // Signal-Benachrichtigungen aktivieren/deaktivieren true/false
+
+// Schwellwerte:
+let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll" gilt
+let entladeReset = 90;               // Prozent, ab wann erneute Vollmeldung erlaubt ist
+let minVoltWarn  = 2.9;              // Volt, Unterspannungsgrenze
+let minVoltReset = 3.1;              // Volt, Erholungsgrenze
+
+let sunriseOffset = 0;               // Minuten (negativ = davor, positiv = danach)
+let sunsetOffset  = 0;               // Minuten (negativ = davor, positiv = danach)
+
+// ==================== VARIABLEN ====================
+
+let Zen = 0;                         // Gesamt-Ladezustand
+let bat = 9;                         // Akku-Arbeitsmodus (packState / socStatus)
+let modus = "UNKN ";                 // Textdarstellung Modus
+let packs = {};                      // Datenstruktur für alle Packs
+
+let akkuVollMsgSent = false;
+let lowVoltMsgSent  = {};
+
+let retryCount = 0;
+
+// ==================== HILFSFUNKTIONEN ====================
+
+function simpleEncode(str) {
+    let out = "";
+    let map = {
+        " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss",
+        ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
+        "°": "%C2%B0", "!": "%21"
+    };
+    for (let i = 0; i < str.length; i++) {
+        let ch = str.charAt(i);
+        out += (map[ch] || ch);
+    }
+    return out;
+}
+
+function sendSignalMessage(text) {
+    if (!useSignal) return;
+    let safeText = simpleEncode(text);
+    let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone + "&apikey=" + signalKey + "&text=" + safeText;
+    print("📨 Sende Signal-Nachricht...");
+    Shelly.call("HTTP.GET", { url: url, timeout: 15 }, function (result, error_code, error_msg) {
+        if (error_code === 0) {
+            print("✅ Nachricht erfolgreich gesendet.");
+        } else if (error_code === -104) {
+            print("⚠️ Timeout (-104), Nachricht kam vermutlich trotzdem an.");
+        } else {
+            print("❌ Fehler beim Senden: " + error_msg);
+        }
+    });
+}
+
+// ---- Ausgabe eines einzelnen Packs ----
+function Druck(sn) {
+    let daten = packs[sn];
+    if (!daten) return;
+    print(modus +
+          sn + ": " +
+          (daten.soc  !== undefined ? daten.soc  + "%" : "-%") + " " +
+          (daten.minV !== undefined ? daten.minV + "V" : "-V") + " .. " +
+          (daten.maxV !== undefined ? daten.maxV + "V" : "-V") + " " +
+          (daten.maxT !== undefined ? daten.maxT + "°" : "-°"));
+}
+
+// ---- Ausgabe aller Packs ----
+function DruckAlle() {
+    for (let sn in packs) { Druck(sn); }
+}
+
+// ==================== DATEN VERARBEITEN ====================
+
+function processData(data) {
+
+    // --- Gesamt-Ladestand ---
+    if (data.electricLevel !== undefined && Zen !== data.electricLevel) {
+        Zen = data.electricLevel;
+        if (Zen >= vollSchwelle && !akkuVollMsgSent) {
+            akkuVollMsgSent = true;
+            sendSignalMessage("🔋 Akku ist jetzt voll (" + Zen + "%)");
+        } else if (Zen < entladeReset) {
+            akkuVollMsgSent = false;
+        }
+    }
+
+    // --- Pack-Daten ---
+    if (data.packData) {
+        for (let i = 0; i < data.packData.length; i++) {
+            let pack = data.packData[i];
+            let sn   = pack.sn;
+
+            if (!packs[sn]) {
+                packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+                lowVoltMsgSent[sn] = false;
+            }
+
+            // --- Modus aus pack.state ableiten ---
+            if (pack.state !== undefined && pack.state !== bat) {
+                bat   = pack.state;
+                modus = (bat === 0) ? "STBY " : (bat === 1) ? "LOAD " : "UNLD ";
+            }
+
+            if (pack.maxVol     !== undefined) packs[sn].maxV = pack.maxVol / 100;
+            if (pack.socLevel   !== undefined) packs[sn].soc  = pack.socLevel;
+            if (pack.maxTemp    !== undefined) packs[sn].maxT = (pack.maxTemp - 2731) / 10;  // Kelvin * 10 → °C
+
+            if (pack.minVol !== undefined) {
+                packs[sn].minV = pack.minVol / 100;
+
+                if (packs[sn].minV > 0 && packs[sn].minV < minVoltWarn) {
+                    if (!lowVoltMsgSent[sn]) {
+                        lowVoltMsgSent[sn] = true;
+                        sendSignalMessage("⚠️ Zelle " + sn + " hat nur " + packs[sn].minV + "V!");
+                    }
+                } else if (packs[sn].minV > minVoltReset) {
+                    lowVoltMsgSent[sn] = false;
+                }
+            }
+
+            Druck(sn);
+        }
+    }
+}
+
+// ==================== HTTP POLLING ====================
+
+function handleResponse(result, error_code, error_message) {
+    if (error_code !== 0) {
+        print("Request failed:", error_message);
+        if (retryCount < CONFIG.maxRetries) {
+            retryCount++;
+            print("Retrying in", CONFIG.retryDelayMs, "ms (attempt", retryCount, "of", CONFIG.maxRetries + ")");
+            Timer.set(CONFIG.retryDelayMs, false, attemptRequest);
+        } else {
+            print("Max retries reached, giving up");
+            retryCount = 0;
+        }
+        return;
+    }
+
+    retryCount = 0;
+    let data = JSON.parse(result.body);
+
+    // API liefert { "properties": { "report": { ... } } } oder direkt das Objekt
+    let payload = (data.properties && data.properties.report) ? data.properties.report : data;
+
+    processData(payload);
+}
+
+function attemptRequest() {
+    print("Attempting request...");
+    Shelly.call("HTTP.GET", { url: CONFIG.url }, handleResponse);
+}
+
+// ==================== STATUS-FUNKTION (ASTRO) ====================
+
+function sendAstroStatus(type) {
+    if (!useSignal) return;
+    let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update (+45 Min):";
+    let statusText = header + "\n";
+    statusText += "Gesamt-Ladung: " + Zen + "% \n";
+    for (let sn in packs) {
+        let p = packs[sn];
+        statusText += "Pack " + sn + ": " + (p.soc  !== undefined ? p.soc  + "%" : "?%") +
+                      " (Min: "            + (p.minV !== undefined ? p.minV + "V" : "?V") + ")\n";
+    }
+    sendSignalMessage(statusText);
+}
+
+// ==================== SCHEDULES INITIALISIEREN ====================
+
+function setupAstroSchedules() {
+    Shelly.call("Schedule.DeleteAll", null);
+
+    let sunriseSpec = "@sunrise" + (sunriseOffset >= 0 ? "+" : "") + sunriseOffset;
+    let sunsetSpec  = "@sunset"  + (sunsetOffset  >= 0 ? "+" : "") + sunsetOffset;
+
+    Shelly.call("Schedule.Create", {
+        "enable": true,
+        "timespec": sunriseSpec,
+        "calls": [{ "method": "Script.Eval", "params": {
+            "id": Shelly.getCurrentScriptId(),
+            "code": "sendAstroStatus('sunrise')"
+        }}]
+    }, function(res, err, msg) {
+        if (err !== 0) print("❌ Fehler Sunrise (" + sunriseSpec + "):", msg);
+        else           print("✅ Sunrise Schedule (" + sunriseSpec + ") erstellt");
+    });
+
+    Shelly.call("Schedule.Create", {
+        "enable": true,
+        "timespec": sunsetSpec,
+        "calls": [{ "method": "Script.Eval", "params": {
+            "id": Shelly.getCurrentScriptId(),
+            "code": "sendAstroStatus('sunset')"
+        }}]
+    }, function(res, err, msg) {
+        if (err !== 0) print("❌ Fehler Sunset (" + sunsetSpec + "):", msg);
+        else           print("✅ Sunset Schedule (" + sunsetSpec + ") erstellt");
+        print("📡 Überwachung aktiv. Polling alle", CONFIG.pollIntervalMs / 1000, "Sekunden.");
+    });
+}
+
+// ==================== START ====================
+
+setupAstroSchedules();
+
+// Erster Abruf sofort, danach periodisch
+attemptRequest();
+Timer.set(CONFIG.pollIntervalMs, true, attemptRequest);
+
+if (useSignal) {
+    sendSignalMessage("✅ AkkuWatchDog Hub2 erfolgreich gestartet");
+}
