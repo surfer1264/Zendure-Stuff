@@ -2,17 +2,17 @@
 // Erkennt Akku-Zustand und sendet Nachrichten bei:
 //  - Akku voll (>= vollSchwelle %)
 //  - Unterspannung einzelner Zellen (< minVoltWarn V)
-//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang
+//  - Status-Updates bei Sonnenaufgang und Sonnenuntergang (mit OffSet)
 
 print("⚡ Starte AkkuVolt-Watchdog (Hub-zenSDK REST) — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
 
 let CONFIG = {
-  url: "http://192.168.178.143/properties/report", // Change your IP HERE 
+  url: "http://192.XXX.YYY.ZZZ/properties/report", // Change your IP HERE 
   maxRetries: 3,
   retryDelayMs: 2000,
-  pollIntervalMs: 30000        // Abfrageintervall in ms (30 Sekunden)
+  pollIntervalMs: 60000        // Abfrageintervall in ms (60 Sekunden)
 };
 
 // Signal (CallMeBot) Einstellungen:
