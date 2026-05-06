@@ -3,18 +3,38 @@ print("🔍 Starte ZendureLens – Daten-Monitor");
 
 // ==================== EINSTELLUNGEN ====================
 let CONFIG = {
-  url: "http://192.168.178.143/properties/report", // IP Adresse ersetzen
+  url: "http://192.XXX.178.143/properties/report", // IP Adresse ersetzen
   pollIntervalMs: 60000 // alle 60Sekunden werden die Werte in die Konsole geschrieben 
 };
 
 let useSignal      = false; // true or false; NUR Wenn ein MessagBot CALLMEBOT konfiguriert ist
 let signalPhone    = "PHONE-STRING";
 let signalKey      = "YOUR_API_KEY";
-
 let signalIntervalMin = 60;  // Signal höchstens alle 60 Minuten
 
 // ==================== VARIABLEN ====================
 let lastSignalSent = 0;
+let printQueue     = [];
+let printIdx       = 0;
+let printing       = false;
+
+// ==================== QUEUE-PRINT ====================
+function flushQueue() {
+  if (printIdx >= printQueue.length) {
+    printQueue = [];
+    printIdx   = 0;
+    printing   = false;
+    return;
+  }
+  print(printQueue[printIdx]);
+  printIdx++;
+  Timer.set(50, false, flushQueue);
+}
+
+function qprint(line) {
+  printQueue.push(line);
+  if (!printing) { printing = true; flushQueue(); }
+}
 
 // ==================== HILFSFUNKTIONEN ====================
 function simpleEncode(str) {
@@ -33,17 +53,17 @@ function simpleEncode(str) {
 
 function sendSignal(text) {
   if (!useSignal) return;
-  let now = Date.now() / 1000;  // Unix-Timestamp in Sekunden
+  let now = Date.now() / 1000;
   if (now - lastSignalSent < signalIntervalMin * 60) {
-    print("⏭️ Signal übersprungen (Mindestabstand noch nicht erreicht)");
+    qprint("⏭️ Signal uebersprungen (Mindestabstand nicht erreicht)");
     return;
   }
   lastSignalSent = now;
   let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone +
             "&apikey=" + signalKey + "&text=" + simpleEncode(text);
   Shelly.call("HTTP.GET", { url: url, timeout: 15 }, function(res, ec, em) {
-    if (ec === 0 || ec === -104) print("📨 Signal OK");
-    else print("❌ Signal Fehler: " + em);
+    if (ec === 0 || ec === -104) qprint("📨 Signal OK");
+    else qprint("❌ Signal Fehler: " + em);
   });
 }
 
@@ -52,56 +72,7 @@ function stateLabel(s) {
 }
 
 function c(val) {
-  // Kelvin*10 → °C
-  return ((val - 2731) / 10).toFixed(1);
-}
-
-// ==================== AUSGABE ====================
-function printAndSend(data) {
-  let p = data.properties;
-
-  let lines = [
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "🔋 SF2400Pro  SN: " + data.sn,
-    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "⚡ Ladung:     " + p.electricLevel + "%  │  Modus: " + stateLabel(p.packState),
-    "☀️  Solar:      " + p.solarInputPower + " W  " + buildPvString(p),
-    "🏠 Verbrauch:  " + p.outputHomePower + " W",
-    "📦 Pack→Haus:  " + p.outputPackPower + " W  │  Haus→Pack: " + p.packInputPower + " W",
-    "⏱️  Restlaufz.: " + p.remainOutTime + " min",
-    "🌡️  Gerät:      " + c(p.hyperTmp) + " °C",
-    "🔌 Netz:       " + p.gridInputPower + " W  │  Netz-Aus: " + p.gridOffPower + " W",
-  ];
-
-  if (data.packData && data.packData.length > 0) {
-    for (let i = 0; i < data.packData.length; i++) {
-      let pd   = data.packData[i];
-      let minV = (pd.minVol / 100).toFixed(2);
-      let maxV = (pd.maxVol / 100).toFixed(2);
-      lines.push("──────────────────────────────");
-      lines.push("🗂️  Pack " + (i + 1) + "/" + data.packData.length + "  SN: " + pd.sn);
-      lines.push("   SOC:   " + pd.socLevel + "%  │  State: " + stateLabel(pd.state));
-      lines.push("   Volt:  " + (pd.totalVol / 100).toFixed(2) + " V  (Min:" + minV + " Max:" + maxV + " V)");
-      lines.push("   Temp:  " + c(pd.maxTemp) + " °C  │  Leistung: " + pd.power + " W");
-    }
-  }
-
-  lines.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-
-  for (let i = 0; i < lines.length; i++) print(lines[i]);
-
-  sendSignal(lines.join("\n"));
-}
-
-// ==================== HTTP POLL ====================
-function handleResponse(result, ec, em) {
-  if (ec !== 0) { print("❌ Fehler: " + em); return; }
-  let data = JSON.parse(result.body);
-  printAndSend(data);
-}
-
-function poll() {
-  Shelly.call("HTTP.GET", { url: CONFIG.url }, handleResponse);
+  return ((val - 2731) / 10).toFixed(1) + " C";
 }
 
 function buildPvString(p) {
@@ -113,6 +84,73 @@ function buildPvString(p) {
     }
   }
   return pvs === "" ? "" : pvs + ")";
+}
+
+// ==================== AUSGABE ====================
+function printAndSend(data) {
+  let p = data.properties;
+
+  qprint("==============================");
+  qprint("🔋 SF2400Pro  SN: " + data.sn);
+  qprint("==============================");
+  qprint("⚡ Ladung:     " + p.electricLevel + "%  |  Modus: " + stateLabel(p.packState));
+  qprint("☀️  Solar:      " + p.solarInputPower + " W  " + buildPvString(p));
+  qprint("🏠 Verbrauch:  " + p.outputHomePower + " W");
+  qprint("📦 Pack->Haus: " + p.outputPackPower + " W  |  Haus->Pack: " + p.packInputPower + " W");
+  qprint("⏱️  Restlaufz.: " + p.remainOutTime + " min");
+  qprint("🌡️  Geraet:     " + c(p.hyperTmp));
+  qprint("🔌 Netz:       " + p.gridInputPower + " W  |  Netz-Aus: " + p.gridOffPower + " W");
+
+  if (data.packData && data.packData.length > 0) {
+    for (let i = 0; i < data.packData.length; i++) {
+      let pd   = data.packData[i];
+      let minV = (pd.minVol / 100).toFixed(2);
+      let maxV = (pd.maxVol / 100).toFixed(2);
+      qprint("------------------------------");
+      qprint("🗂️  Pack " + (i + 1) + "/" + data.packData.length + "  SN: " + pd.sn);
+      qprint("  SOC:   " + pd.socLevel + "%  |  State: " + stateLabel(pd.state));
+      qprint("  Volt:  " + (pd.totalVol / 100).toFixed(2) + " V  (Min:" + minV + " Max:" + maxV + " V)");
+      qprint("  Temp:  " + c(pd.maxTemp) + "  |  Leistung: " + pd.power + " W");
+    }
+  }
+
+  qprint("==============================");
+
+  // Signal-Nachricht
+  let msg = "🔋 SF2400Pro SN: " + data.sn + "\n" +
+            "------------------------------\n" +
+            "⚡ Ladung: " + p.electricLevel + "% | Modus: " + stateLabel(p.packState) + "\n" +
+            "☀️ Solar: " + p.solarInputPower + " W " + buildPvString(p) + "\n" +
+            "🏠 Verbrauch: " + p.outputHomePower + " W\n" +
+            "📦 Pack->Haus: " + p.outputPackPower + " W | Haus->Pack: " + p.packInputPower + " W\n" +
+            "⏱️ Restlaufz.: " + p.remainOutTime + " min\n" +
+            "🌡️ Geraet: " + c(p.hyperTmp) + "\n" +
+            "🔌 Netz: " + p.gridInputPower + " W | Netz-Aus: " + p.gridOffPower + " W\n";
+
+  if (data.packData && data.packData.length > 0) {
+    for (let i = 0; i < data.packData.length; i++) {
+      let pd = data.packData[i];
+      msg += "------------------------------\n" +
+             "🗂️ Pack " + (i + 1) + "/" + data.packData.length + " SN: " + pd.sn + "\n" +
+             "  SOC: " + pd.socLevel + "% | State: " + stateLabel(pd.state) + "\n" +
+             "  Volt: " + (pd.totalVol / 100).toFixed(2) + " V" +
+             " (Min:" + (pd.minVol / 100).toFixed(2) + " Max:" + (pd.maxVol / 100).toFixed(2) + " V)\n" +
+             "  Temp: " + c(pd.maxTemp) + " | Leistung: " + pd.power + " W\n";
+    }
+  }
+
+  sendSignal(msg);
+}
+
+// ==================== HTTP POLL ====================
+function handleResponse(result, ec, em) {
+  if (ec !== 0) { qprint("❌ Fehler: " + em); return; }
+  let data = JSON.parse(result.body);
+  printAndSend(data);
+}
+
+function poll() {
+  Shelly.call("HTTP.GET", { url: CONFIG.url }, handleResponse);
 }
 
 // ==================== START ====================
