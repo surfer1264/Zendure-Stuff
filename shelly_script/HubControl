@@ -1,0 +1,120 @@
+// ========== ZendureLens – Strukturierte Anzeige SF2400Pro ==========
+print("🔍 Starte ZendureLens – Daten-Monitor");
+
+// ==================== EINSTELLUNGEN ====================
+let CONFIG = {
+  url: "http://192.168.178.143/properties/report", // IP Adresse ersetzen
+  pollIntervalMs: 60000 // alle 60Sekunden werden die Werte in die Konsole geschrieben 
+};
+
+let useSignal      = false; // true or false; NUR Wenn ein MessagBot CALLMEBOT konfiguriert ist
+let signalPhone    = "PHONE-STRING";
+let signalKey      = "YOUR_API_KEY";
+
+let signalIntervalMin = 60;  // Signal höchstens alle 60 Minuten
+
+// ==================== VARIABLEN ====================
+let lastSignalSent = 0;
+
+// ==================== HILFSFUNKTIONEN ====================
+function simpleEncode(str) {
+  let out = "";
+  let map = {
+    " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss",
+    ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
+    "°": "%C2%B0", "!": "%21"
+  };
+  for (let i = 0; i < str.length; i++) {
+    let ch = str.charAt(i);
+    out += (map[ch] || ch);
+  }
+  return out;
+}
+
+function sendSignal(text) {
+  if (!useSignal) return;
+  let now = Date.now() / 1000;  // Unix-Timestamp in Sekunden
+  if (now - lastSignalSent < signalIntervalMin * 60) {
+    print("⏭️ Signal übersprungen (Mindestabstand noch nicht erreicht)");
+    return;
+  }
+  lastSignalSent = now;
+  let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone +
+            "&apikey=" + signalKey + "&text=" + simpleEncode(text);
+  Shelly.call("HTTP.GET", { url: url, timeout: 15 }, function(res, ec, em) {
+    if (ec === 0 || ec === -104) print("📨 Signal OK");
+    else print("❌ Signal Fehler: " + em);
+  });
+}
+
+function stateLabel(s) {
+  return s === 0 ? "STANDBY" : s === 1 ? "LADEN" : s === 2 ? "ENTLADEN" : "UNBEKANNT";
+}
+
+function c(val) {
+  // Kelvin*10 → °C
+  return ((val - 2731) / 10).toFixed(1);
+}
+
+// ==================== AUSGABE ====================
+function printAndSend(data) {
+  let p = data.properties;
+
+  let lines = [
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "🔋 SF2400Pro  SN: " + data.sn,
+    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+    "⚡ Ladung:     " + p.electricLevel + "%  │  Modus: " + stateLabel(p.packState),
+    "☀️  Solar:      " + p.solarInputPower + " W  " + buildPvString(p),
+    "🏠 Verbrauch:  " + p.outputHomePower + " W",
+    "📦 Pack→Haus:  " + p.outputPackPower + " W  │  Haus→Pack: " + p.packInputPower + " W",
+    "⏱️  Restlaufz.: " + p.remainOutTime + " min",
+    "🌡️  Gerät:      " + c(p.hyperTmp) + " °C",
+    "🔌 Netz:       " + p.gridInputPower + " W  │  Netz-Aus: " + p.gridOffPower + " W",
+  ];
+
+  if (data.packData && data.packData.length > 0) {
+    for (let i = 0; i < data.packData.length; i++) {
+      let pd   = data.packData[i];
+      let minV = (pd.minVol / 100).toFixed(2);
+      let maxV = (pd.maxVol / 100).toFixed(2);
+      lines.push("──────────────────────────────");
+      lines.push("🗂️  Pack " + (i + 1) + "/" + data.packData.length + "  SN: " + pd.sn);
+      lines.push("   SOC:   " + pd.socLevel + "%  │  State: " + stateLabel(pd.state));
+      lines.push("   Volt:  " + (pd.totalVol / 100).toFixed(2) + " V  (Min:" + minV + " Max:" + maxV + " V)");
+      lines.push("   Temp:  " + c(pd.maxTemp) + " °C  │  Leistung: " + pd.power + " W");
+    }
+  }
+
+  lines.push("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+  for (let i = 0; i < lines.length; i++) print(lines[i]);
+
+  sendSignal(lines.join("\n"));
+}
+
+// ==================== HTTP POLL ====================
+function handleResponse(result, ec, em) {
+  if (ec !== 0) { print("❌ Fehler: " + em); return; }
+  let data = JSON.parse(result.body);
+  printAndSend(data);
+}
+
+function poll() {
+  Shelly.call("HTTP.GET", { url: CONFIG.url }, handleResponse);
+}
+
+function buildPvString(p) {
+  let pvs = "";
+  let keys = ["solarPower1", "solarPower2", "solarPower3", "solarPower4"];
+  for (let i = 0; i < keys.length; i++) {
+    if (p[keys[i]] !== undefined) {
+      pvs += (pvs === "" ? "(" : " ") + "PV" + (i + 1) + ":" + p[keys[i]] + "W";
+    }
+  }
+  return pvs === "" ? "" : pvs + ")";
+}
+
+// ==================== START ====================
+poll();
+Timer.set(CONFIG.pollIntervalMs, true, poll);
