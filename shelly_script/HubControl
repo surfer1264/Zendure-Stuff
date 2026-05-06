@@ -97,7 +97,6 @@ function printAndSend(data) {
   qprint("☀️ Solar:      " + p.solarInputPower + " W  " + buildPvString(p));
   qprint("🏠 Verbrauch:  " + p.outputHomePower + " W");
   qprint("📦 Pack->Haus: " + p.outputPackPower + " W  |  Haus->Pack: " + p.packInputPower + " W");
-  qprint("⏱️ Restlaufz.: " + p.remainOutTime + " min");
   qprint("🌡️ Geraet:     " + c(p.hyperTmp));
   qprint("🔌 Netz:       " + p.gridInputPower + " W  |  Netz-Aus: " + p.gridOffPower + " W");
 
@@ -123,7 +122,6 @@ function printAndSend(data) {
             "☀️ Solar: " + p.solarInputPower + " W " + buildPvString(p) + "\n" +
             "🏠 Verbrauch: " + p.outputHomePower + " W\n" +
             "📦 Pack->Haus: " + p.outputPackPower + " W | Haus->Pack: " + p.packInputPower + " W\n" +
-            "⏱️ Restlaufz.: " + p.remainOutTime + " min\n" +
             "🌡️ Geraet: " + c(p.hyperTmp) + "\n" +
             "🔌 Netz: " + p.gridInputPower + " W | Netz-Aus: " + p.gridOffPower + " W\n";
 
