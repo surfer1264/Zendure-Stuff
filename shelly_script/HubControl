@@ -94,11 +94,11 @@ function printAndSend(data) {
   qprint("🔋 SF2400Pro  SN: " + data.sn);
   qprint("==============================");
   qprint("⚡ Ladung:     " + p.electricLevel + "%  |  Modus: " + stateLabel(p.packState));
-  qprint("☀️  Solar:      " + p.solarInputPower + " W  " + buildPvString(p));
+  qprint("☀️ Solar:      " + p.solarInputPower + " W  " + buildPvString(p));
   qprint("🏠 Verbrauch:  " + p.outputHomePower + " W");
   qprint("📦 Pack->Haus: " + p.outputPackPower + " W  |  Haus->Pack: " + p.packInputPower + " W");
-  qprint("⏱️  Restlaufz.: " + p.remainOutTime + " min");
-  qprint("🌡️  Geraet:     " + c(p.hyperTmp));
+  qprint("⏱️ Restlaufz.: " + p.remainOutTime + " min");
+  qprint("🌡️ Geraet:     " + c(p.hyperTmp));
   qprint("🔌 Netz:       " + p.gridInputPower + " W  |  Netz-Aus: " + p.gridOffPower + " W");
 
   if (data.packData && data.packData.length > 0) {
