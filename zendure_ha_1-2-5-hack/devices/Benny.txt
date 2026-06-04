@@ -1,0 +1,24 @@
+3 Hyper
+alle drei Hyper sind in Z-HA sichtbar
+- Shelly 3EM
+- Shelly 3EMPro
+- Ecotracker
+1 Hyper mit 4 PV mit 2 Akkus
+2 Hyper als AC Ladegeräte mit je 2 Akkus
+
+jeder Hyper auf einer eigenen Phase geklemmt
+
+Zendure APP
+- HEMS ist aus
+- Energiepläne sind aus
+
+Z-HA
+- EINE Sicherungsgruppe 3600W
+- oder hat JEDER Hyper seine eigene Sicherungsgruppe (max.1200 W)
+
+Was ist eingestellt 
+- Cloud
+- lokal
+- zenSDK
+
+
