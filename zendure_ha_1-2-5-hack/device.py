@@ -106,6 +106,7 @@ class ZendureDevice(EntityDevice):
         self.discharge_start: int = 0
         self.maxSolar = 0
         self.pwr_max: int = 0
+        self._last_commanded_charge = 0
         self.pwr_produced: int = 0
         self.actualKwh: float = 0.0
         self.state: DeviceState = DeviceState.OFFLINE
@@ -483,13 +484,22 @@ class ZendureDevice(EntityDevice):
         """Set the power output/input."""
         return 0
 
+    #async def power_charge(self, power: int) -> int:
+    #    """Set charge power."""
+    #    power = min(0, max(power, self.charge_limit))
+    #    if abs(power - self.homeInput.asInt + self.homeOutput.asInt) <= SmartMode.POWER_TOLERANCE:
+    #        _LOGGER.info(f"Power charge {self.name} => no action [power {power}]")
+    #        return self.homeInput.asInt
+    #    return await self.charge(power)
     async def power_charge(self, power: int) -> int:
         """Set charge power."""
         power = min(0, max(power, self.charge_limit))
-        if abs(power - self.homeInput.asInt + self.homeOutput.asInt) <= SmartMode.POWER_TOLERANCE:
+        if abs(power - self.homeInput.asInt + self.homeOutput.asInt) <= SmartMode.POWER_TOLERANCE \
+            and abs(self._last_commanded_charge - self.homeInput.asInt) <= SmartMode.POWER_TOLERANCE:
             _LOGGER.info(f"Power charge {self.name} => no action [power {power}]")
             return self.homeInput.asInt
-        return await self.charge(power)
+        self._last_commanded_charge = power
+        return await self.charge(power)    
 
     async def discharge(self, _power: int) -> int:
         """Set the power output/input."""
