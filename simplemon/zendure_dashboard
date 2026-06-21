@@ -28,6 +28,10 @@ DB_FILE = "zendure_log.db"
 PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
                "totalVol", "batcur", "maxVol", "minVol"]
 
+# SQLite-Spaltentyp je Pack-Feld (Felder ohne Eintrag -> Standard REAL)
+PACK_TYPES = {"sn": "TEXT", "state": "INTEGER", "batcur": "INTEGER",
+              "maxVol": "INTEGER", "minVol": "INTEGER"}
+
 PROPS = [
     "electricLevel", "packInputPower", "outputPackPower", "outputHomePower",
     "gridInputPower", "solarInputPower", "solarPower1", "solarPower2",
@@ -42,14 +46,36 @@ _lock = threading.Lock()
 
 
 # ----------------------------- Datenbank ----------------------------------
+def _pack_col_def(field):
+    return f"{field} {PACK_TYPES.get(field, 'REAL')}"
+
+
+def ensure_columns(con, table, expected):
+    """Ergaenzt fehlende Spalten in einer bestehenden Tabelle per ALTER TABLE.
+
+    `expected` ist eine Liste von (Spaltenname, Typ)-Tupeln. Bereits
+    vorhandene Spalten bleiben unveraendert; nur fehlende werden hinzugefuegt.
+    """
+    have = {row[1] for row in con.execute(f"PRAGMA table_info({table})")}
+    for name, ctype in expected:
+        if name not in have:
+            con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ctype}")
+            print(f"DB-Migration: Spalte '{name}' zu Tabelle '{table}' hinzugefuegt")
+
+
 def setup_db():
     con = sqlite3.connect(DB_FILE, check_same_thread=False)
-    cols = ", ".join(f"{p} REAL" for p in PROPS)
-    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, {cols})")
-    con.execute("""CREATE TABLE IF NOT EXISTS packs (
-        ts INTEGER, dt TEXT, sn TEXT, socLevel REAL, state INTEGER,
-        power REAL, maxTemp REAL, totalVol REAL, batcur INTEGER,
-        maxVol INTEGER, minVol INTEGER)""")
+
+    # Tabellen anlegen, falls noch nicht vorhanden
+    dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
+    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, {dev_cols})")
+    pack_cols = ", ".join(_pack_col_def(f) for f in PACK_FIELDS)
+    con.execute(f"CREATE TABLE IF NOT EXISTS packs (ts INTEGER, dt TEXT, {pack_cols})")
+
+    # Bestehende Tabellen migrieren: neue Felder aus PROPS / PACK_FIELDS nachziehen
+    ensure_columns(con, "device", [(p, "REAL") for p in PROPS])
+    ensure_columns(con, "packs", [(f, PACK_TYPES.get(f, "REAL")) for f in PACK_FIELDS])
+
     con.commit()
     return con
 
@@ -84,14 +110,19 @@ def store(con, data):
     dt = datetime.now().isoformat(timespec="seconds")
     props = data.get("properties", {})
 
-    placeholders = ", ".join("?" * (len(PROPS) + 2))
-    con.execute(f"INSERT OR REPLACE INTO device VALUES ({placeholders})",
-                [ts, dt] + [props.get(p) for p in PROPS])
+    dev_cols = ["ts", "dt"] + PROPS
+    dev_ph = ", ".join("?" * len(dev_cols))
+    con.execute(
+        f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
+        [ts, dt] + [props.get(p) for p in PROPS])
+
     packs = data.get("packData", [])
-    ph_pack = ", ".join("?" * (len(PACK_FIELDS) + 2))
+    pack_cols = ["ts", "dt"] + PACK_FIELDS
+    pack_ph = ", ".join("?" * len(pack_cols))
     for pk in packs:
-        con.execute(f"INSERT INTO packs VALUES ({ph_pack})",
-                    [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
+        con.execute(
+            f"INSERT INTO packs ({', '.join(pack_cols)}) VALUES ({pack_ph})",
+            [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
     log_csv(ts, dt, props)
     log_packs_csv(ts, dt, packs)
