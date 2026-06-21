@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Zendure - Logger + Web-Dashboard in einem.
+Zendure SF240Pro - Logger + Web-Dashboard in einem.
 
 Pollt das Gerät regelmaessig, speichert die Daten in CSV und SQLite
 und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
@@ -172,7 +172,8 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/history":
             con = sqlite3.connect(DB_FILE)
             rows = con.execute(
-                "SELECT dt, electricLevel, solarInputPower, outputHomePower "
+                "SELECT dt, electricLevel, solarInputPower, outputHomePower, "
+                "outputPackPower, packInputPower "
                 "FROM device ORDER BY ts DESC LIMIT 200").fetchall()
             con.close()
             rows.reverse()
@@ -205,8 +206,11 @@ PAGE = r"""<!DOCTYPE html>
   .bar > div{height:100%;background:var(--acc);transition:width .4s}
   .panel{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:18px}
   .panel h2{font-size:14px;font-weight:600;margin-bottom:12px}
-  .legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-bottom:8px}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-bottom:8px;flex-wrap:wrap}
   .legend span{display:flex;align-items:center;gap:5px}
+  .legend .leg{cursor:pointer;user-select:none;padding:2px 4px;border-radius:4px}
+  .legend .leg:hover{background:var(--soft)}
+  .legend .leg.off{opacity:.4;text-decoration:line-through}
   .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
   .chartwrap{position:relative;height:260px}
   .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
@@ -237,9 +241,11 @@ PAGE = r"""<!DOCTYPE html>
 <div class="panel">
   <h2>Leistungsverlauf</h2>
   <div class="legend">
-    <span><i class="dot" style="background:#f59e0b"></i>Solar W</span>
-    <span><i class="dot" style="background:#3b82f6"></i>Ausgang W</span>
-    <span><i class="dot" style="background:#22c55e"></i>SoC %</span>
+    <span class="leg" data-ds="0"><i class="dot" style="background:#f59e0b"></i>Solar W</span>
+    <span class="leg" data-ds="1"><i class="dot" style="background:#3b82f6"></i>Ausgang W</span>
+    <span class="leg" data-ds="2"><i class="dot" style="background:#a855f7"></i>Akku laden W</span>
+    <span class="leg" data-ds="3"><i class="dot" style="background:#ef4444"></i>Akku entladen W</span>
+    <span class="leg" data-ds="4"><i class="dot" style="background:#22c55e"></i>SoC %</span>
   </div>
   <div class="chartwrap"><canvas id="chart"></canvas></div>
 </div>
@@ -257,6 +263,8 @@ function initChart(){
     data:{labels:[],datasets:[
       {label:'Solar W',yAxisID:'y',data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.12)',borderWidth:2,tension:.3,pointRadius:0,fill:true},
       {label:'Ausgang W',yAxisID:'y',data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.12)',borderWidth:2,tension:.3,pointRadius:0,fill:true},
+      {label:'Akku laden W',yAxisID:'y',data:[],borderColor:'#a855f7',borderWidth:2,tension:.3,pointRadius:0},
+      {label:'Akku entladen W',yAxisID:'y',data:[],borderColor:'#ef4444',borderWidth:2,tension:.3,pointRadius:0},
       {label:'SoC %',yAxisID:'y1',data:[],borderColor:'#22c55e',borderWidth:2,borderDash:[5,3],tension:.3,pointRadius:0}
     ]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,
@@ -268,6 +276,17 @@ function initChart(){
       }}
   });
 }
+function initLegend(){
+  document.querySelectorAll('.legend .leg').forEach(function(el){
+    el.addEventListener('click',function(){
+      var i=+el.dataset.ds;
+      var vis=chart.isDatasetVisible(i);
+      chart.setDatasetVisibility(i,!vis);
+      el.classList.toggle('off',vis);
+      chart.update();
+    });
+  });
+}
 function setStatus(ok,txt){const s=document.getElementById('status');s.textContent=txt;s.className='badge'+(ok?'':' bad');}
 function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
 
@@ -275,9 +294,11 @@ async function loadHistory(){
   try{
     const r=await fetch('/history');const rows=await r.json();
     chart.data.labels=rows.map(x=>fmtTime(x[0]));
-    chart.data.datasets[2].data=rows.map(x=>x[1]);
-    chart.data.datasets[0].data=rows.map(x=>x[2]);
-    chart.data.datasets[1].data=rows.map(x=>x[3]);
+    chart.data.datasets[0].data=rows.map(x=>x[2]); // Solar
+    chart.data.datasets[1].data=rows.map(x=>x[3]); // Ausgang
+    chart.data.datasets[2].data=rows.map(x=>x[4]); // Akku laden (outputPackPower)
+    chart.data.datasets[3].data=rows.map(x=>x[5]); // Akku entladen (packInputPower)
+    chart.data.datasets[4].data=rows.map(x=>x[1]); // SoC
     chart.update();
   }catch(e){}
 }
@@ -313,6 +334,7 @@ async function refresh(){
 }
 
 initChart();
+initLegend();
 loadHistory().then(refresh);
 setInterval(refresh, 5000);
 setInterval(loadHistory, 60000);
