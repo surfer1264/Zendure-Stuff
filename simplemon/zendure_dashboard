@@ -244,7 +244,7 @@ PAGE = r"""<!DOCTYPE html>
     <span class="leg" data-ds="0"><i class="dot" style="background:#f59e0b"></i>Solar W</span>
     <span class="leg" data-ds="1"><i class="dot" style="background:#3b82f6"></i>Ausgang W</span>
     <span class="leg" data-ds="2"><i class="dot" style="background:#a855f7"></i>Akku laden W</span>
-    <span class="leg" data-ds="3"><i class="dot" style="background:#ef4444"></i>Akku entladen W</span>
+    <span class="leg" data-ds="3"><i class="dot" style="background:#ef4444"></i>Akku entladen W (−)</span>
     <span class="leg" data-ds="4"><i class="dot" style="background:#22c55e"></i>SoC %</span>
   </div>
   <div class="chartwrap"><canvas id="chart"></canvas></div>
@@ -270,7 +270,7 @@ function initChart(){
     options:{responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{display:false}},
       scales:{
-        y:{beginAtZero:true,grid:{color:'#2c3038'},ticks:{color:'#9aa0ac'},title:{display:true,text:'Watt',color:'#9aa0ac'}},
+        y:{grid:{color:c=>c.tick.value===0?'#5a6172':'#2c3038'},ticks:{color:'#9aa0ac'},title:{display:true,text:'Watt (Akku: + laden / − entladen)',color:'#9aa0ac'}},
         y1:{position:'right',min:0,max:100,grid:{drawOnChartArea:false},ticks:{color:'#9aa0ac'},title:{display:true,text:'%',color:'#9aa0ac'}},
         x:{grid:{color:'#2c3038'},ticks:{color:'#9aa0ac',maxTicksLimit:8}}
       }}
@@ -297,7 +297,7 @@ async function loadHistory(){
     chart.data.datasets[0].data=rows.map(x=>x[2]); // Solar
     chart.data.datasets[1].data=rows.map(x=>x[3]); // Ausgang
     chart.data.datasets[2].data=rows.map(x=>x[4]); // Akku laden (outputPackPower)
-    chart.data.datasets[3].data=rows.map(x=>x[5]); // Akku entladen (packInputPower)
+    chart.data.datasets[3].data=rows.map(x=>x[5]==null?null:-x[5]); // Akku entladen negativ (packInputPower)
     chart.data.datasets[4].data=rows.map(x=>x[1]); // SoC
     chart.update();
   }catch(e){}
