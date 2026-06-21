@@ -10,7 +10,6 @@ Kein CORS-Problem, weil Browser und Daten vom selben Server kommen.
 Start:   python3 zendure_dashboard.py
 Aufruf:  http://localhost:8080   (im Browser)
 
-https://bodo-schoenfeld.de/installation-von-python-unter-windows-11/
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
 import json, sqlite3, csv, time, os, threading, urllib.request
@@ -18,11 +17,16 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # ----------------------------- Konfiguration -----------------------------
-DEVICE_URL = "http://YOURIP/properties/report"
+DEVICE_URL = "http://192.168.178.143/properties/report"
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
 WEB_PORT = 8080
 CSV_FILE = "zendure_log.csv"
+PACK_CSV_FILE = "zendure_packs.csv"
 DB_FILE = "zendure_log.db"
+
+# Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
+PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
+               "totalVol", "batcur", "maxVol", "minVol"]
 
 PROPS = [
     "electricLevel", "packInputPower", "outputPackPower", "outputHomePower",
@@ -65,6 +69,16 @@ def log_csv(ts, dt, props):
         w.writerow([ts, dt] + [props.get(p, "") for p in PROPS])
 
 
+def log_packs_csv(ts, dt, packs):
+    new = not os.path.exists(PACK_CSV_FILE)
+    with open(PACK_CSV_FILE, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["ts", "dt", "packIndex"] + PACK_FIELDS)
+        for i, pk in enumerate(packs):
+            w.writerow([ts, dt, i] + [pk.get(fld, "") for fld in PACK_FIELDS])
+
+
 def store(con, data):
     ts = data.get("timestamp", int(time.time()))
     dt = datetime.now().isoformat(timespec="seconds")
@@ -73,19 +87,20 @@ def store(con, data):
     placeholders = ", ".join("?" * (len(PROPS) + 2))
     con.execute(f"INSERT OR REPLACE INTO device VALUES ({placeholders})",
                 [ts, dt] + [props.get(p) for p in PROPS])
-    for pk in data.get("packData", []):
-        con.execute("INSERT INTO packs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                    [ts, dt, pk.get("sn"), pk.get("socLevel"), pk.get("state"),
-                     pk.get("power"), pk.get("maxTemp"), pk.get("totalVol"),
-                     pk.get("batcur"), pk.get("maxVol"), pk.get("minVol")])
+    packs = data.get("packData", [])
+    ph_pack = ", ".join("?" * (len(PACK_FIELDS) + 2))
+    for pk in packs:
+        con.execute(f"INSERT INTO packs VALUES ({ph_pack})",
+                    [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
     log_csv(ts, dt, props)
+    log_packs_csv(ts, dt, packs)
 
 
 # ----------------------------- Poll-Thread --------------------------------
 def poll_loop():
     con = setup_db()
-    print(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {CSV_FILE} + {DB_FILE}")
+    print(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {CSV_FILE} + {PACK_CSV_FILE} + {DB_FILE}")
     while True:
         try:
             data = fetch_device()
