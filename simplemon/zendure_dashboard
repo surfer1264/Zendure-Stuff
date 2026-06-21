@@ -1,0 +1,291 @@
+#!/usr/bin/env python3
+"""
+Zendure SF240Pro - Logger + Web-Dashboard in einem.
+
+Pollt das Gerät regelmaessig, speichert die Daten in CSV und SQLite
+und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
+
+Kein CORS-Problem, weil Browser und Daten vom selben Server kommen.
+
+Start:   python3 zendure_dashboard.py
+Aufruf:  http://localhost:8080   (im Browser)
+
+https://bodo-schoenfeld.de/installation-von-python-unter-windows-11/
+Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
+"""
+import json, sqlite3, csv, time, os, threading, urllib.request
+from datetime import datetime
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+# ----------------------------- Konfiguration -----------------------------
+DEVICE_URL = "http://192.168.178.143/properties/report"
+POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
+WEB_PORT = 8080
+CSV_FILE = "zendure_log.csv"
+DB_FILE = "zendure_log.db"
+
+PROPS = [
+    "electricLevel", "packInputPower", "outputPackPower", "outputHomePower",
+    "gridInputPower", "solarInputPower", "solarPower1", "solarPower2",
+    "solarPower3", "solarPower4", "remainOutTime", "packState",
+    "hyperTmp", "BatVolt", "outputLimit", "inputLimit", "socSet",
+    "minSoc", "acMode", "rssi", "is_error",
+]
+
+# Letzter abgerufener Datensatz (vom Poll-Thread gefuellt, vom Webserver gelesen)
+_latest = {"data": None, "ts": 0, "error": None}
+_lock = threading.Lock()
+
+
+# ----------------------------- Datenbank ----------------------------------
+def setup_db():
+    con = sqlite3.connect(DB_FILE, check_same_thread=False)
+    cols = ", ".join(f"{p} REAL" for p in PROPS)
+    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, {cols})")
+    con.execute("""CREATE TABLE IF NOT EXISTS packs (
+        ts INTEGER, dt TEXT, sn TEXT, socLevel REAL, state INTEGER,
+        power REAL, maxTemp REAL, totalVol REAL, batcur INTEGER,
+        maxVol INTEGER, minVol INTEGER)""")
+    con.commit()
+    return con
+
+
+def fetch_device():
+    req = urllib.request.Request(DEVICE_URL, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.loads(r.read().decode())
+
+
+def log_csv(ts, dt, props):
+    new = not os.path.exists(CSV_FILE)
+    with open(CSV_FILE, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(["ts", "dt"] + PROPS)
+        w.writerow([ts, dt] + [props.get(p, "") for p in PROPS])
+
+
+def store(con, data):
+    ts = data.get("timestamp", int(time.time()))
+    dt = datetime.now().isoformat(timespec="seconds")
+    props = data.get("properties", {})
+
+    placeholders = ", ".join("?" * (len(PROPS) + 2))
+    con.execute(f"INSERT OR REPLACE INTO device VALUES ({placeholders})",
+                [ts, dt] + [props.get(p) for p in PROPS])
+    for pk in data.get("packData", []):
+        con.execute("INSERT INTO packs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                    [ts, dt, pk.get("sn"), pk.get("socLevel"), pk.get("state"),
+                     pk.get("power"), pk.get("maxTemp"), pk.get("totalVol"),
+                     pk.get("batcur"), pk.get("maxVol"), pk.get("minVol")])
+    con.commit()
+    log_csv(ts, dt, props)
+
+
+# ----------------------------- Poll-Thread --------------------------------
+def poll_loop():
+    con = setup_db()
+    print(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {CSV_FILE} + {DB_FILE}")
+    while True:
+        try:
+            data = fetch_device()
+            store(con, data)
+            with _lock:
+                _latest.update(data=data, ts=time.time(), error=None)
+            p = data.get("properties", {})
+            print(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
+                  f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W")
+        except Exception as e:
+            with _lock:
+                _latest.update(error=str(e))
+            print(f"{datetime.now():%H:%M:%S}  Fehler: {e}")
+        time.sleep(POLL_INTERVAL)
+
+
+# ----------------------------- Webserver ----------------------------------
+class Handler(BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass  # ruhige Konsole
+
+    def _send(self, code, body, ctype="application/json"):
+        b = body.encode() if isinstance(body, str) else body
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+
+    def do_GET(self):
+        if self.path == "/" or self.path.startswith("/index"):
+            self._send(200, PAGE, "text/html; charset=utf-8")
+        elif self.path == "/data":
+            with _lock:
+                payload = {"data": _latest["data"], "ts": _latest["ts"],
+                           "error": _latest["error"]}
+            self._send(200, json.dumps(payload))
+        elif self.path == "/history":
+            con = sqlite3.connect(DB_FILE)
+            rows = con.execute(
+                "SELECT dt, electricLevel, solarInputPower, outputHomePower "
+                "FROM device ORDER BY ts DESC LIMIT 200").fetchall()
+            con.close()
+            rows.reverse()
+            self._send(200, json.dumps(rows))
+        else:
+            self._send(404, "not found", "text/plain")
+
+
+# ----------------------------- HTML-Seite ---------------------------------
+PAGE = r"""<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zendure Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0f1115;--card:#1a1d24;--soft:#22262f;--txt:#e7e9ee;--mut:#9aa0ac;
+        --acc:#3b82f6;--solar:#f59e0b;--ok:#22c55e;--err:#ef4444;--bd:#2c3038;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif;padding:18px;max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px}
+  h1{font-size:19px;font-weight:600}
+  .sub{font-size:13px;color:var(--mut)}
+  .badge{font-size:12px;padding:5px 12px;border-radius:8px;background:rgba(34,197,94,.15);color:var(--ok)}
+  .badge.bad{background:rgba(239,68,68,.15);color:var(--err)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .stat{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 16px}
+  .stat .lbl{font-size:12px;color:var(--mut);margin-bottom:6px}
+  .stat .val{font-size:23px;font-weight:600}
+  .bar{height:6px;background:var(--soft);border-radius:3px;margin-top:9px;overflow:hidden}
+  .bar > div{height:100%;background:var(--acc);transition:width .4s}
+  .panel{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:18px}
+  .panel h2{font-size:14px;font-weight:600;margin-bottom:12px}
+  .legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-bottom:8px}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .dot{width:10px;height:10px;border-radius:2px;display:inline-block}
+  .chartwrap{position:relative;height:260px}
+  .packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .pack{background:var(--soft);border-radius:10px;padding:12px}
+  .pack h3{font-size:13px;font-weight:600;margin-bottom:8px}
+  .row{display:flex;justify-content:space-between;font-size:13px;margin:4px 0}
+  .row .m{color:var(--mut)}
+</style></head>
+<body>
+<header>
+  <div><h1 id="title">Zendure</h1><div class="sub" id="meta">verbinde …</div></div>
+  <span class="badge" id="status">verbinde …</span>
+</header>
+
+<div class="grid">
+  <div class="stat"><div class="lbl">Ladestand</div><div class="val"><span id="soc">–</span>%</div><div class="bar"><div id="socbar" style="width:0"></div></div></div>
+  <div class="stat"><div class="lbl">Solar ein</div><div class="val"><span id="solar">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Ausgang Haus</div><div class="val"><span id="out">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Akku laden</div><div class="val"><span id="packin">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Akku entladen</div><div class="val"><span id="packout">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Netz ein</div><div class="val"><span id="grid">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
+  <div class="stat"><div class="lbl">Batteriespannung</div><div class="val"><span id="volt">–</span> V</div></div>
+  <div class="stat"><div class="lbl">Restlaufzeit</div><div class="val"><span id="remain">–</span> h</div></div>
+  <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
+</div>
+
+<div class="panel">
+  <h2>Leistungsverlauf</h2>
+  <div class="legend">
+    <span><i class="dot" style="background:#f59e0b"></i>Solar W</span>
+    <span><i class="dot" style="background:#3b82f6"></i>Ausgang W</span>
+    <span><i class="dot" style="background:#22c55e"></i>SoC %</span>
+  </div>
+  <div class="chartwrap"><canvas id="chart"></canvas></div>
+</div>
+
+<div class="panel">
+  <h2>Akku-Packs</h2>
+  <div class="packs" id="packs"></div>
+</div>
+
+<script>
+let chart;
+function initChart(){
+  chart = new Chart(document.getElementById('chart'),{
+    type:'line',
+    data:{labels:[],datasets:[
+      {label:'Solar W',yAxisID:'y',data:[],borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.12)',borderWidth:2,tension:.3,pointRadius:0,fill:true},
+      {label:'Ausgang W',yAxisID:'y',data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.12)',borderWidth:2,tension:.3,pointRadius:0,fill:true},
+      {label:'SoC %',yAxisID:'y1',data:[],borderColor:'#22c55e',borderWidth:2,borderDash:[5,3],tension:.3,pointRadius:0}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#2c3038'},ticks:{color:'#9aa0ac'},title:{display:true,text:'Watt',color:'#9aa0ac'}},
+        y1:{position:'right',min:0,max:100,grid:{drawOnChartArea:false},ticks:{color:'#9aa0ac'},title:{display:true,text:'%',color:'#9aa0ac'}},
+        x:{grid:{color:'#2c3038'},ticks:{color:'#9aa0ac',maxTicksLimit:8}}
+      }}
+  });
+}
+function setStatus(ok,txt){const s=document.getElementById('status');s.textContent=txt;s.className='badge'+(ok?'':' bad');}
+function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+
+async function loadHistory(){
+  try{
+    const r=await fetch('/history');const rows=await r.json();
+    chart.data.labels=rows.map(x=>fmtTime(x[0]));
+    chart.data.datasets[2].data=rows.map(x=>x[1]);
+    chart.data.datasets[0].data=rows.map(x=>x[2]);
+    chart.data.datasets[1].data=rows.map(x=>x[3]);
+    chart.update();
+  }catch(e){}
+}
+
+async function refresh(){
+  try{
+    const r=await fetch('/data');const j=await r.json();
+    if(j.error||!j.data){setStatus(false,'Fehler: '+(j.error||'keine Daten'));return;}
+    const p=j.data.properties,packs=j.data.packData||[];
+    setStatus(true,'Live · '+fmtTime(new Date(j.ts*1000).toISOString()));
+    const prod=j.data.product||'Zendure';
+    document.getElementById('title').textContent=prod;
+    document.title=prod;
+    document.getElementById('meta').textContent='SN '+(j.data.sn||'–')+' · v'+(j.data.version||'?');
+    const set=(id,v)=>document.getElementById(id).textContent=v;
+    set('soc',p.electricLevel); document.getElementById('socbar').style.width=p.electricLevel+'%';
+    set('solar',p.solarInputPower); set('out',p.outputHomePower); set('grid',p.gridInputPower);
+    set('packin',p.outputPackPower); set('packout',p.packInputPower);
+    set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
+    set('remain',(p.remainOutTime/3600).toFixed(1)); set('rssi',p.rssi);
+
+    document.getElementById('packs').innerHTML=packs.map((pk,i)=>`
+      <div class="pack"><h3>Pack ${i+1} ${pk.sn?'· '+pk.sn:''}</h3>
+        <div class="row"><span class="m">Ladestand</span><span>${pk.socLevel}%</span></div>
+        <div class="row"><span class="m">Leistung</span><span>${pk.power} W</span></div>
+        <div class="row"><span class="m">Spannung</span><span>${(pk.totalVol/100).toFixed(2)} V</span></div>
+        <div class="row"><span class="m">Max. Temp.</span><span>${((pk.maxTemp-2731)/10).toFixed(1)} °C</span></div>
+        <div class="row"><span class="m">Zelle min</span><span>${pk.minVol} mV</span></div>
+        <div class="row"><span class="m">Zelle max</span><span>${pk.maxVol} mV</span></div>
+        <div class="row"><span class="m">Zelldifferenz</span><span>${pk.maxVol-pk.minVol} mV</span></div>
+      </div>`).join('');
+  }catch(e){setStatus(false,'Server nicht erreichbar');}
+}
+
+initChart();
+loadHistory().then(refresh);
+setInterval(refresh, 5000);
+setInterval(loadHistory, 60000);
+</script>
+</body></html>
+"""
+
+
+# ----------------------------- Main ---------------------------------------
+def main():
+    threading.Thread(target=poll_loop, daemon=True).start()
+    srv = ThreadingHTTPServer(("0.0.0.0", WEB_PORT), Handler)
+    print(f"Dashboard:  http://localhost:{WEB_PORT}")
+    print("Beenden mit Strg+C")
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        print("\nGestoppt.")
+
+
+if __name__ == "__main__":
+    main()
