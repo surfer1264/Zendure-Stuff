@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Zendure SF240Pro - Logger + Web-Dashboard in einem.
+Zendure - Logger + Web-Dashboard in einem.
 
 Pollt das Gerät regelmaessig, speichert die Daten in CSV und SQLite
 und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
@@ -18,7 +18,7 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # ----------------------------- Konfiguration -----------------------------
-DEVICE_URL = "http://192.168.178.143/properties/report"
+DEVICE_URL = "http://YOURIP/properties/report"
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
 WEB_PORT = 8080
 CSV_FILE = "zendure_log.csv"
