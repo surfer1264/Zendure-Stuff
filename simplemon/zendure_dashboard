@@ -32,10 +32,27 @@ PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
 PACK_TYPES = {"sn": "TEXT", "state": "INTEGER", "batcur": "INTEGER",
               "maxVol": "INTEGER", "minVol": "INTEGER"}
 
+# Felder, die als Roh-Temperatur (Zehntel-Kelvin) geliefert werden und vor dem
+# Speichern in ganze Grad Celsius umgewandelt werden: (roh - 2731) / 10, gerundet.
+TEMP_FIELDS = {"hyperTmp", "maxTemp"}
+
+
+def raw_to_celsius(raw):
+    """Wandelt Roh-Temperatur (Zehntel-Kelvin) in ganze Grad Celsius um.
+
+    Gibt None zurueck, wenn kein Wert vorliegt (bleibt in DB/CSV leer/NULL).
+    """
+    if raw is None or raw == "":
+        return None
+    try:
+        return round((float(raw) - 2731) / 10)
+    except (TypeError, ValueError):
+        return None
+
 PROPS = [
     "electricLevel", "packInputPower", "outputPackPower", "outputHomePower",
     "gridInputPower", "solarInputPower", "solarPower1", "solarPower2",
-    "solarPower3", "solarPower4", "remainOutTime", "packState",
+    "solarPower3", "solarPower4", "packState",
     "hyperTmp", "BatVolt", "outputLimit", "inputLimit", "socSet",
     "minSoc", "acMode", "rssi", "is_error",
 ]
@@ -108,7 +125,18 @@ def log_packs_csv(ts, dt, packs):
 def store(con, data):
     ts = data.get("timestamp", int(time.time()))
     dt = datetime.now().isoformat(timespec="seconds")
-    props = data.get("properties", {})
+    props = dict(data.get("properties", {}))  # Kopie, Original unangetastet
+
+    # Temperaturen vor dem Speichern in ganze Grad Celsius umwandeln
+    for f in TEMP_FIELDS:
+        if f in props:
+            props[f] = raw_to_celsius(props[f])
+
+    packs = [dict(pk) for pk in data.get("packData", [])]  # Kopien
+    for pk in packs:
+        for f in TEMP_FIELDS:
+            if f in pk:
+                pk[f] = raw_to_celsius(pk[f])
 
     dev_cols = ["ts", "dt"] + PROPS
     dev_ph = ", ".join("?" * len(dev_cols))
@@ -116,7 +144,6 @@ def store(con, data):
         f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
         [ts, dt] + [props.get(p) for p in PROPS])
 
-    packs = data.get("packData", [])
     pack_cols = ["ts", "dt"] + PACK_FIELDS
     pack_ph = ", ".join("?" * len(pack_cols))
     for pk in packs:
@@ -234,7 +261,6 @@ PAGE = r"""<!DOCTYPE html>
   <div class="stat"><div class="lbl">Netz ein</div><div class="val"><span id="grid">–</span> W</div></div>
   <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
   <div class="stat"><div class="lbl">Batteriespannung</div><div class="val"><span id="volt">–</span> V</div></div>
-  <div class="stat"><div class="lbl">Restlaufzeit</div><div class="val"><span id="remain">–</span> h</div></div>
   <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
 </div>
 
@@ -318,7 +344,7 @@ async function refresh(){
     set('solar',p.solarInputPower); set('out',p.outputHomePower); set('grid',p.gridInputPower);
     set('packin',p.outputPackPower); set('packout',p.packInputPower);
     set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
-    set('remain',(p.remainOutTime/3600).toFixed(1)); set('rssi',p.rssi);
+    set('rssi',p.rssi);
 
     document.getElementById('packs').innerHTML=packs.map((pk,i)=>`
       <div class="pack"><h3>Pack ${i+1} ${pk.sn?'· '+pk.sn:''}</h3>
