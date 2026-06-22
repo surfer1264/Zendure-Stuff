@@ -12,17 +12,32 @@ Aufruf:  http://localhost:8080   (im Browser)
 
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
-import json, sqlite3, csv, time, os, threading, urllib.request
+import json, sqlite3, csv, time, os, threading, urllib.request, urllib.parse
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # ----------------------------- Konfiguration -----------------------------
 DEVICE_URL = "http://192.168.178.143/properties/report"
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
-WEB_PORT = 8080
+WEB_PORT = 8095
 CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
 DB_FILE = "zendure_log.db"
+
+# ----------------------------- Benachrichtigungen ------------------------
+# Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
+USE_SIGNAL = False
+SIGNAL_PHONE = "+49170XXXXXXX"   # deine Signal-Nummer im Format +49...
+SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
+
+
+# Schwellwerte mit Hysterese (Warnung einmalig, Reset erst im sicheren Bereich)
+VOLL_SCHWELLE = 99     # %  - ab hier gilt der Akku als "voll"
+ENTLADE_RESET = 90     # %  - darunter ist eine erneute Vollmeldung wieder erlaubt
+MIN_VOLT_WARN = 2.9    # V  - Unterspannungsgrenze je Zelle
+MIN_VOLT_RESET = 3.1   # V  - Erholungsgrenze
+TEMP_WARN = 45.0       # °C - Geraete-Temperaturgrenze
+TEMP_RESET = 40.0      # °C - Ruecksetz-Grenze
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
 PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
@@ -60,6 +75,67 @@ PROPS = [
 # Letzter abgerufener Datensatz (vom Poll-Thread gefuellt, vom Webserver gelesen)
 _latest = {"data": None, "ts": 0, "error": None}
 _lock = threading.Lock()
+
+# Alarm-Zustand fuer Hysterese: merkt sich, welche Warnung bereits gesendet wurde,
+# damit nicht bei jedem Poll erneut benachrichtigt wird.
+_alarm = {"voll": False, "temp": False, "lowvolt": {}}
+
+
+def send_signal(text):
+    """Sendet eine Signal-Nachricht ueber CallMeBot. No-op wenn USE_SIGNAL=False."""
+    if not USE_SIGNAL:
+        return
+    try:
+        params = urllib.parse.urlencode(
+            {"phone": SIGNAL_PHONE, "apikey": SIGNAL_KEY, "text": text})
+        url = "https://api.callmebot.com/signal/send.php?" + params
+        with urllib.request.urlopen(url, timeout=15) as r:
+            r.read()
+        print(f"{datetime.now():%H:%M:%S}  Signal gesendet: {text.splitlines()[0]}")
+    except Exception as e:
+        print(f"{datetime.now():%H:%M:%S}  Signal-Fehler: {e}")
+
+
+def check_alarms(props, packs):
+    """Prueft Schwellwerte und sendet Warnungen mit Hysterese.
+
+    Erwartet Roh-`props` und Roh-`packs` (Temperatur in Zehntel-Kelvin,
+    Zellspannung in der vom Geraet gelieferten Roh-Einheit).
+    """
+    if not USE_SIGNAL:
+        return
+
+    # --- Akku voll ---
+    soc = props.get("electricLevel")
+    if soc is not None:
+        if soc >= VOLL_SCHWELLE and not _alarm["voll"]:
+            _alarm["voll"] = True
+            send_signal(f"\U0001F50B Akku ist jetzt voll ({soc}%)")
+        elif soc < ENTLADE_RESET:
+            _alarm["voll"] = False
+
+    # --- Geraete-Temperatur ---
+    temp = raw_to_celsius(props.get("hyperTmp"))
+    if temp is not None:
+        if temp > TEMP_WARN and not _alarm["temp"]:
+            _alarm["temp"] = True
+            send_signal(f"\U0001F525 Achtung! Geraete-Temperatur zu hoch: {temp} \u00b0C")
+        elif temp < TEMP_RESET:
+            _alarm["temp"] = False
+
+    # --- Unterspannung je Pack/Zelle ---
+    for pk in packs:
+        sn = pk.get("sn")
+        raw = pk.get("minVol")
+        if sn is None or raw is None:
+            continue
+        minv = raw / 100.0
+        sent = _alarm["lowvolt"].get(sn, False)
+        if 0 < minv < MIN_VOLT_WARN and not sent:
+            _alarm["lowvolt"][sn] = True
+            send_signal(f"\u26A0\uFE0F Zelle {sn} hat nur {minv:.2f} V!")
+        elif minv > MIN_VOLT_RESET:
+            _alarm["lowvolt"][sn] = False
 
 
 # ----------------------------- Datenbank ----------------------------------
@@ -165,6 +241,8 @@ def poll_loop():
             store(con, data)
             with _lock:
                 _latest.update(data=data, ts=time.time(), error=None)
+            # Alarme auf Basis der Rohdaten pruefen (vor jeder Umwandlung)
+            check_alarms(data.get("properties", {}), data.get("packData", []))
             p = data.get("properties", {})
             print(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
                   f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W")
@@ -374,6 +452,8 @@ def main():
     threading.Thread(target=poll_loop, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", WEB_PORT), Handler)
     print(f"Dashboard:  http://localhost:{WEB_PORT}")
+    if USE_SIGNAL:
+        send_signal("\u2705 Zendure-Watchdog gestartet")
     print("Beenden mit Strg+C")
     try:
         srv.serve_forever()
