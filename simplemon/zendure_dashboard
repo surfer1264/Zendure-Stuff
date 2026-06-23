@@ -24,12 +24,17 @@ CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
 DB_FILE = "zendure_log.db"
 
+# Speicherung: gleitender Datenbestand in der DB (CSV bleibt unbegrenzt als Archiv).
+RETENTION_DAYS = 7          # aeltere DB-Zeilen werden geloescht (z. B. 1 / 3 / 7 / 20)
+
+# Anzeige: max. Anzahl Datenpunkte im Chart (Umschalter im Dashboard).
+MAX_POINTS = 600            # Obergrenze; der Umschalter bietet 200 / 400 / 600
+
 # ----------------------------- Benachrichtigungen ------------------------
 # Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
 USE_SIGNAL = False
 SIGNAL_PHONE = "+49170XXXXXXX"   # deine Signal-Nummer im Format +49...
 SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
-
 
 # Schwellwerte mit Hysterese (Warnung einmalig, Reset erst im sicheren Bereich)
 VOLL_SCHWELLE = 99     # %  - ab hier gilt der Akku als "voll"
@@ -37,7 +42,7 @@ ENTLADE_RESET = 90     # %  - darunter ist eine erneute Vollmeldung wieder erlau
 MIN_VOLT_WARN = 2.9    # V  - Unterspannungsgrenze je Zelle
 MIN_VOLT_RESET = 3.1   # V  - Erholungsgrenze
 TEMP_WARN = 45.0       # °C - Geraete-Temperaturgrenze
-TEMP_RESET = 40.0      # °C - Ruecksetz-Grenze
+TEMP_RESET = 30.0      # °C - Ruecksetz-Grenze
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
 PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
@@ -253,6 +258,38 @@ def poll_loop():
         time.sleep(POLL_INTERVAL)
 
 
+# ----------------------------- Retention / Cleanup ------------------------
+def cleanup_db():
+    """Loescht DB-Zeilen aelter als RETENTION_DAYS aus device und packs.
+
+    Die CSV-Dateien bleiben unangetastet (Langzeit-Archiv).
+    """
+    if not RETENTION_DAYS or RETENTION_DAYS <= 0:
+        return
+    cutoff = int(time.time()) - RETENTION_DAYS * 86400
+    try:
+        con = sqlite3.connect(DB_FILE)
+        d = con.execute("DELETE FROM device WHERE ts < ?", (cutoff,)).rowcount
+        p = con.execute("DELETE FROM packs WHERE ts < ?", (cutoff,)).rowcount
+        con.commit()
+        if d or p:
+            con.execute("VACUUM")  # Datei physisch verkleinern
+            con.commit()
+            print(f"{datetime.now():%H:%M:%S}  Cleanup: {d} device- und {p} pack-Zeilen "
+                  f"aelter als {RETENTION_DAYS} Tage geloescht")
+        con.close()
+    except Exception as e:
+        print(f"{datetime.now():%H:%M:%S}  Cleanup-Fehler: {e}")
+
+
+def cleanup_loop():
+    """Fuehrt das Aufraeumen beim Start und danach einmal taeglich aus."""
+    cleanup_db()
+    while True:
+        time.sleep(86400)  # 24 Stunden
+        cleanup_db()
+
+
 # ----------------------------- Webserver ----------------------------------
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -267,19 +304,28 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
-        if self.path == "/" or self.path.startswith("/index"):
+        parsed = urllib.parse.urlparse(self.path)
+        route = parsed.path
+        if route == "/" or route.startswith("/index"):
             self._send(200, PAGE, "text/html; charset=utf-8")
-        elif self.path == "/data":
+        elif route == "/data":
             with _lock:
                 payload = {"data": _latest["data"], "ts": _latest["ts"],
                            "error": _latest["error"]}
             self._send(200, json.dumps(payload))
-        elif self.path == "/history":
+        elif route == "/history":
+            # Anzahl Punkte aus ?n=... lesen, auf 1..MAX_POINTS begrenzen
+            q = urllib.parse.parse_qs(parsed.query)
+            try:
+                n = int(q.get("n", [MAX_POINTS])[0])
+            except (ValueError, TypeError):
+                n = MAX_POINTS
+            n = max(1, min(n, MAX_POINTS))
             con = sqlite3.connect(DB_FILE)
             rows = con.execute(
                 "SELECT dt, electricLevel, solarInputPower, outputHomePower, "
                 "outputPackPower, packInputPower "
-                "FROM device ORDER BY ts DESC LIMIT 200").fetchall()
+                "FROM device ORDER BY ts DESC LIMIT ?", (n,)).fetchall()
             con.close()
             rows.reverse()
             self._send(200, json.dumps(rows))
@@ -311,6 +357,12 @@ PAGE = r"""<!DOCTYPE html>
   .bar > div{height:100%;background:var(--acc);transition:width .4s}
   .panel{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:18px}
   .panel h2{font-size:14px;font-weight:600;margin-bottom:12px}
+  .panelhead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .panelhead h2{margin-bottom:0}
+  .rangesel{display:flex;gap:4px}
+  .rbtn{font:inherit;font-size:12px;padding:4px 12px;border:1px solid var(--bd);background:var(--soft);color:var(--mut);border-radius:6px;cursor:pointer}
+  .rbtn:hover{color:var(--txt)}
+  .rbtn.active{background:var(--acc);border-color:var(--acc);color:#fff}
   .legend{display:flex;gap:16px;font-size:12px;color:var(--mut);margin-bottom:8px;flex-wrap:wrap}
   .legend span{display:flex;align-items:center;gap:5px}
   .legend .leg{cursor:pointer;user-select:none;padding:2px 4px;border-radius:4px}
@@ -343,7 +395,14 @@ PAGE = r"""<!DOCTYPE html>
 </div>
 
 <div class="panel">
-  <h2>Leistungsverlauf</h2>
+  <div class="panelhead">
+    <h2>Leistungsverlauf</h2>
+    <div class="rangesel">
+      <button class="rbtn" data-n="200">200</button>
+      <button class="rbtn" data-n="400">400</button>
+      <button class="rbtn" data-n="600">600</button>
+    </div>
+  </div>
   <div class="legend">
     <span class="leg" data-ds="0"><i class="dot" style="background:#f59e0b"></i>Solar W</span>
     <span class="leg" data-ds="1"><i class="dot" style="background:#3b82f6"></i>Ausgang W</span>
@@ -394,9 +453,22 @@ function initLegend(){
 function setStatus(ok,txt){const s=document.getElementById('status');s.textContent=txt;s.className='badge'+(ok?'':' bad');}
 function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
 
+let pointCount=200;  // aktuell gewaehlte Anzahl Datenpunkte (Standard: kleinste Stufe)
+
+function initRange(){
+  document.querySelectorAll('.rbtn').forEach(function(b){
+    if(+b.dataset.n===pointCount) b.classList.add('active');
+    b.addEventListener('click',function(){
+      pointCount=+b.dataset.n;
+      document.querySelectorAll('.rbtn').forEach(x=>x.classList.toggle('active',x===b));
+      loadHistory();
+    });
+  });
+}
+
 async function loadHistory(){
   try{
-    const r=await fetch('/history');const rows=await r.json();
+    const r=await fetch('/history?n='+pointCount);const rows=await r.json();
     chart.data.labels=rows.map(x=>fmtTime(x[0]));
     chart.data.datasets[0].data=rows.map(x=>x[2]); // Solar
     chart.data.datasets[1].data=rows.map(x=>x[3]); // Ausgang
@@ -439,6 +511,7 @@ async function refresh(){
 
 initChart();
 initLegend();
+initRange();
 loadHistory().then(refresh);
 setInterval(refresh, 5000);
 setInterval(loadHistory, 60000);
@@ -450,6 +523,7 @@ setInterval(loadHistory, 60000);
 # ----------------------------- Main ---------------------------------------
 def main():
     threading.Thread(target=poll_loop, daemon=True).start()
+    threading.Thread(target=cleanup_loop, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", WEB_PORT), Handler)
     print(f"Dashboard:  http://localhost:{WEB_PORT}")
     if USE_SIGNAL:
