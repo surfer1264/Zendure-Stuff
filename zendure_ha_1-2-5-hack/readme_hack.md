@@ -70,7 +70,7 @@ Die Parameter (Teiler/Faktor) wurden nun so gesetzt, dass beispielhaft für eine
 </br>
 Wenn der Hub die obere Ladegrenze 100% erreicht hat, geht der Hub in den Standby, die Anforderungen des Haushalts werden nicht mehr bedient. PV Leistung/Akku-Leistung wird nicht abgerufen.
 
-**Achtung:**Es gibt Stimmen, die sagen: "Funktioniert einwandfrei". Es gibt aber auch gegenteilige Stimmen: "Funktioniert trotzdem nicht".
+**Achtung:** Es gibt Stimmen, die sagen: "Funktioniert einwandfrei". Es gibt aber auch gegenteilige Stimmen: "Funktioniert trotzdem nicht".
 
 **Lösung**
 </br>
