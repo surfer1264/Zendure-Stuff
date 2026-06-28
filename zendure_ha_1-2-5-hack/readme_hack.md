@@ -59,7 +59,7 @@ Die Parameter (Teiler/Faktor) zur Ermittlung der Schwellwerte wurden in der `con
 Die Parameter (Teiler/Faktor) wurden nun so gesetzt, dass beispielhaft für einen 800W-Hub folgende Grenzen gelten:
 - gemeinsamer Start erst bei 533W
 - Stopp bei Unterschreiten von 160W
-- Achtung: Vorsicht beim Spielen mit den Parametern, man muss die FUnktionsweise verstanden haben...das unkontrollierte Setzen irgendwelcher Werte, führt auch zu unvorhergeshenem Regelverhalten.
+- **Achtung**: Vorsicht beim Spielen mit den Parametern, man muss die Funktionsweise verstanden haben...das unkontrollierte Setzen irgendwelcher Werte, führt auch zu unvorhergeshenem Regelverhalten.
 
 - siehe: https://github.com/surfer1264/Zendure-Stuff/wiki/Z‐HA-Entlade-Effizienz-steigern
 
@@ -98,11 +98,11 @@ Bei der Ableitung der Schwellwerte wird die gewählte FuseGroup nun berücksicht
 
 `pwr_max = min(Fuse-Group, Hardware-Limit)`
 
-Folge: ein SF2400 verhält sich mit einer gewählten FuseGroup "800W" auch wie ein 800W-Hub. Die Einstellungen der FiseGroup wird damit führend, ohne die HW-Grenzen zu missachten.
+Folge: ein SF2400 verhält sich mit einer gewählten FuseGroup "800W" auch wie ein 800W-Hub. Die Einstellungen der FuseGroup wird damit führend, ohne die HW-Grenzen zu missachten.
 
 - siehe: https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-SF1200-und-SF2400Pro-konkret-mit-zwei-FuseGroups
 
-
+Im übrigen ermöglicht dieser Fix das Einführen weiterer FuseGroups, um das Lade-/Entladeverhalten zu steuern/begrenzen.
 
 
 
