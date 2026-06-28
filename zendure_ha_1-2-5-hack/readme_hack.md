@@ -33,6 +33,7 @@ Der P1-Sensor steht nun als Selct-Feld (editierbar) im Zendure-Manager zur Verf�
 Das Select-Feld filtert dabei bereits auf die verfügbaren Power-Sensoren der HA-Instanz. Die Entität des P1 kann nun in HA_Automatisierungen (und NodeRed) verwendet werden.
 
 - siehe: https://github.com/surfer1264/Zendure-Stuff/wiki/P1-Sensor-in-Z‐HA-konfigurierbar-machen
+- siehe P1-Sensor bauen: https://github.com/surfer1264/Zendure-Stuff/wiki/Virtueller-P1‐Sensor
 
 
 ## 3. Anpassung der Schwellwerte für das Zusammenspiel mehrerer Hubs (Entladen)
