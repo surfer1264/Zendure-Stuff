@@ -58,8 +58,13 @@ class ZendureBattery(EntityDevice):
             case "F":
                 model = "AB3000"
                 self.kWh = 2.88
-            case "J":
+            case "G":
                 model = "AB3000L"
+                kWh = 2.88
+            case "J":
+                # JO2A => internal battery of SF2400AC pro
+                # JO4A => internal battery of SF2400AC+
+                model = "I2400"
                 self.kWh = 2.4
             case _:
                 model = "Unknown"
