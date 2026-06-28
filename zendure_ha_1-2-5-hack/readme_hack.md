@@ -40,25 +40,26 @@ Das Select-Feld filtert dabei bereits auf die verfügbaren Power-Sensoren der HA
 
 **Ausgangspunkt:**
 </br>
-Das Zusammenspiel zwei Hubs wird über zwei Parameter orchestriert und erläutere ich an folgendem einfachen Beispiel:
+Das Zusammenspiel zweier Hubs wird über zwei Parameter orchestriert und erläutere ich an folgendem einfachen Beispiel exemplarisch:
 </br>
 Standard (für zwei 800W Hubs): 
 - bis 400W läuft ein Hub allein
 - ab 400W werden Hubs zusammengeschaltet, jeder Hub trägt die Last von 200W
 - wenn ein Hub 120W unterschreitet, wird nach einer speziellen Logik ein Hub wieder abgeschaltet
-- Achtung: die Schwellwerte werden abgeleitet als Teiler aus den Device-Profilen und erst zur Laufzeit ermittelt.
+- **Achtung**: die Schwellwerte werden abgeleitet aus einem Teiler/Faktor aus den jeweiligen HW-Grenzwerten, definiert in den Device-Profilen und werden erst zur Laufzeit ermittelt.
 
 **Problem:**
-- Die Parameter (Teiler) sind im Code fest verdrahtet und nicht konfigurierbar.
+- Die Parameter (Teiler/Faktor) sind im Code fest verdrahtet und nicht konfigurierbar.
 - Das Zusammenschalten erfolgt recht früh. Die Hubs laufen (noch) nicht in einem effizienten Bereich.
 - Das Abschalten erfolgt erst recht spät.
 
 **Lösung**
 </br>
-Die Parameter (Teiler) zur Ermittlung der Schwellwerte wurden in der `const.py` aufgenommen. Durch die Externalisierung, kann eine Individualisierung vorgenommen werden  
-Die Parameter (Teiler) wurden nun so gesetzt, dass für einen 800W-Hub folgende Grenzen gelten:
+Die Parameter (Teiler/Faktor) zur Ermittlung der Schwellwerte wurden in der `const.py` aufgenommen. Durch die Externalisierung, kann eine Individualisierung vorgenommen werden  
+Die Parameter (Teiler/Faktor) wurden nun so gesetzt, dass beispielhaft für einen 800W-Hub folgende Grenzen gelten:
 - gemeinsamer Start erst bei 533W
 - Stopp bei Unterschreiten von 160W
+- Achtung: Vorsicht beim Spielen mit den Parametern, man muss die FUnktionsweise verstanden haben...das unkontrollierte Setzen irgendwelcher Werte, führt auch zu unvorhergeshenem Regelverhalten.
 
 - siehe: https://github.com/surfer1264/Zendure-Stuff/wiki/Z‐HA-Entlade-Effizienz-steigern
 
@@ -67,7 +68,9 @@ Die Parameter (Teiler) wurden nun so gesetzt, dass für einen 800W-Hub folgende 
 
 **Problem:**
 </br>
-Wenn der Hub die obere Ladegrenze 100% erreicht hat, geht der Hub in den Standby, die ANforderungen des Haushalts werden nicht mehr bedient
+Wenn der Hub die obere Ladegrenze 100% erreicht hat, geht der Hub in den Standby, die Anforderungen des Haushalts werden nicht mehr bedient. PV Leistung/Akku-Leistung wird nicht abgerufen.
+
+**Achtung:**Es gibt Stimmen, die sagen: "Funktioniert einwandfrei". Es gibt aber auch gegenteilige Stimmen: "Funktioniert trotzdem nicht".
 
 **Lösung**
 </br>
@@ -95,7 +98,7 @@ Bei der Ableitung der Schwellwerte wird die gewählte FuseGroup nun berücksicht
 
 `pwr_max = min(Fuse-Group, Hardware-Limit)`
 
-Folge: ein SF2400 verhält sich mit einer gewählten FuseGroup "800W" auch wie ein 800W-Hub 
+Folge: ein SF2400 verhält sich mit einer gewählten FuseGroup "800W" auch wie ein 800W-Hub. Die Einstellungen der FiseGroup wird damit führend, ohne die HW-Grenzen zu missachten.
 
 - siehe: https://github.com/surfer1264/Zendure-Stuff/wiki/Regelung-SF1200-und-SF2400Pro-konkret-mit-zwei-FuseGroups
 
