@@ -66,6 +66,7 @@ class Api:
         "hyper2000_3.0": Hyper2000,
         "solarflow 800": SolarFlow800,
         "solarflow 800 pro": SolarFlow800Pro,
+        "solarflow 800 pro2": SolarFlow800Pro,
         "solarflow 800 plus": SolarFlow800Plus,
         "solarflow 2400 ac": SolarFlow2400AC,
         "solarflow 2400 ac+": SolarFlow2400AC_Plus,
