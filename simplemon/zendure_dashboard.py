@@ -19,7 +19,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 # ----------------------------- Konfiguration -----------------------------
 DEVICE_URL = "http://192.168.178.143/properties/report"
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
-WEB_PORT = 8080
+WEB_PORT = 8085
+DEVICE_LABEL = "Hub"     # kurzer Name des Geraets im Energiefluss-Diagramm
 CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
 DB_FILE = "zendure_log.db"
@@ -42,7 +43,7 @@ ENTLADE_RESET = 90     # %  - darunter ist eine erneute Vollmeldung wieder erlau
 MIN_VOLT_WARN = 2.9    # V  - Unterspannungsgrenze je Zelle
 MIN_VOLT_RESET = 3.1   # V  - Erholungsgrenze
 TEMP_WARN = 45.0       # °C - Geraete-Temperaturgrenze
-TEMP_RESET = 30.0      # °C - Ruecksetz-Grenze
+TEMP_RESET = 35.0      # °C - Ruecksetz-Grenze
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
 PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
@@ -307,7 +308,8 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         route = parsed.path
         if route == "/" or route.startswith("/index"):
-            self._send(200, PAGE, "text/html; charset=utf-8")
+            self._send(200, PAGE.replace("__DEVICE_LABEL__", DEVICE_LABEL),
+                       "text/html; charset=utf-8")
         elif route == "/data":
             with _lock:
                 payload = {"data": _latest["data"], "ts": _latest["ts"],
@@ -471,7 +473,7 @@ PAGE = r"""<!DOCTYPE html>
     </g>
     <g>
       <rect x="252" y="126" width="96" height="68" rx="10" fill="#22262f" stroke="#3b82f6"/>
-      <text x="300" y="152" fill="#e7e9ee" font-size="13" text-anchor="middle">HUB</text>
+      <text x="300" y="152" fill="#e7e9ee" font-size="13" text-anchor="middle">__DEVICE_LABEL__</text>
       <text x="300" y="172" fill="#9aa0ac" font-size="12" text-anchor="middle" id="n_soc">– %</text>
     </g>
     <g>
@@ -481,12 +483,13 @@ PAGE = r"""<!DOCTYPE html>
     </g>
     <g>
       <rect x="480" y="208" width="80" height="64" rx="10" fill="#1a1d24" stroke="#2c3038"/>
-      <text x="520" y="236" fill="#a855f7" font-size="13" text-anchor="middle">Akku</text>
-      <text x="520" y="256" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_pack">– %</text>
+      <text x="520" y="231" fill="#a855f7" font-size="13" text-anchor="middle">Akku</text>
+      <text x="520" y="250" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_pack">– %</text>
+      <text x="520" y="266" fill="#9aa0ac" font-size="10" text-anchor="middle" id="n_packcount"></text>
     </g>
   </svg>
   </div>
-  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum SF2400 beim Entladen.</p>
+  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum __DEVICE_LABEL__ beim Entladen.</p>
 </div>
 
 <div class="panel">
@@ -629,7 +632,7 @@ async function refresh(){
     set('packin',p.outputPackPower); set('packout',p.packInputPower);
     set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
     set('rssi',p.rssi);
-    updateFlow(p);
+    updateFlow(p, packs);
 
     document.getElementById('packs').innerHTML=packs.map((pk,i)=>`
       <div class="pack"><h3>Pack ${i+1} ${pk.sn?'· '+pk.sn:''}</h3>
@@ -644,7 +647,7 @@ async function refresh(){
   }catch(e){setStatus(false,'Server nicht erreichbar');}
 }
 
-function updateFlow(p){
+function updateFlow(p, packs){
   const svg=document.getElementById('flow'); if(!svg) return;
   const W=v=>(v||0)+' W';
   // Knoten-Werte
@@ -653,6 +656,9 @@ function updateFlow(p){
   document.getElementById('n_home').textContent=W(p.outputHomePower);
   document.getElementById('n_soc').textContent=(p.electricLevel!=null?p.electricLevel+' %':'– %');
   document.getElementById('n_pack').textContent=(p.electricLevel!=null?p.electricLevel+' %':'– %');
+  // Pack-Anzahl nur anzeigen, wenn mehr als ein Pack vorhanden
+  const cnt=(packs||[]).length;
+  document.getElementById('n_packcount').textContent = cnt>1 ? cnt+' Packs' : '';
 
   // Pfeil-Beschriftungen
   const charge=p.outputPackPower||0, discharge=p.packInputPower||0;
