@@ -471,7 +471,7 @@ PAGE = r"""<!DOCTYPE html>
     </g>
     <g>
       <rect x="252" y="126" width="96" height="68" rx="10" fill="#22262f" stroke="#3b82f6"/>
-      <text x="300" y="152" fill="#e7e9ee" font-size="13" text-anchor="middle">SF2400</text>
+      <text x="300" y="152" fill="#e7e9ee" font-size="13" text-anchor="middle">HUB</text>
       <text x="300" y="172" fill="#9aa0ac" font-size="12" text-anchor="middle" id="n_soc">– %</text>
     </g>
     <g>
