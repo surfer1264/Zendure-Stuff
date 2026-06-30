@@ -8,7 +8,7 @@ und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
 Kein CORS-Problem, weil Browser und Daten vom selben Server kommen.
 
 Start:   python3 zendure_dashboard.py
-Aufruf:  http://localhost:8095   (im Browser)
+Aufruf:  http://localhost:8085   (im Browser)
 
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 # ----------------------------- Konfiguration -----------------------------
 DEVICE_URL = "http://192.168.178.143/properties/report"
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
-WEB_PORT = 8095
+WEB_PORT = 8080
 CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
 DB_FILE = "zendure_log.db"
@@ -32,7 +32,7 @@ MAX_POINTS = 600            # Obergrenze; der Umschalter bietet 200 / 400 / 600
 
 # ----------------------------- Benachrichtigungen ------------------------
 # Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
-USE_SIGNAL = False               # True = Nutzen oder False = Nicht nutzen
+USE_SIGNAL = False
 SIGNAL_PHONE = "+49170XXXXXXX"   # deine Signal-Nummer im Format +49...
 SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
 
@@ -434,6 +434,62 @@ PAGE = r"""<!DOCTYPE html>
 </div>
 
 <div class="panel">
+  <h2>Energiefluss (live)</h2>
+  <div style="width:100%; overflow:hidden;">
+  <svg id="flow" viewBox="0 0 600 320" style="width:100%; height:auto; font-family:inherit;">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#9aa0ac"/>
+      </marker>
+      <marker id="arrA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+      </marker>
+      <marker id="arrP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 z" fill="#a855f7"/>
+      </marker>
+    </defs>
+
+    <line id="l_solar" x1="120" y1="78"  x2="262" y2="140" stroke="#3a3f49" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line id="l_grid"  x1="120" y1="242" x2="262" y2="180" stroke="#3a3f49" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line id="l_home"  x1="338" y1="140" x2="480" y2="78"  stroke="#3a3f49" stroke-width="2.5" marker-end="url(#arr)"/>
+    <line id="l_pack"  x1="338" y1="180" x2="480" y2="242" stroke="#3a3f49" stroke-width="2.5" marker-end="url(#arr)"/>
+
+    <text id="t_solar" x="175" y="100" fill="#9aa0ac" font-size="13" text-anchor="middle">0 W</text>
+    <text id="t_grid"  x="175" y="223" fill="#9aa0ac" font-size="13" text-anchor="middle">0 W</text>
+    <text id="t_home"  x="425" y="100" fill="#9aa0ac" font-size="13" text-anchor="middle">0 W</text>
+    <text id="t_pack"  x="425" y="223" fill="#9aa0ac" font-size="13" text-anchor="middle">0 W</text>
+
+    <g>
+      <rect x="40" y="44" width="80" height="64" rx="10" fill="#1a1d24" stroke="#2c3038"/>
+      <text x="80" y="72" fill="#f59e0b" font-size="13" text-anchor="middle">Solar</text>
+      <text x="80" y="92" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_solar">0 W</text>
+    </g>
+    <g>
+      <rect x="40" y="208" width="80" height="64" rx="10" fill="#1a1d24" stroke="#2c3038"/>
+      <text x="80" y="236" fill="#9aa0ac" font-size="13" text-anchor="middle">Netz</text>
+      <text x="80" y="256" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_grid">0 W</text>
+    </g>
+    <g>
+      <rect x="252" y="126" width="96" height="68" rx="10" fill="#22262f" stroke="#3b82f6"/>
+      <text x="300" y="152" fill="#e7e9ee" font-size="13" text-anchor="middle">SF2400</text>
+      <text x="300" y="172" fill="#9aa0ac" font-size="12" text-anchor="middle" id="n_soc">– %</text>
+    </g>
+    <g>
+      <rect x="480" y="44" width="80" height="64" rx="10" fill="#1a1d24" stroke="#2c3038"/>
+      <text x="520" y="72" fill="#3b82f6" font-size="13" text-anchor="middle">Haus</text>
+      <text x="520" y="92" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_home">0 W</text>
+    </g>
+    <g>
+      <rect x="480" y="208" width="80" height="64" rx="10" fill="#1a1d24" stroke="#2c3038"/>
+      <text x="520" y="236" fill="#a855f7" font-size="13" text-anchor="middle">Akku</text>
+      <text x="520" y="256" fill="#e7e9ee" font-size="13" text-anchor="middle" id="n_pack">– %</text>
+    </g>
+  </svg>
+  </div>
+  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum SF2400 beim Entladen.</p>
+</div>
+
+<div class="panel">
   <h2>Akku-Packs</h2>
   <div class="packs" id="packs"></div>
 </div>
@@ -573,6 +629,7 @@ async function refresh(){
     set('packin',p.outputPackPower); set('packout',p.packInputPower);
     set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
     set('rssi',p.rssi);
+    updateFlow(p);
 
     document.getElementById('packs').innerHTML=packs.map((pk,i)=>`
       <div class="pack"><h3>Pack ${i+1} ${pk.sn?'· '+pk.sn:''}</h3>
@@ -585,6 +642,48 @@ async function refresh(){
         <div class="row"><span class="m">Zelldifferenz</span><span>${(pk.maxVol-pk.minVol)*10} mV</span></div>
       </div>`).join('');
   }catch(e){setStatus(false,'Server nicht erreichbar');}
+}
+
+function updateFlow(p){
+  const svg=document.getElementById('flow'); if(!svg) return;
+  const W=v=>(v||0)+' W';
+  // Knoten-Werte
+  document.getElementById('n_solar').textContent=W(p.solarInputPower);
+  document.getElementById('n_grid').textContent=W(p.gridInputPower);
+  document.getElementById('n_home').textContent=W(p.outputHomePower);
+  document.getElementById('n_soc').textContent=(p.electricLevel!=null?p.electricLevel+' %':'– %');
+  document.getElementById('n_pack').textContent=(p.electricLevel!=null?p.electricLevel+' %':'– %');
+
+  // Pfeil-Beschriftungen
+  const charge=p.outputPackPower||0, discharge=p.packInputPower||0;
+  document.getElementById('t_solar').textContent=W(p.solarInputPower);
+  document.getElementById('t_grid').textContent=W(p.gridInputPower);
+  document.getElementById('t_home').textContent=W(p.outputHomePower);
+
+  // Hilfsfunktion: Linie aktiv (farbig) oder inaktiv (grau) schalten
+  function setLine(id,active){
+    const l=document.getElementById(id);
+    l.setAttribute('stroke', active?'#3b82f6':'#3a3f49');
+    l.setAttribute('marker-end', active?'url(#arrA)':'url(#arr)');
+  }
+  setLine('l_solar',(p.solarInputPower||0)>0);
+  setLine('l_grid',(p.gridInputPower||0)>0);
+  setLine('l_home',(p.outputHomePower||0)>0);
+
+  // Akku: laden -> Pfeil zum Akku (Standard), entladen -> Pfeil zum SF2400 (umdrehen)
+  const pl=document.getElementById('l_pack');
+  if(discharge>0){
+    pl.setAttribute('x1','480'); pl.setAttribute('y1','242');
+    pl.setAttribute('x2','338'); pl.setAttribute('y2','180');
+    pl.setAttribute('stroke','#a855f7'); pl.setAttribute('marker-end','url(#arrP)');
+    document.getElementById('t_pack').textContent=W(discharge);
+  } else {
+    pl.setAttribute('x1','338'); pl.setAttribute('y1','180');
+    pl.setAttribute('x2','480'); pl.setAttribute('y2','242');
+    pl.setAttribute('stroke', charge>0?'#a855f7':'#3a3f49');
+    pl.setAttribute('marker-end', charge>0?'url(#arrP)':'url(#arr)');
+    document.getElementById('t_pack').textContent=W(charge);
+  }
 }
 
 initChart();
