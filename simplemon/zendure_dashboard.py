@@ -486,7 +486,7 @@ PAGE = r"""<!DOCTYPE html>
     </g>
   </svg>
   </div>
-  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum SF2400 beim Entladen.</p>
+  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum Hub beim Entladen.</p>
 </div>
 
 <div class="panel">
