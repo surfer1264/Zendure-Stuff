@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Zendure - Logger + Web-Dashboard in einem.
+Zendure SF240Pro - Logger + Web-Dashboard in einem.
 
 Pollt das Gerät regelmaessig, speichert die Daten in CSV und SQLite
 und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
@@ -8,7 +8,7 @@ und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
 Kein CORS-Problem, weil Browser und Daten vom selben Server kommen.
 
 Start:   python3 zendure_dashboard.py
-Aufruf:  http://localhost:8085   (im Browser)
+Aufruf:  http://localhost:8080   (im Browser)
 
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
@@ -17,33 +17,25 @@ from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 # ----------------------------- Konfiguration -----------------------------
-DEVICE_URL = "http://192.168.178.143/properties/report"
-POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
-WEB_PORT = 8085
-DEVICE_LABEL = "Hub"     # kurzer Name des Geraets im Energiefluss-Diagramm
-CSV_FILE = "zendure_log.csv"
-PACK_CSV_FILE = "zendure_packs.csv"
-DB_FILE = "zendure_log.db"
+# Alle Einstellungen stehen in config.py (im selben Ordner). Diese Datei hier
+# muss nicht angefasst werden und kann bei Updates ersetzt werden.
+try:
+    from config import (
+        DEVICE_URL, POLL_INTERVAL, WEB_PORT, DEVICE_LABEL,
+        CSV_FILE, PACK_CSV_FILE, DB_FILE, WRITE_CSV, QUIET,
+        RETENTION_DAYS, MAX_POINTS,
+        USE_SIGNAL, SIGNAL_PHONE, SIGNAL_KEY,
+        VOLL_SCHWELLE, ENTLADE_RESET, MIN_VOLT_WARN, MIN_VOLT_RESET,
+        TEMP_WARN, TEMP_RESET,
+    )
+except ImportError as e:
+    import sys
+    print("FEHLER: config.py nicht gefunden oder unvollstaendig.")
+    print("        Die Datei config.py muss im selben Ordner liegen wie dieses Script")
+    print("        und alle Einstellungen enthalten. Details:", e)
+    sys.exit(1)
 
-# Speicherung: gleitender Datenbestand in der DB (CSV bleibt unbegrenzt als Archiv).
-RETENTION_DAYS = 7          # aeltere DB-Zeilen werden geloescht (z. B. 1 / 3 / 7 / 20)
-
-# Anzeige: max. Anzahl Datenpunkte im Chart (Umschalter im Dashboard).
-MAX_POINTS = 600            # Obergrenze; der Umschalter bietet 200 / 400 / 600
-
-# ----------------------------- Benachrichtigungen ------------------------
-# Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
-USE_SIGNAL = False
-SIGNAL_PHONE = "+49170XXXXXXX"   # deine Signal-Nummer im Format +49...
-SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
-
-# Schwellwerte mit Hysterese (Warnung einmalig, Reset erst im sicheren Bereich)
-VOLL_SCHWELLE = 99     # %  - ab hier gilt der Akku als "voll"
-ENTLADE_RESET = 90     # %  - darunter ist eine erneute Vollmeldung wieder erlaubt
-MIN_VOLT_WARN = 2.9    # V  - Unterspannungsgrenze je Zelle
-MIN_VOLT_RESET = 3.1   # V  - Erholungsgrenze
-TEMP_WARN = 45.0       # °C - Geraete-Temperaturgrenze
-TEMP_RESET = 35.0      # °C - Ruecksetz-Grenze
+# --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
 PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
@@ -56,6 +48,17 @@ PACK_TYPES = {"sn": "TEXT", "state": "INTEGER", "batcur": "INTEGER",
 # Felder, die als Roh-Temperatur (Zehntel-Kelvin) geliefert werden und vor dem
 # Speichern in ganze Grad Celsius umgewandelt werden: (roh - 2731) / 10, gerundet.
 TEMP_FIELDS = {"hyperTmp", "maxTemp"}
+
+
+def log(*args):
+    """Routine-Ausgabe. Wird bei QUIET=True unterdrueckt."""
+    if not QUIET:
+        print(*args)
+
+
+def log_always(*args):
+    """Wichtige Ausgabe (Fehler, Migration, Start). Erscheint immer."""
+    print(*args)
 
 
 def raw_to_celsius(raw):
@@ -97,9 +100,9 @@ def send_signal(text):
         url = "https://api.callmebot.com/signal/send.php?" + params
         with urllib.request.urlopen(url, timeout=15) as r:
             r.read()
-        print(f"{datetime.now():%H:%M:%S}  Signal gesendet: {text.splitlines()[0]}")
+        log(f"{datetime.now():%H:%M:%S}  Signal gesendet: {text.splitlines()[0]}")
     except Exception as e:
-        print(f"{datetime.now():%H:%M:%S}  Signal-Fehler: {e}")
+        log_always(f"{datetime.now():%H:%M:%S}  Signal-Fehler: {e}")
 
 
 def check_alarms(props, packs):
@@ -159,7 +162,7 @@ def ensure_columns(con, table, expected):
     for name, ctype in expected:
         if name not in have:
             con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ctype}")
-            print(f"DB-Migration: Spalte '{name}' zu Tabelle '{table}' hinzugefuegt")
+            log_always(f"DB-Migration: Spalte '{name}' zu Tabelle '{table}' hinzugefuegt")
 
 
 def setup_db():
@@ -233,14 +236,16 @@ def store(con, data):
             f"INSERT INTO packs ({', '.join(pack_cols)}) VALUES ({pack_ph})",
             [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
-    log_csv(ts, dt, props)
-    log_packs_csv(ts, dt, packs)
+    if WRITE_CSV:
+        log_csv(ts, dt, props)
+        log_packs_csv(ts, dt, packs)
 
 
 # ----------------------------- Poll-Thread --------------------------------
 def poll_loop():
     con = setup_db()
-    print(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {CSV_FILE} + {PACK_CSV_FILE} + {DB_FILE}")
+    ziele = DB_FILE + (f" + {CSV_FILE} + {PACK_CSV_FILE}" if WRITE_CSV else " (CSV aus)")
+    log(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {ziele}")
     while True:
         try:
             data = fetch_device()
@@ -250,12 +255,12 @@ def poll_loop():
             # Alarme auf Basis der Rohdaten pruefen (vor jeder Umwandlung)
             check_alarms(data.get("properties", {}), data.get("packData", []))
             p = data.get("properties", {})
-            print(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
-                  f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W")
+            log(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
+                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W")
         except Exception as e:
             with _lock:
                 _latest.update(error=str(e))
-            print(f"{datetime.now():%H:%M:%S}  Fehler: {e}")
+            log_always(f"{datetime.now():%H:%M:%S}  Fehler: {e}")
         time.sleep(POLL_INTERVAL)
 
 
@@ -276,11 +281,11 @@ def cleanup_db():
         if d or p:
             con.execute("VACUUM")  # Datei physisch verkleinern
             con.commit()
-            print(f"{datetime.now():%H:%M:%S}  Cleanup: {d} device- und {p} pack-Zeilen "
-                  f"aelter als {RETENTION_DAYS} Tage geloescht")
+            log(f"{datetime.now():%H:%M:%S}  Cleanup: {d} device- und {p} pack-Zeilen "
+                f"aelter als {RETENTION_DAYS} Tage geloescht")
         con.close()
     except Exception as e:
-        print(f"{datetime.now():%H:%M:%S}  Cleanup-Fehler: {e}")
+        log_always(f"{datetime.now():%H:%M:%S}  Cleanup-Fehler: {e}")
 
 
 def cleanup_loop():
@@ -289,6 +294,62 @@ def cleanup_loop():
     while True:
         time.sleep(86400)  # 24 Stunden
         cleanup_db()
+
+
+# ----------------------------- Energie / Arbeit ---------------------------
+# Leistungsfelder, aus denen die Arbeit (kWh) integriert wird -> Ausgabename.
+ENERGY_FIELDS = {
+    "solar": "solarInputPower",
+    "home": "outputHomePower",
+    "grid": "gridInputPower",
+    "charge": "outputPackPower",
+    "discharge": "packInputPower",
+}
+
+
+def energy_by_day(days=None):
+    """Berechnet je Kalendertag die Arbeit (kWh) aus den Leistungswerten.
+
+    Integration: fuer jede DB-Zeile Leistung x Zeit zur Vorzeile. Zeitluecken
+    groesser als 2x POLL_INTERVAL werden verworfen (Geraeteausfall/Neustart),
+    damit die Summe nicht faelschlich hochgerechnet wird.
+
+    Rueckgabe: dict {datum: {solar, home, grid, charge, discharge}} in kWh.
+    """
+    cols = list(ENERGY_FIELDS.keys())
+    selects = ", ".join(ENERGY_FIELDS[c] for c in cols)
+    max_gap = 2 * POLL_INTERVAL  # Sekunden; groessere Luecken werden ignoriert
+
+    con = sqlite3.connect(DB_FILE)
+    rows = con.execute(
+        f"SELECT ts, dt, {selects} FROM device ORDER BY ts ASC").fetchall()
+    con.close()
+
+    result = {}
+    prev_ts = None
+    for row in rows:
+        ts, dt = row[0], row[1]
+        day = (dt or "")[:10]  # YYYY-MM-DD
+        if day and day not in result:
+            result[day] = {c: 0.0 for c in cols}
+        if prev_ts is not None and day in result:
+            gap = ts - prev_ts
+            if 0 < gap <= max_gap:
+                hours = gap / 3600.0
+                for i, c in enumerate(cols):
+                    val = row[2 + i]
+                    if val:  # None/0 ueberspringen
+                        result[day][c] += val * hours / 1000.0  # Wh -> kWh
+        prev_ts = ts
+
+    # runden und optional auf die letzten `days` Tage beschraenken
+    for day in result:
+        for c in result[day]:
+            result[day][c] = round(result[day][c], 3)
+    if days:
+        keep = sorted(result.keys())[-days:]
+        result = {d: result[d] for d in keep}
+    return result
 
 
 # ----------------------------- Webserver ----------------------------------
@@ -351,6 +412,19 @@ class Handler(BaseHTTPRequestHandler):
                 result[sn] = rows
             con.close()
             self._send(200, json.dumps(result))
+        elif route == "/energy":
+            # Tages-Arbeit (kWh) je Sensor; optional ?days=N letzte Tage
+            q = urllib.parse.parse_qs(parsed.query)
+            days = None
+            if "days" in q:
+                try:
+                    days = max(1, int(q["days"][0]))
+                except (ValueError, TypeError):
+                    days = None
+            try:
+                self._send(200, json.dumps(energy_by_day(days)))
+            except Exception as e:
+                self._send(200, json.dumps({"error": str(e)}))
         else:
             self._send(404, "not found", "text/plain")
 
@@ -493,6 +567,26 @@ PAGE = r"""<!DOCTYPE html>
 </div>
 
 <div class="panel">
+  <h2>Arbeit heute (kWh)</h2>
+  <div class="grid" id="energytiles" style="margin-bottom:16px;">
+    <div class="stat"><div class="lbl">Solar</div><div class="val"><span id="e_solar">–</span></div></div>
+    <div class="stat"><div class="lbl">Haus</div><div class="val"><span id="e_home">–</span></div></div>
+    <div class="stat"><div class="lbl">Netz</div><div class="val"><span id="e_grid">–</span></div></div>
+    <div class="stat"><div class="lbl">Akku geladen</div><div class="val"><span id="e_charge">–</span></div></div>
+    <div class="stat"><div class="lbl">Akku entladen</div><div class="val"><span id="e_discharge">–</span></div></div>
+  </div>
+  <div class="legend">
+    <span><i class="dot" style="background:#f59e0b"></i>Solar</span>
+    <span><i class="dot" style="background:#3b82f6"></i>Haus</span>
+    <span><i class="dot" style="background:#9aa0ac"></i>Netz</span>
+    <span><i class="dot" style="background:#a855f7"></i>geladen</span>
+    <span><i class="dot" style="background:#ef4444"></i>entladen</span>
+  </div>
+  <div class="chartwrap" style="height:220px;"><canvas id="echart"></canvas></div>
+  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Berechnet aus den Leistungswerten (Näherung). Reicht so weit zurück wie die DB Daten vorhält (siehe RETENTION_DAYS).</p>
+</div>
+
+<div class="panel">
   <h2>Akku-Packs</h2>
   <div class="packs" id="packs"></div>
 </div>
@@ -616,6 +710,51 @@ async function loadPackHistory(){
   }catch(e){}
 }
 
+let echart;
+function initEnergyChart(){
+  echart=new Chart(document.getElementById('echart'),{
+    type:'bar',
+    data:{labels:[],datasets:[
+      {label:'Solar',data:[],backgroundColor:'#f59e0b'},
+      {label:'Haus',data:[],backgroundColor:'#3b82f6'},
+      {label:'Netz',data:[],backgroundColor:'#9aa0ac'},
+      {label:'geladen',data:[],backgroundColor:'#a855f7'},
+      {label:'entladen',data:[],backgroundColor:'#ef4444'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,grid:{color:'#2c3038'},ticks:{color:'#9aa0ac'},title:{display:true,text:'kWh',color:'#9aa0ac'}},
+        x:{grid:{color:'#2c3038'},ticks:{color:'#9aa0ac'}}
+      }}
+  });
+}
+
+async function loadEnergy(){
+  try{
+    const r=await fetch('/energy');const data=await r.json();
+    if(data.error) return;
+    const days=Object.keys(data).sort();
+    const keys=['solar','home','grid','charge','discharge'];
+    // Balkendiagramm
+    echart.data.labels=days.map(d=>d.slice(5)); // MM-DD
+    keys.forEach(function(k,idx){
+      echart.data.datasets[idx].data=days.map(d=>data[d][k]);
+    });
+    echart.update();
+    // Kacheln fuer heute (letzter Tag)
+    const today=days[days.length-1];
+    const fmt=v=>(v==null?'–':v.toFixed(2)+' kWh');
+    if(today){
+      document.getElementById('e_solar').textContent=fmt(data[today].solar);
+      document.getElementById('e_home').textContent=fmt(data[today].home);
+      document.getElementById('e_grid').textContent=fmt(data[today].grid);
+      document.getElementById('e_charge').textContent=fmt(data[today].charge);
+      document.getElementById('e_discharge').textContent=fmt(data[today].discharge);
+    }
+  }catch(e){}
+}
+
 async function refresh(){
   try{
     const r=await fetch('/data');const j=await r.json();
@@ -695,11 +834,14 @@ function updateFlow(p, packs){
 initChart();
 initLegend();
 initRange();
+initEnergyChart();
 loadHistory().then(refresh);
 loadPackHistory();
+loadEnergy();
 setInterval(refresh, 5000);
 setInterval(loadHistory, 60000);
 setInterval(loadPackHistory, 60000);
+setInterval(loadEnergy, 300000);
 </script>
 </body></html>
 """
@@ -710,14 +852,14 @@ def main():
     threading.Thread(target=poll_loop, daemon=True).start()
     threading.Thread(target=cleanup_loop, daemon=True).start()
     srv = ThreadingHTTPServer(("0.0.0.0", WEB_PORT), Handler)
-    print(f"Dashboard:  http://localhost:{WEB_PORT}")
+    log_always(f"Dashboard:  http://localhost:{WEB_PORT}")
     if USE_SIGNAL:
         send_signal("\u2705 Zendure-Watchdog gestartet")
-    print("Beenden mit Strg+C")
+    log_always("Beenden mit Strg+C")
     try:
         srv.serve_forever()
     except KeyboardInterrupt:
-        print("\nGestoppt.")
+        log_always("\nGestoppt.")
 
 
 if __name__ == "__main__":
