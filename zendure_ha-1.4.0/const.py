@@ -71,3 +71,8 @@ class SmartMode:
 
     POWER_START = 50  # Minimum Power (W) for starting a device
     POWER_TOLERANCE = 5  # Device-level power tolerance (W) before updating
+    
+    ## Teiler für Effizienten Betrieb (4 niedrig: frühe Aufteilung; 1 hoch: sehr späte Aufteilung)
+    DISCHARGE_OPTIMAL_DIVISOR = 2.9    # Teiler für discharge_optimal (sinnvolle Werte sind 2..4, 2.5 geht auch)
+    DISCHARGE_START_FACTOR = 1.9     # Faktor für pwr_low Abschaltschwellwert
+    ## DISCHARGE_START_FACTOR: float = 5.5 - DISCHARGE_OPTIMAL_DIVISOR  # automatisch gekoppelt 

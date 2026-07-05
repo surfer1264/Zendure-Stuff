@@ -193,7 +193,7 @@ class ZendureDevice(EntityDevice):
             self.limitInput.update_range(0, abs(charge))
 
             self.discharge_limit = discharge
-            self.discharge_optimal = discharge // 4
+            self.discharge_optimal = int(discharge // SmartMode.DISCHARGE_OPTIMAL_DIVISOR)
             self.discharge_start = discharge // 10
             self.limitOutput.update_range(0, discharge)
         except Exception:
