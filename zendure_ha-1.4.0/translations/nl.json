@@ -1,0 +1,403 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd",
+      "reconfigure_successful": "Hergroepering geslaagd"
+    },
+    "error": {
+      "cannot_connect": "Verbinding mislukt",
+      "invalid_auth": "Ongeldige authenticatie",
+      "unknown": "Onverwachte fout"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "username": "Zendure Gebruikersnaam",
+          "password": "Zendure Wachtwoord",
+          "p1meter": "P1 Sensor voor slimme matching",
+          "mqttlog": "MQTT-Communicatie loggen",
+          "mqttlocal": "Lokale MQTT gebruiken",
+          "auto_mqtt_user": "MQTT-gebruikers automatisch beheren",
+          "wifissid": "Wifi SSID",
+          "wifipsw": "Wifi Wachtwoord"
+        }
+      },
+      "local": {
+        "data": {
+          "mqttserver": "MQTT Server",
+          "mqttport": "MQTT Poort",
+          "mqttuser": "MQTT Gebruiker",
+          "mqttpsw": "MQTT Wachtwoord",
+          "auto_mqtt_user": "MQTT-gebruikers automatisch beheren",
+          "wifissid": "Wifi SSID",
+          "wifipsw": "Wifi Wachtwoord"
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "username": "Zendure Gebruikersnaam",
+          "password": "Zendure Wachtwoord",
+          "p1meter": "P1 Sensor voor slimme matching",
+          "mqttlog": "MQTT-Communicatie loggen",
+          "mqttlocal": "Lokale MQTT gebruiken",
+          "auto_mqtt_user": "MQTT-gebruikers automatisch beheren",
+          "wifissid": "Wifi SSID",
+          "wifipsw": "Wifi Wachtwoord"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Scaninterval (seconden)",
+          "auto_mqtt_user": "MQTT-gebruikers automatisch beheren"
+        },
+        "description": "Pas je opties aan.",
+        "title": "Zendure Integratie Opties"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "mqtt_reset": {
+        "name": "Reset verbinding"
+      }
+    },
+    "binary_sensor": {
+      "master_switch": {
+        "name": "Hoofdschakelaar"
+      },
+      "wifi_state": {
+        "name": "Wifi Status"
+      },
+      "heat_state": {
+        "name": "batterijverwarming"
+      },
+      "rest_state": {
+        "name": "Energiebesparende modus"
+      }
+    },
+    "number": {
+      "input_limit": {
+        "name": "Limiet Opladen"
+      },
+      "output_limit": {
+        "name": "Limiet Ontladen"
+      },
+      "manual_power": {
+        "name": "Handmatig vermogen"
+      },
+      "min_soc": {
+        "name": "SOC Minimaal"
+      },
+      "soc_set": {
+        "name": "SOC Maximaal"
+      }
+    },
+    "sensor": {
+      "ambient_light_color": {
+        "name": "Omgevingslichtkleur"
+      },
+      "available_kwh": {
+        "name": "Beschikbare Energie"
+      },
+      "auto_model": {
+        "name": "Batterijprogramma",
+        "state": {
+          "0": "Geen",
+          "6": "Batterijprioriteitsmodus",
+          "7": "Afspraakmodus",
+          "8": "Slimme Matching Modus",
+          "9": "Slimme CT Modus",
+          "10": "Elektriciteitsprijs"
+        }
+      },
+      "aggr_charge": {
+        "name": "Totaal geladen"
+      },
+      "aggr_discharge": {
+        "name": "Totaal geleverd"
+      },
+      "aggr_output_home": {
+        "name": "in het huis gevoerd"
+      },
+      "aggr_solar": {
+        "name": "Totale Zonne-energie"
+      },
+      "plug_state": {
+        "name": "Off-grid stekkerdoos",
+        "state": {
+          "0": "niet beschikbaar",
+          "1": "aangesloten"
+        }
+      },
+      "connection_status": {
+        "name": "Connectie Status",
+        "state": {
+          "0": "Onbekend",
+          "1": "Kalibreren",
+          "2": "HEMS",
+          "3": "Geen Zekeringgroep",
+          "10": "Verbonden (Cloud)",
+          "11": "Verbonden (Local)",
+          "12": "Verbonden (zenSDK)"
+        }
+      },
+      "so_h": {
+        "name": "Gezondheidsstatus"
+      },
+      "soc_status": {
+        "name": "Soc status",
+        "state": {
+          "0": "Actief",
+          "1": "Automatische kalibratie"
+        }
+      },
+      "hub_state": {
+        "name": "Hub Status"
+      },
+      "pack_num": {
+        "name": "Batterij Aantal"
+      },
+      "bat_volt": {
+        "name": "Batterijspanning"
+      },
+      "electric_level": {
+        "name": "Batterij"
+      },
+      "input_limit": {
+        "name": "Invoerlimiet"
+      },
+      "charging_mode": {
+        "name": "Laadmodus",
+        "state": {
+          "0": "Geen",
+          "1": "Modus 1",
+          "2": "Modus 2"
+        }
+      },
+      "charging_type": {
+        "name": "Laadtype",
+        "state": {
+          "0": "Type 0",
+          "1": "Type 1",
+          "2": "Type 2"
+        }
+      },
+      "charging_time": {
+        "name": "Laadtijd"
+      },
+      "pack_state": {
+        "name": "Batterijstatus",
+        "state": {
+          "0": "Inactief",
+          "1": "Laden",
+          "2": "Ontladen",
+          "3": "UPS"
+        }
+      },
+      "operation_state": {
+        "name": "State",
+        "state": {
+          "0": "Inactief",
+          "1": "Laden",
+          "2": "Ontladen",
+          "3": "Uit"
+        }
+      },
+      "state": {
+        "name": "Status",
+        "state": {
+          "0": "Inactief",
+          "1": "Laden",
+          "2": "Ontladen"
+        }
+      },
+      "soc_level": {
+        "name": "Elektriciteitsniveau (SoC)"
+      },
+      "global_soc": {
+         "name": "Globale batterij SOC"
+      },
+      "roundtrip_efficiency": {
+        "name": "Retourrendement"
+      },
+      "max_temp": {
+        "name": "Hoogste celtemperatuur"
+      },
+      "total_vol": {
+        "name": "Totale spanning"
+      },
+      "max_vol": {
+        "name": "Hoogste celspanning"
+      },
+      "min_vol": {
+        "name": "Laagste celspanning"
+      },
+      "batcur": {
+        "name": "huidig"
+      },
+      "bat_in_out": {
+        "name": "Batterijvermogen"
+      },
+      "pack_input_power": {
+        "name": "Batterij Ontladen"
+      },
+      "pass": {
+        "name": "Bypass",
+        "state": {
+          "0": "Uit",
+          "1": "Aan",
+          "2": "Aan",
+          "3": "Directe netlevering"
+        }
+      },      
+      "output_pack_power": {
+        "name": "Batterij Laden"
+      },
+      "hyper_tmp": {
+        "name": "Apparaat Temperatuur"
+      },
+      "strength": {
+        "name": "Wifi Signaalsterkte"
+      },
+      "remaining_time": {
+        "name": "Resterende Tijd"
+      },
+      "soft_version": {
+        "name": "BMS Firmware"
+      },
+      "dspversion": {
+        "name": "AC Firmware"
+      },
+      "master_soft_version": {
+        "name": "Master Firmware"
+      },
+      "masterhaer_version": {
+        "name": "Hardwareversie"
+      },
+      "delta_voltage": {
+        "name": "Spanningsverschil"
+      }
+    },
+    "select": {
+      "ac_mode": {
+        "name": "AC Bedrijfsmodus",
+        "state": {
+          "input": "AC Invoermodus",
+          "output": "AC Uitvoermodus"
+        }
+      },
+      "dc_switch": {
+        "name": "DC-poort",
+        "state": {
+          "on": "Aan/Uitgang",
+          "off": "Uit/Invoer"
+        }
+      },
+      "hub_mode": {
+        "name": "Hub-modus",
+        "state": {
+          "paired": "Gekoppeld met hub",
+          "standalone": "Standalone"
+        }
+      },
+      "hems_state": {
+        "name": "HEMS Status",
+        "state": {
+          "off": "Inactief",
+          "on": "Actief"
+        }
+      },
+      "auto_heat": {
+        "name": "automatische batterijverwarming",
+        "state": {
+          "off": "Inactief",
+          "on": "Actief"
+        }
+      },
+      "fuse_group": {
+        "name": "Device fusegroup",
+        "state": {
+          "unused": "Niet gebruikt, apparaat heeft geen zekeringgroep",
+          "owncircuit": "Apparaat is aangesloten op aparte groep of fase",
+          "group800": "Zekeringgroep max. 800w / 1200w batterijlading",
+          "group800_2400": "Zekeringgroep max. 800w / 2400w batterijlading",
+          "group1200": "Zekeringgroep max. 1200w",
+          "group2000": "Zekeringgroep max. 2000w",
+          "group2400": "Zekeringgroep max. 2400w",
+          "group3600": "Zekeringgroep max. 3600w"
+        }
+      },
+      "connection": {
+        "name": "Verbindingsmodus",
+        "state": {
+          "local": "Lokaal",
+          "cloud": "Cloud"
+        }
+      },
+      "ble_adapter": {
+        "name": "BLE-adapter",
+        "state": {
+          "auto": "Automatisch"
+        }
+      },
+      "operation": {
+        "name": "Bedrijfsmodus",
+        "state": {
+          "off": "Uit",
+          "manual": "Handmatig Vermogen",
+          "smart": "Slimme Matching",
+          "smart_discharging": "Slim ontladen",
+          "smart_charging": "Slim opladen",
+          "store_solar": "Zonne-energie opslaan"
+        }
+      },
+      "pass_mode": {
+        "name": "Bypass-modus",
+        "state": {
+          "auto": "Automatisch",
+          "off": "Altijd Uit",
+          "on": "Altijd Aan"
+        }
+      },
+      "grid_off_mode": {
+        "name": "Off-Grid Modus",
+        "state": {
+          "normal": "Normaal",
+          "eco": "Economisch",
+          "off": "Uit"
+        }
+      },
+      "grid_reverse": {
+        "name": "Energie-export",
+        "state": {
+          "disabled": "uit",
+          "allow": "toegestaan",
+          "forbidden": "verboden"
+        }
+      },
+      "fanspeed": {
+        "name": "Ventilatorsnelheid",
+        "state": {
+          "auto": "Automatisch",
+          "normal": "Normaal",
+          "fast": "Snel"
+        }
+      }
+    }
+  },
+  "switch": {
+    "lamp_switch": {
+      "name": "Led"
+    },
+    "ac_switch": {
+      "name": "AC-uitgang"
+    },
+    "fanmode": {
+      "name": "Slimme Koelventilator"
+    }
+  }
+}
