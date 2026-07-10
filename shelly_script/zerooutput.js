@@ -23,7 +23,6 @@
 //
 // ======================================================
 
-
 let CONFIG = {
 
   // Zendure IP address
@@ -35,10 +34,8 @@ let CONFIG = {
   // Watchdog timeout in milliseconds
   watchdog: 5000,
 
-
   // Minimum battery state of charge required for output
   minSoc: 10,
-
 
   // Minimum allowed output power
   minOutput: 50,
@@ -48,24 +45,17 @@ let CONFIG = {
 
 };
 
-
-
 let state = {
 
   gridPower: 0,
   zenOutput: 0,
   soc: 0,
-
   serial: null,
-
   outputLimit: -1,
-
   busy: false,
   watchdogTimer: null
 
 };
-
-
 
 // ======================================================
 // Lock handling and watchdog
@@ -75,11 +65,8 @@ function lock() {
 
   state.busy = true;
 
-
   if (state.watchdogTimer !== null)
     Timer.clear(state.watchdogTimer);
-
-
 
   state.watchdogTimer = Timer.set(
     CONFIG.watchdog,
@@ -93,15 +80,11 @@ function lock() {
 
     }
   );
-
 }
-
-
 
 function unlock() {
 
   state.busy = false;
-
 
   if (state.watchdogTimer !== null) {
 
@@ -109,10 +92,7 @@ function unlock() {
     state.watchdogTimer = null;
 
   }
-
 }
-
-
 
 // ======================================================
 // HTTP helper functions
@@ -127,10 +107,7 @@ function httpGet(url, callback) {
     },
     callback
   );
-
 }
-
-
 
 function httpPost(url, body, callback) {
 
@@ -149,10 +126,7 @@ function httpPost(url, body, callback) {
     },
     callback
   );
-
 }
-
-
 
 // ======================================================
 // Read local Shelly power measurement
@@ -162,7 +136,6 @@ function readGridPower() {
 
   let em = Shelly.getComponentStatus("em:0");
 
-
   if (!em) {
 
     print("No EM data available");
@@ -171,12 +144,9 @@ function readGridPower() {
 
   }
 
-
   state.gridPower = em.total_act_power;
 
 }
-
-
 
 // ======================================================
 // Read Zendure status
@@ -184,13 +154,11 @@ function readGridPower() {
 
 function readZendure() {
 
-
   httpGet(
 
     "http://" + CONFIG.zendure + "/properties/report",
 
     function(res) {
-
 
       if (!res || res.code !== 200) {
 
@@ -200,9 +168,7 @@ function readZendure() {
 
       }
 
-
       let data;
-
 
       try {
 
@@ -218,16 +184,12 @@ function readZendure() {
 
       }
 
-
-
       // Get serial number from Zendure response
       if (data.sn) {
 
         state.serial = data.sn;
 
       }
-
-
 
       if (!state.serial) {
 
@@ -237,28 +199,17 @@ function readZendure() {
 
       }
 
-
-
       state.soc =
         data.packData[0].socLevel;
-
-
 
       state.zenOutput =
         data.properties.outputHomePower;
 
-
-
       calculate();
 
-
     }
-
   );
-
 }
-
-
 
 // ======================================================
 // Calculate required output power
@@ -266,35 +217,25 @@ function readZendure() {
 
 function calculate() {
 
-
   let output = 0;
-
-
 
   // Only provide output above minimum SOC
 
   if (state.soc > CONFIG.minSoc) {
 
-
     output = Math.round(
       state.gridPower + state.zenOutput
     );
-
-
 
     // Limit lower boundary
 
     if (output < 0)
       output = 0;
 
-
-
     // Limit maximum output
 
     if (output > CONFIG.maxOutput)
       output = CONFIG.maxOutput;
-
-
 
     // Apply minimum output only when output is active
 
@@ -303,10 +244,7 @@ function calculate() {
 
       output = CONFIG.minOutput;
 
-
   }
-
-
 
   // Skip update if value did not change
 
@@ -317,11 +255,7 @@ function calculate() {
 
   }
 
-
-
   state.outputLimit = output;
-
-
 
   print(
     "Grid:",
@@ -337,14 +271,9 @@ function calculate() {
     "W"
   );
 
-
-
   writeZendure(output);
 
-
 }
-
-
 
 // ======================================================
 // Write output limit to Zendure
@@ -352,11 +281,9 @@ function calculate() {
 
 function writeZendure(output) {
 
-
   httpPost(
 
     "http://" + CONFIG.zendure + "/properties/write",
-
 
     {
 
@@ -367,42 +294,29 @@ function writeZendure(output) {
         outputLimit: output
 
       }
-
     },
 
-
     function(res) {
-
 
       if (res && res.code === 200)
 
         print("Zendure output set:", output, "W");
 
-
       else
 
         print("Zendure write error");
 
-
-
       unlock();
 
-
     }
-
   );
-
-
 }
-
-
 
 // ======================================================
 // Main control loop
 // ======================================================
 
 function update() {
-
 
   if (state.busy) {
 
@@ -411,21 +325,15 @@ function update() {
 
   }
 
-
   lock();
-
 
   // Read power directly from local Shelly meter
   readGridPower();
 
-
   // Read Zendure data and calculate output
   readZendure();
 
-
 }
-
-
 
 // ======================================================
 // Startup
@@ -439,7 +347,6 @@ print("Min SOC  :", CONFIG.minSoc, "%");
 print("Min Out  :", CONFIG.minOutput, "W");
 print("Max Out  :", CONFIG.maxOutput, "W");
 print("--------------------------------");
-
 
 Timer.set(
   CONFIG.interval,
