@@ -27,7 +27,7 @@
 let CONFIG = {
 
   // Zendure IP address
-  zendure: "<IP address of the Zendure device here",
+  zendure: "<IP address of the Zendure device here>",
 
   // Update interval in milliseconds
   interval: 3000,
