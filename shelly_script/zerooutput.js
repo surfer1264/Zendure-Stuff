@@ -32,6 +32,7 @@ let CONFIG = {
 
   // Zendure IP address
   zendure: "IP-Adresse",
+  // zendure: "192.168.178.143",
 
   // Where to read the household grid power from:
   // "local"  -> script runs directly on the Shelly Pro 3EM and reads
@@ -55,7 +56,7 @@ let CONFIG = {
   watchdog: 5000,
 
   // Minimum battery state of charge required for output
-  minSoc: 10,
+  minSoc: 15,
 
   // Minimum allowed output power
   minOutput: 50,
@@ -69,11 +70,23 @@ let CONFIG = {
 
   // Hysteresis in watts - minimum change required before a new
   // output value is written to the Zendure (reduces write frequency)
-  hysteresis: 5,
+  hysteresis: 10,
+
+  // Damping / gain factor for the control signal (0 < factor <= 1).
+  // The output does NOT jump directly to the freshly calculated target
+  // value each cycle. Instead it moves only a fraction of the way there:
+  //   smoothedOutput = smoothedOutput + dampingFactor * (target - smoothedOutput)
+  // 1.0   = no damping, output follows the target immediately (old behavior)
+  // 0.6   = output moves 60% of the remaining distance per cycle (default,
+  //         smooths out sudden load spikes/dips over a few cycles)
+  // 0.1  = very sluggish, strongly smoothed reaction
+  // Note: the SOC safety cutoff (minSoc) always reacts immediately and
+  // bypasses damping, so the battery is never held back from stopping.
+  dampingFactor: 0.6,
 
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
-  errorThreshold: 3,
+  errorThreshold: 5,
 
   // Signal notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
@@ -93,6 +106,7 @@ let state = {
   soc: 0,
   serial: null,
   outputLimit: -1,
+  smoothedOutput: -1,
   busy: false,
   watchdogTimer: null,
 
@@ -474,20 +488,46 @@ function calculate() {
 
   if (state.soc > CONFIG.minSoc) {
 
-    // Regulate grid power towards the configured setpoint
-    output = Math.round(
+    // Raw (undamped) target based on current grid/zendure readings
+    let target = Math.round(
       (state.gridPower - CONFIG.setpoint) + state.zenOutput
     );
 
     // Limit lower boundary
 
-    if (output < 0)
-      output = 0;
+    if (target < 0)
+      target = 0;
 
     // Limit maximum output
 
-    if (output > CONFIG.maxOutput)
-      output = CONFIG.maxOutput;
+    if (target > CONFIG.maxOutput)
+      target = CONFIG.maxOutput;
+
+    // Apply damping/gain: instead of jumping straight to the new
+    // target, move only a fraction (dampingFactor) of the remaining
+    // distance per cycle. This smooths out sudden load spikes/dips.
+    if (state.smoothedOutput < 0) {
+
+      // First run after (re)start - initialize directly, nothing to
+      // smooth against yet.
+      state.smoothedOutput = target;
+
+    }
+
+    else {
+
+      state.smoothedOutput =
+        state.smoothedOutput +
+        CONFIG.dampingFactor * (target - state.smoothedOutput);
+
+    }
+
+    output = Math.round(state.smoothedOutput);
+
+    // Limit lower boundary again (rounding/damping could undershoot)
+
+    if (output < 0)
+      output = 0;
 
     // Apply minimum output only when output is active
 
@@ -495,6 +535,16 @@ function calculate() {
         output < CONFIG.minOutput)
 
       output = CONFIG.minOutput;
+
+  }
+
+  else {
+
+    // Safety cutoff (SOC at/below minSoc): react immediately, bypass
+    // damping entirely, and reset the smoothing state so a later
+    // recovery starts fresh from 0 instead of surging back up.
+    output = 0;
+    state.smoothedOutput = 0;
 
   }
 
@@ -616,6 +666,7 @@ let bannerLines = [
   "Max Out    : " + CONFIG.maxOutput + " W",
   "Setpoint   : " + CONFIG.setpoint + " W",
   "Hysteresis : " + CONFIG.hysteresis + " W",
+  "Damping    : " + CONFIG.dampingFactor,
   "Err.Thresh : " + CONFIG.errorThreshold,
   "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
   "--------------------------------"
