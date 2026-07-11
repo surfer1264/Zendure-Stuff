@@ -16,6 +16,7 @@ ausgewählte Links
 * [externe Regelung mit HA bauen](https://github.com/surfer1264/Zendure-Stuff/wiki/Regeln-mit-HomeAssistent)
 * [Z-HA Verstehen](https://github.com/surfer1264/Zendure-Stuff/wiki/Z‐HA-verstehen)
 * [Z-HA Grundlagen](https://github.com/surfer1264/Zendure-Stuff/wiki/Zendure-HA-Basics)
+* [Shelly-Zendure-Suite](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S))
 * [Quellen rund um das Thema und HA](https://github.com/surfer1264/Zendure-Stuff/wiki/Linksammlung)
 
   
