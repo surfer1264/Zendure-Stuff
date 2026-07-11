@@ -1,5 +1,5 @@
 // Zendure Dynamic Output Controller
-// Runs on a Shelly Pro 3PM
+// Runs on any Shelly Gen2/3 device with scripting support.
 //
 // It tries to output power into the household according to current load
 // The aim is to output as little power as possible to the public net and
@@ -7,9 +7,12 @@
 // Everything locally without any cloud involved.
 //
 // 1. Remove the Zendure from HEMS in the app
-// 2. Copy the whole content and paste it into your Shell 3PM Script UI
-// 3. Set the Zendure-IP
-// 4. Press start (and set it to start on boot time of the Shelly)
+// 2. Copy the whole content and paste it into your Shelly Script UI
+// 3. Set CONFIG.gridSource ("local" = script runs ON the Pro 3EM itself,
+//    "remote" = script runs on any other Shelly and reads the Pro 3EM
+//    over the network via RPC)
+// 4. Set the Zendure-IP (and gridSourceIp if using "remote")
+// 5. Press start (and set it to start on boot time of the Shelly)
 // Optional: change parameters in CONFIG to your liking
 //
 // This is working on a SolarFlow 800 with 2 battery packs
@@ -28,7 +31,22 @@
 let CONFIG = {
 
   // Zendure IP address
-  zendure: "IP-ADRESSE",
+  zendure: "IP-Adresse",
+
+  // Where to read the household grid power from:
+  // "local"  -> script runs directly on the Shelly Pro 3EM and reads
+  //             Shelly.getComponentStatus("em:<gridSourceEmId>") locally
+  // "remote" -> script runs on ANY other Shelly device and reads the
+  //             grid power from a Shelly Pro 3EM elsewhere in the
+  //             network via its HTTP RPC API (EM.GetStatus)
+  gridSource: "local",
+
+  // IP address of the Shelly Pro 3EM providing the grid measurement.
+  // Only required/used when gridSource = "remote".
+  gridSourceIp: "<IP address of the Shelly Pro 3EM here>",
+
+  // EM channel id to read (usually 0)
+  gridSourceEmId: 0,
 
   // Update interval in milliseconds
   interval: 3000,
@@ -37,12 +55,12 @@ let CONFIG = {
   watchdog: 5000,
 
   // Minimum battery state of charge required for output
-  minSoc: 20,
+  minSoc: 10,
 
-  // Minimum allowed output power for start
+  // Minimum allowed output power
   minOutput: 50,
 
-  // Maximum allowed output power, Limit
+  // Maximum allowed output power
   maxOutput: 800,
 
   // Target grid power in watts (e.g. 0 = balance to zero,
@@ -51,7 +69,7 @@ let CONFIG = {
 
   // Hysteresis in watts - minimum change required before a new
   // output value is written to the Zendure (reduces write frequency)
-  hysteresis: 10,
+  hysteresis: 5,
 
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
@@ -286,26 +304,93 @@ function httpPost(url, body, callback) {
 }
 
 // ======================================================
-// Read local Shelly power measurement
+// Read grid power - either locally (script runs on the Pro 3EM
+// itself) or remotely (script runs on any other Shelly device
+// and fetches the value from the Pro 3EM via RPC over HTTP)
 // ======================================================
 
-function readGridPower() {
+function readGridPower(callback) {
 
-  let em = Shelly.getComponentStatus("em:0");
+  if (CONFIG.gridSource === "local") {
 
-  if (!em) {
+    let em = Shelly.getComponentStatus("em:" + CONFIG.gridSourceEmId);
 
-    reportError("em", "Kein EM-Messwert verfuegbar (em:0 nicht gefunden)");
-    unlock();
-    return false;
+    if (!em) {
+
+      reportError(
+        "em",
+        "Kein lokaler EM-Messwert verfuegbar (em:" +
+        CONFIG.gridSourceEmId + " nicht gefunden)"
+      );
+
+      unlock();
+      callback(false);
+      return;
+
+    }
+
+    reportSuccess("em");
+    state.gridPower = em.total_act_power;
+
+    callback(true);
+    return;
 
   }
 
-  reportSuccess("em");
-  state.gridPower = em.total_act_power;
+  // gridSource === "remote": fetch the value from the Pro 3EM via RPC
+  httpGet(
 
-  return true;
+    "http://" + CONFIG.gridSourceIp +
+    "/rpc/EM.GetStatus?id=" + CONFIG.gridSourceEmId,
 
+    function(res) {
+
+      if (!res || res.code !== 200) {
+
+        reportError(
+          "em",
+          "Remote-EM (" + CONFIG.gridSourceIp + ") nicht erreichbar"
+        );
+
+        unlock();
+        callback(false);
+        return;
+
+      }
+
+      let data;
+
+      try {
+
+        data = JSON.parse(res.body);
+
+      }
+
+      catch(e) {
+
+        reportError("em", "Fehler beim Parsen der Remote-EM-Antwort");
+        unlock();
+        callback(false);
+        return;
+
+      }
+
+      if (data.total_act_power === undefined) {
+
+        reportError("em", "Remote-EM-Antwort enthaelt keinen Leistungswert");
+        unlock();
+        callback(false);
+        return;
+
+      }
+
+      reportSuccess("em");
+      state.gridPower = data.total_act_power;
+
+      callback(true);
+
+    }
+  );
 }
 
 // ======================================================
@@ -502,12 +587,16 @@ function update() {
 
   lock();
 
-  // Read power directly from local Shelly meter
-  if (!readGridPower())
-    return;
+  // Read grid power (local or remote, depending on CONFIG.gridSource)
+  readGridPower(function(ok) {
 
-  // Read Zendure data and calculate output
-  readZendure();
+    if (!ok)
+      return;
+
+    // Read Zendure data and calculate output
+    readZendure();
+
+  });
 
 }
 
@@ -515,18 +604,38 @@ function update() {
 // Startup
 // ======================================================
 
-print("--------------------------------");
-print("Zendure Controller started");
-print("Interval   :", CONFIG.interval, "ms");
-print("Watchdog   :", CONFIG.watchdog, "ms");
-print("Min SOC    :", CONFIG.minSoc, "%");
-print("Min Out    :", CONFIG.minOutput, "W");
-print("Max Out    :", CONFIG.maxOutput, "W");
-print("Setpoint   :", CONFIG.setpoint, "W");
-print("Hysteresis :", CONFIG.hysteresis, "W");
-print("Err.Thresh :", CONFIG.errorThreshold);
-print("Signal     :", CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
-print("--------------------------------");
+let bannerLines = [
+  "--------------------------------",
+  "Zendure Controller started",
+  "Grid source: " + CONFIG.gridSource +
+    (CONFIG.gridSource === "remote" ? " (" + CONFIG.gridSourceIp + ")" : ""),
+  "Interval   : " + CONFIG.interval + " ms",
+  "Watchdog   : " + CONFIG.watchdog + " ms",
+  "Min SOC    : " + CONFIG.minSoc + " %",
+  "Min Out    : " + CONFIG.minOutput + " W",
+  "Max Out    : " + CONFIG.maxOutput + " W",
+  "Setpoint   : " + CONFIG.setpoint + " W",
+  "Hysteresis : " + CONFIG.hysteresis + " W",
+  "Err.Thresh : " + CONFIG.errorThreshold,
+  "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
+  "--------------------------------"
+];
+ 
+let bannerIndex = 0;
+ 
+function printBannerLine() {
+ 
+  if (bannerIndex >= bannerLines.length)
+    return;
+ 
+  print(bannerLines[bannerIndex]);
+  bannerIndex = bannerIndex + 1;
+ 
+  Timer.set(150, false, printBannerLine);
+ 
+}
+ 
+printBannerLine();
 
 if (CONFIG.signal.enabled) {
   sendSignalMessage("Zendure-Controller gestartet.");
