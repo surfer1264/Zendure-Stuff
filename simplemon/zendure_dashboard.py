@@ -170,12 +170,17 @@ def setup_db():
 
     # Tabellen anlegen, falls noch nicht vorhanden
     dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
-    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, {dev_cols})")
+    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, {dev_cols})")
     pack_cols = ", ".join(_pack_col_def(f) for f in PACK_FIELDS)
     con.execute(f"CREATE TABLE IF NOT EXISTS packs (ts INTEGER, dt TEXT, {pack_cols})")
 
+    # Dauerhafte Tages-Energiestatistik (bleibt auch nach Loeschung der Rohdaten)
+    con.execute("""CREATE TABLE IF NOT EXISTS energy_daily (
+        day TEXT PRIMARY KEY, solar REAL, home REAL, grid REAL,
+        charge REAL, discharge REAL)""")
+
     # Bestehende Tabellen migrieren: neue Felder aus PROPS / PACK_FIELDS nachziehen
-    ensure_columns(con, "device", [(p, "REAL") for p in PROPS])
+    ensure_columns(con, "device", [("hub_sn", "TEXT")] + [(p, "REAL") for p in PROPS])
     ensure_columns(con, "packs", [(f, PACK_TYPES.get(f, "REAL")) for f in PACK_FIELDS])
 
     con.commit()
@@ -188,13 +193,13 @@ def fetch_device():
         return json.loads(r.read().decode())
 
 
-def log_csv(ts, dt, props):
+def log_csv(ts, dt, hub_sn, props):
     new = not os.path.exists(CSV_FILE)
     with open(CSV_FILE, "a", newline="") as f:
         w = csv.writer(f)
         if new:
-            w.writerow(["ts", "dt"] + PROPS)
-        w.writerow([ts, dt] + [props.get(p, "") for p in PROPS])
+            w.writerow(["ts", "dt", "hub_sn"] + PROPS)
+        w.writerow([ts, dt, hub_sn if hub_sn is not None else ""] + [props.get(p, "") for p in PROPS])
 
 
 def log_packs_csv(ts, dt, packs):
@@ -223,11 +228,13 @@ def store(con, data):
             if f in pk:
                 pk[f] = raw_to_celsius(pk[f])
 
-    dev_cols = ["ts", "dt"] + PROPS
+    hub_sn = data.get("sn")  # Seriennummer des Hubs (Top-Level im Report)
+
+    dev_cols = ["ts", "dt", "hub_sn"] + PROPS
     dev_ph = ", ".join("?" * len(dev_cols))
     con.execute(
         f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
-        [ts, dt] + [props.get(p) for p in PROPS])
+        [ts, dt, hub_sn] + [props.get(p) for p in PROPS])
 
     pack_cols = ["ts", "dt"] + PACK_FIELDS
     pack_ph = ", ".join("?" * len(pack_cols))
@@ -237,7 +244,7 @@ def store(con, data):
             [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
     if WRITE_CSV:
-        log_csv(ts, dt, props)
+        log_csv(ts, dt, hub_sn, props)
         log_packs_csv(ts, dt, packs)
 
 
@@ -289,10 +296,16 @@ def cleanup_db():
 
 
 def cleanup_loop():
-    """Fuehrt das Aufraeumen beim Start und danach einmal taeglich aus."""
+    """Sichert taeglich die Tages-Energiewerte und raeumt dann alte Rohdaten auf.
+
+    Reihenfolge ist wichtig: erst die Tageswerte dauerhaft festschreiben,
+    DANN alte Rohdaten loeschen - sonst gingen die Werte verloren.
+    """
+    persist_energy_daily()
     cleanup_db()
     while True:
         time.sleep(86400)  # 24 Stunden
+        persist_energy_daily()
         cleanup_db()
 
 
@@ -346,6 +359,58 @@ def energy_by_day(days=None):
     for day in result:
         for c in result[day]:
             result[day][c] = round(result[day][c], 3)
+    if days:
+        keep = sorted(result.keys())[-days:]
+        result = {d: result[d] for d in keep}
+    return result
+
+
+def persist_energy_daily():
+    """Schreibt die aus den Rohdaten berechneten Tageswerte dauerhaft fest.
+
+    INSERT OR REPLACE: der laufende Tag wird aktualisiert, abgeschlossene Tage
+    bleiben erhalten - auch nachdem der Cleanup ihre Rohdaten geloescht hat.
+    """
+    fresh = energy_by_day()  # aus den (noch vorhandenen) Rohdaten
+    if not fresh:
+        return
+    try:
+        con = sqlite3.connect(DB_FILE)
+        for day, v in fresh.items():
+            con.execute(
+                "INSERT OR REPLACE INTO energy_daily "
+                "(day, solar, home, grid, charge, discharge) VALUES (?,?,?,?,?,?)",
+                (day, v["solar"], v["home"], v["grid"], v["charge"], v["discharge"]))
+        con.commit()
+        con.close()
+    except Exception as e:
+        log_always(f"{datetime.now():%H:%M:%S}  Energie-Persist-Fehler: {e}")
+
+
+def energy_combined(days=None):
+    """Kombiniert dauerhaft gespeicherte Tageswerte mit dem aktuellen Tag.
+
+    Gespeicherte Werte (energy_daily) bilden die Langzeit-Basis; die aus den
+    aktuellen Rohdaten berechneten Tage ueberschreiben sie (frischere Werte,
+    v. a. der laufende Tag). So reicht die Statistik weiter zurueck als die
+    Rohdaten-Retention.
+    """
+    combined = {}
+    # 1) dauerhafte Werte laden
+    try:
+        con = sqlite3.connect(DB_FILE)
+        for row in con.execute(
+                "SELECT day, solar, home, grid, charge, discharge FROM energy_daily"):
+            combined[row[0]] = {"solar": row[1], "home": row[2], "grid": row[3],
+                                "charge": row[4], "discharge": row[5]}
+        con.close()
+    except Exception:
+        pass
+    # 2) mit frisch berechneten Tagen aus den Rohdaten ueberschreiben
+    for day, v in energy_by_day().items():
+        combined[day] = v
+    # 3) sortieren, optional begrenzen
+    result = {d: combined[d] for d in sorted(combined.keys())}
     if days:
         keep = sorted(result.keys())[-days:]
         result = {d: result[d] for d in keep}
@@ -422,7 +487,7 @@ class Handler(BaseHTTPRequestHandler):
                 except (ValueError, TypeError):
                     days = None
             try:
-                self._send(200, json.dumps(energy_by_day(days)))
+                self._send(200, json.dumps(energy_combined(days)))
             except Exception as e:
                 self._send(200, json.dumps({"error": str(e)}))
         else:
