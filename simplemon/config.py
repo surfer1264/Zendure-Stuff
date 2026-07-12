@@ -44,3 +44,9 @@ MIN_VOLT_WARN = 2.9    # V  - Unterspannungsgrenze je Zelle
 MIN_VOLT_RESET = 3.1   # V  - Erholungsgrenze
 TEMP_WARN = 45.0       # °C - Geraete-Temperaturgrenze
 TEMP_RESET = 35.0      # °C - Ruecksetz-Grenze
+
+# ----------------------------- Smartmeter (Shelly 3EM Pro) ---------------
+# Optional: zusätzlicher Momentanwert der echten Netzleistung, direkt vom
+# Shelly Pro 3EM per lokaler RPC-API gelesen (unabhängig vom Zendure-Report).
+USE_SMARTMETER = False
+SMARTMETER_URL = "http://192.168.178.117/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Zendure SF240Pro - Logger + Web-Dashboard in einem.
+Zendure - Logger + Web-Dashboard in einem.
 
 Pollt das Gerät regelmaessig, speichert die Daten in CSV und SQLite
 und stellt unter http://localhost:8080 ein Live-Dashboard bereit.
@@ -34,6 +34,15 @@ except ImportError as e:
     print("        Die Datei config.py muss im selben Ordner liegen wie dieses Script")
     print("        und alle Einstellungen enthalten. Details:", e)
     sys.exit(1)
+
+# Smartmeter-Einstellungen separat importieren, mit Fallback: so laeuft das
+# Script auch mit einer aelteren config.py weiter, die diese Werte noch
+# nicht kennt (Smartmeter-Anzeige ist dann einfach deaktiviert).
+try:
+    from config import USE_SMARTMETER, SMARTMETER_URL
+except ImportError:
+    USE_SMARTMETER = False
+    SMARTMETER_URL = ""
 
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
 
@@ -82,7 +91,7 @@ PROPS = [
 ]
 
 # Letzter abgerufener Datensatz (vom Poll-Thread gefuellt, vom Webserver gelesen)
-_latest = {"data": None, "ts": 0, "error": None}
+_latest = {"data": None, "ts": 0, "error": None, "grid_meter": None}
 _lock = threading.Lock()
 
 # Alarm-Zustand fuer Hysterese: merkt sich, welche Warnung bereits gesendet wurde,
@@ -169,8 +178,11 @@ def setup_db():
     con = sqlite3.connect(DB_FILE, check_same_thread=False)
 
     # Tabellen anlegen, falls noch nicht vorhanden
+    # gridMeterPower: Momentanwert vom Shelly 3EM Pro (echter Smartmeter-Wert,
+    # unabhaengig von der Zendure-eigenen gridInputPower-Schaetzung).
     dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
-    con.execute(f"CREATE TABLE IF NOT EXISTS device (ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, {dev_cols})")
+    con.execute(f"CREATE TABLE IF NOT EXISTS device "
+                f"(ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, gridMeterPower REAL, {dev_cols})")
     pack_cols = ", ".join(_pack_col_def(f) for f in PACK_FIELDS)
     con.execute(f"CREATE TABLE IF NOT EXISTS packs (ts INTEGER, dt TEXT, {pack_cols})")
 
@@ -180,7 +192,8 @@ def setup_db():
         charge REAL, discharge REAL)""")
 
     # Bestehende Tabellen migrieren: neue Felder aus PROPS / PACK_FIELDS nachziehen
-    ensure_columns(con, "device", [("hub_sn", "TEXT")] + [(p, "REAL") for p in PROPS])
+    ensure_columns(con, "device",
+                   [("hub_sn", "TEXT"), ("gridMeterPower", "REAL")] + [(p, "REAL") for p in PROPS])
     ensure_columns(con, "packs", [(f, PACK_TYPES.get(f, "REAL")) for f in PACK_FIELDS])
 
     con.commit()
@@ -193,13 +206,28 @@ def fetch_device():
         return json.loads(r.read().decode())
 
 
-def log_csv(ts, dt, hub_sn, props):
+def fetch_smartmeter():
+    """Liest die aktuelle Netz-Wirkleistung direkt vom Shelly Pro 3EM (RPC).
+
+    Nutzt dieselbe RPC-API (EM.GetStatus), die auch zerooutput.js im
+    "remote"-Modus abfragt. Unabhaengig vom Zendure-Report - liefert den
+    tatsaechlichen Smartmeter-Momentanwert statt der Zendure-Schaetzung.
+    """
+    req = urllib.request.Request(SMARTMETER_URL, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        d = json.loads(r.read().decode())
+    return d.get("total_act_power")
+
+
+def log_csv(ts, dt, hub_sn, props, grid_meter=None):
     new = not os.path.exists(CSV_FILE)
     with open(CSV_FILE, "a", newline="") as f:
         w = csv.writer(f)
         if new:
-            w.writerow(["ts", "dt", "hub_sn"] + PROPS)
-        w.writerow([ts, dt, hub_sn if hub_sn is not None else ""] + [props.get(p, "") for p in PROPS])
+            w.writerow(["ts", "dt", "hub_sn", "gridMeterPower"] + PROPS)
+        w.writerow([ts, dt, hub_sn if hub_sn is not None else "",
+                    grid_meter if grid_meter is not None else ""] +
+                   [props.get(p, "") for p in PROPS])
 
 
 def log_packs_csv(ts, dt, packs):
@@ -212,7 +240,7 @@ def log_packs_csv(ts, dt, packs):
             w.writerow([ts, dt, i] + [pk.get(fld, "") for fld in PACK_FIELDS])
 
 
-def store(con, data):
+def store(con, data, grid_meter=None):
     ts = data.get("timestamp", int(time.time()))
     dt = datetime.now().isoformat(timespec="seconds")
     props = dict(data.get("properties", {}))  # Kopie, Original unangetastet
@@ -230,11 +258,11 @@ def store(con, data):
 
     hub_sn = data.get("sn")  # Seriennummer des Hubs (Top-Level im Report)
 
-    dev_cols = ["ts", "dt", "hub_sn"] + PROPS
+    dev_cols = ["ts", "dt", "hub_sn", "gridMeterPower"] + PROPS
     dev_ph = ", ".join("?" * len(dev_cols))
     con.execute(
         f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
-        [ts, dt, hub_sn] + [props.get(p) for p in PROPS])
+        [ts, dt, hub_sn, grid_meter] + [props.get(p) for p in PROPS])
 
     pack_cols = ["ts", "dt"] + PACK_FIELDS
     pack_ph = ", ".join("?" * len(pack_cols))
@@ -244,7 +272,7 @@ def store(con, data):
             [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
     if WRITE_CSV:
-        log_csv(ts, dt, hub_sn, props)
+        log_csv(ts, dt, hub_sn, props, grid_meter)
         log_packs_csv(ts, dt, packs)
 
 
@@ -253,17 +281,31 @@ def poll_loop():
     con = setup_db()
     ziele = DB_FILE + (f" + {CSV_FILE} + {PACK_CSV_FILE}" if WRITE_CSV else " (CSV aus)")
     log(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {ziele}")
+    if USE_SMARTMETER:
+        log(f"Smartmeter (Shelly 3EM Pro) zusaetzlich unter {SMARTMETER_URL}")
     while True:
         try:
             data = fetch_device()
-            store(con, data)
+
+            # Smartmeter-Wert unabhaengig vom Zendure-Report abrufen. Ein
+            # Fehler hier darf das Zendure-Logging nicht abbrechen lassen -
+            # deshalb eigener try/except, Wert bleibt dann einfach None.
+            grid_meter = None
+            if USE_SMARTMETER:
+                try:
+                    grid_meter = fetch_smartmeter()
+                except Exception as e:
+                    log_always(f"{datetime.now():%H:%M:%S}  Smartmeter-Fehler: {e}")
+
+            store(con, data, grid_meter)
             with _lock:
-                _latest.update(data=data, ts=time.time(), error=None)
+                _latest.update(data=data, ts=time.time(), error=None, grid_meter=grid_meter)
             # Alarme auf Basis der Rohdaten pruefen (vor jeder Umwandlung)
             check_alarms(data.get("properties", {}), data.get("packData", []))
             p = data.get("properties", {})
+            gm_txt = f"  Netz(Meter)={grid_meter}W" if USE_SMARTMETER else ""
             log(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
-                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W")
+                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W{gm_txt}")
         except Exception as e:
             with _lock:
                 _latest.update(error=str(e))
@@ -439,7 +481,7 @@ class Handler(BaseHTTPRequestHandler):
         elif route == "/data":
             with _lock:
                 payload = {"data": _latest["data"], "ts": _latest["ts"],
-                           "error": _latest["error"]}
+                           "error": _latest["error"], "grid_meter": _latest.get("grid_meter")}
             self._send(200, json.dumps(payload))
         elif route == "/history":
             # Anzahl Punkte aus ?n=... lesen, auf 1..MAX_POINTS begrenzen
@@ -452,7 +494,7 @@ class Handler(BaseHTTPRequestHandler):
             con = sqlite3.connect(DB_FILE)
             rows = con.execute(
                 "SELECT dt, electricLevel, solarInputPower, outputHomePower, "
-                "outputPackPower, packInputPower "
+                "outputPackPower, packInputPower, gridMeterPower "
                 "FROM device ORDER BY ts DESC LIMIT ?", (n,)).fetchall()
             con.close()
             rows.reverse()
@@ -549,7 +591,8 @@ PAGE = r"""<!DOCTYPE html>
   <div class="stat"><div class="lbl">Ausgang Haus</div><div class="val"><span id="out">–</span> W</div></div>
   <div class="stat"><div class="lbl">Akku laden</div><div class="val"><span id="packin">–</span> W</div></div>
   <div class="stat"><div class="lbl">Akku entladen</div><div class="val"><span id="packout">–</span> W</div></div>
-  <div class="stat"><div class="lbl">Netz ein</div><div class="val"><span id="grid">–</span> W</div></div>
+  <div class="stat"><div class="lbl">Netz ein (Zendure)</div><div class="val"><span id="grid">–</span> W</div></div>
+  <div class="stat" id="gridmeter_tile" style="display:none;"><div class="lbl">Netz (Smartmeter)</div><div class="val"><span id="gridmeter">–</span> W</div></div>
   <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
   <div class="stat"><div class="lbl">Batteriespannung</div><div class="val"><span id="volt">–</span> V</div></div>
   <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
@@ -570,6 +613,7 @@ PAGE = r"""<!DOCTYPE html>
     <span class="leg" data-ds="2"><i class="dot" style="background:#a855f7"></i>Akku laden W</span>
     <span class="leg" data-ds="3"><i class="dot" style="background:#ef4444"></i>Akku entladen W (−)</span>
     <span class="leg" data-ds="4"><i class="dot" style="background:#22c55e"></i>SoC %</span>
+    <span class="leg" data-ds="5"><i class="dot" style="background:#e879f9"></i>Netz Smartmeter W</span>
   </div>
   <div class="chartwrap"><canvas id="chart"></canvas></div>
 </div>
@@ -628,7 +672,7 @@ PAGE = r"""<!DOCTYPE html>
     </g>
   </svg>
   </div>
-  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum __DEVICE_LABEL__ beim Entladen.</p>
+  <p style="font-size:12px;color:var(--mut);margin-top:6px;">Akku-Pfeil zeigt zum Akku beim Laden, zum __DEVICE_LABEL__ beim Entladen. „Netz" im Fluss-Diagramm zeigt den Zendure-eigenen Schätzwert; der echte Smartmeter-Wert steht oben in der Kachel und im Verlaufsdiagramm.</p>
 </div>
 
 <div class="panel">
@@ -675,7 +719,8 @@ function initChart(){
       {label:'Ausgang W',yAxisID:'y',data:[],borderColor:'#3b82f6',backgroundColor:'rgba(59,130,246,.12)',borderWidth:2,tension:.3,pointRadius:0,fill:true},
       {label:'Akku laden W',yAxisID:'y',data:[],borderColor:'#a855f7',borderWidth:2,tension:.3,pointRadius:0},
       {label:'Akku entladen W',yAxisID:'y',data:[],borderColor:'#ef4444',borderWidth:2,tension:.3,pointRadius:0},
-      {label:'SoC %',yAxisID:'y1',data:[],borderColor:'#22c55e',borderWidth:2,borderDash:[5,3],tension:.3,pointRadius:0}
+      {label:'SoC %',yAxisID:'y1',data:[],borderColor:'#22c55e',borderWidth:2,borderDash:[5,3],tension:.3,pointRadius:0},
+      {label:'Netz Smartmeter W',yAxisID:'y',data:[],borderColor:'#e879f9',borderWidth:2,borderDash:[2,2],tension:.3,pointRadius:0}
     ]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,
       plugins:{legend:{display:false}},
@@ -723,6 +768,7 @@ async function loadHistory(){
     chart.data.datasets[2].data=rows.map(x=>x[4]); // Akku laden (outputPackPower)
     chart.data.datasets[3].data=rows.map(x=>x[5]==null?null:-x[5]); // Akku entladen negativ (packInputPower)
     chart.data.datasets[4].data=rows.map(x=>x[1]); // SoC
+    chart.data.datasets[5].data=rows.map(x=>x[6]); // Netz Smartmeter (gridMeterPower)
     chart.update();
   }catch(e){}
 }
@@ -836,6 +882,14 @@ async function refresh(){
     set('packin',p.outputPackPower); set('packout',p.packInputPower);
     set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
     set('rssi',p.rssi);
+    // Smartmeter-Kachel nur anzeigen, wenn ein Wert geliefert wird (USE_SMARTMETER aktiv)
+    const gmTile=document.getElementById('gridmeter_tile');
+    if(j.grid_meter!=null){
+      gmTile.style.display='';
+      set('gridmeter',Math.round(j.grid_meter));
+    } else {
+      gmTile.style.display='none';
+    }
     updateFlow(p, packs);
 
     document.getElementById('packs').innerHTML=packs.map((pk,i)=>`
