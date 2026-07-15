@@ -78,3 +78,6 @@ class SmartMode:
     DISCHARGE_START_DIVISOR = 7        # Divisor for discharge_start  (default 10)
     CHARGE_OPTIMAL_DIVISOR = 4         # Divisor for charge_optimal (default 4)
     CHARGE_START_DIVISOR = 10          # Divisor for charge_start  (default 10)
+    # %-Punkte SoC-Differenz, ab der ein Idle-Gerät bevorzugt dem aktiven Gerät mit ungünstigerem SoC vorgezogen wird
+    SOC_BALANCE_MARGIN = 4  # %-Punkte SoC-Differenz (Default 3)
+    

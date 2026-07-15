@@ -561,7 +561,7 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
                 pwr = 0 if self.pwr_low < d.charge_optimal else pwr
 
             setpoint -= await d.power_charge(pwr)
-            dev_start += -1 if pwr != 0 and d.electricLevel.asInt > self.idle_lvlmin + 3 else 0
+            dev_start += -1 if pwr != 0 and d.electricLevel.asInt > self.idle_lvlmin + SmartMode.SOC_BALANCE_MARGIN else 0
 
         # start idle device if needed
         if dev_start < 0 and len(self.idle) > 0:
@@ -630,7 +630,7 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
                 self.pwr_low = 0 if (delta := dstart * 1.5 - pwr) <= 0 else self.pwr_low + int(delta)
                 pwr = 0 if self.pwr_low > doptimal else pwr
             setpoint -= await d.power_discharge(pwr)
-            dev_start += 1 if pwr != 0 and d.electricLevel.asInt + 3 < self.idle_lvlmax else 0
+            dev_start += 1 if pwr != 0 and d.electricLevel.asInt + SmartMode.SOC_BALANCE_MARGIN < self.idle_lvlmax else 0
 
         # start idle device if needed
         if dev_start > 0 and len(self.idle) > 0:
