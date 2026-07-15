@@ -59,7 +59,7 @@ let CONFIG = {
   minSoc: 15,
 
   // Minimum allowed output power
-  minOutput: 50,
+  minOutput: 35,
 
   // Maximum allowed output power
   maxOutput: 800,
@@ -77,12 +77,42 @@ let CONFIG = {
   // value each cycle. Instead it moves only a fraction of the way there:
   //   smoothedOutput = smoothedOutput + dampingFactor * (target - smoothedOutput)
   // 1.0   = no damping, output follows the target immediately (old behavior)
-  // 0.6   = output moves 60% of the remaining distance per cycle (default,
+  // 0.6   = output moves 30% of the remaining distance per cycle (default,
   //         smooths out sudden load spikes/dips over a few cycles)
-  // 0.1  = very sluggish, strongly smoothed reaction
+  // 0.05  = very sluggish, strongly smoothed reaction
   // Note: the SOC safety cutoff (minSoc) always reacts immediately and
   // bypasses damping, so the battery is never held back from stopping.
   dampingFactor: 0.6,
+
+  // ------------------------------------------------------------------
+  // Reverse mode: allows charging the Zendure FROM the grid, in
+  // addition to the normal discharge/export into the household.
+  // Mirrors the "REVERSE" feature of the original Shelly-tos-Controller.
+  // ------------------------------------------------------------------
+
+  // Enables loading (charging) the battery from the grid whenever the
+  // combined target power becomes negative (i.e. more household load
+  // than the battery alone would need to cover, so it's worth pulling
+  // extra energy from the grid to charge). Only makes sense if you have
+  // another inverter/source feeding your home network already.
+  // false = charging from the grid is disabled entirely (default,
+  //         matches the original single-direction behavior)
+  reverse: false,
+
+  // Maximum power in watts to draw FROM the grid while charging.
+  // Only relevant when reverse = true.
+  maxInputPower: 1200,
+
+  // Minimum charging power in watts required to START charging from
+  // the grid. Acts as a deadband so the battery doesn't switch into
+  // charge mode for a negligible power deficit. Only relevant when
+  // reverse = true.
+  reverseStartupPower: 30,
+
+  // Charging power in watts below which charging from the grid is
+  // STOPPED again (must be <= reverseStartupPower). Only relevant
+  // when reverse = true.
+  reverseStopPower: 10,
 
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
@@ -99,14 +129,28 @@ let CONFIG = {
 
 };
 
+// Sanity check, analogous to the original Shelly-tos-Controller:
+// the stop threshold must never be larger than the startup threshold,
+// otherwise charging would never be able to switch off again.
+if (CONFIG.reverseStopPower > CONFIG.reverseStartupPower) {
+
+  print(
+    "reverseStopPower groesser als reverseStartupPower - " +
+    "setze beide auf: " + CONFIG.reverseStartupPower
+  );
+
+  CONFIG.reverseStopPower = CONFIG.reverseStartupPower;
+
+}
+
 let state = {
 
   gridPower: 0,
-  zenOutput: 0,
+  zenPower: 0,
   soc: 0,
   serial: null,
-  outputLimit: -1,
-  smoothedOutput: -1,
+  outputLimit: null,
+  smoothedOutput: null,
   busy: false,
   watchdogTimer: null,
 
@@ -467,8 +511,24 @@ function readZendure() {
       state.soc =
         data.packData[0].socLevel;
 
-      state.zenOutput =
-        data.properties.outputHomePower;
+      // Determine the Zendure's current actual power flow, signed:
+      // positive = currently discharging/exporting (acMode 2)
+      // negative = currently charging from the grid (acMode 1)
+      let acMode = data.properties.acMode;
+
+      if (acMode === 2) {
+
+        state.zenPower = data.properties.outputHomePower;
+
+      } else if (acMode === 1) {
+
+        state.zenPower = (data.properties.gridInputPower || 0) * -1;
+
+      } else {
+
+        state.zenPower = 0;
+
+      }
 
       calculate();
 
@@ -482,75 +542,112 @@ function readZendure() {
 
 function calculate() {
 
-  let output = 0;
+  // Raw (undamped) combined target power:
+  // positive = discharge/export towards household+grid
+  // negative = charge/import from the grid (only usable if CONFIG.reverse)
+  let raw = Math.round(
+    (state.gridPower - CONFIG.setpoint) + state.zenPower
+  );
 
-  // Only provide output above minimum SOC
+  let target = 0;
+  let immediate = false; // true = bypass damping (safety cutoff)
 
-  if (state.soc > CONFIG.minSoc) {
+  if (raw >= 0) {
 
-    // Raw (undamped) target based on current grid/zendure readings
-    let target = Math.round(
-      (state.gridPower - CONFIG.setpoint) + state.zenOutput
-    );
+    // ---------------- Export / discharge side ----------------
 
-    // Limit lower boundary
+    if (state.soc <= CONFIG.minSoc) {
 
-    if (target < 0)
+      // Safety cutoff: no discharge below minimum SOC.
+      // Reacts immediately, bypasses damping.
+      target = 0;
+      immediate = true;
+
+    } else {
+
+      target = raw;
+
+      if (target > CONFIG.maxOutput)
+        target = CONFIG.maxOutput;
+
+    }
+
+  } else {
+
+    // ---------------- Charge / import side ----------------
+
+    if (!CONFIG.reverse) {
+
+      // Charging from the grid not enabled -> nothing to do
       target = 0;
 
-    // Limit maximum output
+    } else {
 
-    if (target > CONFIG.maxOutput)
-      target = CONFIG.maxOutput;
+      target = raw;
 
-    // Apply damping/gain: instead of jumping straight to the new
-    // target, move only a fraction (dampingFactor) of the remaining
-    // distance per cycle. This smooths out sudden load spikes/dips.
-    if (state.smoothedOutput < 0) {
+      if (state.zenPower >= 0 &&
+          target < 0 &&
+          target >= (CONFIG.reverseStartupPower * -1)) {
 
-      // First run after (re)start - initialize directly, nothing to
-      // smooth against yet.
-      state.smoothedOutput = target;
+        // Not enough deficit yet to be worth starting to charge
+        target = 0;
 
-    }
+      } else if (target < (CONFIG.maxInputPower * -1)) {
 
-    else {
+        target = CONFIG.maxInputPower * -1;
 
-      state.smoothedOutput =
-        state.smoothedOutput +
-        CONFIG.dampingFactor * (target - state.smoothedOutput);
+      }
 
     }
-
-    output = Math.round(state.smoothedOutput);
-
-    // Limit lower boundary again (rounding/damping could undershoot)
-
-    if (output < 0)
-      output = 0;
-
-    // Apply minimum output only when output is active
-
-    if (output > 0 &&
-        output < CONFIG.minOutput)
-
-      output = CONFIG.minOutput;
 
   }
 
-  else {
+  // Apply damping/gain: instead of jumping straight to the new
+  // target, move only a fraction (dampingFactor) of the remaining
+  // distance per cycle. This smooths out sudden load spikes/dips.
+  // The safety cutoff above always bypasses this and applies instantly.
 
-    // Safety cutoff (SOC at/below minSoc): react immediately, bypass
-    // damping entirely, and reset the smoothing state so a later
-    // recovery starts fresh from 0 instead of surging back up.
-    output = 0;
-    state.smoothedOutput = 0;
+  if (immediate || state.smoothedOutput === null) {
+
+    state.smoothedOutput = target;
+
+  } else {
+
+    state.smoothedOutput =
+      state.smoothedOutput +
+      CONFIG.dampingFactor * (target - state.smoothedOutput);
+
+  }
+
+  let output = Math.round(state.smoothedOutput);
+
+  // Post-damping deadbands / floors
+
+  if (output >= 0) {
+
+    // Apply minimum output only when discharge is active
+    if (output > 0 && output < CONFIG.minOutput)
+      output = CONFIG.minOutput;
+
+  } else {
+
+    if (!CONFIG.reverse) {
+
+      // Should not happen (target was already forced to 0 above),
+      // but guard against residual damping drift just in case.
+      output = 0;
+
+    } else if (Math.abs(output) < CONFIG.reverseStopPower) {
+
+      output = 0;
+
+    }
 
   }
 
   // Skip update if change is within the hysteresis band
 
-  if (state.outputLimit >= 0 &&
+  if (state.outputLimit !== null &&
       Math.abs(output - state.outputLimit) < CONFIG.hysteresis) {
 
     unlock();
@@ -564,16 +661,17 @@ function calculate() {
     "Grid:",
     state.gridPower,
     "W | Zendure:",
-    state.zenOutput,
+    state.zenPower,
     "W | SOC:",
     state.soc,
     "% | Setpoint:",
     CONFIG.setpoint,
     "W | SN:",
     state.serial,
-    "| Output:",
+    "| Combined:",
     output,
-    "W"
+    "W",
+    output >= 0 ? "(Export)" : "(Laden vom Netz)"
   );
 
   writeZendure(output);
@@ -586,6 +684,22 @@ function calculate() {
 
 function writeZendure(output) {
 
+  let acMode, outputLimit, inputLimit;
+
+  if (output >= 0) {
+
+    acMode = 2;          // discharge / export
+    outputLimit = output;
+    inputLimit = 0;
+
+  } else {
+
+    acMode = 1;           // charge / import from grid
+    outputLimit = 0;
+    inputLimit = Math.abs(output);
+
+  }
+
   httpPost(
 
     "http://" + CONFIG.zendure + "/properties/write",
@@ -596,7 +710,10 @@ function writeZendure(output) {
 
       properties: {
 
-        outputLimit: output
+        acMode: acMode,
+        outputLimit: outputLimit,
+        inputLimit: inputLimit,
+        smartMode: 1
 
       }
     },
@@ -605,7 +722,7 @@ function writeZendure(output) {
 
       if (res && res.code === 200) {
 
-        print("Zendure output set:", output, "W");
+        print("Zendure Leistung gesetzt:", output, "W");
         reportSuccess("write");
 
       }
@@ -667,6 +784,11 @@ let bannerLines = [
   "Setpoint   : " + CONFIG.setpoint + " W",
   "Hysteresis : " + CONFIG.hysteresis + " W",
   "Damping    : " + CONFIG.dampingFactor,
+  "Reverse    : " + (CONFIG.reverse ? "aktiviert" : "deaktiviert") +
+    (CONFIG.reverse ?
+      " (max " + CONFIG.maxInputPower + " W, Start " +
+      CONFIG.reverseStartupPower + " W, Stop " +
+      CONFIG.reverseStopPower + " W)" : ""),
   "Err.Thresh : " + CONFIG.errorThreshold,
   "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
   "--------------------------------"
