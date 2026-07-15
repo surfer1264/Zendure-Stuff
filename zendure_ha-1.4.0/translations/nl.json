@@ -5,7 +5,11 @@
       "reconfigure_successful": "Hergroepering geslaagd"
     },
     "error": {
-      "cannot_connect": "Verbinding mislukt",
+      "cannot_connect": "De Zendure-API is niet bereikbaar. Controleer je internetverbinding en probeer het opnieuw.",
+      "malformed_token": "Het token is ongeldig. Kopieer het Home Assistant-token opnieuw uit de Zendure-app (Instellingen, Ontwikkelaar).",
+      "api_rejected": "Zendure heeft het verzoek geweigerd: {detail}",
+      "no_devices": "Token geaccepteerd, maar er zijn geen apparaten gevonden op dit account. Zorg dat je het Zendure-account gebruikt waarop het apparaat is geregistreerd, en de juiste regio.",
+      "no_mqtt": "Token geaccepteerd, maar er is geen MQTT-server teruggegeven. Schakel lokale of cloud-MQTT in voor dit account in de Zendure-app.",
       "invalid_auth": "Ongeldige authenticatie",
       "unknown": "Onverwachte fout"
     },

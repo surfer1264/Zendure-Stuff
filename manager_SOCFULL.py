@@ -448,14 +448,19 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
                     # device: pwr_produced can exceed homeOutput (internal trickle charge, sensor
                     # skew), and subtracting more than was added fabricates a phantom negative
                     # setpoint — the root cause of #1151.
-                    if d.state == DeviceState.SOCFULL and d.exports_bypass:
+                    is_bypass_only = d.state == DeviceState.SOCFULL and d.exports_bypass
+                    if is_bypass_only:
                         self.discharge_bypass += min(-d.pwr_produced, home)
                     self.discharge_limit += d.fuseGrp.discharge_limit(d)
-                    self.discharge_optimal += d.discharge_optimal
+                    # Bypass-only devices (full battery, solar just passing through) have no
+                    # dispatchable headroom beyond what's already flowing as bypass, so they
+                    # must not inflate the "current devices can handle it" threshold used by
+                    # dev_start below.
+                    self.discharge_optimal += 0 if is_bypass_only else d.discharge_optimal
                     self.discharge_produced -= d.pwr_produced
                     self.discharge_weight += d.pwr_max * d.electricLevel.asInt
                     setpoint += home
- 
+
                 else:
                     self.idle.append(d)
                     self.idle_lvlmax = max(self.idle_lvlmax, d.electricLevel.asInt)
@@ -592,7 +597,12 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
             await d.power_discharge(0 if max(0, d.pwr_offgrid) == 0 else 10)
 
         # distribute discharging devices, use produced power first, before adding another device
-        dev_start = max(0, setpoint - self.discharge_optimal * 2 - self.discharge_produced) if setpoint > SmartMode.POWER_START else 0
+        # Only count produced power that is NOT already accounted for via discharge_bypass
+        # (non-dispatchable bypass of SOCFULL devices); otherwise that power is credited twice
+        # towards "current devices can cover setpoint" and an idle device never gets recruited.
+        dev_start = (
+            max(0, setpoint - self.discharge_optimal * 2 - (self.discharge_produced - self.discharge_bypass)) if setpoint > SmartMode.POWER_START else 0
+        )
         solaronly = self.discharge_produced >= setpoint
         limit = self.discharge_produced if solaronly else self.discharge_limit
         setpoint = min(limit, setpoint)

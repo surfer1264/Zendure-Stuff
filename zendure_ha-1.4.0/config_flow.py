@@ -11,7 +11,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
-from .api import Api
+from .api import Api, ApiError
 from .const import (
     CONF_APPTOKEN,
     CONF_AUTO_MQTT_USER,
@@ -73,41 +73,48 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None:
             self._user_input = user_input
 
             try:
-                if await Api.Connect(self.hass, self._user_input, False) is None:
-                    errors["base"] = "invalid input"
-                else:
-                    localmqtt = user_input[CONF_MQTTLOCAL]
-                    if localmqtt:
-                        return await self.async_step_local()
-
-                    await self.async_set_unique_id("Zendure", raise_on_progress=False)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(title="Zendure", data=self._user_input)
-
+                await Api.Connect(self.hass, self._user_input, False)
+            except ApiError as err:
+                errors["base"] = err.key
+                placeholders["detail"] = err.detail
             except Exception as err:  # pylint: disable=broad-except
-                errors["base"] = f"invalid input {err}"
+                _LOGGER.error("Unexpected exception: %s", err)
+                errors["base"] = "unknown"
+            else:
+                localmqtt = user_input[CONF_MQTTLOCAL]
+                if localmqtt:
+                    return await self.async_step_local()
 
-        return self.async_show_form(step_id="user", data_schema=self.data_schema, errors=errors)
+                await self.async_set_unique_id("Zendure", raise_on_progress=False)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title="Zendure", data=self._user_input)
+
+        return self.async_show_form(step_id="user", data_schema=self.data_schema, errors=errors, description_placeholders=placeholders)
 
     async def async_step_local(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         if user_input is not None and user_input.get(CONF_MQTTSERVER, None) is not None:
             try:
                 self._user_input = self._user_input | user_input if self._user_input else user_input
-                if await Api.Connect(self.hass, self._user_input, False) is None:
-                    errors["base"] = "invalid input"
+                await Api.Connect(self.hass, self._user_input, False)
+            except ApiError as err:
+                errors["base"] = err.key
+                placeholders["detail"] = err.detail
             except Exception as err:  # pylint: disable=broad-except
-                errors["base"] = f"invalid input {err}"
+                _LOGGER.error("Unexpected exception: %s", err)
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id("Zendure", raise_on_progress=False)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title="Zendure", data=self._user_input)
 
-        return self.async_show_form(step_id="local", data_schema=self.mqtt_schema, errors=errors)
+        return self.async_show_form(step_id="local", data_schema=self.mqtt_schema, errors=errors, description_placeholders=placeholders)
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Add reconfigure step to allow to reconfigure a config entry."""
@@ -115,6 +122,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
 
         entry = self._get_reconfigure_entry()
         schema = self.data_schema
+        placeholders: dict[str, str] = {}
         if user_input is not None:
             self._user_input = self._user_input | user_input
             use_mqtt = user_input.get(CONF_MQTTLOCAL, False)
@@ -122,11 +130,13 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                 schema = self.mqtt_schema
             else:
                 try:
-                    if await Api.Connect(self.hass, self._user_input, False) is None:
-                        errors["base"] = "invalid input"
+                    await Api.Connect(self.hass, self._user_input, False)
+                except ApiError as err:
+                    errors["base"] = err.key
+                    placeholders["detail"] = err.detail
                 except Exception as err:  # pylint: disable=broad-except
                     _LOGGER.error("Unexpected exception: %s", err)
-                    errors["base"] = f"invalid input {err}"
+                    errors["base"] = "unknown"
                 else:
                     await self.async_set_unique_id("Zendure", raise_on_progress=False)
                     self._abort_if_unique_id_mismatch()
@@ -140,6 +150,7 @@ class ZendureConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=entry.data | (user_input or {}),
             ),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     @staticmethod

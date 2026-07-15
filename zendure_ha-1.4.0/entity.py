@@ -64,8 +64,8 @@ class EntityZendure(Entity):
         self.internal_integration_suggested_object_id = self._attr_unique_id
         self._attr_translation_key = snakecase(uniqueid)
         device.entities[uniqueid] = self
-        if domain and device.checkEntity is not None and self._attr_translation_key not in device.checkEntity:
-            device.checkEntity[self._attr_translation_key] = domain
+        if domain:
+            device.checkEntity.setdefault(self._attr_translation_key, domain)
 
     @property
     def device_info(self) -> DeviceInfo | None:
@@ -178,9 +178,21 @@ class EntityDevice:
         "ts": ("none"),
         "tsZone": ("none"),
     }
-    checkEntity: dict[str, str] | None = None
+    checkEntity: dict[str, str] = {}
 
     empty = EntityZendure(None, "empty")
+
+    @classmethod
+    async def async_load_translations(cls, hass: HomeAssistant) -> None:
+        """Load the translation_key -> domain map from disk, off the event loop."""
+        if cls.checkEntity:
+            return
+
+        def _load() -> dict[str, str]:
+            _t = json.loads((Path(__file__).parent / "translations" / "en.json").read_text())
+            return {key: domain for domain, keys in _t.get("entity", {}).items() for key in keys}
+
+        cls.checkEntity = await hass.async_add_executor_job(_load)
 
     def __init__(
         self,
@@ -222,10 +234,6 @@ class EntityDevice:
             self.attr_device_info["via_device"] = (DOMAIN, parent)
 
     def check_entities(self, di: DeviceEntry, name: str) -> None:
-        if EntityDevice.checkEntity is None:
-            _t = json.loads((Path(__file__).parent / "translations" / "en.json").read_text())
-            EntityDevice.checkEntity = {key: domain for domain, keys in _t.get("entity", {}).items() for key in keys}
-
         # Get all entities for this device and group them by translation_key if they match the current device and platform
         entity_registry = er.async_get(self.hass)
         ed: dict[str, list[er.RegistryEntry]] = {}
@@ -236,19 +244,27 @@ class EntityDevice:
         # check al entities
         for key, entries in ed.items():
             entityid = f"{entries[0].domain}.{name}_{key}"
-            if len(entries) == 1 and entries[0].entity_id == entityid:
+            new_uid = f"{name}_{key}"
+            if len(entries) == 1 and entries[0].entity_id == entityid and entries[0].unique_id == new_uid:
                 continue
             _LOGGER.info("Update entity %s", entityid)
-            if (found := next((x for x in entries if x.entity_id == entityid), entries[0])) is not None:
-                entries.remove(found)
-                if found.entity_id != entityid:
-                    _LOGGER.info("Updating entity %s -> %s", found.entity_id, entityid)
-                    entity_registry.async_update_entity(found.entity_id, new_entity_id=entityid)
-
-            # remove all other entities with same translation_key but different entity_id
+            # Prefer the entry whose unique_id already matches what create_entities is about to
+            # produce (that is the entry HA will bind the live entity to). Fall back to the entry
+            # holding the canonical entity_id, then to any entry.
+            found = (
+                next((x for x in entries if x.unique_id == new_uid), None)
+                or next((x for x in entries if x.entity_id == entityid), None)
+                or entries[0]
+            )
+            entries.remove(found)
+            # Remove the losers FIRST so their entity_id and (indirectly) any conflicting unique_id
+            # slots are freed before we migrate the survivor.
             for entry in entries:
-                _LOGGER.info("Removing entity %s", entry.entity_id)
+                _LOGGER.info("Removing stale entity %s", entry.entity_id)
                 entity_registry.async_remove(entry.entity_id)
+            if found.entity_id != entityid or found.unique_id != new_uid:
+                _LOGGER.info("Migrating entity %s -> %s (unique_id %s -> %s)", found.entity_id, entityid, found.unique_id, new_uid)
+                entity_registry.async_update_entity(found.entity_id, new_entity_id=entityid, new_unique_id=new_uid)
 
     async def dataRefresh(self, _update_count: int) -> None:
         return

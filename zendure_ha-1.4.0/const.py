@@ -72,7 +72,9 @@ class SmartMode:
     POWER_START = 50  # Minimum Power (W) for starting a device
     POWER_TOLERANCE = 5  # Device-level power tolerance (W) before updating
     
-    ## Teiler für Effizienten Betrieb (4 niedrig: frühe Aufteilung; 1 hoch: sehr späte Aufteilung)
-    DISCHARGE_OPTIMAL_DIVISOR = 2.9    # Teiler für discharge_optimal (sinnvolle Werte sind 2..4, 2.5 geht auch)
-    DISCHARGE_START_FACTOR = 1.9     # Faktor für pwr_low Abschaltschwellwert
-    ## DISCHARGE_START_FACTOR: float = 5.5 - DISCHARGE_OPTIMAL_DIVISOR  # automatisch gekoppelt 
+    # DIVISOR used in manager.py and device.py 
+    # make sure we have devices in optimal working range start or stop a second device for charge or dischage
+    DISCHARGE_OPTIMAL_DIVISOR = 2.8    # Divisor for discharge_optimal (default 4)
+    DISCHARGE_START_DIVISOR = 7        # Divisor for discharge_start  (default 10)
+    CHARGE_OPTIMAL_DIVISOR = 4         # Divisor for charge_optimal (default 4)
+    CHARGE_START_DIVISOR = 10          # Divisor for charge_start  (default 10)

@@ -5,7 +5,11 @@
       "reconfigure_successful": "Reconfiguration réussie"
     },
     "error": {
-      "cannot_connect": "Échec de la connexion",
+      "cannot_connect": "Impossible de joindre l'API Zendure. Vérifiez votre connexion Internet et réessayez.",
+      "malformed_token": "Le jeton n'est pas valide. Copiez à nouveau le jeton Home Assistant depuis l'application Zendure (Paramètres, Développeur).",
+      "api_rejected": "Zendure a rejeté la requête : {detail}",
+      "no_devices": "Jeton accepté, mais aucun appareil n'a été trouvé sur ce compte. Assurez-vous d'utiliser le compte Zendure sur lequel l'appareil est enregistré, ainsi que la bonne région.",
+      "no_mqtt": "Jeton accepté, mais aucun serveur MQTT n'a été renvoyé. Activez le MQTT local ou cloud pour ce compte dans l'application Zendure.",
       "invalid_auth": "Authentification invalide",
       "unknown": "Erreur inattendue"
     },

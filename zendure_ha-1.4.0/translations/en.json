@@ -5,7 +5,11 @@
       "reconfigure_successful": "Reconfiguration successful"
     },
     "error": {
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "Could not reach the Zendure API. Check your internet connection and try again.",
+      "malformed_token": "The token is not valid. Copy the Home Assistant token again from the Zendure app (Settings, Developer).",
+      "api_rejected": "Zendure rejected the request: {detail}",
+      "no_devices": "Token accepted, but no devices were found on this account. Make sure you use the Zendure account the device is registered to, and the correct region.",
+      "no_mqtt": "Token accepted, but no MQTT server was returned. Enable local or cloud MQTT for this account in the Zendure app.",
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error"
     },
