@@ -128,6 +128,8 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
                 device = init(self.hass, deviceId, dev.get("deviceName", prodModel), dev)
                 device.discharge_start = device.discharge_limit // SmartMode.DISCHARGE_START_DIVISOR
                 device.discharge_optimal = device.discharge_limit // SmartMode.DISCHARGE_OPTIMAL_DIVISOR
+                device.charge_start = device.charge_limit // SmartMode.CHARGE_START_DIVISOR      # NEU
+                device.charge_optimal = device.charge_limit // SmartMode.CHARGE_OPTIMAL_DIVISOR  # NEU
                 Api.devices[deviceId] = device
 
                 # Check if we should automatically manage MQTT users (opt-in)
@@ -558,7 +560,7 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
             # make sure we have devices in optimal working range
             if len(self.charge) > 1 and i == 0:
                 self.pwr_low = 0 if (delta := d.charge_start * 1.5 - pwr) >= 0 else self.pwr_low + int(-delta)
-                pwr = 0 if self.pwr_low < d.charge_optimal else pwr
+                pwr = 0 if self.pwr_low > abs(d.charge_optimal) else pwr
 
             setpoint -= await d.power_charge(pwr)
             dev_start += -1 if pwr != 0 and d.electricLevel.asInt > self.idle_lvlmin + SmartMode.SOC_BALANCE_MARGIN else 0
