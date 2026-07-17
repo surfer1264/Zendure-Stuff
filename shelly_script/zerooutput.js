@@ -31,8 +31,8 @@
 let CONFIG = {
 
   // Zendure IP address
-  zendure: "IP-Adresse",
-  // zendure: "192.168.178.143",
+  // zendure: "IP-Adresse",
+  zendure: "192.168.178.143",
 
   // Where to read the household grid power from:
   // "local"  -> script runs directly on the Shelly Pro 3EM and reads
@@ -77,7 +77,7 @@ let CONFIG = {
   // value each cycle. Instead it moves only a fraction of the way there:
   //   smoothedOutput = smoothedOutput + dampingFactor * (target - smoothedOutput)
   // 1.0   = no damping, output follows the target immediately (old behavior)
-  // 0.6   = output moves 30% of the remaining distance per cycle (default,
+  // 0.3   = output moves 30% of the remaining distance per cycle (default,
   //         smooths out sudden load spikes/dips over a few cycles)
   // 0.05  = very sluggish, strongly smoothed reaction
   // Note: the SOC safety cutoff (minSoc) always reacts immediately and
@@ -101,7 +101,7 @@ let CONFIG = {
 
   // Maximum power in watts to draw FROM the grid while charging.
   // Only relevant when reverse = true.
-  maxInputPower: 1200,
+  maxInputPower: 1000,
 
   // Minimum charging power in watts required to START charging from
   // the grid. Acts as a deadband so the battery doesn't switch into
@@ -113,6 +113,15 @@ let CONFIG = {
   // STOPPED again (must be <= reverseStartupPower). Only relevant
   // when reverse = true.
   reverseStopPower: 10,
+
+  // Upper SOC limit in percent. At or above this value, charging from
+  // the grid is blocked entirely (mirrors minSoc, just for the charge
+  // side instead of the discharge side). Reacts immediately, bypasses
+  // damping. This is an independent, script-side safeguard - it does
+  // NOT rely on the Zendure firmware's own overcharge protection
+  // (socSet/socLimit), which the script has no visibility into.
+  // Only relevant when reverse = true.
+  maxSoc: 100,
 
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
@@ -151,6 +160,7 @@ let state = {
   serial: null,
   outputLimit: null,
   smoothedOutput: null,
+  maxSocLogged: false,
   busy: false,
   watchdogTimer: null,
 
@@ -581,7 +591,38 @@ function calculate() {
       // Charging from the grid not enabled -> nothing to do
       target = 0;
 
+    } else if (state.soc >= CONFIG.maxSoc) {
+
+      // Safety cutoff: battery already at/above the configured max SOC.
+      // Reacts immediately, bypasses damping - mirrors the minSoc
+      // cutoff on the discharge side. This is informational only (not
+      // an error), so just a console print - no Signal notification.
+      target = 0;
+      immediate = true;
+
+      if (!state.maxSocLogged) {
+
+        print(
+          "SOC-Obergrenze erreicht (" + state.soc + "% >= " +
+          CONFIG.maxSoc + "%) - Laden vom Netz gesperrt"
+        );
+
+        state.maxSocLogged = true;
+
+      }
+
     } else {
+
+      if (state.maxSocLogged) {
+
+        print(
+          "SOC wieder unter Obergrenze (" + state.soc + "% < " +
+          CONFIG.maxSoc + "%) - Laden vom Netz bei Bedarf wieder moeglich"
+        );
+
+        state.maxSocLogged = false;
+
+      }
 
       target = raw;
 
@@ -788,7 +829,8 @@ let bannerLines = [
     (CONFIG.reverse ?
       " (max " + CONFIG.maxInputPower + " W, Start " +
       CONFIG.reverseStartupPower + " W, Stop " +
-      CONFIG.reverseStopPower + " W)" : ""),
+      CONFIG.reverseStopPower + " W, maxSOC " +
+      CONFIG.maxSoc + " %)" : ""),
   "Err.Thresh : " + CONFIG.errorThreshold,
   "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
   "--------------------------------"
