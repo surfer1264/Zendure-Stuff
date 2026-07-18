@@ -9,9 +9,11 @@
 // 1. Remove the Zendure from HEMS in the app
 // 2. Copy the whole content and paste it into your Shelly Script UI
 // 3. Set CONFIG.gridSource ("local" = script runs ON the Pro 3EM itself,
-//    "remote" = script runs on any other Shelly and reads the Pro 3EM
-//    over the network via RPC)
-// 4. Set the Zendure-IP (and gridSourceIp if using "remote")
+//    "remote" = script runs on any other Shelly and reads a Pro 3EM
+//    over the network via RPC, "http_json" = reads grid power from any
+//    other JSON-over-HTTP meter, e.g. the Zendure Smart Meter 3CT)
+// 4. Set the Zendure-IP (and gridSourceIp / gridSourceUrl depending on
+//    the chosen gridSource)
 // 5. Press start (and set it to start on boot time of the Shelly)
 // Optional: change parameters in CONFIG to your liking
 //
@@ -31,23 +33,45 @@
 let CONFIG = {
 
   // Zendure IP address
-  // zendure: "IP-Adresse",
-  zendure: "192.168.178.143",
+  zendure: "IP-Adresse",
+  // zendure: "192.168.178.143",
 
   // Where to read the household grid power from:
-  // "local"  -> script runs directly on the Shelly Pro 3EM and reads
-  //             Shelly.getComponentStatus("em:<gridSourceEmId>") locally
-  // "remote" -> script runs on ANY other Shelly device and reads the
-  //             grid power from a Shelly Pro 3EM elsewhere in the
-  //             network via its HTTP RPC API (EM.GetStatus)
+  // "local"     -> script runs directly on the Shelly Pro 3EM and reads
+  //                Shelly.getComponentStatus("em:<gridSourceEmId>") locally
+  // "remote"    -> script runs on ANY other Shelly device and reads the
+  //                grid power from a Shelly Pro 3EM elsewhere in the
+  //                network via its HTTP RPC API (EM.GetStatus)
+  // "http_json" -> generic: reads the grid power from ANY device that
+  //                exposes a flat JSON object via plain HTTP GET, e.g. the
+  //                Zendure Smart Meter 3CT (http://<IP>/properties/report)
+  //                or similar third-party meters. Configure gridSourceUrl /
+  //                gridSourceField / gridSourceInvert below.
   gridSource: "local",
 
   // IP address of the Shelly Pro 3EM providing the grid measurement.
   // Only required/used when gridSource = "remote".
   gridSourceIp: "<IP address of the Shelly Pro 3EM here>",
 
-  // EM channel id to read (usually 0)
+  // EM channel id to read (usually 0). Only used when gridSource = "remote".
   gridSourceEmId: 0,
+
+  // Full URL of a generic JSON grid meter. Only used when
+  // gridSource = "http_json". Example for the Zendure Smart Meter 3CT:
+  // "http://192.168.178.150/properties/report"
+  gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
+
+  // Name of the JSON field in that response which holds the total grid
+  // power in watts. For the Zendure Smart Meter 3CT this is "total_power".
+  gridSourceField: "total_power",
+
+  // Set to true if the sign of gridSourceField is inverted compared to what
+  // this script expects (positive = importing from grid / more household
+  // load than covered, negative = exporting into the grid). Test by
+  // switching on a big consumer at home and checking whether the printed
+  // "Grid:" value in the console goes positive - if it goes negative
+  // instead, set this to true.
+  gridSourceInvert: false,
 
   // Update interval in milliseconds
   interval: 3000,
@@ -77,7 +101,7 @@ let CONFIG = {
   // value each cycle. Instead it moves only a fraction of the way there:
   //   smoothedOutput = smoothedOutput + dampingFactor * (target - smoothedOutput)
   // 1.0   = no damping, output follows the target immediately (old behavior)
-  // 0.3   = output moves 30% of the remaining distance per cycle (default,
+  // 0.6   = output moves 30% of the remaining distance per cycle (default,
   //         smooths out sudden load spikes/dips over a few cycles)
   // 0.05  = very sluggish, strongly smoothed reaction
   // Note: the SOC safety cutoff (minSoc) always reacts immediately and
@@ -101,7 +125,7 @@ let CONFIG = {
 
   // Maximum power in watts to draw FROM the grid while charging.
   // Only relevant when reverse = true.
-  maxInputPower: 1000,
+  maxInputPower: 1200,
 
   // Minimum charging power in watts required to START charging from
   // the grid. Acts as a deadband so the battery doesn't switch into
@@ -113,15 +137,6 @@ let CONFIG = {
   // STOPPED again (must be <= reverseStartupPower). Only relevant
   // when reverse = true.
   reverseStopPower: 10,
-
-  // Upper SOC limit in percent. At or above this value, charging from
-  // the grid is blocked entirely (mirrors minSoc, just for the charge
-  // side instead of the discharge side). Reacts immediately, bypasses
-  // damping. This is an independent, script-side safeguard - it does
-  // NOT rely on the Zendure firmware's own overcharge protection
-  // (socSet/socLimit), which the script has no visibility into.
-  // Only relevant when reverse = true.
-  maxSoc: 100,
 
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
@@ -160,7 +175,6 @@ let state = {
   serial: null,
   outputLimit: null,
   smoothedOutput: null,
-  maxSocLogged: false,
   busy: false,
   watchdogTimer: null,
 
@@ -372,10 +386,65 @@ function httpPost(url, body, callback) {
 }
 
 // ======================================================
-// Read grid power - either locally (script runs on the Pro 3EM
-// itself) or remotely (script runs on any other Shelly device
-// and fetches the value from the Pro 3EM via RPC over HTTP)
+// Read grid power - locally (script runs on the Pro 3EM itself),
+// remotely from a Shelly Pro 3EM via RPC, or generically from any
+// other device (e.g. Zendure Smart Meter 3CT) that returns a flat
+// JSON object with a total-power field over plain HTTP GET.
 // ======================================================
+
+// Shared handler for any HTTP+JSON based grid meter (used by both
+// "remote" and "http_json"). `field` is the JSON property to read,
+// `invert` optionally flips its sign to match this script's
+// convention (positive = importing from grid).
+function handleGenericGridResponse(res, meterLabel, field, invert, callback) {
+
+  if (!res || res.code !== 200) {
+
+    reportError("em", meterLabel + " nicht erreichbar");
+    unlock();
+    callback(false);
+    return;
+
+  }
+
+  let data;
+
+  try {
+
+    data = JSON.parse(res.body);
+
+  }
+
+  catch(e) {
+
+    reportError("em", "Fehler beim Parsen der Antwort von " + meterLabel);
+    unlock();
+    callback(false);
+    return;
+
+  }
+
+  let value = data[field];
+
+  if (value === undefined) {
+
+    reportError(
+      "em",
+      meterLabel + "-Antwort enthaelt kein Feld '" + field + "'"
+    );
+
+    unlock();
+    callback(false);
+    return;
+
+  }
+
+  reportSuccess("em");
+  state.gridPower = invert ? (value * -1) : value;
+
+  callback(true);
+
+}
 
 function readGridPower(callback) {
 
@@ -405,60 +474,61 @@ function readGridPower(callback) {
 
   }
 
-  // gridSource === "remote": fetch the value from the Pro 3EM via RPC
-  httpGet(
+  if (CONFIG.gridSource === "remote") {
 
-    "http://" + CONFIG.gridSourceIp +
-    "/rpc/EM.GetStatus?id=" + CONFIG.gridSourceEmId,
+    // Fetch the value from a Shelly Pro 3EM elsewhere in the network
+    // via its standard RPC API.
+    httpGet(
 
-    function(res) {
+      "http://" + CONFIG.gridSourceIp +
+      "/rpc/EM.GetStatus?id=" + CONFIG.gridSourceEmId,
 
-      if (!res || res.code !== 200) {
+      function(res) {
 
-        reportError(
-          "em",
-          "Remote-EM (" + CONFIG.gridSourceIp + ") nicht erreichbar"
+        handleGenericGridResponse(
+          res,
+          "Remote-EM (" + CONFIG.gridSourceIp + ")",
+          "total_act_power",
+          false,
+          callback
         );
 
-        unlock();
-        callback(false);
-        return;
+      }
+    );
+
+    return;
+
+  }
+
+  if (CONFIG.gridSource === "http_json") {
+
+    // Generic JSON meter, e.g. Zendure Smart Meter 3CT
+    // (http://<IP>/properties/report -> field "total_power").
+    httpGet(
+
+      CONFIG.gridSourceUrl,
+
+      function(res) {
+
+        handleGenericGridResponse(
+          res,
+          "Grid-Meter (" + CONFIG.gridSourceUrl + ")",
+          CONFIG.gridSourceField,
+          CONFIG.gridSourceInvert,
+          callback
+        );
 
       }
+    );
 
-      let data;
+    return;
 
-      try {
+  }
 
-        data = JSON.parse(res.body);
+  reportError("em", "Unbekannter CONFIG.gridSource: " + CONFIG.gridSource);
+  unlock();
+  callback(false);
 
-      }
-
-      catch(e) {
-
-        reportError("em", "Fehler beim Parsen der Remote-EM-Antwort");
-        unlock();
-        callback(false);
-        return;
-
-      }
-
-      if (data.total_act_power === undefined) {
-
-        reportError("em", "Remote-EM-Antwort enthaelt keinen Leistungswert");
-        unlock();
-        callback(false);
-        return;
-
-      }
-
-      reportSuccess("em");
-      state.gridPower = data.total_act_power;
-
-      callback(true);
-
-    }
-  );
 }
 
 // ======================================================
@@ -591,38 +661,7 @@ function calculate() {
       // Charging from the grid not enabled -> nothing to do
       target = 0;
 
-    } else if (state.soc >= CONFIG.maxSoc) {
-
-      // Safety cutoff: battery already at/above the configured max SOC.
-      // Reacts immediately, bypasses damping - mirrors the minSoc
-      // cutoff on the discharge side. This is informational only (not
-      // an error), so just a console print - no Signal notification.
-      target = 0;
-      immediate = true;
-
-      if (!state.maxSocLogged) {
-
-        print(
-          "SOC-Obergrenze erreicht (" + state.soc + "% >= " +
-          CONFIG.maxSoc + "%) - Laden vom Netz gesperrt"
-        );
-
-        state.maxSocLogged = true;
-
-      }
-
     } else {
-
-      if (state.maxSocLogged) {
-
-        print(
-          "SOC wieder unter Obergrenze (" + state.soc + "% < " +
-          CONFIG.maxSoc + "%) - Laden vom Netz bei Bedarf wieder moeglich"
-        );
-
-        state.maxSocLogged = false;
-
-      }
 
       target = raw;
 
@@ -816,7 +855,10 @@ let bannerLines = [
   "--------------------------------",
   "Zendure Controller started",
   "Grid source: " + CONFIG.gridSource +
-    (CONFIG.gridSource === "remote" ? " (" + CONFIG.gridSourceIp + ")" : ""),
+    (CONFIG.gridSource === "remote" ? " (" + CONFIG.gridSourceIp + ")" : "") +
+    (CONFIG.gridSource === "http_json" ?
+      " (" + CONFIG.gridSourceUrl + ", Feld: " + CONFIG.gridSourceField +
+      (CONFIG.gridSourceInvert ? ", invertiert" : "") + ")" : ""),
   "Interval   : " + CONFIG.interval + " ms",
   "Watchdog   : " + CONFIG.watchdog + " ms",
   "Min SOC    : " + CONFIG.minSoc + " %",
@@ -829,8 +871,7 @@ let bannerLines = [
     (CONFIG.reverse ?
       " (max " + CONFIG.maxInputPower + " W, Start " +
       CONFIG.reverseStartupPower + " W, Stop " +
-      CONFIG.reverseStopPower + " W, maxSOC " +
-      CONFIG.maxSoc + " %)" : ""),
+      CONFIG.reverseStopPower + " W)" : ""),
   "Err.Thresh : " + CONFIG.errorThreshold,
   "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
   "--------------------------------"
