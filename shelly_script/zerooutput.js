@@ -747,7 +747,8 @@ function calculate() {
   if (output >= 0) {
 
     // Apply minimum output only when discharge is active
-    if (output > 0 && output < CONFIG.minOutput)
+    // if (output > 0 && output < CONFIG.minOutput)
+    if (output > 0 && output < CONFIG.minOutput && target > 0)
       output = CONFIG.minOutput;
 
   } else {
