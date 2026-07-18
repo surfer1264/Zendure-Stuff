@@ -138,6 +138,15 @@ let CONFIG = {
   // when reverse = true.
   reverseStopPower: 10,
 
+  // Upper SOC limit in percent. At or above this value, charging from
+  // the grid is blocked entirely (mirrors minSoc, just for the charge
+  // side instead of the discharge side). Reacts immediately, bypasses
+  // damping. This is an independent, script-side safeguard - it does
+  // NOT rely on the Zendure firmware's own overcharge protection
+  // (socSet/socLimit), which the script has no visibility into.
+  // Only relevant when reverse = true.
+  maxSoc: 100,
+
   // Number of consecutive failures of the same type before a
   // Signal notification is sent (avoids alarm spam on single glitches)
   errorThreshold: 5,
@@ -175,6 +184,7 @@ let state = {
   serial: null,
   outputLimit: null,
   smoothedOutput: null,
+  maxSocLogged: false,
   busy: false,
   watchdogTimer: null,
 
@@ -661,7 +671,38 @@ function calculate() {
       // Charging from the grid not enabled -> nothing to do
       target = 0;
 
+    } else if (state.soc >= CONFIG.maxSoc) {
+
+      // Safety cutoff: battery already at/above the configured max SOC.
+      // Reacts immediately, bypasses damping - mirrors the minSoc
+      // cutoff on the discharge side. This is informational only (not
+      // an error), so just a console print - no Signal notification.
+      target = 0;
+      immediate = true;
+
+      if (!state.maxSocLogged) {
+
+        print(
+          "SOC-Obergrenze erreicht (" + state.soc + "% >= " +
+          CONFIG.maxSoc + "%) - Laden vom Netz gesperrt"
+        );
+
+        state.maxSocLogged = true;
+
+      }
+
     } else {
+
+      if (state.maxSocLogged) {
+
+        print(
+          "SOC wieder unter Obergrenze (" + state.soc + "% < " +
+          CONFIG.maxSoc + "%) - Laden vom Netz bei Bedarf wieder moeglich"
+        );
+
+        state.maxSocLogged = false;
+
+      }
 
       target = raw;
 
@@ -871,7 +912,8 @@ let bannerLines = [
     (CONFIG.reverse ?
       " (max " + CONFIG.maxInputPower + " W, Start " +
       CONFIG.reverseStartupPower + " W, Stop " +
-      CONFIG.reverseStopPower + " W)" : ""),
+      CONFIG.reverseStopPower + " W, maxSOC " +
+      CONFIG.maxSoc + " %)" : ""),
   "Err.Thresh : " + CONFIG.errorThreshold,
   "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert"),
   "--------------------------------"
