@@ -188,13 +188,13 @@ class ZendureDevice(EntityDevice):
         """Set the device limits."""
         try:
             self.charge_limit = charge
-            self.charge_optimal = int(charge // SmartMode.CHARGE_OPTIMAL_DIVISOR)
-            self.charge_start = int(charge // SmartMode.CHARGE_START_DIVISOR)
+            self.charge_optimal = charge // 4
+            self.charge_start = charge // 10
             self.limitInput.update_range(0, abs(charge))
 
             self.discharge_limit = discharge
-            self.discharge_optimal = int(discharge // SmartMode.DISCHARGE_OPTIMAL_DIVISOR)
-            self.discharge_start = int(discharge // SmartMode.DISCHARGE_START_DIVISOR)
+            self.discharge_optimal = discharge // 4
+            self.discharge_start = discharge // 10
             self.limitOutput.update_range(0, discharge)
         except Exception:
             _LOGGER.error("SetLimits error %s %s %s!", self.name, charge, discharge)
@@ -265,7 +265,7 @@ class ZendureDevice(EntityDevice):
                             self.nextCalibration.update_value(dt_util.now() + timedelta(days=30))
                         self.availableKwh.update_value((self.electricLevel.asNumber - self.minSoc.asNumber) / 100 * self.kWh)
                     case "gridReverse":
-                        self.exports_bypass = value != 2
+                        self.exports_bypass = value == 1
         except Exception as e:
             _LOGGER.error("EntityUpdate error %s %s %s!", self.name, key, e)
             _LOGGER.error(traceback.format_exc())
@@ -745,7 +745,15 @@ class ZendureZenSdk(ZendureDevice):
             _LOGGER.error("Entity %s has no translation_key, cannot write property %s", entity.name, self.name)
             return
 
-        if self.online and self.connection.value == 0:
+        # Route limit writes through the power routines so they send the full command
+        # (smartMode/acMode), exactly like the manager does. A bare outputLimit/inputLimit
+        # property write is silently ignored when the device has dropped out of smart mode
+        # (observed on SolarFlow 2400 Pro at 100% SoC, see #1505).
+        if entity.propertyName == "outputLimit":
+            await self.discharge(value)
+        elif entity.propertyName == "inputLimit":
+            await self.charge(-value)
+        elif self.online and self.connection.value == 0:
             await super().entityWrite(entity, value)
         else:
             _LOGGER.info("Writing property %s %s => %s", self.name, entity.propertyName, value)
