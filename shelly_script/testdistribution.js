@@ -513,11 +513,11 @@ const CHARGE_CFG = { concentrateBelow: 400, spreadAbove: 800 };
 // lesen laesst (bei CONFIG.interval=3000ms -> 20 Zyklen Wartezeit)
 const REBALANCE_CFG = { socMargin: 20, holdMinutes: 1 };
 
-function setup(devices) {
+function setup(devices, dischargeCfg, chargeCfg) {
   CONFIG = {
     devices: devices,
-    discharge: DISCHARGE_CFG,
-    charge: CHARGE_CFG,
+    discharge: dischargeCfg || DISCHARGE_CFG,
+    charge: chargeCfg || CHARGE_CFG,
     rebalance: REBALANCE_CFG,
     interval: 3000,
     reverseStopPower: 10
@@ -756,6 +756,64 @@ function scenarioH() {
 }
 
 // ============================================================
+// I) Realer Aufbau: SF2400 (echtes Geraet) + FATAMORGANA (Dry-Run-
+//    Testprofil, gleiche IP wie SF2400) mit den tatsaechlich in
+//    multi.js verwendeten Werten (minSoc 15/50, maxOutput 800/1200,
+//    Entladen/Laden-Schwellen 60/100 W). Deckt Konzentrationsmodus bei
+//    niedrigem Ziel, Wechsel in Wasserfuellung samt minOutput-Floor bei
+//    sehr ungleichen Gewichten (44 vs. 9), Sticky-Verhalten beim
+//    Zurueckwechseln, sowie auf der Lade-Seite den Ausschluss von
+//    SF2400 (reverse:false) und FATAMORGANAs maxSoc-Deckel ab - alles
+//    Faelle, die so oder so aehnlich auf der echten Hardware
+//    durchgespielt wurden.
+// ============================================================
+const DEVICES_ACTUAL = [
+  { label: "SF2400", minSoc: 15, maxOutput: 800, minOutput: 35,
+    reverse: false, maxSoc: 100, maxInputPower: 1200 },
+  { label: "FATAMORGANA", minSoc: 50, maxOutput: 1200, minOutput: 35,
+    reverse: true, maxSoc: 100, maxInputPower: 1200 }
+];
+
+const DISCHARGE_CFG_ACTUAL = { concentrateBelow: 60, spreadAbove: 100 };
+const CHARGE_CFG_ACTUAL = { concentrateBelow: 60, spreadAbove: 100 };
+
+function scenarioI_discharge() {
+  console.log("\n=== I) Realer Aufbau - Entladen (SOC 59% beide, Schwellen 60/100W) ===");
+  setup(DEVICES_ACTUAL, DISCHARGE_CFG_ACTUAL, CHARGE_CFG_ACTUAL);
+  state.devices[0].soc = 59; // Gewicht 44 (59-15)
+  state.devices[1].soc = 59; // Gewicht  9 (59-50)
+
+  let targets = [40, 150, 90, 50];
+  for (let c = 0; c < targets.length; c++) {
+    let out = distributeDischarge(targets[c]);
+    logDischarge(c + 1, targets[c], out);
+  }
+  console.log("  (bei 150W: FATAMORGANAs rechnerischer Anteil ~25W liegt unter");
+  console.log("   minOutput 35W und wird einzeln hochgerundet - dieselbe Floor-");
+  console.log("   Logik, die im Live-Test SF2400=62W/FATAMORGANA=35W bei Ziel 75W ergab)");
+}
+
+function scenarioI_charge() {
+  console.log("\n=== I) Realer Aufbau - Laden (SOC 61% beide, Schwellen 60/100W) ===");
+  setup(DEVICES_ACTUAL, DISCHARGE_CFG_ACTUAL, CHARGE_CFG_ACTUAL);
+  state.devices[0].soc = 61;
+  state.devices[1].soc = 61; // Gewicht 39 (100-61), einziges reverse:true Geraet
+
+  let targets = [-50, -150];
+  for (let c = 0; c < targets.length; c++) {
+    let out = distributeCharge(targets[c]);
+    logCharge(c + 1, targets[c], out);
+  }
+  console.log("  (SF2400 bleibt in JEDEM Zyklus bei 0W - reverse:false schliesst");
+  console.log("   es in computeChargeWeights() komplett von der Ladeverteilung aus)");
+
+  console.log("  -- FATAMORGANA erreicht maxSoc (100%) --");
+  state.devices[1].soc = 100;
+  let out = distributeCharge(-100);
+  logCharge(targets.length + 1, -100, out);
+}
+
+// ============================================================
 // Alle Szenarien ausfuehren
 // ============================================================
 
@@ -768,3 +826,5 @@ scenarioE();
 scenarioF();
 scenarioG();
 scenarioH();
+scenarioI_discharge();
+scenarioI_charge();
