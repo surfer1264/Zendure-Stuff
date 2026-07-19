@@ -72,32 +72,32 @@ let CONFIG = {
   devices: [
     {
       ip: "192.168.178.143",   // Zendure IP address
-      label: "SF800",          // short name, used in logs/messages
+      label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
-      reverse: true,            // may this device charge from the grid?
+      reverse: false,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,       // max charge power from grid (W)
 
       dryRun: false             // true = read + calculate only, never write
     },
     {
-      ip: "192.168.178.150",
-      label: "SF2400Pro",
+      ip: "192.168.178.yyy",   // Zendure IP address
+      label: "SF800",          // short name, used in logs/messages
 
-      minSoc: 15,
-      maxOutput: 1200,
-      minOutput: 35,
+      minSoc: 15,               // no discharge below this SOC (%)
+      maxOutput: 800,           // max discharge/export power (W)
+      minOutput: 35,            // don't bother writing values below this (W)
 
-      reverse: true,           // this device is never charged from the grid
-      maxSoc: 100,
-      maxInputPower: 2400,
+      reverse: false,            // may this device charge from the grid?
+      maxSoc: 100,               // no charging from grid at/above this SOC (%)
+      maxInputPower: 1200,       // max charge power from grid (W)
 
-      dryRun: false
-    }
+      dryRun: true               // true = read + calculate only, never write
+    },
   ],
 
   // Where to read the household grid power from:
@@ -164,13 +164,13 @@ let CONFIG = {
   // whichever mode is currently active stays active.
   // ------------------------------------------------------------------
   discharge: {
-    concentrateBelow: 800,   // W - below this combined target, use ONE device
-    spreadAbove: 1600        // W - above this, split across all devices
+    concentrateBelow: 400,   // W - below this combined target, use ONE device
+    spreadAbove: 600        // W - above this, split across all devices
   },
 
   charge: {
-    concentrateBelow: 800,
-    spreadAbove: 1600
+    concentrateBelow: 400,
+    spreadAbove: 800
   },
 
   // Which device is "the one" in concentration mode is sticky (does not
@@ -207,6 +207,12 @@ let CONFIG = {
   // globally for the grid meter / watchdog) before a Signal notification
   // is sent (avoids alarm spam on single glitches)
   errorThreshold: 5,
+
+  // Verbose write-request logging (exact outgoing httpPost URL/body, and
+  // full res/error_code/error_message on a failed write). Set to true
+  // temporarily when diagnosing write problems; leave false for normal
+  // operation to keep the console output clean.
+  debug: false,
 
   // Signal notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
@@ -456,6 +462,18 @@ function httpGet(url, callback) {
 
 function httpPost(url, body, callback) {
 
+  let bodyStr = JSON.stringify(body);
+
+  if (CONFIG.debug) {
+    print("DEBUG httpPost -> url: " + url + " | body: " + bodyStr);
+  }
+
+  // Back to the plain HTTP.Request form (headers + JSON string body) -
+  // confirmed correct by an isolated standalone test with the exact same
+  // payload. The earlier -103 "Malformed JSON request" errors were never
+  // about the request format; they trace to something in multi.js's own
+  // execution context (memory pressure, most likely - see the trimmed
+  // bannerLines below), not to how the write request is built.
   Shelly.call(
     "HTTP.Request",
     {
@@ -466,7 +484,7 @@ function httpPost(url, body, callback) {
         "Content-Type": "application/json"
       },
 
-      body: JSON.stringify(body)
+      body: bodyStr
 
     },
     callback
@@ -1296,16 +1314,23 @@ function applyOutputs(output) {
       continue; // change too small for this device, skip write
     }
 
-    ds.outputLimit = output[i];
-
     if (cfg.dryRun) {
-      // Still tracked above for hysteresis purposes (so this line only
-      // repeats when the value actually changes enough), but never sent.
+      // dryRun devices are never actually written, so there's no "confirmed
+      // success" to wait for - track the value right here so this line only
+      // repeats once it changes enough (same behaviour as before).
+      ds.outputLimit = output[i];
       print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + output[i] +
         " W " + (output[i] >= 0 ? "(Export)" : "(Laden vom Netz)"));
       continue;
     }
 
+    // NOTE: ds.outputLimit is intentionally NOT set here for real devices
+    // anymore. It's only updated in writeDevice() once the write is
+    // actually confirmed successful (res.code === 200). This way a failed
+    // write gets retried on every following cycle where the target still
+    // differs by more than the hysteresis from the value that was truly
+    // last applied on the device - instead of being silently skipped
+    // because the script wrongly believed the device was already there.
     toWrite[toWrite.length] = i;
 
   }
@@ -1315,8 +1340,19 @@ function applyOutputs(output) {
     return;
   }
 
-  writeAllDevices(toWrite, 0, function () {
-    unlock();
+  // Deferred via Timer.set(0, ...) instead of calling writeAllDevices()
+  // directly: by this point the call stack is already several levels deep
+  // (GET-response callback -> readAllDevices -> calculate -> applyOutputs),
+  // all still synchronous. Timer.set(0, ...) breaks out into a fresh event
+  // loop tick, so the write RPC call fires from a much shallower stack -
+  // testing whether stack depth (as opposed to heap, which measured
+  // plenty free) is behind the -103 errors.
+  Timer.set(0, false, function () {
+
+    writeAllDevices(toWrite, output, 0, function () {
+      unlock();
+    });
+
   });
 
 
@@ -1326,25 +1362,25 @@ function applyOutputs(output) {
 // Write output limit to a Zendure device (sequentially across devices)
 // ======================================================
 
-function writeDevice(index, callback) {
+function writeDevice(index, output, callback) {
 
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
-  let output = ds.outputLimit;
+  let target = output[index];
 
   let acMode, outputLimit, inputLimit;
 
-  if (output >= 0) {
+  if (target >= 0) {
 
     acMode = 2;          // discharge / export
-    outputLimit = output;
+    outputLimit = target;
     inputLimit = 0;
 
   } else {
 
     acMode = 1;           // charge / import from grid
     outputLimit = 0;
-    inputLimit = Math.abs(output);
+    inputLimit = Math.abs(target);
 
   }
 
@@ -1366,15 +1402,34 @@ function writeDevice(index, callback) {
       }
     },
 
-    function (res) {
+    // Shelly.call() invokes this with (result, error_code, error_message) -
+    // capture all three so a failure can actually be diagnosed instead of
+    // just being logged as "fehlgeschlagen" with no further detail.
+    function (res, error_code, error_message) {
 
       if (res && res.code === 200) {
 
-        print(cfg.label + ": Leistung gesetzt: " + output + " W " +
-          (output >= 0 ? "(Export)" : "(Laden vom Netz)"));
+        // Only NOW - after a confirmed successful write - remember the
+        // value as actually applied. This is what makes the per-device
+        // hysteresis check in applyOutputs() trustworthy: a failed write
+        // will make ds.outputLimit stay at its old value, so the next
+        // cycle's differing target will exceed the hysteresis band again
+        // and trigger a fresh retry, instead of being silently skipped.
+        ds.outputLimit = target;
+
+        print(cfg.label + ": Leistung gesetzt: " + target + " W " +
+          (target >= 0 ? "(Export)" : "(Laden vom Netz)"));
         reportSuccess(ds.errors, ds.notified, "write", cfg.label);
 
       } else {
+
+        if (CONFIG.debug) {
+          print(
+            "DEBUG " + cfg.label + "/write - res: " + JSON.stringify(res) +
+            " | error_code: " + error_code +
+            " | error_message: " + error_message
+          );
+        }
 
         reportError(ds.errors, ds.notified, "write", cfg.label,
           "Schreibvorgang fehlgeschlagen");
@@ -1387,15 +1442,15 @@ function writeDevice(index, callback) {
   );
 }
 
-function writeAllDevices(indices, pos, callback) {
+function writeAllDevices(indices, output, pos, callback) {
 
   if (pos >= indices.length) {
     callback();
     return;
   }
 
-  writeDevice(indices[pos], function () {
-    writeAllDevices(indices, pos + 1, callback);
+  writeDevice(indices[pos], output, function () {
+    writeAllDevices(indices, output, pos + 1, callback);
   });
 
 }
@@ -1478,6 +1533,7 @@ bannerLines[bannerLines.length] = "Ausgleich  : ab " + CONFIG.rebalance.socMargi
 bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
   CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
+bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "--------------------------------";
 
@@ -1485,8 +1541,14 @@ let bannerIndex = 0;
 
 function printBannerLine() {
 
-  if (bannerIndex >= bannerLines.length)
+  if (bannerIndex >= bannerLines.length) {
+    // Startup banner fully printed - release it. Without this, the whole
+    // array of (fairly long, per-device) strings stays referenced by the
+    // top-level `bannerLines` variable for the entire remaining runtime of
+    // the script, permanently occupying memory it will never need again.
+    bannerLines = null;
     return;
+  }
 
   print(bannerLines[bannerIndex]);
   bannerIndex = bannerIndex + 1;
