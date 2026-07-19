@@ -34,8 +34,10 @@ MAX_POINTS = 600            # Obergrenze; der Umschalter bietet 200 / 400 / 600
 # ----------------------------- Benachrichtigungen ------------------------
 # Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
 USE_SIGNAL = False
-SIGNAL_PHONE = "+49170XXXXXXX"   # deine Signal-Nummer im Format +49...
+MESSENGER_TYP = "SIGNAL"         # SIGNAL or WHATSAPP
+SIGNAL_PHONE = "+49170XXXXXXX"   # deine Phone-Nummer im Format +49...
 SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
+
 
 # Schwellwerte mit Hysterese (Warnung einmalig, Reset erst im sicheren Bereich)
 VOLL_SCHWELLE = 99     # %  - ab hier gilt der Akku als "voll"
