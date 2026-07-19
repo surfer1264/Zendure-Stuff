@@ -25,11 +25,11 @@
 //
 // Signal notifications via CallMeBot, adapted from
 // https://github.com/surfer1264/Zendure-Stuff (zenSDKWatchDog)
-// - **Reverse-Lademodus (Laden vom Netz mit Start-/Stop-Schwelle):**
-//  Das Konzept (Start-/Stop-Deadband für das Laden vom Netz) orientiert sich
-//  am `REVERSE`-Feature aus tost11s Projekt
-//  https://github.com/tost11/zendure-shelly-tools/tree/main
-////
+// Reverse-Lademodus (Laden vom Netz mit Start-/Stop-Schwelle)
+// Das Konzept (Start-/Stop-Deadband für das Laden vom Netz) orientiert sich
+// am `REVERSE`-Feature aus tost11s Projekt
+// https://github.com/tost11/zendure-shelly-tools/tree/main
+//
 // ... And ofc. a lot of AI coding aid was involved ;-)
 //
 // ======================================================
@@ -116,8 +116,6 @@ let CONFIG = {
   // Reverse mode: allows charging the Zendure FROM the grid, in
   // addition to the normal discharge/export into the household.
   // Mirrors the "REVERSE" feature of the original Shelly-tos-Controller.
-  // https://github.com/tost11/zendure-shelly-tools/tree/main
-  // (see zendure_power_control/control_zendure_power_ip.js)
   // ------------------------------------------------------------------
 
   // Enables loading (charging) the battery from the grid whenever the
@@ -159,11 +157,10 @@ let CONFIG = {
 
   // Signal notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
-
-    enabled: false,          // set to true to activate Signal notifications
-    phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
-    apiKey: "YOUR_API_KEY"   // your CallMeBot API key
-
+    enabled: false,            // set to true to activate notifications
+	  typ: "SIGNAL",             // SIGNAL or WHATSAPP
+    //phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
+    //apiKey: "YOUR_API_KEY"   // your CallMeBot API key
   }
 
 };
@@ -247,14 +244,13 @@ function sendSignalMessage(text) {
     return;
 
   let safeText = simpleEncode(text);
+  let url = "url";
 
-  let url =
-    "https://api.callmebot.com/signal/send.php?phone=" +
-    CONFIG.signal.phone +
-    "&apikey=" +
-    CONFIG.signal.apiKey +
-    "&text=" +
-    safeText;
+  if (CONFIG.signal.typ == "SIGNAL")
+    url = "https://api.callmebot.com/signal/send.php?phone=" + CONFIG.signal.phone + "&apikey=" + CONFIG.signal.apiKey +  "&text=" + safeText;
+  else
+	url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
+		
 
   print("Sende Signal-Nachricht...");
 
@@ -753,7 +749,7 @@ function calculate() {
   if (output >= 0) {
 
     // Apply minimum output only when discharge is active
-    // if (output > 0 && output < CONFIG.minOutput)
+    // if (output > 0 && output < CONFIG.minOutput) 
     if (output > 0 && output < CONFIG.minOutput && target > 0)
       output = CONFIG.minOutput;
 
