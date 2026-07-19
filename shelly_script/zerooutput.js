@@ -112,6 +112,8 @@ let CONFIG = {
   // Reverse mode: allows charging the Zendure FROM the grid, in
   // addition to the normal discharge/export into the household.
   // Mirrors the "REVERSE" feature of the original Shelly-tos-Controller.
+  // https://github.com/tost11/zendure-shelly-tools/tree/main
+  // (see zendure_power_control/control_zendure_power_ip.js)
   // ------------------------------------------------------------------
 
   // Enables loading (charging) the battery from the grid whenever the
