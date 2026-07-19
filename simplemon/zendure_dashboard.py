@@ -24,7 +24,7 @@ try:
         DEVICE_URL, POLL_INTERVAL, WEB_PORT, DEVICE_LABEL,
         CSV_FILE, PACK_CSV_FILE, DB_FILE, WRITE_CSV, QUIET,
         RETENTION_DAYS, MAX_POINTS,
-        USE_SIGNAL, SIGNAL_PHONE, SIGNAL_KEY,
+        USE_SIGNAL, MESSENGER_TYP, SIGNAL_PHONE, SIGNAL_KEY,
         VOLL_SCHWELLE, ENTLADE_RESET, MIN_VOLT_WARN, MIN_VOLT_RESET,
         TEMP_WARN, TEMP_RESET,
     )
@@ -103,16 +103,23 @@ def send_signal(text):
     """Sendet eine Signal-Nachricht ueber CallMeBot. No-op wenn USE_SIGNAL=False."""
     if not USE_SIGNAL:
         return
-    try:
+
+    if MESSENGER_TYP == "SIGNAL":
         params = urllib.parse.urlencode(
             {"phone": SIGNAL_PHONE, "apikey": SIGNAL_KEY, "text": text})
         url = "https://api.callmebot.com/signal/send.php?" + params
+    else:
+        params = urllib.parse.urlencode(
+            {"phone": SIGNAL_PHONE, "text": text, "apikey": SIGNAL_KEY})
+        url = "https://api.callmebot.com/whatsapp.php?" + params
+
+    try:
         with urllib.request.urlopen(url, timeout=15) as r:
             r.read()
         log(f"{datetime.now():%H:%M:%S}  Signal gesendet: {text.splitlines()[0]}")
     except Exception as e:
         log_always(f"{datetime.now():%H:%M:%S}  Signal-Fehler: {e}")
-
+	
 
 def check_alarms(props, packs):
     """Prueft Schwellwerte und sendet Warnungen mit Hysterese.
