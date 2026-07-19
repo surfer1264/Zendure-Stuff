@@ -60,27 +60,31 @@ let CONFIG = {
   // One entry per Zendure device. Add/remove entries to change the
   // number of devices - the rest of the script adapts automatically.
   // dryRun (per device, default false): if true, the device is still
-  // polled normally (its SOC/power feed into the grid-balance calculation
-  // and the distribution weighting exactly like a real participant), but
-  // it is NEVER actually written to - the script only logs what it WOULD
-  // have sent. Handy for testing the multi-device split with a second,
-  // fictional device profile while you only own one real Zendure: point
-  // a second entry at the SAME ip as your real device with dryRun:true
-  // and different minSoc/maxOutput, and watch the console to see how the
-  // split would behave with real, live SOC/power data - without ever
-  // risking a conflicting write to your actual hardware.
+  // polled normally and takes part in the distribution weighting exactly
+  // like a real participant, but it is NEVER actually written to - the
+  // script only logs what it WOULD have sent. Handy for testing the
+  // multi-device split with a second, fictional device profile while you
+  // only own one real Zendure: point a second entry at the SAME ip as
+  // your real device with dryRun:true and different minSoc/maxOutput, and
+  // watch the console to see how the split would behave with real, live
+  // SOC/power data - without ever risking a conflicting write to your
+  // actual hardware. Note: if two entries share the same ip, that
+  // device's power is only counted ONCE towards the combined grid-balance
+  // target (calculate() dedupes by ip) - otherwise the same physical
+  // device's output would be summed twice, inflating the target and
+  // causing a runaway feedback loop.
   devices: [
     {
-      ip: "192.168.178.143",   // Zendure IP address
+      ip: "192.168.178.xxx",   // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
-      maxOutput: 800,           // max discharge/export power (W)
+      maxOutput: 2400,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
       reverse: false,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
-      maxInputPower: 1200,       // max charge power from grid (W)
+      maxInputPower: 2400,       // max charge power from grid (W)
 
       dryRun: false             // true = read + calculate only, never write
     },
@@ -96,7 +100,7 @@ let CONFIG = {
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,       // max charge power from grid (W)
 
-      dryRun: true               // true = read + calculate only, never write
+      dryRun: false             // true = read + calculate only, never write
     },
   ],
 
@@ -137,7 +141,7 @@ let CONFIG = {
   gridSourceInvert: false,
 
   // Update interval in milliseconds
-  interval: 3000,
+  interval: 4000,
 
   // Watchdog timeout in milliseconds (covers the whole cycle: grid read +
   // all device reads + distribution + all device writes)
@@ -170,7 +174,7 @@ let CONFIG = {
 
   charge: {
     concentrateBelow: 400,
-    spreadAbove: 800
+    spreadAbove: 600
   },
 
   // Which device is "the one" in concentration mode is sticky (does not
@@ -745,10 +749,28 @@ function calculate() {
   let sumZen = 0;
   let availableCount = 0;
 
+  // Dedupe by IP: two CONFIG entries pointing at the same physical device
+  // (e.g. a real entry plus a dryRun testing entry on the same IP - see
+  // the dryRun comment above CONFIG.devices) are the SAME battery. Only
+  // count that device's power once, otherwise it gets summed twice into
+  // sumZen, which inflates the calculated target, which makes the script
+  // write an even higher value to the real device, which reads even
+  // higher next cycle - a runaway feedback loop. The split/weighting
+  // logic below is unaffected and still runs per entry, so this only
+  // fixes the combined target, not the split preview.
+  let countedIps = {};
+
   for (let i = 0; i < n; i++) {
 
     if (state.devices[i].available) {
-      sumZen += state.devices[i].zenPower;
+
+      let ip = CONFIG.devices[i].ip;
+
+      if (!countedIps[ip]) {
+        sumZen += state.devices[i].zenPower;
+        countedIps[ip] = true;
+      }
+
       availableCount++;
     }
 
