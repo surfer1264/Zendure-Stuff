@@ -25,7 +25,11 @@
 //
 // Signal notifications via CallMeBot, adapted from
 // https://github.com/surfer1264/Zendure-Stuff (zenSDKWatchDog)
-//
+// - **Reverse-Lademodus (Laden vom Netz mit Start-/Stop-Schwelle):**
+//  Das Konzept (Start-/Stop-Deadband für das Laden vom Netz) orientiert sich
+//  am `REVERSE`-Feature aus tost11s Projekt
+//  https://github.com/tost11/zendure-shelly-tools/tree/main
+////
 // ... And ofc. a lot of AI coding aid was involved ;-)
 //
 // ======================================================
