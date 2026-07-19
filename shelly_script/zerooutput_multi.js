@@ -82,7 +82,7 @@ let CONFIG = {
       maxOutput: 2400,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
-      reverse: false,            // may this device charge from the grid?
+      reverse: true,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 2400,       // max charge power from grid (W)
 
@@ -96,7 +96,7 @@ let CONFIG = {
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
-      reverse: false,            // may this device charge from the grid?
+      reverse: true,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,       // max charge power from grid (W)
 
@@ -1501,7 +1501,18 @@ function update() {
     if (!ok) return; // unlock() already called inside readGridPower on failure
 
     readAllDevices(0, function () {
-      calculate();
+
+      // Deferred via Timer.set(0, ...): calculate() (and everything it
+      // calls - distributeDischarge/distributeCharge/waterFillDischarge/
+      // waterFillCharge) needs a fair amount of local variables and
+      // nested loops, and running it directly inside the last device's
+      // GET-response callback was enough to exceed mJS's stack budget on
+      // this device (seen as "Too much recursion" the first time the
+      // charge/water-fill branch actually ran). Breaking out into a fresh
+      // event loop tick here gives it a shallow stack to start from -
+      // same fix pattern as the write-path deferral in applyOutputs().
+      Timer.set(0, false, calculate);
+
     });
 
   });
