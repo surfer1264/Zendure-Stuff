@@ -10,18 +10,19 @@ print("⚡ Starte AkkuVolt-Watchdog (Hub REST-API) — bitte vorsichtig benutzen
 // ==================== EINSTELLUNGEN ====================
 
 let CONFIG = {
-  url: "http://192.YYY.XXX.ZZZ/properties/report", // CHANGE IP
+  url: "http://192.168.178.143/properties/report",
   maxRetries: 3,
   retryDelayMs: 2000,
   pollIntervalMs: 60000        // Abfrageintervall in ms (60 Sekunden)
 };
 
-// Signal (CallMeBot) Einstellungen:
+// (CallMeBot) Einstellungen:
 let signalPhone = "PHONE-STRING";    // z. B. +4917XXXXXXXX
 let signalKey   = "YOUR_API_KEY";    // dein API Key
+let messengerTyp = "SIGNAL";         // SIGNAL or WHATSAPP
 
-// Signalsteuerung:
-let useSignal = false;                // Signal-Benachrichtigungen aktivieren/deaktivieren
+// CallMeBotSteuerung:
+let useMessenger = false;            // CallMeBot-Benachrichtigungen aktivieren/deaktivieren
 
 // Schwellwerte:
 let vollSchwelle = 99;               // Prozent, ab wann Akku als „voll" gilt
@@ -41,6 +42,7 @@ let bat   = 9;                       // Akku-Arbeitsmodus
 let modus = "UNKN ";                 // Textdarstellung Modus
 let packs = {};                      // Datenstruktur für alle Packs
 let HT    = 0;                       // Geräte-Temperatur in °C
+let url   = "api";
 
 let akkuVollMsgSent   = false;
 let lowVoltMsgSent    = {};
@@ -66,10 +68,13 @@ function simpleEncode(str) {
 }
 
 function sendSignalMessage(text) {
-    if (!useSignal) return;
+    if (!useMessenger) return;
     let safeText = simpleEncode(text);
-    let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone + "&apikey=" + signalKey + "&text=" + safeText;
-    print("📨 Sende Signal-Nachricht...");
+	if (messengerTyp == "SIGNAL")
+		url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone + "&apikey=" + signalKey + "&text=" + safeText;
+	else
+		url = "https://api.callmebot.com/whatsapp.php?phone=" + signalPhone + "&text=" + safeText + "&apikey=" + signalKey;
+    print("📨 Sende-Nachricht...");
     Shelly.call("HTTP.GET", { url: url, timeout: 15 }, function (result, error_code, error_msg) {
         if (error_code === 0) {
             print("✅ Nachricht erfolgreich gesendet.");
@@ -217,7 +222,7 @@ function attemptRequest() {
 // ==================== STATUS-FUNKTION (ASTRO + STARTUP) ====================
 
 function sendAstroStatus(type) {
-    if (!useSignal) return;
+    if (!useMessenger) return;
     let header = (type === "sunset")  ? "🌇 Abend-Update (Sonnenuntergang):" :
                  (type === "sunrise") ? "🌅 Morgen-Update:" :
                                         "🚀 Startup-Status Hub:";
@@ -274,6 +279,6 @@ setupAstroSchedules();
 attemptRequest();
 Timer.set(CONFIG.pollIntervalMs, true, attemptRequest);
 
-if (useSignal) {
+if (useMessenger) {
     sendSignalMessage("✅ AkkuWatchDog Hub (ZenSDK) erfolgreich gestartet");
 }
