@@ -116,13 +116,6 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // Reverse mode (charging from the grid) - global hysteresis
   // ------------------------------------------------------------------
-  // Whether an individual device is ALLOWED to charge from the grid at
-  // all is configured per device (CONFIG.devices[i].reverse). These two
-  // values control the system-wide start/stop hysteresis for entering or
-  // leaving "charging mode" as a whole (mirrors the single-device script;
-  // kept global here since starting/stopping should be a single system
-  // decision, not something each device decides independently).
-
   // Minimum charging power in watts required to START charging from
   // the grid. Acts as a deadband so the system doesn't switch into
   // charge mode for a negligible power deficit.
