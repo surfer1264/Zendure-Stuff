@@ -1,30 +1,6 @@
 // Zendure Dynamic Output Controller - MULTI-DEVICE Version
 // Runs on any Shelly Gen2/3 device with scripting support.
 //
-// Balances the household grid power to (roughly) zero using TWO OR MORE
-// Zendure devices at once. All devices are treated as one combined
-// "virtual battery": the script reads the grid power once, adds up what
-// all Zendure devices are currently doing, and calculates ONE combined
-// target power - exactly like the single-device version. That combined
-// target is then SPLIT across the configured devices every cycle:
-//
-//   - Discharge (export towards household): each device's share is
-//     weighted by how far its SOC is above its own configured minSoc.
-//     A fuller battery therefore contributes more. A device at or below
-//     its minSoc gets a weight of 0 and is left alone (safety cutoff -
-//     this falls out of the weighting automatically, no special case
-//     needed).
-//   - Charge (import from grid, only for devices with reverse=true):
-//     mirrored - weighted by how much room is left below maxSoc.
-//   - Each device's share is capped at its own maxOutput / maxInputPower.
-//     Whatever a capped device can't take is redistributed across the
-//     remaining (uncapped) devices in the same cycle ("water filling"),
-//     so a small device and a big device can be mixed and the big one
-//     will pick up the slack.
-//   - If the combined capacity of all available devices isn't enough to
-//     reach the target, the script simply delivers as much as it can -
-//     no error, it just under-delivers for that cycle.
-//
 // Structurally this supports any number of devices (CONFIG.devices is a
 // plain array) - tested/designed for 2, but adding a third device is just
 // adding another entry to the array.
@@ -48,45 +24,26 @@
 // This is based on the single-device Zendure Dynamic Output Controller
 // and might be working on similar setups.
 //
-// Signal notifications via CallMeBot, adapted from
-// https://github.com/surfer1264/Zendure-Stuff (zenSDKWatchDog)
 //
 // ... And ofc. a lot of AI coding aid was involved ;-)
 //
 // ======================================================
 
 let CONFIG = {
-
-  // One entry per Zendure device. Add/remove entries to change the
-  // number of devices - the rest of the script adapts automatically.
-  // dryRun (per device, default false): if true, the device is still
-  // polled normally and takes part in the distribution weighting exactly
-  // like a real participant, but it is NEVER actually written to - the
-  // script only logs what it WOULD have sent. Handy for testing the
-  // multi-device split with a second, fictional device profile while you
-  // only own one real Zendure: point a second entry at the SAME ip as
-  // your real device with dryRun:true and different minSoc/maxOutput, and
-  // watch the console to see how the split would behave with real, live
-  // SOC/power data - without ever risking a conflicting write to your
-  // actual hardware. Note: if two entries share the same ip, that
-  // device's power is only counted ONCE towards the combined grid-balance
-  // target (calculate() dedupes by ip) - otherwise the same physical
-  // device's output would be summed twice, inflating the target and
-  // causing a runaway feedback loop.
   devices: [
-    {
+     {
       ip: "192.168.178.xxx",   // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
-      maxOutput: 2400,           // max discharge/export power (W)
+      maxOutput: 1200,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
-      reverse: true,            // may this device charge from the grid?
+      reverse: false,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 2400,       // max charge power from grid (W)
 
-      dryRun: false             // true = read + calculate only, never write
+      dryRun: false  
     },
     {
       ip: "192.168.178.yyy",   // Zendure IP address
@@ -100,7 +57,7 @@ let CONFIG = {
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,       // max charge power from grid (W)
 
-      dryRun: false             // true = read + calculate only, never write
+      dryRun: false              // true = read + calculate only, never write
     },
   ],
 
@@ -147,16 +104,7 @@ let CONFIG = {
   // all device reads + distribution + all device writes)
   watchdog: 10000,
 
-  // Per-request timeout in SECONDS for every individual HTTP call to a
-  // device (GET and POST). Deliberately kept well under CONFIG.watchdog
-  // (in milliseconds): if a single call is allowed to run longer than our
-  // own watchdog, the watchdog can give up on the cycle (Timer.clear()
-  // only cancels OUR timer, it can't pull back an HTTP request already
-  // handed to the firmware) while that request is still genuinely
-  // pending in the background. Repeated slow/unresponsive cycles can
-  // then accumulate orphaned in-flight calls until the firmware's own
-  // hard limit on concurrent calls is hit ("Uncaught Error: Too many
-  // calls in progress"). Keeping this comfortably shorter than the
+  // Keeping this comfortably shorter than the
   // watchdog ensures every call is actually resolved (success or
   // failure) well before that can happen.
   httpTimeout: 5,
@@ -230,10 +178,11 @@ let CONFIG = {
   // operation to keep the console output clean.
   debug: false,
 
-  // Signal notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
+  // Message notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
 
     enabled: false,          // set to true to activate Signal notifications
+	  typ: "SIGNAL",			     // Signal oor WHATSAPP
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
     apiKey: "YOUR_API_KEY"   // your CallMeBot API key
 
@@ -352,14 +301,13 @@ function sendSignalMessage(text) {
     return;
 
   let safeText = simpleEncode(text);
+  let url = "url";
 
-  let url =
-    "https://api.callmebot.com/signal/send.php?phone=" +
-    CONFIG.signal.phone +
-    "&apikey=" +
-    CONFIG.signal.apiKey +
-    "&text=" +
-    safeText;
+  if (CONFIG.signal.typ == "SIGNAL")
+    url = "https://api.callmebot.com/signal/send.php?phone=" + CONFIG.signal.phone + "&apikey=" + CONFIG.signal.apiKey +  "&text=" + safeText;
+  else
+	url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
+		
 
   print("Sende Signal-Nachricht...");
 
@@ -378,6 +326,7 @@ function sendSignalMessage(text) {
     }
   );
 }
+
 
 // ======================================================
 // Error / recovery bookkeeping (generic - used both globally and
@@ -1670,10 +1619,6 @@ let bannerIndex = 0;
 function printBannerLine() {
 
   if (bannerIndex >= bannerLines.length) {
-    // Startup banner fully printed - release it. Without this, the whole
-    // array of (fairly long, per-device) strings stays referenced by the
-    // top-level `bannerLines` variable for the entire remaining runtime of
-    // the script, permanently occupying memory it will never need again.
     bannerLines = null;
     return;
   }
