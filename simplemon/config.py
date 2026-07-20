@@ -32,8 +32,8 @@ RETENTION_DAYS = 7          # aeltere DB-Zeilen werden geloescht (z. B. 1 / 3 / 
 MAX_POINTS = 600            # Obergrenze; der Umschalter bietet 200 / 400 / 600
 
 # ----------------------------- Benachrichtigungen ------------------------
-# Signal-Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
-USE_SIGNAL = False
+#  Nachrichten--Versand ueber CallMeBot. Master-Schalter: auf False -> keine Nachrichten.
+USE_SIGNAL = False               # False, True
 MESSENGER_TYP = "SIGNAL"         # SIGNAL or WHATSAPP
 SIGNAL_PHONE = "+49170XXXXXXX"   # deine Phone-Nummer im Format +49...
 SIGNAL_KEY = "DEIN_API_KEY"      # dein CallMeBot API-Key
