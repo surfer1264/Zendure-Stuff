@@ -157,10 +157,10 @@ let CONFIG = {
 
   // Signal notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
-    enabled: false,            // set to true to activate notifications
-	  typ: "SIGNAL",             // SIGNAL or WHATSAPP
-    //phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
-    //apiKey: "YOUR_API_KEY"   // your CallMeBot API key
+	enabled: false,            // set to true to activate notifications
+	typ: "SIGNAL",             // SIGNAL or WHATSAPP
+    phone: "PHONE-STRING",     // e.g. +4917XXXXXXXX
+    apiKey: "YOUR_API_KEY"     // your CallMeBot API key
   }
 
 };
