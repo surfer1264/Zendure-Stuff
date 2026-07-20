@@ -147,6 +147,20 @@ let CONFIG = {
   // all device reads + distribution + all device writes)
   watchdog: 8000,
 
+  // Per-request timeout in SECONDS for every individual HTTP call to a
+  // device (GET and POST). Deliberately kept well under CONFIG.watchdog
+  // (in milliseconds): if a single call is allowed to run longer than our
+  // own watchdog, the watchdog can give up on the cycle (Timer.clear()
+  // only cancels OUR timer, it can't pull back an HTTP request already
+  // handed to the firmware) while that request is still genuinely
+  // pending in the background. Repeated slow/unresponsive cycles can
+  // then accumulate orphaned in-flight calls until the firmware's own
+  // hard limit on concurrent calls is hit ("Uncaught Error: Too many
+  // calls in progress"). Keeping this comfortably shorter than the
+  // watchdog ensures every call is actually resolved (success or
+  // failure) well before that can happen.
+  httpTimeout: 5,
+
   // Target grid power in watts (e.g. 0 = balance to zero,
   // negative = slight export, positive = slight import)
   setpoint: 0,
@@ -174,18 +188,16 @@ let CONFIG = {
 
   charge: {
     concentrateBelow: 400,
-    spreadAbove: 600
+    spreadAbove: 800
   },
 
   // Which device is "the one" in concentration mode is sticky (does not
   // re-evaluate every cycle) to avoid rapid switching. It only changes
-  // immediately if the active device fails or hits its own safety limit
-  // (minSoc/maxSoc). A slow rebalance towards a persistently fuller/emptier
-  // alternative device is still possible, but only once its advantage has
-  // been sustained continuously for a while - a brief lead doesn't count.
+  // if the active device fails, hits its own safety limit (minSoc/maxSoc -
+  // immediate switch, no delay), or if another device's advantage reaches
+  // socMargin percentage points (immediate switch as well - no hold time).
   rebalance: {
-    socMargin: 10,       // percentage points of advantage required
-    holdMinutes: 15       // ...sustained continuously for this long
+    socMargin: 10        // percentage points of advantage required to switch
   },
 
   // ------------------------------------------------------------------
@@ -254,12 +266,6 @@ if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
   CONFIG.charge.spreadAbove = CONFIG.charge.concentrateBelow;
 }
 
-// How many consecutive cycles a rebalance advantage must hold before the
-// sticky device selection actually switches (derived from holdMinutes so
-// the config stays meaningful even if CONFIG.interval is changed).
-let REBALANCE_HOLD_CYCLES = Math.max(1,
-  Math.round((CONFIG.rebalance.holdMinutes * 60000) / CONFIG.interval));
-
 // ======================================================
 // State
 // ======================================================
@@ -281,8 +287,8 @@ let state = {
   // mode - the very first cycle(s) always used it before this feature
   // existed, so starting there preserves prior behaviour until the mode
   // logic has had a chance to evaluate the first real target.
-  discharge: { mode: "spread", active: null, rebalanceCounter: 0 },
-  charge: { mode: "spread", active: null, rebalanceCounter: 0 },
+  discharge: { mode: "spread", active: null },
+  charge: { mode: "spread", active: null },
 
   devices: []
 
@@ -458,7 +464,8 @@ function httpGet(url, callback) {
   Shelly.call(
     "HTTP.GET",
     {
-      url: url
+      url: url,
+      timeout: CONFIG.httpTimeout
     },
     callback
   );
@@ -488,7 +495,9 @@ function httpPost(url, body, callback) {
         "Content-Type": "application/json"
       },
 
-      body: bodyStr
+      body: bodyStr,
+
+      timeout: CONFIG.httpTimeout
 
     },
     callback
@@ -880,14 +889,11 @@ function updateMode(currentMode, targetMagnitude, cfg) {
 }
 
 // Sticky device selection for concentration mode. `selector` is a small
-// persistent object ({ active, rebalanceCounter }), one for discharge and
-// one for charge, that survives across cycles. The currently active
-// device keeps being used unless it becomes unavailable or hits its own
-// safety limit (immediate switch, no delay - safety never waits), or
-// unless an alternative device has had a large, sustained SOC advantage
-// for a while (slow rebalance - see CONFIG.rebalance). A brief lead is
-// ignored; the counter resets the moment the advantage dips below the
-// margin, so only a CONTINUOUS lead counts.
+// persistent object ({ active }), one for discharge and one for charge,
+// that survives across cycles. The currently active device keeps being
+// used unless it becomes unavailable, hits its own safety limit, or
+// another device's advantage reaches socMargin percentage points -
+// all three cases switch immediately, no hold/wait time.
 function pickStickyDevice(weight, active, selector) {
 
   let n = weight.length;
@@ -895,7 +901,6 @@ function pickStickyDevice(weight, active, selector) {
   if (selector.active !== null &&
       (!active[selector.active] || weight[selector.active] <= 0)) {
     selector.active = null;
-    selector.rebalanceCounter = 0;
   }
 
   let bestIdx = -1;
@@ -910,12 +915,10 @@ function pickStickyDevice(weight, active, selector) {
 
   if (selector.active === null) {
     selector.active = bestIdx; // stays -1 if nobody is usable at all
-    selector.rebalanceCounter = 0;
     return selector.active;
   }
 
   if (bestIdx === -1 || bestIdx === selector.active) {
-    selector.rebalanceCounter = 0;
     return selector.active;
   }
 
@@ -923,22 +926,11 @@ function pickStickyDevice(weight, active, selector) {
 
   if (advantage >= CONFIG.rebalance.socMargin) {
 
-    selector.rebalanceCounter = selector.rebalanceCounter + 1;
+    print("Ausgleich: bevorzugtes Geraet wechselt zu " +
+      CONFIG.devices[bestIdx].label + " (Vorsprung " +
+      Math.round(advantage) + " Prozentpunkte)");
 
-    if (selector.rebalanceCounter >= REBALANCE_HOLD_CYCLES) {
-
-      print("Sanfter Ausgleich: bevorzugtes Geraet wechselt zu " +
-        CONFIG.devices[bestIdx].label + " (Vorsprung " +
-        Math.round(advantage) + " Prozentpunkte, anhaltend)");
-
-      selector.active = bestIdx;
-      selector.rebalanceCounter = 0;
-
-    }
-
-  } else {
-
-    selector.rebalanceCounter = 0;
+    selector.active = bestIdx;
 
   }
 
@@ -1551,6 +1543,7 @@ bannerLines[bannerLines.length] = "Grid source: " + CONFIG.gridSource +
     (CONFIG.gridSourceInvert ? ", invertiert" : "") + ")" : "");
 bannerLines[bannerLines.length] = "Interval   : " + CONFIG.interval + " ms";
 bannerLines[bannerLines.length] = "Watchdog   : " + CONFIG.watchdog + " ms";
+bannerLines[bannerLines.length] = "HTTP-Timeout: " + CONFIG.httpTimeout + " s (pro Anfrage)";
 bannerLines[bannerLines.length] = "Setpoint   : " + CONFIG.setpoint + " W";
 bannerLines[bannerLines.length] = "Hysteresis : " + CONFIG.hysteresis + " W (pro Geraet)";
 bannerLines[bannerLines.length] = "Damping    : " + CONFIG.dampingFactor;
@@ -1561,8 +1554,7 @@ bannerLines[bannerLines.length] = "Laden      : ein Geraet unter " +
   CONFIG.charge.concentrateBelow + " W, verteilen ueber " +
   CONFIG.charge.spreadAbove + " W";
 bannerLines[bannerLines.length] = "Ausgleich  : ab " + CONFIG.rebalance.socMargin +
-  " Prozentpunkten Vorsprung, anhaltend fuer " + CONFIG.rebalance.holdMinutes +
-  " min (" + REBALANCE_HOLD_CYCLES + " Zyklen)";
+  " Prozentpunkten Vorsprung, sofort";
 bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
   CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
