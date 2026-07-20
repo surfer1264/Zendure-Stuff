@@ -145,7 +145,7 @@ let CONFIG = {
 
   // Watchdog timeout in milliseconds (covers the whole cycle: grid read +
   // all device reads + distribution + all device writes)
-  watchdog: 8000,
+  watchdog: 10000,
 
   // Per-request timeout in SECONDS for every individual HTTP call to a
   // device (GET and POST). Deliberately kept well under CONFIG.watchdog
@@ -182,13 +182,13 @@ let CONFIG = {
   // whichever mode is currently active stays active.
   // ------------------------------------------------------------------
   discharge: {
-    concentrateBelow: 400,   // W - below this combined target, use ONE device
-    spreadAbove: 600        // W - above this, split across all devices
+    concentrateBelow: 2000,   // W - below this combined target, use ONE device
+    spreadAbove: 2400        // W - above this, split across all devices
   },
 
   charge: {
-    concentrateBelow: 400,
-    spreadAbove: 800
+    concentrateBelow: 2000,
+    spreadAbove: 2400
   },
 
   // Which device is "the one" in concentration mode is sticky (does not
@@ -276,6 +276,15 @@ let state = {
   smoothedOutput: null,
   busy: false,
   watchdogTimer: null,
+
+  // Incremented every time a new cycle starts (see lock()). Threaded
+  // through the async chain of a single cycle so that a callback which
+  // fires late - after the watchdog has already given up on that same
+  // cycle and a NEWER cycle has since started - can recognize itself as
+  // stale and skip touching shared state entirely, instead of silently
+  // overwriting fresher data or issuing a duplicate write.
+  cycleId: 0,
+  cycleStartedAt: 0,
 
   // Global error types: "em" (grid meter), "watchdog" (stuck cycle)
   errors: { em: 0, watchdog: 0 },
@@ -419,9 +428,26 @@ function reportSuccess(errors, notified, type, label) {
 // all device reads, distribution, all device writes)
 // ======================================================
 
+// DEBUG-only helper: log that an async response/continuation was
+// recognized as belonging to a stale (already-abandoned) cycle and was
+// discarded before touching any shared state. Kept as a single helper
+// so every guard point logs in the same format.
+function debugStale(where, myCycle) {
+  if (CONFIG.debug) {
+    print("DEBUG " + where + " -> verworfen (Zyklus " + myCycle +
+      " veraltet, aktuell ist " + state.cycleId + ")");
+  }
+}
+
 function lock() {
 
   state.busy = true;
+  state.cycleId = state.cycleId + 1;
+  state.cycleStartedAt = Date.now();
+
+  if (CONFIG.debug) {
+    print("DEBUG Zyklus " + state.cycleId + " gestartet");
+  }
 
   if (state.watchdogTimer !== null)
     Timer.clear(state.watchdogTimer);
@@ -432,16 +458,35 @@ function lock() {
     function () {
 
       reportError(state.errors, state.notified, "watchdog", "System",
-        "Zyklus haengengeblieben (Watchdog-Timeout)");
+        "Zyklus haengengeblieben (Watchdog-Timeout, " +
+        (Date.now() - state.cycleStartedAt) + " ms)");
 
       state.busy = false;
       state.watchdogTimer = null;
 
     }
   );
+
+  return state.cycleId;
+
 }
 
-function unlock() {
+function unlock(myCycle) {
+
+  // A stale cycle (one the watchdog already gave up on, whose async
+  // chain only completes later) must never touch busy/watchdogTimer -
+  // that state belongs to whichever cycle is current NOW, and clearing
+  // it out from under a still-running newer cycle would disable its
+  // watchdog protection without it actually being done.
+  if (myCycle !== state.cycleId) {
+    debugStale("unlock", myCycle);
+    return;
+  }
+
+  if (CONFIG.debug) {
+    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " +
+      (Date.now() - state.cycleStartedAt) + " ms");
+  }
 
   reportSuccess(state.errors, state.notified, "watchdog", "System");
 
@@ -511,12 +556,19 @@ function httpPost(url, body, callback) {
 // JSON object with a total-power field over plain HTTP GET.
 // ======================================================
 
-function handleGenericGridResponse(res, meterLabel, field, invert, callback) {
+function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, callback) {
+
+  // Stale cycle (a newer one has already started since this request was
+  // sent) - do nothing at all, not even call the callback further.
+  if (myCycle !== state.cycleId) {
+    debugStale("readGridPower", myCycle);
+    return;
+  }
 
   if (!res || res.code !== 200) {
 
     reportError(state.errors, state.notified, "em", meterLabel, "nicht erreichbar");
-    unlock();
+    unlock(myCycle);
     callback(false);
     return;
 
@@ -533,7 +585,7 @@ function handleGenericGridResponse(res, meterLabel, field, invert, callback) {
   catch (e) {
 
     reportError(state.errors, state.notified, "em", meterLabel, "Fehler beim Parsen der Antwort");
-    unlock();
+    unlock(myCycle);
     callback(false);
     return;
 
@@ -546,7 +598,7 @@ function handleGenericGridResponse(res, meterLabel, field, invert, callback) {
     reportError(state.errors, state.notified, "em", meterLabel,
       "Antwort enthaelt kein Feld '" + field + "'");
 
-    unlock();
+    unlock(myCycle);
     callback(false);
     return;
 
@@ -559,7 +611,7 @@ function handleGenericGridResponse(res, meterLabel, field, invert, callback) {
 
 }
 
-function readGridPower(callback) {
+function readGridPower(myCycle, callback) {
 
   if (CONFIG.gridSource === "local") {
 
@@ -570,7 +622,7 @@ function readGridPower(callback) {
       reportError(state.errors, state.notified, "em", "Lokaler EM",
         "Kein Messwert verfuegbar (em:" + CONFIG.gridSourceEmId + " nicht gefunden)");
 
-      unlock();
+      unlock(myCycle);
       callback(false);
       return;
 
@@ -594,6 +646,7 @@ function readGridPower(callback) {
       function (res) {
 
         handleGenericGridResponse(
+          myCycle,
           res,
           "Remote-EM (" + CONFIG.gridSourceIp + ")",
           "total_act_power",
@@ -617,6 +670,7 @@ function readGridPower(callback) {
       function (res) {
 
         handleGenericGridResponse(
+          myCycle,
           res,
           "Grid-Meter (" + CONFIG.gridSourceUrl + ")",
           CONFIG.gridSourceField,
@@ -634,7 +688,7 @@ function readGridPower(callback) {
   reportError(state.errors, state.notified, "em", "Konfiguration",
     "Unbekannter CONFIG.gridSource: " + CONFIG.gridSource);
 
-  unlock();
+  unlock(myCycle);
   callback(false);
 
 }
@@ -643,7 +697,7 @@ function readGridPower(callback) {
 // Read Zendure devices (sequentially, one after another)
 // ======================================================
 
-function readDevice(index, callback) {
+function readDevice(index, myCycle, callback) {
 
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -653,6 +707,14 @@ function readDevice(index, callback) {
     "http://" + cfg.ip + "/properties/report",
 
     function (res) {
+
+      // Stale cycle - a newer one has already started since this GET was
+      // sent. Do not touch ds.* with what could be outdated data, and
+      // don't continue the (equally stale) readAllDevices chain either.
+      if (myCycle !== state.cycleId) {
+        debugStale("readDevice(" + cfg.label + ")", myCycle);
+        return;
+      }
 
       if (!res || res.code !== 200) {
 
@@ -724,15 +786,15 @@ function readDevice(index, callback) {
   );
 }
 
-function readAllDevices(index, callback) {
+function readAllDevices(index, myCycle, callback) {
 
   if (index >= CONFIG.devices.length) {
     callback();
     return;
   }
 
-  readDevice(index, function () {
-    readAllDevices(index + 1, callback);
+  readDevice(index, myCycle, function () {
+    readAllDevices(index + 1, myCycle, callback);
   });
 
 }
@@ -752,7 +814,16 @@ function zeroOutputs() {
   return out;
 }
 
-function calculate() {
+function calculate(myCycle) {
+
+  // Stale cycle (deferred here via Timer.set(0,...) from update() - a
+  // newer cycle may have already started in the meantime) - skip
+  // entirely rather than recomputing damping/mode/sticky-device off
+  // data that a fresher cycle may have already superseded.
+  if (myCycle !== state.cycleId) {
+    debugStale("calculate", myCycle);
+    return;
+  }
 
   let n = CONFIG.devices.length;
   let sumZen = 0;
@@ -788,7 +859,7 @@ function calculate() {
   if (availableCount === 0) {
 
     print("Kein Geraet erreichbar - Zyklus uebersprungen");
-    unlock();
+    unlock(myCycle);
     return;
 
   }
@@ -854,7 +925,7 @@ function calculate() {
     " W | Kombiniertes Ziel (gedaempft): " + target + " W"
   );
 
-  applyOutputs(output);
+  applyOutputs(output, myCycle);
 
 }
 
@@ -1305,7 +1376,7 @@ function distributeCharge(target) {
 // and write only the devices that actually changed enough.
 // ======================================================
 
-function applyOutputs(output) {
+function applyOutputs(output, myCycle) {
 
   let n = CONFIG.devices.length;
   let toWrite = [];
@@ -1350,7 +1421,7 @@ function applyOutputs(output) {
   }
 
   if (toWrite.length === 0) {
-    unlock();
+    unlock(myCycle);
     return;
   }
 
@@ -1363,8 +1434,15 @@ function applyOutputs(output) {
   // plenty free) is behind the -103 errors.
   Timer.set(0, false, function () {
 
-    writeAllDevices(toWrite, output, 0, function () {
-      unlock();
+    // Re-check after the deferral: a newer cycle could have started in
+    // this gap too.
+    if (myCycle !== state.cycleId) {
+      debugStale("applyOutputs (nach Timer.set(0))", myCycle);
+      return;
+    }
+
+    writeAllDevices(toWrite, output, myCycle, 0, function () {
+      unlock(myCycle);
     });
 
   });
@@ -1376,7 +1454,16 @@ function applyOutputs(output) {
 // Write output limit to a Zendure device (sequentially across devices)
 // ======================================================
 
-function writeDevice(index, output, callback) {
+function writeDevice(index, output, myCycle, callback) {
+
+  // Stale cycle - stop the whole writeAllDevices chain right here rather
+  // than firing (more) writes derived from outdated calculations. Any
+  // write already in flight from before this cycle went stale can't be
+  // recalled, but its response will also be caught by the guard below.
+  if (myCycle !== state.cycleId) {
+    debugStale("writeDevice(" + CONFIG.devices[index].label + ") vor dem Schreiben", myCycle);
+    return;
+  }
 
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -1421,6 +1508,14 @@ function writeDevice(index, output, callback) {
     // just being logged as "fehlgeschlagen" with no further detail.
     function (res, error_code, error_message) {
 
+      // Stale by the time the response arrives (a newer cycle started
+      // while this write was still in flight) - don't commit outputLimit
+      // or continue the chain with data a fresher cycle has superseded.
+      if (myCycle !== state.cycleId) {
+        debugStale("writeDevice(" + cfg.label + ") Antwort", myCycle);
+        return;
+      }
+
       if (res && res.code === 200) {
 
         // Only NOW - after a confirmed successful write - remember the
@@ -1456,15 +1551,15 @@ function writeDevice(index, output, callback) {
   );
 }
 
-function writeAllDevices(indices, output, pos, callback) {
+function writeAllDevices(indices, output, myCycle, pos, callback) {
 
   if (pos >= indices.length) {
     callback();
     return;
   }
 
-  writeDevice(indices[pos], output, function () {
-    writeAllDevices(indices, output, pos + 1, callback);
+  writeDevice(indices[pos], output, myCycle, function () {
+    writeAllDevices(indices, output, myCycle, pos + 1, callback);
   });
 
 }
@@ -1478,21 +1573,27 @@ function update() {
   if (state.busy) {
 
     print("Vorheriger Zyklus laeuft noch");
+
+    if (CONFIG.debug) {
+      print("DEBUG Tick uebersprungen - Zyklus " + state.cycleId +
+        " laeuft seit " + (Date.now() - state.cycleStartedAt) + " ms");
+    }
+
     return;
 
   }
 
-  lock();
+  let myCycle = lock();
 
   for (let i = 0; i < CONFIG.devices.length; i++) {
     state.devices[i].available = false;
   }
 
-  readGridPower(function (ok) {
+  readGridPower(myCycle, function (ok) {
 
     if (!ok) return; // unlock() already called inside readGridPower on failure
 
-    readAllDevices(0, function () {
+    readAllDevices(0, myCycle, function () {
 
       // Deferred via Timer.set(0, ...): calculate() (and everything it
       // calls - distributeDischarge/distributeCharge/waterFillDischarge/
@@ -1503,7 +1604,9 @@ function update() {
       // charge/water-fill branch actually ran). Breaking out into a fresh
       // event loop tick here gives it a shallow stack to start from -
       // same fix pattern as the write-path deferral in applyOutputs().
-      Timer.set(0, false, calculate);
+      Timer.set(0, false, function () {
+        calculate(myCycle);
+      });
 
     });
 
