@@ -1,7 +1,8 @@
-// Zendure Dynamic Output Controller - MULTI-DEVICE Version
-// Runs on any Shelly Gen2/3 device with scripting support.
-// ... And ofc. a lot of AI coding aid was involved ;-)
-// ======================================================
+// Zendure Dynamic Output Controller - Multi-Device Version
+// Shelly Gen2/3 Script (mJS) fuer das Balancing mehrerer Zendure-Geraete gegen einen Pro 3EM oder generischen JSON-Zaehler
+// Alle HTTP-Requests je Geraet sequenziell (kein paralleler Zugriff auf den Shelly)
+// Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
+// Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
   devices: [
@@ -9,8 +10,8 @@ let CONFIG = {
       ip: "192.168.178.143",   // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
-      minSoc: 15,               // no discharge below this SOC (%)
-      maxOutput: 1200,           // max discharge/export power (W)
+      minSoc: 18,               // no discharge below this SOC (%)
+      maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
       reverse: false,            // may this device charge from the grid?
@@ -20,7 +21,7 @@ let CONFIG = {
       dryRun: false  
     },
     {
-      ip: "192.168.178.144",   // Zendure IP address
+      ip: "192.168.178.143",   // Zendure IP address
       label: "SF800",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
@@ -36,10 +37,7 @@ let CONFIG = {
   ],
 
   // Where to read the household grid power from:
-  // "local"     -> script runs directly on the Shelly Pro 3EM and reads
-  // "remote"    -> script runs on ANY other Shelly device
-  // "http_json" -> generic: reads the grid power from ANY device that
-  gridSource: "local",
+  gridSource: "local", // "local", "remote", "http_json"
 
   // IP address of the Shelly Pro 3EM providing the grid measurement.
   // Only required/used when gridSource = "remote".
@@ -58,7 +56,10 @@ let CONFIG = {
   gridSourceField: "total_power",
 
   // Set to true if the sign of gridSourceField is inverted compared to what
-  // this script expects (positive = importing from grid).
+  // this script expects (positive = importing from grid). Test by
+  // switching on a big consumer at home and checking whether the printed
+  // "Grid:" value in the console goes positive - if it goes negative
+  // instead, set this to true.
   gridSourceInvert: false,
 
   // Update interval in milliseconds
@@ -87,7 +88,9 @@ let CONFIG = {
   dampingFactor: 0.6,
 
   // ------------------------------------------------------------------
-  // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
+  // Concentration mode: run only ONE device at low load instead of
+  // splitting a small amount across all of them. Uses hysteresis (two
+  // separate thresholds) so the number of active devices doesn't flap
   // back and forth around a single value. Between the two thresholds,
   // whichever mode is currently active stays active.
   // ------------------------------------------------------------------
@@ -113,6 +116,13 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // Reverse mode (charging from the grid) - global hysteresis
   // ------------------------------------------------------------------
+  // Whether an individual device is ALLOWED to charge from the grid at
+  // all is configured per device (CONFIG.devices[i].reverse). These two
+  // values control the system-wide start/stop hysteresis for entering or
+  // leaving "charging mode" as a whole (mirrors the single-device script;
+  // kept global here since starting/stopping should be a single system
+  // decision, not something each device decides independently).
+
   // Minimum charging power in watts required to START charging from
   // the grid. Acts as a deadband so the system doesn't switch into
   // charge mode for a negligible power deficit.
@@ -145,8 +155,6 @@ let CONFIG = {
 
 };
 
-// Sanity check: the stop threshold must never be larger than the startup
-// threshold, otherwise charging would never be able to switch off again.
 if (CONFIG.reverseStopPower > CONFIG.reverseStartupPower) {
 
   print(
@@ -158,8 +166,6 @@ if (CONFIG.reverseStopPower > CONFIG.reverseStartupPower) {
 
 }
 
-// Sanity check: concentrateBelow must not exceed spreadAbove, otherwise the
-// hysteresis band is inverted and the mode would flap every cycle.
 if (CONFIG.discharge.concentrateBelow > CONFIG.discharge.spreadAbove) {
   print("CONFIG.discharge: concentrateBelow > spreadAbove - setze spreadAbove = concentrateBelow");
   CONFIG.discharge.spreadAbove = CONFIG.discharge.concentrateBelow;
@@ -170,10 +176,6 @@ if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
   CONFIG.charge.spreadAbove = CONFIG.charge.concentrateBelow;
 }
 
-// ======================================================
-// State
-// ======================================================
-
 let state = {
 
   gridPower: 0,
@@ -181,11 +183,9 @@ let state = {
   busy: false,
   watchdogTimer: null,
 
-
   cycleId: 0,
   cycleStartedAt: 0,
 
-  // Global error types: "em" (grid meter), "watchdog" (stuck cycle)
   errors: { em: 0, watchdog: 0 },
   notified: { em: false, watchdog: false },
 
@@ -207,7 +207,6 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     outputLimit: null,  // last value written to this device
     maxSocLogged: false,
 
-    // Per-device error types: "connect", "json", "serial", "write"
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
 
@@ -215,10 +214,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
 
 }
 
-// ======================================================
-// Signal notifications (CallMeBot)
-// ======================================================
-
+// ------------------------------------------------------------------
 function simpleEncode(str) {
 
   let out = "";
@@ -239,6 +235,7 @@ function simpleEncode(str) {
   return out;
 }
 
+// ------------------------------------------------------------------
 function sendSignalMessage(text) {
 
   if (!CONFIG.signal.enabled)
@@ -252,7 +249,6 @@ function sendSignalMessage(text) {
   else
 	url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
 		
-
   print("Sende Signal-Nachricht...");
 
   Shelly.call(
@@ -271,12 +267,7 @@ function sendSignalMessage(text) {
   );
 }
 
-
-// ======================================================
-// Error / recovery bookkeeping (generic - used both globally and
-// per device, by passing the matching errors/notified objects)
-// ======================================================
-
+// ------------------------------------------------------------------
 function reportError(errors, notified, type, label, message) {
 
   errors[type] = errors[type] + 1;
@@ -298,6 +289,7 @@ function reportError(errors, notified, type, label, message) {
   }
 }
 
+// ------------------------------------------------------------------
 function reportSuccess(errors, notified, type, label) {
 
   if (errors[type] > 0 || notified[type]) {
@@ -316,15 +308,7 @@ function reportSuccess(errors, notified, type, label) {
   }
 }
 
-// ======================================================
-// Lock handling and watchdog (covers the whole cycle: grid read,
-// all device reads, distribution, all device writes)
-// ======================================================
-
-// DEBUG-only helper: log that an async response/continuation was
-// recognized as belonging to a stale (already-abandoned) cycle and was
-// discarded before touching any shared state. Kept as a single helper
-// so every guard point logs in the same format.
+// ------------------------------------------------------------------
 function debugStale(where, myCycle) {
   if (CONFIG.debug) {
     print("DEBUG " + where + " -> verworfen (Zyklus " + myCycle +
@@ -332,6 +316,7 @@ function debugStale(where, myCycle) {
   }
 }
 
+// ------------------------------------------------------------------
 function lock() {
 
   state.busy = true;
@@ -364,13 +349,9 @@ function lock() {
 
 }
 
+// ------------------------------------------------------------------
 function unlock(myCycle) {
 
-  // A stale cycle (one the watchdog already gave up on, whose async
-  // chain only completes later) must never touch busy/watchdogTimer -
-  // that state belongs to whichever cycle is current NOW, and clearing
-  // it out from under a still-running newer cycle would disable its
-  // watchdog protection without it actually being done.
   if (myCycle !== state.cycleId) {
     debugStale("unlock", myCycle);
     return;
@@ -393,10 +374,7 @@ function unlock(myCycle) {
   }
 }
 
-// ======================================================
-// HTTP helper functions
-// ======================================================
-
+// ------------------------------------------------------------------
 function httpGet(url, callback) {
 
   Shelly.call(
@@ -409,6 +387,7 @@ function httpGet(url, callback) {
   );
 }
 
+// ------------------------------------------------------------------
 function httpPost(url, body, callback) {
 
   let bodyStr = JSON.stringify(body);
@@ -417,12 +396,6 @@ function httpPost(url, body, callback) {
     print("DEBUG httpPost -> url: " + url + " | body: " + bodyStr);
   }
 
-  // Back to the plain HTTP.Request form (headers + JSON string body) -
-  // confirmed correct by an isolated standalone test with the exact same
-  // payload. The earlier -103 "Malformed JSON request" errors were never
-  // about the request format; they trace to something in multi.js's own
-  // execution context (memory pressure, most likely - see the trimmed
-  // bannerLines below), not to how the write request is built.
   Shelly.call(
     "HTTP.Request",
     {
@@ -442,17 +415,9 @@ function httpPost(url, body, callback) {
   );
 }
 
-// ======================================================
-// Read grid power - locally (script runs on the Pro 3EM itself),
-// remotely from a Shelly Pro 3EM via RPC, or generically from any
-// other device (e.g. Zendure Smart Meter 3CT) that returns a flat
-// JSON object with a total-power field over plain HTTP GET.
-// ======================================================
-
+// ------------------------------------------------------------------
 function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, callback) {
 
-  // Stale cycle (a newer one has already started since this request was
-  // sent) - do nothing at all, not even call the callback further.
   if (myCycle !== state.cycleId) {
     debugStale("readGridPower", myCycle);
     return;
@@ -504,6 +469,7 @@ function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, call
 
 }
 
+// ------------------------------------------------------------------
 function readGridPower(myCycle, callback) {
 
   if (CONFIG.gridSource === "local") {
@@ -586,10 +552,7 @@ function readGridPower(myCycle, callback) {
 
 }
 
-// ======================================================
-// Read Zendure devices (sequentially, one after another)
-// ======================================================
-
+// ------------------------------------------------------------------
 function readDevice(index, myCycle, callback) {
 
   let cfg = CONFIG.devices[index];
@@ -601,9 +564,6 @@ function readDevice(index, myCycle, callback) {
 
     function (res) {
 
-      // Stale cycle - a newer one has already started since this GET was
-      // sent. Do not touch ds.* with what could be outdated data, and
-      // don't continue the (equally stale) readAllDevices chain either.
       if (myCycle !== state.cycleId) {
         debugStale("readDevice(" + cfg.label + ")", myCycle);
         return;
@@ -653,9 +613,6 @@ function readDevice(index, myCycle, callback) {
 
       ds.soc = data.packData[0].socLevel;
 
-      // Determine the device's current actual power flow, signed:
-      // positive = currently discharging/exporting (acMode 2)
-      // negative = currently charging from the grid (acMode 1)
       let acMode = data.properties.acMode;
 
       if (acMode === 2) {
@@ -679,6 +636,7 @@ function readDevice(index, myCycle, callback) {
   );
 }
 
+// ------------------------------------------------------------------
 function readAllDevices(index, myCycle, callback) {
 
   if (index >= CONFIG.devices.length) {
@@ -692,10 +650,7 @@ function readAllDevices(index, myCycle, callback) {
 
 }
 
-// ======================================================
-// Calculate the combined target and split it across devices
-// ======================================================
-
+// ------------------------------------------------------------------
 function zeroOutputs() {
 
   let out = [];
@@ -707,12 +662,9 @@ function zeroOutputs() {
   return out;
 }
 
+// ------------------------------------------------------------------
 function calculate(myCycle) {
 
-  // Stale cycle (deferred here via Timer.set(0,...) from update() - a
-  // newer cycle may have already started in the meantime) - skip
-  // entirely rather than recomputing damping/mode/sticky-device off
-  // data that a fresher cycle may have already superseded.
   if (myCycle !== state.cycleId) {
     debugStale("calculate", myCycle);
     return;
@@ -748,8 +700,6 @@ function calculate(myCycle) {
 
   }
 
-  // Combined (undamped) target power, exactly like the single-device
-  // script, just with the SUM of all devices' current power flow.
   let raw = Math.round((state.gridPower - CONFIG.setpoint) + sumZen);
 
   if (state.smoothedOutput === null) {
@@ -781,7 +731,6 @@ function calculate(myCycle) {
 
   } else if (!anyReverseCapable) {
 
-    // Charging desired but no device allows it -> nothing to do
     output = zeroOutputs();
 
   } else {
@@ -809,12 +758,7 @@ function calculate(myCycle) {
 
 }
 
-// ======================================================
-// Concentration mode: decide whether ONE device or ALL devices should
-// be active this cycle, and (if one) WHICH device - with hysteresis on
-// both decisions so neither flaps.
-// ======================================================
-
+// ------------------------------------------------------------------
 function updateMode(currentMode, targetMagnitude, cfg) {
 
   if (currentMode === "single") {
@@ -835,12 +779,7 @@ function updateMode(currentMode, targetMagnitude, cfg) {
 
 }
 
-// Sticky device selection for concentration mode. `selector` is a small
-// persistent object ({ active }), one for discharge and one for charge,
-// that survives across cycles. The currently active device keeps being
-// used unless it becomes unavailable, hits its own safety limit, or
-// another device's advantage reaches socMargin percentage points -
-// all three cases switch immediately, no hold/wait time.
+// ------------------------------------------------------------------
 function pickStickyDevice(weight, active, selector) {
 
   let n = weight.length;
@@ -885,12 +824,7 @@ function pickStickyDevice(weight, active, selector) {
 
 }
 
-// ======================================================
-// Weight calculation - identical safety-cutoff semantics as before
-// (weight 0 = excluded), factored out so both the mode/sticky decision
-// and the water-filling function share exactly the same numbers.
-// ======================================================
-
+// ------------------------------------------------------------------
 function computeDischargeWeights() {
 
   let n = CONFIG.devices.length;
@@ -917,6 +851,7 @@ function computeDischargeWeights() {
 
 }
 
+// ------------------------------------------------------------------
 function computeChargeWeights() {
 
   let n = CONFIG.devices.length;
@@ -962,13 +897,7 @@ function computeChargeWeights() {
 
 }
 
-// ======================================================
-// Water-filling core (used in "spread" mode, and as the automatic
-// fallback when concentration mode's single device can't cover the
-// target on its own). Same logic as before, factored to take
-// pre-computed weight/active arrays.
-// ======================================================
-
+// ------------------------------------------------------------------
 function waterFillDischarge(target, weight, active) {
 
   let n = weight.length;
@@ -1026,10 +955,6 @@ function waterFillDischarge(target, weight, active) {
 
   }
 
-  // Defensive floor safety-net: even in spread mode, if the water-filled
-  // shares end up smaller than minOutput (e.g. thresholds misconfigured),
-  // don't overshoot by flooring every device independently - concentrate
-  // on the single best one instead.
   let activeCount = 0;
   let sumMinOutput = 0;
   let bestIdx = -1;
@@ -1084,6 +1009,7 @@ function waterFillDischarge(target, weight, active) {
 
 }
 
+// ------------------------------------------------------------------
 function waterFillCharge(target, weight, active) {
 
   let n = weight.length;
@@ -1158,12 +1084,7 @@ function waterFillCharge(target, weight, active) {
 
 }
 
-// ======================================================
-// Top-level distribution entry points, called from calculate(). Decide
-// the mode (single/spread) with hysteresis, then either concentrate on
-// one sticky device or fall back to full water-filling.
-// ======================================================
-
+// ------------------------------------------------------------------
 function distributeDischarge(target) {
 
   let weights = computeDischargeWeights();
@@ -1194,8 +1115,6 @@ function distributeDischarge(target) {
 
     }
 
-    // The preferred single device can't cover the target on its own -
-    // real necessity overrides the hysteresis, switch to spread NOW.
     print("Ziel uebersteigt maxOutput von " + CONFIG.devices[idx].label +
       " - wechsle sofort in den Mehrere-Geraete-Modus");
     state.discharge.mode = "spread";
@@ -1206,6 +1125,7 @@ function distributeDischarge(target) {
 
 }
 
+// ------------------------------------------------------------------
 function distributeCharge(target) {
 
   let weights = computeChargeWeights();
@@ -1247,11 +1167,7 @@ function distributeCharge(target) {
 
 }
 
-// ======================================================
-// Apply the calculated outputs: log, apply per-device hysteresis,
-// and write only the devices that actually changed enough.
-// ======================================================
-
+// ------------------------------------------------------------------
 function applyOutputs(output, myCycle) {
 
   let n = CONFIG.devices.length;
@@ -1276,22 +1192,12 @@ function applyOutputs(output, myCycle) {
     }
 
     if (cfg.dryRun) {
-      // dryRun devices are never actually written, so there's no "confirmed
-      // success" to wait for - track the value right here so this line only
-      // repeats once it changes enough (same behaviour as before).
       ds.outputLimit = output[i];
       print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + output[i] +
         " W " + (output[i] >= 0 ? "(Export)" : "(Laden vom Netz)"));
       continue;
     }
 
-    // NOTE: ds.outputLimit is intentionally NOT set here for real devices
-    // anymore. It's only updated in writeDevice() once the write is
-    // actually confirmed successful (res.code === 200). This way a failed
-    // write gets retried on every following cycle where the target still
-    // differs by more than the hysteresis from the value that was truly
-    // last applied on the device - instead of being silently skipped
-    // because the script wrongly believed the device was already there.
     toWrite[toWrite.length] = i;
 
   }
@@ -1301,17 +1207,8 @@ function applyOutputs(output, myCycle) {
     return;
   }
 
-  // Deferred via Timer.set(0, ...) instead of calling writeAllDevices()
-  // directly: by this point the call stack is already several levels deep
-  // (GET-response callback -> readAllDevices -> calculate -> applyOutputs),
-  // all still synchronous. Timer.set(0, ...) breaks out into a fresh event
-  // loop tick, so the write RPC call fires from a much shallower stack -
-  // testing whether stack depth (as opposed to heap, which measured
-  // plenty free) is behind the -103 errors.
   Timer.set(0, false, function () {
 
-    // Re-check after the deferral: a newer cycle could have started in
-    // this gap too.
     if (myCycle !== state.cycleId) {
       debugStale("applyOutputs (nach Timer.set(0))", myCycle);
       return;
@@ -1323,19 +1220,11 @@ function applyOutputs(output, myCycle) {
 
   });
 
-
 }
 
-// ======================================================
-// Write output limit to a Zendure device (sequentially across devices)
-// ======================================================
-
+// ------------------------------------------------------------------
 function writeDevice(index, output, myCycle, callback) {
 
-  // Stale cycle - stop the whole writeAllDevices chain right here rather
-  // than firing (more) writes derived from outdated calculations. Any
-  // write already in flight from before this cycle went stale can't be
-  // recalled, but its response will also be caught by the guard below.
   if (myCycle !== state.cycleId) {
     debugStale("writeDevice(" + CONFIG.devices[index].label + ") vor dem Schreiben", myCycle);
     return;
@@ -1379,14 +1268,8 @@ function writeDevice(index, output, myCycle, callback) {
       }
     },
 
-    // Shelly.call() invokes this with (result, error_code, error_message) -
-    // capture all three so a failure can actually be diagnosed instead of
-    // just being logged as "fehlgeschlagen" with no further detail.
     function (res, error_code, error_message) {
 
-      // Stale by the time the response arrives (a newer cycle started
-      // while this write was still in flight) - don't commit outputLimit
-      // or continue the chain with data a fresher cycle has superseded.
       if (myCycle !== state.cycleId) {
         debugStale("writeDevice(" + cfg.label + ") Antwort", myCycle);
         return;
@@ -1394,12 +1277,6 @@ function writeDevice(index, output, myCycle, callback) {
 
       if (res && res.code === 200) {
 
-        // Only NOW - after a confirmed successful write - remember the
-        // value as actually applied. This is what makes the per-device
-        // hysteresis check in applyOutputs() trustworthy: a failed write
-        // will make ds.outputLimit stay at its old value, so the next
-        // cycle's differing target will exceed the hysteresis band again
-        // and trigger a fresh retry, instead of being silently skipped.
         ds.outputLimit = target;
 
         print(cfg.label + ": Leistung gesetzt: " + target + " W " +
@@ -1427,6 +1304,7 @@ function writeDevice(index, output, myCycle, callback) {
   );
 }
 
+// ------------------------------------------------------------------
 function writeAllDevices(indices, output, myCycle, pos, callback) {
 
   if (pos >= indices.length) {
@@ -1440,10 +1318,7 @@ function writeAllDevices(indices, output, myCycle, pos, callback) {
 
 }
 
-// ======================================================
-// Main control loop
-// ======================================================
-
+// ------------------------------------------------------------------
 function update() {
 
   if (state.busy) {
@@ -1471,15 +1346,6 @@ function update() {
 
     readAllDevices(0, myCycle, function () {
 
-      // Deferred via Timer.set(0, ...): calculate() (and everything it
-      // calls - distributeDischarge/distributeCharge/waterFillDischarge/
-      // waterFillCharge) needs a fair amount of local variables and
-      // nested loops, and running it directly inside the last device's
-      // GET-response callback was enough to exceed mJS's stack budget on
-      // this device (seen as "Too much recursion" the first time the
-      // charge/water-fill branch actually ran). Breaking out into a fresh
-      // event loop tick here gives it a shallow stack to start from -
-      // same fix pattern as the write-path deferral in applyOutputs().
       Timer.set(0, false, function () {
         calculate(myCycle);
       });
@@ -1490,10 +1356,7 @@ function update() {
 
 }
 
-// ======================================================
-// One-time SoC-limit sync (minSoc / socSet) at startup
-// ======================================================
-
+// ------------------------------------------------------------------
 function syncSocLimitsDevice(index, callback) {
 
   let cfg = CONFIG.devices[index];
@@ -1535,8 +1398,6 @@ function syncSocLimitsDevice(index, callback) {
 
       ds.serial = data.sn;
 
-      // Config values are whole percent, device properties are in
-      // per-mille (tenths of a percent) - e.g. 15 % -> 150, 100 % -> 1000.
       let minSocRaw = Math.round(cfg.minSoc * 10);
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
 
@@ -1583,6 +1444,7 @@ function syncSocLimitsDevice(index, callback) {
 
 }
 
+// ------------------------------------------------------------------
 function syncSocLimitsAll(index, callback) {
 
   if (index >= CONFIG.devices.length) {
@@ -1595,10 +1457,6 @@ function syncSocLimitsAll(index, callback) {
   });
 
 }
-
-// ======================================================
-// Startup
-// ======================================================
 
 let bannerLines = [];
 
@@ -1649,6 +1507,7 @@ bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
 
+// ------------------------------------------------------------------
 function printBannerLine(onDone) {
 
   if (bannerIndex >= bannerLines.length) {
