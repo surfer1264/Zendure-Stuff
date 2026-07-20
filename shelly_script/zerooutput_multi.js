@@ -1,38 +1,12 @@
 // Zendure Dynamic Output Controller - MULTI-DEVICE Version
 // Runs on any Shelly Gen2/3 device with scripting support.
-//
-// Structurally this supports any number of devices (CONFIG.devices is a
-// plain array) - tested/designed for 2, but adding a third device is just
-// adding another entry to the array.
-//
-// Requests to each device (report + write) are sent SEQUENTIALLY, never
-// in parallel, to avoid overloading the Shelly's limited HTTP/memory
-// resources.
-//
-// Setup:
-// 1. Remove ALL Zendure devices from HEMS in the app.
-// 2. Copy the whole content and paste it into your Shelly Script UI.
-// 3. Set CONFIG.gridSource ("local" = script runs ON the Pro 3EM itself,
-//    "remote" = script runs on any other Shelly and reads a Pro 3EM
-//    over the network via RPC, "http_json" = reads grid power from any
-//    other JSON-over-HTTP meter, e.g. the Zendure Smart Meter 3CT).
-// 4. Fill in CONFIG.devices with one entry per Zendure device (IP,
-//    label, minSoc/maxSoc, maxOutput, minOutput, reverse, maxInputPower).
-// 5. Set gridSourceIp / gridSourceUrl depending on the chosen gridSource.
-// 6. Press start (and set it to start on boot time of the Shelly).
-//
-// This is based on the single-device Zendure Dynamic Output Controller
-// and might be working on similar setups.
-//
-//
 // ... And ofc. a lot of AI coding aid was involved ;-)
-//
 // ======================================================
 
 let CONFIG = {
   devices: [
      {
-      ip: "192.168.178.xxx",   // Zendure IP address
+      ip: "192.168.178.143",   // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
@@ -46,7 +20,7 @@ let CONFIG = {
       dryRun: false  
     },
     {
-      ip: "192.168.178.yyy",   // Zendure IP address
+      ip: "192.168.178.144",   // Zendure IP address
       label: "SF800",          // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
@@ -63,15 +37,8 @@ let CONFIG = {
 
   // Where to read the household grid power from:
   // "local"     -> script runs directly on the Shelly Pro 3EM and reads
-  //                Shelly.getComponentStatus("em:<gridSourceEmId>") locally
-  // "remote"    -> script runs on ANY other Shelly device and reads the
-  //                grid power from a Shelly Pro 3EM elsewhere in the
-  //                network via its HTTP RPC API (EM.GetStatus)
+  // "remote"    -> script runs on ANY other Shelly device
   // "http_json" -> generic: reads the grid power from ANY device that
-  //                exposes a flat JSON object via plain HTTP GET, e.g. the
-  //                Zendure Smart Meter 3CT (http://<IP>/properties/report)
-  //                or similar third-party meters. Configure gridSourceUrl /
-  //                gridSourceField / gridSourceInvert below.
   gridSource: "local",
 
   // IP address of the Shelly Pro 3EM providing the grid measurement.
@@ -91,10 +58,7 @@ let CONFIG = {
   gridSourceField: "total_power",
 
   // Set to true if the sign of gridSourceField is inverted compared to what
-  // this script expects (positive = importing from grid). Test by
-  // switching on a big consumer at home and checking whether the printed
-  // "Grid:" value in the console goes positive - if it goes negative
-  // instead, set this to true.
+  // this script expects (positive = importing from grid).
   gridSourceInvert: false,
 
   // Update interval in milliseconds
@@ -123,9 +87,7 @@ let CONFIG = {
   dampingFactor: 0.6,
 
   // ------------------------------------------------------------------
-  // Concentration mode: run only ONE device at low load instead of
-  // splitting a small amount across all of them. Uses hysteresis (two
-  // separate thresholds) so the number of active devices doesn't flap
+  // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
   // back and forth around a single value. Between the two thresholds,
   // whichever mode is currently active stays active.
   // ------------------------------------------------------------------
@@ -151,13 +113,6 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // Reverse mode (charging from the grid) - global hysteresis
   // ------------------------------------------------------------------
-  // Whether an individual device is ALLOWED to charge from the grid at
-  // all is configured per device (CONFIG.devices[i].reverse). These two
-  // values control the system-wide start/stop hysteresis for entering or
-  // leaving "charging mode" as a whole (mirrors the single-device script;
-  // kept global here since starting/stopping should be a single system
-  // decision, not something each device decides independently).
-
   // Minimum charging power in watts required to START charging from
   // the grid. Acts as a deadband so the system doesn't switch into
   // charge mode for a negligible power deficit.
@@ -182,7 +137,7 @@ let CONFIG = {
   signal: {
 
     enabled: false,          // set to true to activate Signal notifications
-	  typ: "SIGNAL",			     // Signal oor WHATSAPP
+	typ: "SIGNAL",			     // Signal oor WHATSAPP
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
     apiKey: "YOUR_API_KEY"   // your CallMeBot API key
 
@@ -226,12 +181,7 @@ let state = {
   busy: false,
   watchdogTimer: null,
 
-  // Incremented every time a new cycle starts (see lock()). Threaded
-  // through the async chain of a single cycle so that a callback which
-  // fires late - after the watchdog has already given up on that same
-  // cycle and a NEWER cycle has since started - can recognize itself as
-  // stale and skip touching shared state entirely, instead of silently
-  // overwriting fresher data or issuing a duplicate write.
+
   cycleId: 0,
   cycleStartedAt: 0,
 
@@ -239,12 +189,6 @@ let state = {
   errors: { em: 0, watchdog: 0 },
   notified: { em: false, watchdog: false },
 
-  // Concentration-mode state, tracked separately for discharge and charge
-  // since the system could in principle resume either with its own
-  // previously-preferred device. "spread" is the safe/neutral starting
-  // mode - the very first cycle(s) always used it before this feature
-  // existed, so starting there preserves prior behaviour until the mode
-  // logic has had a chance to evaluate the first real target.
   discharge: { mode: "spread", active: null },
   charge: { mode: "spread", active: null },
 
@@ -778,15 +722,6 @@ function calculate(myCycle) {
   let sumZen = 0;
   let availableCount = 0;
 
-  // Dedupe by IP: two CONFIG entries pointing at the same physical device
-  // (e.g. a real entry plus a dryRun testing entry on the same IP - see
-  // the dryRun comment above CONFIG.devices) are the SAME battery. Only
-  // count that device's power once, otherwise it gets summed twice into
-  // sumZen, which inflates the calculated target, which makes the script
-  // write an even higher value to the real device, which reads even
-  // higher next cycle - a runaway feedback loop. The split/weighting
-  // logic below is unaffected and still runs per entry, so this only
-  // fixes the combined target, not the split preview.
   let countedIps = {};
 
   for (let i = 0; i < n; i++) {
@@ -851,10 +786,6 @@ function calculate(myCycle) {
 
   } else {
 
-    // System-wide startup deadband: only begin charging if the deficit is
-    // big enough. If the system is ALREADY charging (sumZen < 0), it may
-    // continue down to the smaller reverseStopPower threshold instead -
-    // this mirrors the single-device hysteresis behaviour.
     let alreadyCharging = sumZen < 0;
 
     if (!alreadyCharging && target > (CONFIG.reverseStartupPower * -1)) {
@@ -884,10 +815,6 @@ function calculate(myCycle) {
 // both decisions so neither flaps.
 // ======================================================
 
-// Hysteresis on "how many devices should be active". Between the two
-// configured thresholds, whatever mode is already active stays active -
-// this is the same two-threshold pattern used for the SOC/temperature
-// alarms elsewhere in this project, just applied to device count.
 function updateMode(currentMode, targetMagnitude, cfg) {
 
   if (currentMode === "single") {
@@ -1564,6 +1491,112 @@ function update() {
 }
 
 // ======================================================
+// One-time SoC-limit sync (minSoc / socSet) at startup
+// ======================================================
+
+function syncSocLimitsDevice(index, callback) {
+
+  let cfg = CONFIG.devices[index];
+  let ds = state.devices[index];
+
+  if (cfg.dryRun) {
+    print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
+    callback();
+    return;
+  }
+
+  httpGet(
+
+    "http://" + cfg.ip + "/properties/report",
+
+    function (res) {
+
+      if (!res || res.code !== 200) {
+        print("  " + cfg.label + ": SoC-Sync uebersprungen - Geraet nicht erreichbar");
+        callback();
+        return;
+      }
+
+      let data;
+
+      try {
+        data = JSON.parse(res.body);
+      } catch (e) {
+        print("  " + cfg.label + ": SoC-Sync uebersprungen - Fehler beim Parsen der Antwort");
+        callback();
+        return;
+      }
+
+      if (!data.sn) {
+        print("  " + cfg.label + ": SoC-Sync uebersprungen - keine Seriennummer gefunden");
+        callback();
+        return;
+      }
+
+      ds.serial = data.sn;
+
+      // Config values are whole percent, device properties are in
+      // per-mille (tenths of a percent) - e.g. 15 % -> 150, 100 % -> 1000.
+      let minSocRaw = Math.round(cfg.minSoc * 10);
+      let maxSocRaw = Math.round(cfg.maxSoc * 10);
+
+      httpPost(
+
+        "http://" + cfg.ip + "/properties/write",
+
+        {
+          sn: ds.serial,
+          properties: {
+            minSoc: minSocRaw,
+            socSet: maxSocRaw
+          }
+        },
+
+        function (res2, error_code, error_message) {
+
+          if (res2 && res2.code === 200) {
+
+            print("  " + cfg.label + ": SoC-Grenzwerte synchronisiert (minSoc " +
+              cfg.minSoc + "%, maxSoc " + cfg.maxSoc + "%)");
+
+          } else {
+
+            if (CONFIG.debug) {
+              print(
+                "DEBUG " + cfg.label + "/socSync - res: " + JSON.stringify(res2) +
+                " | error_code: " + error_code +
+                " | error_message: " + error_message
+              );
+            }
+
+            print("  " + cfg.label + ": SoC-Sync fehlgeschlagen beim Schreiben");
+
+          }
+
+          callback();
+
+        }
+      );
+
+    }
+  );
+
+}
+
+function syncSocLimitsAll(index, callback) {
+
+  if (index >= CONFIG.devices.length) {
+    callback();
+    return;
+  }
+
+  syncSocLimitsDevice(index, function () {
+    syncSocLimitsAll(index + 1, callback);
+  });
+
+}
+
+// ======================================================
 // Startup
 // ======================================================
 
@@ -1616,29 +1649,44 @@ bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
 
-function printBannerLine() {
+function printBannerLine(onDone) {
 
   if (bannerIndex >= bannerLines.length) {
     bannerLines = null;
+    if (onDone) onDone();
     return;
   }
 
   print(bannerLines[bannerIndex]);
   bannerIndex = bannerIndex + 1;
 
-  Timer.set(150, false, printBannerLine);
+  Timer.set(150, false, function () {
+    printBannerLine(onDone);
+  });
 
 }
 
-printBannerLine();
+printBannerLine(function () {
 
-if (CONFIG.signal.enabled) {
-  sendSignalMessage("Zendure Multi-Device-Controller gestartet (" +
-    CONFIG.devices.length + " Geraete).");
-}
+  if (CONFIG.signal.enabled) {
+    sendSignalMessage("Zendure Multi-Device-Controller gestartet (" +
+      CONFIG.devices.length + " Geraete).");
+  }
 
-Timer.set(
-  CONFIG.interval,
-  true,
-  update
-);
+  print("--------------------------------");
+  print("Synchronisiere SoC-Grenzwerte (minSoc/maxSoc) einmalig mit allen Geraeten...");
+
+  syncSocLimitsAll(0, function () {
+
+    print("SoC-Sync abgeschlossen - starte Regelbetrieb.");
+    print("--------------------------------");
+
+    Timer.set(
+      CONFIG.interval,
+      true,
+      update
+    );
+
+  });
+
+});
