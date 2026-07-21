@@ -5,13 +5,15 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
+  version: "1.0.0",
+  
   devices: [
      {
       ip: "192.168.178.143",   // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 18,               // no discharge below this SOC (%)
-      maxOutput: 800,           // max discharge/export power (W)
+      maxOutput: 2400,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
 
       reverse: false,            // may this device charge from the grid?
@@ -62,18 +64,6 @@ let CONFIG = {
   // instead, set this to true.
   gridSourceInvert: false,
 
-  // Update interval in milliseconds
-  interval: 4000,
-
-  // Watchdog timeout in milliseconds (covers the whole cycle: grid read +
-  // all device reads + distribution + all device writes)
-  watchdog: 10000,
-
-  // Keeping this comfortably shorter than the
-  // watchdog ensures every call is actually resolved (success or
-  // failure) well before that can happen.
-  httpTimeout: 5,
-
   // Target grid power in watts (e.g. 0 = balance to zero,
   // negative = slight export, positive = slight import)
   setpoint: 0,
@@ -112,6 +102,12 @@ let CONFIG = {
   rebalance: {
     socMargin: 10        // percentage points of advantage required to switch
   },
+  // ------------------------------------------------------------------
+  // Time-coupled hysteresis for the spread -> single transition.
+  // Purpose: with periodically fluctuating loads (sun/cloud, air fryer
+  // duty cycles, etc.) right around concentrateBelow/spreadAbove, a
+  // pure power-based hysteresis can still cause rapid mode flapping.
+  concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
   // Reverse mode (charging from the grid) - global hysteresis
@@ -124,6 +120,18 @@ let CONFIG = {
   // Charging power in watts below which charging from the grid is
   // STOPPED again (must be <= reverseStartupPower).
   reverseStopPower: 10,
+
+  // Update interval in milliseconds
+  interval: 4000,
+
+  // Watchdog timeout in milliseconds (covers the whole cycle: grid read +
+  // all device reads + distribution + all device writes)
+  watchdog: 10000,
+
+  // Keeping this comfortably shorter than the
+  // watchdog ensures every call is actually resolved (success or
+  // failure) well before that can happen.
+  httpTimeout: 5,
 
   // Number of consecutive failures of the same type (per device, or
   // globally for the grid meter / watchdog) before a Signal notification
@@ -140,7 +148,7 @@ let CONFIG = {
   signal: {
 
     enabled: false,          // set to true to activate Signal notifications
-	typ: "SIGNAL",			     // Signal oor WHATSAPP
+	typ: "SIGNAL",			 // Signal oor WHATSAPP
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
     apiKey: "YOUR_API_KEY"   // your CallMeBot API key
 
@@ -169,6 +177,15 @@ if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
   CONFIG.charge.spreadAbove = CONFIG.charge.concentrateBelow;
 }
 
+// Hold time (spread -> single) in cycles, derived once from
+// concentrateHoldMinutes and the configured interval. Minimum 1 cycle,
+// so a value of 0 effectively behaves like "switch on the next cycle"
+// rather than never switching.
+let CONCENTRATE_HOLD_CYCLES = Math.max(
+  1,
+  Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
+);
+
 let state = {
 
   gridPower: 0,
@@ -182,8 +199,8 @@ let state = {
   errors: { em: 0, watchdog: 0 },
   notified: { em: false, watchdog: false },
 
-  discharge: { mode: "spread", active: null },
-  charge: { mode: "spread", active: null },
+  discharge: { mode: "spread", active: null, holdCycles: 0 },
+  charge: { mode: "spread", active: null, holdCycles: 0 },
 
   devices: []
 
@@ -752,11 +769,14 @@ function calculate(myCycle) {
 }
 
 // ------------------------------------------------------------------
-function updateMode(currentMode, targetMagnitude, cfg) {
+function updateMode(directionState, targetMagnitude, cfg) {
+
+  let currentMode = directionState.mode;
 
   if (currentMode === "single") {
 
     if (targetMagnitude > cfg.spreadAbove) {
+      directionState.holdCycles = 0; // fresh start for the next spread->single evaluation
       return "spread";
     }
 
@@ -764,10 +784,30 @@ function updateMode(currentMode, targetMagnitude, cfg) {
 
   }
 
-  if (targetMagnitude < cfg.concentrateBelow) {
-    return "single";
+  // currentMode === "spread"
+
+  if (targetMagnitude > cfg.spreadAbove) {
+
+    directionState.holdCycles = 0; // genuine spike back up - reset the hold counter
+    return "spread";
+
   }
 
+  if (targetMagnitude < cfg.concentrateBelow) {
+
+    directionState.holdCycles = directionState.holdCycles + 1;
+
+    if (directionState.holdCycles >= CONCENTRATE_HOLD_CYCLES) {
+      directionState.holdCycles = 0;
+      return "single";
+    }
+
+    return "spread";
+
+  }
+
+  // Dead zone between concentrateBelow and spreadAbove: freeze the
+  // counter (neither progress nor reset) and stay in spread mode.
   return "spread";
 
 }
@@ -1084,7 +1124,7 @@ function distributeDischarge(target) {
   let weight = weights.weight;
   let active = weights.active;
 
-  state.discharge.mode = updateMode(state.discharge.mode, target, CONFIG.discharge);
+  state.discharge.mode = updateMode(state.discharge, target, CONFIG.discharge);
 
   if (state.discharge.mode === "single") {
 
@@ -1111,6 +1151,7 @@ function distributeDischarge(target) {
     print("Ziel uebersteigt maxOutput von " + CONFIG.devices[idx].label +
       " - wechsle sofort in den Mehrere-Geraete-Modus");
     state.discharge.mode = "spread";
+    state.discharge.holdCycles = 0;
 
   }
 
@@ -1126,7 +1167,7 @@ function distributeCharge(target) {
   let active = weights.active;
   let magnitude = -target;
 
-  state.charge.mode = updateMode(state.charge.mode, magnitude, CONFIG.charge);
+  state.charge.mode = updateMode(state.charge, magnitude, CONFIG.charge);
 
   if (state.charge.mode === "single") {
 
@@ -1153,6 +1194,7 @@ function distributeCharge(target) {
     print("Ladebedarf uebersteigt maxInputPower von " + CONFIG.devices[idx].label +
       " - wechsle sofort in den Mehrere-Geraete-Modus");
     state.charge.mode = "spread";
+    state.charge.holdCycles = 0;
 
   }
 
@@ -1453,6 +1495,7 @@ function syncSocLimitsAll(index, callback) {
 
 let bannerLines = [];
 
+bannerLines[bannerLines.length] = "Version    : " + CONFIG.version;
 bannerLines[bannerLines.length] = "--------------------------------";
 bannerLines[bannerLines.length] = "Zendure Multi-Device Controller gestartet";
 bannerLines[bannerLines.length] = "Geraete    : " + CONFIG.devices.length;
@@ -1489,6 +1532,9 @@ bannerLines[bannerLines.length] = "Entladen   : ein Geraet unter " +
 bannerLines[bannerLines.length] = "Laden      : ein Geraet unter " +
   CONFIG.charge.concentrateBelow + " W, verteilen ueber " +
   CONFIG.charge.spreadAbove + " W";
+bannerLines[bannerLines.length] = "Konzentrieren-Haltezeit: " +
+  CONFIG.concentrateHoldMinutes + " min (" + CONCENTRATE_HOLD_CYCLES +
+  " Zyklen) - gilt fuer spread->single, discharge+charge";
 bannerLines[bannerLines.length] = "Ausgleich  : ab " + CONFIG.rebalance.socMargin +
   " Prozentpunkten Vorsprung, sofort";
 bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
