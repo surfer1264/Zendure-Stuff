@@ -216,6 +216,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     available: false,   // was this device read successfully THIS cycle?
     outputLimit: null,  // last value written to this device
     maxSocLogged: false,
+    atMaxSoc: false,
 
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
@@ -622,6 +623,7 @@ function readDevice(index, myCycle, callback) {
       reportSuccess(ds.errors, ds.notified, "serial", cfg.label);
 
       ds.soc = data.packData[0].socLevel;
+      ds.atMaxSoc = (ds.soc >= cfg.maxSoc);
 
       let acMode = data.properties.acMode;
 
@@ -1271,7 +1273,16 @@ function writeDevice(index, output, myCycle, callback) {
 
   let acMode, outputLimit, inputLimit;
 
-  if (target >= 0) {
+  if (target === 0 && cfg.reverse && ds.atMaxSoc) {
+
+    // Geraet ist untaetig, WEIL es voll ist (SOC >= maxSoc) - bleibt
+    // logisch im Eingang/Lade-Modus bei 0 W statt in den Ausgang-Modus
+    // zu wechseln (leistungsmaessig identisch, 0 W ist 0 W).
+    acMode = 1;
+    outputLimit = 0;
+    inputLimit = 0;
+
+  } else if (target >= 0) {
 
     acMode = 2;          // discharge / export
     outputLimit = target;
