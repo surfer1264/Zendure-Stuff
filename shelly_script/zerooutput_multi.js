@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.0.0",
+  version: "1.0.1",
   
   devices: [
      {
@@ -622,7 +622,7 @@ function readDevice(index, myCycle, callback) {
 
       reportSuccess(ds.errors, ds.notified, "serial", cfg.label);
 
-      ds.soc = data.packData[0].socLevel;
+      ds.soc = data.properties.electricLevel;
       ds.atMaxSoc = (ds.soc >= cfg.maxSoc);
 
       let acMode = data.properties.acMode;
