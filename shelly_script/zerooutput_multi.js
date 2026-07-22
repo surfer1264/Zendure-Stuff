@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.0.1",
+  version: "1.0.2",
   
   devices: [
      {
@@ -460,12 +460,44 @@ function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, call
 
   }
 
-  let value = data[field];
+  let value;
+  let fieldLabel;
+
+  if (typeof field === "string") {
+
+    // Bisheriges Verhalten: flacher Top-Level-Zugriff
+    value = data[field];
+    fieldLabel = field;
+
+  } else {
+
+    // field ist ein Array aus Schluesseln - verschachtelten Pfad Ebene
+    // fuer Ebene ablaufen, z. B. ["StatusSNS", "SML", "Watt_Summe"]
+    let current = data;
+    fieldLabel = "";
+
+    for (let i = 0; i < field.length; i++) {
+
+      if (i > 0) fieldLabel += ".";
+      fieldLabel += field[i];
+
+      if (current === undefined || current === null) {
+        current = undefined;
+        break;
+      }
+
+      current = current[field[i]];
+
+    }
+
+    value = current;
+
+  }
 
   if (value === undefined) {
 
     reportError(state.errors, state.notified, "em", meterLabel,
-      "Antwort enthaelt kein Feld '" + field + "'");
+      "Antwort enthaelt kein Feld '" + fieldLabel + "'");
 
     unlock(myCycle);
     callback(false);
