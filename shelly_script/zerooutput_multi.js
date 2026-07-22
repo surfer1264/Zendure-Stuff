@@ -85,13 +85,13 @@ let CONFIG = {
   // whichever mode is currently active stays active.
   // ------------------------------------------------------------------
   discharge: {
-    concentrateBelow: 2000,   // W - below this combined target, use ONE device
-    spreadAbove: 2400        // W - above this, split across all devices
+    concentrateBelow: 600,   // W - below this combined target, use ONE device
+    spreadAbove: 800        // W - above this, split across all devices
   },
 
   charge: {
-    concentrateBelow: 2000,
-    spreadAbove: 2400
+    concentrateBelow: 600,
+    spreadAbove: 800
   },
 
   // Which device is "the one" in concentration mode is sticky (does not
