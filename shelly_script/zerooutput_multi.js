@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.0.2",
+  version: "1.0.3",
   
   devices: [
      {
@@ -38,113 +38,87 @@ let CONFIG = {
     },
   ],
 
-  // Where to read the household grid power from:
+  // SMARTMETER SECTION
+  // Where to read the household grid power from, there are three options 
   gridSource: "local", // "local", "remote", "http_json"
-
+  // ------------------------------------------------------------------
+  // ONLY required/used when gridSource = "remote".
   // IP address of the Shelly Pro 3EM providing the grid measurement.
-  // Only required/used when gridSource = "remote".
   gridSourceIp: "<IP address of the Shelly Pro 3EM here>",
-
   // EM channel id to read (usually 0). Only used when gridSource = "remote".
   gridSourceEmId: 0,
-
+  // ------------------------------------------------------------------
+  // ONLY requested when gridSource = "http_json". Example is made for the Zendure Smart Meter 3CT, read the DOC for other devices.
   // Full URL of a generic JSON grid meter. Only used when
-  // gridSource = "http_json". Example for the Zendure Smart Meter 3CT:
-  // "http://192.168.178.150/properties/report"
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
-
-  // Name of the JSON field in that response which holds the total grid
-  // power in watts. For the Zendure Smart Meter 3CT this is "total_power".
+  // Name of the JSON field in that response which holds the total grid power in watts
   gridSourceField: "total_power",
-
   // Set to true if the sign of gridSourceField is inverted compared to what
-  // this script expects (positive = importing from grid). Test by
-  // switching on a big consumer at home and checking whether the printed
-  // "Grid:" value in the console goes positive - if it goes negative
-  // instead, set this to true.
+  // this script expects (positive = importing from grid).
   gridSourceInvert: false,
-
+  
+  // ------------------------------------------------------------------
+  // RULES ENGINE CORE PARAMETERS
   // Target grid power in watts (e.g. 0 = balance to zero,
   // negative = slight export, positive = slight import)
   setpoint: 0,
-
   // Hysteresis in watts, PER DEVICE - minimum change required before a new
   // output value is written to that device (reduces write frequency)
   hysteresis: 10,
-
   // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
   // applied before the target is split across devices. See original
   // single-device script for details. 1.0 = no damping, 0.6 = default.
   dampingFactor: 0.6,
 
   // ------------------------------------------------------------------
-  // Concentration mode: run only ONE device at low load instead of
-  // splitting a small amount across all of them. Uses hysteresis (two
-  // separate thresholds) so the number of active devices doesn't flap
-  // back and forth around a single value. Between the two thresholds,
-  // whichever mode is currently active stays active.
-  // ------------------------------------------------------------------
+  // THRESHOLD SECTION
+  // Concentration mode: run only ONE device at low load instead of splitting a small amount across all of them. 
+  // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
   discharge: {
     concentrateBelow: 600,   // W - below this combined target, use ONE device
-    spreadAbove: 800        // W - above this, split across all devices
+    spreadAbove: 800         // W - above this, split across all devices
   },
 
   charge: {
     concentrateBelow: 600,
     spreadAbove: 800
   },
+  // Time-coupled hysteresis for the (only) spread -> single transition.
+  concentrateHoldMinutes: 3,
 
+
+  // ------------------------------------------------------------------
+  // SOC BALANCING SECTION
   // Which device is "the one" in concentration mode is sticky (does not
   // re-evaluate every cycle) to avoid rapid switching. It only changes
-  // if the active device fails, hits its own safety limit (minSoc/maxSoc -
-  // immediate switch, no delay), or if another device's advantage reaches
-  // socMargin percentage points (immediate switch as well - no hold time).
+  // if another device's advantage reaches socMargin percentage points 
+  // (immediate switch as well - no hold time).
   rebalance: {
     socMargin: 10        // percentage points of advantage required to switch
   },
-  // ------------------------------------------------------------------
-  // Time-coupled hysteresis for the spread -> single transition.
-  // Purpose: with periodically fluctuating loads (sun/cloud, air fryer
-  // duty cycles, etc.) right around concentrateBelow/spreadAbove, a
-  // pure power-based hysteresis can still cause rapid mode flapping.
-  concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
-  // Reverse mode (charging from the grid) - global hysteresis
-  // ------------------------------------------------------------------
-  // Minimum charging power in watts required to START charging from
-  // the grid. Acts as a deadband so the system doesn't switch into
-  // charge mode for a negligible power deficit.
+  // REVERSE MODE SECTION (charging from the grid) - global hysteresis
+  // Minimum charging power in watts required to START charging from the grid. 
   reverseStartupPower: 30,
-
-  // Charging power in watts below which charging from the grid is
-  // STOPPED again (must be <= reverseStartupPower).
+  // Charging power in watts below which charging from the grid is STOPPED again (must be <= reverseStartupPower).
   reverseStopPower: 10,
 
-  // Update interval in milliseconds
+  // ------------------------------------------------------------------
+  // INTERNAL SECTION BE CAREFUL
+  // Update interval (milliseconds)
   interval: 4000,
-
-  // Watchdog timeout in milliseconds (covers the whole cycle: grid read +
-  // all device reads + distribution + all device writes)
+  // Watchdog timeout in milliseconds (covers the whole cycle: grid read + all device reads + distribution + all device writes)
   watchdog: 10000,
-
-  // Keeping this comfortably shorter than the
-  // watchdog ensures every call is actually resolved (success or
-  // failure) well before that can happen.
+  // Keeping this comfortably shorter than the watchdog (second)   
   httpTimeout: 5,
-
-  // Number of consecutive failures of the same type (per device, or
-  // globally for the grid meter / watchdog) before a Signal notification
-  // is sent (avoids alarm spam on single glitches)
+  // Number of consecutive failures of the same type (per device, or globally for the grid meter / watchdog) before a Signal notification
   errorThreshold: 5,
-
-  // Verbose write-request logging (exact outgoing httpPost URL/body, and
-  // full res/error_code/error_message on a failed write). Set to true
-  // temporarily when diagnosing write problems; leave false for normal
   // operation to keep the console output clean.
   debug: false,
 
-  // Message notifications via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
+  // ------------------------------------------------------------------
+  // MESSAGE SECTION  via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
   signal: {
 
     enabled: false,          // set to true to activate Signal notifications
