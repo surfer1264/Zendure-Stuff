@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.2.0 KVS",
+  version: "1.3.0 KVS",
   
   devices: [
      {
@@ -131,24 +131,24 @@ let CONFIG = {
 
 
 
-if (CONFIG.reverseStopPower > CONFIG.reverseStartupPower) {
-  print(
-    "reverseStopPower groesser als reverseStartupPower - " +
-    "setze beide auf: " + CONFIG.reverseStartupPower
-  );
-
-  CONFIG.reverseStopPower = CONFIG.reverseStartupPower;
+// ------------------------------------------------------------------
+// Plausibilitaets-Checks fuer CONFIG (einmalig beim Start) - Endwerte
+// werden im Banner ausgegeben, daher hier keine eigenen Printouts.
+function checkBand(band) {
+  if (band.concentrateBelow < 100) band.concentrateBelow = 100;
+  if (band.spreadAbove < 200) band.spreadAbove = 200;
+  if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow + 100;
 }
 
-if (CONFIG.discharge.concentrateBelow > CONFIG.discharge.spreadAbove) {
-  print("CONFIG.discharge: concentrateBelow > spreadAbove - setze spreadAbove = concentrateBelow");
-  CONFIG.discharge.spreadAbove = CONFIG.discharge.concentrateBelow;
-}
+if (CONFIG.interval < 2500) CONFIG.interval = 2500;
+if (CONFIG.watchdog < CONFIG.interval * 2.5) CONFIG.watchdog = CONFIG.interval * 2.5;
+if (CONFIG.dampingFactor < 0.1) CONFIG.dampingFactor = 0.1;
+if (CONFIG.dampingFactor > 1) CONFIG.dampingFactor = 1;
 
-if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
-  print("CONFIG.charge: concentrateBelow > spreadAbove - setze spreadAbove = concentrateBelow");
-  CONFIG.charge.spreadAbove = CONFIG.charge.concentrateBelow;
-}
+checkBand(CONFIG.discharge);
+checkBand(CONFIG.charge);
+
+if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 
 // Hold time (spread -> single) in cycles, derived once from
 // concentrateHoldMinutes 
@@ -392,43 +392,39 @@ function readKvsOverrides(myCycle, callback) {
 
     if (items["zdmc_dampingFactor"]) {
       applyKvsValue("zdmc_dampingFactor", items["zdmc_dampingFactor"].value,
-        function (v) { return v > 0; },
-        function (v) { CONFIG.dampingFactor = v > 1 ? 1 : v; });
+        function (v) { return v >= 0.1 && v <= 1; },
+        function (v) { CONFIG.dampingFactor = v; });
     }
 
     if (items["zdmc_discharge_concentrateBelow"]) {
       applyKvsValue("zdmc_discharge_concentrateBelow", items["zdmc_discharge_concentrateBelow"].value,
-        function (v) { return v >= 0; },
+        function (v) { return v >= 100; },
         function (v) { CONFIG.discharge.concentrateBelow = v; });
     }
 
     if (items["zdmc_discharge_spreadAbove"]) {
       applyKvsValue("zdmc_discharge_spreadAbove", items["zdmc_discharge_spreadAbove"].value,
-        function (v) { return v >= 0; },
+        function (v) { return v >= 200; },
         function (v) { CONFIG.discharge.spreadAbove = v; });
     }
 
     if (items["zdmc_charge_concentrateBelow"]) {
       applyKvsValue("zdmc_charge_concentrateBelow", items["zdmc_charge_concentrateBelow"].value,
-        function (v) { return v >= 0; },
+        function (v) { return v >= 100; },
         function (v) { CONFIG.charge.concentrateBelow = v; });
     }
 
     if (items["zdmc_charge_spreadAbove"]) {
       applyKvsValue("zdmc_charge_spreadAbove", items["zdmc_charge_spreadAbove"].value,
-        function (v) { return v >= 0; },
+        function (v) { return v >= 200; },
         function (v) { CONFIG.charge.spreadAbove = v; });
     }
 
-    // Re-validate ordering after applying overrides - mirrors the
-    // startup checks, in case only one side of a pair got overridden.
-    if (CONFIG.discharge.concentrateBelow > CONFIG.discharge.spreadAbove) {
-      CONFIG.discharge.spreadAbove = CONFIG.discharge.concentrateBelow;
-    }
-
-    if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
-      CONFIG.charge.spreadAbove = CONFIG.charge.concentrateBelow;
-    }
+    // Re-validate ordering/Mindestabstand nach dem Anwenden der Overrides -
+    // nutzt dieselbe Pruefung wie beim Start (checkBand), falls nur eine
+    // Seite eines Paares ueberschrieben wurde.
+    checkBand(CONFIG.discharge);
+    checkBand(CONFIG.charge);
 
     callback();
   });
