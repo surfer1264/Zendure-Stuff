@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.6.0 KVS",
+  version: "1.6.0 KVS (+ kvsForceReseed)",
   
   devices: [
      {
@@ -24,13 +24,13 @@ let CONFIG = {
     },
     {
       ip: "192.168.178.143",    // Zendure IP address
-      label: "FATAMORGANA",     // short name, used in logs/messages
+      label: "Fatamorgana",     // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
       dischargeAllowed: false,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: false,            // may this device charge from the grid? (KVS-live-overridable)
+      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxSoc: 100,              // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,      // max charge power from grid (W)
 
@@ -86,13 +86,8 @@ let CONFIG = {
   // Time-coupled hysteresis for the (only) spread -> single transition.
   concentrateHoldMinutes: 3,
 
-
   // ------------------------------------------------------------------
   // SOC BALANCING SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
-  // Which device is "the one" in concentration mode is sticky (does not
-  // re-evaluate every cycle) to avoid rapid switching. It only changes
-  // if another device's advantage reaches socMargin percentage points 
-  // (immediate switch as well - no hold time).
   rebalance: {
     socMargin: 10        // percentage points of advantage required to switch
   },
@@ -114,6 +109,8 @@ let CONFIG = {
   httpTimeout: 5,
   // Number of consecutive failures of the same type (per device, or globally for the grid meter / watchdog) before a Signal notification
   errorThreshold: 5,
+  // KVS-Seed-Verhalten beim Skriptstart. Normalerweise (false), bei true werden die Daten bei jedem Scriptstart in den KVS geschrieben
+  kvsForceReseed: true,
   // operation to keep the console output clean.
   debug: false,
 
@@ -491,11 +488,13 @@ function seedKvsDefaultsStep(pairs, index, callback) {
 
 // ------------------------------------------------------------------
 // Runs ONCE at startup (not per cycle - KVS is flash-backed, and this
-// avoids wearing it out). Reads what's already in KVS and writes the
-// current CONFIG default ONLY for keys that don't exist yet - so a
-// fresh install ends up with sensible starting values that Home
-// Assistant (or curl) can read immediately, while any value a user
-// already set externally is never touched/overwritten.
+// avoids wearing it out). By default (CONFIG.kvsForceReseed === false)
+// reads what's already in KVS and writes the current CONFIG default
+// ONLY for keys that don't exist yet - so a fresh install ends up with
+// sensible starting values, while any value a user already set
+// externally is never touched/overwritten. If CONFIG.kvsForceReseed
+// is true, ALL zdmc_* keys are (re-)written from CONFIG on every start,
+// discarding any existing live overrides - see the CONFIG comment.
 function seedKvsDefaults(callback) {
   Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
     if (err_code !== 0 || !res || !res.items) {
@@ -505,35 +504,39 @@ function seedKvsDefaults(callback) {
     }
 
     let items = kvsItemsToMap(res.items);
-    let missing = [];
+    let pairs = [];
 
-    if (!items["zdmc_setpoint"])
-      missing.push({ key: "zdmc_setpoint", value: CONFIG.setpoint });
-
-    if (!items["zdmc_hysteresis"])
-      missing.push({ key: "zdmc_hysteresis", value: CONFIG.hysteresis });
-
-    if (!items["zdmc_dampingFactor"])
-      missing.push({ key: "zdmc_dampingFactor", value: CONFIG.dampingFactor });
-
-    for (let i = 0; i < CONFIG.devices.length; i++) {
-      let dischargeKey = "zdmc_dev" + i + "_dischargeAllowed";
-      if (!items[dischargeKey])
-        missing.push({ key: dischargeKey, value: CONFIG.devices[i].dischargeAllowed === false ? 0 : 1 });
-
-      let reverseKey = "zdmc_dev" + i + "_reverse";
-      if (!items[reverseKey])
-        missing.push({ key: reverseKey, value: CONFIG.devices[i].reverse ? 1 : 0 });
+    function addPair(key, value) {
+      if (CONFIG.kvsForceReseed || !items[key]) {
+        pairs.push({ key: key, value: value });
+      }
     }
 
-    if (missing.length === 0) {
+    addPair("zdmc_setpoint", CONFIG.setpoint);
+    addPair("zdmc_hysteresis", CONFIG.hysteresis);
+    addPair("zdmc_dampingFactor", CONFIG.dampingFactor);
+
+    for (let i = 0; i < CONFIG.devices.length; i++) {
+      addPair("zdmc_dev" + i + "_dischargeAllowed",
+        CONFIG.devices[i].dischargeAllowed === false ? 0 : 1);
+      addPair("zdmc_dev" + i + "_reverse",
+        CONFIG.devices[i].reverse ? 1 : 0);
+    }
+
+    if (pairs.length === 0) {
       if (CONFIG.debug) print("KVS-Seed: alle Keys bereits vorhanden, nichts zu tun");
       callback();
       return;
     }
 
-    print("KVS-Seed: schreibe " + missing.length + " fehlende(n) Default-Wert(e)...");
-    seedKvsDefaultsStep(missing, 0, callback);
+    if (CONFIG.kvsForceReseed) {
+      print("KVS-Seed: kvsForceReseed aktiv - schreibe " + pairs.length +
+        " Wert(e) aus CONFIG (bestehende Live-Overrides werden ueberschrieben!)");
+    } else {
+      print("KVS-Seed: schreibe " + pairs.length + " fehlende(n) Default-Wert(e)...");
+    }
+
+    seedKvsDefaultsStep(pairs, 0, callback);
   });
 }
 
@@ -1565,6 +1568,9 @@ bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" 
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/hysteresis/dampingFactor/" +
   "dev{n}_dischargeAllowed/dev{n}_reverse (Keys: " + KVS_MATCH + ")";
+bannerLines[bannerLines.length] = "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
+  "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides mit CONFIG!" :
+  "aus (Standard, empfohlen)");
 bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
