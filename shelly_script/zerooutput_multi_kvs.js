@@ -5,39 +5,39 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.3.0 KVS",
+  version: "1.4.0 KVS",
   
   devices: [
      {
-      ip: "192.168.178.143",   // Zendure IP address
+      ip: "192.168.178.143",    // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 18,               // no discharge below this SOC (%)
-      maxOutput: 2400,           // max discharge/export power (W)
+      maxOutput: 2400,          // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
-
+      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
       reverse: false,            // may this device charge from the grid?
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 2400,       // max charge power from grid (W)
 
-      dryRun: false  
+      dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
-      ip: "192.168.178.143",   // Zendure IP address
-      label: "SF800",          // short name, used in logs/messages
+      ip: "192.168.178.143",    // Zendure IP address
+      label: "SF800",           // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
-
+      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
       reverse: true,            // may this device charge from the grid?
-      maxSoc: 100,               // no charging from grid at/above this SOC (%)
-      maxInputPower: 1200,       // max charge power from grid (W)
+      maxSoc: 100,              // no charging from grid at/above this SOC (%)
+      maxInputPower: 1200,      // max charge power from grid (W)
 
-      dryRun: false              // true = read + calculate only, never write
+      dryRun: false             // only simulation; true = read + calculate only, never write
     },
   ],
-
+// ------------------------------------------------------------------
   // SMARTMETER SECTION
   // Where to read the household grid power from, there are three options 
   gridSource: "local", // "local", "remote", "http_json"
@@ -61,27 +61,27 @@ let CONFIG = {
   // RULES ENGINE CORE PARAMETERS
   // Target grid power in watts (e.g. 0 = balance to zero,
   // negative = slight export, positive = slight import)
-  setpoint: 0,
+  setpoint: 0, // (KVS-live-overridable)
   // Hysteresis in watts, PER DEVICE - minimum change required before a new
   // output value is written to that device (reduces write frequency)
-  hysteresis: 10,
+  hysteresis: 10, // (KVS-live-overridable)
   // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
   // applied before the target is split across devices. See original
   // single-device script for details. 1.0 = no damping, 0.6 = default.
-  dampingFactor: 0.6,
+  dampingFactor: 0.6, // (KVS-live-overridable)
 
   // ------------------------------------------------------------------
   // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
   // Concentration mode: run only ONE device at low load instead of splitting a small amount across all of them. 
   // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
   discharge: {
-    concentrateBelow: 600,   // W - below this combined target, use ONE device
-    spreadAbove: 800         // W - above this, split across all devices
+    concentrateBelow: 600,  // W - below this combined target, use ONE device (KVS-live-overridable)
+    spreadAbove: 800        // W - above this, split across all devices (KVS-live-overridable)
   },
 
   charge: {
-    concentrateBelow: 600,
-    spreadAbove: 800
+    concentrateBelow: 600,  // (KVS-live-overridable)
+    spreadAbove: 800        // (KVS-live-overridable)
   },
   // Time-coupled hysteresis for the (only) spread -> single transition.
   concentrateHoldMinutes: 3,
@@ -159,6 +159,8 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
 // Set a value externally via the Shelly's own local RPC, e.g.:
 // POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
+// Per-device keys use the device's array index (see banner "[devN]"), e.g.:
+// POST .../rpc/KVS.Set  {"key":"zdmc_dev0_dischargeAllowed","value":0}  // 1 = erlaubt, 0 = gesperrt
 // ------------------------------------------------------------------
 let KVS_MATCH = "zdmc_*";
 
@@ -422,6 +424,17 @@ function readKvsOverrides(myCycle, callback) {
     checkBand(CONFIG.discharge);
     checkBand(CONFIG.charge);
 
+    for (let i = 0; i < CONFIG.devices.length; i++) {
+      let key = "zdmc_dev" + i + "_dischargeAllowed";
+      let dev = CONFIG.devices[i];
+
+      if (items[key]) {
+        applyKvsValue(key, items[key].value,
+          function (v) { return v === 0 || v === 1; },
+          function (v) { dev.dischargeAllowed = (v !== 0); });
+      }
+    }
+
     callback();
   });
 }
@@ -487,6 +500,12 @@ function seedKvsDefaults(callback) {
 
     if (!items["zdmc_charge_spreadAbove"])
       missing.push({ key: "zdmc_charge_spreadAbove", value: CONFIG.charge.spreadAbove });
+
+    for (let i = 0; i < CONFIG.devices.length; i++) {
+      let key = "zdmc_dev" + i + "_dischargeAllowed";
+      if (!items[key])
+        missing.push({ key: key, value: CONFIG.devices[i].dischargeAllowed === false ? 0 : 1 });
+    }
 
     if (missing.length === 0) {
       print("KVS-Seed: alle Keys bereits vorhanden, nichts zu tun");
@@ -932,7 +951,7 @@ function computeDischargeWeights() {
   let active = [];
 
   for (let i = 0; i < n; i++) {
-    if (!state.devices[i].available) {
+    if (!state.devices[i].available || CONFIG.devices[i].dischargeAllowed === false) {
       weight[i] = 0;
       active[i] = false;
       continue;
@@ -1487,7 +1506,9 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
   let cfg = CONFIG.devices[i];
 
   bannerLines[bannerLines.length] =
-    "  - " + cfg.label + " (" + cfg.ip + "): minSoc " + cfg.minSoc +
+    "  - [dev" + i + "] " + cfg.label + " (" + cfg.ip + "): Entladen " +
+    (cfg.dischargeAllowed === false ? "nein" : "ja") +
+    ", minSoc " + cfg.minSoc +
     "%, maxOutput " + cfg.maxOutput + " W, minOutput " + cfg.minOutput +
     " W, Laden vom Netz " +
     (cfg.reverse
@@ -1524,7 +1545,7 @@ bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/hysteresis/dampingFactor/" +
-  "discharge+charge concentrateBelow+spreadAbove (Keys: " + KVS_MATCH + ")";
+  "discharge+charge concentrateBelow+spreadAbove/dev{n}_dischargeAllowed (Keys: " + KVS_MATCH + ")";
 bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
