@@ -71,7 +71,7 @@ let CONFIG = {
   dampingFactor: 0.6,
 
   // ------------------------------------------------------------------
-  // THRESHOLD SECTION
+  // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
   // Concentration mode: run only ONE device at low load instead of splitting a small amount across all of them. 
   // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
   discharge: {
@@ -88,7 +88,7 @@ let CONFIG = {
 
 
   // ------------------------------------------------------------------
-  // SOC BALANCING SECTION
+  // SOC BALANCING SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
   // Which device is "the one" in concentration mode is sticky (does not
   // re-evaluate every cycle) to avoid rapid switching. It only changes
   // if another device's advantage reaches socMargin percentage points 
@@ -98,7 +98,7 @@ let CONFIG = {
   },
 
   // ------------------------------------------------------------------
-  // REVERSE MODE SECTION (charging from the grid) - global hysteresis
+  // REVERSE MODE SECTION (charging from the grid) - global hysteresis - ONLY relevant for reverse: true (see CONFIG device)
   // Minimum charging power in watts required to START charging from the grid. 
   reverseStartupPower: 30,
   // Charging power in watts below which charging from the grid is STOPPED again (must be <= reverseStartupPower).
@@ -122,14 +122,12 @@ let CONFIG = {
   signal: {
 
     enabled: false,          // set to true to activate Signal notifications
-	typ: "SIGNAL",			 // Signal oor WHATSAPP
+	  typ: "SIGNAL",			     // Signal oor WHATSAPP
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
     apiKey: "YOUR_API_KEY"   // your CallMeBot API key
 
   }
 };
-
-
 
 // ------------------------------------------------------------------
 // Plausibilitaets-Checks fuer CONFIG (einmalig beim Start) - Endwerte
@@ -159,10 +157,8 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 
 // ------------------------------------------------------------------
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
-
 // Set a value externally via the Shelly's own local RPC, e.g.:
-//   POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
-//
+// POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
 // ------------------------------------------------------------------
 let KVS_MATCH = "zdmc_*";
 
