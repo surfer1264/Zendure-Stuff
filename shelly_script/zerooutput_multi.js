@@ -152,9 +152,6 @@ if (CONFIG.charge.concentrateBelow > CONFIG.charge.spreadAbove) {
 }
 
 // Hold time (spread -> single) in cycles, derived once from
-// concentrateHoldMinutes and the configured interval. Minimum 1 cycle,
-// so a value of 0 effectively behaves like "switch on the next cycle"
-// rather than never switching.
 let CONCENTRATE_HOLD_CYCLES = Math.max(
   1,
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)

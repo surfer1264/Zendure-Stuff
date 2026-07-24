@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.5.0 KVS",
+  version: "1.6.0 KVS",
   
   devices: [
      {
@@ -13,7 +13,7 @@ let CONFIG = {
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 18,               // no discharge below this SOC (%)
-      maxOutput: 2400,          // max discharge/export power (W)
+      maxOutput: 800,          // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
       dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
       reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
@@ -24,17 +24,17 @@ let CONFIG = {
     },
     {
       ip: "192.168.178.143",    // Zendure IP address
-      label: "SF800",           // short name, used in logs/messages
+      label: "FATAMORGANA",     // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
-      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
+      dischargeAllowed: false,   // may this device discharge/export at all? (KVS-live-overridable)
+      reverse: false,            // may this device charge from the grid? (KVS-live-overridable)
       maxSoc: 100,              // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,      // max charge power from grid (W)
 
-      dryRun: false             // only simulation; true = read + calculate only, never write
+      dryRun: true             // only simulation; true = read + calculate only, never write
     },
   ],
 // ------------------------------------------------------------------
@@ -142,6 +142,11 @@ if (CONFIG.interval < 2500) CONFIG.interval = 2500;
 if (CONFIG.watchdog < CONFIG.interval * 2.5) CONFIG.watchdog = CONFIG.interval * 2.5;
 if (CONFIG.dampingFactor < 0.1) CONFIG.dampingFactor = 0.1;
 if (CONFIG.dampingFactor > 1) CONFIG.dampingFactor = 1;
+if (CONFIG.setpoint < -50) CONFIG.setpoint = -50;
+if (CONFIG.setpoint > 50) CONFIG.setpoint = 50;
+if (CONFIG.hysteresis >50) CONFIG.hysteresis = 50;
+if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
+
 
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
@@ -338,20 +343,54 @@ function unlock(myCycle) {
 }
 
 // ------------------------------------------------------------------
+// Normalizes the "items" field returned by KVS.GetMany into a plain
+// {key: {value, etag}} lookup map. Current Shelly firmware returns
+// items as an ARRAY of {key, etag, value} objects (needed to support
+// the "offset" pagination parameter), NOT as an object keyed by the
+// KVS key name - so code doing items["some_key"] directly would always
+// get undefined. This normalizes either shape defensively, in case a
+// future/older firmware ever reverts to the object form.
+function kvsItemsToMap(rawItems) {
+  let map = {};
+
+  if (!rawItems) return map;
+
+  if (Array.isArray(rawItems)) {
+    for (let idx = 0; idx < rawItems.length; idx++) {
+      let entry = rawItems[idx];
+      if (entry && entry.key !== undefined) {
+        map[entry.key] = entry;
+      }
+    }
+  } else {
+    // already an object keyed by KVS key name
+    map = rawItems;
+  }
+
+  return map;
+}
+
+// ------------------------------------------------------------------
 // Apply a single KVS override: parses raw into a number, runs it
 // through validate(), and only calls apply() if both checks pass.
 // Silently keeps the previous CONFIG value on any invalid input.
-function applyKvsValue(key, raw, validate, apply) {
+// Logs exactly once when a value actually changes (not every cycle) -
+// only shown when CONFIG.debug is true.
+function applyKvsValue(key, raw, currentValue, validate, apply) {
   let n = Number(raw);
 
   if (isNaN(n) || !isFinite(n)) {
-    print("KVS " + key + ": ungueltiger Wert '" + raw + "' - ignoriert");
+    if (CONFIG.debug) print("KVS " + key + ": ungueltiger Wert '" + raw + "' - ignoriert");
     return;
   }
 
   if (!validate(n)) {
-    print("KVS " + key + ": Wert " + n + " ausserhalb des erlaubten Bereichs - ignoriert");
+    if (CONFIG.debug) print("KVS " + key + ": Wert " + n + " ausserhalb des erlaubten Bereichs - ignoriert");
     return;
+  }
+
+  if (CONFIG.debug && n !== currentValue) {
+    print("KVS " + key + ": Wert uebernommen (" + currentValue + " -> " + n + ")");
   }
 
   apply(n);
@@ -375,22 +414,30 @@ function readKvsOverrides(myCycle, callback) {
 
     reportSuccess(state.errors, state.notified, "kvs", "KVS");
 
-    let items = res.items;
+    if (CONFIG.debug && res.total !== undefined &&
+        Array.isArray(res.items) && res.total > res.items.length) {
+      print("DEBUG KVS.GetMany: nur " + res.items.length + " von " +
+        res.total + " passenden Eintraegen erhalten (Pagination?) - " +
+        "ggf. Offset-Handling ergaenzen");
+    }
+
+    let items = kvsItemsToMap(res.items);
     let always = function () { return true; };
 
     if (items["zdmc_setpoint"]) {
-      applyKvsValue("zdmc_setpoint", items["zdmc_setpoint"].value, always,
-        function (v) { CONFIG.setpoint = v; });
+      applyKvsValue("zdmc_setpoint", items["zdmc_setpoint"].value, CONFIG.setpoint,
+      function (v) { return v >= -50 && v <= 50; },
+      function (v) { CONFIG.setpoint = v; });
     }
 
     if (items["zdmc_hysteresis"]) {
-      applyKvsValue("zdmc_hysteresis", items["zdmc_hysteresis"].value,
-        function (v) { return v >= 0; },
-        function (v) { CONFIG.hysteresis = v; });
+      applyKvsValue("zdmc_hysteresis", items["zdmc_hysteresis"].value, CONFIG.hysteresis,
+      function (v) { return v >= 5 && v <= 50; },
+      function (v) { CONFIG.hysteresis = v; });
     }
 
     if (items["zdmc_dampingFactor"]) {
-      applyKvsValue("zdmc_dampingFactor", items["zdmc_dampingFactor"].value,
+      applyKvsValue("zdmc_dampingFactor", items["zdmc_dampingFactor"].value, CONFIG.dampingFactor,
         function (v) { return v >= 0.1 && v <= 1; },
         function (v) { CONFIG.dampingFactor = v; });
     }
@@ -401,6 +448,7 @@ function readKvsOverrides(myCycle, callback) {
       let dischargeKey = "zdmc_dev" + i + "_dischargeAllowed";
       if (items[dischargeKey]) {
         applyKvsValue(dischargeKey, items[dischargeKey].value,
+          (dev.dischargeAllowed === false ? 0 : 1),
           function (v) { return v === 0 || v === 1; },
           function (v) { dev.dischargeAllowed = (v !== 0); });
       }
@@ -408,6 +456,7 @@ function readKvsOverrides(myCycle, callback) {
       let reverseKey = "zdmc_dev" + i + "_reverse";
       if (items[reverseKey]) {
         applyKvsValue(reverseKey, items[reverseKey].value,
+          (dev.reverse ? 1 : 0),
           function (v) { return v === 0 || v === 1; },
           function (v) { dev.reverse = (v !== 0); });
       }
@@ -432,7 +481,7 @@ function seedKvsDefaultsStep(pairs, index, callback) {
   Shelly.call("KVS.Set", { key: pair.key, value: pair.value }, function (res, err_code, err_msg) {
     if (err_code !== 0) {
       print("KVS-Seed: " + pair.key + " konnte nicht geschrieben werden (" + err_msg + ")");
-    } else {
+    } else if (CONFIG.debug) {
       print("KVS-Seed: " + pair.key + " = " + pair.value + " initial gesetzt");
     }
 
@@ -455,7 +504,7 @@ function seedKvsDefaults(callback) {
       return;
     }
 
-    let items = res.items;
+    let items = kvsItemsToMap(res.items);
     let missing = [];
 
     if (!items["zdmc_setpoint"])
@@ -478,7 +527,7 @@ function seedKvsDefaults(callback) {
     }
 
     if (missing.length === 0) {
-      print("KVS-Seed: alle Keys bereits vorhanden, nichts zu tun");
+      if (CONFIG.debug) print("KVS-Seed: alle Keys bereits vorhanden, nichts zu tun");
       callback();
       return;
     }
