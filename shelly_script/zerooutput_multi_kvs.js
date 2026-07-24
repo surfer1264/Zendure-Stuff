@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.4.0 KVS",
+  version: "1.5.0 KVS",
   
   devices: [
      {
@@ -16,7 +16,7 @@ let CONFIG = {
       maxOutput: 2400,          // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
       dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: false,            // may this device charge from the grid?
+      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 2400,       // max charge power from grid (W)
 
@@ -30,7 +30,7 @@ let CONFIG = {
       maxOutput: 800,           // max discharge/export power (W)
       minOutput: 35,            // don't bother writing values below this (W)
       dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: true,            // may this device charge from the grid?
+      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxSoc: 100,              // no charging from grid at/above this SOC (%)
       maxInputPower: 1200,      // max charge power from grid (W)
 
@@ -75,13 +75,13 @@ let CONFIG = {
   // Concentration mode: run only ONE device at low load instead of splitting a small amount across all of them. 
   // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
   discharge: {
-    concentrateBelow: 600,  // W - below this combined target, use ONE device (KVS-live-overridable)
-    spreadAbove: 800        // W - above this, split across all devices (KVS-live-overridable)
+    concentrateBelow: 600,  // W - below this combined target, use ONE device
+    spreadAbove: 800        // W - above this, split across all devices
   },
 
   charge: {
-    concentrateBelow: 600,  // (KVS-live-overridable)
-    spreadAbove: 800        // (KVS-live-overridable)
+    concentrateBelow: 600,
+    spreadAbove: 800
   },
   // Time-coupled hysteresis for the (only) spread -> single transition.
   concentrateHoldMinutes: 3,
@@ -161,6 +161,7 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 // POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
 // Per-device keys use the device's array index (see banner "[devN]"), e.g.:
 // POST .../rpc/KVS.Set  {"key":"zdmc_dev0_dischargeAllowed","value":0}  // 1 = erlaubt, 0 = gesperrt
+// POST .../rpc/KVS.Set  {"key":"zdmc_dev0_reverse","value":1}          // 1 = erlaubt, 0 = gesperrt
 // ------------------------------------------------------------------
 let KVS_MATCH = "zdmc_*";
 
@@ -394,44 +395,21 @@ function readKvsOverrides(myCycle, callback) {
         function (v) { CONFIG.dampingFactor = v; });
     }
 
-    if (items["zdmc_discharge_concentrateBelow"]) {
-      applyKvsValue("zdmc_discharge_concentrateBelow", items["zdmc_discharge_concentrateBelow"].value,
-        function (v) { return v >= 100; },
-        function (v) { CONFIG.discharge.concentrateBelow = v; });
-    }
-
-    if (items["zdmc_discharge_spreadAbove"]) {
-      applyKvsValue("zdmc_discharge_spreadAbove", items["zdmc_discharge_spreadAbove"].value,
-        function (v) { return v >= 200; },
-        function (v) { CONFIG.discharge.spreadAbove = v; });
-    }
-
-    if (items["zdmc_charge_concentrateBelow"]) {
-      applyKvsValue("zdmc_charge_concentrateBelow", items["zdmc_charge_concentrateBelow"].value,
-        function (v) { return v >= 100; },
-        function (v) { CONFIG.charge.concentrateBelow = v; });
-    }
-
-    if (items["zdmc_charge_spreadAbove"]) {
-      applyKvsValue("zdmc_charge_spreadAbove", items["zdmc_charge_spreadAbove"].value,
-        function (v) { return v >= 200; },
-        function (v) { CONFIG.charge.spreadAbove = v; });
-    }
-
-    // Re-validate ordering/Mindestabstand nach dem Anwenden der Overrides -
-    // nutzt dieselbe Pruefung wie beim Start (checkBand), falls nur eine
-    // Seite eines Paares ueberschrieben wurde.
-    checkBand(CONFIG.discharge);
-    checkBand(CONFIG.charge);
-
     for (let i = 0; i < CONFIG.devices.length; i++) {
-      let key = "zdmc_dev" + i + "_dischargeAllowed";
       let dev = CONFIG.devices[i];
 
-      if (items[key]) {
-        applyKvsValue(key, items[key].value,
+      let dischargeKey = "zdmc_dev" + i + "_dischargeAllowed";
+      if (items[dischargeKey]) {
+        applyKvsValue(dischargeKey, items[dischargeKey].value,
           function (v) { return v === 0 || v === 1; },
           function (v) { dev.dischargeAllowed = (v !== 0); });
+      }
+
+      let reverseKey = "zdmc_dev" + i + "_reverse";
+      if (items[reverseKey]) {
+        applyKvsValue(reverseKey, items[reverseKey].value,
+          function (v) { return v === 0 || v === 1; },
+          function (v) { dev.reverse = (v !== 0); });
       }
     }
 
@@ -489,22 +467,14 @@ function seedKvsDefaults(callback) {
     if (!items["zdmc_dampingFactor"])
       missing.push({ key: "zdmc_dampingFactor", value: CONFIG.dampingFactor });
 
-    if (!items["zdmc_discharge_concentrateBelow"])
-      missing.push({ key: "zdmc_discharge_concentrateBelow", value: CONFIG.discharge.concentrateBelow });
-
-    if (!items["zdmc_discharge_spreadAbove"])
-      missing.push({ key: "zdmc_discharge_spreadAbove", value: CONFIG.discharge.spreadAbove });
-
-    if (!items["zdmc_charge_concentrateBelow"])
-      missing.push({ key: "zdmc_charge_concentrateBelow", value: CONFIG.charge.concentrateBelow });
-
-    if (!items["zdmc_charge_spreadAbove"])
-      missing.push({ key: "zdmc_charge_spreadAbove", value: CONFIG.charge.spreadAbove });
-
     for (let i = 0; i < CONFIG.devices.length; i++) {
-      let key = "zdmc_dev" + i + "_dischargeAllowed";
-      if (!items[key])
-        missing.push({ key: key, value: CONFIG.devices[i].dischargeAllowed === false ? 0 : 1 });
+      let dischargeKey = "zdmc_dev" + i + "_dischargeAllowed";
+      if (!items[dischargeKey])
+        missing.push({ key: dischargeKey, value: CONFIG.devices[i].dischargeAllowed === false ? 0 : 1 });
+
+      let reverseKey = "zdmc_dev" + i + "_reverse";
+      if (!items[reverseKey])
+        missing.push({ key: reverseKey, value: CONFIG.devices[i].reverse ? 1 : 0 });
     }
 
     if (missing.length === 0) {
@@ -1545,7 +1515,7 @@ bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/hysteresis/dampingFactor/" +
-  "discharge+charge concentrateBelow+spreadAbove/dev{n}_dischargeAllowed (Keys: " + KVS_MATCH + ")";
+  "dev{n}_dischargeAllowed/dev{n}_reverse (Keys: " + KVS_MATCH + ")";
 bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
