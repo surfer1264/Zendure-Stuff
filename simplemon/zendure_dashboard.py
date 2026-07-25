@@ -44,6 +44,16 @@ except ImportError:
     USE_SMARTMETER = False
     SMARTMETER_URL = ""
 
+# Einstellungen fuer das zusaetzliche Shelly-Geraet ebenfalls mit Fallback
+# importieren, damit das Script auch mit einer aelteren config.py laeuft
+# (die Kachel bleibt dann einfach ausgeblendet).
+try:
+    from config import USE_EXTRA_SHELLY, EXTRA_SHELLY_URL, EXTRA_SHELLY_LABEL
+except ImportError:
+    USE_EXTRA_SHELLY = False
+    EXTRA_SHELLY_URL = ""
+    EXTRA_SHELLY_LABEL = "Extra"
+
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
@@ -91,7 +101,7 @@ PROPS = [
 ]
 
 # Letzter abgerufener Datensatz (vom Poll-Thread gefuellt, vom Webserver gelesen)
-_latest = {"data": None, "ts": 0, "error": None, "grid_meter": None}
+_latest = {"data": None, "ts": 0, "error": None, "grid_meter": None, "extra_shelly": None}
 _lock = threading.Lock()
 
 # Alarm-Zustand fuer Hysterese: merkt sich, welche Warnung bereits gesendet wurde,
@@ -189,7 +199,8 @@ def setup_db():
     # unabhaengig von der Zendure-eigenen gridInputPower-Schaetzung).
     dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
     con.execute(f"CREATE TABLE IF NOT EXISTS device "
-                f"(ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, gridMeterPower REAL, {dev_cols})")
+                f"(ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, gridMeterPower REAL, "
+                f"extraShellyPower REAL, {dev_cols})")
     pack_cols = ", ".join(_pack_col_def(f) for f in PACK_FIELDS)
     con.execute(f"CREATE TABLE IF NOT EXISTS packs (ts INTEGER, dt TEXT, {pack_cols})")
 
@@ -200,7 +211,8 @@ def setup_db():
 
     # Bestehende Tabellen migrieren: neue Felder aus PROPS / PACK_FIELDS nachziehen
     ensure_columns(con, "device",
-                   [("hub_sn", "TEXT"), ("gridMeterPower", "REAL")] + [(p, "REAL") for p in PROPS])
+                   [("hub_sn", "TEXT"), ("gridMeterPower", "REAL"), ("extraShellyPower", "REAL")]
+                   + [(p, "REAL") for p in PROPS])
     ensure_columns(con, "packs", [(f, PACK_TYPES.get(f, "REAL")) for f in PACK_FIELDS])
 
     con.commit()
@@ -226,14 +238,33 @@ def fetch_smartmeter():
     return d.get("total_act_power")
 
 
-def log_csv(ts, dt, hub_sn, props, grid_meter=None):
+def fetch_extra_shelly():
+    """Liest den aktuellen Leistungswert vom zusaetzlichen Shelly-Geraet (RPC).
+
+    Erkennt automatisch die gaengigsten Shelly-RPC-Antwortformen, je nachdem
+    welchen Endpunkt EXTRA_SHELLY_URL anspricht: 'total_act_power' (z. B.
+    EM.GetStatus, 3-Phasen-Zaehler), 'act_power' (z. B. EM1.GetStatus,
+    1-Phasen-Zaehler) oder 'apower' (z. B. Switch.GetStatus / PM1.GetStatus,
+    Steckdosen- oder Schaltgeraete).
+    """
+    req = urllib.request.Request(EXTRA_SHELLY_URL, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        d = json.loads(r.read().decode())
+    for key in ("total_act_power", "act_power", "apower"):
+        if key in d:
+            return d[key]
+    return None
+
+
+def log_csv(ts, dt, hub_sn, props, grid_meter=None, extra_shelly=None):
     new = not os.path.exists(CSV_FILE)
     with open(CSV_FILE, "a", newline="") as f:
         w = csv.writer(f)
         if new:
-            w.writerow(["ts", "dt", "hub_sn", "gridMeterPower"] + PROPS)
+            w.writerow(["ts", "dt", "hub_sn", "gridMeterPower", "extraShellyPower"] + PROPS)
         w.writerow([ts, dt, hub_sn if hub_sn is not None else "",
-                    grid_meter if grid_meter is not None else ""] +
+                    grid_meter if grid_meter is not None else "",
+                    extra_shelly if extra_shelly is not None else ""] +
                    [props.get(p, "") for p in PROPS])
 
 
@@ -247,7 +278,7 @@ def log_packs_csv(ts, dt, packs):
             w.writerow([ts, dt, i] + [pk.get(fld, "") for fld in PACK_FIELDS])
 
 
-def store(con, data, grid_meter=None):
+def store(con, data, grid_meter=None, extra_shelly=None):
     ts = data.get("timestamp", int(time.time()))
     dt = datetime.now().isoformat(timespec="seconds")
     props = dict(data.get("properties", {}))  # Kopie, Original unangetastet
@@ -265,11 +296,11 @@ def store(con, data, grid_meter=None):
 
     hub_sn = data.get("sn")  # Seriennummer des Hubs (Top-Level im Report)
 
-    dev_cols = ["ts", "dt", "hub_sn", "gridMeterPower"] + PROPS
+    dev_cols = ["ts", "dt", "hub_sn", "gridMeterPower", "extraShellyPower"] + PROPS
     dev_ph = ", ".join("?" * len(dev_cols))
     con.execute(
         f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
-        [ts, dt, hub_sn, grid_meter] + [props.get(p) for p in PROPS])
+        [ts, dt, hub_sn, grid_meter, extra_shelly] + [props.get(p) for p in PROPS])
 
     pack_cols = ["ts", "dt"] + PACK_FIELDS
     pack_ph = ", ".join("?" * len(pack_cols))
@@ -279,7 +310,7 @@ def store(con, data, grid_meter=None):
             [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
     con.commit()
     if WRITE_CSV:
-        log_csv(ts, dt, hub_sn, props, grid_meter)
+        log_csv(ts, dt, hub_sn, props, grid_meter, extra_shelly)
         log_packs_csv(ts, dt, packs)
 
 
@@ -290,6 +321,8 @@ def poll_loop():
     log(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {ziele}")
     if USE_SMARTMETER:
         log(f"Smartmeter (Shelly 3EM Pro) zusaetzlich unter {SMARTMETER_URL}")
+    if USE_EXTRA_SHELLY:
+        log(f"Zusaetzliches Shelly-Geraet '{EXTRA_SHELLY_LABEL}' unter {EXTRA_SHELLY_URL}")
     while True:
         try:
             data = fetch_device()
@@ -304,15 +337,26 @@ def poll_loop():
                 except Exception as e:
                     log_always(f"{datetime.now():%H:%M:%S}  Smartmeter-Fehler: {e}")
 
-            store(con, data, grid_meter)
+            # Zusaetzliches Shelly-Geraet ebenso unabhaengig und fehlertolerant
+            # abrufen - ein Ausfall darf das restliche Logging nicht stoppen.
+            extra_shelly = None
+            if USE_EXTRA_SHELLY:
+                try:
+                    extra_shelly = fetch_extra_shelly()
+                except Exception as e:
+                    log_always(f"{datetime.now():%H:%M:%S}  Shelly '{EXTRA_SHELLY_LABEL}'-Fehler: {e}")
+
+            store(con, data, grid_meter, extra_shelly)
             with _lock:
-                _latest.update(data=data, ts=time.time(), error=None, grid_meter=grid_meter)
+                _latest.update(data=data, ts=time.time(), error=None,
+                                grid_meter=grid_meter, extra_shelly=extra_shelly)
             # Alarme auf Basis der Rohdaten pruefen (vor jeder Umwandlung)
             check_alarms(data.get("properties", {}), data.get("packData", []))
             p = data.get("properties", {})
             gm_txt = f"  Netz(Meter)={grid_meter}W" if USE_SMARTMETER else ""
+            es_txt = f"  {EXTRA_SHELLY_LABEL}={extra_shelly}W" if USE_EXTRA_SHELLY else ""
             log(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
-                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W{gm_txt}")
+                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W{gm_txt}{es_txt}")
         except Exception as e:
             with _lock:
                 _latest.update(error=str(e))
@@ -483,12 +527,14 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         route = parsed.path
         if route == "/" or route.startswith("/index"):
-            self._send(200, PAGE.replace("__DEVICE_LABEL__", DEVICE_LABEL),
-                       "text/html; charset=utf-8")
+            page = (PAGE.replace("__DEVICE_LABEL__", DEVICE_LABEL)
+                        .replace("__EXTRA_SHELLY_LABEL__", EXTRA_SHELLY_LABEL))
+            self._send(200, page, "text/html; charset=utf-8")
         elif route == "/data":
             with _lock:
                 payload = {"data": _latest["data"], "ts": _latest["ts"],
-                           "error": _latest["error"], "grid_meter": _latest.get("grid_meter")}
+                           "error": _latest["error"], "grid_meter": _latest.get("grid_meter"),
+                           "extra_shelly": _latest.get("extra_shelly")}
             self._send(200, json.dumps(payload))
         elif route == "/history":
             # Anzahl Punkte aus ?n=... lesen, auf 1..MAX_POINTS begrenzen
@@ -600,9 +646,12 @@ PAGE = r"""<!DOCTYPE html>
   <div class="stat"><div class="lbl">Akku entladen</div><div class="val"><span id="packout">–</span> W</div></div>
   <div class="stat"><div class="lbl">Netz ein (Zendure)</div><div class="val"><span id="grid">–</span> W</div></div>
   <div class="stat" id="gridmeter_tile" style="display:none;"><div class="lbl">Netz (Smartmeter)</div><div class="val"><span id="gridmeter">–</span> W</div></div>
+  <div class="stat" id="extra_shelly_tile" style="display:none;"><div class="lbl">__EXTRA_SHELLY_LABEL__</div><div class="val"><span id="extra_shelly">–</span> W</div></div>
   <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
   <div class="stat"><div class="lbl">Batteriespannung</div><div class="val"><span id="volt">–</span> V</div></div>
   <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
+  <div class="stat"><div class="lbl">Lade-Grenze (max. SoC)</div><div class="val"><span id="maxsoc">–</span>%</div></div>
+  <div class="stat"><div class="lbl">Entlade-Grenze (min. SoC)</div><div class="val"><span id="minsoc">–</span>%</div></div>
 </div>
 
 <div class="panel">
@@ -750,7 +799,7 @@ function initLegend(){
   });
 }
 function setStatus(ok,txt){const s=document.getElementById('status');s.textContent=txt;s.className='badge'+(ok?'':' bad');}
-function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+function fmtTime(iso){return new Date(iso).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
 let pointCount=200;  // aktuell gewaehlte Anzahl Datenpunkte (Standard: kleinste Stufe)
 
@@ -889,6 +938,10 @@ async function refresh(){
     set('packin',p.outputPackPower); set('packout',p.packInputPower);
     set('temp',((p.hyperTmp-2731)/10).toFixed(1)); set('volt',(p.BatVolt/100).toFixed(2));
     set('rssi',p.rssi);
+    // Geraete-Einstellungen: Rohwerte kommen in Zehntel-Prozent (analog zur
+    // Zehntel-Grad-Temperatur), daher /10.
+    set('maxsoc', p.socSet!=null ? (p.socSet/10).toFixed(1) : '–');
+    set('minsoc', p.minSoc!=null ? (p.minSoc/10).toFixed(1) : '–');
     // Smartmeter-Kachel nur anzeigen, wenn ein Wert geliefert wird (USE_SMARTMETER aktiv)
     const gmTile=document.getElementById('gridmeter_tile');
     if(j.grid_meter!=null){
@@ -896,6 +949,15 @@ async function refresh(){
       set('gridmeter',Math.round(j.grid_meter));
     } else {
       gmTile.style.display='none';
+    }
+    // Zusaetzliche Shelly-Kachel nur anzeigen, wenn ein Wert geliefert wird
+    // (USE_EXTRA_SHELLY aktiv); Label kommt vom Server (__EXTRA_SHELLY_LABEL__).
+    const esTile=document.getElementById('extra_shelly_tile');
+    if(j.extra_shelly!=null){
+      esTile.style.display='';
+      set('extra_shelly',Math.round(j.extra_shelly));
+    } else {
+      esTile.style.display='none';
     }
     updateFlow(p, packs);
 

@@ -7,7 +7,7 @@
 # ============================================================================
 
 # ----------------------------- Geraet & Server ---------------------------
-DEVICE_URL = "http://192.168.178.143/properties/report"   # IP deiner Zendure
+DEVICE_URL = "http://192.168.178.xxx/properties/report"   # IP deiner Zendure
 POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
 WEB_PORT = 8085             # Port des Dashboards (http://<NAS-IP>:PORT)
 DEVICE_LABEL = "Hub"     # kurzer Name des Geraets im Energiefluss-Diagramm
@@ -50,5 +50,14 @@ TEMP_RESET = 35.0      # °C - Ruecksetz-Grenze
 # ----------------------------- Smartmeter (Shelly 3EM Pro) ---------------
 # Optional: zusätzlicher Momentanwert der echten Netzleistung, direkt vom
 # Shelly Pro 3EM per lokaler RPC-API gelesen (unabhängig vom Zendure-Report).
-USE_SMARTMETER = False
-SMARTMETER_URL = "http://192.168.178.117/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
+USE_SMARTMETER = True
+SMARTMETER_URL = "http://192.168.178.yyy/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
+
+# ----------------------------- Zusätzliches Shelly-Geraet -----------------
+# Optional: ein weiteres Shelly-Geraet (z. B. Zaehler an einer PV-Einspeisung,
+# einem Ladegeraet o. Ae.), dessen aktueller Leistungswert in einer eigenen,
+# frei benennbaren Kachel im Dashboard angezeigt wird. Wird nur eingeblendet,
+# wenn USE_EXTRA_SHELLY = True ist - genau wie beim Smartmeter oben.
+USE_EXTRA_SHELLY = True
+EXTRA_SHELLY_URL = "http://192.168.178.yyy/rpc/Switch.GetStatus?id=0"  # IP des Geraets
+EXTRA_SHELLY_LABEL = "Input"  # frei waehlbarer Name der Kachel im Dashboard
