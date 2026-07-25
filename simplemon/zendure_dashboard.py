@@ -639,19 +639,19 @@ PAGE = r"""<!DOCTYPE html>
 </header>
 
 <div class="grid">
-  <div class="stat"><div class="lbl">Ladestand</div><div class="val"><span id="soc">–</span>%</div><div class="bar"><div id="socbar" style="width:0"></div></div></div>
   <div class="stat"><div class="lbl">Solar ein</div><div class="val"><span id="solar">–</span> W</div></div>
   <div class="stat"><div class="lbl">Ausgang Haus</div><div class="val"><span id="out">–</span> W</div></div>
   <div class="stat"><div class="lbl">Akku laden</div><div class="val"><span id="packin">–</span> W</div></div>
   <div class="stat"><div class="lbl">Akku entladen</div><div class="val"><span id="packout">–</span> W</div></div>
   <div class="stat"><div class="lbl">Netz ein (Zendure)</div><div class="val"><span id="grid">–</span> W</div></div>
-  <div class="stat" id="gridmeter_tile" style="display:none;"><div class="lbl">Netz (Smartmeter)</div><div class="val"><span id="gridmeter">–</span> W</div></div>
-  <div class="stat" id="extra_shelly_tile" style="display:none;"><div class="lbl">__EXTRA_SHELLY_LABEL__</div><div class="val"><span id="extra_shelly">–</span> W</div></div>
-  <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
+  <div class="stat"><div class="lbl">Ladestand</div><div class="val"><span id="soc">–</span>%</div><div class="bar"><div id="socbar" style="width:0"></div></div></div>
   <div class="stat"><div class="lbl">Batteriespannung</div><div class="val"><span id="volt">–</span> V</div></div>
-  <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
   <div class="stat"><div class="lbl">Lade-Grenze (max. SoC)</div><div class="val"><span id="maxsoc">–</span>%</div></div>
   <div class="stat"><div class="lbl">Entlade-Grenze (min. SoC)</div><div class="val"><span id="minsoc">–</span>%</div></div>
+  <div class="stat"><div class="lbl">Temperatur</div><div class="val"><span id="temp">–</span> °C</div></div>
+  <div class="stat"><div class="lbl">WLAN (RSSI)</div><div class="val"><span id="rssi">–</span> dBm</div></div>
+  <div class="stat" id="gridmeter_tile" style="display:none;"><div class="lbl">Netz (Smartmeter)</div><div class="val"><span id="gridmeter">–</span> W</div></div>
+  <div class="stat" id="extra_shelly_tile" style="display:none;"><div class="lbl">__EXTRA_SHELLY_LABEL__</div><div class="val"><span id="extra_shelly">–</span> W</div></div>
 </div>
 
 <div class="panel">
