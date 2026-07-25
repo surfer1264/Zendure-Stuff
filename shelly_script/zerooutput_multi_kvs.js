@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.5.6 KVS (Restrukturiert)",
+  version: "1.5.7 KVS (kvsEnabled: false,)",
   
   devices: [
      {
@@ -109,7 +109,7 @@ let CONFIG = {
   // Number of consecutive failures of the same type (per device, or globally for the grid meter / watchdog) before a Signal notification
   errorThreshold: 5,
   // Master switch: KVS-Live-Override an/aus (false = kein KVS.GetMany pro Zyklus/Seeding, Werte fix auf CONFIG)
-  kvsEnabled: true,
+  kvsEnabled: false,
   // true = JEDER Start ueberschreibt KVS-Werte mit CONFIG (verliert Live-Overrides!) - danach zurueck auf false
   kvsForceReseed: false,
   // operation to keep the console output clean.
