@@ -75,3 +75,9 @@ Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **"Zugriff zulass
 | Netzbezug bleibt „n/a" | `GRID_SOURCE_IP`/`SHELLY_IP` falsch oder Gerät ohne EM-Kanal | Direkt im Browser `http://<IP>/rpc/EM.GetStatus?id=0` testen |
 | Regler/Schalter wirken nicht im Script | `kvsEnabled` im Script-CONFIG steht auf `false` | Auf `true` setzen, Script neu starten |
 | 404 beim Öffnen der HTML-Datei | Datei liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
+
+## Impressionen
+![alt text](<2026-07-25 21-24-16.PNG>)
+![alt text](<2026-07-25 21-24-24.PNG>)
+![alt text](<2026-07-25 21-24-31.PNG>)
+![alt text](<2026-07-25 21-49-18-1.PNG>)
