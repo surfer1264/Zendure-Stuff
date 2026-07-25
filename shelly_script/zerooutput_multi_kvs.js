@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.5.5 KVS (Restrukturiert)",
+  version: "1.5.6 KVS (Restrukturiert)",
   
   devices: [
      {
@@ -87,6 +87,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // SOC BALANCING SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
   // Define the maximum allowed SOC difference between devices in percent points. 
+  rebalance: {
     socMargin: 10        // percentage points of advantage required to switch
   },
 
