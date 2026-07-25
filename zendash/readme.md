@@ -8,6 +8,9 @@ Drei Teile gehören zusammen:
 | `zendure_proxy.py` | auf eurem PC | liefert das Dashboard aus + fragt Shelly/Hubs CORS-frei ab |
 | `zendure-grid-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
+`zendure_proxy.py` und `zendure-grid-dashboard.html` in EIN Verzeichnis kopieren auf PC/MAC/RASPI/NAS.... mit einer gültigen Python Umgebung (leicht nachzuinstallieren)
+
+
 ---
 
 ## 1) Shelly-Script
