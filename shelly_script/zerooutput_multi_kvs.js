@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.5.7 KVS (kvsEnabled: false,)",
+  version: "1.5.8 KVS (validation socMargin)",
   
   devices: [
      {
@@ -130,9 +130,9 @@ let CONFIG = {
 // Plausibilitaets-Checks fuer CONFIG (einmalig beim Start) - Endwerte
 // werden im Banner ausgegeben, daher hier keine eigenen Printouts.
 function checkBand(band) {
-  if (band.concentrateBelow < 100) band.concentrateBelow = 100;
-  if (band.spreadAbove < 200) band.spreadAbove = 200;
-  if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow + 100;
+  if (band.concentrateBelow < 35) band.concentrateBelow = 35;
+  if (band.spreadAbove < 50) band.spreadAbove = 50;
+  if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow +15 ;
 }
 
 if (CONFIG.interval < 2500) CONFIG.interval = 2500;
@@ -143,6 +143,8 @@ if (CONFIG.setpoint < -50) CONFIG.setpoint = -50;
 if (CONFIG.setpoint > 50) CONFIG.setpoint = 50;
 if (CONFIG.hysteresis >50) CONFIG.hysteresis = 50;
 if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
+if (CONFIG.rebalance.socMargin < 3) CONFIG.rebalance.socMargin = 3;
+if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
 
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
