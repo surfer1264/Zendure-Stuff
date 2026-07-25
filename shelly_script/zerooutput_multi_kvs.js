@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.5.8 KVS (validation socMargin)",
+  version: "1.6.0 KVS (more logging)",
   
   devices: [
      {
@@ -37,7 +37,7 @@ let CONFIG = {
       dryRun: true             // only simulation; true = read + calculate only, never write
     },
   ],
-// ------------------------------------------------------------------
+  // ------------------------------------------------------------------
   // SMARTMETER SECTION
   // Where to read the household grid power from, there are three options 
   gridSource: "local", // "local", "remote", "http_json"
@@ -1241,6 +1241,28 @@ function distributeCharge(target) {
   return waterFillCharge(target, weight, active);
 }
 
+// Ermittelt acMode/outputLimit/inputLimit aus dem Zielwert - zentrale
+// Stelle, damit Print (Vorschau in applyOutputs) und tatsaechlicher
+// Write (writeDevice) garantiert dieselbe Logik verwenden.
+function planWrite(target, cfg, ds) {
+  if (target === 0 && cfg.reverse && ds.atMaxSoc) {
+    // Geraet ist untaetig, WEIL es voll ist (SOC >= maxSoc) - bleibt
+    // logisch im Eingang/Lade-Modus bei 0 W statt in den Ausgang-Modus
+    // zu wechseln (leistungsmaessig identisch, 0 W ist 0 W).
+    return { acMode: 1, outputLimit: 0, inputLimit: 0 };
+  }
+
+  if (target >= 0) {
+    return { acMode: 2, outputLimit: target, inputLimit: 0 }; // discharge / export
+  }
+
+  return { acMode: 1, outputLimit: 0, inputLimit: Math.abs(target) }; // charge / import from grid
+}
+
+function acModeLabel(acMode) {
+  return acMode === 2 ? "Export" : "Import/Idle";
+}
+
 function applyOutputs(output, myCycle) {
   let n = CONFIG.devices.length;
   let toWrite = [];
@@ -1249,9 +1271,12 @@ function applyOutputs(output, myCycle) {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
+    let plan = planWrite(output[i], cfg, ds);
+
     print(
       "  " + cfg.label + ": SOC " + (ds.available ? ds.soc + "%" : "n/a") +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
+      " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
       (cfg.dryRun ? " [DRYRUN - wird nicht geschrieben]" : "")
     );
 
@@ -1299,24 +1324,10 @@ function writeDevice(index, output, myCycle, callback) {
   let ds = state.devices[index];
   let target = output[index];
 
-  let acMode, outputLimit, inputLimit;
-
-  if (target === 0 && cfg.reverse && ds.atMaxSoc) {
-    // Geraet ist untaetig, WEIL es voll ist (SOC >= maxSoc) - bleibt
-    // logisch im Eingang/Lade-Modus bei 0 W statt in den Ausgang-Modus
-    // zu wechseln (leistungsmaessig identisch, 0 W ist 0 W).
-    acMode = 1;
-    outputLimit = 0;
-    inputLimit = 0;
-  } else if (target >= 0) {
-    acMode = 2;          // discharge / export
-    outputLimit = target;
-    inputLimit = 0;
-  } else {
-    acMode = 1;           // charge / import from grid
-    outputLimit = 0;
-    inputLimit = Math.abs(target);
-  }
+  let plan = planWrite(target, cfg, ds);
+  let acMode = plan.acMode;
+  let outputLimit = plan.outputLimit;
+  let inputLimit = plan.inputLimit;
 
   httpPost(
 
