@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.6.0 KVS (+ kvsForceReseed)",
+  version: "1.5.5 KVS (Restrukturiert)",
   
   devices: [
      {
@@ -66,8 +66,6 @@ let CONFIG = {
   // output value is written to that device (reduces write frequency)
   hysteresis: 10, // (KVS-live-overridable)
   // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
-  // applied before the target is split across devices. See original
-  // single-device script for details. 1.0 = no damping, 0.6 = default.
   dampingFactor: 0.6, // (KVS-live-overridable)
 
   // ------------------------------------------------------------------
@@ -88,7 +86,7 @@ let CONFIG = {
 
   // ------------------------------------------------------------------
   // SOC BALANCING SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
-  rebalance: {
+  // Define the maximum allowed SOC difference between devices in percent points. 
     socMargin: 10        // percentage points of advantage required to switch
   },
 
@@ -109,8 +107,10 @@ let CONFIG = {
   httpTimeout: 5,
   // Number of consecutive failures of the same type (per device, or globally for the grid meter / watchdog) before a Signal notification
   errorThreshold: 5,
-  // KVS-Seed-Verhalten beim Skriptstart. Normalerweise (false), bei true werden die Daten bei jedem Scriptstart in den KVS geschrieben
-  kvsForceReseed: true,
+  // Master switch: KVS-Live-Override an/aus (false = kein KVS.GetMany pro Zyklus/Seeding, Werte fix auf CONFIG)
+  kvsEnabled: true,
+  // true = JEDER Start ueberschreibt KVS-Werte mit CONFIG (verliert Live-Overrides!) - danach zurueck auf false
+  kvsForceReseed: false,
   // operation to keep the console output clean.
   debug: false,
 
@@ -126,7 +126,6 @@ let CONFIG = {
   }
 };
 
-// ------------------------------------------------------------------
 // Plausibilitaets-Checks fuer CONFIG (einmalig beim Start) - Endwerte
 // werden im Banner ausgegeben, daher hier keine eigenen Printouts.
 function checkBand(band) {
@@ -144,7 +143,6 @@ if (CONFIG.setpoint > 50) CONFIG.setpoint = 50;
 if (CONFIG.hysteresis >50) CONFIG.hysteresis = 50;
 if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
 
-
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
 
@@ -157,14 +155,12 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
 );
 
-// ------------------------------------------------------------------
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
 // Set a value externally via the Shelly's own local RPC, e.g.:
 // POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
 // Per-device keys use the device's array index (see banner "[devN]"), e.g.:
 // POST .../rpc/KVS.Set  {"key":"zdmc_dev0_dischargeAllowed","value":0}  // 1 = erlaubt, 0 = gesperrt
 // POST .../rpc/KVS.Set  {"key":"zdmc_dev0_reverse","value":1}          // 1 = erlaubt, 0 = gesperrt
-// ------------------------------------------------------------------
 let KVS_MATCH = "zdmc_*";
 
 let state = {
@@ -179,8 +175,8 @@ let state = {
   errors: { em: 0, watchdog: 0, kvs: 0 },
   notified: { em: false, watchdog: false, kvs: false },
 
-  discharge: { mode: "spread", active: null, holdCycles: 0 },
-  charge: { mode: "spread", active: null, holdCycles: 0 },
+  discharge: { mode: "single", active: null, holdCycles: 0 },
+  charge: { mode: "single", active: null, holdCycles: 0 },
 
   devices: []
 };
@@ -200,7 +196,6 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
   };
 }
 
-// ------------------------------------------------------------------
 function simpleEncode(str) {
   let out = "";
 
@@ -218,7 +213,6 @@ function simpleEncode(str) {
   return out;
 }
 
-// ------------------------------------------------------------------
 function sendSignalMessage(text) {
   if (!CONFIG.signal.enabled)
     return;
@@ -247,7 +241,6 @@ function sendSignalMessage(text) {
   );
 }
 
-// ------------------------------------------------------------------
 function reportError(errors, notified, type, label, message) {
   errors[type] = errors[type] + 1;
 
@@ -266,7 +259,6 @@ function reportError(errors, notified, type, label, message) {
   }
 }
 
-// ------------------------------------------------------------------
 function reportSuccess(errors, notified, type, label) {
   if (errors[type] > 0 || notified[type]) {
     if (notified[type]) {
@@ -280,7 +272,6 @@ function reportSuccess(errors, notified, type, label) {
   }
 }
 
-// ------------------------------------------------------------------
 function debugStale(where, myCycle) {
   if (CONFIG.debug) {
     print("DEBUG " + where + " -> verworfen (Zyklus " + myCycle +
@@ -288,7 +279,6 @@ function debugStale(where, myCycle) {
   }
 }
 
-// ------------------------------------------------------------------
 function lock() {
   state.busy = true;
   state.cycleId = state.cycleId + 1;
@@ -317,7 +307,6 @@ function lock() {
   return state.cycleId;
 }
 
-// ------------------------------------------------------------------
 function unlock(myCycle) {
   if (myCycle !== state.cycleId) {
     debugStale("unlock", myCycle);
@@ -339,7 +328,6 @@ function unlock(myCycle) {
   }
 }
 
-// ------------------------------------------------------------------
 // Normalizes the "items" field returned by KVS.GetMany into a plain
 // {key: {value, etag}} lookup map. Current Shelly firmware returns
 // items as an ARRAY of {key, etag, value} objects (needed to support
@@ -367,7 +355,6 @@ function kvsItemsToMap(rawItems) {
   return map;
 }
 
-// ------------------------------------------------------------------
 // Apply a single KVS override: parses raw into a number, runs it
 // through validate(), and only calls apply() if both checks pass.
 // Silently keeps the previous CONFIG value on any invalid input.
@@ -393,8 +380,12 @@ function applyKvsValue(key, raw, currentValue, validate, apply) {
   apply(n);
 }
 
-// ------------------------------------------------------------------
 function readKvsOverrides(myCycle, callback) {
+  if (!CONFIG.kvsEnabled) {
+    callback();
+    return;
+  }
+
   Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
     if (myCycle !== state.cycleId) {
       debugStale("readKvsOverrides", myCycle);
@@ -463,7 +454,6 @@ function readKvsOverrides(myCycle, callback) {
   });
 }
 
-// ------------------------------------------------------------------
 // Writes ONE missing default into KVS, then moves to the next pair.
 // Sequential on purpose (same pattern as writeAllDevices/syncSocLimitsAll)
 // rather than firing all KVS.Set calls at once.
@@ -486,7 +476,6 @@ function seedKvsDefaultsStep(pairs, index, callback) {
   });
 }
 
-// ------------------------------------------------------------------
 // Runs ONCE at startup (not per cycle - KVS is flash-backed, and this
 // avoids wearing it out). By default (CONFIG.kvsForceReseed === false)
 // reads what's already in KVS and writes the current CONFIG default
@@ -496,6 +485,12 @@ function seedKvsDefaultsStep(pairs, index, callback) {
 // is true, ALL zdmc_* keys are (re-)written from CONFIG on every start,
 // discarding any existing live overrides - see the CONFIG comment.
 function seedKvsDefaults(callback) {
+  if (!CONFIG.kvsEnabled) {
+    print("KVS-Seed uebersprungen - kvsEnabled: false");
+    callback();
+    return;
+  }
+
   Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
     if (err_code !== 0 || !res || !res.items) {
       print("KVS-Seed uebersprungen - KVS.GetMany nicht verfuegbar");
@@ -540,7 +535,6 @@ function seedKvsDefaults(callback) {
   });
 }
 
-// ------------------------------------------------------------------
 function httpGet(url, callback) {
   Shelly.call(
     "HTTP.GET",
@@ -552,7 +546,6 @@ function httpGet(url, callback) {
   );
 }
 
-// ------------------------------------------------------------------
 function httpPost(url, body, callback) {
   let bodyStr = JSON.stringify(body);
 
@@ -578,7 +571,6 @@ function httpPost(url, body, callback) {
   );
 }
 
-// ------------------------------------------------------------------
 function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, callback) {
   if (myCycle !== state.cycleId) {
     debugStale("readGridPower", myCycle);
@@ -654,7 +646,6 @@ function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, call
   callback(true);
 }
 
-// ------------------------------------------------------------------
 function readGridPower(myCycle, callback) {
   if (CONFIG.gridSource === "local") {
     let em = Shelly.getComponentStatus("em:" + CONFIG.gridSourceEmId);
@@ -723,7 +714,6 @@ function readGridPower(myCycle, callback) {
   callback(false);
 }
 
-// ------------------------------------------------------------------
 function readDevice(index, myCycle, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -791,7 +781,6 @@ function readDevice(index, myCycle, callback) {
   );
 }
 
-// ------------------------------------------------------------------
 function readAllDevices(index, myCycle, callback) {
   if (index >= CONFIG.devices.length) {
     callback();
@@ -803,7 +792,6 @@ function readAllDevices(index, myCycle, callback) {
   });
 }
 
-// ------------------------------------------------------------------
 function zeroOutputs() {
   let out = [];
 
@@ -814,7 +802,6 @@ function zeroOutputs() {
   return out;
 }
 
-// ------------------------------------------------------------------
 function calculate(myCycle) {
   if (myCycle !== state.cycleId) {
     debugStale("calculate", myCycle);
@@ -889,7 +876,6 @@ function calculate(myCycle) {
   applyOutputs(output, myCycle);
 }
 
-// ------------------------------------------------------------------
 function updateMode(directionState, targetMagnitude, cfg) {
   let currentMode = directionState.mode;
 
@@ -925,7 +911,6 @@ function updateMode(directionState, targetMagnitude, cfg) {
   return "spread";
 }
 
-// ------------------------------------------------------------------
 function pickStickyDevice(weight, active, selector) {
   let n = weight.length;
 
@@ -966,7 +951,6 @@ function pickStickyDevice(weight, active, selector) {
   return selector.active;
 }
 
-// ------------------------------------------------------------------
 function computeDischargeWeights() {
   let n = CONFIG.devices.length;
   let weight = [];
@@ -989,7 +973,6 @@ function computeDischargeWeights() {
   return { weight: weight, active: active };
 }
 
-// ------------------------------------------------------------------
 function computeChargeWeights() {
   let n = CONFIG.devices.length;
   let weight = [];
@@ -1027,7 +1010,6 @@ function computeChargeWeights() {
   return { weight: weight, active: active };
 }
 
-// ------------------------------------------------------------------
 function waterFillDischarge(target, weight, active) {
   let n = weight.length;
   let output = [];
@@ -1123,7 +1105,6 @@ function waterFillDischarge(target, weight, active) {
   return output;
 }
 
-// ------------------------------------------------------------------
 function waterFillCharge(target, weight, active) {
   let n = weight.length;
   let magnitude = -target;
@@ -1186,7 +1167,6 @@ function waterFillCharge(target, weight, active) {
   return output;
 }
 
-// ------------------------------------------------------------------
 function distributeDischarge(target) {
   let weights = computeDischargeWeights();
   let weight = weights.weight;
@@ -1222,7 +1202,6 @@ function distributeDischarge(target) {
   return waterFillDischarge(target, weight, active);
 }
 
-// ------------------------------------------------------------------
 function distributeCharge(target) {
   let weights = computeChargeWeights();
   let weight = weights.weight;
@@ -1259,7 +1238,6 @@ function distributeCharge(target) {
   return waterFillCharge(target, weight, active);
 }
 
-// ------------------------------------------------------------------
 function applyOutputs(output, myCycle) {
   let n = CONFIG.devices.length;
   let toWrite = [];
@@ -1308,7 +1286,6 @@ function applyOutputs(output, myCycle) {
   });
 }
 
-// ------------------------------------------------------------------
 function writeDevice(index, output, myCycle, callback) {
   if (myCycle !== state.cycleId) {
     debugStale("writeDevice(" + CONFIG.devices[index].label + ") vor dem Schreiben", myCycle);
@@ -1383,7 +1360,6 @@ function writeDevice(index, output, myCycle, callback) {
   );
 }
 
-// ------------------------------------------------------------------
 function writeAllDevices(indices, output, myCycle, pos, callback) {
   if (pos >= indices.length) {
     callback();
@@ -1395,7 +1371,6 @@ function writeAllDevices(indices, output, myCycle, pos, callback) {
   });
 }
 
-// ------------------------------------------------------------------
 function update() {
   if (state.busy) {
     print("Vorheriger Zyklus laeuft noch");
@@ -1427,7 +1402,6 @@ function update() {
   });
 }
 
-// ------------------------------------------------------------------
 function syncSocLimitsDevice(index, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -1505,7 +1479,6 @@ function syncSocLimitsDevice(index, callback) {
   );
 }
 
-// ------------------------------------------------------------------
 function syncSocLimitsAll(index, callback) {
   if (index >= CONFIG.devices.length) {
     callback();
@@ -1566,16 +1539,20 @@ bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
-bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/hysteresis/dampingFactor/" +
-  "dev{n}_dischargeAllowed/dev{n}_reverse (Keys: " + KVS_MATCH + ")";
-bannerLines[bannerLines.length] = "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
-  "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides mit CONFIG!" :
-  "aus (Standard, empfohlen)");
+bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "DEAKTIVIERT (kein Live-Override, kein Seeding)");
+
+if (CONFIG.kvsEnabled) {
+  bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/hysteresis/dampingFactor/" +
+    "dev{n}_dischargeAllowed/dev{n}_reverse (Keys: " + KVS_MATCH + ")";
+  bannerLines[bannerLines.length] = "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
+    "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides mit CONFIG!" :
+    "aus (Standard, empfohlen)");
+}
+
 bannerLines[bannerLines.length] = "--------------------------------";
 
 let bannerIndex = 0;
 
-// ------------------------------------------------------------------
 function printBannerLine(onDone) {
   if (bannerIndex >= bannerLines.length) {
     bannerLines = null;
