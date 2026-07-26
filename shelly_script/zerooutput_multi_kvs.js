@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.7.0 KVS (discharge start/stop, no minOutput)",
+  version: "2.0.0 KVS (direction change cooldown)",
   
   devices: [
      {
@@ -27,12 +27,12 @@ let CONFIG = {
 
       minSoc: 15,               // no discharge below this SOC (%)
       maxSoc: 100,              // no charging from grid at/above this SOC (%)
-      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
+      dischargeAllowed: false,   // may this device discharge/export at all? (KVS-live-overridable)
       reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxInputPower: 1200,      // max charge power from grid (W)
       maxOutput: 800,           // max discharge/export power (W)
 
-      dryRun: true             // only simulation; true = read + calculate only, never write
+      dryRun: true              // only simulation; true = read + calculate only, never write
     },
   ],
 // ------------------------------------------------------------------
@@ -92,12 +92,12 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // REVERSE MODE SECTION (charging from the grid) - global hysteresis - ONLY relevant for reverse: true (see CONFIG device)
   // Minimum charging power in watts required to START charging from the grid. 
-  reverseStartupPower: 35,
+  reverseStartupPower: 30,
   // Charging power in watts below which charging from the grid is STOPPED again (must be <= reverseStartupPower).
-  reverseStopPower: 15,
+  reverseStopPower: 10,
 
   // ------------------------------------------------------------------
-  // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese 
+  // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese, spiegelbildlich
   // Minimum discharge/export power in watts required to START discharging.
   dischargeStartupPower: 35,
   // Discharge power in watts below which discharging is STOPPED again (must be <= dischargeStartupPower).
@@ -113,6 +113,8 @@ let CONFIG = {
   httpTimeout: 5,
   // Number of consecutive failures of the same type (per device, or globally for the grid meter / watchdog) before a Signal notification
   errorThreshold: 5,
+  // AC-RICHTUNGSWECHSEL SECTION - schuetzt reine AC-ladefaehige Solarflows ohne eigene smarte Umschaltrampe vor zu haeufigem Hin-und-Her
+  directionChangeCooldown: 8000,
   // Master switch: KVS-Live-Override an/aus (false = kein KVS.GetMany pro Zyklus/Seeding, Werte fix auf CONFIG)
   kvsEnabled: false,
   // true = JEDER Start ueberschreibt KVS-Werte mit CONFIG (verliert Live-Overrides!) - danach zurueck auf false
@@ -159,6 +161,8 @@ if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStar
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
 
+if (CONFIG.directionChangeCooldown < 0) CONFIG.directionChangeCooldown = 0;
+
 // Hold time (spread -> single) in cycles, derived once from
 // concentrateHoldMinutes 
 let CONCENTRATE_HOLD_CYCLES = Math.max(
@@ -167,7 +171,6 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 );
 
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
-// Set a value externally via the Shelly's own local RPC, e.g.:
 // POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
 // Per-device keys use the device's array index (see banner "[devN]"), e.g.:
 // POST .../rpc/KVS.Set  {"key":"zdmc_dev0_dischargeAllowed","value":0}  // 1 = erlaubt, 0 = gesperrt
@@ -198,9 +201,12 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     serial: null,
     zenPower: 0,        // current signed power flow, from the device's own report
     available: false,   // was this device read successfully THIS cycle?
-    outputLimit: null,  // last value written to this device
+    outputLimit: null,  // last EFFEKTIV geschriebene signierte Leistung (nach Cooldown, falls aktiv)
     maxSocLogged: false,
 	atMaxSoc: false,
+
+    acMode: null,          // zuletzt tatsaechlich geschriebener/simulierter acMode (1=Laden/Idle, 2=Entladen)
+    acModeChangedAt: 0,    // Zeitpunkt (Date.now()) des letzten ECHTEN Richtungswechsels
 
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
@@ -339,13 +345,7 @@ function unlock(myCycle) {
   }
 }
 
-// Normalizes the "items" field returned by KVS.GetMany into a plain
-// {key: {value, etag}} lookup map. Current Shelly firmware returns
-// items as an ARRAY of {key, etag, value} objects (needed to support
-// the "offset" pagination parameter), NOT as an object keyed by the
-// KVS key name - so code doing items["some_key"] directly would always
-// get undefined. This normalizes either shape defensively, in case a
-// future/older firmware ever reverts to the object form.
+// Normalizes the "items" field returned by KVS.GetMany into a plain {key: {value, etag}} lookup map. 
 function kvsItemsToMap(rawItems) {
   let map = {};
 
@@ -368,9 +368,6 @@ function kvsItemsToMap(rawItems) {
 
 // Apply a single KVS override: parses raw into a number, runs it
 // through validate(), and only calls apply() if both checks pass.
-// Silently keeps the previous CONFIG value on any invalid input.
-// Logs exactly once when a value actually changes (not every cycle) -
-// only shown when CONFIG.debug is true.
 function applyKvsValue(key, raw, currentValue, validate, apply) {
   let n = Number(raw);
 
@@ -489,12 +486,6 @@ function seedKvsDefaultsStep(pairs, index, callback) {
 
 // Runs ONCE at startup (not per cycle - KVS is flash-backed, and this
 // avoids wearing it out). By default (CONFIG.kvsForceReseed === false)
-// reads what's already in KVS and writes the current CONFIG default
-// ONLY for keys that don't exist yet - so a fresh install ends up with
-// sensible starting values, while any value a user already set
-// externally is never touched/overwritten. If CONFIG.kvsForceReseed
-// is true, ALL zdmc_* keys are (re-)written from CONFIG on every start,
-// discarding any existing live overrides - see the CONFIG comment.
 function seedKvsDefaults(callback) {
   if (!CONFIG.kvsEnabled) {
     print("KVS-Seed uebersprungen - kvsEnabled: false");
@@ -1076,9 +1067,7 @@ function waterFillDischarge(target, weight, active) {
   }
 
   // Analog zu waterFillCharge: pro Geraet einfach auf 0 setzen, wenn der
-  // zugewiesene Anteil unter der globalen Stop-Schwelle liegt - kein
-  // Hochziehen auf einen Mindestwert mehr, kein Sonderfall fuer "Ziel
-  // kleiner als die Summe aller Mindestwerte" noetig. Ein Geraet laeuft
+  // zugewiesene Anteil unter der globalen Stop-Schwelle liegt - Ein Geraet laeuft
   // entweder mit sinnvoller Leistung oder gar nicht.
   for (let i = 0; i < n; i++) {
     let o = Math.round(output[i]);
@@ -1248,34 +1237,76 @@ function acModeLabel(acMode) {
   return acMode === 2 ? "Export" : "Import/Idle";
 }
 
+// Signierte Leistung, die ein plan-Objekt tatsaechlich am Geraet bewirkt -
+// Gegenstueck zu planWrite(): bei acMode 2 ist das +outputLimit (Export),
+// bei acMode 1 ist es -inputLimit (Import) bzw. 0 (Idle/voll). Wird als
+// "letzter effektiv geschriebener Wert" in ds.outputLimit gespeichert,
+// damit die Hysteresis-Pruefung in applyOutputs() immer gegen das vergleicht,
+// was WIRKLICH zuletzt geschrieben wurde - nicht gegen den rohen,
+// moeglicherweise vom Cooldown ueberschriebenen Zielwert.
+function planSignedPower(plan) {
+  return plan.acMode === 2 ? plan.outputLimit : (plan.inputLimit * -1);
+}
+
+// Verhindert zu haeufige acMode-Wechsel (Laden<->Entladen) an EINEM Geraet.
+// Greift nur, wenn plan.acMode vom zuletzt geschriebenen/simulierten
+// ds.acMode abweicht UND CONFIG.directionChangeCooldown seit dem letzten
+// echten Wechsel noch nicht abgelaufen ist. In diesem Fall wird die ALTE
+// Richtung mit 0 W gehalten (kein Umschalten, aber auch kein Leistungsfluss
+// in die neue Richtung), bis die Sperrzeit abgelaufen ist.
+function enforceDirectionCooldown(plan, ds, now) {
+  if (CONFIG.directionChangeCooldown <= 0) return plan;
+  if (ds.acMode === null) return plan;              // noch nie geschrieben - nichts zu vergleichen
+  if (plan.acMode === ds.acMode) return plan;        // keine Richtungsaenderung angefordert
+
+  let elapsed = now - ds.acModeChangedAt;
+  if (elapsed >= CONFIG.directionChangeCooldown) return plan; // Sperrzeit abgelaufen, Wechsel erlaubt
+
+  if (CONFIG.debug) {
+    print("Cooldown aktiv (" + Math.round((CONFIG.directionChangeCooldown - elapsed) / 1000) +
+      "s verbleibend) - Richtungswechsel blockiert, halte " + acModeLabel(ds.acMode));
+  }
+
+  return { acMode: ds.acMode, outputLimit: 0, inputLimit: 0 };
+}
+
 function applyOutputs(output, myCycle) {
   let n = CONFIG.devices.length;
   let toWrite = [];
+  let now = Date.now(); // einheitlicher Zeitpunkt fuer die Cooldown-Vorschau dieses Zyklus
 
   for (let i = 0; i < n; i++) {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
-    let plan = planWrite(output[i], cfg, ds);
+    let rawPlan = planWrite(output[i], cfg, ds);
+    let plan = enforceDirectionCooldown(rawPlan, ds, now);
+    let signedPower = planSignedPower(plan);
 
     print(
       "  " + cfg.label + ": SOC " + (ds.available ? ds.soc + "%" : "n/a") +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
       " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
+      (plan.acMode !== rawPlan.acMode ? " [Cooldown haelt Richtung]" : "") +
       (cfg.dryRun ? " [DRYRUN - wird nicht geschrieben]" : "")
     );
 
     if (!ds.available) continue;
 
     if (ds.outputLimit !== null &&
-        Math.abs(output[i] - ds.outputLimit) < CONFIG.hysteresis) {
-      continue; // change too small for this device, skip write
+        Math.abs(signedPower - ds.outputLimit) < CONFIG.hysteresis) {
+      continue; // effektiv geschriebener Wert wuerde sich kaum aendern - Schreibvorgang ueberspringen
     }
 
     if (cfg.dryRun) {
-      ds.outputLimit = output[i];
-      print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + output[i] +
-        " W " + (output[i] >= 0 ? "(Export)" : "(Laden vom Netz)"));
+      if (ds.acMode === null || ds.acMode !== plan.acMode) {
+        ds.acModeChangedAt = now;
+      }
+      ds.acMode = plan.acMode;
+      ds.outputLimit = signedPower;
+
+      print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + signedPower +
+        " W " + (signedPower >= 0 ? "(Export)" : "(Laden vom Netz)"));
       continue;
     }
 
@@ -1310,9 +1341,12 @@ function writeDevice(index, output, myCycle, callback) {
   let target = output[index];
 
   let plan = planWrite(target, cfg, ds);
+  plan = enforceDirectionCooldown(plan, ds, Date.now()); // frischer Zeitpunkt, moeglichst nah am echten Schreibvorgang
+
   let acMode = plan.acMode;
   let outputLimit = plan.outputLimit;
   let inputLimit = plan.inputLimit;
+  let signedPower = planSignedPower(plan);
 
   httpPost(
 
@@ -1336,10 +1370,14 @@ function writeDevice(index, output, myCycle, callback) {
       }
 
       if (res && res.code === 200) {
-        ds.outputLimit = target;
+        if (ds.acMode === null || ds.acMode !== acMode) {
+          ds.acModeChangedAt = Date.now();
+        }
+        ds.acMode = acMode;
+        ds.outputLimit = signedPower;
 
-        print(cfg.label + ": Leistung gesetzt: " + target + " W " +
-          (target >= 0 ? "(Export)" : "(Laden vom Netz)"));
+        print(cfg.label + ": Leistung gesetzt: " + signedPower + " W " +
+          (signedPower >= 0 ? "(Export)" : "(Laden vom Netz)"));
         reportSuccess(ds.errors, ds.notified, "write", cfg.label);
       } else {
         if (CONFIG.debug) {
@@ -1536,6 +1574,9 @@ bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
   CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
 bannerLines[bannerLines.length] = "Discharge Start/Stop: " +
   CONFIG.dischargeStartupPower + " W / " + CONFIG.dischargeStopPower + " W";
+bannerLines[bannerLines.length] = "Richtungswechsel-Cooldown: " +
+  (CONFIG.directionChangeCooldown > 0 ?
+    (CONFIG.directionChangeCooldown / 1000) + " s (pro Geraet)" : "deaktiviert");
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
