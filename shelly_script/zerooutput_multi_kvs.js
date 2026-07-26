@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "2.0.0 KVS (direction change cooldown)",
+  version: "2.0.1 KVS (direction change cooldown)",
   
   devices: [
      {
@@ -1446,7 +1446,15 @@ function syncSocLimitsDevice(index, callback) {
 
   if (cfg.dryRun) {
     print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
-    callback();
+
+    // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
+    // aufeinanderfolgenden dryRun-Geraeten wuerde sich syncSocLimitsAll()
+    // sonst rein synchron immer tiefer verschachteln (kein echter HTTP-Call,
+    // der den Stack zwischendurch ueber den Event-Loop abbaut) und den
+    // flachen nativen mJS-Stack zum Ueberlaufen bringen ("Too much
+    // recursion"). Timer.set(0, ...) erzwingt denselben Event-Loop-Sprung,
+    // den ein echtes Geraet automatisch durch seinen HTTP-Callback bekommt.
+    Timer.set(0, false, callback);
     return;
   }
 
