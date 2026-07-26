@@ -40,6 +40,12 @@ let LATEST_STATUS = {
   hubs: []
 };
 
+// Zeitpunkt der letzten Anfrage vom Dashboard (irgendein Endpunkt).
+// Solange laenger nichts reinkam, pausiert backgroundPoll die eigentlichen
+// HTTP-Abfragen an Netzzaehler/Hubs (kein Dashboard offen = keine Anfragen noetig).
+let lastRequestAt = 0;
+let IDLE_MS = 15000;
+
 
 // =====================================================
 // KVS-Helfer
@@ -162,6 +168,10 @@ function updateAllHubsStatus(index, results, callback) {
 
 // Hauptfunktion für das periodische Hintergrund-Update
 function backgroundPoll() {
+  if (Date.now() - lastRequestAt > IDLE_MS) {
+    // kein Dashboard aktiv - Netzzaehler/Hubs nicht unnoetig abfragen
+    return;
+  }
   updateGridPowerStatus(function (grid) {
     LATEST_STATUS.grid = grid;
     updateAllHubsStatus(0, [], function (hubs) {
@@ -198,6 +208,7 @@ function buildDeviceDefaults() {
 }
 
 HTTPServer.registerEndpoint("config_api", function (req, res) {
+  lastRequestAt = Date.now();
   let devices = buildDeviceDefaults();
   let setpoint = 0;
   let hysteresis = 10;
@@ -231,6 +242,7 @@ HTTPServer.registerEndpoint("config_api", function (req, res) {
 });
 
 HTTPServer.registerEndpoint("status_api", function (req, res) {
+  lastRequestAt = Date.now();
   res.code = 200;
   res.headers = [
     ["Content-Type", "application/json"],
@@ -242,6 +254,7 @@ HTTPServer.registerEndpoint("status_api", function (req, res) {
 });
 
 HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
+  lastRequestAt = Date.now();
   if (!req.query || req.query.data === undefined) {
     res.code = 400;
     res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
@@ -316,6 +329,7 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
     "*{box-sizing:border-box;}body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--text);padding:20px;}" +
     ".shell{max-width:1000px;margin:0 auto;}" +
     ".card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}" +
+    ".row{display:flex;gap:16px;}.row>.card{flex:1;min-width:0;}" +
     ".hero-val{font-size:42px;font-weight:bold;color:var(--teal);}" +
     ".mono{font-family:monospace;}" +
     ".grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}" +
@@ -325,13 +339,15 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
     "<body>" +
     "<div class='shell'>" +
       "<h1>ZENDURE // GRID</h1>" +
-      "<div class='card'>" +
-        "<div>Netzbezug / Einspeisung</div>" +
-        "<div class='hero-val mono' id='gridVal'>-- W</div>" +
-      "</div>" +
-      "<div class='card'>" +
-        "<div>Batterieleistung (Solarflows)</div>" +
-        "<div class='hero-val mono' id='battVal'>-- W</div>" +
+      "<div class='row'>" +
+        "<div class='card'>" +
+          "<div>Netzbezug / Einspeisung</div>" +
+          "<div class='hero-val mono' id='gridVal'>-- W</div>" +
+        "</div>" +
+        "<div class='card'>" +
+          "<div>Batterieleistung (Solarflows)</div>" +
+          "<div class='hero-val mono' id='battVal'>-- W</div>" +
+        "</div>" +
       "</div>" +
       "<div class='card'>" +
         "<h3>Regelparameter</h3>" +
@@ -355,7 +371,7 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
         "}" +
         "let hHtml='';let total=0;" +
         "(d.hubs||[]).forEach(h=>{" +
-          "hHtml+='<div class=\"card\"><h4>Hub '+h.id+'</h4>SoC: '+(h.soc!==null?h.soc+'%':'--')+'<br>Power: '+(h.power||0)+' W</div>';" +
+          "hHtml+='<div class=\"card\"><h4>Hub '+h.id+'</h4>SoC: '+(h.soc!==null?h.soc+'%':'--')+'<br>Power: '+(h.power||0)+' W<br><label><input type=\"checkbox\"> Entladen erlauben</label><br><label><input type=\"checkbox\"> Laden erlauben</label></div>';" +
           "total+=(h.power||0);" +
         "});" +
         "document.getElementById('hubs').innerHTML=hHtml;" +
