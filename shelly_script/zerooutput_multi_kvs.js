@@ -162,6 +162,7 @@ if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
 
 if (CONFIG.directionChangeCooldown < 0) CONFIG.directionChangeCooldown = 0;
+if (CONFIG.directionChangeCooldown > 0 && CONFIG.directionChangeCooldown < CONFIG.interval * 1.5) {CONFIG.directionChangeCooldown = CONFIG.interval * 1.5;}
 
 // Hold time (spread -> single) in cycles, derived once from
 // concentrateHoldMinutes 
