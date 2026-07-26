@@ -15,13 +15,15 @@ Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen 
 
 ## 1) Regel-Script auf dem Shelly
 
+Hier der Vollständigkeit erwähnt, da die Vewrfügbarkeit dieses Scriptes berteits vorausgesetzt wird. 
+
 1. **Settings → Scripts** → neues Script anlegen, Inhalt von `zerooutput_multi_kvs.js` einfügen. (hier nur der Vollständigkeithalber erwähnt, wenn das schon läuft, ist dieser Punkt erledigt)
 2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nie an.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 
 ## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
 
-1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen.
+1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf dem gleichen Shelly laufen, auf dem auch das Regel-Script läuft
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
    - `devices` — gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS)
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
