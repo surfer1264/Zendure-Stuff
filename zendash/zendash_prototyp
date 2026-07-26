@@ -253,9 +253,24 @@ HTTPServer.registerEndpoint("status_api", function (req, res) {
   res.send();
 });
 
+function getQueryParam(query, name) {
+  if (!query) return undefined;
+  let pairs = query.split("&");
+  for (let i = 0; i < pairs.length; i++) {
+    let eq = pairs[i].indexOf("=");
+    if (eq < 0) continue;
+    let k = decodeURIComponent(pairs[i].slice(0, eq));
+    if (k === name) {
+      return decodeURIComponent(pairs[i].slice(eq + 1));
+    }
+  }
+  return undefined;
+}
+
 HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   lastRequestAt = Date.now();
-  if (!req.query || req.query.data === undefined) {
+  let dataParam = getQueryParam(req.query, "data");
+  if (dataParam === undefined) {
     res.code = 400;
     res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
     res.body = JSON.stringify({ success: false, error: "missing data param" });
@@ -264,7 +279,7 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   }
 
   let data = null;
-  try { data = JSON.parse(req.query.data); } catch (e) { data = null; }
+  try { data = JSON.parse(dataParam); } catch (e) { data = null; }
 
   if (!data || typeof data !== "object") {
     res.code = 400;
@@ -361,6 +376,9 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
     "<script>" +
     "async function fetchJ(p){let r=await fetch(p);return await r.json();}" +
     "async function setKvs(k,v){await fetch('kvs_set_api?data='+encodeURIComponent(JSON.stringify({[k]:v})));}" +
+    "let cfgDevices=[];" +
+    "function toggleDis(id,el){setKvs('zdmc_dev'+id+'_dischargeAllowed',el.checked?1:0);}" +
+    "function toggleChg(id,el){setKvs('zdmc_dev'+id+'_reverse',el.checked?1:0);}" +
     "async function update(){" +
       "try{" +
         "let d=await fetchJ('status_api');" +
@@ -371,7 +389,8 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
         "}" +
         "let hHtml='';let total=0;" +
         "(d.hubs||[]).forEach(h=>{" +
-          "hHtml+='<div class=\"card\"><h4>Hub '+h.id+'</h4>SoC: '+(h.soc!==null?h.soc+'%':'--')+'<br>Power: '+(h.power||0)+' W<br><label><input type=\"checkbox\"> Entladen erlauben</label><br><label><input type=\"checkbox\"> Laden erlauben</label></div>';" +
+          "let cfgD=cfgDevices.find(x=>x.id===h.id)||{};" +
+          "hHtml+='<div class=\"card\"><h4>Hub '+h.id+'</h4>SoC: '+(h.soc!==null?h.soc+'%':'--')+'<br>Power: '+(h.power||0)+' W<br><label><input type=\"checkbox\" '+(cfgD.dischargeAllowed?'checked':'')+' onchange=\"toggleDis('+h.id+',this)\"> Entladen erlauben</label><br><label><input type=\"checkbox\" '+(cfgD.reverse?'checked':'')+' onchange=\"toggleChg('+h.id+',this)\"> Laden erlauben</label></div>';" +
           "total+=(h.power||0);" +
         "});" +
         "document.getElementById('hubs').innerHTML=hHtml;" +
@@ -380,6 +399,7 @@ HTTPServer.registerEndpoint("dashboard", function (req, res) {
     "}" +
     "async function init(){" +
       "let c=await fetchJ('config_api');" +
+      "cfgDevices=c.devices||[];" +
       "document.getElementById('sp').value=c.setpoint||0;" +
       "document.getElementById('spVal').innerText=(c.setpoint||0)+' W';" +
       "document.getElementById('hyst').value=c.hysteresis||10;" +
