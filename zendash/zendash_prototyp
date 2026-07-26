@@ -1,0 +1,381 @@
+// =====================================================================
+// Zendure Dashboard Endpoint (zendure_dashboard_endpoint.js) - FIXED
+// =====================================================================
+
+let CONFIG = {
+  devices: [
+    {
+      ip: "192.168.178.143",
+      label: "SF2400",
+      minSoc: 18,
+      maxOutput: 800,
+      maxInputPower: 2400,
+      dischargeAllowed: true,
+      reverse: true
+    },
+    {
+      ip: "192.168.178.143",
+      label: "Fatamorgana",
+      minSoc: 15,
+      maxOutput: 800,
+      maxInputPower: 1200,
+      dischargeAllowed: false,
+      reverse: true
+    }
+  ],
+
+  gridSource: "local",
+  gridSourceIp: "192.168.178.117",
+  gridSourceEmId: 0,
+
+  httpTimeout: 3,
+  pollIntervalSec: 5
+};
+
+let KVS_MATCH = "zdmc_*";
+
+// Zwischenspeicher für Hintergrund-Polling (Verhindert 404 durch Blockieren)
+let LATEST_STATUS = {
+  grid: { power: 0, online: false },
+  hubs: []
+};
+
+
+// =====================================================
+// KVS-Helfer
+// =====================================================
+
+function kvsItemsToMap(rawItems) {
+  let map = {};
+  if (!rawItems) return map;
+
+  if (Array.isArray(rawItems)) {
+    for (let i = 0; i < rawItems.length; i++) {
+      let entry = rawItems[i];
+      if (entry && entry.key !== undefined) {
+        map[entry.key] = entry.value;
+      }
+    }
+  } else {
+    for (let k in rawItems) {
+      map[k] = rawItems[k].value !== undefined ? rawItems[k].value : rawItems[k];
+    }
+  }
+  return map;
+}
+
+
+// =====================================================
+// Hintergrund-Polling (Netz + Hubs entkoppelt abfragen)
+// =====================================================
+
+function updateGridPowerStatus(callback) {
+  if (CONFIG.gridSource === "local") {
+    let em = Shelly.getComponentStatus("em:" + CONFIG.gridSourceEmId);
+    if (!em) {
+      callback({ power: 0, online: false });
+      return;
+    }
+    let power = em.total_act_power;
+    if (power === undefined) {
+      power = (em.a_act_power || 0) + (em.b_act_power || 0) + (em.c_act_power || 0);
+    }
+    callback({ power: Math.round(power), online: true });
+    return;
+  }
+
+  if (CONFIG.gridSource === "remote") {
+    Shelly.call(
+      "HTTP.GET",
+      {
+        url: "http://" + CONFIG.gridSourceIp + "/rpc/EM.GetStatus?id=" + CONFIG.gridSourceEmId,
+        timeout: CONFIG.httpTimeout
+      },
+      function (res, error_code) {
+        if (error_code !== 0 || !res || res.code !== 200) {
+          callback({ power: 0, online: false });
+          return;
+        }
+        let data;
+        try { data = JSON.parse(res.body); } catch (e) { callback({ power: 0, online: false }); return; }
+        if (data.total_act_power === undefined) {
+          callback({ power: 0, online: false });
+          return;
+        }
+        callback({ power: Math.round(data.total_act_power), online: true });
+      }
+    );
+    return;
+  }
+  callback({ power: 0, online: false });
+}
+
+function updateHubStatus(index, callback) {
+  let cfg = CONFIG.devices[index];
+
+  Shelly.call(
+    "HTTP.GET",
+    {
+      url: "http://" + cfg.ip + "/properties/report",
+      timeout: CONFIG.httpTimeout
+    },
+    function (res, error_code) {
+      if (error_code !== 0 || !res || res.code !== 200) {
+        callback({ id: index, soc: null, power: 0, online: false });
+        return;
+      }
+      let data;
+      try { data = JSON.parse(res.body); } catch (e) { callback({ id: index, soc: null, power: 0, online: false }); return; }
+      if (!data.properties) {
+        callback({ id: index, soc: null, power: 0, online: false });
+        return;
+      }
+
+      let p = data.properties;
+      let power = 0;
+      if (p.acMode === 2) {
+        power = p.outputHomePower || 0;
+      } else if (p.acMode === 1) {
+        power = (p.gridInputPower || 0) * -1;
+      }
+
+      callback({
+        id: index,
+        soc: p.electricLevel,
+        power: Math.round(power),
+        online: true
+      });
+    }
+  );
+}
+
+function updateAllHubsStatus(index, results, callback) {
+  if (index >= CONFIG.devices.length) {
+    callback(results);
+    return;
+  }
+  updateHubStatus(index, function (r) {
+    results[results.length] = r;
+    updateAllHubsStatus(index + 1, results, callback);
+  });
+}
+
+// Hauptfunktion für das periodische Hintergrund-Update
+function backgroundPoll() {
+  updateGridPowerStatus(function (grid) {
+    LATEST_STATUS.grid = grid;
+    updateAllHubsStatus(0, [], function (hubs) {
+      LATEST_STATUS.hubs = hubs;
+    });
+  });
+}
+
+// Starte Timer für Hintergrund-Abfragen (alle 5 Sekunden)
+Timer.set(CONFIG.pollIntervalSec * 1000, true, backgroundPoll);
+backgroundPoll(); // Erster sofortiger Aufruf
+
+
+// =====================================================
+// API: Endpunkte (Antworten JETZT sofort aus dem RAM)
+// =====================================================
+
+function buildDeviceDefaults() {
+  let arr = [];
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    let d = CONFIG.devices[i];
+    arr[i] = {
+      id: i,
+      ip: d.ip,
+      label: d.label,
+      minSoc: d.minSoc,
+      maxOutput: d.maxOutput,
+      maxInputPower: d.maxInputPower,
+      dischargeAllowed: d.dischargeAllowed !== false,
+      reverse: !!d.reverse
+    };
+  }
+  return arr;
+}
+
+HTTPServer.registerEndpoint("config_api", function (req, res) {
+  let devices = buildDeviceDefaults();
+  let setpoint = 0;
+  let hysteresis = 10;
+
+  Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
+    if (error_code === 0 && result && result.items) {
+      let items = kvsItemsToMap(result.items);
+      if (items["zdmc_setpoint"] !== undefined) setpoint = Number(items["zdmc_setpoint"]);
+      if (items["zdmc_hysteresis"] !== undefined) hysteresis = Number(items["zdmc_hysteresis"]);
+
+      for (let i = 0; i < devices.length; i++) {
+        let dKey = "zdmc_dev" + i + "_dischargeAllowed";
+        let rKey = "zdmc_dev" + i + "_reverse";
+        if (items[dKey] !== undefined) devices[i].dischargeAllowed = (Number(items[dKey]) !== 0);
+        if (items[rKey] !== undefined) devices[i].reverse = (Number(items[rKey]) !== 0);
+      }
+    }
+
+    res.code = 200;
+    res.headers = [
+      ["Content-Type", "application/json"],
+      ["Access-Control-Allow-Origin", "*"]
+    ];
+    res.body = JSON.stringify({
+      setpoint: setpoint,
+      hysteresis: hysteresis,
+      devices: devices
+    });
+    res.send();
+  });
+});
+
+HTTPServer.registerEndpoint("status_api", function (req, res) {
+  res.code = 200;
+  res.headers = [
+    ["Content-Type", "application/json"],
+    ["Access-Control-Allow-Origin", "*"]
+  ];
+  // Reagiert sofort aus dem Zwischenspeicher!
+  res.body = JSON.stringify(LATEST_STATUS);
+  res.send();
+});
+
+HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
+  if (!req.query || req.query.data === undefined) {
+    res.code = 400;
+    res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+    res.body = JSON.stringify({ success: false, error: "missing data param" });
+    res.send();
+    return;
+  }
+
+  let data = null;
+  try { data = JSON.parse(req.query.data); } catch (e) { data = null; }
+
+  if (!data || typeof data !== "object") {
+    res.code = 400;
+    res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+    res.body = JSON.stringify({ success: false, error: "invalid json" });
+    res.send();
+    return;
+  }
+
+  let keys = Object.keys(data);
+  let allowedKeys = [];
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].indexOf("zdmc_") === 0) allowedKeys[allowedKeys.length] = keys[i];
+  }
+
+  if (allowedKeys.length === 0) {
+    res.code = 200;
+    res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+    res.body = JSON.stringify({ success: true, written: 0 });
+    res.send();
+    return;
+  }
+
+  let remaining = allowedKeys.length;
+  let allOk = true;
+
+  for (let i = 0; i < allowedKeys.length; i++) {
+    let k = allowedKeys[i];
+    Shelly.call("KVS.Set", { key: k, value: String(data[k]) }, function (result, error_code) {
+      if (error_code !== 0) allOk = false;
+      remaining--;
+      if (remaining === 0) {
+        res.code = allOk ? 200 : 500;
+        res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+        res.body = JSON.stringify({ success: allOk, written: allowedKeys.length });
+        res.send();
+      }
+    });
+  }
+});
+
+
+// =====================================================
+// Dashboard UI (HTML Output)
+// =====================================================
+
+HTTPServer.registerEndpoint("dashboard", function (req, res) {
+  res.code = 200;
+  res.headers = [["Content-Type", "text/html; charset=utf-8"]];
+
+  res.body =
+    "<!DOCTYPE html>" +
+    "<html lang='de' data-theme='dark'>" +
+    "<head>" +
+    "<meta charset='UTF-8'>" +
+    "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+    "<title>Zendure Grid · Dashboard</title>" +
+    "<style>" +
+    ":root{--amber:#F2A93B;--teal:#4FD1C5;--alert:#E2574C;--idle:#5B6B85;}" +
+    "html[data-theme='dark']{--bg:#0B1220;--surface:#141E33;--text:#EAF0F6;--text-muted:#8B9BB4;--border:rgba(255,255,255,0.08);}" +
+    "html[data-theme='light']{--bg:#EEF3F1;--surface:#FFFFFF;--text:#10192B;--text-muted:#5A6B82;--border:rgba(15,23,32,0.08);}" +
+    "*{box-sizing:border-box;}body{margin:0;font-family:sans-serif;background:var(--bg);color:var(--text);padding:20px;}" +
+    ".shell{max-width:1000px;margin:0 auto;}" +
+    ".card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}" +
+    ".hero-val{font-size:42px;font-weight:bold;color:var(--teal);}" +
+    ".mono{font-family:monospace;}" +
+    ".grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;}" +
+    "input[type=range]{width:100%;}" +
+    "</style>" +
+    "</head>" +
+    "<body>" +
+    "<div class='shell'>" +
+      "<h1>ZENDURE // GRID</h1>" +
+      "<div class='card'>" +
+        "<div>Netzbezug / Einspeisung</div>" +
+        "<div class='hero-val mono' id='gridVal'>-- W</div>" +
+      "</div>" +
+      "<div class='card'>" +
+        "<div>Batterieleistung (Solarflows)</div>" +
+        "<div class='hero-val mono' id='battVal'>-- W</div>" +
+      "</div>" +
+      "<div class='card'>" +
+        "<h3>Regelparameter</h3>" +
+        "Sollwert: <span id='spVal' class='mono'>0 W</span><br>" +
+        "<input type='range' id='sp' min='-50' max='50' step='10' value='0' onchange='setKvs(\"zdmc_setpoint\",this.value)'><br><br>" +
+        "Hysterese: <span id='hystVal' class='mono'>10 W</span><br>" +
+        "<input type='range' id='hyst' min='5' max='50' step='5' value='10' onchange='setKvs(\"zdmc_hysteresis\",this.value)'>" +
+      "</div>" +
+      "<div id='hubs' class='grid'></div>" +
+    "</div>" +
+    "<script>" +
+    "async function fetchJ(p){let r=await fetch(p);return await r.json();}" +
+    "async function setKvs(k,v){await fetch('kvs_set_api?data='+encodeURIComponent(JSON.stringify({[k]:v})));}" +
+    "async function update(){" +
+      "try{" +
+        "let d=await fetchJ('status_api');" +
+        "if(d.grid&&d.grid.online){" +
+          "document.getElementById('gridVal').innerText=(d.grid.power>0?'+':'')+d.grid.power+' W';" +
+        "}else{" +
+          "document.getElementById('gridVal').innerText='offline';" +
+        "}" +
+        "let hHtml='';let total=0;" +
+        "(d.hubs||[]).forEach(h=>{" +
+          "hHtml+='<div class=\"card\"><h4>Hub '+h.id+'</h4>SoC: '+(h.soc!==null?h.soc+'%':'--')+'<br>Power: '+(h.power||0)+' W</div>';" +
+          "total+=(h.power||0);" +
+        "});" +
+        "document.getElementById('hubs').innerHTML=hHtml;" +
+        "document.getElementById('battVal').innerText=(total>0?'+':'')+total+' W';" +
+      "}catch(e){console.error(e);}" +
+    "}" +
+    "async function init(){" +
+      "let c=await fetchJ('config_api');" +
+      "document.getElementById('sp').value=c.setpoint||0;" +
+      "document.getElementById('spVal').innerText=(c.setpoint||0)+' W';" +
+      "document.getElementById('hyst').value=c.hysteresis||10;" +
+      "document.getElementById('hystVal').innerText=(c.hysteresis||10)+' W';" +
+      "setInterval(update,3000);update();" +
+    "}" +
+    "init();" +
+    "</script>" +
+    "</body>" +
+    "</html>";
+
+  res.send();
+});
+
+print("Zendure Dashboard Endpoint erfolgreich gestartet.");
