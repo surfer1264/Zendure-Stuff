@@ -1,150 +1,189 @@
 #!/usr/bin/env python3
 """
-Lokaler Server fuer das Zendure-Grid-Dashboard.
+Zendure Dashboard Proxy
+=======================
+Kleiner lokaler Proxy, nur Python-Standardbibliothek (kein "pip install"
+noetig). Loest das Origin/CORS-Problem der Shelly-Firmware, indem der
+Browser nur noch mit DIESEM Proxy spricht (gleicher Ursprung) - der Proxy
+selbst holt die Daten serverseitig vom Shelly (dort gelten keine
+Browser-CORS-Regeln).
 
-Dient drei Zwecken:
-  1. Liefert die Dashboard-HTML-Datei (wie "python -m http.server").
-  2. Stellt unter /hubproxy?ip=<hub-ip> einen kleinen Proxy fuer die
-     Zendure-Hub-Abfrage (/properties/report) bereit.
-  3. Stellt unter /shellyrpc?ip=<ip>&method=<Methode>&<weitere Parameter>
-     einen generischen Proxy fuer die native Shelly-RPC-Schnittstelle
-     bereit (KVS.Set, KVS.GetMany, EM.GetStatus, ...).
+Start:
+    python3 zendure_proxy.py
 
-Grund fuer beide Proxies: weder die Zendure- noch (bei diesem Geraet/dieser
-Firmware) die Shelly-RPC-Antworten enthalten einen
-Access-Control-Allow-Origin-Header, daher blockt der Browser einen direkten
-fetch() aus dem Dashboard heraus (CORS). Eine Anfrage von diesem
-Python-Skript aus ist dagegen keine Browser-Anfrage und unterliegt keiner
-CORS-Pruefung - das Skript holt die Daten also stellvertretend fuer den
-Browser und reicht sie same-origin weiter.
+Danach im Browser oeffnen:
+    http://localhost:8000/
 
-Nutzung:
-    python3 zendure_proxy.py [port]
-    # Default-Port: 8000
+Beenden: Strg+C im Terminal.
 
-Dann im Browser oeffnen:
-    http://localhost:8000/zendure-grid-dashboard.html
-
-Die HTML-Datei muss im selben Ordner liegen wie dieses Skript.
+Anpassen falls noetig: SHELLY_IP, SHELLY_SCRIPT_ID, PORT, HTML_FILE
 """
 
-import json
-import sys
-import urllib.error
-import urllib.parse
+import http.server
 import urllib.request
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+import urllib.error
+import os
+import socket
+import sys
 
-TIMEOUT_SECONDS = 5
+# ---------------------------------------------------------------
+# Konfiguration - hier anpassen
+# ---------------------------------------------------------------
+SHELLY_IP = "192.168.178.117"
+SHELLY_SCRIPT_ID = 1
+PORT = 8000
+
+# "0.0.0.0" = auf allen Netzwerk-Schnittstellen lauschen (von jedem Rechner
+# im selben Netz erreichbar). Fuer "nur dieser Rechner" stattdessen wieder
+# "localhost" eintragen.
+BIND_ADDRESS = "0.0.0.0"
+
+# Erwartet die HTML-Datei im selben Ordner wie dieses Script.
+# Falls sie woanders liegt oder anders heisst, hier den Pfad anpassen.
+HTML_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "zendure-dashboard.html")
+
+API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
+SHELLY_BASE = "http://{}/script/{}/".format(SHELLY_IP, SHELLY_SCRIPT_ID)
+TIMEOUT = 5
+
+# Kleines, selbst gezeichnetes SVG-Icon (Blitz in Teal auf dunklem
+# Hintergrund, passend zur Optik des Dashboards). Wird fuer favicon.ico,
+# favicon.svg und alle gaengigen Apple-Touch-Icon-Pfade ausgeliefert -
+# damit hat der Browser-Tab ein Icon UND die vielen 404-Zeilen im Log
+# fuer diese automatischen Anfragen verschwinden.
+FAVICON_SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#0B1220"/>
+<path d="M34 6 L14 34 H28 L24 58 L50 26 H36 Z" fill="#4FD1C5"/>
+</svg>"""
+
+ICON_PATHS = (
+    "favicon.ico",
+    "favicon.svg",
+    "apple-touch-icon.png",
+    "apple-touch-icon-precomposed.png",
+    "apple-touch-icon-120x120.png",
+    "apple-touch-icon-120x120-precomposed.png",
+)
 
 
-class ProxyHandler(SimpleHTTPRequestHandler):
+class Handler(http.server.BaseHTTPRequestHandler):
+
+    def log_message(self, fmt, *args):
+        print("[proxy] " + (fmt % args))
 
     def do_GET(self):
-        parsed = urlparse(self.path)
+        if "?" in self.path:
+            path, query = self.path.split("?", 1)
+        else:
+            path, query = self.path, ""
 
-        if parsed.path == "/hubproxy":
-            self._handle_hub_proxy(parsed)
+        endpoint = path.strip("/")
+
+        if path == "/" or path == "":
+            self.serve_html()
             return
 
-        if parsed.path == "/shellyrpc":
-            self._handle_shelly_rpc(parsed)
+        if endpoint in ICON_PATHS:
+            self.serve_favicon()
             return
 
-        # alles andere (die Dashboard-Datei, etc.) normal als statische Datei ausliefern
-        super().do_GET()
-
-    def _handle_shelly_rpc(self, parsed):
-        query = parse_qs(parsed.query)
-        ip = (query.get("ip") or [""])[0].strip()
-        method = (query.get("method") or [""])[0].strip()
-
-        if not ip or not method:
-            self._send_json(400, {"error": "Parameter 'ip' und 'method' erforderlich, z.B. /shellyrpc?ip=...&method=KVS.GetMany&match=zdmc_*"})
+        if endpoint in API_ENDPOINTS:
+            self.proxy_to_shelly(endpoint, query)
             return
 
-        # restliche Query-Parameter 1:1 an die Shelly-RPC-Methode weiterreichen
-        extra = []
-        for key, values in query.items():
-            if key in ("ip", "method"):
-                continue
-            for value in values:
-                extra.append(urllib.parse.quote(key) + "=" + urllib.parse.quote(value))
-        qs = "&".join(extra)
-        target_url = "http://" + ip + "/rpc/" + method + (("?" + qs) if qs else "")
+        self.send_error(404, "Nicht gefunden: " + path)
 
+    def serve_favicon(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "image/svg+xml")
+        self.send_header("Content-Length", str(len(FAVICON_SVG)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self.end_headers()
+        self.wfile.write(FAVICON_SVG)
+
+    def serve_html(self):
         try:
-            request = urllib.request.Request(target_url, headers={"Accept": "application/json"})
-            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as resp:
-                body = resp.read()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-
-        except urllib.error.HTTPError as e:
-            body = e.read()
-            self.send_response(e.code)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
-        except urllib.error.URLError as e:
-            self._send_json(502, {"error": "Shelly " + ip + " nicht erreichbar: " + str(e.reason)})
-        except Exception as e:
-            self._send_json(502, {"error": "Fehler bei RPC " + method + " auf " + ip + ": " + str(e)})
-
-    def _handle_hub_proxy(self, parsed):
-        query = parse_qs(parsed.query)
-        ip = (query.get("ip") or [""])[0].strip()
-
-        if not ip:
-            self._send_json(400, {"error": "Parameter 'ip' fehlt, z.B. /hubproxy?ip=192.168.178.143"})
+            with open(HTML_FILE, "rb") as f:
+                body = f.read()
+        except OSError as e:
+            msg = "HTML-Datei nicht lesbar ({}): {}".format(HTML_FILE, e)
+            self.send_error(500, msg)
             return
 
-        target_url = "http://" + ip + "/properties/report"
-
-        try:
-            request = urllib.request.Request(target_url, headers={"Accept": "application/json"})
-            with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as resp:
-                body = resp.read()
-
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.send_header("Cache-Control", "no-store")
-            self.end_headers()
-            self.wfile.write(body)
-
-        except urllib.error.URLError as e:
-            self._send_json(502, {"error": "Hub " + ip + " nicht erreichbar: " + str(e.reason)})
-        except Exception as e:
-            self._send_json(502, {"error": "Fehler beim Abfragen von " + ip + ": " + str(e)})
-
-    def _send_json(self, status, payload):
-        body = json.dumps(payload).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    # ruhigeres Log: nur Fehler, keine Zeile pro Request (bei Bedarf entfernen)
-    def log_message(self, fmt, *args):
-        if args and str(args[0]).startswith(("4", "5")):
-            super().log_message(fmt, *args)
+    def proxy_to_shelly(self, endpoint, query):
+        url = SHELLY_BASE + endpoint
+        if query:
+            url += "?" + query
+
+        try:
+            with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
+                body = resp.read()
+                status = resp.status
+                content_type = resp.headers.get("Content-Type", "application/json")
+        except urllib.error.HTTPError as e:
+            # Shelly hat selbst einen Fehlerstatus geliefert (z.B. 400/500) -
+            # 1:1 durchreichen, damit die Seite die echte Fehlermeldung sieht.
+            body = e.read()
+            status = e.code
+            content_type = "application/json"
+        except Exception as e:
+            body = ('{{"success":false,"error":"Shelly nicht erreichbar: {}"}}'.format(str(e))).encode("utf-8")
+            status = 502
+            content_type = "application/json"
+
+        self.send_response(status)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
 
-if __name__ == "__main__":
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
-    server = ThreadingHTTPServer(("0.0.0.0", port), ProxyHandler)
-    print("Server laeuft: http://localhost:%d/zendure-grid-dashboard.html" % port)
-    print("Hub-Proxy unter: http://localhost:%d/hubproxy?ip=<hub-ip>" % port)
-    print("Shelly-RPC-Proxy unter: http://localhost:%d/shellyrpc?ip=<ip>&method=<Methode>" % port)
+def get_lan_ip():
+    # Ermittelt die LAN-IP dieses Rechners (ohne eine echte Verbindung
+    # aufzubauen) - fuer eine hilfreiche Ausgabe, von welcher Adresse aus
+    # andere Rechner im Netz diesen Proxy erreichen koennen.
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect((SHELLY_IP, 80))
+        return s.getsockname()[0]
+    except Exception:
+        return "<lan-ip-dieses-rechners>"
+    finally:
+        s.close()
+
+
+def main():
+    if not os.path.isfile(HTML_FILE):
+        print("WARNUNG: HTML-Datei nicht gefunden unter: " + HTML_FILE)
+        print("Lege zendure-dashboard.html in denselben Ordner wie dieses Script,")
+        print("oder passe HTML_FILE oben im Script an.\n")
+
+    print("Zendure Dashboard Proxy")
+    print("  Shelly:   " + SHELLY_BASE)
+    print("  HTML:     " + HTML_FILE)
+    print("  Lokal:    http://localhost:{}/".format(PORT))
+    if BIND_ADDRESS == "0.0.0.0":
+        print("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
+    print("(Strg+C zum Beenden)\n")
+
+    try:
+        server = http.server.HTTPServer((BIND_ADDRESS, PORT), Handler)
+    except OSError as e:
+        print("Konnte Port {} nicht oeffnen: {}".format(PORT, e))
+        print("Laeuft eventuell schon ein anderer Prozess auf diesem Port?")
+        sys.exit(1)
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nBeendet.")
+
+
+if __name__ == "__main__":
+    main()

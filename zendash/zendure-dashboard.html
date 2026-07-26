@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1220">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Zendure Grid · Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --amber:#F2A93B; --amber-deep:#C97C1D;
+    --teal:#4FD1C5; --teal-deep:#1FA394;
+    --alert:#E2574C;
+    --idle:#5B6B85;
+    --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+  }
+
+  html[data-theme="dark"]{
+    --bg:#0B1220;
+    --bg-glow:
+      radial-gradient(circle at 15% -10%, rgba(79,209,197,0.14), transparent 42%),
+      radial-gradient(circle at 92% 6%, rgba(242,169,59,0.11), transparent 38%);
+    --surface:#141E33;
+    --surface-2:#1B2740;
+    --border:rgba(255,255,255,0.08);
+    --text:#EAF0F6;
+    --text-muted:#8B9BB4;
+    --shadow:0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
+    --amber-text:#F2A93B;
+    --teal-text:#4FD1C5;
+    --alert-text:#E2574C;
+  }
+  html[data-theme="light"]{
+    --bg:#EEF3F1;
+    --bg-glow:
+      radial-gradient(circle at 12% -10%, rgba(79,209,197,0.20), transparent 42%),
+      radial-gradient(circle at 92% 4%, rgba(242,169,59,0.18), transparent 38%);
+    --surface:#FFFFFF;
+    --surface-2:#F3F7F6;
+    --border:rgba(15,23,32,0.08);
+    --text:#10192B;
+    --text-muted:#5A6B82;
+    --shadow:0 10px 24px rgba(20,30,45,0.10), 0 2px 6px rgba(20,30,45,0.06);
+    --amber-text:#99600A;
+    --teal-text:#207B73;
+    --alert-text:#CF2E22;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color:var(--text);
+    background:var(--bg);
+  }
+  .app{
+    min-height:100vh;
+    background-image:var(--bg-glow);
+    padding: 20px 20px 60px;
+  }
+  .mono{ font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .shell{ max-width:1180px; margin:0 auto; }
+
+  header{
+    display:flex; align-items:flex-start; justify-content:space-between;
+    flex-wrap:wrap; gap:16px;
+    padding: 6px 4px 26px;
+  }
+  .brand{ display:flex; flex-direction:column; gap:4px; }
+  .brand .word{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(1.05rem, 1.6vw, 1.3rem);
+  }
+  .brand .word span{ color:var(--teal-text); }
+  .brand .sub{ font-size:.82rem; color:var(--text-muted); }
+
+  .head-right{ display:flex; align-items:center; gap:14px; }
+  .status-pill{
+    display:flex; align-items:center; gap:8px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:999px; padding:7px 14px; box-shadow:var(--shadow);
+    font-size:.78rem; color:var(--text-muted);
+  }
+  .status-dot{
+    width:8px; height:8px; border-radius:50%; background:var(--teal-text);
+    box-shadow:0 0 0 0 rgba(79,209,197,.6);
+    animation:pulse 2.2s ease-out infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(79,209,197,.55); }
+    70%{ box-shadow:0 0 0 7px rgba(79,209,197,0); }
+    100%{ box-shadow:0 0 0 0 rgba(79,209,197,0); }
+  }
+  .status-dot.offline{ background:var(--alert-text); animation:none; }
+  .hub-status-dot{
+    width:7px; height:7px; border-radius:50%; background:var(--teal-text);
+    display:inline-block; margin-right:5px; flex-shrink:0;
+  }
+  .hub-status-dot.offline{ background:var(--alert-text); }
+  .clock{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-md); box-shadow:var(--shadow);
+    padding:8px 16px; text-align:right; min-width:118px;
+  }
+  .clock .time{ font-family:'IBM Plex Mono', monospace; font-size:1.15rem; font-weight:600; line-height:1.1; }
+  .clock .date{ font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+
+  .theme-toggle{
+    width:42px; height:42px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    color:var(--text); font-size:1.05rem;
+  }
+  .theme-toggle:active{ transform:scale(.92); }
+
+  .card{
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow);
+  }
+
+  .row{ display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
+  .row>.card{ flex:1; min-width:240px; padding:22px 22px 18px; }
+
+  .hero-label{ font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:6px; }
+  .hero-value{
+    font-family:'IBM Plex Mono', monospace; font-weight:600;
+    font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
+    display:flex; align-items:baseline; gap:8px;
+  }
+  .hero-value .unit{ font-size:1rem; font-weight:500; color:var(--text-muted); }
+  .hero-state{ font-size:.82rem; margin-top:8px; color:var(--text-muted); }
+  .hero-state b{ font-weight:600; }
+
+  .chart-card{ padding:22px 22px 18px; margin-bottom:24px; }
+  .chart-wrap{ height:220px; margin-top:6px; }
+  .chart-wrap canvas{ display:block; width:100%; height:100%; }
+  .hero-foot{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+    margin-top:10px; font-size:.72rem; color:var(--text-muted);
+  }
+
+  .params{ padding:20px clamp(18px,3vw,26px) 18px; margin-bottom:24px; }
+  .param-row{ margin-bottom:20px; }
+  .param-row:last-of-type{ margin-bottom:8px; }
+  .param-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    margin-bottom:10px; flex-wrap:wrap; gap:6px;
+  }
+  .param-label{ font-size:.88rem; display:flex; flex-direction:column; gap:3px; }
+  .param-key{ font-size:.66rem; color:var(--text-muted); }
+  .param-value{ font-weight:600; font-size:1.05rem; }
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:28px; background:transparent; accent-color:var(--teal-text); cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track{
+    height:6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; margin-top:-9px;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--teal-text); border:3px solid var(--surface);
+    box-shadow:0 2px 6px rgba(0,0,0,0.25);
+  }
+  .param-note{ font-size:.72rem; color:var(--text-muted); line-height:1.45; }
+
+  .section-title{
+    font-size:.8rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase;
+    margin: 0 4px 12px;
+  }
+  .hubs-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:20px;
+  }
+  .hub{ position:relative; overflow:hidden; padding:20px 20px 16px; }
+  .hub::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:3px;
+    background-image:repeating-linear-gradient(90deg, var(--flow-color, var(--idle)) 0 8px, transparent 8px 16px);
+    opacity:.85;
+  }
+  .hub[data-flow="out"]{ --flow-color:var(--amber); }
+  .hub[data-flow="in"]{ --flow-color:var(--teal); }
+  .hub[data-flow="idle"]{ --flow-color:var(--idle); }
+  .hub[data-flow="out"]::before, .hub[data-flow="in"]::before{ animation:flow 1.1s linear infinite; }
+  .hub[data-flow="in"]::before{ animation-direction:reverse; }
+  @keyframes flow{ from{ background-position:0 0; } to{ background-position:32px 0; } }
+
+  .hub-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .hub-name{ font-weight:600; font-size:1.02rem; }
+  .hub-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem; color:var(--text-muted);
+    background:var(--surface-2); border:1px solid var(--border);
+    border-radius:6px; padding:2px 6px;
+  }
+
+  .hub-body{ display:flex; gap:16px; align-items:center; margin-bottom:16px; }
+  .battery{
+    width:30px; height:58px; border:2px solid var(--text-muted); border-radius:6px;
+    position:relative; display:flex; align-items:flex-end; padding:3px; flex-shrink:0;
+  }
+  .battery::before{
+    content:""; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    width:12px; height:4px; background:var(--text-muted); border-radius:2px 2px 0 0;
+  }
+  .battery-fill{ width:100%; border-radius:3px; transition:height .6s ease, background .6s ease; }
+
+  .hub-metrics{ display:flex; flex-direction:column; gap:4px; }
+  .soc-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:1.3rem; }
+  .soc-sub{ font-size:.72rem; color:var(--text-muted); }
+  .power-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:.95rem; margin-top:2px; }
+
+  .divider{ height:1px; background:var(--border); margin:14px 0; }
+
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+  .switch-text{ display:flex; flex-direction:column; }
+  .switch-text .lbl{ font-size:.84rem; }
+  .switch-text .key{ font-size:.66rem; color:var(--text-muted); margin-top:1px; }
+
+  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
+  .switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:2; }
+  .switch .track{
+    position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border);
+    border-radius:999px; transition:background .25s ease, border-color .25s ease;
+  }
+  .switch .thumb{
+    position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
+    background:var(--text-muted); transition:transform .25s ease, background .25s ease;
+  }
+  .switch.amber input:checked ~ .track{ background:var(--amber-deep); border-color:transparent; }
+  .switch.teal input:checked ~ .track{ background:var(--teal-deep); border-color:transparent; }
+  .switch input:checked ~ .thumb{ transform:translateX(18px); background:#fff; }
+
+  footer{ text-align:center; color:var(--text-muted); font-size:.74rem; margin-top:34px; }
+  footer .toast{
+    display:inline-block; margin-top:10px; font-family:'IBM Plex Mono', monospace;
+    font-size:.7rem; color:var(--text-muted); opacity:0; transition:opacity .3s ease;
+  }
+  footer .toast.show{ opacity:1; }
+
+  .diag{
+    background:rgba(226,87,76,0.12); border:1px solid var(--alert);
+    color:var(--text); border-radius:var(--radius-md);
+    padding:12px 16px; margin-bottom:20px; font-size:.82rem; line-height:1.4;
+  }
+  .diag b{ color:var(--alert-text); }
+
+  @media (max-width:480px){ .clock{ text-align:left; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="shell">
+
+    <header>
+      <div class="brand">
+        <div class="word">ZENDURE <span>// GRID</span></div>
+        <div class="sub">Über lokalen Proxy · zendure_proxy.py</div>
+      </div>
+      <div class="head-right">
+        <div class="status-pill"><span class="status-dot" id="statusDot"></span> <span id="statusText">Verbinde…</span></div>
+        <div class="clock">
+          <div class="time mono" id="clockTime">--:--:--</div>
+          <div class="date" id="clockDate">–</div>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Tag/Nacht umschalten">☾</button>
+      </div>
+    </header>
+
+    <div class="diag" id="diag" hidden></div>
+
+    <div class="row">
+      <div class="card">
+        <div class="hero-label">Netzbezug / Einspeisung</div>
+        <div class="hero-value"><span id="gridValue">0</span><span class="unit">W</span></div>
+        <div class="hero-state" id="gridState">Ausgeglichen</div>
+      </div>
+      <div class="card">
+        <div class="hero-label">Batterieleistung (Solarflows)</div>
+        <div class="hero-value"><span id="battValue">0</span><span class="unit">W</span></div>
+        <div class="hero-state" id="battState">–</div>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="hero-label">Summe Hub-Leistung über Zeit</div>
+      <div class="chart-wrap"><canvas id="gridChart"></canvas></div>
+      <div class="hero-foot">
+        <span id="chartWindowLabel">Letzte Werte</span>
+        <span id="lastUpdate">zuletzt aktualisiert –</span>
+      </div>
+    </div>
+
+    <div class="section-title">Regelparameter</div>
+    <section class="card params">
+      <div class="param-row">
+        <div class="param-head">
+          <span class="param-label">Sollwert<span class="param-key mono">zdmc_setpoint</span></span>
+          <span class="param-value mono" id="setpointValue">0 W</span>
+        </div>
+        <input type="range" id="setpointSlider" min="-50" max="50" step="10" value="0">
+      </div>
+      <div class="param-row">
+        <div class="param-head">
+          <span class="param-label">Hysterese<span class="param-key mono">zdmc_hysteresis</span></span>
+          <span class="param-value mono" id="hysteresisValue">10 W</span>
+        </div>
+        <input type="range" id="hysteresisSlider" min="5" max="50" step="5" value="10">
+      </div>
+      <div class="param-row">
+        <div class="param-head">
+          <span class="param-label">Poll-Intervall<span class="param-key mono">nur lokal in dieser Seite</span></span>
+          <span class="param-value mono" id="pollIntervalValue">5 s</span>
+        </div>
+        <input type="range" id="pollIntervalSlider" min="3" max="30" step="1" value="5">
+      </div>
+      <div class="param-note">Sollwert/Hysterese werden per KVS an das Regel-Script übergeben (wirkt beim nächsten Regel-Zyklus). Das Poll-Intervall bestimmt nur, wie oft diese Seite die Shelly-API abfragt.</div>
+    </section>
+
+    <div class="section-title">Geräte</div>
+    <div class="hubs-grid" id="hubsGrid"></div>
+
+    <footer>
+      Eigenständige Seite · Daten &amp; Regelparameter über die Shelly-API (config_api / status_api / kvs_set_api).
+      <div class="toast" id="toast"></div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+(function(){
+
+  /* ================================================================
+     Diese Seite spricht jetzt mit dem lokalen Proxy (zendure_proxy.py),
+     nicht mehr direkt mit dem Shelly - deshalb reichen relative Pfade.
+     Die Shelly-IP/Script-ID muss nur noch im Proxy-Script gepflegt werden.
+     ================================================================ */
+  const API_BASE = "";
+
+  function showDiag(msg){
+    const el = document.getElementById('diag');
+    if (!el) return;
+    el.innerHTML = '<b>Hinweis:</b> ' + msg;
+    el.hidden = false;
+  }
+
+  try {
+
+  /* ---------------- Theme ---------------- */
+  const themeToggle = document.getElementById('themeToggle');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  let theme = prefersDark ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
+  themeToggle.addEventListener('click', function(){
+    theme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
+    drawChart();
+  });
+
+  /* ---------------- Clock ---------------- */
+  const clockTime = document.getElementById('clockTime');
+  const clockDate = document.getElementById('clockDate');
+  const dateFmt = new Intl.DateTimeFormat('de-DE', { weekday:'short', day:'2-digit', month:'long' });
+  function tickClock(){
+    const now = new Date();
+    clockTime.textContent = now.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    clockDate.textContent = dateFmt.format(now);
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  /* ---------------- API-Aufrufe ---------------- */
+  async function fetchJ(path){
+    const res = await fetch(API_BASE + path, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' bei ' + path);
+    return res.json();
+  }
+
+  let toastTimer = null;
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = '→ KVS gesetzt: ' + msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  }
+
+  async function kvsSet(key, value){
+    const obj = {};
+    obj[key] = value;
+    try {
+      const r = await fetchJ('kvs_set_api?data=' + encodeURIComponent(JSON.stringify(obj)));
+      if (!r.success) throw new Error('Shelly meldet Fehler beim Setzen');
+      showToast(key + ' = ' + value);
+      return true;
+    } catch (err) {
+      showDiag('Konnte "' + key + '" nicht setzen: ' + err.message + '.');
+      return false;
+    }
+  }
+
+  /* ---------------- Regelparameter ---------------- */
+  const setpointSlider = document.getElementById('setpointSlider');
+  const hysteresisSlider = document.getElementById('hysteresisSlider');
+  const setpointValueEl = document.getElementById('setpointValue');
+  const hysteresisValueEl = document.getElementById('hysteresisValue');
+
+  setpointSlider.addEventListener('input', function(e){
+    setpointValueEl.textContent = (Number(e.target.value) > 0 ? '+' : '') + e.target.value + ' W';
+  });
+  setpointSlider.addEventListener('change', function(e){
+    kvsSet('zdmc_setpoint', Number(e.target.value));
+  });
+
+  hysteresisSlider.addEventListener('input', function(e){
+    hysteresisValueEl.textContent = e.target.value + ' W';
+  });
+  hysteresisSlider.addEventListener('change', function(e){
+    kvsSet('zdmc_hysteresis', Number(e.target.value));
+  });
+
+  /* ---------------- Poll-Intervall (nur lokal in dieser Seite) ---------------- */
+  let pollIntervalSec = 5;
+  let pollTimer = null;
+  const pollIntervalSlider = document.getElementById('pollIntervalSlider');
+  const pollIntervalValueEl = document.getElementById('pollIntervalValue');
+  pollIntervalSlider.addEventListener('input', function(e){
+    pollIntervalValueEl.textContent = e.target.value + ' s';
+  });
+  pollIntervalSlider.addEventListener('change', function(e){
+    pollIntervalSec = Number(e.target.value);
+    startPolling();
+  });
+
+  /* ---------------- Chart ---------------- */
+  const MAX_POINTS = 40;
+  const history = [];
+  const chartCanvas = document.getElementById('gridChart');
+
+  function drawChart(){
+    if (!chartCanvas || history.length < 2) return;
+    const wrap = chartCanvas.parentElement;
+    const cssW = wrap.clientWidth, cssH = wrap.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    const pxW = Math.round(cssW * dpr), pxH = Math.round(cssH * dpr);
+    if (chartCanvas.width !== pxW || chartCanvas.height !== pxH){
+      chartCanvas.width = pxW; chartCanvas.height = pxH;
+    }
+    const g = chartCanvas.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, cssW, cssH);
+
+    const dark = theme === 'dark';
+    const gridColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,32,0.08)';
+    const tickColor = dark ? '#8B9BB4' : '#5A6B82';
+    const pad = { l:46, r:8, t:10, b:22 };
+    const w = Math.max(10, cssW - pad.l - pad.r);
+    const h = Math.max(10, cssH - pad.t - pad.b);
+
+    const maxAbs = Math.max(200, history.reduce(function(m, v){ return Math.max(m, Math.abs(v)); }, 0));
+    const yMax = Math.ceil(maxAbs / 100) * 100;
+    const yMin = -yMax;
+
+    function xAt(i){ return pad.l + (i / (history.length - 1)) * w; }
+    function yAt(v){ return pad.t + h - ((v - yMin) / (yMax - yMin)) * h; }
+
+    g.font = '10px "IBM Plex Mono", monospace';
+    g.textAlign = 'right'; g.textBaseline = 'middle';
+    [yMax, 0, yMin].forEach(function(v){
+      const y = yAt(v);
+      g.strokeStyle = gridColor; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + w, y); g.stroke();
+      g.fillStyle = tickColor;
+      g.fillText((v > 0 ? '+' : '') + v, pad.l - 8, y);
+    });
+
+    function areaPath(clampFn){
+      g.beginPath();
+      g.moveTo(xAt(0), yAt(0));
+      history.forEach(function(v, i){ g.lineTo(xAt(i), yAt(clampFn(v))); });
+      g.lineTo(xAt(history.length - 1), yAt(0));
+      g.closePath();
+    }
+    areaPath(function(v){ return Math.max(v, 0); });
+    g.fillStyle = 'rgba(242,169,59,0.14)'; g.fill();
+    areaPath(function(v){ return Math.min(v, 0); });
+    g.fillStyle = 'rgba(79,209,197,0.14)'; g.fill();
+
+    const lineAmber = dark ? '#F2A93B' : '#99600A';
+    const lineTeal  = dark ? '#4FD1C5' : '#207B73';
+    const grad = g.createLinearGradient(0, pad.t, 0, pad.t + h);
+    grad.addColorStop(0, lineAmber); grad.addColorStop(1, lineTeal);
+    g.beginPath();
+    history.forEach(function(v, i){
+      const x = xAt(i), y = yAt(v);
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    });
+    g.strokeStyle = grad; g.lineWidth = 2; g.lineJoin = 'round'; g.lineCap = 'round';
+    g.stroke();
+
+    g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = tickColor;
+    const now = new Date();
+    [0, Math.floor((history.length - 1) / 2), history.length - 1].forEach(function(i){
+      const t = new Date(now.getTime() - (history.length - 1 - i) * pollIntervalSec * 1000);
+      g.fillText(t.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }), xAt(i), pad.t + h + 6);
+    });
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(drawChart, 150);
+  });
+
+  /* ---------------- Hub-Karten: einmal aus config_api aufbauen ---------------- */
+  let hubs = [];
+  const hubsGrid = document.getElementById('hubsGrid');
+
+  function buildHubCards(){
+    hubsGrid.innerHTML = '';
+    hubs.forEach(function(d){
+      const el = document.createElement('div');
+      el.className = 'card hub';
+      el.id = 'hub-' + d.id;
+      el.setAttribute('data-flow', 'idle');
+      el.innerHTML =
+        '<div class="hub-head">' +
+          '<div class="hub-name"><span class="hub-status-dot offline" id="hubDot-' + d.id + '"></span>' + d.label + '</div>' +
+          '<div class="hub-tag">[dev' + d.id + '] ' + d.ip + '</div>' +
+        '</div>' +
+        '<div class="hub-body">' +
+          '<div class="battery"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
+          '<div class="hub-metrics">' +
+            '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
+            '<div class="soc-sub">SoC · min ' + d.minSoc + '%</div>' +
+            '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="divider"></div>' +
+        '<div class="switch-row">' +
+          '<div class="switch-text"><span class="lbl">Entladen erlaubt</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
+          '<label class="switch amber"><input type="checkbox" id="discharge-' + d.id + '" ' + (d.dischargeAllowed ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+        '</div>' +
+        '<div class="switch-row">' +
+          '<div class="switch-text"><span class="lbl">Laden vom Netz erlaubt</span><span class="key mono">zdmc_dev' + d.id + '_reverse</span></div>' +
+          '<label class="switch teal"><input type="checkbox" id="reverse-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+        '</div>';
+      hubsGrid.appendChild(el);
+
+      document.getElementById('discharge-' + d.id).addEventListener('change', function(e){
+        const next = e.target.checked;
+        kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', next ? 1 : 0).then(function(ok){
+          if (!ok) e.target.checked = !next;
+        });
+      });
+      document.getElementById('reverse-' + d.id).addEventListener('change', function(e){
+        const next = e.target.checked;
+        kvsSet('zdmc_dev' + d.id + '_reverse', next ? 1 : 0).then(function(ok){
+          if (!ok) e.target.checked = !next;
+        });
+      });
+    });
+  }
+
+  /* ---------------- Initiale Konfiguration ---------------- */
+  async function loadConfig(){
+    const cfg = await fetchJ('config_api');
+
+    setpointSlider.value = cfg.setpoint || 0;
+    setpointValueEl.textContent = ((cfg.setpoint || 0) > 0 ? '+' : '') + (cfg.setpoint || 0) + ' W';
+    hysteresisSlider.value = cfg.hysteresis || 10;
+    hysteresisValueEl.textContent = (cfg.hysteresis || 10) + ' W';
+
+    hubs = (cfg.devices || []).map(function(d){
+      return {
+        id: d.id, ip: d.ip, label: d.label, minSoc: d.minSoc,
+        maxOutput: d.maxOutput, maxInputPower: d.maxInputPower,
+        dischargeAllowed: !!d.dischargeAllowed, reverse: !!d.reverse,
+        soc: null, power: 0, online: false
+      };
+    });
+
+    buildHubCards();
+  }
+
+  // Aktualisiert nur die Schalterstellung, ohne die Karten neu aufzubauen
+  // (damit ein gerade angeklickter Schalter nicht "flackert").
+  function refreshSwitchStates(devices){
+    (devices || []).forEach(function(d){
+      const dis = document.getElementById('discharge-' + d.id);
+      const rev = document.getElementById('reverse-' + d.id);
+      if (dis && document.activeElement !== dis) dis.checked = !!d.dischargeAllowed;
+      if (rev && document.activeElement !== rev) rev.checked = !!d.reverse;
+    });
+  }
+
+  /* ---------------- Laufende Abfrage ---------------- */
+  const gridValueEl = document.getElementById('gridValue');
+  const gridStateEl = document.getElementById('gridState');
+  const battValueEl = document.getElementById('battValue');
+  const battStateEl = document.getElementById('battState');
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  let liveSetpoint = 0, liveHysteresis = 10;
+  let gridOnline = false, gridPower = 0;
+
+  function updateStatusPill(hasErrors){
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    if (hasErrors) {
+      dot.classList.add('offline'); text.textContent = 'Verbindungsproblem';
+    } else {
+      dot.classList.remove('offline'); text.textContent = 'Live · Poll alle ' + pollIntervalSec + 's';
+    }
+  }
+
+  async function pollAll(){
+    try {
+      const status = await fetchJ('status_api');
+      const cfg = await fetchJ('config_api');
+
+      liveSetpoint = Number(cfg.setpoint || 0);
+      liveHysteresis = Number(cfg.hysteresis || 10);
+      refreshSwitchStates(cfg.devices);
+
+      gridOnline = !!(status.grid && status.grid.online);
+      gridPower = status.grid ? status.grid.power : 0;
+
+      const byId = {};
+      (status.hubs || []).forEach(function(h){ byId[h.id] = h; });
+      hubs.forEach(function(d){
+        const h = byId[d.id];
+        if (h) { d.soc = h.soc; d.power = h.power; d.online = !!h.online; }
+        else { d.online = false; }
+      });
+
+      const anyHubOnline = hubs.some(function(h){ return h.online; });
+      if (anyHubOnline) {
+        const totalHubPower = hubs.reduce(function(sum, h){ return sum + (h.online ? h.power : 0); }, 0);
+        history.push(totalHubPower);
+        if (history.length > MAX_POINTS) history.shift();
+      }
+
+      document.getElementById('diag').hidden = true;
+      updateStatusPill(false);
+    } catch (err) {
+      showDiag('Abfrage fehlgeschlagen: ' + err.message + '. IP/SCRIPT_ID oben im Code prüfen, oder ob der Shelly erreichbar ist.');
+      updateStatusPill(true);
+    }
+    render();
+  }
+
+  function startPolling(){
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(pollAll, pollIntervalSec * 1000);
+    pollAll();
+  }
+
+  function render(){
+    const now = new Date();
+
+    if (gridOnline) {
+      const rounded = Math.round(gridPower);
+      gridValueEl.textContent = (rounded > 0 ? '+' : '') + rounded;
+      const deviationNow = rounded - liveSetpoint;
+      const zielTxt = ' (Ziel ' + (liveSetpoint > 0 ? '+' : '') + liveSetpoint + ' W)';
+      if (deviationNow > liveHysteresis){
+        gridValueEl.style.color = 'var(--amber-text)';
+        gridStateEl.innerHTML = '<b>Import</b> ggü. Sollwert' + zielTxt;
+      } else if (deviationNow < -liveHysteresis){
+        gridValueEl.style.color = 'var(--teal-text)';
+        gridStateEl.innerHTML = '<b>Export</b> ggü. Sollwert' + zielTxt;
+      } else {
+        gridValueEl.style.color = '';
+        gridStateEl.innerHTML = 'Ausgeglichen' + zielTxt;
+      }
+    } else {
+      gridValueEl.textContent = 'n/a';
+      gridValueEl.style.color = 'var(--alert-text)';
+      gridStateEl.innerHTML = 'Netzzähler nicht erreichbar';
+    }
+
+    const totalBatt = hubs.reduce(function(sum, h){ return sum + (h.online ? h.power : 0); }, 0);
+    battValueEl.textContent = (totalBatt > 0 ? '+' : '') + Math.round(totalBatt);
+    battValueEl.style.color = totalBatt > 0 ? 'var(--amber-text)' : (totalBatt < 0 ? 'var(--teal-text)' : '');
+    battStateEl.textContent = totalBatt > 0 ? 'Entladen / Export' : (totalBatt < 0 ? 'Laden vom Netz' : 'Ruht');
+
+    drawChart();
+    lastUpdateEl.textContent = 'zuletzt aktualisiert ' + now.toLocaleTimeString('de-DE');
+    const totalSec = MAX_POINTS * pollIntervalSec;
+    document.getElementById('chartWindowLabel').textContent = totalSec < 60
+      ? ('Letzte ' + totalSec + ' s') : ('Letzte ~' + Math.round(totalSec / 60) + ' Min');
+
+    hubs.forEach(function(d){
+      const dot = document.getElementById('hubDot-' + d.id);
+      if (!dot) return;
+      dot.classList.toggle('offline', !d.online);
+
+      const socEl = document.getElementById('socValue-' + d.id);
+      const fill = document.getElementById('battFill-' + d.id);
+      const powerEl = document.getElementById('powerValue-' + d.id);
+      const hubEl = document.getElementById('hub-' + d.id);
+
+      if (!d.online || d.soc === null || d.soc === undefined) {
+        socEl.textContent = '--%'; powerEl.textContent = '-- W'; powerEl.style.color = '';
+        hubEl.setAttribute('data-flow', 'idle');
+        return;
+      }
+
+      const soc = Math.round(d.soc);
+      socEl.textContent = soc + '%';
+      fill.style.height = soc + '%';
+      fill.style.background = soc <= d.minSoc + 2 ? 'var(--alert-text)' : (soc < 40 ? 'var(--amber-text)' : 'var(--teal-text)');
+
+      const pw = Math.round(d.power);
+      powerEl.textContent = (pw > 0 ? '+' : '') + pw + ' W';
+      powerEl.style.color = pw > 0 ? 'var(--amber-text)' : (pw < 0 ? 'var(--teal-text)' : '');
+      hubEl.setAttribute('data-flow', pw > 0 ? 'out' : (pw < 0 ? 'in' : 'idle'));
+    });
+  }
+
+  loadConfig().then(startPolling).catch(function(err){
+    console.error('Init-Fehler:', err);
+    showDiag('Fehler beim Laden der Konfiguration: ' + err.message + ' (Shelly erreichbar? IP/SCRIPT_ID korrekt?)');
+  });
+
+  } catch (err){
+    console.error('Dashboard-Fehler:', err);
+    showDiag('Unerwarteter Fehler: ' + err.message + '. Seite neu laden; besteht das Problem weiter, kurz Bescheid geben.');
+  }
+
+})();
+</script>
+</body>
+</html>

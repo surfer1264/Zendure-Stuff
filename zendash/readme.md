@@ -1,38 +1,50 @@
 # Zendure Grid Dashboard — Inbetriebnahme
 
-Drei Teile gehören zusammen:
+Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen eigenen, schlanken API-Endpunkt auf dem Shelly, getrennt vom Regel-Script):
 
 | Datei | Läuft wo | Aufgabe |
 |---|---|---|
-| `zerooutput_multi_kvs.js` | auf dem Shelly | balanciert die Zendure-Hubs gegen den Netzzähler |
-| `zendure_proxy.py` | auf eurem PC | liefert das Dashboard aus + fragt Shelly/Hubs CORS-frei ab |
-| `zendure-grid-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
+| `zerooutput_multi_kvs.js` | als Script auf dem Shelly | balanciert die Zendure-Hubs gegen den Netzzähler |
+| `zendure_dashboard_api.js` | als **zweites, separates** Script auf dem Shelly | liefert reine JSON-Daten (`config_api`/`status_api`/`kvs_set_api`) für das Dashboard |
+| `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus + fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
+| `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
-`zendure_proxy.py` und `zendure-grid-dashboard.html` in EIN Verzeichnis kopieren auf PC/MAC/RASPI/NAS.... mit einer gültigen Python Umgebung (leicht nachzuinstallieren)
-
+`zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit Python (Standardbibliothek reicht, kein `pip install` nötig).
 
 ---
 
-## 1) Shelly-Script
+## 1) Regel-Script auf dem Shelly
 
-1. Im Shelly-Webinterface: **Settings → Scripts** → neues Script anlegen, Inhalt von `zerooutput_multi_kvs.js` einfügen.
-2. Im `CONFIG`-Block oben im Script anpassen: `devices` (IP/Label/SoC-Grenzen je Hub), `gridSource` + zugehörige `gridSource*`-Felder.
-3. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nicht an.
-4. Script speichern, **"Run on startup"** aktivieren, Script starten.
+1. **Settings → Scripts** → neues Script anlegen, Inhalt von `zerooutput_multi_kvs.js` einfügen. (hier nur der Vollständigkeithalber erwähnt, wenn das schon läuft, ist dieser Punkt erledigt)
+2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nie an.
+3. Speichern, **„Run on startup"** aktivieren, Script starten.
 
-## 2) Dashboard konfigurieren
+## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
 
-Ganz oben in `zendure-grid-dashboard.html` im `<script>`-Block steht der Konfigurationsblock — dort genügt Copy-paste aus dem Shelly-Script:
+1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen.
+2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
+   - `devices` — gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS)
+   - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
+3. Speichern, **„Run on startup"** aktivieren, Script starten.
+4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
+5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
+   ```
+   http://<shelly-ip>/script/<script-id>/config_api
+   http://<shelly-ip>/script/<script-id>/status_api
+   ```
+   Beide sollten JSON liefern. Falls nicht: siehe Troubleshooting unten.
 
-- **`DEVICES`**: den kompletten `CONFIG.devices`-Array 1:1 hineinkopieren (zusätzliche Felder wie `dryRun` stören nicht).
-- **`GRID_SOURCE*`**: die `gridSource`/`gridSourceIp`/`gridSourceEmId`-Zeilen 1:1 aus `CONFIG` übernehmen.
-- **`SHELLY_IP`**: IP des Shelly-Geräts, auf dem das Script läuft.
+## 3) Proxy konfigurieren und starten
 
-Alles unterhalb von *„Ab hier normalerweise nichts mehr anpassen"* ist reine Verdrahtung.
+Im Kopf von `zendure_proxy.py` anpassen:
 
-## 3) Proxy starten
+```python
+SHELLY_IP = "192.168.178.117"   # IP des Shelly mit dem API-Script
+SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 2.4
+PORT = 8000                     # lokaler Port, an dem der Proxy lauscht
+```
 
-Beide Dateien `zendure_proxy.py` und `zendure-grid-dashboard.html` müssen **im selben Ordner** liegen.
+Beide Dateien (`zendure_proxy.py`, `zendure-dashboard.html`) müssen im selben Ordner liegen. Dann:
 
 ```bash
 python3 zendure_proxy.py
@@ -41,45 +53,59 @@ python3 zendure_proxy.py
 Danach im Browser öffnen:
 
 ```
-http://localhost:8000/zendure-grid-dashboard.html
+http://localhost:8000/
 ```
 
-Server beenden: `Strg+C` im Terminal.
+(**Nicht** `.../zendure-dashboard.html` anhängen — der Proxy liefert die Seite direkt unter `/` aus.)
+
+Server beenden: `Strg+C` im Terminal. Das Terminal-Fenster muss offen bleiben, solange das Dashboard genutzt wird.
 
 ### Warum ein Proxy?
 
-Weder die Zendure-Hubs noch (je nach Firmware) die Shelly-RPC-Antworten senden einen `Access-Control-Allow-Origin`-Header. Ein direkter Aufruf im Browser (Adresszeile) funktioniert trotzdem, weil das eine normale Seiten-Navigation ist — ein `fetch()` aus dem Dashboard heraus ist dagegen eine Cross-Origin-Anfrage und wird ohne diesen Header vom Browser blockiert (CORS). Der Proxy fragt stellvertretend serverseitig ab (dort gilt CORS nicht) und reicht die Antwort same-origin ans Dashboard weiter.
+Ein direkter Aufruf der API-URL im Browser (Adresszeile) funktioniert, weil das eine normale Seiten-Navigation ist. Ein `fetch()` **aus** der Dashboard-Seite heraus ist dagegen eine Cross-Origin-Anfrage — und die Shelly-Firmware weist solche Anfragen bereits **unterhalb** des Scripts mit `403 Forbidden` ab (unabhängig davon, welche CORS-Header das Script selbst setzt). Betroffen sind sowohl `file://`-Seiten als auch andere `http://`-Ursprünge (z. B. `localhost`). Der Proxy fragt stattdessen **serverseitig** ab (dort gelten keine Browser-CORS-Regeln) und reicht die Antwort same-origin ans Dashboard weiter — das umgeht das Problem vollständig, unabhängig von der genauen Ursache auf Shelly-Seite.
 
 ## 4) Von einem anderen Rechner im selben Netz zugreifen
 
-Der Proxy lauscht bereits auf allen Netzwerkschnittstellen. Auf dem PC, der den Proxy ausführt, die lokale IP ermitteln (z. B. `ipconfig` unter Windows → „IPv4-Adresse") und auf dem anderen Rechner öffnen:
+Der Proxy lauscht standardmäßig auf allen Netzwerkschnittstellen (`BIND_ADDRESS = "0.0.0.0"`) und zeigt beim Start direkt die passende Adresse an:
 
 ```
-http://<IP-des-PCs>:8000/zendure-grid-dashboard.html
+Lokal:    http://localhost:8000/
+Im Netz:  http://192.168.x.x:8000/   (von jedem Rechner im selben Netzwerk, das ist die IP-Adresse des Rechners auf dem der Proxy läuft)
 ```
 
-Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **"Zugriff zulassen"** (privates Netzwerk) bestätigen, sonst kommen andere Rechner nicht durch.
+Einfach die „Im Netz"-Adresse auf einem anderen Gerät im selben WLAN/LAN öffnen.
 
-⚠️ Kein Login/Zugriffsschutz — jeder im selben Netz kann mit der URL das Dashboard öffnen und Regelparameter ändern. Für ein Heimnetz meist unproblematisch; **nicht** per Portweiterreichung offen ins Internet stellen.
+Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **„Zugriff zulassen"** (privates Netzwerk) bestätigen, sonst kommen andere Rechner nicht durch.
+
+⚠️ **Kein Login/Zugriffsschutz** — jeder im selben Netz kann mit der URL das Dashboard öffnen und Regelparameter ändern. Für ein Heimnetz meist unproblematisch; **nicht** per Portweiterleitung offen ins Internet stellen.
+
+Für dauerhaften Zugriff eignet sich ein immer laufendes Gerät (Raspberry Pi, NAS, Mini-PC) besser als ein Laptop, den man zuklappt.
 
 ## 5) Bedienung
 
-- **Sollwert / Hysterese**: schreiben per Shelly-KVS, wirken beim nächsten Regelzyklus des Scripts (Standard: alle 4 s).
-- **Entladen erlaubt / Laden vom Netz erlaubt** (je Hub): gleiches Prinzip.
-- **Poll-Intervall**: rein lokal im Dashboard, bestimmt nur, wie oft Hubs/Netzzähler abgefragt werden — hat keinen Einfluss auf das Script.
-- Regler-Grenzen (Sollwert ±50 W/10er-Schritte, Hysterese 5–50 W/5er-Schritte, Poll 5–60 s/5er-Schritte) sind an das Clamping im Script angepasst.
+- **Sollwert** (`zdmc_setpoint`, −50 bis +50 W, 10er-Schritte) / **Hysterese** (`zdmc_hysteresis`, 5–50 W, 5er-Schritte): werden per Shelly-KVS gesetzt, wirken beim nächsten Regelzyklus des Regel-Scripts. Grenzen entsprechen dem Clamping in `zerooutput_multi_kvs.js`.
+- **Entladen erlaubt** / **Laden vom Netz erlaubt** (je Hub): gleiches Prinzip, schreibt `zdmc_dev{id}_dischargeAllowed` bzw. `zdmc_dev{id}_reverse`.
+- **Poll-Intervall** (3–30 s, lokal einstellbar): bestimmt nur, wie oft die Dashboard-Seite die API abfragt — hat keinen Einfluss auf das Regel-Script.
+- Geräteliste, Sollwert/Hysterese-Anzeige und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst (vermeidet Doppelpflege).
+- Unabhängig vom Browser-Poll-Intervall fragt das API-Script auf dem Shelly selbst alle 5 s (`pollIntervalSec`) Netzzähler und Hubs ab — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch (kein unnötiger Traffic zu den Zendure-Hubs).
 
 ## 6) Kurz-Troubleshooting
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| Weißes/leeres Fenster | Datei per Doppelklick geöffnet (`file://`) statt über den Proxy | Immer über `http://localhost:8000/...` öffnen |
-| „Failed to fetch" / CORS-Fehler in der Konsole (F12) | Direkter Fetch ohne Proxy | `shellyProxyEnabled`/`hubProxyEnabled` im Dashboard-Config auf `true` lassen |
-| Netzbezug bleibt „n/a" | `GRID_SOURCE_IP`/`SHELLY_IP` falsch oder Gerät ohne EM-Kanal | Direkt im Browser `http://<IP>/rpc/EM.GetStatus?id=0` testen |
-| Regler/Schalter wirken nicht im Script | `kvsEnabled` im Script-CONFIG steht auf `false` | Auf `true` setzen, Script neu starten |
-| 404 beim Öffnen der HTML-Datei | Datei liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
+| Weißes/leeres Fenster, Konsole zeigt „Failed to fetch" | Datei per Doppelklick geöffnet (`file://`) statt über den Proxy | Immer über `http://localhost:8000/` öffnen, nicht die `.html`-Datei direkt |
+| Roter Hinweis-Banner „Fehler beim Laden der Konfiguration" | Proxy läuft nicht, oder `SHELLY_IP`/`SHELLY_SCRIPT_ID` im Proxy falsch | Proxy-Konsole prüfen; `config_api`/`status_api` direkt im Browser testen (Schritt 2.5) |
+| `config_api`/`status_api` liefern direkt im Browser JSON, aber die Seite bleibt trotzdem leer | CORS/Origin-Block der Shelly-Firmware bei `fetch()` (siehe „Warum ein Proxy?") | Sicherstellen, dass die Seite tatsächlich über den Proxy läuft (`localhost:8000`), nicht per `file://` |
+| 404 beim Öffnen von `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
+| Netzbezug bleibt „n/a" | `gridSource`/`gridSourceIp` im API-Script falsch, oder Gerät ohne EM-Kanal | `gridSource`-Werte im API-Script gegen das Regel-Script abgleichen |
+| Regler/Schalter wirken nicht auf die Hubs | `kvsEnabled` im Regel-Script steht auf `false` | Im Regel-Script auf `true` setzen, Script neu starten |
+| Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (siehe Schritt 2.2) |
+| Shelly-Script stürzt ab / „out of memory" o. ä. | Passiert nur beim (mittlerweile entfernten) HTML-Endpunkt direkt auf dem Shelly — nicht mehr relevant, seit das Dashboard als eigenständige Datei läuft | Sicherstellen, dass auf dem Shelly wirklich `zendure_dashboard_api.js` läuft (keine HTML-Auslieferung mehr an Bord) |
 
 ## Impressionen
+
+*(Screenshots aus einer früheren Version der Oberfläche — bei Gelegenheit gegen aktuelle ersetzen.)*
+
 ![alt text](<2026-07-25 21-24-16.PNG>)
 ![alt text](<2026-07-25 21-24-24.PNG>)
 ![alt text](<2026-07-25 21-24-31.PNG>)
