@@ -5,7 +5,7 @@
 // Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "1.6.0 KVS (more logging)",
+  version: "1.7.0 KVS (discharge start/stop, no minOutput)",
   
   devices: [
      {
@@ -13,13 +13,12 @@ let CONFIG = {
       label: "SF2400",          // short name, used in logs/messages
 
       minSoc: 18,               // no discharge below this SOC (%)
-      maxOutput: 800,          // max discharge/export power (W)
-      minOutput: 35,            // don't bother writing values below this (W)
+      maxSoc: 100,               // no charging from grid at/above this SOC (%)
       dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
       reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
-      maxSoc: 100,               // no charging from grid at/above this SOC (%)
       maxInputPower: 2400,       // max charge power from grid (W)
-
+      maxOutput: 800,          // max discharge/export power (W)
+      
       dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
@@ -27,17 +26,16 @@ let CONFIG = {
       label: "Fatamorgana",     // short name, used in logs/messages
 
       minSoc: 15,               // no discharge below this SOC (%)
-      maxOutput: 800,           // max discharge/export power (W)
-      minOutput: 35,            // don't bother writing values below this (W)
-      dischargeAllowed: false,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxSoc: 100,              // no charging from grid at/above this SOC (%)
+      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
+      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxInputPower: 1200,      // max charge power from grid (W)
+      maxOutput: 800,           // max discharge/export power (W)
 
       dryRun: true             // only simulation; true = read + calculate only, never write
     },
   ],
-  // ------------------------------------------------------------------
+// ------------------------------------------------------------------
   // SMARTMETER SECTION
   // Where to read the household grid power from, there are three options 
   gridSource: "local", // "local", "remote", "http_json"
@@ -94,9 +92,16 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // REVERSE MODE SECTION (charging from the grid) - global hysteresis - ONLY relevant for reverse: true (see CONFIG device)
   // Minimum charging power in watts required to START charging from the grid. 
-  reverseStartupPower: 30,
+  reverseStartupPower: 35,
   // Charging power in watts below which charging from the grid is STOPPED again (must be <= reverseStartupPower).
-  reverseStopPower: 10,
+  reverseStopPower: 15,
+
+  // ------------------------------------------------------------------
+  // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese 
+  // Minimum discharge/export power in watts required to START discharging.
+  dischargeStartupPower: 35,
+  // Discharge power in watts below which discharging is STOPPED again (must be <= dischargeStartupPower).
+  dischargeStopPower: 15,
 
   // ------------------------------------------------------------------
   // INTERNAL SECTION BE CAREFUL
@@ -150,6 +155,9 @@ checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
 
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
+
+if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
+if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
 
 // Hold time (spread -> single) in cycles, derived once from
 // concentrateHoldMinutes 
@@ -858,7 +866,13 @@ function calculate(myCycle) {
   let output;
 
   if (target >= 0) {
-    output = distributeDischarge(target);
+    let alreadyDischarging = sumZen > 0;
+
+    if (!alreadyDischarging && target < CONFIG.dischargeStartupPower) {
+      output = zeroOutputs();
+    } else {
+      output = distributeDischarge(target);
+    }
   } else if (!anyReverseCapable) {
     output = zeroOutputs();
   } else {
@@ -1061,48 +1075,19 @@ function waterFillDischarge(target, weight, active) {
     }
   }
 
-  let activeCount = 0;
-  let sumMinOutput = 0;
-  let bestIdx = -1;
-  let bestWeight = -1;
-
+  // Analog zu waterFillCharge: pro Geraet einfach auf 0 setzen, wenn der
+  // zugewiesene Anteil unter der globalen Stop-Schwelle liegt - kein
+  // Hochziehen auf einen Mindestwert mehr, kein Sonderfall fuer "Ziel
+  // kleiner als die Summe aller Mindestwerte" noetig. Ein Geraet laeuft
+  // entweder mit sinnvoller Leistung oder gar nicht.
   for (let i = 0; i < n; i++) {
-    if (weight[i] > 0) {
-      activeCount++;
-      sumMinOutput += CONFIG.devices[i].minOutput;
-      if (weight[i] > bestWeight) {
-        bestWeight = weight[i];
-        bestIdx = i;
-      }
-    }
-  }
+    let o = Math.round(output[i]);
 
-  if (activeCount > 1 && target < sumMinOutput && bestIdx >= 0) {
-    for (let i = 0; i < n; i++) {
-      output[i] = 0;
+    if (o < CONFIG.dischargeStopPower) {
+      o = 0;
     }
 
-    let o = Math.round(target);
-
-    if (o > 0 && o < CONFIG.devices[bestIdx].minOutput) {
-      o = CONFIG.devices[bestIdx].minOutput;
-    }
-
-    if (o > CONFIG.devices[bestIdx].maxOutput) {
-      o = CONFIG.devices[bestIdx].maxOutput;
-    }
-
-    output[bestIdx] = o;
-  } else {
-    for (let i = 0; i < n; i++) {
-      let o = Math.round(output[i]);
-
-      if (o > 0 && o < CONFIG.devices[i].minOutput) {
-        o = CONFIG.devices[i].minOutput;
-      }
-
-      output[i] = o;
-    }
+    output[i] = o;
   }
 
   return output;
@@ -1188,8 +1173,8 @@ function distributeDischarge(target) {
       let output = zeroOutputs();
       let o = Math.round(target);
 
-      if (o > 0 && o < CONFIG.devices[idx].minOutput) {
-        o = CONFIG.devices[idx].minOutput;
+      if (o < CONFIG.dischargeStopPower) {
+        o = 0;
       }
 
       output[idx] = o;
@@ -1518,8 +1503,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     "  - [dev" + i + "] " + cfg.label + " (" + cfg.ip + "): Entladen " +
     (cfg.dischargeAllowed === false ? "nein" : "ja") +
     ", minSoc " + cfg.minSoc +
-    "%, maxOutput " + cfg.maxOutput + " W, minOutput " + cfg.minOutput +
-    " W, Laden vom Netz " +
+    "%, maxOutput " + cfg.maxOutput + " W, Laden vom Netz " +
     (cfg.reverse
       ? ("ja (maxInput " + cfg.maxInputPower + " W, maxSoc " + cfg.maxSoc + "%)")
       : "nein") +
@@ -1550,6 +1534,8 @@ bannerLines[bannerLines.length] = "Ausgleich  : ab " + CONFIG.rebalance.socMargi
   " Prozentpunkten Vorsprung, sofort";
 bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
   CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
+bannerLines[bannerLines.length] = "Discharge Start/Stop: " +
+  CONFIG.dischargeStartupPower + " W / " + CONFIG.dischargeStopPower + " W";
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
