@@ -1,11 +1,9 @@
 // Zendure Dynamic Output Controller - Multi-Device Version
 // Shelly Gen2/3/4 Script (mJS) fuer das Balancing mehrerer Zendure-Geraete gegen einen Pro 3EM oder generischen JSON-Zaehler
-// Alle HTTP-Requests je Geraet sequenziell (kein paralleler Zugriff auf den Shelly)
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
-// Siehe Projekt-Dokumentation fuer Einrichtung und Hintergrund
 
 let CONFIG = {
-  version: "2.0.1 KVS (direction change cooldown)",
+  version: "2.1.0 KVS (webhook)",
   
   devices: [
      {
@@ -57,19 +55,15 @@ let CONFIG = {
   
   // ------------------------------------------------------------------
   // RULES ENGINE CORE PARAMETERS
-  // Target grid power in watts (e.g. 0 = balance to zero,
-  // negative = slight export, positive = slight import)
   setpoint: 0, // (KVS-live-overridable)
-  // Hysteresis in watts, PER DEVICE - minimum change required before a new
-  // output value is written to that device (reduces write frequency)
+  // Hysteresis in watts, PER DEVICE
   hysteresis: 10, // (KVS-live-overridable)
   // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
   dampingFactor: 0.6, // (KVS-live-overridable)
 
   // ------------------------------------------------------------------
   // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
-  // Concentration mode: run only ONE device at low load instead of splitting a small amount across all of them. 
-  // Uses hysteresis (two separate thresholds) so the number of active devices doesn't flap
+  // Concentration mode: run only ONE device at low load instead of splitting. 
   discharge: {
     concentrateBelow: 600,  // W - below this combined target, use ONE device
     spreadAbove: 800        // W - above this, split across all devices
@@ -91,14 +85,12 @@ let CONFIG = {
 
   // ------------------------------------------------------------------
   // REVERSE MODE SECTION (charging from the grid) - global hysteresis - ONLY relevant for reverse: true (see CONFIG device)
-  // Minimum charging power in watts required to START charging from the grid. 
   reverseStartupPower: 30,
   // Charging power in watts below which charging from the grid is STOPPED again (must be <= reverseStartupPower).
   reverseStopPower: 10,
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese, spiegelbildlich
-  // Minimum discharge/export power in watts required to START discharging.
   dischargeStartupPower: 35,
   // Discharge power in watts below which discharging is STOPPED again (must be <= dischargeStartupPower).
   dischargeStopPower: 15,
@@ -123,19 +115,17 @@ let CONFIG = {
   debug: false,
 
   // ------------------------------------------------------------------
-  // MESSAGE SECTION  via CallMeBot (https://www.callmebot.com/blog/free-api-signal-send-messages/)
+  // MESSAGE SECTION - entweder ueber CallMeBot (Signal/WhatsApp, WebHOOK
   signal: {
-
-    enabled: false,          // set to true to activate Signal notifications
-	  typ: "SIGNAL",			     // Signal oor WHATSAPP
-    phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX
-    apiKey: "YOUR_API_KEY"   // your CallMeBot API key
-
+    enabled: false,          // set to true to activate notifications
+	typ: "WEBHOOK",			 // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
+    phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX (nur SIGNAL/WHATSAPP)
+    apiKey: "YOUR_API_KEY",  // your CallMeBot API key (nur SIGNAL/WHATSAPP)
+    webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
   }
 };
 
-// Plausibilitaets-Checks fuer CONFIG (einmalig beim Start) - Endwerte
-// werden im Banner ausgegeben, daher hier keine eigenen Printouts.
+// Plausibilitaets-Checks fuer CONFIG (einmalig beim Start)
 function checkBand(band) {
   if (band.concentrateBelow < 35) band.concentrateBelow = 35;
   if (band.spreadAbove < 50) band.spreadAbove = 50;
@@ -174,8 +164,6 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
 // POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
 // Per-device keys use the device's array index (see banner "[devN]"), e.g.:
-// POST .../rpc/KVS.Set  {"key":"zdmc_dev0_dischargeAllowed","value":0}  // 1 = erlaubt, 0 = gesperrt
-// POST .../rpc/KVS.Set  {"key":"zdmc_dev0_reverse","value":1}          // 1 = erlaubt, 0 = gesperrt
 let KVS_MATCH = "zdmc_*";
 
 let state = {
@@ -231,9 +219,40 @@ function simpleEncode(str) {
   return out;
 }
 
+// Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}, kein
+// Auth-Header, kein Template - passt z.B. auf einen Home Assistant
+// Webhook-Trigger 	
+function sendWebhookMessage(text) {
+  print("Sende Webhook-Benachrichtigung...");
+
+  Shelly.call(
+    "HTTP.Request",
+    {
+      method: "POST",
+      url: CONFIG.signal.webhookUrl,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text }),
+      timeout: 15
+    },
+    function (result, error_code, error_msg) {
+      if (error_code === 0)
+        print("Webhook-Benachrichtigung erfolgreich gesendet.");
+      else if (error_code === -104)
+        print("Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.");
+      else
+        print("Fehler beim Senden der Webhook-Benachrichtigung: " + error_msg);
+    }
+  );
+}
+
 function sendSignalMessage(text) {
   if (!CONFIG.signal.enabled)
     return;
+
+  if (CONFIG.signal.typ == "WEBHOOK") {
+    sendWebhookMessage(text);
+    return;
+  }
 
   let safeText = simpleEncode(text);
   let url = "url";
@@ -1240,21 +1259,12 @@ function acModeLabel(acMode) {
 
 // Signierte Leistung, die ein plan-Objekt tatsaechlich am Geraet bewirkt -
 // Gegenstueck zu planWrite(): bei acMode 2 ist das +outputLimit (Export),
-// bei acMode 1 ist es -inputLimit (Import) bzw. 0 (Idle/voll). Wird als
-// "letzter effektiv geschriebener Wert" in ds.outputLimit gespeichert,
-// damit die Hysteresis-Pruefung in applyOutputs() immer gegen das vergleicht,
-// was WIRKLICH zuletzt geschrieben wurde - nicht gegen den rohen,
-// moeglicherweise vom Cooldown ueberschriebenen Zielwert.
+// bei acMode 1 ist es -inputLimit (Import) bzw. 0 (Idle/voll). 
 function planSignedPower(plan) {
   return plan.acMode === 2 ? plan.outputLimit : (plan.inputLimit * -1);
 }
 
 // Verhindert zu haeufige acMode-Wechsel (Laden<->Entladen) an EINEM Geraet.
-// Greift nur, wenn plan.acMode vom zuletzt geschriebenen/simulierten
-// ds.acMode abweicht UND CONFIG.directionChangeCooldown seit dem letzten
-// echten Wechsel noch nicht abgelaufen ist. In diesem Fall wird die ALTE
-// Richtung mit 0 W gehalten (kein Umschalten, aber auch kein Leistungsfluss
-// in die neue Richtung), bis die Sperrzeit abgelaufen ist.
 function enforceDirectionCooldown(plan, ds, now) {
   if (CONFIG.directionChangeCooldown <= 0) return plan;
   if (ds.acMode === null) return plan;              // noch nie geschrieben - nichts zu vergleichen
@@ -1449,11 +1459,6 @@ function syncSocLimitsDevice(index, callback) {
 
     // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
     // aufeinanderfolgenden dryRun-Geraeten wuerde sich syncSocLimitsAll()
-    // sonst rein synchron immer tiefer verschachteln (kein echter HTTP-Call,
-    // der den Stack zwischendurch ueber den Event-Loop abbaut) und den
-    // flachen nativen mJS-Stack zum Ueberlaufen bringen ("Too much
-    // recursion"). Timer.set(0, ...) erzwingt denselben Event-Loop-Sprung,
-    // den ein echtes Geraet automatisch durch seinen HTTP-Callback bekommt.
     Timer.set(0, false, callback);
     return;
   }
@@ -1588,7 +1593,8 @@ bannerLines[bannerLines.length] = "Richtungswechsel-Cooldown: " +
     (CONFIG.directionChangeCooldown / 1000) + " s (pro Geraet)" : "deaktiviert");
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
-bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ? "aktiviert" : "deaktiviert");
+bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
+  ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "DEAKTIVIERT (kein Live-Override, kein Seeding)");
 
 if (CONFIG.kvsEnabled) {
