@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.1.0 KVS (webhook)",
+  version: "2.1.1 KVS (write-log label fix)",
   
   devices: [
      {
@@ -1387,8 +1387,16 @@ function writeDevice(index, output, myCycle, callback) {
         ds.acMode = acMode;
         ds.outputLimit = signedPower;
 
-        print(cfg.label + ": Leistung gesetzt: " + signedPower + " W " +
-          (signedPower >= 0 ? "(Export)" : "(Laden vom Netz)"));
+        let stateLabel;
+        if (acMode === 2) {
+          stateLabel = "Export";
+        } else if (inputLimit > 0) {
+          stateLabel = "Laden vom Netz";
+        } else {
+          stateLabel = "Idle";
+        }
+
+        print(cfg.label + ": Leistung gesetzt: " + signedPower + " W (" + stateLabel + ")");
         reportSuccess(ds.errors, ds.notified, "write", cfg.label);
       } else {
         if (CONFIG.debug) {
