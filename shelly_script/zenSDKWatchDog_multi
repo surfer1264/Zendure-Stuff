@@ -1,0 +1,719 @@
+// ========== AkkuVolt Watchdog - Multi-Device (Hub2/SF2400Pro u.a.) via REST ==========
+// Erkennt Akku-Zustand mehrerer Zendure-Geraete gleichzeitig und sendet Nachrichten bei:
+//  - Akku voll (>= vollSchwelle %)               - pro Geraet einzeln
+//  - Unterspannung einzelner Zellen (< minVoltWarn V) - pro Geraet einzeln
+//  - Uebertemperatur Geraet (> tempWarn Grad C)   - pro Geraet einzeln
+//  - Sammel-Status bei Sonnenaufgang und Sonnenuntergang (EINE Nachricht, alle Geraete,
+//    Werte aus dem letzten Poll-Zyklus - kein zusaetzlicher Request)
+//
+// Warnschwellen gelten GLOBAL fuer alle Geraete gleichermassen.
+// Skaliert auf beliebig viele Geraete (CONFIG.devices[]).
+ 
+print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig benutzen!");
+ 
+// ==================== KONFIGURATION ====================
+ 
+let CONFIG = {
+  version: "1.0 AkkuWatchDog",
+ 
+  devices: [
+    { ip: "192.168.178.143", label: "SF2400",     enabled: true },
+    { ip: "192.168.178.143", label: "Fatamorgana", enabled: false },
+  ],
+ 
+  // ------------------------------------------------------------------
+  // ABFRAGE / POLLING
+  pollIntervalMs: 60000,   // ms zwischen den Zyklen - MINIMUM 60000 (wird sonst automatisch angehoben)
+  httpTimeout: 5,          // Sekunden pro einzelnem HTTP-Request an ein Geraet
+  watchdog: 68000,         // ms - Notbremse fuer einen kompletten Zyklus (wird ggf. automatisch angehoben)
+  maxRetries: 3,           // Wiederholungsversuche pro Geraet und Zyklus bei Fehlern
+  retryDelayMs: 5000,      // Wartezeit zwischen Wiederholungsversuchen
+  errorThreshold: 5,       // aufeinanderfolgende Fehlversuche, bevor "Geraet nicht erreichbar" gemeldet wird
+ 
+  // ------------------------------------------------------------------
+  // WARNSCHWELLEN - GELTEN GLOBAL FUER ALLE GERAETE GLEICHERMASSEN
+  vollSchwelle: 99,        // % - ab wann ein Geraet als "voll" gilt
+  entladeReset: 90,        // % - ab wann eine erneute Vollmeldung fuer dasselbe Geraet wieder moeglich ist
+  minVoltWarn: 2.9,        // V - Unterspannungsgrenze je Zelle/Pack
+  minVoltReset: 3.1,       // V - Erholungsgrenze, ab der die Warnung zurueckgesetzt wird
+  tempWarn: 45.0,          // Grad C - Geraete-Temperatur-Alarmgrenze
+  tempReset: 30.0,         // Grad C - Erholungsgrenze fuer die Temperaturwarnung
+ 
+  // ------------------------------------------------------------------
+  // ASTRO (Sonnenaufgang/-untergang) - Sammel-Status, EINE Nachricht fuer alle Geraete
+  sunriseOffset: 0,        // Minuten (negativ = davor, positiv = danach)
+  sunsetOffset: 0,
+ 
+  // Sicherheitsnetz gegen zu lange Nachrichten (siehe sendDigest()).
+  // Bei fester Zeilenlaenge pro Geraet (siehe buildDigest) sollte dies bei
+  // realistischen Geraetezahlen nie greifen - dient nur als Notbremse.
+  maxMessageLength: 900,   // Zeichen, vor URL-Encoding
+ 
+  // ------------------------------------------------------------------
+  // NACHRICHTENVERSAND - genau EIN Kanal aktiv (SIGNAL, WHATSAPP oder WEBHOOK)
+  signal: {
+    enabled: false,               // auf true setzen, um Benachrichtigungen zu aktivieren
+    typ: "WEBHOOK",                // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
+    phone: "PHONE-STRING",         // nur SIGNAL/WHATSAPP, z.B. +4917XXXXXXXX
+    apiKey: "YOUR_API_KEY",        // nur SIGNAL/WHATSAPP
+    webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // nur WEBHOOK
+  },
+ 
+  // Reduziert die Konsolenausgabe auf das Wesentliche, wenn false.
+  debug: false   // vorübergehend an, für Webhook-Diagnose
+};
+ 
+// ==================== PLAUSIBILITAETS-CHECKS (einmalig beim Start) ====================
+ 
+if (CONFIG.pollIntervalMs < 60000) CONFIG.pollIntervalMs = 60000;
+if (CONFIG.httpTimeout < 5) CONFIG.httpTimeout = 5;
+if (CONFIG.maxRetries < 0) CONFIG.maxRetries = 1;
+if (CONFIG.retryDelayMs < 500) CONFIG.retryDelayMs = 500;
+if (CONFIG.errorThreshold < 1) CONFIG.errorThreshold = 1;
+ 
+if (CONFIG.entladeReset >= CONFIG.vollSchwelle) CONFIG.entladeReset = CONFIG.vollSchwelle - 5;
+if (CONFIG.minVoltReset <= CONFIG.minVoltWarn) CONFIG.minVoltReset = CONFIG.minVoltWarn + 0.1;
+if (CONFIG.tempReset >= CONFIG.tempWarn) CONFIG.tempReset = CONFIG.tempWarn - 5;
+ 
+// Watchdog muss mindestens so lange laufen, wie ein Zyklus im schlechtesten Fall
+// dauern kann (alle Geraete unerreichbar, jeweils voll ausgereizte Retries).
+let minWatchdog =
+  CONFIG.devices.length *
+    (CONFIG.httpTimeout * 1000 + CONFIG.retryDelayMs * CONFIG.maxRetries + 1000) +
+  5000;
+ 
+if (CONFIG.watchdog < minWatchdog) CONFIG.watchdog = minWatchdog;
+ 
+if (CONFIG.devices.length === 0) {
+  print("WARNUNG: CONFIG.devices ist leer - es wird nichts abgefragt.");
+}
+ 
+// ==================== STATUS / STATE ====================
+ 
+let state = {
+  busy: false,
+  watchdogTimer: null,
+  cycleId: 0,
+  cycleStartedAt: 0,
+ 
+  errors: { watchdog: 0 },
+  notified: { watchdog: false },
+ 
+  devices: []
+};
+ 
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  state.devices[i] = {
+    soc: null,          // Gesamt-Ladezustand des Hubs (%)
+    serial: null,        // Seriennummer des Hubs (bleibt ueber Zyklen hinweg erhalten)
+    hyperTemp: null,      // Geraete-Temperatur in Grad C
+ 
+    minVol: null,         // kleinste minVol ueber alle Packs dieses Geraets (V)
+    minVolSoc: null,       // SOC des betroffenen Packs
+    minVolSn: null,         // SN des betroffenen Packs
+ 
+    available: false,        // wurde das Geraet in DIESEM Zyklus erfolgreich gelesen?
+    retryCount: 0,
+ 
+    packs: {},                // sn -> { soc, minV, maxV, maxT }
+ 
+    akkuVollMsgSent: false,
+    hyperTempMsgSent: false,
+    lowVoltMsgSent: {},         // sn -> bool
+ 
+    errors: { connect: 0, json: 0 },
+    notified: { connect: false, json: false }
+  };
+}
+ 
+// ==================== HILFSFUNKTIONEN: TEXT / NACHRICHTENVERSAND ====================
+// (uebernommen aus zerooutput_multi_kvs.js - Alternativ-Versand SIGNAL / WHATSAPP / WEBHOOK)
+ 
+function simpleEncode(str) {
+  let out = "";
+ 
+  let map = {
+    " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss",
+    ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
+    "°": "%C2%B0", "!": "%21", ",": "%2C"
+  };
+ 
+  for (let i = 0; i < str.length; i++) {
+    let ch = str.charAt(i);
+    out += (map[ch] || ch);
+  }
+ 
+  return out;
+}
+ 
+function sendWebhookMessage(text) {
+  print("Sende Webhook-Benachrichtigung...");
+ 
+  Shelly.call(
+    "HTTP.Request",
+    {
+      method: "POST",
+      url: CONFIG.signal.webhookUrl,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text }),
+      timeout: CONFIG.httpTimeout
+    },
+    function (result, error_code, error_msg) {
+      if (error_code === 0) {
+        if (result && result.code >= 200 && result.code < 300) {
+          print("Webhook-Benachrichtigung erfolgreich gesendet (HTTP " + result.code + ").");
+        } else {
+          print("Webhook-Request kam an, aber Antwort war HTTP " +
+            (result ? result.code : "?") + " - webhookUrl/Empfaenger pruefen.");
+        }
+        if (CONFIG.debug && result) {
+          print("DEBUG Webhook-Antwort-Body: " + (result.body ? result.body : "(leer)"));
+        }
+      } else if (error_code === -104) {
+        print("Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.");
+      } else {
+        print("Fehler beim Senden der Webhook-Benachrichtigung: " + error_msg);
+      }
+    }
+  );
+}
+ 
+function sendSignalMessage(text) {
+  if (!CONFIG.signal.enabled)
+    return;
+ 
+  if (CONFIG.signal.typ == "WEBHOOK") {
+    sendWebhookMessage(text);
+    return;
+  }
+ 
+  let safeText = simpleEncode(text);
+  let url;
+ 
+  if (CONFIG.signal.typ == "SIGNAL")
+    url = "https://api.callmebot.com/signal/send.php?phone=" + CONFIG.signal.phone + "&apikey=" + CONFIG.signal.apiKey + "&text=" + safeText;
+  else
+    url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
+ 
+  print("Sende Nachricht (" + CONFIG.signal.typ + ")...");
+ 
+  Shelly.call(
+    "HTTP.GET",
+    { url: url, timeout: CONFIG.httpTimeout },
+    function (result, error_code, error_msg) {
+      if (error_code === 0)
+        print("Nachricht erfolgreich gesendet.");
+      else if (error_code === -104)
+        print("Timeout (-104), Nachricht kam vermutlich trotzdem an.");
+      else
+        print("Fehler beim Senden der Nachricht: " + error_msg);
+    }
+  );
+}
+ 
+// ==================== FEHLER-ZAEHLUNG MIT SCHWELLENWERT-BENACHRICHTIGUNG ====================
+// (Muster aus zerooutput_multi_kvs.js - meldet erst nach CONFIG.errorThreshold
+// aufeinanderfolgenden Fehlern, und meldet einmalig die Erholung.)
+ 
+function reportError(errors, notified, type, label, message) {
+  errors[type] = errors[type] + 1;
+ 
+  print(
+    "FEHLER (" + label + "/" + type + "): " + message +
+    " - aufeinanderfolgende Fehler: " + errors[type]
+  );
+ 
+  if (errors[type] >= CONFIG.errorThreshold && !notified[type]) {
+    notified[type] = true;
+ 
+    sendSignalMessage(
+      label + " Fehler (" + type + "): " + message + "\n" +
+      errors[type] + " Versuche in Folge fehlgeschlagen."
+    );
+  }
+}
+ 
+function reportSuccess(errors, notified, type, label) {
+  if (errors[type] > 0 || notified[type]) {
+    if (notified[type]) {
+      sendSignalMessage(
+        label + ": Fehler (" + type + ") behoben, laeuft wieder normal."
+      );
+    }
+ 
+    errors[type] = 0;
+    notified[type] = false;
+  }
+}
+ 
+function debugStale(where, myCycle) {
+  if (CONFIG.debug) {
+    print("DEBUG " + where + " -> verworfen (Zyklus " + myCycle +
+      " veraltet, aktuell ist " + state.cycleId + ")");
+  }
+}
+ 
+// Letzte 4 Zeichen der Seriennummer als kompakter Geraete-Bezeichner fuer
+// die Sammel-Nachricht. "????" solange noch nie eine SN gelesen werden konnte.
+function last4(sn) {
+  if (!sn) return "????";
+ 
+  let len = sn.length;
+  if (len <= 4) return sn;
+ 
+  return sn.substr(len - 4, 4);
+}
+ 
+// ==================== ZYKLUS-SPERRE / WATCHDOG (Muster aus zerooutput_multi_kvs.js) ====================
+ 
+function onWatchdogTimeout() {
+  reportError(state.errors, state.notified, "watchdog", "System",
+    "Zyklus haengengeblieben (Watchdog-Timeout, " +
+    (Date.now() - state.cycleStartedAt) + " ms)");
+ 
+  state.busy = false;
+  state.watchdogTimer = null;
+}
+ 
+function lock() {
+  state.busy = true;
+  state.cycleId = state.cycleId + 1;
+  state.cycleStartedAt = Date.now();
+ 
+  if (CONFIG.debug) {
+    print("DEBUG Zyklus " + state.cycleId + " gestartet");
+  }
+ 
+  if (state.watchdogTimer !== null)
+    Timer.clear(state.watchdogTimer);
+ 
+  state.watchdogTimer = Timer.set(CONFIG.watchdog, false, onWatchdogTimeout);
+ 
+  return state.cycleId;
+}
+ 
+function unlock(myCycle) {
+  if (myCycle !== state.cycleId) {
+    debugStale("unlock", myCycle);
+    return;
+  }
+ 
+  if (CONFIG.debug) {
+    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " +
+      (Date.now() - state.cycleStartedAt) + " ms");
+  }
+ 
+  reportSuccess(state.errors, state.notified, "watchdog", "System");
+ 
+  state.busy = false;
+ 
+  if (state.watchdogTimer !== null) {
+    Timer.clear(state.watchdogTimer);
+    state.watchdogTimer = null;
+  }
+}
+ 
+// ==================== HTTP-WRAPPER ====================
+ 
+function httpGet(url, callback) {
+  Shelly.call("HTTP.GET", { url: url, timeout: CONFIG.httpTimeout }, callback);
+}
+ 
+// ==================== WARN-PRUEFUNGEN (globale Schwellen, pro Geraet ausgewertet) ====================
+ 
+function checkSocFull(index) {
+  let ds = state.devices[index];
+  let cfg = CONFIG.devices[index];
+ 
+  if (ds.soc === null) return;
+ 
+  if (ds.soc >= CONFIG.vollSchwelle && !ds.akkuVollMsgSent) {
+    ds.akkuVollMsgSent = true;
+    sendSignalMessage("🔋 " + cfg.label + ": Akku ist jetzt voll (" + ds.soc + "%)");
+  } else if (ds.soc < CONFIG.entladeReset) {
+    ds.akkuVollMsgSent = false;
+  }
+}
+ 
+function checkHyperTemp(index) {
+  let ds = state.devices[index];
+  let cfg = CONFIG.devices[index];
+ 
+  if (ds.hyperTemp === null) return;
+ 
+  if (ds.hyperTemp > CONFIG.tempWarn) {
+    if (!ds.hyperTempMsgSent) {
+      ds.hyperTempMsgSent = true;
+      sendSignalMessage("🔥 " + cfg.label + ": Achtung! Geraete-Temperatur zu hoch: " +
+        ds.hyperTemp.toFixed(1) + " °C");
+    }
+  } else if (ds.hyperTemp < CONFIG.tempReset) {
+    ds.hyperTempMsgSent = false;
+  }
+}
+ 
+function checkPackVoltage(index, sn) {
+  let ds = state.devices[index];
+  let cfg = CONFIG.devices[index];
+  let minV = ds.packs[sn].minV;
+ 
+  if (minV === undefined) return;
+ 
+  if (minV > 0 && minV < CONFIG.minVoltWarn) {
+    if (!ds.lowVoltMsgSent[sn]) {
+      ds.lowVoltMsgSent[sn] = true;
+      sendSignalMessage("⚠️ " + cfg.label + ": Zelle " + sn + " hat nur " + minV + "V!");
+    }
+  } else if (minV > CONFIG.minVoltReset) {
+    ds.lowVoltMsgSent[sn] = false;
+  }
+}
+ 
+// ==================== GERAETE-DATEN VERARBEITEN ====================
+// (Parsing-Logik uebernommen aus zenSDKWatchDog - normalisiert die properties/report
+// Antwort und wertet packData fuer Zell-Spannungen/Temperaturen aus.)
+ 
+function processDeviceData(index, data) {
+  let ds = state.devices[index];
+ 
+  let payload = (data.properties && data.properties.report) ? data.properties.report :
+                (data.properties) ? data.properties : data;
+ 
+  if (!payload.packData && data.packData) payload.packData = data.packData;
+ 
+  // Die Seriennummer des Hubs steht auf oberster Ebene der Antwort (data.sn),
+  // NICHT innerhalb von properties/report - deshalb hier bewusst "data.sn"
+  // und nicht "payload.sn".
+  if (data.sn) ds.serial = data.sn;
+ 
+  if (payload.electricLevel !== undefined) {
+    ds.soc = payload.electricLevel;
+  }
+ 
+  if (payload.hyperTmp !== undefined) {
+    ds.hyperTemp = (payload.hyperTmp - 2731) / 10;
+  }
+ 
+  let minVol = null;
+  let minVolSoc = null;
+  let minVolSn = null;
+ 
+  if (payload.packData) {
+    for (let i = 0; i < payload.packData.length; i++) {
+      let pack = payload.packData[i];
+      let sn = pack.sn;
+ 
+      if (!ds.packs[sn]) {
+        ds.packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
+        ds.lowVoltMsgSent[sn] = false;
+      }
+ 
+      if (pack.maxVol !== undefined) ds.packs[sn].maxV = pack.maxVol / 100;
+      if (pack.socLevel !== undefined) ds.packs[sn].soc = pack.socLevel;
+      if (pack.maxTemp !== undefined) ds.packs[sn].maxT = (pack.maxTemp - 2731) / 10;
+      if (pack.minVol !== undefined) ds.packs[sn].minV = pack.minVol / 100;
+ 
+      checkPackVoltage(index, sn);
+ 
+      if (ds.packs[sn].minV !== undefined) {
+        if (minVol === null || ds.packs[sn].minV < minVol) {
+          minVol = ds.packs[sn].minV;
+          minVolSoc = ds.packs[sn].soc;
+          minVolSn = sn;
+        }
+      }
+    }
+  }
+ 
+  ds.minVol = minVol;
+  ds.minVolSoc = minVolSoc;
+  ds.minVolSn = minVolSn;
+ 
+  ds.available = true;
+ 
+  checkSocFull(index);
+  checkHyperTemp(index);
+}
+ 
+// ==================== GERAETE ABFRAGEN (sequentiell, mit Retry) ====================
+// mJS erlaubt keine tief verschachtelten anonymen Funktionen (max. 2-3 Ebenen,
+// sonst Geraete-Absturz) - deshalb ausschliesslich benannte Top-Level-Funktionen,
+// die per Referenz als Callback durchgereicht werden.
+ 
+function retryDevice(index, myCycle, callback) {
+  if (myCycle !== state.cycleId) {
+    debugStale("retryDevice", myCycle);
+    return;
+  }
+  pollDevice(index, myCycle, callback);
+}
+ 
+function onDeviceHttpResult(index, myCycle, res, err_code, err_msg, callback) {
+  let cfg = CONFIG.devices[index];
+  let ds = state.devices[index];
+ 
+  if (err_code !== 0 || !res || res.code !== 200) {
+    ds.retryCount = ds.retryCount + 1;
+ 
+    if (ds.retryCount <= CONFIG.maxRetries) {
+      if (CONFIG.debug) {
+        print("DEBUG " + cfg.label + ": Versuch " + ds.retryCount + "/" +
+          CONFIG.maxRetries + " fehlgeschlagen, Retry in " + CONFIG.retryDelayMs + " ms");
+      }
+ 
+      Timer.set(CONFIG.retryDelayMs, false, function () {
+        retryDevice(index, myCycle, callback);
+      });
+      return;
+    }
+ 
+    ds.retryCount = 0;
+    ds.available = false;
+    reportError(ds.errors, ds.notified, "connect", cfg.label,
+      "Geraet nicht erreichbar (" + err_msg + ")");
+    callback();
+    return;
+  }
+ 
+  ds.retryCount = 0;
+  reportSuccess(ds.errors, ds.notified, "connect", cfg.label);
+ 
+  let data;
+ 
+  try {
+    data = JSON.parse(res.body);
+  } catch (e) {
+    ds.available = false;
+    reportError(ds.errors, ds.notified, "json", cfg.label, "Fehler beim Parsen der Antwort");
+    callback();
+    return;
+  }
+ 
+  reportSuccess(ds.errors, ds.notified, "json", cfg.label);
+ 
+  processDeviceData(index, data);
+  callback();
+}
+ 
+function pollDevice(index, myCycle, callback) {
+  let cfg = CONFIG.devices[index];
+ 
+  httpGet("http://" + cfg.ip + "/properties/report", function (res, err_code, err_msg) {
+    if (myCycle !== state.cycleId) {
+      debugStale("pollDevice(" + cfg.label + ")", myCycle);
+      return;
+    }
+    onDeviceHttpResult(index, myCycle, res, err_code, err_msg, callback);
+  });
+}
+ 
+function readAllDevices(index, myCycle, callback) {
+  if (index >= CONFIG.devices.length) {
+    callback();
+    return;
+  }
+ 
+  let cfg = CONFIG.devices[index];
+ 
+  if (!cfg.enabled) {
+    Timer.set(0, false, function () {
+      if (myCycle !== state.cycleId) {
+        debugStale("readAllDevices(skip " + cfg.label + ")", myCycle);
+        return;
+      }
+      readAllDevices(index + 1, myCycle, callback);
+    });
+    return;
+  }
+ 
+  pollDevice(index, myCycle, function () {
+    readAllDevices(index + 1, myCycle, callback);
+  });
+}
+ 
+// ==================== SAMMEL-STATUS (Morgen/Abend) ====================
+// Feste Zeilenlaenge pro Geraet, unabhaengig von der Anzahl der Packs -
+// dadurch bleibt die Nachricht bei wachsender Geraeteanzahl beherrschbar.
+// Format je Zeile: "<letzte 4 Zeichen SN>: <SOC>%, <Temp>grd, <kleinste MinVol>V"
+// Nicht verfuegbare Geraete zeigen "n/a" fuer ALLE Werte, bleiben aber in der Liste.
+ 
+function buildDigest(headerText) {
+  let text = headerText;
+ 
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    let cfg = CONFIG.devices[i];
+    if (!cfg.enabled) continue;
+ 
+    let ds = state.devices[i];
+ 
+    let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
+    let tempStr = (ds.available && ds.hyperTemp !== null) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
+    let volStr = (ds.available && ds.minVol !== null) ? (ds.minVol.toFixed(2) + "V") : "n/a";
+ 
+    text += "\n" + last4(ds.serial) + ": " + socStr + ", " + tempStr + ", " + volStr;
+  }
+ 
+  return text;
+}
+ 
+function sendDigest(headerText) {
+  if (!CONFIG.signal.enabled) return;
+ 
+  let text = buildDigest(headerText);
+ 
+  if (text.length > CONFIG.maxMessageLength) {
+    print("WARNUNG: Sammel-Nachricht ueberschreitet maxMessageLength (" +
+      text.length + " > " + CONFIG.maxMessageLength + " Zeichen) - wird gekuerzt");
+    text = text.substr(0, CONFIG.maxMessageLength - 15) + "\n...(gekuerzt)";
+  }
+ 
+  sendSignalMessage(text);
+}
+ 
+// ==================== ASTRO-STATUS (Sonnenaufgang/-untergang) ====================
+// Nutzt bewusst die zuletzt eingelesenen Werte aus state.devices[] - kein
+// zusaetzlicher Request wird ausgeloest.
+ 
+function sendAstroStatus(type) {
+  let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update:";
+  sendDigest(header);
+}
+ 
+function setupAstroSchedules() {
+  Shelly.call("Schedule.DeleteAll", null);
+ 
+  let sunriseSpec = "@sunrise" + (CONFIG.sunriseOffset >= 0 ? "+" : "") + CONFIG.sunriseOffset;
+  let sunsetSpec = "@sunset" + (CONFIG.sunsetOffset >= 0 ? "+" : "") + CONFIG.sunsetOffset;
+ 
+  Shelly.call("Schedule.Create", {
+    "enable": true,
+    "timespec": sunriseSpec,
+    "calls": [{ "method": "Script.Eval", "params": {
+      "id": Shelly.getCurrentScriptId(),
+      "code": "sendAstroStatus('sunrise')"
+    }}]
+  }, function (res, err, msg) {
+    if (err !== 0) print("Fehler Sunrise-Schedule (" + sunriseSpec + "): " + msg);
+    else print("Sunrise-Schedule (" + sunriseSpec + ") erstellt");
+  });
+ 
+  Shelly.call("Schedule.Create", {
+    "enable": true,
+    "timespec": sunsetSpec,
+    "calls": [{ "method": "Script.Eval", "params": {
+      "id": Shelly.getCurrentScriptId(),
+      "code": "sendAstroStatus('sunset')"
+    }}]
+  }, function (res, err, msg) {
+    if (err !== 0) print("Fehler Sunset-Schedule (" + sunsetSpec + "): " + msg);
+    else print("Sunset-Schedule (" + sunsetSpec + ") erstellt");
+  });
+}
+ 
+// ==================== HAUPT-ZYKLUS ====================
+ 
+function onCycleComplete(myCycle) {
+  if (myCycle !== state.cycleId) {
+    debugStale("onCycleComplete", myCycle);
+    return;
+  }
+ 
+  let anyAvailable = false;
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    if (state.devices[i].available) anyAvailable = true;
+  }
+ 
+  if (!anyAvailable) {
+    print("Kein Geraet erreichbar in diesem Zyklus");
+  }
+ 
+  unlock(myCycle);
+}
+ 
+function update() {
+  if (state.busy) {
+    print("Vorheriger Zyklus laeuft noch - Tick uebersprungen");
+ 
+    if (CONFIG.debug) {
+      print("DEBUG Zyklus " + state.cycleId + " laeuft seit " +
+        (Date.now() - state.cycleStartedAt) + " ms");
+    }
+ 
+    return;
+  }
+ 
+  let myCycle = lock();
+ 
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    state.devices[i].available = false;
+  }
+ 
+  readAllDevices(0, myCycle, function () {
+    onCycleComplete(myCycle);
+  });
+}
+ 
+// ==================== BANNER / START ====================
+ 
+let bannerLines = [];
+let enabledCount = 0;
+ 
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  if (CONFIG.devices[i].enabled) enabledCount++;
+}
+ 
+bannerLines[bannerLines.length] = "--------------------------------";
+bannerLines[bannerLines.length] = "Version " + CONFIG.version;
+bannerLines[bannerLines.length] = "AkkuVolt Watchdog Multi-Device gestartet";
+bannerLines[bannerLines.length] = "Geraete    : " + CONFIG.devices.length + " konfiguriert, " + enabledCount + " aktiv";
+ 
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  let cfg = CONFIG.devices[i];
+  bannerLines[bannerLines.length] =
+    "  - [dev" + i + "] " + cfg.label + " (" + cfg.ip + ")" +
+    (cfg.enabled ? "" : "  [DEAKTIVIERT]");
+}
+ 
+bannerLines[bannerLines.length] = "Intervall  : " + CONFIG.pollIntervalMs + " ms";
+bannerLines[bannerLines.length] = "HTTP-Timeout: " + CONFIG.httpTimeout + " s | Retries: " + CONFIG.maxRetries + " | Retry-Delay: " + CONFIG.retryDelayMs + " ms";
+bannerLines[bannerLines.length] = "Watchdog   : " + CONFIG.watchdog + " ms";
+bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
+bannerLines[bannerLines.length] = "Voll ab    : " + CONFIG.vollSchwelle + "% (Reset bei " + CONFIG.entladeReset + "%)";
+bannerLines[bannerLines.length] = "MinVolt-Warn: " + CONFIG.minVoltWarn + "V (Reset bei " + CONFIG.minVoltReset + "V)";
+bannerLines[bannerLines.length] = "Temp-Warn  : " + CONFIG.tempWarn + " Grad C (Reset bei " + CONFIG.tempReset + " Grad C)";
+bannerLines[bannerLines.length] = "maxMessageLength: " + CONFIG.maxMessageLength + " Zeichen";
+bannerLines[bannerLines.length] = "Nachrichten: " + (CONFIG.signal.enabled ? ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
+bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
+bannerLines[bannerLines.length] = "--------------------------------";
+ 
+let bannerIndex = 0;
+ 
+function printBannerLine(onDone) {
+  if (bannerIndex >= bannerLines.length) {
+    bannerLines = null;
+    if (onDone) onDone();
+    return;
+  }
+ 
+  print(bannerLines[bannerIndex]);
+  bannerIndex = bannerIndex + 1;
+ 
+  Timer.set(150, false, function () {
+    printBannerLine(onDone);
+  });
+}
+ 
+function afterBanner() {
+  sendSignalMessage("✅ AkkuVolt Watchdog Multi-Device gestartet (" +
+    enabledCount + " von " + CONFIG.devices.length + " Geraeten aktiv).");
+ 
+  setupAstroSchedules();
+ 
+  print("Ueberwachung aktiv. Polling alle " + (CONFIG.pollIntervalMs / 1000) + " Sekunden.");
+  print("--------------------------------");
+ 
+  update();
+  Timer.set(CONFIG.pollIntervalMs, true, update);
+}
+ 
+printBannerLine(afterBanner);
