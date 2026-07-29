@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.1.1 KVS (write-log label fix)",
+  version: "2.2.0 KVS (KVS listener)",
   
   devices: [
      {
@@ -16,21 +16,19 @@ let CONFIG = {
       reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxInputPower: 2400,       // max charge power from grid (W)
       maxOutput: 800,          // max discharge/export power (W)
-      
       dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
-      ip: "192.168.178.143",    // Zendure IP address
-      label: "Fatamorgana",     // short name, used in logs/messages
+      ip: "192.168.178.143",    
+      label: "Fatamorgana",     
 
-      minSoc: 15,               // no discharge below this SOC (%)
-      maxSoc: 100,              // no charging from grid at/above this SOC (%)
-      dischargeAllowed: false,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
-      maxInputPower: 1200,      // max charge power from grid (W)
-      maxOutput: 800,           // max discharge/export power (W)
-
-      dryRun: true              // only simulation; true = read + calculate only, never write
+      minSoc: 15,               
+      maxSoc: 100,              
+      dischargeAllowed: false,  
+      reverse: true,            
+      maxInputPower: 1200,      
+      maxOutput: 800,           
+      dryRun: true              
     },
   ],
 // ------------------------------------------------------------------
@@ -1428,14 +1426,9 @@ function writeAllDevices(indices, output, myCycle, pos, callback) {
 }
 
 function update() {
+
   if (state.busy) {
-    print("Vorheriger Zyklus laeuft noch");
-
-    if (CONFIG.debug) {
-      print("DEBUG Tick uebersprungen - Zyklus " + state.cycleId +
-        " laeuft seit " + (Date.now() - state.cycleStartedAt) + " ms");
-    }
-
+    // ...
     return;
   }
 
@@ -1445,14 +1438,15 @@ function update() {
     state.devices[i].available = false;
   }
 
-  readKvsOverrides(myCycle, function () {
-    readGridPower(myCycle, function (ok) {
-      if (!ok) return; // unlock() already called inside readGridPower on failure
+  // KVS-Reading im 4s-Takt überspringen - direkt Zählerstand auslesen
+  readGridPower(myCycle, function (ok) {
 
-      readAllDevices(0, myCycle, function () {
-        Timer.set(0, false, function () {
-          calculate(myCycle);
-        });
+    if (!ok) return;
+
+    readAllDevices(0, myCycle, function () {
+
+      Timer.set(0, false, function () {
+        calculate(myCycle);
       });
     });
   });
@@ -1633,20 +1627,20 @@ function printBannerLine(onDone) {
 }
 
 printBannerLine(function () {
+
   if (CONFIG.signal.enabled) {
     sendSignalMessage("Zendure Multi-Device-Controller gestartet (" +
       CONFIG.devices.length + " Geraete).");
   }
-
   print("--------------------------------");
   print("Synchronisiere SoC-Grenzwerte (minSoc/maxSoc) einmalig mit allen Geraeten...");
-
   syncSocLimitsAll(0, function () {
-    print("SoC-Sync abgeschlossen.");
-    print("Pruefe KVS auf fehlende Default-Werte (einmalig)...");
 
-    seedKvsDefaults(function () {
-      print("KVS-Seed abgeschlossen - starte Regelbetrieb.");
+    print("SoC-Sync abgeschlossen.");
+
+    // Hilfsfunktion zum Starten des Timers (vermeidet doppelten Code)
+    let startController = function () {
+      print("Starte Regelbetrieb.");
       print("--------------------------------");
 
       Timer.set(
@@ -1654,6 +1648,39 @@ printBannerLine(function () {
         true,
         update
       );
-    });
+    };
+
+    // PRÜFUNG: Ist KVS überhaupt aktiviert?
+    if (!CONFIG.kvsEnabled) {
+
+      print("KVS-Funktion ist deaktiviert (CONFIG.kvsEnabled = false) - KVS wird ignoriert.");
+      startController();
+
+    } else {
+
+      print("Pruefe KVS auf fehlende Default-Werte (einmalig)...");
+
+      seedKvsDefaults(function () {
+
+        print("KVS-Seed abgeschlossen.");
+        print("Lade initiale KVS-Overrides...");
+
+        readKvsOverrides(0, function () {
+
+          // StatusHandler nur registrieren, wenn KVS aktiv ist
+          Shelly.addStatusHandler(function (e) {
+            if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
+              print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ") - Lade Overrides...");
+              readKvsOverrides(state.cycleId, function () {
+                print("KVS-Overrides erfolgreich aktualisiert.");
+              });
+            }
+          });
+
+          print("KVS Event-Listener aktiv.");
+          startController();
+        });
+      });
+    }
   });
 });
