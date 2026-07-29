@@ -1,0 +1,10 @@
+{
+  "interval_seconds": 15,
+  "timeout_seconds": 5,
+  "csv_file": "script_status.csv",
+
+  "targets": [
+    { "host": "192.168.178.117", "script_id": 6, "label": "Regler" },
+    { "host": "192.168.178.117", "script_id": 8, "label": "Watchdog" }
+  ]
+}
