@@ -14,7 +14,7 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.0 AkkuWatchDog",
+  version: "1.1 AkkuWatchDog (no-retry, packs-leak-fix)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
@@ -25,9 +25,10 @@ let CONFIG = {
   // ABFRAGE / POLLING
   pollIntervalMs: 60000,   // ms zwischen den Zyklen - MINIMUM 60000 (wird sonst automatisch angehoben)
   httpTimeout: 5,          // Sekunden pro einzelnem HTTP-Request an ein Geraet
-  watchdog: 68000,         // ms - Notbremse fuer einen kompletten Zyklus (wird ggf. automatisch angehoben)
-  maxRetries: 3,           // Wiederholungsversuche pro Geraet und Zyklus bei Fehlern
-  retryDelayMs: 5000,      // Wartezeit zwischen Wiederholungsversuchen
+  watchdog: 20000,         // ms - Notbremse fuer einen kompletten Zyklus (wird ggf. automatisch angehoben)
+  // Kein Retry mehr: ein Fehlversuch pro Geraet und Zyklus zaehlt direkt als
+  // ein Fehler. Nach errorThreshold aufeinanderfolgenden Fehlern (ueber
+  // mehrere Zyklen hinweg) wird gemeldet - siehe reportError().
   errorThreshold: 5,       // aufeinanderfolgende Fehlversuche, bevor "Geraet nicht erreichbar" gemeldet wird
  
   // ------------------------------------------------------------------
@@ -67,8 +68,6 @@ let CONFIG = {
  
 if (CONFIG.pollIntervalMs < 60000) CONFIG.pollIntervalMs = 60000;
 if (CONFIG.httpTimeout < 5) CONFIG.httpTimeout = 5;
-if (CONFIG.maxRetries < 0) CONFIG.maxRetries = 1;
-if (CONFIG.retryDelayMs < 500) CONFIG.retryDelayMs = 500;
 if (CONFIG.errorThreshold < 1) CONFIG.errorThreshold = 1;
  
 if (CONFIG.entladeReset >= CONFIG.vollSchwelle) CONFIG.entladeReset = CONFIG.vollSchwelle - 5;
@@ -76,10 +75,9 @@ if (CONFIG.minVoltReset <= CONFIG.minVoltWarn) CONFIG.minVoltReset = CONFIG.minV
 if (CONFIG.tempReset >= CONFIG.tempWarn) CONFIG.tempReset = CONFIG.tempWarn - 5;
  
 // Watchdog muss mindestens so lange laufen, wie ein Zyklus im schlechtesten Fall
-// dauern kann (alle Geraete unerreichbar, jeweils voll ausgereizte Retries).
+// dauern kann (alle Geraete unerreichbar, jeweils ein Versuch, kein Retry mehr).
 let minWatchdog =
-  CONFIG.devices.length *
-    (CONFIG.httpTimeout * 1000 + CONFIG.retryDelayMs * CONFIG.maxRetries + 1000) +
+  CONFIG.devices.length * (CONFIG.httpTimeout * 1000 + 1000) +
   5000;
  
 if (CONFIG.watchdog < minWatchdog) CONFIG.watchdog = minWatchdog;
@@ -113,9 +111,8 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     minVolSn: null,         // SN des betroffenen Packs
  
     available: false,        // wurde das Geraet in DIESEM Zyklus erfolgreich gelesen?
-    retryCount: 0,
  
-    packs: {},                // sn -> { soc, minV, maxV, maxT }
+    packs: {},                // sn -> { soc, minV, maxV, maxT } - wird JEDEN Zyklus frisch aufgebaut (kein Akkumulieren)
  
     akkuVollMsgSent: false,
     hyperTempMsgSent: false,
@@ -352,20 +349,20 @@ function checkHyperTemp(index) {
   }
 }
  
-function checkPackVoltage(index, sn) {
-  let ds = state.devices[index];
-  let cfg = CONFIG.devices[index];
-  let minV = ds.packs[sn].minV;
- 
+// Arbeitet bewusst auf uebergebenen Werten (nicht auf ds.packs/ds.lowVoltMsgSent),
+// weil processDeviceData() die Pack-Map jeden Zyklus frisch aufbaut und erst
+// danach in ds uebernimmt - so bleibt hier alles konsistent auf dem
+// aktuellen Zyklus, ohne auf alte/verwaiste Eintraege zuzugreifen.
+function checkPackVoltage(cfg, sn, minV, lowVoltMsgSent) {
   if (minV === undefined) return;
  
   if (minV > 0 && minV < CONFIG.minVoltWarn) {
-    if (!ds.lowVoltMsgSent[sn]) {
-      ds.lowVoltMsgSent[sn] = true;
+    if (!lowVoltMsgSent[sn]) {
+      lowVoltMsgSent[sn] = true;
       sendSignalMessage("⚠️ " + cfg.label + ": Zelle " + sn + " hat nur " + minV + "V!");
     }
   } else if (minV > CONFIG.minVoltReset) {
-    ds.lowVoltMsgSent[sn] = false;
+    lowVoltMsgSent[sn] = false;
   }
 }
  
@@ -375,6 +372,7 @@ function checkPackVoltage(index, sn) {
  
 function processDeviceData(index, data) {
   let ds = state.devices[index];
+  let cfg = CONFIG.devices[index];
  
   let payload = (data.properties && data.properties.report) ? data.properties.report :
                 (data.properties) ? data.properties : data;
@@ -398,32 +396,51 @@ function processDeviceData(index, data) {
   let minVolSoc = null;
   let minVolSn = null;
  
+  // WICHTIG (Memory-Fix): packs/lowVoltMsgSent werden JEDEN Zyklus frisch aus
+  // der aktuellen packData-Antwort aufgebaut statt in ds.packs immer weiter
+  // ergaenzt zu werden. Dadurch koennen sich keine verwaisten/veralteten
+  // SN-Eintraege mehr unbegrenzt ansammeln (Ursache des frueheren OOM).
+  // Der "bereits gemeldet"-Status pro Zelle wird dabei fuer noch vorhandene
+  // SNs uebernommen, damit eine laufende Unterspannungswarnung nicht bei
+  // jedem Zyklus neu ausgeloest wird.
+  let newPacks = {};
+  let newLowVoltMsgSent = {};
+ 
   if (payload.packData) {
     for (let i = 0; i < payload.packData.length; i++) {
       let pack = payload.packData[i];
       let sn = pack.sn;
+      let prev = ds.packs[sn];
  
-      if (!ds.packs[sn]) {
-        ds.packs[sn] = { soc: undefined, minV: undefined, maxV: undefined, maxT: undefined };
-        ds.lowVoltMsgSent[sn] = false;
-      }
+      let entry = {
+        soc: prev ? prev.soc : undefined,
+        minV: prev ? prev.minV : undefined,
+        maxV: prev ? prev.maxV : undefined,
+        maxT: prev ? prev.maxT : undefined
+      };
  
-      if (pack.maxVol !== undefined) ds.packs[sn].maxV = pack.maxVol / 100;
-      if (pack.socLevel !== undefined) ds.packs[sn].soc = pack.socLevel;
-      if (pack.maxTemp !== undefined) ds.packs[sn].maxT = (pack.maxTemp - 2731) / 10;
-      if (pack.minVol !== undefined) ds.packs[sn].minV = pack.minVol / 100;
+      if (pack.maxVol !== undefined) entry.maxV = pack.maxVol / 100;
+      if (pack.socLevel !== undefined) entry.soc = pack.socLevel;
+      if (pack.maxTemp !== undefined) entry.maxT = (pack.maxTemp - 2731) / 10;
+      if (pack.minVol !== undefined) entry.minV = pack.minVol / 100;
  
-      checkPackVoltage(index, sn);
+      newPacks[sn] = entry;
+      newLowVoltMsgSent[sn] = ds.lowVoltMsgSent[sn] || false;
  
-      if (ds.packs[sn].minV !== undefined) {
-        if (minVol === null || ds.packs[sn].minV < minVol) {
-          minVol = ds.packs[sn].minV;
-          minVolSoc = ds.packs[sn].soc;
+      checkPackVoltage(cfg, sn, entry.minV, newLowVoltMsgSent);
+ 
+      if (entry.minV !== undefined) {
+        if (minVol === null || entry.minV < minVol) {
+          minVol = entry.minV;
+          minVolSoc = entry.soc;
           minVolSn = sn;
         }
       }
     }
   }
+ 
+  ds.packs = newPacks;
+  ds.lowVoltMsgSent = newLowVoltMsgSent;
  
   ds.minVol = minVol;
   ds.minVolSoc = minVolSoc;
@@ -440,34 +457,16 @@ function processDeviceData(index, data) {
 // sonst Geraete-Absturz) - deshalb ausschliesslich benannte Top-Level-Funktionen,
 // die per Referenz als Callback durchgereicht werden.
  
-function retryDevice(index, myCycle, callback) {
-  if (myCycle !== state.cycleId) {
-    debugStale("retryDevice", myCycle);
-    return;
-  }
-  pollDevice(index, myCycle, callback);
-}
- 
+// Kein Retry mehr: EIN Versuch pro Geraet und Zyklus. Ein Fehlversuch wird
+// direkt ueber reportError() gezaehlt (state.devices[i].errors.connect/json);
+// erst nach CONFIG.errorThreshold aufeinanderfolgenden Fehlern - ueber
+// mehrere Zyklen hinweg, nicht mehr innerhalb eines einzigen Zyklus - wird
+// tatsaechlich eine Nachricht verschickt.
 function onDeviceHttpResult(index, myCycle, res, err_code, err_msg, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
  
   if (err_code !== 0 || !res || res.code !== 200) {
-    ds.retryCount = ds.retryCount + 1;
- 
-    if (ds.retryCount <= CONFIG.maxRetries) {
-      if (CONFIG.debug) {
-        print("DEBUG " + cfg.label + ": Versuch " + ds.retryCount + "/" +
-          CONFIG.maxRetries + " fehlgeschlagen, Retry in " + CONFIG.retryDelayMs + " ms");
-      }
- 
-      Timer.set(CONFIG.retryDelayMs, false, function () {
-        retryDevice(index, myCycle, callback);
-      });
-      return;
-    }
- 
-    ds.retryCount = 0;
     ds.available = false;
     reportError(ds.errors, ds.notified, "connect", cfg.label,
       "Geraet nicht erreichbar (" + err_msg + ")");
@@ -475,7 +474,6 @@ function onDeviceHttpResult(index, myCycle, res, err_code, err_msg, callback) {
     return;
   }
  
-  ds.retryCount = 0;
   reportSuccess(ds.errors, ds.notified, "connect", cfg.label);
  
   let data;
@@ -693,7 +691,9 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
 }
  
 bannerLines[bannerLines.length] = "Intervall  : " + CONFIG.pollIntervalMs + " ms";
-bannerLines[bannerLines.length] = "HTTP-Timeout: " + CONFIG.httpTimeout + " s | Retries: " + CONFIG.maxRetries + " | Retry-Delay: " + CONFIG.retryDelayMs + " ms";
+bannerLines[bannerLines.length] = "HTTP-Timeout: " + CONFIG.httpTimeout +
+  " s (kein Retry - Fehler zaehlen direkt, Meldung ab " + CONFIG.errorThreshold +
+  " Fehlversuchen in Folge)";
 bannerLines[bannerLines.length] = "Watchdog   : " + CONFIG.watchdog + " ms";
 bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Voll ab    : " + CONFIG.vollSchwelle + "% (Reset bei " + CONFIG.entladeReset + "%)";
