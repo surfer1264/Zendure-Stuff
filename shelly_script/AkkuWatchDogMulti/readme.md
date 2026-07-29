@@ -4,7 +4,7 @@
 
 Überwacht **beliebig viele** lokale zenSDK-Zendure-Hubs (SF800 bis SF2400Pro u. a.) gleichzeitig über einen Shelly Gen2/3/4. Meldet Akku-voll, Unterspannung und Übertemperatur **pro Gerät einzeln**, und schickt zweimal täglich (Sonnenaufgang/-untergang) **eine kompakte Sammel-Nachricht** mit allen Geräten.
 
-Ausführliche Hintergründe (Zendure-Zugangsdaten für ältere Geräte, CallMeBot-Einrichtung, MQTT-Setup) stehen in der Gesamtdoku: **`Shelly-Script-Akkudaten-auslesen.md`**. Dieses Dokument hier ist bewusst kurz gehalten und deckt nur die Multi-Device-Variante ab.
+Ausführliche Hintergründe (Zendure-Zugangsdaten für ältere Geräte, CallMeBot-Einrichtung, MQTT-Setup) stehen in der Gesamtdoku: [Dokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen). Dieses Dokument hier ist bewusst kurz gehalten und deckt nur die Multi-Device-Variante ab.
 
 ## Voraussetzungen
 
