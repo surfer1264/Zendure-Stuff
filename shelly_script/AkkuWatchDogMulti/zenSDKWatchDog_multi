@@ -60,7 +60,7 @@ let CONFIG = {
   },
  
   // Reduziert die Konsolenausgabe auf das Wesentliche, wenn false.
-  debug: false   // vorübergehend an, für Webhook-Diagnose
+  debug: false // vorübergehend an, für Webhook-Diagnose
 };
  
 // ==================== PLAUSIBILITAETS-CHECKS (einmalig beim Start) ====================
@@ -537,23 +537,39 @@ function readAllDevices(index, myCycle, callback) {
 // Format je Zeile: "<letzte 4 Zeichen SN>: <SOC>%, <Temp>grd, <kleinste MinVol>V"
 // Nicht verfuegbare Geraete zeigen "n/a" fuer ALLE Werte, bleiben aber in der Liste.
  
+function deviceLine(index) {
+  let ds = state.devices[index];
+
+  let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
+  let tempStr = (ds.available && ds.hyperTemp !== null) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
+  let volStr = (ds.available && ds.minVol !== null) ? (ds.minVol.toFixed(2) + "V") : "n/a";
+
+  return last4(ds.serial) + ": " + socStr + ", " + tempStr + ", " + volStr;
+}
+
 function buildDigest(headerText) {
   let text = headerText;
- 
+
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    if (!CONFIG.devices[i].enabled) continue;
+    text += "\n" + deviceLine(i);
+  }
+
+  return text;
+}
+
+// Konsolen-Ausgabe pro Gerät, einmal je Poll-Zyklus - dieselbe kompakte
+// Zeilenform wie die Sammel-Nachricht, nur direkt auf die Konsole statt
+// per Messenger.
+function printDeviceSummary() {
+  print("Geraete-Status:");
+
   for (let i = 0; i < CONFIG.devices.length; i++) {
     let cfg = CONFIG.devices[i];
     if (!cfg.enabled) continue;
- 
-    let ds = state.devices[i];
- 
-    let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
-    let tempStr = (ds.available && ds.hyperTemp !== null) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
-    let volStr = (ds.available && ds.minVol !== null) ? (ds.minVol.toFixed(2) + "V") : "n/a";
- 
-    text += "\n" + last4(ds.serial) + ": " + socStr + ", " + tempStr + ", " + volStr;
+
+    print("  " + cfg.label + " (" + deviceLine(i) + ")");
   }
- 
-  return text;
 }
  
 function sendDigest(headerText) {
@@ -622,11 +638,13 @@ function onCycleComplete(myCycle) {
   for (let i = 0; i < CONFIG.devices.length; i++) {
     if (state.devices[i].available) anyAvailable = true;
   }
- 
+
   if (!anyAvailable) {
     print("Kein Geraet erreichbar in diesem Zyklus");
+  } else {
+    printDeviceSummary();
   }
- 
+
   unlock(myCycle);
 }
  
