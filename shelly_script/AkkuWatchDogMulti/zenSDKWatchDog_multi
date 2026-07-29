@@ -14,22 +14,12 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.1 AkkuWatchDog (no-retry, packs-leak-fix)",
+  version: "1.2 AkkuWatchDog (no-retry, packs-leak-fix)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
     { ip: "192.168.178.143", label: "Fatamorgana", enabled: false },
   ],
- 
-  // ------------------------------------------------------------------
-  // ABFRAGE / POLLING
-  pollIntervalMs: 60000,   // ms zwischen den Zyklen - MINIMUM 60000 (wird sonst automatisch angehoben)
-  httpTimeout: 5,          // Sekunden pro einzelnem HTTP-Request an ein Geraet
-  watchdog: 20000,         // ms - Notbremse fuer einen kompletten Zyklus (wird ggf. automatisch angehoben)
-  // Kein Retry mehr: ein Fehlversuch pro Geraet und Zyklus zaehlt direkt als
-  // ein Fehler. Nach errorThreshold aufeinanderfolgenden Fehlern (ueber
-  // mehrere Zyklen hinweg) wird gemeldet - siehe reportError().
-  errorThreshold: 5,       // aufeinanderfolgende Fehlversuche, bevor "Geraet nicht erreichbar" gemeldet wird
  
   // ------------------------------------------------------------------
   // WARNSCHWELLEN - GELTEN GLOBAL FUER ALLE GERAETE GLEICHERMASSEN
@@ -46,8 +36,6 @@ let CONFIG = {
   sunsetOffset: 0,
  
   // Sicherheitsnetz gegen zu lange Nachrichten (siehe sendDigest()).
-  // Bei fester Zeilenlaenge pro Geraet (siehe buildDigest) sollte dies bei
-  // realistischen Geraetezahlen nie greifen - dient nur als Notbremse.
   maxMessageLength: 900,   // Zeichen, vor URL-Encoding
  
   // ------------------------------------------------------------------
@@ -59,8 +47,13 @@ let CONFIG = {
     apiKey: "YOUR_API_KEY",        // nur SIGNAL/WHATSAPP
     webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // nur WEBHOOK
   },
- 
-  // Reduziert die Konsolenausgabe auf das Wesentliche, wenn false.
+
+  // ------------------------------------------------------------------
+  // ABFRAGE / POLLING
+  pollIntervalMs: 60000,   // ms zwischen den Zyklen - MINIMUM 60000 (wird sonst automatisch angehoben)
+  httpTimeout: 5,          // Sekunden pro einzelnem HTTP-Request an ein Geraet
+  watchdog: 20000,         // ms - Notbremse fuer einen kompletten Zyklus (wird ggf. automatisch angehoben)
+  errorThreshold: 5,       // aufeinanderfolgende Fehlversuche, bevor "Geraet nicht erreichbar" gemeldet wird
   debug: false // vorübergehend an, für Webhook-Diagnose
 };
  
@@ -250,15 +243,13 @@ function debugStale(where, myCycle) {
   }
 }
  
-// Letzte 4 Zeichen der Seriennummer als kompakter Geraete-Bezeichner fuer
-// die Sammel-Nachricht. "????" solange noch nie eine SN gelesen werden konnte.
-function last4(sn) {
-  if (!sn) return "????";
+// Erste 6 Zeichen des CONFIG-Labels als kompakter Geraete-Bezeichner fuer
+// die Sammel-Nachricht (statt der Seriennummer - besser lesbar, da der
+// Nutzer das Label selbst vergibt).
+function first6(label) {
+  if (!label) return "??????";
  
-  let len = sn.length;
-  if (len <= 4) return sn;
- 
-  return sn.substr(len - 4, 4);
+  return label.substr(0, 6);
 }
  
 // ==================== ZYKLUS-SPERRE / WATCHDOG (Muster aus zerooutput_multi_kvs.js) ====================
@@ -532,17 +523,22 @@ function readAllDevices(index, myCycle, callback) {
 // ==================== SAMMEL-STATUS (Morgen/Abend) ====================
 // Feste Zeilenlaenge pro Geraet, unabhaengig von der Anzahl der Packs -
 // dadurch bleibt die Nachricht bei wachsender Geraeteanzahl beherrschbar.
-// Format je Zeile: "<letzte 4 Zeichen SN>: <SOC>%, <Temp>grd, <kleinste MinVol>V"
+// Format je Zeile: "<erste 6 Zeichen Label>: <SOC>%, <Temp>grd, <kleinste MinVol>V"
 // Nicht verfuegbare Geraete zeigen "n/a" fuer ALLE Werte, bleiben aber in der Liste.
  
-function deviceLine(index) {
+function deviceValues(index) {
   let ds = state.devices[index];
 
   let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
   let tempStr = (ds.available && ds.hyperTemp !== null) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
   let volStr = (ds.available && ds.minVol !== null) ? (ds.minVol.toFixed(2) + "V") : "n/a";
 
-  return last4(ds.serial) + ": " + socStr + ", " + tempStr + ", " + volStr;
+  return socStr + ", " + tempStr + ", " + volStr;
+}
+
+function deviceLine(index) {
+  let cfg = CONFIG.devices[index];
+  return first6(cfg.label) + ": " + deviceValues(index);
 }
 
 function buildDigest(headerText) {
@@ -556,9 +552,9 @@ function buildDigest(headerText) {
   return text;
 }
 
-// Konsolen-Ausgabe pro Gerät, einmal je Poll-Zyklus - dieselbe kompakte
-// Zeilenform wie die Sammel-Nachricht, nur direkt auf die Konsole statt
-// per Messenger.
+// Konsolen-Ausgabe pro Gerät, einmal je Poll-Zyklus - nutzt bewusst das
+// VOLLE Label statt der (fuer die Sammel-Nachricht) gekuerzten Variante,
+// da hier kein Zeichenlimit gilt.
 function printDeviceSummary() {
   print("Geraete-Status:");
 
@@ -566,7 +562,7 @@ function printDeviceSummary() {
     let cfg = CONFIG.devices[i];
     if (!cfg.enabled) continue;
 
-    print("  " + cfg.label + " (" + deviceLine(i) + ")");
+    print("  " + cfg.label + ": " + deviceValues(i));
   }
 }
  
