@@ -14,7 +14,7 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.2.1 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard)",
+  version: "1.2.2 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
@@ -426,10 +426,21 @@ function processDeviceData(index, data) {
         maxT: prev ? prev.maxT : undefined
       };
  
-      if (pack.maxVol !== undefined && isNum(pack.maxVol / 100)) entry.maxV = pack.maxVol / 100;
-      if (pack.socLevel !== undefined && isNum(pack.socLevel)) entry.soc = pack.socLevel;
-      if (pack.maxTemp !== undefined && isNum((pack.maxTemp - 2731) / 10)) entry.maxT = (pack.maxTemp - 2731) / 10;
-      if (pack.minVol !== undefined && isNum(pack.minVol / 100)) entry.minV = pack.minVol / 100;
+      if (pack.maxVol !== undefined) {
+        let v = pack.maxVol / 100;
+        if (isNum(v)) entry.maxV = v;
+      }
+      if (pack.socLevel !== undefined) {
+        if (isNum(pack.socLevel)) entry.soc = pack.socLevel;
+      }
+      if (pack.maxTemp !== undefined) {
+        let v = (pack.maxTemp - 2731) / 10;
+        if (isNum(v)) entry.maxT = v;
+      }
+      if (pack.minVol !== undefined) {
+        let v = pack.minVol / 100;
+        if (isNum(v)) entry.minV = v;
+      }
  
       newPacks[sn] = entry;
       newLowVoltMsgSent[sn] = ds.lowVoltMsgSent[sn] || false;
