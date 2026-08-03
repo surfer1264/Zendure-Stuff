@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.3.0 KVS",
+  version: "3.0.1",
   
   devices: [
      {
@@ -15,20 +15,7 @@ let CONFIG = {
       dischargeAllowed: true,   // darf entladen/exportieren? (KVS)
       reverse: true,            // darf vom Netz laden? (KVS)
       maxInputPower: 2400,       // max charge power from grid (W)
-      maxOutput: 800,          // max discharge/export power (W)
-      dryRun: false              // true = nur simulieren, nie schreiben
-    },
-    {
-      ip: "192.168.178.143",    
-      label: "Fatamorgana",     
-
-      minSoc: 15,               
-      maxSoc: 100,              
-      dischargeAllowed: false,  
-      reverse: true,            
-      maxInputPower: 1200,      
-      maxOutput: 800,           
-      dryRun: true              
+      maxOutput: 800          // max discharge/export power (W)
     },
   ],
 // ------------------------------------------------------------------
@@ -106,7 +93,7 @@ let CONFIG = {
   // Schuetzt vor zu haeufigem Laden/Entladen-Wechsel
   directionChangeHoldCycles: 2,
   // 0W: true->smartMode 0, false->1
-  standbySmartModeZero: true,
+  standbySmartModeZero: false,
   // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG (verliert Overrides), danach false
@@ -1315,8 +1302,7 @@ function applyOutputs(output, myCycle) {
       " | socLimit " + ds.socLimit +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
       " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
-      (plan !== rawPlan ? " [Cooldown haelt Standby]" : "") +
-      (cfg.dryRun ? " [DRYRUN - wird nicht geschrieben]" : "")
+      (plan !== rawPlan ? " [Cooldown haelt Standby]" : "")
     );
 
     if (!ds.available) continue;
@@ -1326,17 +1312,6 @@ function applyOutputs(output, myCycle) {
         ds.acMode === plan.acMode &&
         ds.smartMode === plan.smartMode) {
       continue; // Wert/acMode/smartMode unveraendert
-    }
-
-    if (cfg.dryRun) {
-      updateRealDirection(ds, plan.acMode, plan.outputLimit, plan.inputLimit);
-      ds.acMode = plan.acMode;
-      ds.outputLimit = signedPower;
-      ds.smartMode = plan.smartMode;
-
-      print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + signedPower +
-        " W " + (signedPower >= 0 ? "(Export)" : "(Laden vom Netz)"));
-      continue;
     }
 
     toWrite[toWrite.length] = i;
@@ -1473,15 +1448,6 @@ function syncSocLimitsDevice(index, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
 
-  if (cfg.dryRun) {
-    print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
-
-    // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
-    // aufeinanderfolgenden dryRun-Geraeten wuerde sich syncSocLimitsAll()
-    Timer.set(0, false, callback);
-    return;
-  }
-
   httpGet(
 
     "http://" + cfg.ip + "/properties/report",
@@ -1577,8 +1543,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     "%, maxOutput " + cfg.maxOutput + " W, Laden vom Netz " +
     (cfg.reverse
       ? ("ja (maxInput " + cfg.maxInputPower + " W, maxSoc " + cfg.maxSoc + "%)")
-      : "nein") +
-    (cfg.dryRun ? "  [DRYRUN]" : "");
+      : "nein");
 }
 
 bannerLines[bannerLines.length] = "Grid source: " + CONFIG.gridSource +

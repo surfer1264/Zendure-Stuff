@@ -1,3 +1,17 @@
+# Chamglog 3.0.1
+## 1. dryRun-Feature komplett entfernt
+
+**Hintergrund**: Seicher zur Laufzeit sparen
+
+Kein **dryRun-Feld** mehr in der Geräte-Konfiguration
+applyOutputs(): Der komplette DRYRUN-Zweig ist weg – vorher wurde bei cfg.dryRun === true nur simuliert (ds.acMode/ds.outputLimit intern aktualisiert, aber kein HTTP-Write ausgeführt). Jetzt landet jedes Gerät ohne Ausnahme in toWrite und wird tatsächlich geschrieben.
+syncSocLimitsDevice(): Der DRYRUN-Skip beim SoC-Grenzwert-Sync ist ebenfalls weg – minSoc/maxSoc werden jetzt beim Start immer ans Gerät geschrieben.
+Print-Ausgaben: „[DRYRUN - wird nicht geschrieben]" (Vorschau) und „[DRYRUN]" (Banner-Zeile) sind entfernt.
+
+➡️ Praktisch heißt das: Es gibt in 3.0.1 keine Möglichkeit mehr, den Regler im reinen Simulationsmodus laufen zu lassen, ohne dass tatsächlich ans Gerät geschrieben wird. Wer testen will, muss das jetzt anders absichern (z. B. übers Netzwerk isolieren oder Geräte-IP auf etwas Ungefährliches zeigen lassen).
+
+Sonst keine Logikänderungen
+
 # ChangeLog 2.3.0
 ## 1. SOC-Sperre kommt jetzt vom Gerät (`socLimit`) statt lokal berechnet
 - **Alt:** `ds.atMaxSoc = (ds.soc >= cfg.maxSoc)` – lokal aus dem konfigurierten `maxSoc` berechnet.
