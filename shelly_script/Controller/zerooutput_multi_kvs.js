@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.0.1",
+  version: "2.3.1 KVS (dev2-charge-fix)",
   
   devices: [
      {
@@ -12,10 +12,24 @@ let CONFIG = {
 
       minSoc: 18,               // no discharge below this SOC (%)
       maxSoc: 100,               // no charging from grid at/above this SOC (%)
-      dischargeAllowed: true,   // darf entladen/exportieren? (KVS)
-      reverse: true,            // darf vom Netz laden? (KVS)
+      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
+      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
       maxInputPower: 2400,       // max charge power from grid (W)
-      maxOutput: 800          // max discharge/export power (W)
+      maxOutput: 800,          // max discharge/export power (W)
+      
+      dryRun: false              // only simulation; true = read + calculate only, never write
+    },
+    {
+      ip: "192.168.178.143",    // Zendure IP address
+      label: "Fatamorgana",     // short name, used in logs/messages
+
+      minSoc: 15,               
+      maxSoc: 100,              
+      dischargeAllowed: false,  
+      reverse: true,            
+      maxInputPower: 1200,      
+      maxOutput: 800,           
+      dryRun: true              
     },
   ],
 // ------------------------------------------------------------------
@@ -156,6 +170,7 @@ let KVS_MATCH = "zdmc_*";
 let state = {
   gridPower: 0,
   smoothedOutput: null,
+  smoothedCharge: null,
   busy: false,
   watchdogTimer: null,
 
@@ -818,6 +833,7 @@ function calculate(myCycle) {
 
   let n = CONFIG.devices.length;
   let sumZen = 0;
+  let sumZenReverse = 0;
   let availableCount = 0;
 
   let countedIps = {};
@@ -828,6 +844,11 @@ function calculate(myCycle) {
 
       if (!countedIps[ip]) {
         sumZen += state.devices[i].zenPower;
+
+        if (CONFIG.devices[i].reverse) {
+          sumZenReverse += state.devices[i].zenPower;
+        }
+
         countedIps[ip] = true;
       }
 
@@ -850,7 +871,18 @@ function calculate(myCycle) {
       state.smoothedOutput + CONFIG.dampingFactor * (raw - state.smoothedOutput);
   }
 
-  let target = Math.round(state.smoothedOutput);
+  let dischargeTarget = Math.round(state.smoothedOutput);
+
+  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
+
+  if (state.smoothedCharge === null) {
+    state.smoothedCharge = rawCharge;
+  } else {
+    state.smoothedCharge =
+      state.smoothedCharge + CONFIG.dampingFactor * (rawCharge - state.smoothedCharge);
+  }
+
+  let chargeTarget = Math.round(state.smoothedCharge);
 
   let anyReverseCapable = false;
 
@@ -860,31 +892,41 @@ function calculate(myCycle) {
     }
   }
 
-  let output;
+  let chargeOutput = zeroOutputs();
+  let chargeExclude = {};
 
-  if (target >= 0) {
-    let alreadyDischarging = sumZen > 0;
+  if (anyReverseCapable) {
+    let alreadyChargingRev = sumZenReverse < 0;
 
-    if (!alreadyDischarging && target < CONFIG.dischargeStartupPower) {
-      output = zeroOutputs();
-    } else {
-      output = distributeDischarge(target);
+    if (chargeTarget < 0 &&
+        (alreadyChargingRev || chargeTarget <= (CONFIG.reverseStartupPower * -1))) {
+      chargeOutput = distributeCharge(chargeTarget);
+
+      for (let i = 0; i < n; i++) {
+        if (chargeOutput[i] !== 0) chargeExclude[i] = true;
+      }
     }
-  } else if (!anyReverseCapable) {
-    output = zeroOutputs();
+  }
+
+  let dischargeOutput;
+  let alreadyDischarging = sumZen > 0;
+
+  if (dischargeTarget >= 0 &&
+      (alreadyDischarging || dischargeTarget >= CONFIG.dischargeStartupPower)) {
+    dischargeOutput = distributeDischarge(dischargeTarget, chargeExclude);
   } else {
-    let alreadyCharging = sumZen < 0;
+    dischargeOutput = zeroOutputs();
+  }
 
-    if (!alreadyCharging && target > (CONFIG.reverseStartupPower * -1)) {
-      output = zeroOutputs();
-    } else {
-      output = distributeCharge(target);
-    }
+  let output = [];
+  for (let i = 0; i < n; i++) {
+    output[i] = chargeOutput[i] !== 0 ? chargeOutput[i] : dischargeOutput[i];
   }
 
   print(
     "Grid: " + state.gridPower + " W | Summe Geraete: " + sumZen +
-    " W | Kombiniertes Ziel (gedaempft): " + target + " W"
+    " W (netzladefaehig: " + sumZenReverse + " W)" +
+    " | Ziel Entladen: " + dischargeTarget + " W | Ziel Laden: " + chargeTarget + " W"
   );
 
   applyOutputs(output, myCycle);
@@ -965,7 +1007,7 @@ function pickStickyDevice(weight, active, selector) {
   return selector.active;
 }
 
-function computeDischargeWeights() {
+function computeDischargeWeights(exclude) {
   let n = CONFIG.devices.length;
   let weight = [];
   let active = [];
@@ -974,7 +1016,8 @@ function computeDischargeWeights() {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
-    if (!ds.available || cfg.dischargeAllowed === false || ds.socLimit === 2) {
+    if (!ds.available || cfg.dischargeAllowed === false || ds.socLimit === 2 ||
+        (exclude && exclude[i])) {
       weight[i] = 0;
       active[i] = false;
       continue;
@@ -1159,8 +1202,8 @@ function waterFillCharge(target, weight, active) {
   return output;
 }
 
-function distributeDischarge(target) {
-  let weights = computeDischargeWeights();
+function distributeDischarge(target, exclude) {
+  let weights = computeDischargeWeights(exclude);
   let weight = weights.weight;
   let active = weights.active;
 
@@ -1302,7 +1345,8 @@ function applyOutputs(output, myCycle) {
       " | socLimit " + ds.socLimit +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
       " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
-      (plan !== rawPlan ? " [Cooldown haelt Standby]" : "")
+      (plan !== rawPlan ? " [Cooldown haelt Standby]" : "") +
+      (cfg.dryRun ? " [DRYRUN - wird nicht geschrieben]" : "")
     );
 
     if (!ds.available) continue;
@@ -1312,6 +1356,17 @@ function applyOutputs(output, myCycle) {
         ds.acMode === plan.acMode &&
         ds.smartMode === plan.smartMode) {
       continue; // Wert/acMode/smartMode unveraendert
+    }
+
+    if (cfg.dryRun) {
+      updateRealDirection(ds, plan.acMode, plan.outputLimit, plan.inputLimit);
+      ds.acMode = plan.acMode;
+      ds.outputLimit = signedPower;
+      ds.smartMode = plan.smartMode;
+
+      print("  " + cfg.label + ": [DRYRUN] wuerde schreiben: " + signedPower +
+        " W " + (signedPower >= 0 ? "(Export)" : "(Laden vom Netz)"));
+      continue;
     }
 
     toWrite[toWrite.length] = i;
@@ -1448,6 +1503,15 @@ function syncSocLimitsDevice(index, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
 
+  if (cfg.dryRun) {
+    print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
+
+    // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
+    // aufeinanderfolgenden dryRun-Geraeten wuerde sich syncSocLimitsAll()
+    Timer.set(0, false, callback);
+    return;
+  }
+
   httpGet(
 
     "http://" + cfg.ip + "/properties/report",
@@ -1543,7 +1607,8 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     "%, maxOutput " + cfg.maxOutput + " W, Laden vom Netz " +
     (cfg.reverse
       ? ("ja (maxInput " + cfg.maxInputPower + " W, maxSoc " + cfg.maxSoc + "%)")
-      : "nein");
+      : "nein") +
+    (cfg.dryRun ? "  [DRYRUN]" : "");
 }
 
 bannerLines[bannerLines.length] = "Grid source: " + CONFIG.gridSource +

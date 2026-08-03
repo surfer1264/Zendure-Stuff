@@ -1,16 +1,30 @@
-# Chamglog 3.0.1
-## 1. dryRun-Feature komplett entfernt
+# Chamglog 2.3.1
 
-**Hintergrund**: Seicher zur Laufzeit sparen
+ZIEL: Bug-Behebung von #52 und #56
 
-Kein **dryRun-Feld** mehr in der Geräte-Konfiguration
-applyOutputs(): Der komplette DRYRUN-Zweig ist weg – vorher wurde bei cfg.dryRun === true nur simuliert (ds.acMode/ds.outputLimit intern aktualisiert, aber kein HTTP-Write ausgeführt). Jetzt landet jedes Gerät ohne Ausnahme in toWrite und wird tatsächlich geschrieben.
-syncSocLimitsDevice(): Der DRYRUN-Skip beim SoC-Grenzwert-Sync ist ebenfalls weg – minSoc/maxSoc werden jetzt beim Start immer ans Gerät geschrieben.
-Print-Ausgaben: „[DRYRUN - wird nicht geschrieben]" (Vorschau) und „[DRYRUN]" (Banner-Zeile) sind entfernt.
+1. **Neue Variable `sumZenReverse`** – zählt beim Einlesen der Geräte zusätzlich zur bisherigen `sumZen` (alle Geräte) eine zweite Summe **nur** für Geräte mit `reverse:true`.
 
-➡️ Praktisch heißt das: Es gibt in 3.0.1 keine Möglichkeit mehr, den Regler im reinen Simulationsmodus laufen zu lassen, ohne dass tatsächlich ans Gerät geschrieben wird. Wer testen will, muss das jetzt anders absichern (z. B. übers Netzwerk isolieren oder Geräte-IP auf etwas Ungefährliches zeigen lassen).
 
-Sonst keine Logikänderungen
+2. **Zwei getrennte Zielsignale statt einem:**
+   ```js
+   dischargeTarget = gridPower + sumZen          // wie bisher, unveraendert
+   chargeTarget     = gridPower + sumZenReverse   // NEU
+   ```
+   Dazu eine zweite, eigene Glättung (`state.smoothedCharge` statt nur `state.smoothedOutput`).
+
+3. **`calculate()` berechnet jetzt beide Pools im selben Zyklus** statt sich per `if/else` für genau eine Richtung zu entscheiden:
+   - Lade-Pool zuerst (`distributeCharge(chargeTarget)`), Geräte die dabei laden landen in `chargeExclude`
+   - Entlade-Pool danach (`distributeDischarge(dischargeTarget, chargeExclude)`) – **mit** dem neuen zweiten Parameter, der die gerade ladenden Geräte ausschließt
+   - Ergebnis wird gemerged: `output[i] = chargeOutput[i] || dischargeOutput[i]`
+
+4. **`computeDischargeWeights()` und `distributeDischarge()`** bekommen dafür einen neuen optionalen `exclude`-Parameter.
+
+**Effekt:** Ein netzladefähiges Gerät (`reverse:true`) kann jetzt im selben Zyklus laden, während andere Geräte (`reverse:false`, z.B. PV-gekoppelte Entlader) unverändert weiter exportieren – vorher hat der jeweils "verlierende" Zweig alle Geräte per `zeroOutputs()` auf 0 gezwungen.
+
+**Sonst nichts geändert:** `concentrateBelow`/`spreadAbove`, SOC-Balancing, Cooldown, socLimit-Handling, KVS-Logik – alles 1:1 wie in 2.3.0. Bei einer reinen "alle Geräte `reverse:true`"-Flotte ist `sumZenReverse === sumZen`, also verhält sich 2.3.1 dort exakt wie 2.3.0 (kein Regressionsrisiko).
+
+Kleiner Hinweis am Rand: Falls du die Datei so einsetzen willst, würde ich noch einen abschließenden Zeilenumbruch ergänzen (nicht funktional relevant, aber sauberer für Diffs/Editoren).
+
 
 # ChangeLog 2.3.0
 ## 1. SOC-Sperre kommt jetzt vom Gerät (`socLimit`) statt lokal berechnet
