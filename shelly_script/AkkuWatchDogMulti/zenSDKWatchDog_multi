@@ -14,7 +14,7 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.2 AkkuWatchDog (no-retry, packs-leak-fix)",
+  version: "1.2.1 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
@@ -307,6 +307,15 @@ function httpGet(url, callback) {
   Shelly.call("HTTP.GET", { url: url, timeout: CONFIG.httpTimeout }, callback);
 }
  
+// Schuetzt vor NaN: manche Geraetemodelle (z.B. Pro-Varianten mit mehreren
+// Packs) liefern einzelne Felder nicht als einfache Zahl, sondern z.B. als
+// Array/Objekt/leeren String. Die bisherigen "!== null"-Pruefungen lassen
+// das durch (undefined/NaN sind beide "!== null"), und ein spaeterer
+// .toFixed()-Aufruf auf NaN bringt mJS mit "Too much recursion" zum Absturz.
+function isNum(v) {
+  return typeof v === "number" && !isNaN(v) && isFinite(v);
+}
+ 
 // ==================== WARN-PRUEFUNGEN (globale Schwellen, pro Geraet ausgewertet) ====================
  
 function checkSocFull(index) {
@@ -327,7 +336,7 @@ function checkHyperTemp(index) {
   let ds = state.devices[index];
   let cfg = CONFIG.devices[index];
  
-  if (ds.hyperTemp === null) return;
+  if (!isNum(ds.hyperTemp)) return;
  
   if (ds.hyperTemp > CONFIG.tempWarn) {
     if (!ds.hyperTempMsgSent) {
@@ -380,7 +389,14 @@ function processDeviceData(index, data) {
   }
  
   if (payload.hyperTmp !== undefined) {
-    ds.hyperTemp = (payload.hyperTmp - 2731) / 10;
+    let ht = (payload.hyperTmp - 2731) / 10;
+
+    if (isNum(ht)) {
+      ds.hyperTemp = ht;
+    } else if (CONFIG.debug) {
+      print("DEBUG " + cfg.label + ": hyperTmp nicht numerisch verwertbar (Rohwert: " +
+        JSON.stringify(payload.hyperTmp) + ") - ignoriert, alter Wert bleibt stehen");
+    }
   }
  
   let minVol = null;
@@ -410,10 +426,10 @@ function processDeviceData(index, data) {
         maxT: prev ? prev.maxT : undefined
       };
  
-      if (pack.maxVol !== undefined) entry.maxV = pack.maxVol / 100;
-      if (pack.socLevel !== undefined) entry.soc = pack.socLevel;
-      if (pack.maxTemp !== undefined) entry.maxT = (pack.maxTemp - 2731) / 10;
-      if (pack.minVol !== undefined) entry.minV = pack.minVol / 100;
+      if (pack.maxVol !== undefined && isNum(pack.maxVol / 100)) entry.maxV = pack.maxVol / 100;
+      if (pack.socLevel !== undefined && isNum(pack.socLevel)) entry.soc = pack.socLevel;
+      if (pack.maxTemp !== undefined && isNum((pack.maxTemp - 2731) / 10)) entry.maxT = (pack.maxTemp - 2731) / 10;
+      if (pack.minVol !== undefined && isNum(pack.minVol / 100)) entry.minV = pack.minVol / 100;
  
       newPacks[sn] = entry;
       newLowVoltMsgSent[sn] = ds.lowVoltMsgSent[sn] || false;
@@ -530,8 +546,8 @@ function deviceValues(index) {
   let ds = state.devices[index];
 
   let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
-  let tempStr = (ds.available && ds.hyperTemp !== null) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
-  let volStr = (ds.available && ds.minVol !== null) ? (ds.minVol.toFixed(2) + "V") : "n/a";
+  let tempStr = (ds.available && isNum(ds.hyperTemp)) ? (ds.hyperTemp.toFixed(1) + "grd") : "n/a";
+  let volStr = (ds.available && isNum(ds.minVol)) ? (ds.minVol.toFixed(2) + "V") : "n/a";
 
   return socStr + ", " + tempStr + ", " + volStr;
 }
