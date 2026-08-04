@@ -1,12 +1,16 @@
 # Changelog 2.3.1
 
+
+**Effekt:** Ein netzladefähiges Gerät (`reverse:true`) kann jetzt im selben Zyklus laden, während andere Geräte (`reverse:false`, z.B. PV-gekoppelte Entlader) unverändert weiter exportieren – vorher hat der jeweils "verlierende" Zweig alle Geräte per `zeroOutputs()` auf 0 gezwungen.
+
+**Sonst nichts geändert:** `concentrateBelow`/`spreadAbove`, SOC-Balancing, Cooldown, socLimit-Handling, KVS-Logik – alles 1:1 wie in 2.3.0. Bei einer reinen "alle Geräte `reverse:true`"-Flotte ist `sumZenReverse === sumZen`, also verhält sich 2.3.1 dort exakt wie 2.3.0 (kein Regressionsrisiko).
+
 **Adressierte Bugs:**
 * https://github.com/surfer1264/Zendure-Stuff/issues/56
 * https://github.com/surfer1264/Zendure-Stuff/issues/52
 
 
 1. **Neue Variable `sumZenReverse`** – zählt beim Einlesen der Geräte zusätzlich zur bisherigen `sumZen` (alle Geräte) eine zweite Summe **nur** für Geräte mit `reverse:true`.
-
 
 2. **Zwei getrennte Zielsignale statt einem:**
    ```js
@@ -22,11 +26,6 @@
 
 4. **`computeDischargeWeights()` und `distributeDischarge()`** bekommen dafür einen neuen optionalen `exclude`-Parameter.
 
-**Effekt:** Ein netzladefähiges Gerät (`reverse:true`) kann jetzt im selben Zyklus laden, während andere Geräte (`reverse:false`, z.B. PV-gekoppelte Entlader) unverändert weiter exportieren – vorher hat der jeweils "verlierende" Zweig alle Geräte per `zeroOutputs()` auf 0 gezwungen.
-
-**Sonst nichts geändert:** `concentrateBelow`/`spreadAbove`, SOC-Balancing, Cooldown, socLimit-Handling, KVS-Logik – alles 1:1 wie in 2.3.0. Bei einer reinen "alle Geräte `reverse:true`"-Flotte ist `sumZenReverse === sumZen`, also verhält sich 2.3.1 dort exakt wie 2.3.0 (kein Regressionsrisiko).
-
-Kleiner Hinweis am Rand: Falls du die Datei so einsetzen willst, würde ich noch einen abschließenden Zeilenumbruch ergänzen (nicht funktional relevant, aber sauberer für Diffs/Editoren).
 
 # Changelog 3.0.1 (VERWORFEN)
 ## 1. dryRun-Feature komplett entfernt
