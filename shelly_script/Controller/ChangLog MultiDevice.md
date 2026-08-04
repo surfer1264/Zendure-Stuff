@@ -1,6 +1,6 @@
 # Changelog 2.3.1
 
-
+**Adressiertew Bugs:**
 https://github.com/surfer1264/Zendure-Stuff/issues/56
 https://github.com/surfer1264/Zendure-Stuff/issues/52
 
