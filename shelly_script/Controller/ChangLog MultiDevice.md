@@ -36,6 +36,8 @@ Lasttests zeigen aber Lauffähigkeit auf
 * Shelly 1PM Gen4
 * Shelly Plus1PM (Gen2?)
 
+3.0.1 entspricht ansonsten inhaltlich der 2.3.0
+
 # ChangeLog 2.3.0
 ## 1. SOC-Sperre kommt jetzt vom Gerät (`socLimit`) statt lokal berechnet
 - **Alt:** `ds.atMaxSoc = (ds.soc >= cfg.maxSoc)` – lokal aus dem konfigurierten `maxSoc` berechnet.
