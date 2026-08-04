@@ -25,6 +25,16 @@ ZIEL: Bug-Behebung von #52 und #56
 
 Kleiner Hinweis am Rand: Falls du die Datei so einsetzen willst, würde ich noch einen abschließenden Zeilenumbruch ergänzen (nicht funktional relevant, aber sauberer für Diffs/Editoren).
 
+# Changelog 3.0.1 (VERWORFEN)
+## 1. dryRun-Feature komplett entfernt
+
+**Hintergrund**: Seicher zur Laufzeit sparen
+
+Lasttests zeigen aber Lauffähigkeit auf 
+* Shelly 3EM Pro
+* Shelly 3EM-63
+* Shelly 1PM Gen4
+* Shelly Plus1PM (Gen2?)
 
 # ChangeLog 2.3.0
 ## 1. SOC-Sperre kommt jetzt vom Gerät (`socLimit`) statt lokal berechnet
