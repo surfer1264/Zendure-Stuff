@@ -14,11 +14,11 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.2.2 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard)",
+  version: "1.2.3 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard, stack-fix)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
-    { ip: "192.168.178.143", label: "Fatamorgana", enabled: false },
+    { ip: "192.168.178.143", label: "SF2400",     enabled: false },
   ],
  
   // ------------------------------------------------------------------
@@ -523,9 +523,28 @@ function pollDevice(index, myCycle, callback) {
   });
 }
  
+// STACK-FIX: Der Basisfall (index >= length) schliesst den Zyklus jetzt IMMER
+// ueber einen Timer.set(0, ...)-Yield ab, statt callback() direkt aufzurufen.
+// Grund: pollDevice() beendet seinen Callback synchron innerhalb der
+// HTTP.GET-Antwort des zuletzt abgefragten Geraets. War dieses letzte Geraet
+// aktiv (kein "enabled: false"-Yield mehr danach), lief die gesamte Kette
+// HTTP-Callback -> onDeviceHttpResult -> processDeviceData -> callback() ->
+// readAllDevices() -> onCycleComplete() -> printDeviceSummary() -> deviceValues()
+// synchron auf EINEM nativen Stack durch - das hat bei mJS (sehr kleiner
+// nativer Stack) zu "Too much recursion" gefuehrt, sobald kein deaktiviertes
+// Geraet mehr als "zufaelliger" Yield-Punkt am Ende der Liste stand.
+// Mit dem Timer.set(0, ...) hier startet der Zyklus-Abschluss immer auf
+// einem frischen, flachen Stack - unabhaengig von Geraeteanzahl und davon,
+// ob das letzte Geraet aktiv oder deaktiviert ist.
 function readAllDevices(index, myCycle, callback) {
   if (index >= CONFIG.devices.length) {
-    callback();
+    Timer.set(0, false, function () {
+      if (myCycle !== state.cycleId) {
+        debugStale("readAllDevices(complete)", myCycle);
+        return;
+      }
+      callback();
+    });
     return;
   }
  
