@@ -1,6 +1,8 @@
 # Changelog 2.3.1
 
-ZIEL: Bug-Behebung von #52 und #56
+
+https://github.com/surfer1264/Zendure-Stuff/issues/56
+https://github.com/surfer1264/Zendure-Stuff/issues/52
 
 
 1. **Neue Variable `sumZenReverse`** – zählt beim Einlesen der Geräte zusätzlich zur bisherigen `sumZen` (alle Geräte) eine zweite Summe **nur** für Geräte mit `reverse:true`.
