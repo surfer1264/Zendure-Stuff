@@ -32,7 +32,7 @@ Geht von einem offenen, unauthentifizierten lokalen Netz aus – kein Basic/Dige
 ---
 
 
-# 2) Shelly WebSocket Log Grabber – Kurzanleitung
+# 2) Shelly WebSocket Log Grabber
 
 Diese Anleitung beschreibt, wie Sie den Live-Debug-Log-Stream eines Shelly-Geräts (Gen2+) per WebSocket abgreifen und in eine Log-Datei speichern.
 
