@@ -31,15 +31,14 @@ Geht von einem offenen, unauthentifizierten lokalen Netz aus – kein Basic/Dige
 
 ---
 
-# 2. Shelly Logger
 
-# Shelly WebSocket Log Grabber – Kurzanleitung
+# 2) Shelly WebSocket Log Grabber – Kurzanleitung
 
 Diese Anleitung beschreibt, wie Sie den Live-Debug-Log-Stream eines Shelly-Geräts (Gen2+) per WebSocket abgreifen und in eine Log-Datei speichern.
 
 ---
 
-## 1. Vorbereitung & Installation
+## Vorbereitung & Installation
 
 Das Skript benötigt das Python-Modul `websocket-client`. Installieren Sie dieses über das Terminal / die Eingabeaufforderung:
 
@@ -49,7 +48,7 @@ pip install websocket-client
 
 ---
 
-## 2. Konfiguration
+## Konfiguration
 
 Öffnen Sie die Datei `shelly_log_grabber.py` in einem Texteditor und passen Sie den Abschnitt **KONFIGURATION** am Anfang der Datei an:
 
@@ -73,7 +72,7 @@ RECONNECT_DELAY = 5            # Pause vor Wiederverbindung (in Sekunden)
 
 ---
 
-## 3. Skript ausführen
+## Skript ausführen
 
 Starten Sie das Skript im Terminal:
 
@@ -93,7 +92,7 @@ Starte Shelly Log Grabber für 192.168.178.117...
 
 ---
 
-## 4. Beenden
+## Beenden
 
 * Drücken Sie **`Strg + C`** im Terminal, um den Log-Grabber sauber zu beenden.
 * Die gesammelten Logs finden Sie anschließend in der Datei **`shelly_debug.log`** im selben Verzeichnis
