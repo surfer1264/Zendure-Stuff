@@ -1,5 +1,7 @@
 # 1.) Shelly Script-Status-Poller
 
+Diese Anleitung beschreibt, wie Sie den Status zu einem Shelly-Script abgreifen und in eine Log-Datei speichern können.
+
 Fragt periodisch `Script.GetStatus` von einem oder mehreren Shelly-Geräten/Script-IDs ab
 und schreibt jede Messung als Zeile in eine Semikolon-CSV.
 
