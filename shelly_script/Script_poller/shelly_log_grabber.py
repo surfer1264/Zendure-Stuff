@@ -7,23 +7,21 @@ Verbindet sich per WebSocket mit dem Live-Debug-Log eines Shelly (Gen2+)
 
 Voraussetzung:
     pip install websocket-client
-
-Aufruf:
-    python3 shelly_log_grabber.py
 """
 
 import json
-import os
+import re
 import sys
 import time
 from datetime import datetime
 import websocket
 
 # ==============================================================================
-# KONFIGURATION (Hier IP-Adresse und Script-ID anpassen)
+# KONFIGURATION
 # ==============================================================================
 SHELLY_IP = "192.168.178.117"  # IP-Adresse des Shelly
-TARGET_SCRIPT_ID = 8           # Script-ID zum Filtern (None setzen für ALLE Logs)
+TARGET_SCRIPT_ID = 8           # Script-ID zum Filtern (None für ALLE Skripte)
+ONLY_SCRIPT_LOGS = True        # True = Systemmeldungen ausblenden, NUR Skript-Logs zeigen
 
 LOG_TO_FILE = True             # In Datei speichern? (True / False)
 LOG_FILE_PATH = "shelly_debug.log"  # Dateiname für das Log
@@ -46,35 +44,47 @@ def write_log_to_file(text):
         print(f"Fehler beim Schreiben in Logdatei: {e}")
 
 
-def on_message(ws, message):
-    """Wird aufgerufen, wenn eine neue Log-Nachricht vom Shelly empfangen wird."""
-    ts = format_timestamp()
-
+def parse_and_filter(message):
+    """Filtert eingehende Nachrichten nach System/Skript-Status und Script-ID."""
     try:
         data = json.loads(message)
     except json.JSONDecodeError:
-        # Fallback, falls die Nachricht reiner Text/kein JSON ist
-        log_line = f"[{ts}] {message}"
-        print(log_line)
-        write_log_to_file(log_line)
-        return
+        data = message
 
-    # Extraktion der Nachricht und der Script-ID aus dem JSON
     log_text = ""
-    script_id = None
+    detected_script_id = None
 
     if isinstance(data, dict):
-        # Shelly Gen2/Gen3 liefert Logs meist in 'msg' oder 'text'
         log_text = data.get("msg") or data.get("text") or json.dumps(data, ensure_ascii=False)
-        script_id = data.get("script_id") or data.get("sid")
+        detected_script_id = data.get("script_id") or data.get("sid")
     else:
         log_text = str(data)
 
-    # Filterung nach Script-ID
-    if TARGET_SCRIPT_ID is not None and script_id is not None:
-        if str(script_id) != str(TARGET_SCRIPT_ID):
-            return  # Ignorieren, wenn es von einem anderen Skript stammt
+    # Versuch, Script-ID aus dem Text-Präfix zu lesen (z. B. "shelly_notification:108 script:8 ...")
+    if detected_script_id is None:
+        match = re.search(r"script[:#](\d+)", log_text, re.IGNORECASE)
+        if match:
+            detected_script_id = int(match.group(1))
 
+    # 1. Check: Nur Skript-Logs erlauben?
+    is_script_msg = (detected_script_id is not None) or ("script" in log_text.lower())
+    if ONLY_SCRIPT_LOGS and not is_script_msg:
+        return None  # Systemmeldung verworfen
+
+    # 2. Check: Auf spezifische Script-ID filtern?
+    if TARGET_SCRIPT_ID is not None:
+        if detected_script_id is not None and int(detected_script_id) != int(TARGET_SCRIPT_ID):
+            return None  # Gehört zu einem anderen Skript
+
+    return log_text
+
+
+def on_message(ws, message):
+    log_text = parse_and_filter(message)
+    if log_text is None:
+        return  # Gefiltert
+
+    ts = format_timestamp()
     formatted_msg = f"[{ts}] {log_text}"
     print(formatted_msg)
     write_log_to_file(formatted_msg)
@@ -90,10 +100,11 @@ def on_close(ws, close_status_code, close_msg):
 
 def on_open(ws):
     print(f"[{format_timestamp()}] ERFOLGREICH VERBUNDEN mit ws://{SHELLY_IP}/debug/log")
+    print(f"  -> Systemmeldungen ausblenden: {'JA' if ONLY_SCRIPT_LOGS else 'NEIN'}")
     if TARGET_SCRIPT_ID is not None:
-        print(f"  -> Filter aktiv: Zeige nur Logs von Script ID {TARGET_SCRIPT_ID}")
+        print(f"  -> Filter aktiv: Nur Nachrichten von Script ID {TARGET_SCRIPT_ID}")
     else:
-        print("  -> Zeige ALLE System- & Script-Logs")
+        print("  -> Zeige Logs aller Skripte")
     print("-" * 60)
 
 
