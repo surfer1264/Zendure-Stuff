@@ -6,6 +6,9 @@ Der **Websocket-Log-Grabber** holt das Script-Log aus dem Shelly raus, um über 
 
 Grundvoraussetzung ist eine Python-Umgebung. Die existiert defacto auf jedem Computer und Betriebssystem oder lässt sich sehr einfach nachinstallieren.
 
+Ladet Euch die Dateien hier in EIN Verzeichnis auf Eurem Computer
+* passt die CMD-Files für Euch an (Windows-Nutzer)
+* konfiguriert die `config.json und die `shelly_log_grabber.py`
 
 # 1.) Shelly Script-Status-Poller
 
