@@ -14,7 +14,7 @@ print("Starte AkkuVolt-Watchdog Multi-Device (Hub REST-API) - bitte vorsichtig b
 // ==================== KONFIGURATION ====================
  
 let CONFIG = {
-  version: "1.2.3 AkkuWatchDog (no-retry, packs-leak-fix, NaN-guard, stack-fix)",
+  version: "1.2.4 AkkuWatchDog (minor fix label)",
  
   devices: [
     { ip: "192.168.178.143", label: "SF2400",     enabled: true },
@@ -249,7 +249,7 @@ function debugStale(where, myCycle) {
 function first6(label) {
   if (!label) return "??????";
  
-  return label.substr(0, 6);
+  return label.substr(0, 9);
 }
  
 // ==================== ZYKLUS-SPERRE / WATCHDOG (Muster aus zerooutput_multi_kvs.js) ====================
@@ -631,7 +631,7 @@ function sendDigest(headerText) {
 // zusaetzlicher Request wird ausgeloest.
  
 function sendAstroStatus(type) {
-  let header = (type === "sunset") ? "🌇 Abend-Update (Sonnenuntergang):" : "🌅 Morgen-Update:";
+  let header = (type === "sunset") ? "🌇 Abend-Update:" : "🌅 Morgen-Update:";
   sendDigest(header);
 }
  
