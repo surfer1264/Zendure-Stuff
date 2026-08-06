@@ -7,8 +7,7 @@ Verbindet sich per WebSocket mit dem Live-Debug-Log eines Shelly (Gen2+)
 
 Voraussetzung:
     pip install websocket-client
-
-Version 1.0.0    
+V2.0.0
 """
 
 import json
@@ -22,11 +21,19 @@ import websocket
 # KONFIGURATION
 # ==============================================================================
 SHELLY_IP = "192.168.178.117"  # IP-Adresse des Shelly
-TARGET_SCRIPT_ID = 8           # Script-ID zum Filtern (None für ALLE Skripte)
+
+# Script-IDs zum Filtern. Beispiele:
+#   [6]        -> nur Script 6
+#   [6, 8, 12] -> Scripts 6, 8 und 12 (beliebig viele)
+#   None       -> keine ID-Filterung, alle Skripte durchlassen
+TARGET_SCRIPT_IDS = [6, 8]
 ONLY_SCRIPT_LOGS = True        # True = Systemmeldungen ausblenden, NUR Skript-Logs zeigen
 
 LOG_TO_FILE = True             # In Datei speichern? (True / False)
-LOG_FILE_PATH = "shelly_debug.log"  # Dateiname für das Log
+LOG_FILE_PATH = "shelly_debug.log"  # Dateiname, falls SEPARATE_LOG_FILES = False
+SEPARATE_LOG_FILES = False     # True = eigene Datei je Script-ID (shelly_debug_script<ID>.log)
+SHOW_SCRIPT_PREFIX = True      # True = "[Script 6]" vor jede Zeile schreiben (sinnvoll bei mehreren IDs)
+
 AUTO_RECONNECT = True          # Bei Verbindungsabbruch automatisch neu verbinden?
 RECONNECT_DELAY = 5            # Wartezeit vor Wiederverbindung in Sekunden
 
@@ -45,18 +52,26 @@ def format_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def write_log_to_file(text):
+def write_log_to_file(text, script_id=None):
     if not LOG_TO_FILE:
         return
+    if SEPARATE_LOG_FILES and script_id is not None:
+        base, dot, ext = LOG_FILE_PATH.rpartition(".")
+        path = f"{base}_script{script_id}.{ext}" if dot else f"{LOG_FILE_PATH}_script{script_id}"
+    else:
+        path = LOG_FILE_PATH
     try:
-        with open(LOG_FILE_PATH, "a", encoding="utf-8") as f:
+        with open(path, "a", encoding="utf-8") as f:
             f.write(text + "\n")
     except Exception as e:
         print(f"Fehler beim Schreiben in Logdatei: {e}")
 
 
 def parse_and_filter(message):
-    """Filtert eingehende Nachrichten nach System/Skript-Status und Script-ID."""
+    """Filtert eingehende Nachrichten nach System/Skript-Status und Script-ID.
+
+    Rückgabe: (log_text, detected_script_id) oder (None, None) falls gefiltert.
+    """
     try:
         data = json.loads(message)
     except json.JSONDecodeError:
@@ -96,28 +111,29 @@ def parse_and_filter(message):
 
     # 1. Check: Nur Skript-Logs erlauben?
     if ONLY_SCRIPT_LOGS and not is_script_msg:
-        return None  # Systemmeldung verworfen
+        return None, None  # Systemmeldung verworfen
 
-    # 2. Check: Auf spezifische Script-ID filtern?
-    if TARGET_SCRIPT_ID is not None:
-        if detected_script_id is not None and int(detected_script_id) != int(TARGET_SCRIPT_ID):
-            return None  # Gehört zu einem anderen Skript
+    # 2. Check: Auf eine Menge von Script-IDs filtern?
+    if TARGET_SCRIPT_IDS is not None:
+        if detected_script_id is not None and int(detected_script_id) not in TARGET_SCRIPT_IDS:
+            return None, None  # Gehört zu keinem der gewünschten Skripte
 
     if SHOW_FD_DEBUG:
         log_text = f"[fd={fd}] {log_text}"
 
-    return log_text
+    return log_text, detected_script_id
 
 
 def on_message(ws, message):
-    log_text = parse_and_filter(message)
+    log_text, script_id = parse_and_filter(message)
     if log_text is None:
         return  # Gefiltert
 
     ts = format_timestamp()
-    formatted_msg = f"[{ts}] {log_text}"
+    prefix = f"[Script {script_id}] " if (SHOW_SCRIPT_PREFIX and script_id is not None) else ""
+    formatted_msg = f"[{ts}] {prefix}{log_text}"
     print(formatted_msg)
-    write_log_to_file(formatted_msg)
+    write_log_to_file(formatted_msg, script_id)
 
 
 def on_error(ws, error):
@@ -131,8 +147,9 @@ def on_close(ws, close_status_code, close_msg):
 def on_open(ws):
     print(f"[{format_timestamp()}] ERFOLGREICH VERBUNDEN mit ws://{SHELLY_IP}/debug/log")
     print(f"  -> Systemmeldungen ausblenden: {'JA' if ONLY_SCRIPT_LOGS else 'NEIN'}")
-    if TARGET_SCRIPT_ID is not None:
-        print(f"  -> Filter aktiv: Nur Nachrichten von Script ID {TARGET_SCRIPT_ID}")
+    if TARGET_SCRIPT_IDS is not None:
+        ids = ", ".join(str(i) for i in TARGET_SCRIPT_IDS)
+        print(f"  -> Filter aktiv: Nur Nachrichten von Script ID(s) {ids}")
     else:
         print("  -> Zeige Logs aller Skripte")
     print("-" * 60)

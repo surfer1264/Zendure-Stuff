@@ -23,7 +23,7 @@ und
 das eigentliche Script `shelly_script_status_poller.py`.
 
 
-## Nutzung/Aufruf
+## Script ausführen
 
 ```bash
 # in einer Kommandozeile aufrufen
@@ -101,20 +101,37 @@ pip install websocket-client
 # ==============================================================================
 # KONFIGURATION
 # ==============================================================================
-SHELLY_IP = "192.168.178.117"  # IP-Adresse Ihres Shelly
-TARGET_SCRIPT_ID = 8           # Script-ID zum Filtern (None für ALLE Logs)
+SHELLY_IP = "192.168.178.117"  # IP-Adresse des Shelly
+
+# Script-IDs zum Filtern. Beispiele:
+#   [6]        -> nur Script 6
+#   [6, 8, 12] -> Scripts 6, 8 und 12 (beliebig viele)
+#   None       -> keine ID-Filterung, alle Skripte durchlassen
+TARGET_SCRIPT_IDS = [6, 8]
 ONLY_SCRIPT_LOGS = True        # True = Systemmeldungen ausblenden, NUR Skript-Logs zeigen
 
 LOG_TO_FILE = True             # In Datei speichern? (True / False)
-LOG_FILE_PATH = "shelly_debug.log"  # Ziel-Dateiname für das Log
-AUTO_RECONNECT = True          # Bei Abbrüchen automatisch neu verbinden
-RECONNECT_DELAY = 5            # Pause vor Wiederverbindung (in Sekunden)
+LOG_FILE_PATH = "shelly_debug.log"  # Dateiname, falls SEPARATE_LOG_FILES = False
+SEPARATE_LOG_FILES = False     # True = eigene Datei je Script-ID (shelly_debug_script<ID>.log)
+SHOW_SCRIPT_PREFIX = True      # True = "[Script 6]" vor jede Zeile schreiben (sinnvoll bei mehreren IDs)
+
+AUTO_RECONNECT = True          # Bei Verbindungsabbruch automatisch neu verbinden?
+RECONNECT_DELAY = 5            # Wartezeit vor Wiederverbindung in Sekunden
+
+# Shelly kennzeichnet jede Log-Zeile mit einem "fd"-Feld. Systemmeldungen
+# (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung)
+# laufen auf niedrigen fd-Werten. Echte print()/console.log()-Ausgaben
+# eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: fd = 100 + Script-ID
+# (bei dir z. B. Script 6 -> fd 106). Das ist nicht offiziell dokumentiert -
+# bitte einmal mit SHOW_FD_DEBUG=True verifizieren, ob es auf deiner Firmware stimmt.
+SCRIPT_FD_BASE = 100
+SHOW_FD_DEBUG = False           # True = fd-Wert in der Ausgabe mitloggen (zum Verifizieren)
 # ==============================================================================
 ```
 
 * **`SHELLY_IP`**: Die IPv4-Adresse des Shelly im lokalen Netz.
 * **`TARGET_SCRIPT_ID`**: 
-  * Geben Sie die ID ein (z. B. `8`), um nur Meldungen dieses einen Skripts anzuzeigen/zu speichern.
+  * Geben Sie die eine oder mehrere IDs ein (z. B. `8`), um nur Meldungen dieses einen Skripts anzuzeigen/zu speichern.
   * Tragen Sie `None` ein, um alle System- und Skript-Logs des Shelly zu erfassen.
 
 ---
@@ -129,13 +146,20 @@ python3 shelly_log_grabber.py
 
 ### Ausgabe-Beispiel:
 ```text
-Starte Shelly Log Grabber für 192.168.178.117...
-[2026-08-05 21:50:00] ERFOLGREICH VERBUNDEN mit ws://192.168.178.117/debug/log
-  -> Filter aktiv: Nur Nachrichten von Script ID 8
-------------------------------------------------------------
-[2026-08-05 21:50:05] Shelly-Script #8: Power consumption updated to 42.5W
-[2026-08-05 21:50:15] Shelly-Script #8: Loop cycle completed.
+[2026-08-06 13:43:27] [Script 8] Grid: 27.471 W | Summe Geraete: 0 W (netzladefaehig: 0 W) | Ziel Entladen: 18 W | Ziel Laden: 18 W
+[2026-08-06 13:43:27] [Script 8]   SF2400: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle)
+[2026-08-06 13:43:27] [Script 8]   Fatamorgana: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle) [DRYRUN - wird nicht geschrieben]
+[2026-08-06 13:43:32] [Script 8] Grid: -30.516 W | Summe Geraete: 0 W (netzladefaehig: 0 W) | Ziel Entladen: -11 W | Ziel Laden: -11 W
+[2026-08-06 13:43:32] [Script 8]   SF2400: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle)
+[2026-08-06 13:43:32] [Script 8]   Fatamorgana: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle) [DRYRUN - wird nicht geschrieben]
+[2026-08-06 13:43:35] [Script 8] Grid: 45.32 W | Summe Geraete: 0 W (netzladefaehig: 0 W) | Ziel Entladen: 22 W | Ziel Laden: 22 W
+[2026-08-06 13:43:35] [Script 8]   SF2400: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle)
+[2026-08-06 13:43:35] [Script 8]   Fatamorgana: SOC 36% | socLimit 0 | Ist 0 W | Soll 0 W | acMode 1 (Import/Idle) [DRYRUN - wird nicht geschrieben]
 ```
+
+## Testen
+unbedingt die geschriebenen Logfiles ansehen. Alle Shelly Versionen bringen so Ihre Eigenheiten mit sich.
+
 
 ---
 
