@@ -7,6 +7,8 @@ Verbindet sich per WebSocket mit dem Live-Debug-Log eines Shelly (Gen2+)
 
 Voraussetzung:
     pip install websocket-client
+
+Version 1.0.0    
 """
 
 import json
@@ -27,6 +29,15 @@ LOG_TO_FILE = True             # In Datei speichern? (True / False)
 LOG_FILE_PATH = "shelly_debug.log"  # Dateiname für das Log
 AUTO_RECONNECT = True          # Bei Verbindungsabbruch automatisch neu verbinden?
 RECONNECT_DELAY = 5            # Wartezeit vor Wiederverbindung in Sekunden
+
+# Shelly kennzeichnet jede Log-Zeile mit einem "fd"-Feld. Systemmeldungen
+# (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung)
+# laufen auf niedrigen fd-Werten. Echte print()/console.log()-Ausgaben
+# eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: fd = 100 + Script-ID
+# (bei dir z. B. Script 6 -> fd 106). Das ist nicht offiziell dokumentiert -
+# bitte einmal mit SHOW_FD_DEBUG=True verifizieren, ob es auf deiner Firmware stimmt.
+SCRIPT_FD_BASE = 100
+SHOW_FD_DEBUG = False           # True = fd-Wert in der Ausgabe mitloggen (zum Verifizieren)
 # ==============================================================================
 
 
@@ -52,22 +63,38 @@ def parse_and_filter(message):
         data = message
 
     log_text = ""
+    fd = None
     detected_script_id = None
 
     if isinstance(data, dict):
-        log_text = data.get("msg") or data.get("text") or json.dumps(data, ensure_ascii=False)
+        # Die eigentliche Nachricht steht im "data"-Feld (Shelly-Log-Format:
+        # {"ts":..., "level":2, "data":"<message>", "fd":N}). "msg"/"text"
+        # existieren in der Praxis nicht - das war der Grund, warum bisher
+        # das komplette JSON-Objekt ausgegeben wurde.
+        log_text = data.get("data") or data.get("msg") or data.get("text") \
+            or json.dumps(data, ensure_ascii=False)
+        fd = data.get("fd")
         detected_script_id = data.get("script_id") or data.get("sid")
     else:
         log_text = str(data)
 
-    # Versuch, Script-ID aus dem Text-Präfix zu lesen (z. B. "shelly_notification:108 script:8 ...")
-    if detected_script_id is None:
+    # fd-basierte Erkennung: fd >= SCRIPT_FD_BASE => Ausgabe eines laufenden
+    # Skripts (print()/console.log()). Niedrigere fd-Werte sind interne
+    # System-/Notification-Kanäle - auch wenn deren Text zufällig "script:N"
+    # enthält (z. B. CPU-Auslastungsmeldungen).
+    if detected_script_id is None and isinstance(fd, int) and fd >= SCRIPT_FD_BASE:
+        detected_script_id = fd - SCRIPT_FD_BASE
+
+    is_script_msg = detected_script_id is not None
+
+    # Fallback nur falls kein fd im Datensatz vorhanden ist
+    if fd is None and detected_script_id is None:
         match = re.search(r"script[:#](\d+)", log_text, re.IGNORECASE)
         if match:
             detected_script_id = int(match.group(1))
+            is_script_msg = True
 
     # 1. Check: Nur Skript-Logs erlauben?
-    is_script_msg = (detected_script_id is not None) or ("script" in log_text.lower())
     if ONLY_SCRIPT_LOGS and not is_script_msg:
         return None  # Systemmeldung verworfen
 
@@ -75,6 +102,9 @@ def parse_and_filter(message):
     if TARGET_SCRIPT_ID is not None:
         if detected_script_id is not None and int(detected_script_id) != int(TARGET_SCRIPT_ID):
             return None  # Gehört zu einem anderen Skript
+
+    if SHOW_FD_DEBUG:
+        log_text = f"[fd={fd}] {log_text}"
 
     return log_text
 
