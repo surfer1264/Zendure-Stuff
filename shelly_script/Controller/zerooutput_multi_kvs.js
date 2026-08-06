@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.3.1 KVS (dev2-charge-fix)",
+  version: "2.3.2 KVS (Fix#69)",
   
   devices: [
      {
@@ -845,7 +845,8 @@ function calculate(myCycle) {
       if (!countedIps[ip]) {
         sumZen += state.devices[i].zenPower;
 
-        if (CONFIG.devices[i].reverse) {
+        // FIX#69: Geraete, die aktuell socLimit===1 melden 
+        if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
         }
 
