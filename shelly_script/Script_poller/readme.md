@@ -8,7 +8,7 @@ Grundvoraussetzung ist eine Python-Umgebung. Die existiert defacto auf jedem Com
 
 Ladet Euch die Dateien hier in EIN Verzeichnis auf Eurem Computer
 * passt die CMD-Files für Euch an (Windows-Nutzer)
-* konfiguriert die `config.json und die `shelly_log_grabber.py`
+* konfiguriert die `config.json` und die `shelly_log_grabber.py`
 
 # 1.) Shelly Script-Status-Poller
 
