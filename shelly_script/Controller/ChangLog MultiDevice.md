@@ -3,8 +3,9 @@
 ## Konstellationen mit ≥2 reverse:true-Geräten (mit eigener PV)
 
 ### Fixed
-- `sumZenReverse` schloss Geräte mit `socLimit === 1` (Laden vom Netz gesperrt) bisher nicht aus. Dadurch konnte die unsteuerbare, PV-erzwungene Weiterausspeisung eines an seiner SOC-Grenze blockierten Speichers einen echten Ladebedarf bei anderen, noch ladefähigen Geräten maskieren – der Regler berechnete fälschlich weiter einen positiven Entlade-Zielwert, statt Laden auszulösen.
 - Betrifft Konstellationen mit ≥2 `reverse:true`-Geräten, bei denen mindestens eines direkt angeschlossene PV-Module hat.
+- `sumZenReverse` schloss Geräte mit `socLimit === 1` (Laden vom Netz gesperrt) bisher nicht aus. Dadurch konnte die unsteuerbare, PV-erzwungene Weiterausspeisung eines an seiner SOC-Grenze blockierten Speichers einen echten Ladebedarf bei anderen, noch ladefähigen Geräten maskieren – der Regler berechnete fälschlich weiter einen positiven Entlade-Zielwert, statt Laden auszulösen.
+
 
 ### Changed
 - `calculate()`: `sumZenReverse` prüft zusätzlich `state.devices[i].socLimit !== 1`, analog zur bereits bestehenden Filterung in `computeChargeWeights()`.
