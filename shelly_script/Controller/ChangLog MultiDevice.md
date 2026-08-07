@@ -15,7 +15,7 @@
 
 
 # Changelog 2.3.1
-
+## Konstellationen Mischung aus reverse:true- und reverse:false Geräten (keine Überschussannahme)
 
 **Effekt:** Ein netzladefähiges Gerät (`reverse:true`) kann jetzt im selben Zyklus laden, während andere Geräte (`reverse:false`, z.B. PV-gekoppelte Entlader) unverändert weiter exportieren – vorher hat der jeweils "verlierende" Zweig alle Geräte per `zeroOutputs()` auf 0 gezwungen.
 
