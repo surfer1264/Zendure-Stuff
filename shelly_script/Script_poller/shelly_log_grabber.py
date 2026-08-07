@@ -5,47 +5,58 @@ Shelly WebSocket Debug Log Grabber & Filter
 Verbindet sich per WebSocket mit dem Live-Debug-Log eines Shelly (Gen2+)
 über den Pfad ws://<HOST>/debug/log und filtert/schreibt die Logs.
 
+Konfiguration erfolgt ueber eine JSON-Datei (Standard: config.json im
+selben Verzeichnis), siehe shelly_log_grabber_config.json als Beispiel.
+
+Aufruf:
+    python3 shelly_log_grabber.py [--config PATH]
+
+    --config PATH   Pfad zur Config-Datei (Standard: config.json)
+
 Voraussetzung:
     pip install websocket-client
-V2.0.0
+V2.1.0
 """
 
+import argparse
 import json
+import os
 import re
 import sys
 import time
 from datetime import datetime
 import websocket
 
-# ==============================================================================
-# KONFIGURATION
-# ==============================================================================
-SHELLY_IP = "192.168.178.117"  # IP-Adresse des Shelly
+CONFIG = {}  # wird in main() per load_config() befuellt
 
-# Script-IDs zum Filtern. Beispiele:
-#   [6]        -> nur Script 6
-#   [6, 8, 12] -> Scripts 6, 8 und 12 (beliebig viele)
-#   None       -> keine ID-Filterung, alle Skripte durchlassen
-TARGET_SCRIPT_IDS = [6, 8]
-ONLY_SCRIPT_LOGS = True        # True = Systemmeldungen ausblenden, NUR Skript-Logs zeigen
 
-LOG_TO_FILE = True             # In Datei speichern? (True / False)
-LOG_FILE_PATH = "shelly_debug.log"  # Dateiname, falls SEPARATE_LOG_FILES = False
-SEPARATE_LOG_FILES = False     # True = eigene Datei je Script-ID (shelly_debug_script<ID>.log)
-SHOW_SCRIPT_PREFIX = True      # True = "[Script 6]" vor jede Zeile schreiben (sinnvoll bei mehreren IDs)
+def load_config(path):
+    if not os.path.isfile(path):
+        sys.exit(f"Config-Datei nicht gefunden: {path}")
 
-AUTO_RECONNECT = True          # Bei Verbindungsabbruch automatisch neu verbinden?
-RECONNECT_DELAY = 5            # Wartezeit vor Wiederverbindung in Sekunden
+    with open(path, "r", encoding="utf-8") as f:
+        try:
+            cfg = json.load(f)
+        except json.JSONDecodeError as e:
+            sys.exit(f"Config-Datei ist kein gueltiges JSON ({path}): {e}")
 
-# Shelly kennzeichnet jede Log-Zeile mit einem "fd"-Feld. Systemmeldungen
-# (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung)
-# laufen auf niedrigen fd-Werten. Echte print()/console.log()-Ausgaben
-# eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: fd = 100 + Script-ID
-# (bei dir z. B. Script 6 -> fd 106). Das ist nicht offiziell dokumentiert -
-# bitte einmal mit SHOW_FD_DEBUG=True verifizieren, ob es auf deiner Firmware stimmt.
-SCRIPT_FD_BASE = 100
-SHOW_FD_DEBUG = False           # True = fd-Wert in der Ausgabe mitloggen (zum Verifizieren)
-# ==============================================================================
+    if "shelly_ip" not in cfg:
+        sys.exit("Config-Fehler: 'shelly_ip' fehlt.")
+
+    # Defaults, falls in der Config nicht gesetzt (target_script_ids darf
+    # bewusst "null" sein -> keine ID-Filterung, alle Skripte durchlassen)
+    cfg.setdefault("target_script_ids", None)
+    cfg.setdefault("only_script_logs", True)
+    cfg.setdefault("log_to_file", True)
+    cfg.setdefault("log_file_path", "shelly_debug.log")
+    cfg.setdefault("separate_log_files", False)
+    cfg.setdefault("show_script_prefix", True)
+    cfg.setdefault("auto_reconnect", True)
+    cfg.setdefault("reconnect_delay", 5)
+    cfg.setdefault("script_fd_base", 100)
+    cfg.setdefault("show_fd_debug", False)
+
+    return cfg
 
 
 def format_timestamp():
@@ -53,13 +64,14 @@ def format_timestamp():
 
 
 def write_log_to_file(text, script_id=None):
-    if not LOG_TO_FILE:
+    if not CONFIG["log_to_file"]:
         return
-    if SEPARATE_LOG_FILES and script_id is not None:
-        base, dot, ext = LOG_FILE_PATH.rpartition(".")
-        path = f"{base}_script{script_id}.{ext}" if dot else f"{LOG_FILE_PATH}_script{script_id}"
+    log_file_path = CONFIG["log_file_path"]
+    if CONFIG["separate_log_files"] and script_id is not None:
+        base, dot, ext = log_file_path.rpartition(".")
+        path = f"{base}_script{script_id}.{ext}" if dot else f"{log_file_path}_script{script_id}"
     else:
-        path = LOG_FILE_PATH
+        path = log_file_path
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(text + "\n")
@@ -93,12 +105,12 @@ def parse_and_filter(message):
     else:
         log_text = str(data)
 
-    # fd-basierte Erkennung: fd >= SCRIPT_FD_BASE => Ausgabe eines laufenden
+    # fd-basierte Erkennung: fd >= script_fd_base => Ausgabe eines laufenden
     # Skripts (print()/console.log()). Niedrigere fd-Werte sind interne
     # System-/Notification-Kanäle - auch wenn deren Text zufällig "script:N"
     # enthält (z. B. CPU-Auslastungsmeldungen).
-    if detected_script_id is None and isinstance(fd, int) and fd >= SCRIPT_FD_BASE:
-        detected_script_id = fd - SCRIPT_FD_BASE
+    if detected_script_id is None and isinstance(fd, int) and fd >= CONFIG["script_fd_base"]:
+        detected_script_id = fd - CONFIG["script_fd_base"]
 
     is_script_msg = detected_script_id is not None
 
@@ -110,15 +122,16 @@ def parse_and_filter(message):
             is_script_msg = True
 
     # 1. Check: Nur Skript-Logs erlauben?
-    if ONLY_SCRIPT_LOGS and not is_script_msg:
+    if CONFIG["only_script_logs"] and not is_script_msg:
         return None, None  # Systemmeldung verworfen
 
     # 2. Check: Auf eine Menge von Script-IDs filtern?
-    if TARGET_SCRIPT_IDS is not None:
-        if detected_script_id is not None and int(detected_script_id) not in TARGET_SCRIPT_IDS:
+    target_script_ids = CONFIG["target_script_ids"]
+    if target_script_ids is not None:
+        if detected_script_id is not None and int(detected_script_id) not in target_script_ids:
             return None, None  # Gehört zu keinem der gewünschten Skripte
 
-    if SHOW_FD_DEBUG:
+    if CONFIG["show_fd_debug"]:
         log_text = f"[fd={fd}] {log_text}"
 
     return log_text, detected_script_id
@@ -130,7 +143,7 @@ def on_message(ws, message):
         return  # Gefiltert
 
     ts = format_timestamp()
-    prefix = f"[Script {script_id}] " if (SHOW_SCRIPT_PREFIX and script_id is not None) else ""
+    prefix = f"[Script {script_id}] " if (CONFIG["show_script_prefix"] and script_id is not None) else ""
     formatted_msg = f"[{ts}] {prefix}{log_text}"
     print(formatted_msg)
     write_log_to_file(formatted_msg, script_id)
@@ -145,10 +158,12 @@ def on_close(ws, close_status_code, close_msg):
 
 
 def on_open(ws):
-    print(f"[{format_timestamp()}] ERFOLGREICH VERBUNDEN mit ws://{SHELLY_IP}/debug/log")
-    print(f"  -> Systemmeldungen ausblenden: {'JA' if ONLY_SCRIPT_LOGS else 'NEIN'}")
-    if TARGET_SCRIPT_IDS is not None:
-        ids = ", ".join(str(i) for i in TARGET_SCRIPT_IDS)
+    shelly_ip = CONFIG["shelly_ip"]
+    print(f"[{format_timestamp()}] ERFOLGREICH VERBUNDEN mit ws://{shelly_ip}/debug/log")
+    print(f"  -> Systemmeldungen ausblenden: {'JA' if CONFIG['only_script_logs'] else 'NEIN'}")
+    target_script_ids = CONFIG["target_script_ids"]
+    if target_script_ids is not None:
+        ids = ", ".join(str(i) for i in target_script_ids)
         print(f"  -> Filter aktiv: Nur Nachrichten von Script ID(s) {ids}")
     else:
         print("  -> Zeige Logs aller Skripte")
@@ -156,8 +171,16 @@ def on_open(ws):
 
 
 def main():
-    ws_url = f"ws://{SHELLY_IP}/debug/log"
-    print(f"Starte Shelly Log Grabber für {SHELLY_IP}...")
+    parser = argparse.ArgumentParser(description="Verbindet sich mit dem Shelly-Debug-Log per WebSocket und filtert/schreibt die Logs.")
+    parser.add_argument("--config", default="config.json", help="Pfad zur Config-Datei (Standard: config.json)")
+    args = parser.parse_args()
+
+    global CONFIG
+    CONFIG = load_config(args.config)
+
+    shelly_ip = CONFIG["shelly_ip"]
+    ws_url = f"ws://{shelly_ip}/debug/log"
+    print(f"Starte Shelly Log Grabber für {shelly_ip}...")
 
     while True:
         try:
@@ -175,11 +198,11 @@ def main():
         except Exception as e:
             print(f"[{format_timestamp()}] Unerwarteter Fehler: {e}")
 
-        if not AUTO_RECONNECT:
+        if not CONFIG["auto_reconnect"]:
             break
 
-        print(f"[{format_timestamp()}] Versuche Wiederverbindung in {RECONNECT_DELAY} Sekunden...")
-        time.sleep(RECONNECT_DELAY)
+        print(f"[{format_timestamp()}] Versuche Wiederverbindung in {CONFIG['reconnect_delay']} Sekunden...")
+        time.sleep(CONFIG["reconnect_delay"])
 
 
 if __name__ == "__main__":

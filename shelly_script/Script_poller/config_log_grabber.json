@@ -1,0 +1,17 @@
+{
+  "shelly_ip": "192.168.178.117",
+
+  "target_script_ids": [6, 8],
+  "only_script_logs": true,
+
+  "log_to_file": true,
+  "log_file_path": "shelly_debug.log",
+  "separate_log_files": false,
+  "show_script_prefix": true,
+
+  "auto_reconnect": true,
+  "reconnect_delay": 5,
+
+  "script_fd_base": 100,
+  "show_fd_debug": false
+}

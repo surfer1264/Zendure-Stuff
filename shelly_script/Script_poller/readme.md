@@ -8,7 +8,9 @@ Grundvoraussetzung ist eine Python-Umgebung. Die existiert defacto auf jedem Com
 
 Ladet Euch die Dateien hier in EIN Verzeichnis auf Eurem Computer
 * passt die CMD-Files für Euch an (Windows-Nutzer)
-* konfiguriert die `config.json` und die `shelly_log_grabber.py`
+* konfiguriert die beiden Config-Dateien (siehe unten) – ein Bearbeiten der `.py`-Dateien ist **nicht** nötig
+
+> **Wichtig:** Beide Scripte erwarten standardmäßig eine Datei namens `config.json` im selben Verzeichnis. Da hier beide Scripte gemeinsam in einem Ordner liegen, würden sich die Configs sonst gegenseitig überschreiben bzw. das jeweils falsche Script liest die falsche Datei. Deshalb bekommt jede Config in dieser Anleitung einen eigenen, eindeutigen Namen (`config_status_poller.json` bzw. `config_log_grabber.json`) und wird dem jeweiligen Script explizit per `--config` übergeben.
 
 # 1.) Shelly Script-Status-Poller
 
@@ -18,8 +20,8 @@ Fragt periodisch `Script.GetStatus` von einem oder mehreren Shelly-Geräten/Scri
 und schreibt jede Messung als Zeile in eine Semikolon-CSV.
 
 Relevante Dateien sind
-`config.json` für die Konfiguration
-und 
+`config_status_poller.json` für die Konfiguration
+und
 das eigentliche Script `shelly_script_status_poller.py`.
 
 
@@ -27,13 +29,13 @@ das eigentliche Script `shelly_script_status_poller.py`.
 
 ```bash
 # in einer Kommandozeile aufrufen
-python3 shelly_script_status_poller.py --config config.json
-python3 shelly_script_status_poller.py --config config.json --once   # nur ein Testdurchlauf
+python3 shelly_script_status_poller.py --config config_status_poller.json
+python3 shelly_script_status_poller.py --config config_status_poller.json --once   # nur ein Testdurchlauf
 ```
 
 Keine externen Abhängigkeiten (nur Python-Standardbibliothek).
 
-## Konfiguration (`config.json`)
+## Konfiguration (`config_status_poller.json`)
 
 - `interval_seconds` – Abfrage-Takt (Standard: 10)
 - `timeout_seconds` – HTTP-Timeout pro Anfrage (Standard: 5)
@@ -95,44 +97,41 @@ pip install websocket-client
 
 ## Konfiguration
 
-Öffnen Sie die Datei `shelly_log_grabber.py` in einem Texteditor und passen Sie den Abschnitt **KONFIGURATION** am Anfang der Datei an:
+Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`), die im selben Verzeichnis wie das Script liegt. Ein Bearbeiten der Datei `shelly_log_grabber.py` selbst ist nicht mehr nötig – alle Einstellungen stehen in der JSON-Datei:
 
-```python
-# ==============================================================================
-# KONFIGURATION
-# ==============================================================================
-SHELLY_IP = "192.168.178.117"  # IP-Adresse des Shelly
+```json
+{
+  "shelly_ip": "192.168.178.117",
 
-# Script-IDs zum Filtern. Beispiele:
-#   [6]        -> nur Script 6
-#   [6, 8, 12] -> Scripts 6, 8 und 12 (beliebig viele)
-#   None       -> keine ID-Filterung, alle Skripte durchlassen
-TARGET_SCRIPT_IDS = [6, 8]
-ONLY_SCRIPT_LOGS = True        # True = Systemmeldungen ausblenden, NUR Skript-Logs zeigen
+  "target_script_ids": [6, 8],
+  "only_script_logs": true,
 
-LOG_TO_FILE = True             # In Datei speichern? (True / False)
-LOG_FILE_PATH = "shelly_debug.log"  # Dateiname, falls SEPARATE_LOG_FILES = False
-SEPARATE_LOG_FILES = False     # True = eigene Datei je Script-ID (shelly_debug_script<ID>.log)
-SHOW_SCRIPT_PREFIX = True      # True = "[Script 6]" vor jede Zeile schreiben (sinnvoll bei mehreren IDs)
+  "log_to_file": true,
+  "log_file_path": "shelly_debug.log",
+  "separate_log_files": false,
+  "show_script_prefix": true,
 
-AUTO_RECONNECT = True          # Bei Verbindungsabbruch automatisch neu verbinden?
-RECONNECT_DELAY = 5            # Wartezeit vor Wiederverbindung in Sekunden
+  "auto_reconnect": true,
+  "reconnect_delay": 5,
 
-# Shelly kennzeichnet jede Log-Zeile mit einem "fd"-Feld. Systemmeldungen
-# (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung)
-# laufen auf niedrigen fd-Werten. Echte print()/console.log()-Ausgaben
-# eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: fd = 100 + Script-ID
-# (bei dir z. B. Script 6 -> fd 106). Das ist nicht offiziell dokumentiert -
-# bitte einmal mit SHOW_FD_DEBUG=True verifizieren, ob es auf deiner Firmware stimmt.
-SCRIPT_FD_BASE = 100
-SHOW_FD_DEBUG = False           # True = fd-Wert in der Ausgabe mitloggen (zum Verifizieren)
-# ==============================================================================
+  "script_fd_base": 100,
+  "show_fd_debug": false
+}
 ```
 
-* **`SHELLY_IP`**: Die IPv4-Adresse des Shelly im lokalen Netz.
-* **`TARGET_SCRIPT_ID`**: 
-  * Geben Sie die eine oder mehrere IDs ein (z. B. `8`), um nur Meldungen dieses einen Skripts anzuzeigen/zu speichern.
-  * Tragen Sie `None` ein, um alle System- und Skript-Logs des Shelly zu erfassen.
+* **`shelly_ip`**: Die IPv4-Adresse des Shelly im lokalen Netz.
+* **`target_script_ids`**:
+  * Liste mit einer oder mehreren Script-IDs (z. B. `[8]` oder `[6, 8, 12]`), um nur Meldungen dieser Skripte anzuzeigen/zu speichern.
+  * `null` eintragen, um alle System- und Skript-Logs des Shelly zu erfassen.
+* **`only_script_logs`**: `true` = Systemmeldungen ausblenden, nur echte Skript-Logs zeigen.
+* **`log_to_file`**: `true`/`false` – ob überhaupt in eine Datei geschrieben wird.
+* **`log_file_path`**: Zieldatei fürs Log (Standard: `shelly_debug.log`).
+* **`separate_log_files`**: `true` = eigene Datei je Script-ID (`shelly_debug_script<ID>.log`), sonst eine gemeinsame Datei.
+* **`show_script_prefix`**: `true` = schreibt `[Script 6]` vor jede Zeile (sinnvoll bei mehreren IDs).
+* **`auto_reconnect`** / **`reconnect_delay`**: Automatische Wiederverbindung bei Verbindungsabbruch und Wartezeit in Sekunden.
+* **`script_fd_base`** / **`show_fd_debug`**: Interne Erkennung, welche fd-Werte zu Skript-Ausgaben gehören (Standard `100`, siehe Hinweis unten). Nur bei Bedarf ändern.
+
+> **Hinweis zur fd-Erkennung:** Shelly kennzeichnet jede Log-Zeile mit einem `fd`-Feld. Systemmeldungen (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung) laufen auf niedrigen fd-Werten. Echte `print()`/`console.log()`-Ausgaben eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: `fd = script_fd_base + Script-ID` (z. B. Script 6 → fd 106). Das ist nicht offiziell dokumentiert – bitte einmal mit `"show_fd_debug": true` verifizieren, ob es auf Eurer Firmware stimmt.
 
 ---
 
@@ -141,7 +140,7 @@ SHOW_FD_DEBUG = False           # True = fd-Wert in der Ausgabe mitloggen (zum V
 Starten Sie das Skript im Terminal:
 
 ```bash
-python3 shelly_log_grabber.py
+python3 shelly_log_grabber.py --config config_log_grabber.json
 ```
 
 ### Ausgabe-Beispiel:
@@ -166,4 +165,4 @@ unbedingt die geschriebenen Logfiles ansehen. Alle Shelly Versionen bringen so I
 ## Beenden
 
 * Drücken Sie **`Strg + C`** im Terminal, um den Log-Grabber sauber zu beenden.
-* Die gesammelten Logs finden Sie anschließend in der Datei **`shelly_debug.log`** im selben Verzeichnis
+* Die gesammelten Logs finden Sie anschließend in der Datei, die unter `log_file_path` in `config_log_grabber.json` eingetragen ist (Standard: **`shelly_debug.log`**) im selben Verzeichnis.
