@@ -72,6 +72,7 @@ Lasttests zeigen aber Lauffähigkeit auf
 ## 3. Neuer Parameter `standbySmartModeZero`
 - Steuert, welcher `smartMode` (0 oder 1) beim Schreiben von 0 W (Standby) verwendet wird. Vorher war `smartMode` beim Schreiben **immer fest auf 1** gesetzt.
 - `planWrite()` liefert jetzt auch `smartMode` als Teil des Plans zurück (vorher nur `acMode`/`outputLimit`/`inputLimit`).
+- Erzwingt das Standby bei einigen Geräten (2400AC), die mit `smartmode: 1` partout nicht in den Standby gehen
 
 ## 4. KVS-Live-Override für `hysteresis` und `dampingFactor` entfernt
 - In 2.2.0 konnten `zdmc_hysteresis` und `zdmc_dampingFactor` per KVS live überschrieben werden (inkl. Seeding der Default-Werte).
