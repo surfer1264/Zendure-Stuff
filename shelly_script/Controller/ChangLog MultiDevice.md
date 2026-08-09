@@ -1,13 +1,25 @@
+# Changelog 2.3.3
+
+**Problem**: Wenn in einer MultiDevice-Konfig ein Gerät bereits auf 100% (Bypass) stand, wurde der Überschuss genau dieses Gerätes nicht mehr aktiv auf die verbleibenden Geräte aufgeteilt
+
+**Änderung** Feature-Toggle compensateSocLimitExcess (neuer CONFIG-Schalter, Default: true). 
+Kompensiert beim Laden (rawCharge) die Leistung von Geräten, die socLimit === 1 melden und ein outputLimit gesetzt haben: der Überschuss (zenPower - outputLimit, wenn > 0) wird über alle betroffenen Geräte aufsummiert (excessSocLimit1) und von rawCharge abgezogen.
+Alt: rawCharge = round((gridPower - setpoint) + sumZenReverse)
+Neu: rawCharge = round((gridPower - setpoint) + sumZenReverse - excessSocLimit1)
+kann deaktiviert werden, der FIx wird dadurch deaktiviert
+
+
 # Changelog 2.3.2
 
 ## Konstellationen mit ≥2 reverse:true-Geräten (mit eigener PV)
 
-### Fixed
+**Problem**
+- keine Überschussverarbeitung in PV-enabled Geräten
 - Betrifft Konstellationen mit ≥2 `reverse:true`-Geräten, bei denen mindestens eines direkt angeschlossene PV-Module hat.
 - `sumZenReverse` schloss Geräte mit `socLimit === 1` (Laden vom Netz gesperrt) bisher nicht aus. Dadurch konnte die unsteuerbare, PV-erzwungene Weiterausspeisung eines an seiner SOC-Grenze blockierten Speichers einen echten Ladebedarf bei anderen, noch ladefähigen Geräten maskieren – der Regler berechnete fälschlich weiter einen positiven Entlade-Zielwert, statt Laden auszulösen.
 
 
-### Changed
+**Änderung**
 - `calculate()`: `sumZenReverse` prüft zusätzlich `state.devices[i].socLimit !== 1`, analog zur bereits bestehenden Filterung in `computeChargeWeights()`.
 
 **Adressierte Bugs:**
