@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.3.2 KVS (Fix#69)",
+  version: "2.3.3 (compensationFix)",
   
   devices: [
      {
@@ -112,6 +112,7 @@ let CONFIG = {
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG (verliert Overrides), danach false
   kvsForceReseed: false,
+  compensateSocLimitExcess: true,
   // operation to keep the console output clean.
   debug: false,
 
@@ -834,6 +835,7 @@ function calculate(myCycle) {
   let n = CONFIG.devices.length;
   let sumZen = 0;
   let sumZenReverse = 0;
+  let excessSocLimit1 = 0;
   let availableCount = 0;
 
   let countedIps = {};
@@ -848,6 +850,11 @@ function calculate(myCycle) {
         // FIX#69: Geraete, die aktuell socLimit===1 melden 
         if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
+        }
+
+        if (CONFIG.compensateSocLimitExcess && state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
+          let excess = state.devices[i].zenPower - state.devices[i].outputLimit;
+          if (excess > 0) excessSocLimit1 += excess;
         }
 
         countedIps[ip] = true;
@@ -874,7 +881,7 @@ function calculate(myCycle) {
 
   let dischargeTarget = Math.round(state.smoothedOutput);
 
-  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
+  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse - excessSocLimit1);
 
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
