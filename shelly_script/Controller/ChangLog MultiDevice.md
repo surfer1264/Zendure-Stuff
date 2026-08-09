@@ -1,3 +1,25 @@
+# Changelog 2.4.0
+
+**Feature**: Hub-seitige GridReverse-Steuerung ("Bypass-Verhalten")
+
+Die Solarflow-Firmware besitzt einen eigenen Schalter gridReverse (0/1/2) auf Hub-Ebene. Er steuert nicht das Laden vom Netz, sondern ob der Hub im Bypass-Betrieb (Akku voll, PV-Überschuss wird direkt durchgereicht) Energie ins Netz exportieren darf - betrifft also den Export-Zweig (outputLimit), unabhängig von der script-internen Ladeverteilung.
+
+**Änderung**
+
+- Neuer **CONFIG-Schalter** immerBypass (Default: false) steuert, ob das Feature aktiv genutzt wird:
+  - **true**: gridReverse wird nur einmalig beim Start auf 1 (Export erlaubt) gesetzt, danach nie mehr verändert - kein Laufzeit-Effekt, geringstes Risiko.
+  - **false** (Default): Script schaltet `gridReverse` aktiv zur Laufzeit zwischen 1 (Export erlaubt) und 2 (Export gesperrt) um.
+- Neuer CONFIG-Parameter chargeResetMargin (Default: 5 Prozentpunkte) - Hysterese-Abstand unterhalb maxSoc, den mindestens ein Gerät unterschreiten muss, bevor eine gesetzte Sperre wieder aufgehoben wird.
+
+**Codeänderung**
+computeChargeWeights() erweitert: erkennt, wenn kein reverse:true-Gerät mehr Lade-Kapazität hat (allMaxed, d. h. Bypass-Betrieb droht) und löst darüber gridReverse=2 (Export gesperrt) aus; erkennt zusätzlich, wenn mindestens ein Gerät klar unter die Reset-Marge gefallen ist (clearlyBelow) und setzt gridReverse=1 (Export erlaubt) zurück. Beide Übergänge sind flankengetriggert (state.allMaxedLogged) - kein wiederholtes Schreiben pro Zyklus, schont den Flash-Speicher der Hubs.
+Neue Funktionen setGridReverseDevice()/setGridReverseAll() kapseln den properties/write-Aufruf; nur Geräte mit reverse:true werden angefasst, dryRun-Geräte werden übersprungen.
+syncSocLimitsDevice(): Bei immerBypass:true wird gridReverse:1 direkt in denselben properties/write-Aufruf wie minSoc/socSet gepackt (ein Request statt zwei separater Schreibvorgänge beim Start).
+state.devices[i].gridReverse (zuletzt geschriebener Wert) und state.allMaxedLogged (Flankenerkennung) neu ergänzt.
+Debug-Diagnose bei fehlgeschlagenem Schreibvorgang (DEBUG [Label]/gridReverse - res: ... | error_code: ... | error_message: ...), analog zu den bestehenden Schreibvorgängen (writeDevice, syncSocLimitsDevice).
+
+Nicht per KVS live-überschreibbar: immerBypass/chargeResetMargin sind reine CONFIG-Werte, aktuell ohne Live-Override-Key.
+
 # Changelog 2.3.3
 
 **Problem**: Wenn in einer MultiDevice-Konfig ein Gerät bereits auf 100% (Bypass) stand, wurde der Überschuss genau dieses Gerätes nicht mehr aktiv auf die verbleibenden Geräte aufgeteilt

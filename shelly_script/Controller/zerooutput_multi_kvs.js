@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.3.3 (compensationFix)",
+  version: "2.4.0 (Bypass)",
   
   devices: [
      {
@@ -34,22 +34,21 @@ let CONFIG = {
   ],
 // ------------------------------------------------------------------
   // SMARTMETER SECTION
-  // Where to read the household grid power from, there are three options 
+  // Where to read the household grid power from
   gridSource: "local", // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
-  // IP address of the Shelly Pro 3EM providing the grid measurement.
+  // IP address of the Shelly Pro 3EM
   gridSourceIp: "<IP address of the Shelly Pro 3EM here>",
-  // EM channel id to read (usually 0). Only used when gridSource = "remote".
+  // EM channel id (usually 0). Only used gridSource = "remote".
   gridSourceEmId: 0,
   // ------------------------------------------------------------------
-  // Nur bei gridSource=http_json; Beispiel fuer Zendure 3CT
-  // Full URL of a generic JSON grid meter. Only used when
+  // only gridSource=http_json; z.B. Zendure 3CT
+  // Full URL of a generic JSON grid meter.
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
-  // JSON-Feld mit der Gesamt-Netzleistung (W)
+  // JSON-Feld: Gesamt-Netzleistung (W)
   gridSourceField: "total_power",
-  // Set to true if the sign of gridSourceField is inverted compared to what
-  // this script expects (positive = importing from grid).
+  // this script expects positive = importing from grid
   gridSourceInvert: false,
   
   // ------------------------------------------------------------------
@@ -62,7 +61,6 @@ let CONFIG = {
 
   // ------------------------------------------------------------------
   // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
-  // Concentration mode: run only ONE device at low load instead of splitting. 
   discharge: {
     concentrateBelow: 600,  // W - below this combined target, use ONE device
     spreadAbove: 800        // W - above this, split across all devices
@@ -76,8 +74,7 @@ let CONFIG = {
   concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
-  // SOC-BALANCING (nur relevant bei mehreren Geraeten)
-  // Max. erlaubte SOC-Differenz zwischen Geraeten (%)
+  // SOC-BALANCING Max. SOC-Differenz zwischen Geraeten (%)
   rebalance: {
     socMargin: 10        // percentage points of advantage required to switch
   },
@@ -87,6 +84,8 @@ let CONFIG = {
   reverseStartupPower: 30,
   // Ladeleistung, unter der gestoppt wird (<= reverseStartupPower)
   reverseStopPower: 10,
+  immerBypass: false,
+  chargeResetMargin: 5,
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese, spiegelbildlich
@@ -100,19 +99,19 @@ let CONFIG = {
   interval: 4000,
   // Watchdog-Timeout (ms) fuer den gesamten Zyklus
   watchdog: 10000,
-  // Keeping this comfortably shorter than the watchdog (second)   
+  // Dont Change It
   httpTimeout: 5,
-  // Anzahl Fehler in Folge bis Benachrichtigung
+  // Anzahl Fehler bis Benachrichtigung
   errorThreshold: 5,
-  // Schuetzt vor zu haeufigem Laden/Entladen-Wechsel
+  // Cooldown-Takte Laden/Entladen-Wechsel
   directionChangeHoldCycles: 2,
-  // 0W: true->smartMode 0, false->1
+  // true->smartMode 0, false->1
   standbySmartModeZero: false,
   // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG (verliert Overrides), danach false
   kvsForceReseed: false,
-  compensateSocLimitExcess: true,
+  compensateSocLimitExcess: false,
   // operation to keep the console output clean.
   debug: false,
 
@@ -127,7 +126,7 @@ let CONFIG = {
   }
 };
 
-// Plausibilitaets-Checks fuer CONFIG (einmalig beim Start)
+// Plausi: (einmalig beim Start)
 function checkBand(band) {
   if (band.concentrateBelow < 35) band.concentrateBelow = 35;
   if (band.spreadAbove < 50) band.spreadAbove = 50;
@@ -156,16 +155,13 @@ if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.discharg
 if (CONFIG.directionChangeHoldCycles < 0) CONFIG.directionChangeHoldCycles = 0;
 if (CONFIG.directionChangeHoldCycles > 20) CONFIG.directionChangeHoldCycles = 20;
 
-// Hold time (spread -> single) in cycles, derived once from
-// concentrateHoldMinutes 
+// Hold time (spread -> single) in cycles, derived once from concentrateHoldMinutes 
 let CONCENTRATE_HOLD_CYCLES = Math.max(
   1,
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
 );
 
 // Live parameter overrides via the Shelly's own built-in Key-Value-Store
-// POST http://<shelly-ip>/rpc/KVS.Set  {"key":"zdmc_setpoint","value":50}
-// Per-device keys use the device's array index (see banner "[devN]"), e.g.:
 let KVS_MATCH = "zdmc_*";
 
 let state = {
@@ -183,6 +179,7 @@ let state = {
 
   discharge: { mode: "single", active: null, holdCycles: 0 },
   charge: { mode: "single", active: null, holdCycles: 0 },
+  allMaxedLogged: false,
 
   devices: []
 };
@@ -190,15 +187,15 @@ let state = {
 for (let i = 0; i < CONFIG.devices.length; i++) {
   state.devices[i] = {
     soc: 0,
-    socLimit: null,     // socLimit vom Geraet
+    socLimit: null,
     serial: null,
-    zenPower: 0,        // current signed power flow, from the device's own report
-    available: false,   // was this device read successfully THIS cycle?
-    outputLimit: null,  // zuletzt geschriebene signierte Leistung
+    zenPower: 0,   
+    available: false,  
+    outputLimit: null,
     maxSocLogged: false,
-
-    acMode: null,          // zuletzt geschriebener acMode (1=Laden, 2=Entladen)
-    smartMode: null,       // zuletzt geschriebener smartMode
+    gridReverse: null,
+    acMode: null,       
+    smartMode: null,
 
     realDirection: null, reversalHoldCount: 0,
 
@@ -226,7 +223,6 @@ function simpleEncode(str) {
 
 // Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}, kein
 // Auth-Header, kein Template - passt z.B. auf einen Home Assistant
-// Webhook-Trigger 	
 function sendWebhookMessage(text) {
   print("Sende Webhook-Benachrichtigung...");
 
@@ -391,8 +387,7 @@ function kvsItemsToMap(rawItems) {
   return map;
 }
 
-// Apply a single KVS override: parses raw into a number, runs it
-// through validate(), and only calls apply() if both checks pass.
+
 function applyKvsValue(key, raw, currentValue, validate, apply) {
   let n = Number(raw);
 
@@ -476,8 +471,6 @@ function readKvsOverrides(myCycle, callback) {
 }
 
 // Writes ONE missing default into KVS, then moves to the next pair.
-// Sequential on purpose (same pattern as writeAllDevices/syncSocLimitsAll)
-// rather than firing all KVS.Set calls at once.
 function seedKvsDefaultsStep(pairs, index, callback) {
   if (index >= pairs.length) {
     callback();
@@ -1045,6 +1038,7 @@ function computeChargeWeights() {
   let n = CONFIG.devices.length;
   let weight = [];
   let active = [];
+  let clearlyBelow = false;
 
   for (let i = 0; i < n; i++) {
     let ds = state.devices[i];
@@ -1068,6 +1062,8 @@ function computeChargeWeights() {
     weight[i] = w;
     active[i] = (w > 0);
 
+    if (ds.soc < cfg.maxSoc - CONFIG.chargeResetMargin) clearlyBelow = true;
+
     if (w === 0) {
       if (!ds.maxSocLogged) {
         print(cfg.label + ": SOC-Obergrenze erreicht (" + ds.soc +
@@ -1078,6 +1074,19 @@ function computeChargeWeights() {
       print(cfg.label + ": SOC wieder unter Obergrenze (" + ds.soc +
         "% < " + cfg.maxSoc + "%) - Laden bei Bedarf wieder moeglich");
       ds.maxSocLogged = false;
+    }
+  }
+
+  if (!CONFIG.immerBypass) {
+    let allMaxed = true;
+    for (let i = 0; i < n; i++) { if (active[i]) { allMaxed = false; break; } }
+
+    if (allMaxed && !state.allMaxedLogged) {
+      state.allMaxedLogged = true;
+      setGridReverseAll(0, 2, function () {});
+    } else if (state.allMaxedLogged && clearlyBelow) {
+      state.allMaxedLogged = false;
+      setGridReverseAll(0, 1, function () {});
     }
   }
 
@@ -1507,6 +1516,42 @@ function update() {
   });
 }
 
+function setGridReverseDevice(index, value, callback) {
+  let cfg = CONFIG.devices[index];
+  let ds = state.devices[index];
+
+  if (cfg.dryRun || !ds.serial) { callback(); return; }
+
+  httpPost(
+    "http://" + cfg.ip + "/properties/write",
+    { sn: ds.serial, properties: { gridReverse: value } },
+    function (res, error_code, error_message) {
+      if (res && res.code === 200) {
+        ds.gridReverse = value;
+        print("  " + cfg.label + ": gridReverse=" + value + " gesetzt");
+      } else {
+        if (CONFIG.debug) {
+          print("DEBUG " + cfg.label + "/gridReverse - res: " + JSON.stringify(res) +
+            " | error_code: " + error_code + " | error_message: " + error_message);
+        }
+        print("  " + cfg.label + ": gridReverse=" + value + " fehlgeschlagen");
+      }
+      callback();
+    }
+  );
+}
+
+function setGridReverseAll(index, value, callback) {
+  if (index >= CONFIG.devices.length) { callback(); return; }
+  if (!CONFIG.devices[index].reverse) {
+    setGridReverseAll(index + 1, value, callback);
+    return;
+  }
+  setGridReverseDevice(index, value, function () {
+    setGridReverseAll(index + 1, value, callback);
+  });
+}
+
 function syncSocLimitsDevice(index, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -1552,22 +1597,21 @@ function syncSocLimitsDevice(index, callback) {
       let minSocRaw = Math.round(cfg.minSoc * 10);
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
 
+      let props = { minSoc: minSocRaw, socSet: maxSocRaw };
+      if (cfg.reverse && CONFIG.immerBypass) props.gridReverse = 1;
+
       httpPost(
 
         "http://" + cfg.ip + "/properties/write",
 
-        {
-          sn: ds.serial,
-          properties: {
-            minSoc: minSocRaw,
-            socSet: maxSocRaw
-          }
-        },
+        { sn: ds.serial, properties: props },
 
         function (res2, error_code, error_message) {
           if (res2 && res2.code === 200) {
+            if (props.gridReverse !== undefined) ds.gridReverse = props.gridReverse;
             print("  " + cfg.label + ": SoC-Grenzwerte synchronisiert (minSoc " +
-              cfg.minSoc + "%, maxSoc " + cfg.maxSoc + "%)");
+              cfg.minSoc + "%, maxSoc " + cfg.maxSoc + "%)" +
+              (props.gridReverse !== undefined ? ", gridReverse=" + props.gridReverse : ""));
           } else {
             if (CONFIG.debug) {
               print(
@@ -1698,11 +1742,7 @@ printBannerLine(function () {
       print("Starte Regelbetrieb.");
       print("--------------------------------");
 
-      Timer.set(
-        CONFIG.interval,
-        true,
-        update
-      );
+      Timer.set(CONFIG.interval, true, update);
     };
 
     // PRÜFUNG: Ist KVS überhaupt aktiviert?
