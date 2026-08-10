@@ -1,3 +1,7 @@
+# Changelog 2.4.3
+Feature Toggle entfernt...keine Funktionsänderung
+
+
 # Changelog 2.4.2
 
 **Geändert (Defaults)**
