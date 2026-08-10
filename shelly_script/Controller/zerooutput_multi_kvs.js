@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.0 (Bypass)",
+  version: "2.4.1 (Logging)",
   
   devices: [
      {
@@ -111,7 +111,7 @@ let CONFIG = {
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG (verliert Overrides), danach false
   kvsForceReseed: false,
-  compensateSocLimitExcess: false,
+  compensateSocLimitExcess: true,
   // operation to keep the console output clean.
   debug: false,
 
@@ -839,8 +839,7 @@ function calculate(myCycle) {
 
       if (!countedIps[ip]) {
         sumZen += state.devices[i].zenPower;
-
-        // FIX#69: Geraete, die aktuell socLimit===1 melden 
+        
         if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
         }
@@ -926,7 +925,7 @@ function calculate(myCycle) {
 
   print(
     "Grid: " + state.gridPower + " W | Summe Geraete: " + sumZen +
-    " W (netzladefaehig: " + sumZenReverse + " W)" +
+    " W (netzladef.: " + sumZenReverse + " W)" +
     " | Ziel Entladen: " + dischargeTarget + " W | Ziel Laden: " + chargeTarget + " W"
   );
 
@@ -1245,7 +1244,7 @@ function distributeDischarge(target, exclude) {
       return output;
     }
 
-    print("Ziel uebersteigt maxOutput von " + CONFIG.devices[idx].label +
+    print("Ziel ueber maxOutput von " + CONFIG.devices[idx].label +
       " - wechsle sofort in den Mehrere-Geraete-Modus");
     state.discharge.mode = "spread";
     state.discharge.holdCycles = 0;
@@ -1281,7 +1280,7 @@ function distributeCharge(target) {
       return output;
     }
 
-    print("Ladebedarf uebersteigt maxInputPower von " + CONFIG.devices[idx].label +
+    print("Ladebedarf ueber maxInputPower von " + CONFIG.devices[idx].label +
       " - wechsle sofort in den Mehrere-Geraete-Modus");
     state.charge.mode = "spread";
     state.charge.holdCycles = 0;
@@ -1646,7 +1645,7 @@ let bannerLines = [];
 
 bannerLines[bannerLines.length] = "--------------------------------";
 bannerLines[bannerLines.length] = "Verion " + CONFIG.version;
-bannerLines[bannerLines.length] = "Zendure Multi-Device Controller gestartet";
+bannerLines[bannerLines.length] = "Multi-Device Controller gestartet";
 bannerLines[bannerLines.length] = "Geraete    : " + CONFIG.devices.length;
 
 for (let i = 0; i < CONFIG.devices.length; i++) {
@@ -1696,7 +1695,8 @@ bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
   ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
-bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "DEAKTIVIERT (kein Live-Override, kein Seeding)");
+bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override, kein Seeding)");
+bannerLines[bannerLines.length] = "Bypass immer erlauben: " + (CONFIG.immerBypass ? "aktiviert" : "deaktiviert");
 
 if (CONFIG.kvsEnabled) {
   bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/" +
@@ -1728,7 +1728,7 @@ function printBannerLine(onDone) {
 printBannerLine(function () {
 
   if (CONFIG.signal.enabled) {
-    sendSignalMessage("Zendure Multi-Device-Controller gestartet (" +
+    sendSignalMessage("Multi-Device-Controller gestartet (" +
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
