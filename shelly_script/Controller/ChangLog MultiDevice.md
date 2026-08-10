@@ -1,3 +1,19 @@
+# Changelog 2.4.2
+
+**Geändert (Defaults)**
+* compensateSocLimitExcess: Default von false auf true geändert.
+* hysteresis: Default von 10 auf 12 W erhöht.
+ *dampingFactor: Default von 0.6 auf 0.65 erhöht.
+* Grid-Log gerundet: Die Log-Zeile Grid: ... W gibt state.gridPower jetzt gerundet aus (Math.round(...)) statt mit Nachkommastellen.
+
+**Neu hinzugefügt**
+ *Validierung für minSoc/maxSoc pro Gerät (einmalig beim Start):
+* minSoc wird auf mindestens 10 angehoben.
+* maxSoc wird auf mindestens minSoc + 1 angehoben, falls kleiner/gleich minSoc.
+* maxSoc wird auf maximal 100 begrenzt.
+* Neue Banner-Zeile beim Start: Bypass immer erlauben: aktiviert/deaktiviert.
+
+
 # Changelog 2.4.0
 
 **Feature**: Hub-seitige GridReverse-Steuerung ("Bypass-Verhalten")
@@ -8,7 +24,7 @@ Die Solarflow-Firmware besitzt einen eigenen Schalter gridReverse (0/1/2) auf Hu
 
 - Neuer **CONFIG-Schalter** immerBypass (Default: false) steuert, ob das Feature aktiv genutzt wird:
   - **true**: gridReverse wird nur einmalig beim Start auf 1 (Export erlaubt) gesetzt, danach nie mehr verändert - kein Laufzeit-Effekt, geringstes Risiko.
-  - **false** (Default): Script schaltet `gridReverse` aktiv zur Laufzeit zwischen 1 (Export erlaubt) und 2 (Export gesperrt) um.
+  - **false** (Default): Script schaltet `gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)` um.
 - Neuer CONFIG-Parameter chargeResetMargin (Default: 5 Prozentpunkte) - Hysterese-Abstand unterhalb maxSoc, den mindestens ein Gerät unterschreiten muss, bevor eine gesetzte Sperre wieder aufgehoben wird.
 
 **Codeänderung**
