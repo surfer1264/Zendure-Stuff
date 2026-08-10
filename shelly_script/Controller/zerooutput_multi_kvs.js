@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.1 (Logging)",
+  version: "2.4.2 (validate socmin, socmax)",
   
   devices: [
      {
@@ -86,7 +86,7 @@ let CONFIG = {
   reverseStopPower: 10,
   // Spezialbehandlung Bypass
   immerBypass: false,
-  chargeResetMargin: 5, // only immerBypass: true
+  chargeResetMargin: 5, // only immerBypass: false
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION
@@ -117,12 +117,12 @@ let CONFIG = {
   debug: false,
 
   // ------------------------------------------------------------------
-  // MESSAGE SECTION - entweder ueber CallMeBot (Signal/WhatsApp, WebHOOK
+  // MESSAGE SECTION
   signal: {
     enabled: false,          // set to true to activate notifications
 	typ: "WEBHOOK",			 // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX (nur SIGNAL/WHATSAPP)
-    apiKey: "YOUR_API_KEY",  // your CallMeBot API key (nur SIGNAL/WHATSAPP)
+    apiKey: "YOUR_API_KEY",  // CallMeBot API key
     webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
   }
 };
@@ -148,21 +148,25 @@ if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
 
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  let d = CONFIG.devices[i];
+  if (d.minSoc < 10) d.minSoc = 10;
+  if (d.maxSoc < d.minSoc) d.maxSoc = d.minSoc + 1;
+  if (d.maxSoc > 100) d.maxSoc = 100;
+}
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
-
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
-
 if (CONFIG.directionChangeHoldCycles < 0) CONFIG.directionChangeHoldCycles = 0;
 if (CONFIG.directionChangeHoldCycles > 20) CONFIG.directionChangeHoldCycles = 20;
 
-// Hold time (spread -> single) in cycles, derived once from concentrateHoldMinutes 
+// Hold time (spread -> single) in cycles
 let CONCENTRATE_HOLD_CYCLES = Math.max(
   1,
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
 );
 
-// Live parameter overrides via the Shelly's own built-in Key-Value-Store
+// Live parameter overrides (Key-Value-Store)
 let KVS_MATCH = "zdmc_*";
 
 let state = {
@@ -1696,14 +1700,14 @@ bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
 bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
   ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
-bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override, kein Seeding)");
+bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override)");
 bannerLines[bannerLines.length] = "Bypass immer erlauben: " + (CONFIG.immerBypass ? "aktiviert" : "deaktiviert");
 
 if (CONFIG.kvsEnabled) {
   bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/" +
     "dev{n}_dischargeAllowed/dev{n}_reverse (Keys: " + KVS_MATCH + ")";
   bannerLines[bannerLines.length] = "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
-    "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides mit CONFIG!" :
+    "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides!" :  
     "aus (Standard, empfohlen)");
 }
 
@@ -1733,7 +1737,7 @@ printBannerLine(function () {
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
-  print("Synchronisiere SoC-Grenzwerte (minSoc/maxSoc) einmalig mit allen Geraeten...");
+  print("Synchronisiere SoC-Grenzwerte einmalig... ");
   syncSocLimitsAll(0, function () {
 
     print("SoC-Sync abgeschlossen.");
@@ -1749,12 +1753,12 @@ printBannerLine(function () {
     // PRÜFUNG: Ist KVS überhaupt aktiviert?
     if (!CONFIG.kvsEnabled) {
 
-      print("KVS-Funktion ist deaktiviert (CONFIG.kvsEnabled = false) - KVS wird ignoriert.");
+      print("KVS-Funktion ist deaktiviert - KVS wird ignoriert.");
       startController();
 
     } else {
 
-      print("Pruefe KVS auf fehlende Default-Werte (einmalig)...");
+      print("Pruefe KVS auf fehlende Werte (einmalig)...");
 
       seedKvsDefaults(function () {
 
@@ -1768,7 +1772,7 @@ printBannerLine(function () {
             if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
               print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ") - Lade Overrides...");
               readKvsOverrides(state.cycleId, function () {
-                print("KVS-Overrides erfolgreich aktualisiert.");
+                print("KVS-Overrides aktualisiert.");
               });
             }
           });
