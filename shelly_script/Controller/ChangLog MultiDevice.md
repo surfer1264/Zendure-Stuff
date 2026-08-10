@@ -7,10 +7,6 @@
 * Grid-Log gerundet: Die Log-Zeile Grid: ... W gibt state.gridPower jetzt gerundet aus (Math.round(...)) statt mit Nachkommastellen.
 
 **Neu hinzugefügt**
- *Validierung für minSoc/maxSoc pro Gerät (einmalig beim Start):
-* minSoc wird auf mindestens 10 angehoben.
-* maxSoc wird auf mindestens minSoc + 1 angehoben, falls kleiner/gleich minSoc.
-* maxSoc wird auf maximal 100 begrenzt.
 * Neue Banner-Zeile beim Start: Bypass immer erlauben: aktiviert/deaktiviert.
 
 
