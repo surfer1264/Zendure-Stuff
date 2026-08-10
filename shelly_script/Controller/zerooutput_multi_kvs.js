@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.2 (validate socmin, socmax)",
+  version: "2.4.2",
   
   devices: [
      {
@@ -20,8 +20,8 @@ let CONFIG = {
       dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
-      ip: "192.168.178.143",    // Zendure IP address
-      label: "Fatamorgana",     // short name, used in logs/messages
+      ip: "192.168.178.143",   
+      label: "Fatamorgana",     
 
       minSoc: 15,               
       maxSoc: 100,              
@@ -32,23 +32,17 @@ let CONFIG = {
       dryRun: true              
     },
   ],
-// ------------------------------------------------------------------
+  // ------------------------------------------------------------------
   // SMARTMETER SECTION
-  // Where to read the household grid power from
   gridSource: "local", // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
-  // IP address of the Shelly Pro 3EM
-  gridSourceIp: "<IP address of the Shelly Pro 3EM here>",
-  // EM channel id (usually 0). Only used gridSource = "remote".
+  gridSourceIp: "<IP address Shelly Pro 3EM>",
   gridSourceEmId: 0,
   // ------------------------------------------------------------------
   // only gridSource=http_json; z.B. Zendure 3CT
-  // Full URL of a generic JSON grid meter.
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
-  // JSON-Feld: Gesamt-Netzleistung (W)
   gridSourceField: "total_power",
-  // this script expects positive = importing from grid
   gridSourceInvert: false,
   
   // ------------------------------------------------------------------
@@ -148,12 +142,6 @@ if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
 
-for (let i = 0; i < CONFIG.devices.length; i++) {
-  let d = CONFIG.devices[i];
-  if (d.minSoc < 10) d.minSoc = 10;
-  if (d.maxSoc < d.minSoc) d.maxSoc = d.minSoc + 1;
-  if (d.maxSoc > 100) d.maxSoc = 100;
-}
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
