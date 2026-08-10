@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.2",
+  version: "2.4.3 (compensateSocLimitExcess entfernt)",
   
   devices: [
      {
@@ -106,7 +106,6 @@ let CONFIG = {
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG, danach false
   kvsForceReseed: false,
-  compensateSocLimitExcess: true,
   // operation to keep the console output clean.
   debug: false,
 
@@ -837,7 +836,7 @@ function calculate(myCycle) {
           sumZenReverse += state.devices[i].zenPower;
         }
 
-        if (CONFIG.compensateSocLimitExcess && state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
+        if (state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
           let excess = state.devices[i].zenPower - state.devices[i].outputLimit;
           if (excess > 0) excessSocLimit1 += excess;
         }
