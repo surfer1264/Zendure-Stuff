@@ -55,9 +55,9 @@ let CONFIG = {
   // RULES ENGINE CORE PARAMETERS
   setpoint: 0, // (KVS-live-overridable)
   // Hysteresis in watts, PER DEVICE
-  hysteresis: 10,
+  hysteresis: 12,
   // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
-  dampingFactor: 0.6,
+  dampingFactor: 0.65,
 
   // ------------------------------------------------------------------
   // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
@@ -70,7 +70,7 @@ let CONFIG = {
     concentrateBelow: 600,
     spreadAbove: 800
   },
-  // Time-coupled hysteresis for the (only) spread -> single transition.
+  // Time-coupled hysteresis for  (only) spread -> single 
   concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
@@ -82,15 +82,16 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // REVERSE-Hysterese, nur bei reverse:true relevant
   reverseStartupPower: 30,
-  // Ladeleistung, unter der gestoppt wird (<= reverseStartupPower)
+  // Ladeleistung, unter der gestoppt wird 
   reverseStopPower: 10,
+  // Spezialbehandlung Bypass
   immerBypass: false,
-  chargeResetMargin: 5,
+  chargeResetMargin: 5, // only immerBypass: true
 
   // ------------------------------------------------------------------
-  // DISCHARGE MODE SECTION - globale Start/Stop-Hysterese, spiegelbildlich
+  // DISCHARGE MODE SECTION
   dischargeStartupPower: 35,
-  // Entladeleistung, unter der gestoppt wird (<= dischargeStartupPower)
+  // Entladeleistung, unter der gestoppt wird 
   dischargeStopPower: 15,
 
   // ------------------------------------------------------------------
@@ -109,7 +110,7 @@ let CONFIG = {
   standbySmartModeZero: false,
   // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
   kvsEnabled: false,
-  // true = Start ueberschreibt KVS mit CONFIG (verliert Overrides), danach false
+  // true = Start ueberschreibt KVS mit CONFIG, danach false
   kvsForceReseed: false,
   compensateSocLimitExcess: true,
   // operation to keep the console output clean.
@@ -924,7 +925,7 @@ function calculate(myCycle) {
   }
 
   print(
-    "Grid: " + state.gridPower + " W | Summe Geraete: " + sumZen +
+    "Grid: " + Math.round(state.gridPower) + " W | Summe Geraete: " + sumZen +
     " W (netzladef.: " + sumZenReverse + " W)" +
     " | Ziel Entladen: " + dischargeTarget + " W | Ziel Laden: " + chargeTarget + " W"
   );
