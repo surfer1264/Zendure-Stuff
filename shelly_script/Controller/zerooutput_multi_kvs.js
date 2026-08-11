@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.4 (Scriptspeicher Optimierung)",
+  version: "2.4.5 (gridReverse im Log anzeigen)",
   
   devices: [
      {
@@ -771,6 +771,9 @@ function readDevice(index, myCycle, callback) {
       }
       ds.socLimit = newSocLimit;
 
+      ds.gridReverse = (data.properties.gridReverse !== undefined) ?
+        data.properties.gridReverse : null;
+
       let acMode = data.properties.acMode;
 
       if (acMode === 2) {
@@ -1347,7 +1350,8 @@ function applyOutputs(output, myCycle) {
 
     print(
       "  " + cfg.label + ": SOC " + (ds.available ? ds.soc + "%" : "n/a") +
-      " | socLimit " + ds.socLimit +
+      " | socL " + ds.socLimit +
+      " | gridR " + (ds.gridReverse === null ? "n/a" : ds.gridReverse) +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
       " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
       (plan !== rawPlan ? " [Cooldown haelt Standby]" : "") +

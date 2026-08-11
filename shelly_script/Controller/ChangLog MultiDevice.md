@@ -1,4 +1,11 @@
 # Changelog 2.4.4
+`gridReverse` wird ins Log aufgenommen
+`gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)`
+
+
+`  SF2400: SOC 45% | socL 0 | gridR 2 | Ist 195 W | Soll 195 W | acMode 2 (Export)`
+
+# Changelog 2.4.4
 
 - CONFIG.httpTimeout als Parameter entfernt (wird im Code hhtpGet und httpPost als fester Wert mitgegeben)) 
 - CONFIG.watchdog wird als abgeleiteter Wert von intervall (Faktor 2.5) definiert und ist nicht mehr veränderbar
@@ -10,9 +17,9 @@ Feature Toggle `compensateSocLimitExcess`entfernt...keine Funktionsänderung
 # Changelog 2.4.2
 
 **Geändert (Defaults)**
-* compensateSocLimitExcess: Default von false auf true geändert.
-* hysteresis: Default von 10 auf 12 W erhöht.
- *dampingFactor: Default von 0.6 auf 0.65 erhöht.
+* `compensateSocLimitExcess`: Default von false auf true geändert.
+* `hysteresis`: Default von 10 auf 12 W erhöht.
+* `dampingFactor`: Default von 0.6 auf 0.65 erhöht.
 * Grid-Log gerundet: Die Log-Zeile Grid: ... W gibt state.gridPower jetzt gerundet aus (Math.round(...)) statt mit Nachkommastellen.
 
 **Neu hinzugefügt**
@@ -23,7 +30,7 @@ Feature Toggle `compensateSocLimitExcess`entfernt...keine Funktionsänderung
 
 **Feature**: Hub-seitige GridReverse-Steuerung ("Bypass-Verhalten")
 
-Die Solarflow-Firmware besitzt einen eigenen Schalter gridReverse (0/1/2) auf Hub-Ebene. Er steuert nicht das Laden vom Netz, sondern ob der Hub im Bypass-Betrieb (Akku voll, PV-Überschuss wird direkt durchgereicht) Energie ins Netz exportieren darf - betrifft also den Export-Zweig (outputLimit), unabhängig von der script-internen Ladeverteilung.
+Die Solarflow-Firmware besitzt einen eigenen Schalter `gridReverse` (0/1/2) auf Hub-Ebene. Er steuert nicht das Laden vom Netz, sondern ob der Hub im Bypass-Betrieb (Akku voll, PV-Überschuss wird direkt durchgereicht) Energie ins Netz exportieren darf - betrifft also den Export-Zweig (outputLimit), unabhängig von der script-internen Ladeverteilung.
 
 **Änderung**
 
@@ -64,6 +71,7 @@ kann deaktiviert werden, der FIx wird dadurch deaktiviert
 
 **Änderung**
 - `calculate()`: `sumZenReverse` prüft zusätzlich `state.devices[i].socLimit !== 1`, analog zur bereits bestehenden Filterung in `computeChargeWeights()`.
+- Fetaure Toggle `compensateSocLimitExcess`
 
 **Adressierte Bugs:**
 * https://github.com/surfer1264/Zendure-Stuff/issues/69
