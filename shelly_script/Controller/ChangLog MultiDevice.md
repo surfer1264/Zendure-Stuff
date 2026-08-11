@@ -1,5 +1,10 @@
+# Changelog 2.4.4
+
+- CONFIG.httpTimeout als Parameter entfernt (wird im Code hhtpGet und httpPost als fester Wert mitgegeben)) 
+- CONFIG.watchdog wird als abgeleiteter Wert von intervall (Faktor 2.5) definiert und ist nicht mehr veränderbar
+
 # Changelog 2.4.3
-Feature Toggle entfernt...keine Funktionsänderung
+Feature Toggle `compensateSocLimitExcess`entfernt...keine Funktionsänderung
 
 
 # Changelog 2.4.2
