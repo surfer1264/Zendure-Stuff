@@ -2,8 +2,23 @@
 `gridReverse` wird ins Log aufgenommen
 `gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)`
 
+Logzeile:
 
 `  SF2400: SOC 45% | socL 0 | gridR 2 | Ist 195 W | Soll 195 W | acMode 2 (Export)`
+
+Zweck: gridReverse ist eine Geräte-Property, die steuert, ob das Zendure-Gerät (Überschuss-)Energie exportieren darf.
+
+Werte, die das Skript selbst setzt:
+
+- Wert 1:	Export erlaubt/aktiviert	
+  - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593)
+  - b) wenn nach einer Vollsperre (allMaxed) mind. ein Gerät wieder klar unter seinem maxSoc − chargeResetMargin liegt (clearlyBelow) – nur bei `immerBypass: false`
+- Wert 2:	Export gesperrt	wenn alle Geräte ihren maxSoc erreicht haben (allMaxed) – nur bei `immerBypass: false`, um unnötigen Export zu verhindern.
+
+Wenn `immerBypass: true` findet kein aktives Schreiben oder Initalisieren dieses Wertes statt.
+
+
+
 
 # Changelog 2.4.4
 
