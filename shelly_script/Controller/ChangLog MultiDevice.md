@@ -11,7 +11,7 @@ Zweck: `grid_Reverse` ist eine Geräte-Property, die steuert, ob das Zendure-Ger
 Werte, die der Controller selbst setzt:
 
 - Wert 1:	Export erlaubt/aktiviert	
-  - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593)
+  - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593), dauerhaft freigegeben, danach nie wieder verändert.
   - b) wenn nach einer Vollsperre (allMaxed) mind. ein Gerät wieder klar unter seinem maxSoc − chargeResetMargin liegt (clearlyBelow) – nur bei `immerBypass: false`
 - Wert 2:	Export gesperrt	wenn alle Geräte ihren maxSoc erreicht haben (allMaxed) – nur bei `immerBypass: false`, um unnötigen Export zu verhindern.
 
