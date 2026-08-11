@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.3 (compensateSocLimitExcess entfernt)",
+  version: "2.4.4 (Scriptspeicher Optimierung)",
   
   devices: [
      {
@@ -92,10 +92,7 @@ let CONFIG = {
   // INTERNAL SECTION BE CAREFUL
   // Update interval (milliseconds)
   interval: 4000,
-  // Watchdog-Timeout (ms) fuer den gesamten Zyklus
-  watchdog: 10000,
   // Dont Change It
-  httpTimeout: 5,
   // Anzahl Fehler bis Benachrichtigung
   errorThreshold: 5,
   // Cooldown-Takte Laden/Entladen-Wechsel
@@ -128,7 +125,7 @@ function checkBand(band) {
 }
 
 if (CONFIG.interval < 2500) CONFIG.interval = 2500;
-if (CONFIG.watchdog < CONFIG.interval * 2.5) CONFIG.watchdog = CONFIG.interval * 2.5;
+CONFIG.watchdog = CONFIG.interval * 2.5;
 if (CONFIG.dampingFactor < 0.1) CONFIG.dampingFactor = 0.1;
 if (CONFIG.dampingFactor > 1) CONFIG.dampingFactor = 1;
 if (CONFIG.setpoint < -50) CONFIG.setpoint = -50;
@@ -538,7 +535,7 @@ function httpGet(url, callback) {
     "HTTP.GET",
     {
       url: url,
-      timeout: CONFIG.httpTimeout
+      timeout: 5
     },
     callback
   );
@@ -563,7 +560,7 @@ function httpPost(url, body, callback) {
 
       body: bodyStr,
 
-      timeout: CONFIG.httpTimeout
+      timeout: 5
     },
     callback
   );
@@ -1661,7 +1658,6 @@ bannerLines[bannerLines.length] = "Grid source: " + CONFIG.gridSource +
     (CONFIG.gridSourceInvert ? ", invertiert" : "") + ")" : "");
 bannerLines[bannerLines.length] = "Interval   : " + CONFIG.interval + " ms";
 bannerLines[bannerLines.length] = "Watchdog   : " + CONFIG.watchdog + " ms";
-bannerLines[bannerLines.length] = "HTTP-Timeout: " + CONFIG.httpTimeout + " s (pro Anfrage)";
 bannerLines[bannerLines.length] = "Setpoint   : " + CONFIG.setpoint + " W";
 bannerLines[bannerLines.length] = "Hysteresis : " + CONFIG.hysteresis + " W (pro Geraet)";
 bannerLines[bannerLines.length] = "Damping    : " + CONFIG.dampingFactor;
