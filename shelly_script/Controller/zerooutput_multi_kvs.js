@@ -75,9 +75,9 @@ let CONFIG = {
 
   // ------------------------------------------------------------------
   // REVERSE-Hysterese, nur bei reverse:true relevant
-  reverseStartupPower: 30,
+  reverseStartupPower: 35,
   // Ladeleistung, unter der gestoppt wird 
-  reverseStopPower: 10,
+  reverseStopPower: 15,
   // Spezialbehandlung Bypass
   immerBypass: false,
   chargeResetMargin: 5, // only immerBypass: false
