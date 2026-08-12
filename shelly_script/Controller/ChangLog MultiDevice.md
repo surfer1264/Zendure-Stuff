@@ -1,3 +1,6 @@
+# Changelog 3.0.0
+Dokumentation aktualisiert
+
 # Changelog 2.4.5
 `gridReverse` wird ins Log aufgenommen
 `gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)`

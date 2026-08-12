@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "2.4.5 (gridReverse im Log anzeigen)",
+  version: "3.0.0",
   
   devices: [
      {
@@ -124,13 +124,13 @@ function checkBand(band) {
   if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow +15 ;
 }
 
-if (CONFIG.interval < 2500) CONFIG.interval = 2500;
+if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
-if (CONFIG.dampingFactor < 0.1) CONFIG.dampingFactor = 0.1;
+if (CONFIG.dampingFactor < 0.4) CONFIG.dampingFactor = 0.4;
 if (CONFIG.dampingFactor > 1) CONFIG.dampingFactor = 1;
-if (CONFIG.setpoint < -50) CONFIG.setpoint = -50;
-if (CONFIG.setpoint > 50) CONFIG.setpoint = 50;
-if (CONFIG.hysteresis >50) CONFIG.hysteresis = 50;
+if (CONFIG.setpoint < -40) CONFIG.setpoint = -40;
+if (CONFIG.setpoint > 40) CONFIG.setpoint = 40;
+if (CONFIG.hysteresis >40) CONFIG.hysteresis = 40;
 if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
 if (CONFIG.rebalance.socMargin < 3) CONFIG.rebalance.socMargin = 3;
 if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
