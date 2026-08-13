@@ -534,7 +534,7 @@ function httpGet(url, callback) {
     "HTTP.GET",
     {
       url: url,
-      timeout: 5
+      timeout: 3
     },
     callback
   );
@@ -552,14 +552,12 @@ function httpPost(url, body, callback) {
     {
       method: "POST",
       url: url,
-
       headers: {
         "Content-Type": "application/json"
       },
 
       body: bodyStr,
-
-      timeout: 5
+      timeout: 3
     },
     callback
   );
