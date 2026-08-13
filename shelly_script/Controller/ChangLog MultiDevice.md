@@ -6,7 +6,8 @@
 
 **Grund:** Die Freigabe hing zuvor an chargeTarget < 0 – bei aktiver Export-Sperre wird jedoch im Zweifel kein Ladebefehl mehr ausgelöst (nur durch starkes Überschwingen an der Regelung), wodurch dieser Zweig nicht deterministisch erreicht wird, sondern eher zufällig. Der Discharge-Zweig läuft dagegen zuverlässig, solange Haushaltslast gedeckt wird. Beide Zweige behalten ihren Flankenschutz (state.allMaxedLogged).
 
-Fixed: #79
+Fixed:
+* https://github.com/surfer1264/Zendure-Stuff/issues/79
 
 # Changelog 3.0.0
 Dokumentation aktualisiert
