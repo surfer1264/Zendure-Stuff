@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.0.0",
+  version: "3.0.1",
   
   devices: [
      {
@@ -54,7 +54,7 @@ let CONFIG = {
   dampingFactor: 0.65,
 
   // ------------------------------------------------------------------
-  // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES (more than one Solarflow)
+  // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES
   discharge: {
     concentrateBelow: 600,  // W - below this combined target, use ONE device
     spreadAbove: 800        // W - above this, split across all devices
@@ -479,8 +479,7 @@ function seedKvsDefaultsStep(pairs, index, callback) {
   });
 }
 
-// Runs ONCE at startup (not per cycle - KVS is flash-backed, and this
-// avoids wearing it out). By default (CONFIG.kvsForceReseed === false)
+// Runs ONCE at startup (not per cycle
 function seedKvsDefaults(callback) {
   if (!CONFIG.kvsEnabled) {
     print("KVS-Seed uebersprungen - kvsEnabled: false");
@@ -603,8 +602,6 @@ function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, call
 
   } else {
 
-    // field ist ein Array aus Schluesseln - verschachtelten Pfad Ebene
-    // fuer Ebene ablaufen, z. B. ["StatusSNS", "SML", "Watt_Summe"]
     let current = data;
     fieldLabel = "";
 
@@ -954,8 +951,7 @@ function updateMode(directionState, targetMagnitude, cfg) {
     return "spread";
   }
 
-  // Dead zone between concentrateBelow and spreadAbove: freeze the
-  // counter (neither progress nor reset) and stay in spread mode.
+  // Dead zone between concentrateBelow and spreadAbove: 
   return "spread";
 }
 
@@ -1025,7 +1021,7 @@ function computeDischargeWeights(exclude) {
   return { weight: weight, active: active };
 }
 
-function computeChargeWeights() {
+function evaluateChargeCapacity() {
   let n = CONFIG.devices.length;
   let weight = [];
   let active = [];
@@ -1068,20 +1064,24 @@ function computeChargeWeights() {
     }
   }
 
+  return { weight: weight, active: active, clearlyBelow: clearlyBelow };
+}
+
+function computeChargeWeights() {
+  let result = evaluateChargeCapacity();
+
   if (!CONFIG.immerBypass) {
+    let n = CONFIG.devices.length;
     let allMaxed = true;
-    for (let i = 0; i < n; i++) { if (active[i]) { allMaxed = false; break; } }
+    for (let i = 0; i < n; i++) { if (result.active[i]) { allMaxed = false; break; } }
 
     if (allMaxed && !state.allMaxedLogged) {
       state.allMaxedLogged = true;
       setGridReverseAll(0, 2, function () {});
-    } else if (state.allMaxedLogged && clearlyBelow) {
-      state.allMaxedLogged = false;
-      setGridReverseAll(0, 1, function () {});
     }
   }
 
-  return { weight: weight, active: active };
+  return { weight: result.weight, active: result.active };
 }
 
 function waterFillDischarge(target, weight, active) {
@@ -1132,9 +1132,7 @@ function waterFillDischarge(target, weight, active) {
     }
   }
 
-  // Analog zu waterFillCharge: pro Geraet einfach auf 0 setzen, wenn der
-  // zugewiesene Anteil unter der globalen Stop-Schwelle liegt - Ein Geraet laeuft
-  // entweder mit sinnvoller Leistung oder gar nicht.
+  // Analog zu waterFillCharge: pro Geraet einfach auf 0 setzen, wenn der unter globalen Stop-Schwelle liegt
   for (let i = 0; i < n; i++) {
     let o = Math.round(output[i]);
 
@@ -1211,6 +1209,14 @@ function waterFillCharge(target, weight, active) {
 }
 
 function distributeDischarge(target, exclude) {
+  if (!CONFIG.immerBypass && state.allMaxedLogged) {
+    let cap = evaluateChargeCapacity();
+    if (cap.clearlyBelow) {
+      state.allMaxedLogged = false;
+      setGridReverseAll(0, 1, function () {});
+    }
+  }
+
   let weights = computeDischargeWeights(exclude);
   let weight = weights.weight;
   let active = weights.active;
@@ -1494,7 +1500,6 @@ function update() {
     state.devices[i].available = false;
   }
 
-  // KVS-Reading im 4s-Takt überspringen - direkt Zählerstand auslesen
   readGridPower(myCycle, function (ok) {
 
     if (!ok) return;

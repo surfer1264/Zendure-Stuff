@@ -1,3 +1,13 @@
+# Changelog 3.0.1
+
+**Sperren** (gridReverse: 2, bei allMaxed) bleibt in computeChargeWeights() – läuft weiterhin im Charge-Kontext, wo der Übergang zuverlässig erkannt wird.
+
+**Freigeben** (gridReverse: 1, bei clearlyBelow) wurde von computeChargeWeights() nach distributeDischarge() verschoben.
+
+**Grund:** Die Freigabe hing zuvor an chargeTarget < 0 – bei aktiver Export-Sperre wird jedoch im Zweifel kein Ladebefehl mehr ausgelöst (nur durch starkes Überschwingen an der Regelung), wodurch dieser Zweig nicht deterministisch erreicht wird, sondern eher zufällig. Der Discharge-Zweig läuft dagegen zuverlässig, solange Haushaltslast gedeckt wird. Beide Zweige behalten ihren Flankenschutz (state.allMaxedLogged).
+
+Fixed: #79
+
 # Changelog 3.0.0
 Dokumentation aktualisiert
 
