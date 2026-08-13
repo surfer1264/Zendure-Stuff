@@ -9,6 +9,8 @@
 Fixed:
 * https://github.com/surfer1264/Zendure-Stuff/issues/79
 
+httpTimeOut: 3 (vorher 5)
+
 # Changelog 3.0.0
 Dokumentation aktualisiert
 
