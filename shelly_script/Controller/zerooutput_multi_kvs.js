@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.0.1",
+  version: "3.0.2",
   
   devices: [
      {
@@ -222,7 +222,7 @@ function sendWebhookMessage(text) {
       url: CONFIG.signal.webhookUrl,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: text }),
-      timeout: 15
+      timeout: 8
     },
     function (result, error_code, error_msg) {
       if (error_code === 0)
@@ -256,7 +256,7 @@ function sendSignalMessage(text) {
 
   Shelly.call(
     "HTTP.GET",
-    { url: url, timeout: 15 },
+    { url: url, timeout: 8 },
     function (result, error_code, error_msg) {
       if (error_code === 0)
         print("Signal-Nachricht erfolgreich gesendet.");
@@ -1591,6 +1591,10 @@ function syncSocLimitsDevice(index, callback) {
 
       let minSocRaw = Math.round(cfg.minSoc * 10);
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
+
+      if (data.properties && data.properties.gridReverse === 2) {
+        state.allMaxedLogged = true;
+      }
 
       let props = { minSoc: minSocRaw, socSet: maxSocRaw };
       if (cfg.reverse && CONFIG.immerBypass) props.gridReverse = 1;
