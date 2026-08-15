@@ -1,3 +1,6 @@
+# Changelog 3.0.3
+Update Logging, siehe Kapitel 12 Gesamtdoku
+
 # Changelog 3.0.2
 Bei Neustart des Scriptes wird die Reinitialisierung des Status von GridR auf den Wert 1 (Export erlaubt) forciert.
 

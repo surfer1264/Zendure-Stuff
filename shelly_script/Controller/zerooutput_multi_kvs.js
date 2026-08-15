@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.0.2",
+  version: "3.0.3 (Logformat)",
   
   devices: [
      {
@@ -910,10 +910,11 @@ function calculate(myCycle) {
     output[i] = chargeOutput[i] !== 0 ? chargeOutput[i] : dischargeOutput[i];
   }
 
+  let ladeKorrektur = chargeTarget - dischargeTarget;
+
   print(
-    "Grid: " + Math.round(state.gridPower) + " W | Summe Geraete: " + sumZen +
-    " W (netzladef.: " + sumZenReverse + " W)" +
-    " | Ziel Entladen: " + dischargeTarget + " W | Ziel Laden: " + chargeTarget + " W"
+    "Netzsaldo: " + Math.round(state.gridPower) + " W | Ist-Summe: " + sumZen +
+    " W | Regelsignal: " + dischargeTarget + " W | Ladekorrektur: " + ladeKorrektur + " W"
   );
 
   applyOutputs(output, myCycle);
