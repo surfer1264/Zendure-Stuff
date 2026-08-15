@@ -1,3 +1,16 @@
+# Changelog 3.0.2
+Bei Neustart des Scriptes wird die Reinitialisierung des Status von GridR auf den Wert 1 (Export erlaubt) forciert.
+
+**Hintergrund:** externer Zugriffe auf die Konfiguration des Solatflows (durch HA oder durch die Zendure App korrumperen ggf. den Zustand)
+Ein Neustart kann das beheben.
+
+**Wichtig** Im laufenden Betrieb des Controllers findet KEINE Synchronisation von Einstellugnen statt mit dem Solarflow statt.
+
+Bezugnahme ist 
+* https://github.com/surfer1264/Zendure-Stuff/issues/80
+
+Es is kein Fix im eigentlichen Sinne, der Zustand bildet sich im Controller automatisch über die Zeit korrekt ab.
+
 # Changelog 3.0.1
 
 **Sperren** (gridReverse: 2, bei allMaxed) bleibt in computeChargeWeights() – läuft weiterhin im Charge-Kontext, wo der Übergang zuverlässig erkannt wird.
