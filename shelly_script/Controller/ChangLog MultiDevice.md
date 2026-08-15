@@ -1,7 +1,7 @@
 # Changelog 3.0.2
 Bei Neustart des Scriptes wird die Reinitialisierung des Status von GridR auf den Wert 1 (Export erlaubt) forciert.
 
-**Hintergrund:** externer Zugriffe auf die Konfiguration des Solatflows (durch HA oder durch die Zendure App korrumperen ggf. den Zustand)
+**Hintergrund:** externe Zugriffe auf die Konfiguration des Solatflows (durch HA oder durch die Zendure App) korrumpieren ggf. den Zustand
 Ein Neustart kann das beheben.
 
 **Wichtig** Im laufenden Betrieb des Controllers findet KEINE Synchronisation von Einstellugnen statt mit dem Solarflow statt.
