@@ -1,12 +1,12 @@
 // ========== AkkuVolt Watchdog - Multi-Device (Hub2/SF2400Pro u.a.) via REST ==========
-// Speicherschonende Version mit einfachen Encodings aus v1.2.4
+// Speicherschonende Version v1.3.2-opt
 
 print("Starte AkkuVolt-Watchdog Multi-Device");
 
 // ==================== KONFIGURATION ====================
 
 let CONFIG = {
-  version: "1.3.0",
+  version: "1.3.2-opt",
 
   devices: [
     { ip: "192.168.178.143", label: "SF2400", enabled: true },
@@ -65,6 +65,13 @@ if (CONFIG.devices.length === 0) {
   print("WARNUNG: CONFIG.devices ist leer!");
 }
 
+// Globales Map-Objekt um Allokation bei jedem Aufruf zu verhindern
+let ENCODE_MAP = {
+  " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss",
+  ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
+  "°": "%C2%B0", "!": "%21", ",": "%2C"
+};
+
 // ==================== STATUS / STATE ====================
 
 let state = {
@@ -79,25 +86,28 @@ let state = {
   devices: []
 };
 
+// Nur aktive Geräte im State vorhalten
 for (let i = 0; i < CONFIG.devices.length; i++) {
-  state.devices[i] = {
-    soc: null,
-    serial: null,
-    hyperTemp: null,
+  if (CONFIG.devices[i].enabled) {
+    state.devices[i] = {
+      soc: null,
+      serial: null,
+      hyperTemp: null,
 
-    minVol: null,
-    minVolSoc: null,
-    minVolSn: null,
+      minVol: null,
+      minVolSoc: null,
+      minVolSn: null,
 
-    available: false,
+      available: false,
 
-    akkuVollMsgSent: false,
-    hyperTempMsgSent: false,
-    lowVoltMsgSent: {},
+      akkuVollMsgSent: false,
+      hyperTempMsgSent: false,
+      lowVoltMsgSent: {},
 
-    errors: { connect: 0, json: 0 },
-    notified: { connect: false, json: false }
-  };
+      errors: { connect: 0, json: 0 },
+      notified: { connect: false, json: false }
+    };
+  }
 }
 
 // ==================== HILFSFUNKTIONEN & BENACHRICHTIGUNG ====================
@@ -108,20 +118,12 @@ function logDebug(msg) {
   }
 }
 
-// Einfache Mapping-Encodierung direkt aus Version 1.2.4
 function simpleEncode(str) {
   let out = "";
-  let map = {
-    " ": "%20", "ö": "oe", "ä": "ae", "ü": "ue", "ß": "ss",
-    ":": "%3A", "(": "%28", ")": "%29", "\n": "%0A", "%": "%25",
-    "°": "%C2%B0", "!": "%21", ",": "%2C"
-  };
-
   for (let i = 0; i < str.length; i++) {
     let ch = str.charAt(i);
-    out += (map[ch] || ch);
+    out += (ENCODE_MAP[ch] || ch);
   }
-
   return out;
 }
 
@@ -153,18 +155,16 @@ function sendWebhookMessage(text) {
   );
 }
 
-// Signal-Sende-Funktion exakt übernommen aus v1.2.4
 function sendSignalMessage(text) {
-  if (!CONFIG.signal.enabled)
-    return;
+  if (!CONFIG.signal.enabled) return;
 
   if (CONFIG.signal.typ == "WEBHOOK") {
     sendWebhookMessage(text);
     return;
   }
 
-  let safeText = simpleEncode(text);
   let url;
+  let safeText = simpleEncode(text);
 
   if (CONFIG.signal.typ == "SIGNAL")
     url = "https://api.callmebot.com/signal/send.php?phone=" + CONFIG.signal.phone + "&apikey=" + CONFIG.signal.apiKey + "&text=" + safeText;
@@ -208,10 +208,6 @@ function reportSuccess(errors, notified, type, label) {
   }
 }
 
-function first6(label) {
-  return label ? label.substr(0, 6) : "??????";
-}
-
 function isNum(v) {
   return typeof v === "number" && !isNaN(v) && isFinite(v);
 }
@@ -240,8 +236,7 @@ function lock() {
 function unlock(myCycle) {
   if (myCycle !== state.cycleId) return;
 
-  let duration = Date.now() - state.cycleStartedAt;
-  logDebug("Zyklus #" + myCycle + " beendet in " + duration + " ms");
+  logDebug("Zyklus #" + myCycle + " beendet in " + (Date.now() - state.cycleStartedAt) + " ms");
 
   reportSuccess(state.errors, state.notified, "watchdog", "System");
   state.busy = false;
@@ -407,9 +402,9 @@ function readAllDevices(index, myCycle, callback) {
 
 function deviceValues(index) {
   let ds = state.devices[index];
-  let socStr = (ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
-  let tempStr = (ds.available && isNum(ds.hyperTemp)) ? (ds.hyperTemp.toFixed(1) + "C") : "n/a";
-  let volStr = (ds.available && isNum(ds.minVol)) ? (ds.minVol.toFixed(2) + "V") : "n/a";
+  let socStr = (ds && ds.available && ds.soc !== null) ? (ds.soc + "%") : "n/a";
+  let tempStr = (ds && ds.available && isNum(ds.hyperTemp)) ? (ds.hyperTemp.toFixed(1) + "C") : "n/a";
+  let volStr = (ds && ds.available && isNum(ds.minVol)) ? (ds.minVol.toFixed(2) + "V") : "n/a";
   return socStr + ", " + tempStr + ", " + volStr;
 }
 
@@ -426,8 +421,10 @@ function printDeviceSummary() {
 function sendDigest(headerText) {
   let text = headerText;
   for (let i = 0; i < CONFIG.devices.length; i++) {
-    if (!CONFIG.devices[i].enabled) continue;
-    text += "\n" + first6(CONFIG.devices[i].label) + ": " + deviceValues(i);
+    let cfg = CONFIG.devices[i];
+    if (!cfg.enabled) continue;
+    let lbl = cfg.label ? cfg.label.substr(0, 6) : "??????"; // inline first6()
+    text += "\n" + lbl + ": " + deviceValues(i);
   }
 
   if (text.length > CONFIG.maxMessageLength) {
@@ -466,7 +463,7 @@ function onCycleComplete(myCycle) {
 
   let anyAvailable = false;
   for (let i = 0; i < CONFIG.devices.length; i++) {
-    if (state.devices[i].available) anyAvailable = true;
+    if (state.devices[i] && state.devices[i].available) anyAvailable = true;
   }
 
   if (!anyAvailable) {
@@ -487,7 +484,7 @@ function update() {
   let myCycle = lock();
 
   for (let i = 0; i < CONFIG.devices.length; i++) {
-    state.devices[i].available = false;
+    if (state.devices[i]) state.devices[i].available = false;
   }
 
   readAllDevices(0, myCycle, function () {
@@ -495,41 +492,11 @@ function update() {
   });
 }
 
-// ==================== BANNER & START ====================
+// ==================== START ====================
 
 let enabledCount = 0;
 for (let i = 0; i < CONFIG.devices.length; i++) {
   if (CONFIG.devices[i].enabled) enabledCount++;
-}
-
-function printBannerStep(step, onDone) {
-  let TOTAL_STEPS = 10 + CONFIG.devices.length;
-
-  if (step === 0) print("--------------------------------");
-  else if (step === 1) print("AkkuVolt Watchdog " + CONFIG.version);
-  else if (step === 2) print("Geraete    : " + CONFIG.devices.length + " (aktiv: " + enabledCount + ")");
-  else if (step >= 3 && step < 3 + CONFIG.devices.length) {
-    let dev = CONFIG.devices[step - 3];
-    print("  - " + dev.label + " (" + dev.ip + ")" + (dev.enabled ? "" : " [OFF]"));
-  } else {
-    let f = step - (3 + CONFIG.devices.length);
-    if (f === 0) print("Intervall  : " + CONFIG.pollIntervalMs + " ms");
-    if (f === 1) print("ErrThresh  : " + CONFIG.errorThreshold);
-    if (f === 2) print("Voll ab    : " + CONFIG.vollSchwelle + "% (Reset: " + CONFIG.entladeReset + "%)");
-    if (f === 3) print("MinVolt    : " + CONFIG.minVoltWarn + "V (Reset: " + CONFIG.minVoltReset + "V)");
-    if (f === 4) print("Temp-Warn  : " + CONFIG.tempWarn + "C (Reset: " + CONFIG.tempReset + "C)");
-    if (f === 5) print("Nachrichten: " + (CONFIG.signal.enabled ? CONFIG.signal.typ : "aus"));
-    if (f === 6) print("Debug      : " + (CONFIG.debug ? "AN" : "AUS"));
-    if (f === 7) print("--------------------------------");
-  }
-
-  if (step + 1 < TOTAL_STEPS) {
-    Timer.set(100, false, function () {
-      printBannerStep(step + 1, onDone);
-    });
-  } else if (onDone) {
-    onDone();
-  }
 }
 
 function startApp() {
@@ -545,6 +512,34 @@ function startApp() {
 
 // Haupt-Einstiegspunkt
 if (CONFIG.bannerVerbose) {
+  // Banner nur deklarieren wenn explizit aktiviert
+  let printBannerStep = function(step, onDone) {
+    let TOTAL_STEPS = 10 + CONFIG.devices.length;
+
+    if (step === 0) print("--------------------------------");
+    else if (step === 1) print("AkkuVolt Watchdog " + CONFIG.version);
+    else if (step === 2) print("Geraete    : " + CONFIG.devices.length + " (aktiv: " + enabledCount + ")");
+    else if (step >= 3 && step < 3 + CONFIG.devices.length) {
+      let dev = CONFIG.devices[step - 3];
+      print("  - " + dev.label + " (" + dev.ip + ")" + (dev.enabled ? "" : " [OFF]"));
+    } else {
+      let f = step - (3 + CONFIG.devices.length);
+      if (f === 0) print("Intervall  : " + CONFIG.pollIntervalMs + " ms");
+      if (f === 1) print("ErrThresh  : " + CONFIG.errorThreshold);
+      if (f === 2) print("Voll ab    : " + CONFIG.vollSchwelle + "% (Reset: " + CONFIG.entladeReset + "%)");
+      if (f === 3) print("MinVolt    : " + CONFIG.minVoltWarn + "V (Reset: " + CONFIG.minVoltReset + "V)");
+      if (f === 4) print("Temp-Warn  : " + CONFIG.tempWarn + "C (Reset: " + CONFIG.tempReset + "C)");
+      if (f === 5) print("Nachrichten: " + (CONFIG.signal.enabled ? CONFIG.signal.typ : "aus"));
+      if (f === 6) print("Debug      : " + (CONFIG.debug ? "AN" : "AUS"));
+      if (f === 7) print("--------------------------------");
+    }
+
+    if (step + 1 < TOTAL_STEPS) {
+      Timer.set(100, false, function () { printBannerStep(step + 1, onDone); });
+    } else if (onDone) {
+      onDone();
+    }
+  };
   printBannerStep(0, startApp);
 } else {
   print("AkkuVolt Watchdog " + CONFIG.version + " gestartet (" + enabledCount + "/" + CONFIG.devices.length + " aktiv)");
