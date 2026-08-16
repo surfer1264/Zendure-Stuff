@@ -9,6 +9,41 @@ siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/minif
 Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
 
 
+# Changelog 3.1.1
+
+Bezugnahme ist 
+* https://github.com/surfer1264/Zendure-Stuff/issues/80
+* https://github.com/surfer1264/Zendure-Stuff/issues/81
+
+
+Der Konfigurationsparamteer `reveers: true/false`steuert die AC-LAdefähigkeit der Solarflow im Controller
+Der Geräteparameter `gridRevers`steuert die Fähigkeit des Solarflow den Export von Überschussenergie zu erlauben oder zu verbieten.
+
+Beide Parameter haben inhaltlich keine Berührungspunkte, waren im Code aber in einer Abhängigkeit verbunden. Die wurde aufgelöst
+
+Problem: Ein Gerät mit `reverse: false`hätte zwar Enegerie exportieren können, wurde aber von der Steuerung mit `gridReveers`ausgeschlossen.  
+
+
+### Entfernt: `excessSocLimit1`-Korrekturterm
+
+Solarflows folgen den Vorgaben des Controllers im Bypass Fall nicht ....
+Es wird nicht nur die Entladeleistung gliefert sondern der gesamte PV-Überschuss, der zum Laden eines AC-ladefähigen Hubs dienen kann
+Der Überschusswert wurde defacto "doppelt" angerechnet. Je nach Gerätekonstellation konnte das sogar zu extra Netzbezug führen.
+
+
+### Neu: Zustandserkennung beim Start
+
+Problem: In einem Testfall war grudRevers: 2 (Exportsperre altiv). Nach Scriptstart wurde die Sperre nicht aufgehoben, obwohl alle Voraussetzungen erfüllt waren
+- In `syncSocLimitsDevice()` (einmalig beim Boot) wird jetzt geprüft: `if (data.properties && data.properties.gridReverse === 2) state.allMaxedLogged = true;`
+- Damit erkennt der Controller nach einem Neustart sofort, wenn ein Gerät bereits mit `gridReverse: 2` (Netzexport verboten) läuft, statt diesen Zustand erst nach einer vollen Regelrunde neu herzuleiten.
+- Defacto wird die Prüfung durch Setzen des Status `state.allMaxedLogged = true`  erzwungen
+
+## Fazit
+
+v3.1.1 ist im Kern ein **Bugfix-Release**: Die Kopplung von `reverse` (Geräteeigenschaft: darf vom Netz laden) an die fleet-weite `gridReverse`-Steuerung (Geräteeigenschaft: darf bei Ladesperre noch Netzexport machen) wurde entfernt. Beide Mechanismen laufen jetzt, wie beschrieben, komplett unabhängig voneinander – `socLimit` bestimmt allein, wann fleet-weit gesperrt/freigegeben wird, `reverse` bestimmt weiterhin ausschließlich, wie die Ladeleistung auf die Geräte verteilt wird.
+
+
+
 # Changelog 3.0.3
 Update Logging, siehe Kapitel 12 Gesamtdoku
 

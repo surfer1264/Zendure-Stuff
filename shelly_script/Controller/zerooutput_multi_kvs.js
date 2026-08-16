@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.0.3 (Logformat)",
+  version: "3.1.1 (gridReverse fleet-wide)",
   
   devices: [
      {
@@ -110,7 +110,7 @@ let CONFIG = {
   // MESSAGE SECTION
   signal: {
     enabled: false,          // set to true to activate notifications
-	typ: "WEBHOOK",			 // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
+	  typ: "WEBHOOK",			     // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX (nur SIGNAL/WHATSAPP)
     apiKey: "YOUR_API_KEY",  // CallMeBot API key
     webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
@@ -210,8 +210,7 @@ function simpleEncode(str) {
   return out;
 }
 
-// Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}, kein
-// Auth-Header, kein Template - passt z.B. auf einen Home Assistant
+// Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}
 function sendWebhookMessage(text) {
   print("Sende Webhook-Benachrichtigung...");
 
@@ -815,7 +814,6 @@ function calculate(myCycle) {
   let n = CONFIG.devices.length;
   let sumZen = 0;
   let sumZenReverse = 0;
-  let excessSocLimit1 = 0;
   let availableCount = 0;
 
   let countedIps = {};
@@ -829,11 +827,6 @@ function calculate(myCycle) {
         
         if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
-        }
-
-        if (state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
-          let excess = state.devices[i].zenPower - state.devices[i].outputLimit;
-          if (excess > 0) excessSocLimit1 += excess;
         }
 
         countedIps[ip] = true;
@@ -860,7 +853,7 @@ function calculate(myCycle) {
 
   let dischargeTarget = Math.round(state.smoothedOutput);
 
-  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse - excessSocLimit1);
+  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
 
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
@@ -933,7 +926,6 @@ function updateMode(directionState, targetMagnitude, cfg) {
   }
 
   // currentMode === "spread"
-
   if (targetMagnitude > cfg.spreadAbove) {
     directionState.holdCycles = 0; // genuine spike back up - reset the hold counter
     return "spread";
@@ -1020,11 +1012,32 @@ function computeDischargeWeights(exclude) {
   return { weight: weight, active: active };
 }
 
+// gridReverse-Sperrbedingung: fleet-weit, UNABHAENGIG von cfg.reverse.
+function allDevicesAtChargeLimit() {
+  let anyAvailable = false;
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    let ds = state.devices[i];
+    if (!ds.available) continue;
+    anyAvailable = true;
+    if (ds.socLimit !== 1) return false;
+  }
+  return anyAvailable;
+}
+
+// gridReverse-Freigabebedingung: fleet-weit, UNABHAENGIG von cfg.reverse.
+function anyDeviceClearlyBelowMax() {
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    let ds = state.devices[i];
+    let cfg = CONFIG.devices[i];
+    if (ds.available && ds.soc < cfg.maxSoc - CONFIG.chargeResetMargin) return true;
+  }
+  return false;
+}
+
 function evaluateChargeCapacity() {
   let n = CONFIG.devices.length;
   let weight = [];
   let active = [];
-  let clearlyBelow = false;
 
   for (let i = 0; i < n; i++) {
     let ds = state.devices[i];
@@ -1048,8 +1061,6 @@ function evaluateChargeCapacity() {
     weight[i] = w;
     active[i] = (w > 0);
 
-    if (ds.soc < cfg.maxSoc - CONFIG.chargeResetMargin) clearlyBelow = true;
-
     if (w === 0) {
       if (!ds.maxSocLogged) {
         print(cfg.label + ": SOC-Obergrenze erreicht (" + ds.soc +
@@ -1063,18 +1074,14 @@ function evaluateChargeCapacity() {
     }
   }
 
-  return { weight: weight, active: active, clearlyBelow: clearlyBelow };
+  return { weight: weight, active: active };
 }
 
 function computeChargeWeights() {
   let result = evaluateChargeCapacity();
 
   if (!CONFIG.immerBypass) {
-    let n = CONFIG.devices.length;
-    let allMaxed = true;
-    for (let i = 0; i < n; i++) { if (result.active[i]) { allMaxed = false; break; } }
-
-    if (allMaxed && !state.allMaxedLogged) {
+    if (allDevicesAtChargeLimit() && !state.allMaxedLogged) {
       state.allMaxedLogged = true;
       setGridReverseAll(0, 2, function () {});
     }
@@ -1209,8 +1216,7 @@ function waterFillCharge(target, weight, active) {
 
 function distributeDischarge(target, exclude) {
   if (!CONFIG.immerBypass && state.allMaxedLogged) {
-    let cap = evaluateChargeCapacity();
-    if (cap.clearlyBelow) {
+    if (anyDeviceClearlyBelowMax()) {
       state.allMaxedLogged = false;
       setGridReverseAll(0, 1, function () {});
     }
@@ -1539,10 +1545,6 @@ function setGridReverseDevice(index, value, callback) {
 
 function setGridReverseAll(index, value, callback) {
   if (index >= CONFIG.devices.length) { callback(); return; }
-  if (!CONFIG.devices[index].reverse) {
-    setGridReverseAll(index + 1, value, callback);
-    return;
-  }
   setGridReverseDevice(index, value, function () {
     setGridReverseAll(index + 1, value, callback);
   });
@@ -1555,8 +1557,7 @@ function syncSocLimitsDevice(index, callback) {
   if (cfg.dryRun) {
     print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
 
-    // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
-    // aufeinanderfolgenden dryRun-Geraeten wuerde sich syncSocLimitsAll()
+    // WICHTIG: callback() NICHT synchron aufrufen
     Timer.set(0, false, callback);
     return;
   }
@@ -1598,7 +1599,7 @@ function syncSocLimitsDevice(index, callback) {
       }
 
       let props = { minSoc: minSocRaw, socSet: maxSocRaw };
-      if (cfg.reverse && CONFIG.immerBypass) props.gridReverse = 1;
+      if (CONFIG.immerBypass) props.gridReverse = 1;
 
       httpPost(
 
