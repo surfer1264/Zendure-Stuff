@@ -1,6 +1,7 @@
 # Changelog *Major Change*
 ab hier beginnt eigene Releasestrecke für den Controller
-https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini
+
+Codebase: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini
 
 Eine Weiterentwicklung kann nur erfolgen unter Nutzung von **Minify**, da die Script-Engine nur js-Scripte bis 50kB zulässt.
 Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kommentare aus dem Code entfernt. Dies kann auch ein Python-Script erledigen.
@@ -10,7 +11,8 @@ Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
 
 # Changelog 3.0.3
 Update Logging, siehe Kapitel 12 Gesamtdoku
-https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js
+
+Codebase: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js
 
 # Changelog 3.0.2
 Bei Neustart des Scriptes wird die Reinitialisierung des Status von GridR auf den Wert 1 (Export erlaubt) forciert.
