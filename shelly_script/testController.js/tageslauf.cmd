@@ -5,7 +5,7 @@ set STEP_MIN=0.05
 set CYCLES=28800
 set INTERVAL_MS=3000
 set START_SOC=50
-set LOAD_SCALE=1
+set LOAD_SCALE=0.5
 
 echo Werte fuer diesen Lauf:
 echo   SPEED_FACTOR=%SPEED_FACTOR%

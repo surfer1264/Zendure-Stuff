@@ -186,15 +186,22 @@ const server = http.createServer((req, res) => {
     const elapsed = lastGridPollAt === null ? 0 : STEP_MIN;
     if (elapsed > 0) simMinute += STEP_MIN;
 
+    let surplus0 = 0, surplus1 = 0;
     if (elapsed > 0) {
-      advanceDevice(dev0, elapsed);
-      advanceDevice(dev1, elapsed);
+      surplus0 = advanceDevice(dev0, elapsed);
+      surplus1 = advanceDevice(dev1, elapsed);
     }
     lastGridPollAt = Date.now();
 
     const load = householdLoad(simMinute);
     const acSum = currentAcContribution(dev0) + currentAcContribution(dev1);
-    const grid = load - acSum;
+    // PV-Ueberschuss (Akku voll ODER Ladeleistung gedeckelt) wird vom
+    // Solarflow-Hybridwechselrichter automatisch AC-seitig durchgereicht -
+    // unabhaengig vom outputLimit/acMode-Kommando des Reglers (der kennt
+    // PV-Leistung ueberhaupt nicht, genau wie im echten Skript). Er deckt
+    // zuerst den Haushalt, darueber hinaus geht er ins Netz (Einspeisung).
+    const usableSurplus = surplus0 + surplus1;
+    const grid = load - acSum - usableSurplus;
 
     log.push({
       t: hhmm(simMinute), minute: Math.round(simMinute * 10000) / 10000,
@@ -202,6 +209,7 @@ const server = http.createServer((req, res) => {
       grid_W: Math.round(grid),
       soc_sf800: Math.round(dev0.soc), soc_sf2400: Math.round(dev1.soc),
       pv_sf800: Math.round(dev0.lastPv), pv_sf2400: Math.round(dev1.lastPv),
+      ueberschuss_sf800: Math.round(surplus0), ueberschuss_sf2400: Math.round(surplus1),
       acMode_sf800: dev0.acMode, out_sf800: dev0.outputLimit, in_sf800: dev0.inputLimit,
       acMode_sf2400: dev1.acMode, out_sf2400: dev1.outputLimit, in_sf2400: dev1.inputLimit,
       socLimit_sf800: socLimitOf(dev0), socLimit_sf2400: socLimitOf(dev1),

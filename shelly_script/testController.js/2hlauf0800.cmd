@@ -1,4 +1,4 @@
-del tageslauf.log
+del 2htageslauf.log
 del closed_loop_result.csv
 set START_MIN=480
 set CYCLES=2400
@@ -17,7 +17,7 @@ echo   INTERVAL_MS=%INTERVAL_MS%
 echo   START_SOC=%START_SOC%
 echo   LOAD_SCALE=%LOAD_SCALE%
 
-node run_test.js > tageslauf.log 2>&1
+node run_test.js > 2htageslauf.log 2>&1
 
 echo Fertig - erste Log-Zeile zur Kontrolle:
 findstr /N "^" tageslauf.log | findstr "^1:"

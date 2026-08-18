@@ -67,26 +67,16 @@ set SPEED_FACTOR=150&&set STEP_MIN=0.05&&set CYCLES=28800&&set INTERVAL_MS=3000&
 
 **Alle Umgebungsvariablen im Überblick:**
 
-| Variable | Steuert | Womit erreichst du das |
+| Variable | Bedeutung | Default |
 |---|---|---|
-| `CYCLES` | Anzahl Regelzyklen | Wie lang der simulierte Zeitraum ist (`CYCLES × STEP_MIN` Minuten) |
-| `STEP_MIN` | Simulierte Minuten pro Zyklus | Auflösung der Umgebung. Klein (0.05) = realitätstreue Hold-/Cooldown-Timer. Groß (15) = schneller grober Tagesüberblick, aber Timer-Verhalten verfälscht |
-| `SPEED_FACTOR` | Reales Warten zwischen Zyklen | Beschleunigt nur die Wall-Clock-Geschwindigkeit, ohne die Zyklen-Zähler-Logik im Skript zu beeinflussen – macht lange `CYCLES`-Läufe in Minuten statt Stunden machbar |
-| `START_MIN` | Start-Uhrzeit (Minute seit 00:00) | Gezielt in ein bestimmtes Fenster springen, z. B. `420` = 07:00, um nur die morgendliche Entladesperre zu testen, ohne die Nacht davor mitlaufen zu lassen |
-| `START_SOC` | Start-SOC beider Geräte (%) | Szenarien wie "beide starten fast voll" simulieren, ohne erst stundenlang aufladen zu müssen |
-| `LOAD_SCALE` | Skaliert die gesamte Haushaltslastkurve | Extremszenarien erzwingen – z. B. sehr niedrige Last (`0.05`–`0.2`), damit beide Akkus gleichzeitig 100 % erreichen und der `gridReverse`-Fleet-Lock auslöst |
-| `INTERVAL_MS` | Muss zu `CONFIG.interval` in `zdmc_test.js` passen | Nur für die Laufzeit-Schätzung/Logging des Runners – steuert NICHT den echten Zyklus (der kommt aus der CONFIG selbst) |
-| `MIN_REAL_MS` | Untergrenze für den realen Zyklusabstand | Schutz gegen Überlastung des Mock-Servers bei sehr hohem `SPEED_FACTOR` |
-| `MAX_WAIT_MS` | Sicherheits-Obergrenze für die Gesamtlaufzeit | Verhindert endloses Warten, falls ein Zyklus hängt (z. B. Watchdog-Stall) – normalerweise nicht selbst setzen, hat sinnvollen Default |
-
-
-**Die drei, die für unterschiedliche Testziele am wichtigsten sind:**
-- **Realitätsnaher Tageslauf:** `STEP_MIN=0.05` + `CYCLES=28800` + `SPEED_FACTOR=150`
-- **Schneller grober Überblick:** `STEP_MIN=15` + `CYCLES=96` (ohne `SPEED_FACTOR`, läuft in ~5 Min.)
-- **Fleet-Lock (`gridReverse=2`) gezielt provozieren:** `LOAD_SCALE=0.05` + `START_SOC=85`, kombinierbar mit einem der beiden obigen
-- **2-Stunden Test ab 08:00** 
-`$env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js`
-
+| `CYCLES` | Anzahl Regelzyklen | 20 |
+| `INTERVAL_MS` | muss zu `CONFIG.interval` in `zdmc_test.js` passen (Skript erzwingt Minimum 3000) | 3000 |
+| `STEP_MIN` | simulierte Minuten pro Zyklus (Umgebung) | 8 |
+| `START_MIN` | Start-Uhrzeit in Minuten seit 00:00 (z. B. `420` = 07:00) | 0 |
+| `START_SOC` | Start-SOC beider Geräte in % | 50 |
+| `LOAD_SCALE` | Skaliert den gesamten Haushaltslastverlauf (0.2 = 20 %) | 1.0 |
+| `SPEED_FACTOR` | beschleunigt das reale Warten zwischen Zyklen (siehe unten) | 1 |
+| `MIN_REAL_MS` | Untergrenze für den realen Zyklusabstand, Schutz gegen Überlastung | 15 |
 
 ## Geschwindigkeit: läuft das in Echtzeit? Kann man beschleunigen?
 
@@ -378,12 +368,3 @@ interpoliert.
   interpolieren statt synthetisch zu rechnen.
 - **Künstliche Fehler/Timeouts im Mock**: um `reportError`/Watchdog-Pfade
   gezielt zu testen (aktuell nicht abgedeckt, siehe "Warum zuverlässig").
-
-  ## Testdatenkurven
-  
-  <img width="1500" height="1125" alt="image" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
-
-  ### Einsatz von LOAD_SCALE
-  <img width="1500" height="675" alt="image" src="https://github.com/user-attachments/assets/552e5a88-afd2-44c5-a442-2fcb4f93628f" />
-
-
