@@ -378,3 +378,8 @@ interpoliert.
   interpolieren statt synthetisch zu rechnen.
 - **Künstliche Fehler/Timeouts im Mock**: um `reportError`/Watchdog-Pfade
   gezielt zu testen (aktuell nicht abgedeckt, siehe "Warum zuverlässig").
+
+  ## Testdatenkurven
+  
+  <img width="1500" height="1125" alt="image" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
+
