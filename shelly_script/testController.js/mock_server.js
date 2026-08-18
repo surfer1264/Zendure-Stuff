@@ -13,9 +13,9 @@ const STEP_MIN = Number(process.env.STEP_MIN || 8); // simulierte Minuten pro Zy
 let simMinute = Number(process.env.START_MIN || 0);  // Start-Uhrzeit (Minute des Tages)
 
 function hhmm(m) {
-  m = ((m % 1440) + 1440) % 1440;
-  const totalMin = Math.round(m); // fuer die Anzeige auf ganze Minute runden
-  const h = Math.floor(totalMin / 60), mi = totalMin % 60;
+  const totalMin = Math.round(m); // erst auf ganze Minute runden...
+  const wrapped = ((totalMin % 1440) + 1440) % 1440; // ...DANN auf einen Tag wrappen
+  const h = Math.floor(wrapped / 60), mi = wrapped % 60;
   return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
 }
 
@@ -79,8 +79,8 @@ function makeDevice(sn, capacityKWh, startSoc, pvFn) {
 }
 
 const START_SOC = Number(process.env.START_SOC || 50);
-const dev0 = makeDevice("MOCKSN-SF800", 2.0, START_SOC, pv800);
-const dev1 = makeDevice("MOCKSN-SF2400", 4.0, START_SOC, pv2400);
+const dev0 = makeDevice("MOCKSN-SF800", 3.0, START_SOC, pv800);
+const dev1 = makeDevice("MOCKSN-SF2400", 6.0, START_SOC, pv2400);
 
 function socLimitOf(dev) {
   const maxSoc = dev.socSetX10 / 10;
@@ -195,12 +195,31 @@ const server = http.createServer((req, res) => {
 
     const load = householdLoad(simMinute);
     const acSum = currentAcContribution(dev0) + currentAcContribution(dev1);
-    // PV-Ueberschuss (Akku voll ODER Ladeleistung gedeckelt) wird vom
-    // Solarflow-Hybridwechselrichter automatisch AC-seitig durchgereicht -
-    // unabhaengig vom outputLimit/acMode-Kommando des Reglers (der kennt
-    // PV-Leistung ueberhaupt nicht, genau wie im echten Skript). Er deckt
-    // zuerst den Haushalt, darueber hinaus geht er ins Netz (Einspeisung).
-    const usableSurplus = surplus0 + surplus1;
+
+    // PV-Ueberschuss wird vom Solarflow-Hybridwechselrichter AC-seitig
+    // durchgereicht - aber NUR bis zur Hoehe des aktuellen Hausbedarfs
+    // (Selbstverbrauch ist immer erlaubt, unabhaengig von gridReverse).
+    // Ueberschuss DARUEBER HINAUS (echte Netzeinspeisung) wird nur
+    // durchgereicht, wenn das jeweilige Geraet gridReverse=1 hat - bei
+    // gridReverse=2 (Fleet-Lock, alle Geraete voll) wird dieser Anteil
+    // verworfen, das Geraet liefert dann nur noch exakt den vom
+    // "Smartmeter" geforderten Wert, keinen Export darueber hinaus.
+    const totalSurplus = surplus0 + surplus1;
+    const remainingNeed = Math.max(load - acSum, 0);
+    const selfConsumed = Math.min(totalSurplus, remainingNeed);
+    const leftoverSurplus = totalSurplus - selfConsumed;
+
+    let exportAllowed = 0, verworfen0 = 0, verworfen1 = 0;
+    if (totalSurplus > 0 && leftoverSurplus > 0) {
+      const share0 = surplus0 / totalSurplus;
+      const share1 = surplus1 / totalSurplus;
+      const leftover0 = leftoverSurplus * share0;
+      const leftover1 = leftoverSurplus * share1;
+      if (dev0.gridReverse === 1) exportAllowed += leftover0; else verworfen0 = leftover0;
+      if (dev1.gridReverse === 1) exportAllowed += leftover1; else verworfen1 = leftover1;
+    }
+
+    const usableSurplus = selfConsumed + exportAllowed;
     const grid = load - acSum - usableSurplus;
 
     log.push({
@@ -210,6 +229,7 @@ const server = http.createServer((req, res) => {
       soc_sf800: Math.round(dev0.soc), soc_sf2400: Math.round(dev1.soc),
       pv_sf800: Math.round(dev0.lastPv), pv_sf2400: Math.round(dev1.lastPv),
       ueberschuss_sf800: Math.round(surplus0), ueberschuss_sf2400: Math.round(surplus1),
+      verworfen_sf800: Math.round(verworfen0), verworfen_sf2400: Math.round(verworfen1),
       acMode_sf800: dev0.acMode, out_sf800: dev0.outputLimit, in_sf800: dev0.inputLimit,
       acMode_sf2400: dev1.acMode, out_sf2400: dev1.outputLimit, in_sf2400: dev1.inputLimit,
       socLimit_sf800: socLimitOf(dev0), socLimit_sf2400: socLimitOf(dev1),

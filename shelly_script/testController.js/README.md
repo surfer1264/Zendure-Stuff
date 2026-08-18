@@ -23,6 +23,11 @@ geschlossener Regelkreis, echte Logik, keine Annahmen mehr über
   - `minSoc`/`socSet` wirken als **harte physikalische Grenzen** in der
     Akku-Simulation (wie echte Geräte-Firmware das auch tut) – kein
     Überschwingen unter/über die geschriebenen Grenzwerte
+  - PV-Überschuss (Akku voll oder Ladeleistung gedeckelt) wird bis zur Höhe
+    des aktuellen Hausbedarfs immer durchgereicht (Selbstverbrauch). Darüber
+    hinausgehende Einspeisung nur, wenn das jeweilige Gerät `gridReverse=1`
+    hat – bei `gridReverse=2` (Fleet-Lock) wird dieser Anteil verworfen
+    (Spalten `verworfen_sf800`/`verworfen_sf2400` in der CSV)
   - `GET /grid/properties/report` liefert `haushalt − Summe aktueller
     AC-Leistung beider Geräte` (echter geschlossener Kreis) und rückt dabei
     die simulierte Uhr um `STEP_MIN` Minuten weiter
@@ -36,6 +41,11 @@ geschlossener Regelkreis, echte Logik, keine Annahmen mehr über
 - `patch_for_mock.js` – patcht eine beliebige Version von
   `zerooutput_multi_kvs.js` automatisch auf die Mock-Verbindungsdaten
   (Details weiter unten)
+- `compare_runs.js` – vergleicht zwei Testläufe (CSV + Log) numerisch und
+  qualitativ, für Regressionstests zwischen zwei Codeständen (Details weiter
+  unten)
+- `tageslauf.cmd` – Beispiel-Startskript (Windows), setzt alle Env-Vars für
+  einen kalibrierten vollen Tag und räumt alte Ergebnisdateien vorher auf
 
 ## Ausführen
 
@@ -67,26 +77,27 @@ set SPEED_FACTOR=150&&set STEP_MIN=0.05&&set CYCLES=28800&&set INTERVAL_MS=3000&
 
 **Alle Umgebungsvariablen im Überblick:**
 
-| Variable | Steuert | Womit erreichst du das |
-|---|---|---|
-| `CYCLES` | Anzahl Regelzyklen | Wie lang der simulierte Zeitraum ist (`CYCLES × STEP_MIN` Minuten) |
-| `STEP_MIN` | Simulierte Minuten pro Zyklus | Auflösung der Umgebung. Klein (0.05) = realitätstreue Hold-/Cooldown-Timer. Groß (15) = schneller grober Tagesüberblick, aber Timer-Verhalten verfälscht |
-| `SPEED_FACTOR` | Reales Warten zwischen Zyklen | Beschleunigt nur die Wall-Clock-Geschwindigkeit, ohne die Zyklen-Zähler-Logik im Skript zu beeinflussen – macht lange `CYCLES`-Läufe in Minuten statt Stunden machbar |
-| `START_MIN` | Start-Uhrzeit (Minute seit 00:00) | Gezielt in ein bestimmtes Fenster springen, z. B. `420` = 07:00, um nur die morgendliche Entladesperre zu testen, ohne die Nacht davor mitlaufen zu lassen |
-| `START_SOC` | Start-SOC beider Geräte (%) | Szenarien wie "beide starten fast voll" simulieren, ohne erst stundenlang aufladen zu müssen |
-| `LOAD_SCALE` | Skaliert die gesamte Haushaltslastkurve | Extremszenarien erzwingen – z. B. sehr niedrige Last (`0.05`–`0.2`), damit beide Akkus gleichzeitig 100 % erreichen und der `gridReverse`-Fleet-Lock auslöst |
-| `INTERVAL_MS` | Muss zu `CONFIG.interval` in `zdmc_test.js` passen | Nur für die Laufzeit-Schätzung/Logging des Runners – steuert NICHT den echten Zyklus (der kommt aus der CONFIG selbst) |
-| `MIN_REAL_MS` | Untergrenze für den realen Zyklusabstand | Schutz gegen Überlastung des Mock-Servers bei sehr hohem `SPEED_FACTOR` |
-| `MAX_WAIT_MS` | Sicherheits-Obergrenze für die Gesamtlaufzeit | Verhindert endloses Warten, falls ein Zyklus hängt (z. B. Watchdog-Stall) – normalerweise nicht selbst setzen, hat sinnvollen Default |
+| Variable | Steuert | Womit erreichst du das | Default |
+|---|---|---|---|
+| `CYCLES` | Anzahl Regelzyklen | Wie lang der simulierte Zeitraum ist (`CYCLES × STEP_MIN` Minuten) | 20 |
+| `STEP_MIN` | Simulierte Minuten pro Zyklus | Auflösung der Umgebung. Klein (0.05) = realitätstreue Hold-/Cooldown-Timer. Groß (15) = schneller grober Tagesüberblick, aber Timer-Verhalten verfälscht | 8 |
+| `SPEED_FACTOR` | Reales Warten zwischen Zyklen | Beschleunigt nur die Wall-Clock-Geschwindigkeit, ohne die Zyklen-Zähler-Logik im Skript zu beeinflussen – macht lange `CYCLES`-Läufe in Minuten statt Stunden machbar | 1 |
+| `START_MIN` | Start-Uhrzeit (Minute seit 00:00) | Gezielt in ein bestimmtes Fenster springen, z. B. `420` = 07:00, um nur die morgendliche Entladesperre zu testen, ohne die Nacht davor mitlaufen zu lassen | 0 |
+| `START_SOC` | Start-SOC beider Geräte (%) | Szenarien wie "beide starten fast voll" simulieren, ohne erst stundenlang aufladen zu müssen | 50 |
+| `LOAD_SCALE` | Skaliert die gesamte Haushaltslastkurve | Extremszenarien erzwingen – z. B. sehr niedrige Last (`0.05`–`0.2`), damit beide Akkus gleichzeitig 100 % erreichen und der `gridReverse`-Fleet-Lock auslöst | 1.0 |
+| `INTERVAL_MS` | Muss zu `CONFIG.interval` in `zdmc_test.js` passen | Nur für die Laufzeit-Schätzung/Logging des Runners – steuert NICHT den echten Zyklus (der kommt aus der CONFIG selbst) | 3000 |
+| `MIN_REAL_MS` | Untergrenze für den realen Zyklusabstand | Schutz gegen Überlastung des Mock-Servers bei sehr hohem `SPEED_FACTOR` | 15 |
+| `MAX_WAIT_MS` | Sicherheits-Obergrenze für die Gesamtlaufzeit | Verhindert endloses Warten, falls ein Zyklus hängt (z. B. Watchdog-Stall) – normalerweise nicht selbst setzen, hat sinnvollen Default | `CYCLES × effectiveMs × 6 + 30000` |
 
-
-**Die drei, die für unterschiedliche Testziele am wichtigsten sind:**
+**Die vier, die für unterschiedliche Testziele am wichtigsten sind:**
 - **Realitätsnaher Tageslauf:** `STEP_MIN=0.05` + `CYCLES=28800` + `SPEED_FACTOR=150`
 - **Schneller grober Überblick:** `STEP_MIN=15` + `CYCLES=96` (ohne `SPEED_FACTOR`, läuft in ~5 Min.)
 - **Fleet-Lock (`gridReverse=2`) gezielt provozieren:** `LOAD_SCALE=0.05` + `START_SOC=85`, kombinierbar mit einem der beiden obigen
-- **2-Stunden Test ab 08:00** 
-`$env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js`
-
+- **2-Stunden-Test ab 08:00:**
+  ```powershell
+  $env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js
+  ```
+  Achtung: `START_SOC=50` ist hier eine Vereinfachung – nach einer echten Nacht wären die Akkus um 08:00 realistischerweise eher schon niedriger (Richtung `minSoc`). Für einen wirklich realitätsnahen Ausschnitt entweder `START_SOC` niedriger ansetzen (z. B. 20–25) oder einen vollen Tag ab 00:00 laufen lassen und den Bereich `minute` 480–600 aus der CSV filtern.
 
 ## Geschwindigkeit: läuft das in Echtzeit? Kann man beschleunigen?
 
@@ -236,6 +247,34 @@ Kein manuelles Editieren mehr nötig. `zdmc_test.js` bleibt danach stabil –
 laufen lassen, ohne erneut zu patchen. Nur bei mehr als 2 Geräten oder neuen
 `Shelly.call`-Methoden muss noch am Shim/Mock nachjustiert werden.
 
+## Regressionstests zwischen zwei Codeständen
+
+Mit `compare_runs.js` lässt sich prüfen, ob sich ein neuer Codestand
+gegenüber einer Baseline anders verhält – **wichtig:** exakt dieselben
+Env-Vars für beide Läufe, sonst vergleichst du zwei Szenarien statt zwei
+Codestände im selben Szenario:
+
+```bash
+# Alte Version
+node patch_for_mock.js alte_version.js zdmc_test.js
+node run_test.js > baseline.log 2>&1
+cp closed_loop_result.csv baseline.csv
+
+# Neue Version (identische Env-Vars!)
+node patch_for_mock.js neue_version.js zdmc_test.js
+node run_test.js > kandidat.log 2>&1
+cp closed_loop_result.csv kandidat.csv
+
+# Vergleichen
+node compare_runs.js baseline.csv kandidat.csv baseline.log kandidat.log
+```
+
+Prüft automatisch: numerische Abweichungen je Spalte (`grid_W`, SOC,
+`acMode`/`out`/`in`, `socLimit`, `gridReverse`), Anzahl und Zeitpunkt von
+Zustandsübergängen, Aggregate (Netzbezug/-einspeisung in kWh, End-SOC), sowie
+aus dem Log: Anzahl Rebalancing-/Modus-Wechsel-Ereignisse und **neue**
+`FEHLER`-Zeilen, die in der Baseline noch nicht auftraten.
+
 ## Erzeugt die Simulation ein echtes Logfile?
 
 ```bash
@@ -357,17 +396,30 @@ statt der synthetischen Kurve gewünscht sind: `householdLoad()` lässt sich
 leicht so umbauen, dass sie stattdessen Werte aus einer CSV-Datei
 interpoliert.
 
+### Testdatenkurven
+
+Rohe Haushaltslast- und PV-Kurven (unabhängig von Batterie-Simulation),
+sowie der Effekt von `LOAD_SCALE`:
+
+<img width="1500" height="1125" alt="Haushaltslast- und PV-Rohkurven" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
+
+<img width="1500" height="675" alt="Haushaltslast bei verschiedenen LOAD_SCALE-Werten" src="https://github.com/user-attachments/assets/552e5a88-afd2-44c5-a442-2fcb4f93628f" />
+
+
 ## Bekannte Vereinfachungen des Mocks
 
-- PV-Ladeleistung wird nicht durch ein separates Hardware-Limit gedeckelt
-  (nur durch Batterie-Headroom) – reale Geräte könnten hier einen PV-Input-
-  Cap haben, der nicht bekannt ist
 - Kein Lade-/Entlade-Wirkungsgrad (100 % angenommen, real ~90–95 %)
 - Keine Rampzeiten – `outputLimit`/`inputLimit` wirkt sofort und vollständig
 - `directionChangeHoldCycles`/Hysterese-Skip werden vom Original-Skript
   selbst gehandhabt (nicht vom Mock) – das ist beabsichtigt, genau das soll
   ja mitgetestet werden
 - Mock antwortet immer sofort fehlerfrei – keine simulierten Timeouts/Fehler
+
+**Kein Vereinfachung, sondern verifiziertes reales Verhalten:** PV-Ladeleistung
+wird **nicht** durch `maxInputPower` gedeckelt (nur durch Batterie-Headroom) –
+`maxInputPower` bezieht sich ausschließlich auf AC-Import (Laden vom Netz).
+PV geht immer mit voller Leistung in den Akku, auch über `maxInputPower`
+hinaus (z. B. 1600 W PV bei 1000 W `maxInputPower`).
 
 ## Offene Erweiterungen (angeboten, noch nicht gebaut)
 
@@ -378,10 +430,3 @@ interpoliert.
   interpolieren statt synthetisch zu rechnen.
 - **Künstliche Fehler/Timeouts im Mock**: um `reportError`/Watchdog-Pfade
   gezielt zu testen (aktuell nicht abgedeckt, siehe "Warum zuverlässig").
-
-  ## Testdatenkurven
-  
-  <img width="1500" height="1125" alt="image" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
-
-  ### Einsatz von LOAD_SCALE
-  <img width="1500" height="675" alt="image" src="https://github.com/user-attachments/assets/552e5a88-afd2-44c5-a442-2fcb4f93628f" />
