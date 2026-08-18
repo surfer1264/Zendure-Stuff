@@ -14,7 +14,8 @@ let simMinute = Number(process.env.START_MIN || 0);  // Start-Uhrzeit (Minute de
 
 function hhmm(m) {
   m = ((m % 1440) + 1440) % 1440;
-  const h = Math.floor(m / 60), mi = m % 60;
+  const totalMin = Math.round(m); // fuer die Anzeige auf ganze Minute runden
+  const h = Math.floor(totalMin / 60), mi = totalMin % 60;
   return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
 }
 
@@ -196,7 +197,7 @@ const server = http.createServer((req, res) => {
     const grid = load - acSum;
 
     log.push({
-      t: hhmm(simMinute), minute: simMinute,
+      t: hhmm(simMinute), minute: Math.round(simMinute * 10000) / 10000,
       haushalt_W: Math.round(load),
       grid_W: Math.round(grid),
       soc_sf800: Math.round(dev0.soc), soc_sf2400: Math.round(dev1.soc),
