@@ -383,3 +383,7 @@ interpoliert.
   
   <img width="1500" height="1125" alt="image" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
 
+  ### Einsatz von LOAD_SCALE
+  <img width="1500" height="675" alt="image" src="https://github.com/user-attachments/assets/552e5a88-afd2-44c5-a442-2fcb4f93628f" />
+
+
