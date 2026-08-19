@@ -10,6 +10,28 @@ Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kom
 siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/minify_keep_config.py
 Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
 
+# Changelog 3.2.0
+
+**Achtung**
+
+**Neu:** `CONFIG.gridReverseMode` ersetzt `CONFIG.immerBypass`
+
+Vorher (3.1.1): Boolean `immerBypass:` false. false = dynamische Fleet-Sperrlogik aktiv; true = komplett umgangen, beim Start wurde stattdessen fix gridReverse = 1 gesetzt.
+
+Jetzt (3.2.0): String-Enum gridReverseMode: "dynamic" mit drei Werten:
+
+"dynamic" – wie bisher immerBypass: false; Netzexport ist so lange erlaubt wie Geräte per AC Ladebedarf haben, wenn alle Geräte socLimit: 1 (Akkus voll) melden, dann wird `grid_revers:2` gesetzt und der Export von Energie verboten  (automatische Sperre/Freigabe pro Zyklus über updateGridReverseLock()). mit `chargeResetMargin`wird die Sperre aufgehoben
+"always1" – beim Start wird `gridReverse: 1` fix geschrieben (Netzexport dauerhaft erlaubt), die dynamische Logik läuft nicht 
+"always2" – neu, gab es vorher gar nicht: beim Start wird `gridReverse: 2` fix geschrieben (Netzexport dauerhaft verboten).
+
+
+Auswirkung: Fein granularere Kontrolle beim Start – vorher konnte man den gridReverse-Wert beim Start nur "automatisch" oder "immer erlaubt" setzen, jetzt zusätzlich auch dauerhaft "immer verboten" fest vorgeben, ohne die dynamische Logik zu nutzen.
+
+- Bypass immer erlauben (always1)
+- Bypass immer verbieten (always2)
+- Bypass dynamisch setzen/verbieten (dynamic)
+
+
 
 # Changelog 3.1.1
 
