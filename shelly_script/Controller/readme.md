@@ -32,7 +32,9 @@ verlinkt.
 ## Schritt 2 – Minimalkonfiguration (~5 Min)
 
 Der Konfigurator
-[Konfigurator](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zendure-config-wizard.html)
+[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/<pfad-zur-datei>/zendure-config-wizard.html)
+
+https://raw.githack.com/surfer1264/Zendure-Stuff/main/<pfad-zur-datei>/zendure-config-wizard.html
 
 ### 2a) Geräteblock
 
