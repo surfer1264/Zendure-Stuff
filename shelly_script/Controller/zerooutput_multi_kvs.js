@@ -3,8 +3,6 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.2.0 (gridReverseMode: dynamic/always1/always2)",
-  
   devices: [
      {
       ip: "192.168.178.143",    // Zendure IP address
@@ -117,13 +115,12 @@ let CONFIG = {
   }
 };
 
-// Plausi: (einmalig beim Start)
+CONFIG.version: "3.2.0 (gridReverseMode: dynamic/always1/always2)",
 function checkBand(band) {
   if (band.concentrateBelow < 35) band.concentrateBelow = 35;
   if (band.spreadAbove < 50) band.spreadAbove = 50;
   if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow +15 ;
 }
-
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 if (CONFIG.dampingFactor < 0.4) CONFIG.dampingFactor = 0.4;
@@ -134,10 +131,8 @@ if (CONFIG.hysteresis >40) CONFIG.hysteresis = 40;
 if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
 if (CONFIG.rebalance.socMargin < 3) CONFIG.rebalance.socMargin = 3;
 if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
-
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
-
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
