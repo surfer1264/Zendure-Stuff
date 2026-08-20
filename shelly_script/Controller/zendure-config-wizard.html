@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zendure Multi-Device Controller – Konfigurations-Assistent</title>
+<style>
+  :root{
+    --bg:#f7f7f8; --panel:#ffffff; --border:#e2e2e6; --text:#1b1b1f; --muted:#65656d;
+    --accent:#2f6f4f; --accent-weak:#e7f2ec; --accent-text:#1e4a34;
+    --warn:#8a5a12; --warn-bg:#fbf1de;
+    --danger:#9b2c2c; --danger-bg:#fbe9e9;
+    --code-bg:#161618; --code-text:#e6e6e9;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#141416; --panel:#1c1c1f; --border:#2c2c31; --text:#eceef0; --muted:#9a9aa2;
+      --accent:#5fb98a; --accent-weak:#1c2e26; --accent-text:#8fd6b2;
+      --warn:#d8a24b; --warn-bg:#2c2310;
+      --danger:#e08080; --danger-bg:#2e1a1a;
+      --code-bg:#0e0e10; --code-text:#e6e6e9;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 4px 20px rgba(0,0,0,.35);
+    }
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:820px; margin:0 auto; padding:32px 20px 80px;}
+  h1{font-size:1.4rem; margin:0 0 4px;}
+  .sub{color:var(--muted); margin:0 0 28px; font-size:.95rem;}
+  .steps{display:flex; gap:6px; margin-bottom:28px; flex-wrap:wrap;}
+  .step-dot{
+    flex:1; min-width:60px; text-align:center; font-size:.72rem; padding:7px 4px;
+    border-radius:8px; background:var(--panel); border:1px solid var(--border); color:var(--muted);
+  }
+  .step-dot.active{background:var(--accent-weak); color:var(--accent-text); border-color:var(--accent); font-weight:600;}
+  .step-dot.done{color:var(--accent-text);}
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; box-shadow:var(--shadow); margin-bottom:20px;
+  }
+  .panel h2{margin-top:0; font-size:1.1rem;}
+  .hint{color:var(--muted); font-size:.88rem; margin-top:-6px; margin-bottom:16px;}
+  label{display:block; font-size:.85rem; font-weight:600; margin-bottom:5px; margin-top:14px;}
+  label.first{margin-top:0;}
+  input[type=text], input[type=number]{
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); font-size:.92rem;
+  }
+  input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
+  .device-card{
+    border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:14px; position:relative; background:var(--bg);
+  }
+  .device-card .device-title{font-weight:700; font-size:.85rem; margin-bottom:2px; color:var(--muted);}
+  .remove-btn{
+    position:absolute; top:12px; right:12px; background:none; border:none; color:var(--muted);
+    cursor:pointer; font-size:.8rem; text-decoration:underline;
+  }
+  .remove-btn:hover{color:var(--danger);}
+  .add-btn, .btn{
+    display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:8px;
+    border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer;
+    font-size:.88rem; font-weight:600;
+  }
+  .add-btn:hover, .btn:hover{border-color:var(--accent);}
+  .btn-primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn-primary:hover{opacity:.92; border-color:var(--accent);}
+  .btn-primary:disabled{opacity:.45; cursor:not-allowed;}
+  .nav{display:flex; justify-content:space-between; margin-top:22px;}
+  .choice{
+    display:flex; gap:12px; border:1px solid var(--border); border-radius:10px; padding:14px;
+    margin-bottom:10px; cursor:pointer; background:var(--bg);
+  }
+  .choice input{margin-top:3px;}
+  .choice.selected{border-color:var(--accent); background:var(--accent-weak);}
+  .choice .ct{font-weight:700; font-size:.92rem;}
+  .choice .cd{color:var(--muted); font-size:.84rem; margin-top:2px;}
+  .radio-row{display:flex; align-items:flex-start; gap:10px;}
+  .conditional{
+    margin-top:12px; padding:14px; border-left:3px solid var(--accent); background:var(--accent-weak);
+    border-radius:0 8px 8px 0;
+  }
+  .note{
+    background:var(--warn-bg); color:var(--warn); border-radius:8px; padding:10px 12px; font-size:.83rem; margin-top:14px;
+  }
+  .device-checkbox-row{display:flex; align-items:center; gap:10px; padding:8px 0; border-top:1px solid var(--border);}
+  .device-checkbox-row:first-of-type{border-top:none;}
+  .device-checkbox-row label{margin:0; flex:0 0 auto; font-weight:600; font-size:.85rem; min-width:150px;}
+  .device-checkbox-row input[type=number]{max-width:140px;}
+  pre{
+    background:var(--code-bg); color:var(--code-text); padding:18px; border-radius:10px;
+    overflow-x:auto; font-size:.8rem; line-height:1.55; white-space:pre;
+  }
+  .summary-list{font-size:.88rem;}
+  .summary-list div{padding:6px 0; border-bottom:1px dashed var(--border);}
+  .summary-list b{color:var(--accent-text);}
+  .copy-row{display:flex; justify-content:flex-end; margin-bottom:8px; gap:8px;}
+  .badge{display:inline-block; font-size:.72rem; padding:2px 8px; border-radius:999px; background:var(--accent-weak); color:var(--accent-text); font-weight:700; margin-left:6px;}
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:#fff; padding:9px 18px; border-radius:8px; font-size:.85rem;
+    opacity:0; pointer-events:none; transition:opacity .2s ease; box-shadow:var(--shadow);
+  }
+  .toast.show{opacity:1;}
+  .error{color:var(--danger); font-size:.78rem; margin-top:4px; min-height:1.1em;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Zendure Multi-Device Controller</h1>
+  <p class="sub">Konfigurations-Assistent — beantwortet die paar Fragen, die wirklich pro Haushalt unterschiedlich sind. Alles andere bleibt auf dem in der Doku empfohlenen Standard.</p>
+
+  <div class="steps" id="steps"></div>
+
+  <div id="stepContainer"></div>
+</div>
+
+<div class="toast" id="toast">In Zwischenablage kopiert</div>
+
+<script>
+// ---------- State ----------
+const state = {
+  devices: [
+    { label: "SF2400", ip: "192.168.178.", maxOutput: 800, minSoc: 15, maxSoc: 100 }
+  ],
+  gridSource: "local",
+  gridSourceEmId: 0,
+  gridSourceIp: "",
+  gridSourceUrl: "",
+  gridSourceField: "total_power",
+  gridSourceInvert: false,
+  chargingEnabled: null, // Frage 3
+  gridReverseMode: "dynamic", // Frage 4
+
+  signalEnabled: null, // Frage 5
+  signalTyp: "WEBHOOK",
+  signalPhone: "",
+  signalApiKey: "",
+  signalWebhookUrl: ""
+};
+
+let step = 1;
+const totalSteps = 6; // 1 Geraete, 2 Smartmeter, 3 Laden, 4 gridReverseMode, 5 Benachrichtigungen, 6 Ergebnis
+
+// "dynamic" ist nur sinnvoll/verfuegbar, wenn ueberhaupt ein Geraet aus dem Netz laden darf
+function dynamicAllowed(){
+  return state.chargingEnabled === true && state.devices.some(d => d.reverse);
+}
+
+function stepLabel(n){
+  const labels = ["Geräte", "Smartmeter", "Laden vom Netz", "Bei vollem Akku", "Benachrichtigungen", "Ergebnis"];
+  return labels[n-1];
+}
+
+function renderSteps(){
+  const el = document.getElementById('steps');
+  el.innerHTML = "";
+  for(let n=1; n<=totalSteps; n++){
+    const d = document.createElement('div');
+    d.className = 'step-dot' + (n===step ? ' active' : (n<step ? ' done' : ''));
+    d.textContent = (n) + '. ' + stepLabel(n);
+    el.appendChild(d);
+  }
+}
+
+// ---------- Helpers ----------
+function num(v, fallback){
+  const n = parseFloat(v);
+  return isNaN(n) ? fallback : n;
+}
+
+function deviceCard(d, idx){
+  return `
+  <div class="device-card">
+    ${state.devices.length > 1 ? `<button class="remove-btn" onclick="removeDevice(${idx})">entfernen</button>` : ""}
+    <div class="device-title">Gerät ${idx+1}</div>
+    <div class="row">
+      <div>
+        <label class="first">Label (frei wählbar)</label>
+        <input type="text" value="${d.label}" oninput="updateDevice(${idx},'label',this.value)">
+      </div>
+      <div>
+        <label class="first">IP-Adresse</label>
+        <input type="text" value="${d.ip}" placeholder="192.168.178.143" oninput="updateDevice(${idx},'ip',this.value)">
+      </div>
+    </div>
+    <div class="row3">
+      <div>
+        <label>Max. Leistung (W)</label>
+        <input type="number" min="0" value="${d.maxOutput}" oninput="updateDevice(${idx},'maxOutput',this.value)">
+      </div>
+      <div>
+        <label>minSoc (%)</label>
+        <input type="number" min="0" max="100" value="${d.minSoc}" oninput="updateDevice(${idx},'minSoc',this.value)">
+      </div>
+      <div>
+        <label>maxSoc (%)</label>
+        <input type="number" min="0" max="100" value="${d.maxSoc}" oninput="updateDevice(${idx},'maxSoc',this.value)">
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateDevice(idx, field, val){
+  if(field==='label' || field==='ip'){ state.devices[idx][field] = val; }
+  else { state.devices[idx][field] = num(val, 0); }
+}
+function addDevice(){
+  state.devices.push({ label: "SF" + (state.devices.length+1), ip: "192.168.178.", maxOutput: 800, minSoc: 15, maxSoc: 100 });
+  render();
+}
+function removeDevice(idx){
+  state.devices.splice(idx,1);
+  render();
+}
+
+// ---------- Steps ----------
+function renderStep1(){
+  return `
+  <div class="panel">
+    <h2>1) Deine Geräte</h2>
+    <p class="hint">Für jedes Zendure-Gerät: IP-Adresse, maximale Lade-/Entladeleistung sowie minSoc/maxSoc. Diese beiden SoC-Grenzen synchronisiert der Controller beim Start immer direkt in die Geräte-Firmware — unabhängig davon, ob das Gerät später aus dem Netz laden darf.</p>
+    <div id="deviceList">
+      ${state.devices.map((d,i)=>deviceCard(d,i)).join("")}
+    </div>
+    <button class="add-btn" onclick="addDevice()">+ weiteres Gerät</button>
+  </div>`;
+}
+
+function renderStep2(){
+  const s = state.gridSource;
+  return `
+  <div class="panel">
+    <h2>2) Wie ermittelst du deine Netzleistung?</h2>
+    <p class="hint">Bestimmt, woher der Controller den aktuellen Netzbezug/-export bekommt.</p>
+
+    <div class="choice ${s==='local'?'selected':''}" onclick="setGridSource('local')">
+      <input type="radio" name="gs" ${s==='local'?'checked':''}>
+      <div><div class="ct">Der Controller läuft direkt auf einem Shelly Pro 3EM</div>
+      <div class="cd">Schnellste, robusteste Variante — kein zusätzlicher Netzwerk-Request pro Zyklus.</div></div>
+    </div>
+    <div class="choice ${s==='remote'?'selected':''}" onclick="setGridSource('remote')">
+      <input type="radio" name="gs" ${s==='remote'?'checked':''}>
+      <div><div class="ct">Der Controller läuft auf einem anderen Shelly, liest einen Pro 3EM übers Netzwerk</div>
+      <div class="cd">Der Pro 3EM bleibt unangetastet mit Standard-Firmware.</div></div>
+    </div>
+    <div class="choice ${s==='http_json'?'selected':''}" onclick="setGridSource('http_json')">
+      <input type="radio" name="gs" ${s==='http_json'?'checked':''}>
+      <div><div class="ct">Ich habe ein anderes Smartmeter mit JSON-über-HTTP-Schnittstelle</div>
+      <div class="cd">Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät.</div></div>
+    </div>
+
+    ${ s!=='http_json' ? `
+    <div class="conditional">
+      <label class="first">EM-Kanal-ID (in der Regel 0)</label>
+      <input type="number" value="${state.gridSourceEmId}" oninput="state.gridSourceEmId=num(this.value,0)">
+      ${ s==='remote' ? `
+      <label>IP-Adresse des Shelly Pro 3EM</label>
+      <input type="text" value="${state.gridSourceIp}" placeholder="192.168.178.10" oninput="state.gridSourceIp=this.value">
+      ` : "" }
+    </div>` : `
+    <div class="conditional">
+      <label class="first">URL des Smartmeters</label>
+      <input type="text" value="${state.gridSourceUrl}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
+      <label>Feldname mit der Gesamtleistung (W)</label>
+      <input type="text" value="${state.gridSourceField}" placeholder="total_power" oninput="state.gridSourceField=this.value">
+      <label style="margin-top:12px; display:flex; align-items:center; gap:8px; font-weight:600;">
+        <input type="checkbox" style="width:auto;" ${state.gridSourceInvert?'checked':''} onchange="state.gridSourceInvert=this.checked">
+        Vorzeichen ist invertiert (nach Test einmalig prüfen, siehe Doku Kapitel 5.2)
+      </label>
+    </div>` }
+  </div>`;
+}
+
+function renderStep3(){
+  const c = state.chargingEnabled;
+  return `
+  <div class="panel">
+    <h2>3) Willst du Überschuss von anderen Anlagen aufnehmen?</h2>
+    <p class="hint">Gemeint ist: Sollen deine Zendure-Geräte aktiv aus dem Netz laden können, wenn andere Anlagen (weitere Solarflows, eine Dach-PV, ein Balkonkraftwerk) mehr einspeisen, als gerade verbraucht wird? Ein eigenständiges AC-Laden ohne solchen Überschuss löst der Controller nicht aus.</p>
+
+    <div class="choice ${c===true?'selected':''}" onclick="setCharging(true)">
+      <input type="radio" name="ch" ${c===true?'checked':''}>
+      <div><div class="ct">Ja</div><div class="cd">Setzt <code>reverse: true</code> für die ausgewählten Geräte.</div></div>
+    </div>
+    <div class="choice ${c===false?'selected':''}" onclick="setCharging(false)">
+      <input type="radio" name="ch" ${c===false?'checked':''}>
+      <div><div class="ct">Nein</div><div class="cd">Alle Geräte bleiben reine Entlade-/Export-Geräte (<code>reverse: false</code>).</div></div>
+    </div>
+
+    ${ c===true ? `
+    <div class="conditional">
+      <div style="font-weight:700; font-size:.85rem; margin-bottom:6px;">Relevante Felder pro Gerät</div>
+      ${ state.devices.map((d,i)=>`
+        <div class="device-checkbox-row">
+          <label style="display:flex; align-items:center; gap:8px; min-width:180px;">
+            <input type="checkbox" style="width:auto;" ${d.reverse?'checked':''} onchange="toggleReverse(${i}, this.checked)">
+            ${d.label || ('Gerät ' + (i+1))} kann laden
+          </label>
+          ${ d.reverse ? `
+          <div style="flex:1;">
+            <input type="number" min="0" placeholder="max. Ladeleistung (W)" value="${d.maxInputPower ?? d.maxOutput}" oninput="updateDevice(${i},'maxInputPower',this.value)">
+          </div>` : "" }
+        </div>
+      `).join("") }
+    </div>` : "" }
+  </div>`;
+}
+
+function renderStep4(){
+  const allowed = dynamicAllowed();
+  // "dynamic" ist ohne Netzladung nicht waehlbar - vorher gesetzte Auswahl in dem Fall verwerfen
+  if(!allowed && state.gridReverseMode === 'dynamic'){ state.gridReverseMode = null; }
+  const m = state.gridReverseMode;
+
+  const dynamicChoice = `
+    <div class="choice ${m==='dynamic'?'selected':''}" onclick="setGrm('dynamic')">
+      <input type="radio" name="grm" ${m==='dynamic'?'checked':''}>
+      <div><div class="ct">Automatisch (empfohlen) <span class="badge">dynamic</span></div>
+      <div class="cd">Solange irgendein ladefähiges Gerät noch Kapazität hat, bleibt Export erlaubt (das hilft beim Überschussladen der anderen Geräte). Haben wirklich <b>alle</b> ladefähigen Geräte ihre Obergrenze erreicht, wird Export automatisch gesperrt — und sobald eines wieder klar darunter liegt, automatisch wieder freigegeben.</div></div>
+    </div>`;
+
+  return `
+  <div class="panel">
+    <h2>4) Wie soll mit Netzexport umgegangen werden, wenn die Akkustapel 100 % erreichen?</h2>
+    <p class="hint">
+      Neben der eigenen Regellogik (Zielwerte je Gerät) besitzen die Solarflow-Hubs einen zusätzlichen, firmwareeigenen Schalter <code>gridReverse</code>, der Netzexport auf Hardware-Ebene komplett sperrt oder erlaubt — unabhängig davon, was der Controller gerade anfordert und unabhängig von Frage 3. <code>gridReverseMode</code> legt fest, wie der Controller diesen Schalter nutzt.
+    </p>
+
+    ${ allowed ? dynamicChoice : `
+    <div class="note">Der automatische Modus ("dynamic") steht hier nicht zur Verfügung, weil in Frage 3 keine Netzladung aktiviert wurde (oder kein Gerät dafür ausgewählt ist) — er basiert auf dem Ladezustand der ladefähigen Geräte. Wähle stattdessen, ob Netzexport grundsätzlich erlaubt oder gesperrt sein soll.</div>
+    ` }
+
+    <div class="choice ${m==='always1'?'selected':''}" onclick="setGrm('always1')">
+      <input type="radio" name="grm" ${m==='always1'?'checked':''}>
+      <div><div class="ct">Immer erlauben <span class="badge">always1</span></div>
+      <div class="cd">Der Schalter wird einmal beim Start auf "erlaubt" gesetzt und danach nie wieder verändert — auch nicht bei vollen Akkus.</div></div>
+    </div>
+    <div class="choice ${m==='always2'?'selected':''}" onclick="setGrm('always2')">
+      <input type="radio" name="grm" ${m==='always2'?'checked':''}>
+      <div><div class="ct">Immer sperren <span class="badge">always2</span></div>
+      <div class="cd">Der Schalter wird einmal beim Start auf "gesperrt" gesetzt und danach nie wieder verändert.</div></div>
+    </div>
+
+    ${ allowed ? `<div class="note">Der zugehörige Toleranzwert <code>chargeResetMargin</code> (Hysterese unterhalb maxSoc, nur bei "Automatisch" relevant) bleibt auf dem Standardwert 5 Prozentpunkte — kann später bei Bedarf in der CONFIG angepasst werden.</div>` : "" }
+  </div>`;
+}
+
+function renderStep5(){
+  const e = state.signalEnabled;
+  const t = state.signalTyp;
+  return `
+  <div class="panel">
+    <h2>5) Möchtest du Benachrichtigungen bei Störungen erhalten?</h2>
+    <p class="hint">Der Controller kann sich melden, wenn z. B. ein Gerät dauerhaft nicht erreichbar ist oder ein Schreibvorgang wiederholt fehlschlägt (nach mehreren aufeinanderfolgenden Fehlern) — und wieder, sobald der Fehler behoben ist. Die Kernregelung selbst braucht dafür kein Internet, nur der Versand dieser Nachrichten.</p>
+
+    <div class="choice ${e===true?'selected':''}" onclick="setSignalEnabled(true)">
+      <input type="radio" name="sig" ${e===true?'checked':''}>
+      <div><div class="ct">Ja</div><div class="cd">Setzt <code>signal.enabled: true</code> und fragt die nötigen Zugangsdaten ab.</div></div>
+    </div>
+    <div class="choice ${e===false?'selected':''}" onclick="setSignalEnabled(false)">
+      <input type="radio" name="sig" ${e===false?'checked':''}>
+      <div><div class="ct">Nein</div><div class="cd">Standard — keine Benachrichtigungen, <code>signal.enabled: false</code>.</div></div>
+    </div>
+
+    ${ e===true ? `
+    <div class="conditional">
+      <div style="font-weight:700; font-size:.85rem; margin-bottom:10px;">Auf welchem Weg?</div>
+
+      <div class="choice ${t==='WEBHOOK'?'selected':''}" onclick="setSignalTyp('WEBHOOK')" style="margin-bottom:8px;">
+        <input type="radio" name="sigtyp" ${t==='WEBHOOK'?'checked':''}>
+        <div><div class="ct">Webhook <span class="badge">WEBHOOK</span></div>
+        <div class="cd">Eigener HTTP-Endpunkt, z. B. eine Home-Assistant-Automation (POST mit JSON-Body <code>{"message": "..."}</code>).</div></div>
+      </div>
+      <div class="choice ${t==='SIGNAL'?'selected':''}" onclick="setSignalTyp('SIGNAL')" style="margin-bottom:8px;">
+        <input type="radio" name="sigtyp" ${t==='SIGNAL'?'checked':''}>
+        <div><div class="ct">Signal <span class="badge">SIGNAL</span></div>
+        <div class="cd">Über den kostenlosen CallMeBot-Dienst.</div></div>
+      </div>
+      <div class="choice ${t==='WHATSAPP'?'selected':''}" onclick="setSignalTyp('WHATSAPP')">
+        <input type="radio" name="sigtyp" ${t==='WHATSAPP'?'checked':''}>
+        <div><div class="ct">WhatsApp <span class="badge">WHATSAPP</span></div>
+        <div class="cd">Ebenfalls über CallMeBot.</div></div>
+      </div>
+
+      ${ t==='WEBHOOK' ? `
+      <label class="first" style="margin-top:16px;">Webhook-URL</label>
+      <input type="text" value="${state.signalWebhookUrl}" placeholder="http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" oninput="state.signalWebhookUrl=this.value">
+      ` : `
+      <div class="row" style="margin-top:16px;">
+        <div>
+          <label class="first">Telefonnummer / Phone-ID (CallMeBot)</label>
+          <input type="text" value="${state.signalPhone}" placeholder="+4917XXXXXXXX" oninput="state.signalPhone=this.value">
+        </div>
+        <div>
+          <label class="first">CallMeBot API-Key</label>
+          <input type="text" value="${state.signalApiKey}" placeholder="123456" oninput="state.signalApiKey=this.value">
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px; margin-bottom:0;">Kostenlosen API-Key vorher bei <code>callmebot.com</code> anfordern (siehe Doku Kapitel 8.5) — ohne diesen Schritt kommen keine Nachrichten an.</p>
+      ` }
+    </div>` : "" }
+  </div>`;
+}
+
+function renderStep6(){
+  const cfg = buildConfig();
+  return `
+  <div class="panel">
+    <h2>Deine Entscheidungen</h2>
+    <div class="summary-list">
+      <div><b>Geräte:</b> ${state.devices.length} — ${state.devices.map(d=>`${d.label||'?'} (${d.maxOutput} W, minSoc ${d.minSoc}%, maxSoc ${d.maxSoc}%)`).join('; ')}</div>
+      <div><b>Netzquelle:</b> ${gridSourceSummary()}</div>
+      <div><b>Laden vom Netz:</b> ${state.chargingEnabled===true ? ('Ja — ' + (state.devices.filter(d=>d.reverse).map(d=>d.label).join(', ') || 'keine Geräte ausgewählt')) : 'Nein'}</div>
+      <div><b>Bei vollem Akku:</b> ${ {dynamic:'Automatisch sperren/freigeben', always1:'Export immer erlauben', always2:'Export immer sperren'}[state.gridReverseMode] || '—' }</div>
+      <div><b>Benachrichtigungen:</b> ${ state.signalEnabled===true ? ('Ja — ' + state.signalTyp) : 'Nein' }</div>
+      <div><b>Alles Übrige:</b> bleibt auf Standard (Setpoint 0 W, Hysterese 12 W, Damping 0,65, KVS-Fernsteuerung aus, Entladen für alle Geräte erlaubt, u. a.)</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Fertiger CONFIG-Block</h2>
+    <p class="hint">Ersetzt den <code>let CONFIG = { ... };</code>-Block ganz oben im Script. Alle nicht erfragten Parameter stehen auf dem empfohlenen Standardwert — siehe Dokumentation Kapitel 4 für Details und Feintuning.</p>
+    <div class="copy-row">
+      <button class="btn" onclick="copyConfig()">📋 In Zwischenablage kopieren</button>
+    </div>
+    <pre id="configOut">${escapeHtml(cfg)}</pre>
+  </div>`;
+}
+
+function gridSourceSummary(){
+  if(state.gridSource==='local') return `lokal auf dem Shelly Pro 3EM (EM-Kanal ${state.gridSourceEmId})`;
+  if(state.gridSource==='remote') return `entfernter Pro 3EM unter ${state.gridSourceIp || '—'} (EM-Kanal ${state.gridSourceEmId})`;
+  return `generisches JSON-Smartmeter unter ${state.gridSourceUrl || '—'} (Feld "${state.gridSourceField}"${state.gridSourceInvert? ', invertiert':''})`;
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---------- Config generation ----------
+function buildConfig(){
+  const n = state.devices.length;
+  const outputs = state.devices.map(d=>d.maxOutput||0).filter(v=>v>0);
+  const spreadAboveDischarge = outputs.length ? Math.min(...outputs) : 800;
+  const concentrateBelowDischarge = Math.round(spreadAboveDischarge*0.6);
+
+  const inputPowers = state.chargingEnabled ? state.devices.filter(d=>d.reverse).map(d=>num(d.maxInputPower, d.maxOutput)).filter(v=>v>0) : [];
+  const spreadAboveCharge = inputPowers.length ? Math.min(...inputPowers) : spreadAboveDischarge;
+  const concentrateBelowCharge = Math.round(spreadAboveCharge*0.6);
+
+  const devicesJs = state.devices.map(d=>{
+    const reverse = !!(state.chargingEnabled && d.reverse);
+    const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
+    return `    {
+      ip: "${d.ip || '192.168.X.X'}",
+      label: "${(d.label||'').replace(/"/g,'')}",
+
+      minSoc: ${num(d.minSoc,15)},
+      maxSoc: ${num(d.maxSoc,100)},
+      dischargeAllowed: true,
+      reverse: ${reverse},
+      maxInputPower: ${maxInputPower},
+      maxOutput: ${num(d.maxOutput,800)},
+
+      dryRun: false
+    }`;
+  }).join(",\n");
+
+  let gridBlock = `  gridSource: "${state.gridSource}",\n`;
+  gridBlock += `  gridSourceIp: "${state.gridSource==='remote' ? (state.gridSourceIp||'<IP address Shelly Pro 3EM>') : '<IP address Shelly Pro 3EM>'}",\n`;
+  gridBlock += `  gridSourceEmId: ${state.gridSourceEmId},\n`;
+  gridBlock += `  gridSourceUrl: "${state.gridSource==='http_json' ? (state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report') : 'http://<IP-of-your-meter>/properties/report'}",\n`;
+  gridBlock += `  gridSourceField: "${state.gridSource==='http_json' ? (state.gridSourceField||'total_power') : 'total_power'}",\n`;
+  gridBlock += `  gridSourceInvert: ${state.gridSource==='http_json' ? !!state.gridSourceInvert : false},`;
+
+  const grm = state.gridReverseMode || "dynamic";
+
+  return `let CONFIG = {
+  devices: [
+${devicesJs}
+  ],
+  // ------------------------------------------------------------------
+  // SMARTMETER SECTION
+${gridBlock}
+
+  // ------------------------------------------------------------------
+  // RULES ENGINE CORE PARAMETERS — Standard, siehe Doku Kapitel 4
+  setpoint: 0,
+  hysteresis: 12,
+  dampingFactor: 0.65,
+
+  // ------------------------------------------------------------------
+  // aus deiner Geräteliste abgeleitet (Faustformel, Doku Kapitel 7b) —
+  // bei Bedarf von Hand feinjustieren
+  discharge: {
+    concentrateBelow: ${concentrateBelowDischarge},
+    spreadAbove: ${spreadAboveDischarge}
+  },
+
+  charge: {
+    concentrateBelow: ${concentrateBelowCharge},
+    spreadAbove: ${spreadAboveCharge}
+  },
+  concentrateHoldMinutes: 3,
+
+  // ------------------------------------------------------------------
+  rebalance: {
+    socMargin: 10
+  },
+
+  // ------------------------------------------------------------------
+  reverseStartupPower: 35,
+  reverseStopPower: 15,
+  gridReverseMode: "${grm}",
+  chargeResetMargin: 5,
+
+  // ------------------------------------------------------------------
+  dischargeStartupPower: 35,
+  dischargeStopPower: 15,
+
+  // ------------------------------------------------------------------
+  interval: 4000,
+  errorThreshold: 5,
+  directionChangeHoldCycles: 2,
+  standbySmartModeZero: false,
+  kvsEnabled: false,
+  kvsForceReseed: false,
+  debug: false,
+
+  // ------------------------------------------------------------------
+  signal: {
+    enabled: ${state.signalEnabled === true},
+    typ: "${state.signalTyp}",
+    phone: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalPhone||'PHONE-STRING').replace(/"/g,'') : 'PHONE-STRING'}",
+    apiKey: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalApiKey||'YOUR_API_KEY').replace(/"/g,'') : 'YOUR_API_KEY'}",
+    webhookUrl: "${state.signalEnabled===true && state.signalTyp==='WEBHOOK' ? (state.signalWebhookUrl||'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>').replace(/"/g,'') : 'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>'}"
+  }
+};`;
+}
+
+function copyConfig(){
+  const text = buildConfig();
+  navigator.clipboard.writeText(text).then(()=>{
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 1600);
+  });
+}
+
+// ---------- Event handlers ----------
+function setGridSource(v){ state.gridSource = v; render(); }
+function setCharging(v){
+  state.chargingEnabled = v;
+  if(!v){ state.devices.forEach(d=>d.reverse=false); }
+  render();
+}
+function toggleReverse(idx, checked){
+  state.devices[idx].reverse = checked;
+  if(checked && state.devices[idx].maxInputPower===undefined){
+    state.devices[idx].maxInputPower = state.devices[idx].maxOutput;
+  }
+  render();
+}
+function setGrm(v){ state.gridReverseMode = v; render(); }
+function setSignalEnabled(v){
+  state.signalEnabled = v;
+  render();
+}
+function setSignalTyp(v){ state.signalTyp = v; render(); }
+
+// ---------- Navigation ----------
+function validateStep(){
+  if(step===1){
+    return state.devices.every(d => d.ip && d.ip.trim().length>3 && d.maxOutput>0);
+  }
+  if(step===2){
+    if(state.gridSource==='remote') return !!state.gridSourceIp;
+    if(state.gridSource==='http_json') return !!state.gridSourceUrl && !!state.gridSourceField;
+    return true;
+  }
+  if(step===3){
+    return state.chargingEnabled !== null;
+  }
+  if(step===4){
+    return !!state.gridReverseMode;
+  }
+  if(step===5){
+    if(state.signalEnabled === null) return false;
+    if(state.signalEnabled === false) return true;
+    if(state.signalTyp==='WEBHOOK') return !!state.signalWebhookUrl;
+    return !!state.signalPhone && !!state.signalApiKey;
+  }
+  return true;
+}
+
+function next(){
+  if(!validateStep()) return;
+  step++;
+  render();
+}
+function back(){
+  step--;
+  if(step<1) step=1;
+  render();
+}
+
+function renderNav(){
+  const isLast = step===6;
+  return `
+  <div class="nav">
+    <button class="btn" onclick="back()" ${step===1?'style="visibility:hidden;"':''}>← Zurück</button>
+    ${ isLast ? "" : `<button class="btn btn-primary" onclick="next()">Weiter →</button>` }
+  </div>`;
+}
+
+function render(){
+  renderSteps();
+  let html = "";
+  if(step===1) html = renderStep1();
+  else if(step===2) html = renderStep2();
+  else if(step===3) html = renderStep3();
+  else if(step===4) html = renderStep4();
+  else if(step===5) html = renderStep5();
+  else html = renderStep6();
+  html += renderNav();
+  document.getElementById('stepContainer').innerHTML = html;
+}
+
+render();
+</script>
+</body>
+</html>
