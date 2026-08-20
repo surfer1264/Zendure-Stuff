@@ -115,29 +115,26 @@ let CONFIG = {
   }
 };
 
-CONFIG.version: "3.2.0 (gridReverseMode: dynamic/always1/always2)",
+CONFIG.version = "3.2.0 (gridReverseMode: dynamic/always1/always2)";
+if (CONFIG.interval < 3000) CONFIG.interval = 3000;
+CONFIG.watchdog = CONFIG.interval * 2.5;
+
 function checkBand(band) {
   if (band.concentrateBelow < 35) band.concentrateBelow = 35;
   if (band.spreadAbove < 50) band.spreadAbove = 50;
   if (band.concentrateBelow >= band.spreadAbove) band.spreadAbove = band.concentrateBelow +15 ;
 }
-if (CONFIG.interval < 3000) CONFIG.interval = 3000;
-CONFIG.watchdog = CONFIG.interval * 2.5;
-if (CONFIG.dampingFactor < 0.4) CONFIG.dampingFactor = 0.4;
-if (CONFIG.dampingFactor > 1) CONFIG.dampingFactor = 1;
-if (CONFIG.setpoint < -40) CONFIG.setpoint = -40;
-if (CONFIG.setpoint > 40) CONFIG.setpoint = 40;
-if (CONFIG.hysteresis >40) CONFIG.hysteresis = 40;
-if (CONFIG.hysteresis < 5) CONFIG.hysteresis = 5;
-if (CONFIG.rebalance.socMargin < 3) CONFIG.rebalance.socMargin = 3;
-if (CONFIG.rebalance.socMargin > 25) CONFIG.rebalance.socMargin = 25;
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
+
+CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
+CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
+CONFIG.hysteresis          = Math.max(5, Math.min(40, CONFIG.hysteresis));
+CONFIG.rebalance.socMargin = Math.max(3, Math.min(25, CONFIG.rebalance.socMargin));
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
-if (CONFIG.directionChangeHoldCycles < 0) CONFIG.directionChangeHoldCycles = 0;
-if (CONFIG.directionChangeHoldCycles > 20) CONFIG.directionChangeHoldCycles = 20;
+CONFIG.directionChangeHoldCycles = Math.max(0, Math.min(20, CONFIG.directionChangeHoldCycles));
 
 // Hold time (spread -> single) in cycles
 let CONCENTRATE_HOLD_CYCLES = Math.max(
