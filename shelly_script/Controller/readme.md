@@ -31,7 +31,8 @@ verlinkt.
 
 ## Schritt 2 – Minimalkonfiguration (~5 Min)
 
-Der Konfigurator
+Der Konfigurator: 
+
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
 

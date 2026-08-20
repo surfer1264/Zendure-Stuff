@@ -12,13 +12,18 @@ Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
 
 # Changelog 3.2.0
 
+Der Konfigurator: 
+
+[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+
+
 **Achtung**
 
 **Neu:** `CONFIG.gridReverseMode` ersetzt `CONFIG.immerBypass`
 
 Vorher (3.1.1): Boolean `immerBypass:` false. false = dynamische Fleet-Sperrlogik aktiv; true = komplett umgangen, beim Start wurde stattdessen fix gridReverse = 1 gesetzt.
 
-Jetzt (3.2.0): String-Enum gridReverseMode: "dynamic" mit drei Werten:
+Jetzt (3.2.0): String-Enum `gridReverseMode`: "dynamic" mit drei Werten:
 
 "dynamic" – wie bisher immerBypass: false; Netzexport ist so lange erlaubt wie Geräte per AC Ladebedarf haben, wenn alle Geräte socLimit: 1 (Akkus voll) melden, dann wird `grid_revers:2` gesetzt und der Export von Energie verboten  (automatische Sperre/Freigabe pro Zyklus über updateGridReverseLock()). mit `chargeResetMargin`wird die Sperre aufgehoben
 "always1" – beim Start wird `gridReverse: 1` fix geschrieben (Netzexport dauerhaft erlaubt), die dynamische Logik läuft nicht 
