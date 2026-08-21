@@ -403,7 +403,7 @@ sowie der Effekt von `LOAD_SCALE`:
 
 [PVKurve](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/pv_curves.html)
 
-[Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/hauslastkurve.html)
+[Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/hauslast_curves.html)
 
 
 
