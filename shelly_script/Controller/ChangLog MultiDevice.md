@@ -10,6 +10,15 @@ Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kom
 siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/minify_keep_config.py
 Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
 
+# CHANGELOG 3.2.1 
+
+Bugfix in calculate(): die "excessSocLimit1"-Korrektur wurde aus der
+Ladeziel-Berechnung (rawCharge) entfernt.
+Problem: ein nicht volles Geraet wurde mit etwa der doppelten sinnvollen Leistung geladen, waehrend 
+gleichzeitig ein anderes (volles) Geraet entlud - Nettoeffekt: ein dauerhafter, ungedeckter Netzbezug trotz vorhandener Kapazitaet.
+
+
+
 # Changelog 3.2.0
 
 Der Konfigurator: 

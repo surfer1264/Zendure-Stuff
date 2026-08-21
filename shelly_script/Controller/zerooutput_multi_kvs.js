@@ -1,7 +1,7 @@
 // Zendure Dynamic Output Controller - Multi-Device Version
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
-
+//
 let CONFIG = {
   devices: [
      {
@@ -115,7 +115,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "3.2.0 (gridReverseMode: dynamic/always1/always2)";
+CONFIG.version = "3.2.1";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -806,7 +806,6 @@ function calculate(myCycle) {
   let n = CONFIG.devices.length;
   let sumZen = 0;
   let sumZenReverse = 0;
-  let excessSocLimit1 = 0;
   let availableCount = 0;
 
   let countedIps = {};
@@ -820,11 +819,6 @@ function calculate(myCycle) {
         
         if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
-        }
-
-        if (state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
-          let excess = state.devices[i].zenPower - state.devices[i].outputLimit;
-          if (excess > 0) excessSocLimit1 += excess;
         }
 
         countedIps[ip] = true;
@@ -853,7 +847,11 @@ function calculate(myCycle) {
 
   let dischargeTarget = Math.round(state.smoothedOutput);
 
-  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse - excessSocLimit1);
+  // v3.2.1: excessSocLimit1-Korrektur entfernt. Sie naeherte sich mathematisch
+  // an -gridPower an, sobald ein einzelnes gesperrtes (socLimit=1) Geraet die
+  // sumZen dominiert (Einzelgeraet-/Konzentrieren-Modus) - dadurch wurde
+  // rawCharge auf ca. 2x gridPower verdoppelt statt korrigiert. Siehe CHANGELOG.
+  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
 
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
