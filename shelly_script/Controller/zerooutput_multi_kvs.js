@@ -8,26 +8,25 @@ let CONFIG = {
       ip: "192.168.178.143",    // Zendure IP address
       label: "SF2400",          // short name, used in logs/messages
 
-      minSoc: 18,               // no discharge below this SOC (%)
-      maxSoc: 100,               // no charging from grid at/above this SOC (%)
-      dischargeAllowed: true,   // may this device discharge/export at all? (KVS-live-overridable)
-      reverse: true,            // may this device charge from the grid? (KVS-live-overridable)
-      maxInputPower: 2400,       // max charge power from grid (W)
-      maxOutput: 800,          // max discharge/export power (W)
-      
+      minSoc: 15,
+      maxSoc: 100,
+      dischargeAllowed: true,
+      reverse: true,
+      maxInputPower: 1000,
+      maxOutput: 800,
       dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
       ip: "192.168.178.143",   
       label: "Fatamorgana",     
 
-      minSoc: 15,               
-      maxSoc: 100,              
-      dischargeAllowed: false,  
-      reverse: true,            
-      maxInputPower: 1200,      
-      maxOutput: 800,           
-      dryRun: true              
+      minSoc: 15,
+      maxSoc: 100,
+      dischargeAllowed: true,
+      reverse: true,
+      maxInputPower: 2000,
+      maxOutput: 2000,
+      dryRun: false
     },
   ],
   // ------------------------------------------------------------------

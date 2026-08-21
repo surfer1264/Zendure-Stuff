@@ -1,4 +1,5 @@
 set LOGFILE=14tageslauf.log
+set RELEASE=321
 
 del %LOGFILE%
 del closed_loop_result.csv
@@ -14,7 +15,7 @@ set START_SOC=30
 set LOAD_SCALE=1
 
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format 'yyMMdd-HHmmss'"') do set TS=%%i
-set OUTDIR=Testlauf-%TS%
+set OUTDIR=Test14h-%RELEASE%-%TS%
 mkdir "%OUTDIR%"
 
 echo Werte fuer diesen Lauf (Ordner: %OUTDIR%):
