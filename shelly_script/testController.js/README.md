@@ -401,9 +401,10 @@ interpoliert.
 Rohe Haushaltslast- und PV-Kurven (unabhängig von Batterie-Simulation),
 sowie der Effekt von `LOAD_SCALE`:
 
-<img width="1500" height="1125" alt="Haushaltslast- und PV-Rohkurven" src="https://github.com/user-attachments/assets/cd95b21d-4481-4a06-a2aa-7ef8d5bf2098" />
+[PVKurve](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/pv_curves.html)
 
-<img width="1500" height="675" alt="Haushaltslast bei verschiedenen LOAD_SCALE-Werten" src="https://github.com/user-attachments/assets/552e5a88-afd2-44c5-a442-2fcb4f93628f" />
+[Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/hauslastkurve.html)
+
 
 
 ## Bekannte Vereinfachungen des Mocks

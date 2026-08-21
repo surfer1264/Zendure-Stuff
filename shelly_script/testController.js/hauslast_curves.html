@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Simulierte Hauslast – Mock-Server</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page-plane:     #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --series-1:       #2a78d6; /* Scale 0,2 */
+    --series-2:       #eb6834; /* Scale 0,5 */
+    --series-3:       #1baf7a; /* Scale 1,0 */
+    --border:         rgba(11,11,11,0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page-plane:     #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --gridline:       #2c2c2a;
+      --baseline:       #383835;
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --border:         rgba(255,255,255,0.10);
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --border:         rgba(255,255,255,0.10);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--page-plane);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .viz-root {
+    background: var(--page-plane);
+    padding: 28px 20px 36px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 24px 12px;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 18px;
+  }
+  .legend {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .theme-toggle, .table-toggle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: auto;
+  }
+  .theme-toggle:hover, .table-toggle:hover { color: var(--text-primary); }
+  .toprow { display: flex; align-items: center; gap: 12px; }
+  svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .axis-label { fill: var(--text-muted); font-size: 11px; }
+  .tick-label { fill: var(--text-muted); font-size: 11px; }
+  .grid-line { stroke: var(--gridline); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+  .series-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .end-dot { stroke-width: 2; }
+  .direct-label { font-size: 12px; font-weight: 600; fill: var(--text-primary); }
+  .crosshair-line { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 2,3; }
+  .hover-dot { stroke: var(--surface-1); stroke-width: 2; }
+  .tooltip-box { fill: var(--surface-1); stroke: var(--border); stroke-width: 1; rx: 8; }
+  .tooltip-text { font-size: 12px; fill: var(--text-primary); }
+  .tooltip-text.muted { fill: var(--text-secondary); }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin: 10px 0 18px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.data-table th, table.data-table td {
+    text-align: right;
+    padding: 5px 8px;
+    border-bottom: 1px solid var(--gridline);
+  }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; color: var(--text-primary); }
+  table.data-table th { color: var(--text-muted); font-weight: 500; }
+  .hidden { display: none; }
+  footer.note { font-size: 12px; color: var(--text-muted); padding: 10px 2px 18px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="card">
+    <div class="toprow">
+      <div>
+        <h1>Simulierte Hauslast &ndash; Mock-Server</h1>
+        <p class="sub">Simulierte Leistungsaufnahme <code>householdLoad()</code> je LOAD_SCALE über den Tagesverlauf (aus mock_server.js)</p>
+      </div>
+      <button class="table-toggle" id="tableToggle">Als Tabelle anzeigen</button>
+      <button class="theme-toggle" id="themeToggle">Dark Mode</button>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <svg id="chart" viewBox="0 0 920 440" role="img" aria-label="Simulierte Hauslast bei LOAD_SCALE 0,2 / 0,5 / 1,0 über den Tag"></svg>
+
+    <table class="data-table hidden" id="dataTable">
+      <thead>
+        <tr><th>Uhrzeit</th><th>Scale 0,2 (W)</th><th>Scale 0,5 (W)</th><th>Scale 1,0 (W)</th></tr>
+      </thead>
+      <tbody id="dataTableBody"></tbody>
+    </table>
+
+    <footer class="note" id="footerNote"></footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- exakt aus mock_server.js übernommene Formeln (LOAD_SCALE parametrisiert statt env-Konstante) ----
+  function gauss(h, mu, sig, amp) { return amp * Math.exp(-0.5 * Math.pow((h - mu) / sig, 2)); }
+  function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+
+  function householdLoad(minuteOfDay, LOAD_SCALE) {
+    const hour = (((minuteOfDay % 1440) + 1440) % 1440) / 60;
+    const dayW = sigmoid((hour - 6) * 4) * sigmoid((22 - hour) * 4);
+    const lower = 150 + dayW * (300 - 150);
+    const upper = 300 + dayW * (3000 - 300);
+    const base = lower + 0.30 * (upper - lower);
+    const peaks = (gauss(hour, 7.2, 0.8, 700) + gauss(hour, 12.5, 1.0, 550) + gauss(hour, 19.0, 1.3, 1900)) * dayW;
+    let v = (base + peaks) * LOAD_SCALE;
+    v = Math.max(lower * Math.min(1, LOAD_SCALE), Math.min(upper, v));
+    return v;
+  }
+
+  function hhmm(m) {
+    const t = ((Math.round(m) % 1440) + 1440) % 1440;
+    const h = Math.floor(t / 60), mi = t % 60;
+    return String(h).padStart(2, "0") + ":" + String(mi).padStart(2, "0");
+  }
+  function deNum(v) { return Math.round(v).toLocaleString("de-DE"); }
+
+  const SCALES = [
+    { scale: 0.2, key: "s02", varName: "--series-1", label: "Scale 0,2" },
+    { scale: 0.5, key: "s05", varName: "--series-2", label: "Scale 0,5" },
+    { scale: 1.0, key: "s10", varName: "--series-3", label: "Scale 1,0" }
+  ];
+
+  const STEP = 2; // Minuten-Auflösung
+  const points = [];
+  for (let m = 0; m <= 1440; m += STEP) {
+    const row = { m };
+    SCALES.forEach(function (s) { row[s.key] = householdLoad(m, s.scale); });
+    points.push(row);
+  }
+
+  // Peak je Serie (Minute + Wert) für Direct-Label ermitteln
+  SCALES.forEach(function (s) {
+    let best = points[0];
+    points.forEach(function (p) { if (p[s.key] > best[s.key]) best = p; });
+    s.peakM = best.m;
+    s.peakV = best[s.key];
+  });
+
+  // ---- Layout ----
+  const W = 920, H = 440;
+  const padL = 58, padR = 20, padT = 30, padB = 40;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const yMax = 3000;
+  const yTicks = [0, 500, 1000, 1500, 2000, 2500, 3000];
+
+  function xOf(m) { return padL + (m / 1440) * plotW; }
+  function yOf(v) { return padT + plotH - (v / yMax) * plotH; }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("chart");
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(svgNS, tag);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // Gridlines + x ticks (alle 3h)
+  for (let h = 0; h <= 24; h += 3) {
+    const m = h * 60;
+    const x = xOf(m);
+    svg.appendChild(el("line", { class: "grid-line", x1: x, x2: x, y1: padT, y2: padT + plotH }));
+    const t = el("text", { class: "tick-label", x: x, y: padT + plotH + 20, "text-anchor": "middle" });
+    t.textContent = String(h).padStart(2, "0") + ":00";
+    svg.appendChild(t);
+  }
+  // y ticks
+  yTicks.forEach(function (v) {
+    const y = yOf(v);
+    svg.appendChild(el("line", { class: "grid-line", x1: padL, x2: padL + plotW, y1: y, y2: y }));
+    const t = el("text", { class: "tick-label", x: padL - 10, y: y + 4, "text-anchor": "end" });
+    t.textContent = deNum(v);
+    svg.appendChild(t);
+  });
+  // baseline
+  svg.appendChild(el("line", { class: "baseline", x1: padL, x2: padL + plotW, y1: padT + plotH, y2: padT + plotH }));
+  // axis labels
+  const yLabel = el("text", { class: "axis-label", x: padL, y: 14, "text-anchor": "start" });
+  yLabel.textContent = "Leistung (W)";
+  svg.appendChild(yLabel);
+  const xLabel = el("text", { class: "axis-label", x: padL + plotW, y: H - 6, "text-anchor": "end" });
+  xLabel.textContent = "Uhrzeit";
+  svg.appendChild(xLabel);
+
+  function pathFor(key) {
+    return points.map(function (p, i) {
+      return (i === 0 ? "M" : "L") + xOf(p.m).toFixed(2) + "," + yOf(p[key]).toFixed(2);
+    }).join(" ");
+  }
+
+  SCALES.forEach(function (s) {
+    const path = el("path", { class: "series-line", d: pathFor(s.key), stroke: "var(" + s.varName + ")" });
+    svg.appendChild(path);
+
+    const px = xOf(s.peakM), py = yOf(s.peakV);
+    svg.appendChild(el("circle", { class: "end-dot", cx: px, cy: py, r: 4.5, fill: "var(" + s.varName + ")" }));
+    const lbl = el("text", { class: "direct-label", x: px, y: py - 12, "text-anchor": "middle" });
+    lbl.textContent = deNum(s.peakV) + " W";
+    svg.appendChild(lbl);
+  });
+
+  // ---- Legende ----
+  const legend = document.getElementById("legend");
+  SCALES.forEach(function (s) {
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    const sw = document.createElement("span");
+    sw.className = "swatch";
+    sw.style.background = "var(" + s.varName + ")";
+    item.appendChild(sw);
+    const txt = document.createElement("span");
+    txt.textContent = s.label + " (Peak " + hhmm(s.peakM) + ", " + deNum(s.peakV) + " W)";
+    item.appendChild(txt);
+    legend.appendChild(item);
+  });
+
+  document.getElementById("footerNote").textContent =
+    "LOAD_SCALE skaliert Grund- und Spitzenlast (Morgen ~07:15, Mittag ~12:30, Abend ~19:00); untere Leistungsgrenze bleibt geräteseitig erhalten.";
+
+  // ---- Hover: Crosshair + Tooltip ----
+  const hoverGroup = el("g", { style: "display:none" });
+  const crossX = el("line", { class: "crosshair-line", y1: padT, y2: padT + plotH });
+  const dots = SCALES.map(function (s) { return el("circle", { class: "hover-dot", r: 5, fill: "var(" + s.varName + ")" }); });
+  const tipW = 150, tipH = 20 + SCALES.length * 16 + 8;
+  const tipBox = el("rect", { class: "tooltip-box", width: tipW, height: tipH });
+  const tipTime = el("text", { class: "tooltip-text", x: 10, y: 18 });
+  const tipRows = SCALES.map(function (s, i) { return el("text", { class: "tooltip-text", x: 10, y: 36 + i * 16 }); });
+  const tipGroup = el("g");
+  tipGroup.appendChild(tipBox);
+  tipGroup.appendChild(tipTime);
+  tipRows.forEach(function (r) { tipGroup.appendChild(r); });
+  hoverGroup.appendChild(crossX);
+  dots.forEach(function (d) { hoverGroup.appendChild(d); });
+  hoverGroup.appendChild(tipGroup);
+  svg.appendChild(hoverGroup);
+
+  const hitRect = el("rect", { x: padL, y: padT, width: plotW, height: plotH, fill: "transparent", style: "cursor:crosshair" });
+  svg.appendChild(hitRect);
+
+  function nearestPoint(mouseM) {
+    let idx = Math.round(mouseM / STEP);
+    idx = Math.max(0, Math.min(points.length - 1, idx));
+    return points[idx];
+  }
+
+  hitRect.addEventListener("mousemove", function (evt) {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const localX = (evt.clientX - rect.left) * scaleX;
+    const m = ((localX - padL) / plotW) * 1440;
+    if (m < 0 || m > 1440) { hoverGroup.style.display = "none"; return; }
+    const p = nearestPoint(m);
+    const x = xOf(p.m);
+    hoverGroup.style.display = "block";
+    crossX.setAttribute("x1", x); crossX.setAttribute("x2", x);
+    SCALES.forEach(function (s, i) {
+      dots[i].setAttribute("cx", x);
+      dots[i].setAttribute("cy", yOf(p[s.key]));
+    });
+
+    tipTime.textContent = hhmm(p.m) + " Uhr";
+    SCALES.forEach(function (s, i) {
+      tipRows[i].textContent = s.label + ": " + deNum(p[s.key]) + " W";
+    });
+
+    let tx = x + 12;
+    if (tx + tipW > padL + plotW) tx = x - 12 - tipW;
+    let ty = padT + 6;
+    tipGroup.setAttribute("transform", "translate(" + tx + "," + ty + ")");
+  });
+  hitRect.addEventListener("mouseleave", function () { hoverGroup.style.display = "none"; });
+
+  // ---- Tabelle (alle 30 Minuten) ----
+  const tbody = document.getElementById("dataTableBody");
+  for (let m = 0; m <= 1440; m += 30) {
+    const tr = document.createElement("tr");
+    let rowHtml = "<td>" + hhmm(m) + "</td>";
+    SCALES.forEach(function (s) { rowHtml += "<td>" + deNum(householdLoad(m, s.scale)) + "</td>"; });
+    tr.innerHTML = rowHtml;
+    tbody.appendChild(tr);
+  }
+
+  document.getElementById("tableToggle").addEventListener("click", function () {
+    const t = document.getElementById("dataTable");
+    const isHidden = t.classList.contains("hidden");
+    t.classList.toggle("hidden");
+    this.textContent = isHidden ? "Tabelle ausblenden" : "Als Tabelle anzeigen";
+  });
+
+  // ---- Theme toggle ----
+  const root = document.documentElement;
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    const current = root.getAttribute("data-theme");
+    if (current === "dark") { root.setAttribute("data-theme", "light"); this.textContent = "Dark Mode"; }
+    else { root.setAttribute("data-theme", "dark"); this.textContent = "Light Mode"; }
+  });
+})();
+</script>
+</body>
+</html>

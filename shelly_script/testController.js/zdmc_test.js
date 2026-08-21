@@ -3,7 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 
 let CONFIG = {
-  version: "3.1.1 (gridReverse fleet-wide)",
+  version: "3.2.0 (gridReverseMode: dynamic/always1/always2)",
   
   devices: [
      {
@@ -34,7 +34,7 @@ let CONFIG = {
   ],
   // ------------------------------------------------------------------
   // SMARTMETER SECTION
-  gridSource: "http_json", // TEST: gegen Mock-Server statt lokalem em:0
+  gridSource: "http_json", // TEST: automatisch auf Mock umgebogen (patch_for_mock.js) // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
   gridSourceIp: "<IP address Shelly Pro 3EM>",
@@ -42,7 +42,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // only gridSource=http_json; z.B. Zendure 3CT
   gridSourceUrl: "http://localhost:3900/grid/properties/report",
-  gridSourceField: "total_power",
+  gridSourceField: "total_power", // TEST: muss zum Mock-Response-Feld passen
   gridSourceInvert: false,
   
   // ------------------------------------------------------------------
@@ -78,9 +78,9 @@ let CONFIG = {
   reverseStartupPower: 35,
   // Ladeleistung, unter der gestoppt wird 
   reverseStopPower: 15,
-  // Spezialbehandlung Bypass
-  immerBypass: false,
-  chargeResetMargin: 5, // only immerBypass: false
+  // gridReverse-Modus: dynamic / always1 / always2
+  gridReverseMode: "always1",
+  chargeResetMargin: 5, // nur relevant bei gridReverseMode: "dynamic"
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION
@@ -91,7 +91,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // INTERNAL SECTION BE CAREFUL
   // Update interval (milliseconds)
-  interval: 3000, // TEST: schnelleres Durchlaufen der Simulation
+  interval: 4000,
   // Dont Change It
   // Anzahl Fehler bis Benachrichtigung
   errorThreshold: 5,
@@ -110,7 +110,7 @@ let CONFIG = {
   // MESSAGE SECTION
   signal: {
     enabled: false,          // set to true to activate notifications
-	  typ: "WEBHOOK",			     // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
+	typ: "WEBHOOK",			 // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
     phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX (nur SIGNAL/WHATSAPP)
     apiKey: "YOUR_API_KEY",  // CallMeBot API key
     webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
@@ -814,6 +814,7 @@ function calculate(myCycle) {
   let n = CONFIG.devices.length;
   let sumZen = 0;
   let sumZenReverse = 0;
+  let excessSocLimit1 = 0;
   let availableCount = 0;
 
   let countedIps = {};
@@ -829,6 +830,11 @@ function calculate(myCycle) {
           sumZenReverse += state.devices[i].zenPower;
         }
 
+        if (state.devices[i].socLimit === 1 && state.devices[i].outputLimit !== null) {
+          let excess = state.devices[i].zenPower - state.devices[i].outputLimit;
+          if (excess > 0) excessSocLimit1 += excess;
+        }
+
         countedIps[ip] = true;
       }
 
@@ -842,6 +848,8 @@ function calculate(myCycle) {
     return;
   }
 
+  updateGridReverseLock();
+
   let raw = Math.round((state.gridPower - CONFIG.setpoint) + sumZen);
 
   if (state.smoothedOutput === null) {
@@ -853,7 +861,7 @@ function calculate(myCycle) {
 
   let dischargeTarget = Math.round(state.smoothedOutput);
 
-  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
+  let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse - excessSocLimit1);
 
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
@@ -926,6 +934,7 @@ function updateMode(directionState, targetMagnitude, cfg) {
   }
 
   // currentMode === "spread"
+
   if (targetMagnitude > cfg.spreadAbove) {
     directionState.holdCycles = 0; // genuine spike back up - reset the hold counter
     return "spread";
@@ -1079,15 +1088,24 @@ function evaluateChargeCapacity() {
 
 function computeChargeWeights() {
   let result = evaluateChargeCapacity();
+  return { weight: result.weight, active: result.active };
+}
 
-  if (!CONFIG.immerBypass) {
-    if (allDevicesAtChargeLimit() && !state.allMaxedLogged) {
+// Zentrale, pro Zyklus EINMAL laufende gridReverse-Fleet-Steuerung.
+function updateGridReverseLock() {
+  if (CONFIG.gridReverseMode !== "dynamic") return;
+
+  if (!state.allMaxedLogged) {
+    if (allDevicesAtChargeLimit()) {
       state.allMaxedLogged = true;
       setGridReverseAll(0, 2, function () {});
     }
+  } else {
+    if (anyDeviceClearlyBelowMax()) {
+      state.allMaxedLogged = false;
+      setGridReverseAll(0, 1, function () {});
+    }
   }
-
-  return { weight: result.weight, active: result.active };
 }
 
 function waterFillDischarge(target, weight, active) {
@@ -1215,13 +1233,6 @@ function waterFillCharge(target, weight, active) {
 }
 
 function distributeDischarge(target, exclude) {
-  if (!CONFIG.immerBypass && state.allMaxedLogged) {
-    if (anyDeviceClearlyBelowMax()) {
-      state.allMaxedLogged = false;
-      setGridReverseAll(0, 1, function () {});
-    }
-  }
-
   let weights = computeDischargeWeights(exclude);
   let weight = weights.weight;
   let active = weights.active;
@@ -1557,7 +1568,7 @@ function syncSocLimitsDevice(index, callback) {
   if (cfg.dryRun) {
     print("  " + cfg.label + ": [DRYRUN] SoC-Grenzwerte werden nicht geschrieben");
 
-    // WICHTIG: callback() NICHT synchron aufrufen
+    // WICHTIG: callback() NICHT synchron aufrufen - bei mehreren
     Timer.set(0, false, callback);
     return;
   }
@@ -1599,7 +1610,8 @@ function syncSocLimitsDevice(index, callback) {
       }
 
       let props = { minSoc: minSocRaw, socSet: maxSocRaw };
-      if (CONFIG.immerBypass) props.gridReverse = 1;
+      if (CONFIG.gridReverseMode === "always1") props.gridReverse = 1;
+      if (CONFIG.gridReverseMode === "always2") props.gridReverse = 2;
 
       httpPost(
 
@@ -1697,7 +1709,7 @@ bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" 
 bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
   ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override)");
-bannerLines[bannerLines.length] = "Bypass immer erlauben: " + (CONFIG.immerBypass ? "aktiviert" : "deaktiviert");
+bannerLines[bannerLines.length] = "gridReverse-Modus: " + CONFIG.gridReverseMode;
 
 if (CONFIG.kvsEnabled) {
   bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/" +

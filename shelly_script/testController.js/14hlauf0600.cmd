@@ -1,4 +1,6 @@
-del 2htageslauf.log
+set LOGFILE=14tageslauf.log
+
+del %LOGFILE%
 del closed_loop_result.csv
 del report.html
 
@@ -23,16 +25,18 @@ echo   INTERVAL_MS=%INTERVAL_MS%
 echo   START_SOC=%START_SOC%
 echo   LOAD_SCALE=%LOAD_SCALE%
 
-node run_test.js > tageslauf.log 2>&1
+node run_test.js > %LOGFILE% 2>&1
 
 echo Fertig - erste Log-Zeile zur Kontrolle:
-findstr /N "^" 2htageslauf.log | findstr "^1:"
+findstr /N "^" %LOGFILE% | findstr "^1:"
 
 node generate_charts.js closed_loop_result.csv report.html
 
-move 2htageslauf.log "%OUTDIR%\" >nul
+move %LOGFILE% "%OUTDIR%\" >nul
 move closed_loop_result.csv "%OUTDIR%\" >nul
 move report.html "%OUTDIR%\" >nul
+copy zdmc_test.js "%OUTDIR%\" >nul
 
 echo.
 echo Ergebnisse gespeichert in: %OUTDIR%
+pause
