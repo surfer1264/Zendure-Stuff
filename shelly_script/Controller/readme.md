@@ -1,10 +1,15 @@
 # Getting Started – in 10 Minuten startklar
 
 Diese Kurzanleitung deckt nur das ab, was für einen **funktionierenden ersten
-Lauf** nötig ist. Alles Weitere (mehrere Geräte, Signal-/WhatsApp-Meldungen, 
-KVS-Live-Override, Debug, Feinabstimmung) ist bewusst ausgeklammert und wird
+Lauf** nötig ist. 
+Einen perfekten EINstieg erhälst Du hier 
+[Benutzerdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-SMDC-‐-Benutzerdokumentation)
+
+Alles Weitere (mehrere Geräte, Signal-/WhatsApp-Meldungen, KVS-Live-Override, Debug, Feinabstimmung) ist bewusst ausgeklammert und wird
 in der [Gesamtdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController)
 verlinkt.
+
+
 
 ---
 
