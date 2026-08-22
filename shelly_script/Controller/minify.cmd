@@ -1,0 +1,2 @@
+python3 minify_keep_config.py zerooutput_multi_kvs_src.js zerooutput_multi_kvs_mini.js
+Pause

@@ -18,6 +18,29 @@ import re
 import subprocess
 import sys
 import os
+import tempfile
+import shutil
+
+
+def find_npx():
+    """Findet den npx-Ausfuehrungspfad plattformunabhaengig.
+
+    Unter Windows liegt npx als 'npx.cmd' vor. subprocess.run(["npx", ...])
+    ohne shell=True nutzt CreateProcess direkt, die .cmd/.bat-Dateien nicht
+    ueber den blossen Namen findet (WinError 2), obwohl 'npx' in der
+    Konsole normal funktioniert. shutil.which() macht dieselbe PATH-/
+    PATHEXT-Aufloesung wie die Shell und liefert unter Windows z.B.
+    'C:\\...\\npx.cmd', unter Linux/Mac '/usr/bin/npx'.
+    """
+    npx = shutil.which("npx")
+    if npx is None:
+        raise RuntimeError(
+            "npx wurde nicht gefunden. Ist Node.js/npm installiert und im PATH?"
+        )
+    return npx
+
+
+NPX = find_npx()
 
 
 def find_config_block(text):
@@ -55,7 +78,7 @@ def terser_minify(js_text, tmp_path):
         f.write(js_text)
 
     result = subprocess.run(
-        ["npx", "terser", in_path, "-o", out_path, "--ecma", "5", "-f", "beautify=false"],
+        [NPX, "terser", in_path, "-o", out_path, "--ecma", "5", "-f", "beautify=false"],
         capture_output=True, text=True
     )
     if result.returncode != 0:
@@ -65,7 +88,7 @@ def terser_minify(js_text, tmp_path):
         return f.read()
 
 
-def verify(original_rest, minified_rest, full_output):
+def verify(original_rest, minified_rest, full_output, tmp_dir):
     checks = []
 
     def count(pattern, text):
@@ -83,11 +106,11 @@ def verify(original_rest, minified_rest, full_output):
     ))
 
     # Terser parst das GESAMTE Ergebnis nochmal als reinen Syntax-Check
-    tmp_check = "/tmp/_verify_full"
+    tmp_check = os.path.join(tmp_dir, "_verify_full")
     with open(tmp_check + ".js", "w", encoding="utf-8") as f:
         f.write(full_output)
     result = subprocess.run(
-        ["npx", "terser", tmp_check + ".js", "-o", tmp_check + ".out.js", "--ecma", "5"],
+        [NPX, "terser", tmp_check + ".js", "-o", tmp_check + ".out.js", "--ecma", "5"],
         capture_output=True, text=True
     )
     checks.append(("Gesamtdatei erneut syntaktisch gueltig (Terser-Reparse)", result.returncode == 0))
@@ -124,14 +147,15 @@ def main():
     print(f"CONFIG-Block erkannt: Zeichen {cfg_start}-{cfg_end} "
           f"({len(config_block.splitlines())} Zeilen, wird NICHT veraendert)")
 
-    before_min = terser_minify(before, "/tmp/_part_before") if before.strip() else ""
-    after_min = terser_minify(after, "/tmp/_part_after") if after.strip() else ""
+    with tempfile.TemporaryDirectory(prefix="minify_keep_config_", dir=os.getcwd()) as tmp_dir:
+        before_min = terser_minify(before, os.path.join(tmp_dir, "_part_before")) if before.strip() else ""
+        after_min = terser_minify(after, os.path.join(tmp_dir, "_part_after")) if after.strip() else ""
 
-    output = (before_min + "\n" if before_min else "") + \
-             config_block.strip() + "\n\n" + \
-             after_min.strip() + "\n"
+        output = (before_min + "\n" if before_min else "") + \
+                 config_block.strip() + "\n\n" + \
+                 after_min.strip() + "\n"
 
-    ok = verify(before + after, before_min + after_min, output)
+        ok = verify(before + after, before_min + after_min, output, tmp_dir)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(output)
