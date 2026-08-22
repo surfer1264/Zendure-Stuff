@@ -50,6 +50,7 @@ def load_config(path):
     cfg.setdefault("log_to_file", True)
     cfg.setdefault("log_file_path", "shelly_debug.log")
     cfg.setdefault("separate_log_files", False)
+    cfg.setdefault("daily_log_rotation", True)
     cfg.setdefault("show_script_prefix", True)
     cfg.setdefault("auto_reconnect", True)
     cfg.setdefault("reconnect_delay", 5)
@@ -63,15 +64,37 @@ def format_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
+def build_log_filename(script_id=None):
+    """Baut den Dateinamen fuer die Logdatei.
+
+    Haengt bei Bedarf "_scriptN" (separate_log_files) und/oder das
+    aktuelle Datum als "_YYMMDD" (daily_log_rotation) VOR die Dateiendung.
+    Da dieser Name bei JEDEM Schreibvorgang neu berechnet wird, entsteht
+    automatisch eine neue Datei, sobald sich das Datum aendert (Rotation
+    zur Tagesgrenze, ohne separaten Timer/Neustart noetig).
+    """
+    log_file_path = CONFIG["log_file_path"]
+    base, dot, ext = log_file_path.rpartition(".")
+
+    if not dot:
+        base = log_file_path
+        ext = None
+
+    suffix = ""
+
+    if CONFIG["separate_log_files"] and script_id is not None:
+        suffix += f"_script{script_id}"
+
+    if CONFIG["daily_log_rotation"]:
+        suffix += "_" + datetime.now().strftime("%y%m%d")
+
+    return f"{base}{suffix}.{ext}" if ext else f"{base}{suffix}"
+
+
 def write_log_to_file(text, script_id=None):
     if not CONFIG["log_to_file"]:
         return
-    log_file_path = CONFIG["log_file_path"]
-    if CONFIG["separate_log_files"] and script_id is not None:
-        base, dot, ext = log_file_path.rpartition(".")
-        path = f"{base}_script{script_id}.{ext}" if dot else f"{log_file_path}_script{script_id}"
-    else:
-        path = log_file_path
+    path = build_log_filename(script_id)
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(text + "\n")
@@ -167,6 +190,9 @@ def on_open(ws):
         print(f"  -> Filter aktiv: Nur Nachrichten von Script ID(s) {ids}")
     else:
         print("  -> Zeige Logs aller Skripte")
+    if CONFIG["log_to_file"]:
+        rotation_info = " (taegliche Rotation aktiv)" if CONFIG["daily_log_rotation"] else ""
+        print(f"  -> Logdatei aktuell: {build_log_filename()}{rotation_info}")
     print("-" * 60)
 
 
