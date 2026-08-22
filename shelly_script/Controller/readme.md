@@ -22,10 +22,11 @@ verlinkt.
 
 ## Schritt 1 – Script installieren (~2 Min)
 
-1. [Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js)
-2. Im Shelly Web-UI: **Scripts → Add Script**
-3. Code einfügen, **Save**
-4. Noch **nicht** starten – erst nach Schritt 2.
+1. [bis Version 3.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js)
+2. [ab Version 4.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js)
+3. Im Shelly Web-UI: **Scripts → Add Script**
+4. Code einfügen, **Save**
+5. Noch **nicht** starten – erst nach Schritt 2.
 
 ---
 
