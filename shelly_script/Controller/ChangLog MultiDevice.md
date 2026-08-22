@@ -1,7 +1,8 @@
 # Changelog *Major Change*
 ab hier beginnt eigene Releasestrecke für den Controller
 
-Codebase: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini
+1. [bis Version 3.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js)
+2. [ab Version 4.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) Minifyer eingesetzt
 
 
 Eine Weiterentwicklung kann nur erfolgen unter Nutzung von **Minify**, da die Script-Engine nur js-Scripte bis 50kB zulässt.
