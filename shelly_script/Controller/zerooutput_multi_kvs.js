@@ -125,6 +125,9 @@ function checkBand(band) {
 }
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  CONFIG.devices[i].minSoc = Math.max(10, Math.min(100, CONFIG.devices[i].minSoc));
+}
 
 CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
 CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
@@ -846,10 +849,6 @@ function calculate(myCycle) {
 
   let dischargeTarget = Math.round(state.smoothedOutput);
 
-  // v3.2.1: excessSocLimit1-Korrektur entfernt. Sie naeherte sich mathematisch
-  // an -gridPower an, sobald ein einzelnes gesperrtes (socLimit=1) Geraet die
-  // sumZen dominiert (Einzelgeraet-/Konzentrieren-Modus) - dadurch wurde
-  // rawCharge auf ca. 2x gridPower verdoppelt statt korrigiert. Siehe CHANGELOG.
   let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
 
   if (state.smoothedCharge === null) {
