@@ -1,4 +1,4 @@
-# Changelog *Major Change*
+# Changelog *Major Change* 4.0.0
 ab hier beginnt eigene Releasestrecke für den Controller
 
 1. [bis Version 3.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js)
@@ -8,9 +8,13 @@ ab hier beginnt eigene Releasestrecke für den Controller
 Eine Weiterentwicklung kann nur erfolgen unter Nutzung von **Minify**, da die Script-Engine nur js-Scripte bis 50kB zulässt.
 Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kommentare aus dem Code entfernt. Dies kann auch ein Python-Script erledigen.
 siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/minify_keep_config.py
-Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
+Es sind Kürzungen von bis zu 50% möglich.
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+
+**NEU in 4.0.0**
+socMin kann per KVS Zugriff ohne Neustart des Scriptes geändert werden und wird direkt auf den Solarflow synchronisiert
+
 
 
 # CHANGELOG 3.2.1 
