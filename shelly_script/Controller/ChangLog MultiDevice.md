@@ -3,12 +3,14 @@ ab hier beginnt eigene Releasestrecke für den Controller
 
 Codebase: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini
 
-**NICHT FREIGEGEBEN**
 
 Eine Weiterentwicklung kann nur erfolgen unter Nutzung von **Minify**, da die Script-Engine nur js-Scripte bis 50kB zulässt.
 Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kommentare aus dem Code entfernt. Dies kann auch ein Python-Script erledigen.
-siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/minify_keep_config.py
+siehe: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/minify_keep_config.py
 Die Kürzungen sind erheblich Einsparungen bis zu 50% sind möglich.
+
+[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+
 
 # CHANGELOG 3.2.1 
 

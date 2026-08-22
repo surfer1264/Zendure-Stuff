@@ -139,7 +139,9 @@ const state = {
   chargingEnabled: null, // Frage 3
   gridReverseMode: "dynamic", // Frage 4
 
-  signalEnabled: null, // Frage 5
+  kvsEnabled: null, // Frage 5
+
+  signalEnabled: null, // Frage 6
   signalTyp: "WEBHOOK",
   signalPhone: "",
   signalApiKey: "",
@@ -147,7 +149,7 @@ const state = {
 };
 
 let step = 1;
-const totalSteps = 6; // 1 Geraete, 2 Smartmeter, 3 Laden, 4 gridReverseMode, 5 Benachrichtigungen, 6 Ergebnis
+const totalSteps = 7; // 1 Geraete, 2 Smartmeter, 3 Laden, 4 gridReverseMode, 5 KVS, 6 Benachrichtigungen, 7 Ergebnis
 
 // "dynamic" ist nur sinnvoll/verfuegbar, wenn ueberhaupt ein Geraet aus dem Netz laden darf
 function dynamicAllowed(){
@@ -155,7 +157,7 @@ function dynamicAllowed(){
 }
 
 function stepLabel(n){
-  const labels = ["Geräte", "Smartmeter", "Laden vom Netz", "Bei vollem Akku", "Benachrichtigungen", "Ergebnis"];
+  const labels = ["Geräte", "Smartmeter", "Laden vom Netz", "Bei vollem Akku", "KVS", "Benachrichtigungen", "Ergebnis"];
   return labels[n-1];
 }
 
@@ -354,11 +356,33 @@ function renderStep4(){
 }
 
 function renderStep5(){
+  const k = state.kvsEnabled;
+  return `
+  <div class="panel">
+    <h2>5) Willst du Regelparameter später live ändern können — ohne das Script neu hochzuladen?</h2>
+    <p class="hint">Über den eingebauten Key-Value-Store (KVS) des Shelly lassen sich Sollwert, Lade-/Entladefreigabe und minSoc pro Gerät jederzeit von außen setzen — z. B. per Home-Assistant-Schalter oder curl-Befehl.</p>
+
+    <div class="choice ${k===true?'selected':''}" onclick="setKvsEnabled(true)">
+      <input type="radio" name="kvs" ${k===true?'checked':''}>
+      <div><div class="ct">Ja</div><div class="cd">Setzt <code>kvsEnabled: true</code>. Beispiele und Home-Assistant-Einrichtung: Dokumentation Kapitel 13.</div></div>
+    </div>
+    <div class="choice ${k===false?'selected':''}" onclick="setKvsEnabled(false)">
+      <input type="radio" name="kvs" ${k===false?'checked':''}>
+      <div><div class="ct">Nein</div><div class="cd">Standard — Werte bleiben fest auf dieser Konfiguration (<code>kvsEnabled: false</code>), jederzeit später im Script änderbar.</div></div>
+    </div>
+
+    ${ k===true ? `
+    <div class="note">Nur externe Schreibvorgänge (z. B. aus Home Assistant) verschleißen den Flash-Speicher des Shelly — Automations sollten daher nur bei echter Bedienung schreiben, nicht zyklisch (Doku Kapitel 13.2).</div>
+    ` : "" }
+  </div>`;
+}
+
+function renderStep6(){
   const e = state.signalEnabled;
   const t = state.signalTyp;
   return `
   <div class="panel">
-    <h2>5) Möchtest du Benachrichtigungen bei Störungen erhalten?</h2>
+    <h2>6) Möchtest du Benachrichtigungen bei Störungen erhalten?</h2>
     <p class="hint">Der Controller kann sich melden, wenn z. B. ein Gerät dauerhaft nicht erreichbar ist oder ein Schreibvorgang wiederholt fehlschlägt (nach mehreren aufeinanderfolgenden Fehlern) — und wieder, sobald der Fehler behoben ist. Die Kernregelung selbst braucht dafür kein Internet, nur der Versand dieser Nachrichten.</p>
 
     <div class="choice ${e===true?'selected':''}" onclick="setSignalEnabled(true)">
@@ -410,7 +434,7 @@ function renderStep5(){
   </div>`;
 }
 
-function renderStep6(){
+function renderStep7(){
   const cfg = buildConfig();
   return `
   <div class="panel">
@@ -420,8 +444,9 @@ function renderStep6(){
       <div><b>Netzquelle:</b> ${gridSourceSummary()}</div>
       <div><b>Laden vom Netz:</b> ${state.chargingEnabled===true ? ('Ja — ' + (state.devices.filter(d=>d.reverse).map(d=>d.label).join(', ') || 'keine Geräte ausgewählt')) : 'Nein'}</div>
       <div><b>Bei vollem Akku:</b> ${ {dynamic:'Automatisch sperren/freigeben', always1:'Export immer erlauben', always2:'Export immer sperren'}[state.gridReverseMode] || '—' }</div>
+      <div><b>KVS-Fernsteuerung:</b> ${ state.kvsEnabled===true ? 'Ja — Live-Override per KVS aktiv (Doku Kapitel 13)' : 'Nein — alle Werte fest auf dieser Konfiguration' }</div>
       <div><b>Benachrichtigungen:</b> ${ state.signalEnabled===true ? ('Ja — ' + state.signalTyp) : 'Nein' }</div>
-      <div><b>Alles Übrige:</b> bleibt auf Standard (Setpoint 0 W, Hysterese 12 W, Damping 0,65, KVS-Fernsteuerung aus, Entladen für alle Geräte erlaubt, u. a.)</div>
+      <div><b>Alles Übrige:</b> bleibt auf Standard (Setpoint 0 W, Hysterese 12 W, Damping 0,65, Entladen für alle Geräte erlaubt, u. a.)</div>
     </div>
   </div>
 
@@ -531,7 +556,7 @@ ${gridBlock}
   errorThreshold: 5,
   directionChangeHoldCycles: 2,
   standbySmartModeZero: false,
-  kvsEnabled: false,
+  kvsEnabled: ${state.kvsEnabled === true},
   kvsForceReseed: false,
   debug: false,
 
@@ -570,6 +595,7 @@ function toggleReverse(idx, checked){
   render();
 }
 function setGrm(v){ state.gridReverseMode = v; render(); }
+function setKvsEnabled(v){ state.kvsEnabled = v; render(); }
 function setSignalEnabled(v){
   state.signalEnabled = v;
   render();
@@ -593,6 +619,9 @@ function validateStep(){
     return !!state.gridReverseMode;
   }
   if(step===5){
+    return state.kvsEnabled !== null;
+  }
+  if(step===6){
     if(state.signalEnabled === null) return false;
     if(state.signalEnabled === false) return true;
     if(state.signalTyp==='WEBHOOK') return !!state.signalWebhookUrl;
@@ -613,7 +642,7 @@ function back(){
 }
 
 function renderNav(){
-  const isLast = step===6;
+  const isLast = step===totalSteps;
   return `
   <div class="nav">
     <button class="btn" onclick="back()" ${step===1?'style="visibility:hidden;"':''}>← Zurück</button>
@@ -629,7 +658,8 @@ function render(){
   else if(step===3) html = renderStep3();
   else if(step===4) html = renderStep4();
   else if(step===5) html = renderStep5();
-  else html = renderStep6();
+  else if(step===6) html = renderStep6();
+  else html = renderStep7();
   html += renderNav();
   document.getElementById('stepContainer').innerHTML = html;
 }
