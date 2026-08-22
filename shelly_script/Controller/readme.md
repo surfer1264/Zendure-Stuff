@@ -37,7 +37,7 @@ verlinkt.
 
 ## Schritt 2 – Minimalkonfiguration (~5 Min)
 
-Der Konfigurator: 
+Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt 3,
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
@@ -48,26 +48,9 @@ Der Konfigurator:
 Vollständiger Geräteeintrag (ein Feld pro Zeile, Kommentar dahinter) – pro
 Zendure-Gerät ein solcher Block in `CONFIG.devices[]`:
 
-```js
-{
-  ip: "192.168.x.x",           // IP-Adresse des Zendure-Geräts im lokalen Netz
-  label: "SF2400",             // Name für Logs/Meldungen, frei wählbar
-
-  minSoc: 15,                  // untere Entladegrenze (%) - darunter wird nicht entladen
-  maxOutput: 2400,             // maximale Entlade-/Exportleistung dieses Geräts (W)
-  minOutput: 35,               // Mindest-Ausgabewert, sobald ein Anteil zugewiesen wird (W)
-  dischargeAllowed: true,      // darf dieses Gerät entladen/exportieren?
-
-  reverse: true,               // darf dieses Gerät gezielt aus dem Netz laden?
-  maxSoc: 100,                 // obere Ladegrenze (%) - ab hier wird nicht mehr geladen
-  maxInputPower: 2400,         // maximale Ladeleistung vom Netz für dieses Gerät (W)
-
-  dryRun: false                // true = nur lesen/simulieren, nie tatsächlich schreiben
-}
-```
-
 Für den ersten Lauf reicht es, `ip` korrekt zu setzen – die übrigen Werte
-oben sind bereits sinnvolle, geräte-typische Startwerte. Mehrere Geräte:
+oben sind bereits sinnvolle, geräte-typische Startwerte. 
+Mehrere Geräte:
 Block kopieren, mit Komma trennen [Kapitel 4b](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController#4b-mehrere-solarflow-geräte-einpflegen).
 
 ### 2b) Smartmeter
