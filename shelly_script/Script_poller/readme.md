@@ -109,6 +109,7 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
   "log_to_file": true,
   "log_file_path": "shelly_debug.log",
   "separate_log_files": false,
+  "daily_log_rotation": true,
   "show_script_prefix": true,
 
   "auto_reconnect": true,
@@ -126,7 +127,8 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
 * **`only_script_logs`**: `true` = Systemmeldungen ausblenden, nur echte Skript-Logs zeigen.
 * **`log_to_file`**: `true`/`false` – ob überhaupt in eine Datei geschrieben wird.
 * **`log_file_path`**: Zieldatei fürs Log (Standard: `shelly_debug.log`).
-* **`separate_log_files`**: `true` = eigene Datei je Script-ID (`shelly_debug_script<ID>.log`), sonst eine gemeinsame Datei.
+* **`separate_log_files`**: `true` = eigene Datei je Script-ID (`shelly_debug_script<ID>.log`), sonst eine gemeinsame Datei. Bei aktiver `daily_log_rotation` (Standard) kommt zusaetzlich das Datum dazu, siehe unten.
+* **`daily_log_rotation`**: `true` (Standard) = haengt automatisch das aktuelle Datum als `_YYMMDD` an den Dateinamen (vor die Endung), z. B. `shelly_debug_260823.log`. Beim Wechsel auf einen neuen Tag entsteht dadurch von selbst eine neue Datei, ohne dass das Script neu gestartet werden muss. `false` = alte Namensgebung ohne Datum (`log_file_path` wird 1:1 genutzt, bzw. mit `_script<ID>` bei `separate_log_files`).
 * **`show_script_prefix`**: `true` = schreibt `[Script 6]` vor jede Zeile (sinnvoll bei mehreren IDs).
 * **`auto_reconnect`** / **`reconnect_delay`**: Automatische Wiederverbindung bei Verbindungsabbruch und Wartezeit in Sekunden.
 * **`script_fd_base`** / **`show_fd_debug`**: Interne Erkennung, welche fd-Werte zu Skript-Ausgaben gehören (Standard `100`, siehe Hinweis unten). Nur bei Bedarf ändern.
@@ -165,4 +167,4 @@ unbedingt die geschriebenen Logfiles ansehen. Alle Shelly Versionen bringen so I
 ## Beenden
 
 * Drücken Sie **`Strg + C`** im Terminal, um den Log-Grabber sauber zu beenden.
-* Die gesammelten Logs finden Sie anschließend in der Datei, die unter `log_file_path` in `config_log_grabber.json` eingetragen ist (Standard: **`shelly_debug.log`**) im selben Verzeichnis.
+* Die gesammelten Logs finden Sie anschließend im selben Verzeichnis, im Namen basierend auf `log_file_path` aus `config_log_grabber.json` (Standard: `shelly_debug.log`). Solange `daily_log_rotation` aktiv ist (Standard), heißt die Datei tatsächlich `shelly_debug_YYMMDD.log` mit dem jeweiligen Tagesdatum (z. B. `shelly_debug_260823.log`) – pro Tag entsteht so automatisch eine neue Datei. Der aktuell aktive Dateiname wird beim Start des Scripts auch im Terminal angezeigt.
