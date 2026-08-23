@@ -9,8 +9,10 @@ print("⚡ Starte AkkuVolt-Watchdog — bitte vorsichtig benutzen!");
 
 // ==================== EINSTELLUNGEN ====================
 let mqttTopic   = "MYAPPKEY/#";                              // Zendure AppKey
+let signalTyp   = "SIGNAL";                                  // "SIGNAL" oder "WEBHOOK"
 let signalPhone = "MYPHONESTRING";                           // Whatsigram-Phone-String or UUID in der Form 25a7d32b-0c51-44d8-b11b-c5bc73294abc
 let signalKey   = "PHONE-APPKEY";                            // Whatsigram APP-KEY
+let webhookUrl  = "http://<IP-ADRESSE>:8123/api/webhook/<id>"; // Ziel-URL, nur relevant wenn signalTyp = "WEBHOOK"
 let useSignal   = true;                                      // MESSAGING OR NOT
 
 // Schwellwerte:
@@ -52,8 +54,41 @@ function simpleEncode(str) {
     return out;
 }
 
+function sendWebhookMessage(text) {
+    print("📨 Sende Webhook-Benachrichtigung...");
+
+    Shelly.call(
+        "HTTP.Request",
+        {
+            method: "POST",
+            url: webhookUrl,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text }),
+            timeout: 15
+        },
+        function (res, err, msg) {
+            if (err === 0) {
+                if (res && res.code >= 200 && res.code < 300) {
+                    print("✅ Webhook-Benachrichtigung erfolgreich gesendet (HTTP " + res.code + ").");
+                } else {
+                    print("⚠️ Webhook empfangen, aber HTTP Code: " + (res ? res.code : "?"));
+                }
+            } else if (err === -104) {
+                print("⚠️ Webhook-Timeout (-104), Nachricht vermutlich trotzdem angekommen.");
+            } else {
+                print("❌ Fehler beim Senden der Webhook-Benachrichtigung: " + msg);
+            }
+        }
+    );
+}
+
 function sendSignalMessage(text) {
     if (!useSignal) return;
+
+    if (signalTyp === "WEBHOOK") {
+        sendWebhookMessage(text);
+        return;
+    }
 
     let safeText = simpleEncode(text);
     let url = "https://api.callmebot.com/signal/send.php?phone=" + signalPhone + "&apikey=" + signalKey + "&text=" + safeText;
