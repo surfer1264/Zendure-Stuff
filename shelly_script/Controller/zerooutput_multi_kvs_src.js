@@ -65,7 +65,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // SOC-BALANCING Max. SOC-Differenz zwischen Geraeten (%)
   rebalance: {
-    socMargin: 10        // percentage points of advantage required to switch
+    socMargin: 5        // percentage points of advantage required to switch
   },
 
   // ------------------------------------------------------------------
@@ -130,7 +130,8 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
 CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
 CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
 CONFIG.hysteresis          = Math.max(5, Math.min(40, CONFIG.hysteresis));
-CONFIG.rebalance.socMargin = Math.max(3, Math.min(25, CONFIG.rebalance.socMargin));
+CONFIG.rebalance.socMargin = Math.max(5, Math.min(25, CONFIG.rebalance.socMargin));
+CONFIG.chargeResetMargin   = Math.max(10, Math.min(25, CONFIG.chargeResetMargin));
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
