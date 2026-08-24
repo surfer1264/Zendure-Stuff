@@ -17,7 +17,7 @@ let CONFIG = {
       dryRun: false              // only simulation; true = read + calculate only, never write
     },
     {
-      ip: "192.168.178.143",   
+      ip: "192.168.178.144",   
       label: "Fatamorgana",     
 
       minSoc: 15,
@@ -528,7 +528,7 @@ function httpGet(url, callback) {
     "HTTP.GET",
     {
       url: url,
-      timeout: 3
+      timeout: 4
     },
     callback
   );
@@ -551,7 +551,7 @@ function httpPost(url, body, callback) {
       },
 
       body: bodyStr,
-      timeout: 3
+      timeout: 4
     },
     callback
   );
