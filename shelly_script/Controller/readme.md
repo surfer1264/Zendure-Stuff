@@ -16,7 +16,7 @@ verlinkt.
 ## Checkliste, bevor du anfängst (~1 Min)
 
 - [ ] Shelly Gen2/3/4 mit Script-Engine vorhanden [Kapitel 3](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController#3-voraussetzungen)
-- [ ] Zendure-Gerät(e) im selben LAN, feste IP-Adresse bekannt, nur zenSDK fähige Geräte (ab SF800)
+- [ ] Zendure-Gerät(e) im selben LAN, feste IP-Adresse bekannt, **nur zenSDK fähige Geräte (ab SF800)**
 - [ ] **Wichtig:** Zendure-Gerät(e) in der Zendure-App aus dem **HEMS**
       (Home Energy Management System) entfernt – sonst sendet die Cloud
       parallel eigene Steuerbefehle und kollidiert mit dem Script
