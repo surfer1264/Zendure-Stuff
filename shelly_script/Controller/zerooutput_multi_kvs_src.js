@@ -75,7 +75,7 @@ let CONFIG = {
   reverseStopPower: 15,
   // gridReverse-Modus: dynamic / always1 / always2
   gridReverseMode: "dynamic",
-  chargeResetMargin: 5, // nur relevant bei gridReverseMode: "dynamic"
+  chargeResetMargin: 10, // nur relevant bei gridReverseMode: "dynamic"
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION
