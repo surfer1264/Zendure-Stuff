@@ -1,6 +1,6 @@
 # Changelog *Major Change* 4.2.1
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/89
+* https://github.com/surfer1264/Zendure-Stuff/issues/87
 
 4.2.1 - idleSkip nutzt jetzt `CONFIG.hysteresis` als Toleranzband um den
 zuletzt geschriebenen Wert (ds.outputLimit) statt exakter
