@@ -1,3 +1,22 @@
+# Changelog *Major Change* 4.2.1
+
+* https://github.com/surfer1264/Zendure-Stuff/issues/89
+
+4.2.1 - idleSkip nutzt jetzt `CONFIG.hysteresis` als Toleranzband um den
+zuletzt geschriebenen Wert (ds.outputLimit) statt exakter
+Signaturgleichheit.. Richtungswechsel (Export vs.
+Idle/Import) zaehlt weiterhin immer als Aenderung.
+
+Adaptive Polling: NEUER PARAMETER  (`CONFIG.idleSkip`) eingefuehrt: 
+reduziert HTTP-Last auf die Zendure-Geraete, wenn der Regel-Output ueber
+mehrere Zyklen stabil bleibt. Netzmessung laeuft davon
+unberuehrt weiterhin jeden Zyklus (readGridPower unveraendert).
+
+Neuer Konfigurator verfügbar
+
+[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+
+
 # Changelog *Major Change* 4.0.0
 ab hier beginnt eigene Releasestrecke für den Controller
 

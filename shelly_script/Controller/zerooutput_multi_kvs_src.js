@@ -16,8 +16,8 @@ let CONFIG = {
       dryRun: false              
     },
     {
-      ip: "192.168.178.143",   
-      label: "Fatamorgana",     
+      ip: "192.168.178.150",   
+      label: "SF800",     
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
@@ -100,6 +100,13 @@ let CONFIG = {
   kvsForceReseed: false,
   // operation to keep the console output clean.
   debug: false,
+  // ------------------------------------------------------------------
+  // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
+  idleSkip: {
+    enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
+    cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
+    maxSkipSeconds: 44   // max. Alter der Geraete-Daten (SOC/socLimit) waehrend des Aussetzens
+  },
 
   // ------------------------------------------------------------------
   // MESSAGE SECTION
@@ -112,7 +119,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.0.0";
+CONFIG.version = "4.2.1";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -143,6 +150,14 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
 );
 
+// idleSkip: Sekunden -> Zyklen, unabhaengig vom gewaehlten CONFIG.interval
+CONFIG.idleSkip.cyclesUnchanged = Math.max(1, Math.min(50, CONFIG.idleSkip.cyclesUnchanged));
+CONFIG.idleSkip.maxSkipSeconds  = Math.max(CONFIG.interval / 1000, CONFIG.idleSkip.maxSkipSeconds);
+let IDLE_SKIP_CYCLES = Math.max(
+  1,
+  Math.round((CONFIG.idleSkip.maxSkipSeconds * 1000) / CONFIG.interval)
+);
+
 // Live parameter overrides (Key-Value-Store)
 let KVS_MATCH = "zdmc_*";
 
@@ -162,6 +177,10 @@ let state = {
   discharge: { mode: "single", active: null, holdCycles: 0 },
   charge: { mode: "single", active: null, holdCycles: 0 },
   allMaxedLogged: false,
+
+  idleUnchangedCount: 0,
+  idleSkipRemaining: 0,
+  idleSkipActiveThisCycle: false,
 
   devices: []
 };
@@ -813,6 +832,36 @@ function zeroOutputs() {
   return out;
 }
 
+// Prueft, ob der neu berechnete Output pro Geraet innerhalb der bestehenden
+// Schreib-Hysterese um den zuletzt tatsaechlich geschriebenen Wert (ds.outputLimit)
+// liegt UND die Richtung (Export/Idle-Import) gleich bliebe. Anker ist bewusst
+// ds.outputLimit (aendert sich nur bei echtem Schreibvorgang) statt des Werts aus
+// dem Vorzyklus - sonst koennte der Wert langsam ueber viele kleine Schritte aus
+// dem Band "wegdriften", ohne dass es je erkannt wuerde.
+function isOutputWithinHysteresis(output) {
+  for (let i = 0; i < output.length; i++) {
+    let ds = state.devices[i];
+
+    if (!ds.available) continue;
+
+    if (ds.outputLimit === null || ds.acMode === null) {
+      return false; // noch nie geschrieben - kein Anker vorhanden
+    }
+
+    let targetAcMode = output[i] > 0 ? 2 : 1; // gleiche Zuordnung wie planWrite()
+
+    if (targetAcMode !== ds.acMode) {
+      return false; // Richtungswechsel zaehlt immer als Aenderung
+    }
+
+    if (Math.abs(output[i] - ds.outputLimit) >= CONFIG.hysteresis) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function calculate(myCycle) {
   if (myCycle !== state.cycleId) {
     debugStale("calculate", myCycle);
@@ -919,6 +968,41 @@ function calculate(myCycle) {
     "Netzsaldo: " + Math.round(state.gridPower) + " W | Ist-Summe: " + sumZen +
     " W | Regelsignal: " + dischargeTarget + " W | Ladekorrektur: " + ladeKorrektur + " W"
   );
+
+  if (CONFIG.idleSkip.enabled) {
+    let withinBand = isOutputWithinHysteresis(output);
+
+    if (state.idleSkipActiveThisCycle) {
+      // Dieser Zyklus lief OHNE frischen Geraete-Poll (SOC/socLimit ggf. veraltet).
+      // Nur Fruehabbruch pruefen - ein NEUER Sparmodus-Zeitraum darf hier
+      // nicht gestartet werden, sonst reiht sich der Skip mit veralteten Daten
+      // nahtlos aneinander und maxSkipSeconds waere wirkungslos.
+      if (!withinBand) {
+        print("Sparmodus beendet: Output verlaesst die Hysterese (" +
+          CONFIG.hysteresis + " W) oder Richtungswechsel");
+        state.idleSkipRemaining = 0;
+        state.idleUnchangedCount = 0;
+      }
+    } else {
+      // Voller Poll-Zyklus mit frischen Geraetedaten - nur hier darf ein
+      // neuer Sparmodus-Zeitraum beginnen.
+      if (withinBand) {
+        state.idleUnchangedCount = state.idleUnchangedCount + 1;
+
+        if (state.idleUnchangedCount >= CONFIG.idleSkip.cyclesUnchanged) {
+          state.idleSkipRemaining = IDLE_SKIP_CYCLES;
+          state.idleUnchangedCount = 0;
+
+          print("Sparmodus: Output seit " + CONFIG.idleSkip.cyclesUnchanged +
+            " Zyklen in Hysterese (" + CONFIG.hysteresis +
+            " W) - setze Polling fuer " + IDLE_SKIP_CYCLES +
+            " Zyklen aus ");
+        }
+      } else {
+        state.idleUnchangedCount = 0;
+      }
+    }
+  }
 
   applyOutputs(output, myCycle);
 }
@@ -1513,13 +1597,30 @@ function update() {
 
   let myCycle = lock();
 
-  for (let i = 0; i < CONFIG.devices.length; i++) {
-    state.devices[i].available = false;
-  }
-
   readGridPower(myCycle, function (ok) {
 
     if (!ok) return;
+
+    if (CONFIG.idleSkip.enabled && state.idleSkipRemaining > 0) {
+      state.idleSkipRemaining = state.idleSkipRemaining - 1;
+      state.idleSkipActiveThisCycle = true;
+
+      if (CONFIG.debug) {
+        print("DEBUG Sparmodus: Geraete-Poll ausgesetzt (" +
+          state.idleSkipRemaining + " Zyklen verbleibend, Netzmessung aktuell)");
+      }
+
+      Timer.set(0, false, function () {
+        calculate(myCycle);
+      });
+      return;
+    }
+
+    state.idleSkipActiveThisCycle = false;
+
+    for (let i = 0; i < CONFIG.devices.length; i++) {
+      state.devices[i].available = false;
+    }
 
     readAllDevices(0, myCycle, function () {
 
@@ -1746,6 +1847,10 @@ bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
   ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
 bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override)");
 bannerLines[bannerLines.length] = "gridReverse-Modus: " + CONFIG.gridReverseMode;
+bannerLines[bannerLines.length] = "Sparmodus  : " + (CONFIG.idleSkip.enabled ?
+  ("aktiviert (ab " + CONFIG.idleSkip.cyclesUnchanged + " gleichen Zyklen, max. " +
+    IDLE_SKIP_CYCLES + " Zyklen aussetzen / " + CONFIG.idleSkip.maxSkipSeconds + " s)") :
+  "deaktiviert");
 
 if (CONFIG.kvsEnabled) {
   bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/" +

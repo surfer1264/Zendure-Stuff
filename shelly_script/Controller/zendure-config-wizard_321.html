@@ -114,7 +114,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Zendure Multi-Device Controller (4.2.x ff.) </h1>
+  <h1>Zendure Multi-Device Controller (3.2.0 ff.) </h1>
   <p class="sub">Konfigurations-Assistent — beantwortet die paar Fragen, die wirklich pro Haushalt unterschiedlich sind. Alles andere bleibt auf dem in der Doku empfohlenen Standard.</p>
 
   <div class="steps" id="steps"></div>
@@ -141,11 +141,7 @@ const state = {
 
   kvsEnabled: null, // Frage 5
 
-  idleSkipEnabled: null, // Frage 6
-  idleSkipCyclesUnchanged: 4,
-  idleSkipMaxSkipSeconds: 44,
-
-  signalEnabled: null, // Frage 7
+  signalEnabled: null, // Frage 6
   signalTyp: "WEBHOOK",
   signalPhone: "",
   signalApiKey: "",
@@ -153,7 +149,7 @@ const state = {
 };
 
 let step = 1;
-const totalSteps = 8; // 1 Geraete, 2 Smartmeter, 3 Laden, 4 gridReverseMode, 5 KVS, 6 Sparmodus, 7 Benachrichtigungen, 8 Ergebnis
+const totalSteps = 7; // 1 Geraete, 2 Smartmeter, 3 Laden, 4 gridReverseMode, 5 KVS, 6 Benachrichtigungen, 7 Ergebnis
 
 // "dynamic" ist nur sinnvoll/verfuegbar, wenn ueberhaupt ein Geraet aus dem Netz laden darf
 function dynamicAllowed(){
@@ -161,7 +157,7 @@ function dynamicAllowed(){
 }
 
 function stepLabel(n){
-  const labels = ["Geräte", "Smartmeter", "Laden vom Netz", "Bei vollem Akku", "KVS", "Sparmodus", "Benachrichtigungen", "Ergebnis"];
+  const labels = ["Geräte", "Smartmeter", "Laden vom Netz", "Bei vollem Akku", "KVS", "Benachrichtigungen", "Ergebnis"];
   return labels[n-1];
 }
 
@@ -382,42 +378,11 @@ function renderStep5(){
 }
 
 function renderStep6(){
-  const k = state.idleSkipEnabled;
-  return `
-  <div class="panel">
-    <h2>6) Soll der Controller Abfragen an deine Geräte aussetzen, wenn sich sowieso nichts ändert?</h2>
-    <p class="hint">Normalerweise fragt der Controller bei jedem Zyklus den Status jedes Geräts ab – auch wenn der gewünschte Output seit Längerem gleich bleibt. Der Sparmodus erkennt diese ruhigen Phasen und pausiert die Abfragen zeitweise, um Netzwerk und Geräte zu entlasten. Sobald sich wieder etwas ändert, schaltet der Controller sofort zurück auf normale Abfragen.</p>
-
-    <div class="choice ${k===true?'selected':''}" onclick="setIdleSkipEnabled(true)">
-      <input type="radio" name="idle" ${k===true?'checked':''}>
-      <div><div class="ct">Ja</div><div class="cd">Setzt <code>idleSkip.enabled: true</code>. Spart Anfragen in ruhigen Phasen, siehe unten für die Feineinstellung.</div></div>
-    </div>
-    <div class="choice ${k===false?'selected':''}" onclick="setIdleSkipEnabled(false)">
-      <input type="radio" name="idle" ${k===false?'checked':''}>
-      <div><div class="ct">Nein</div><div class="cd">Standard – der Controller fragt jeden Zyklus alle Geräte ab, auch ohne Änderung (<code>idleSkip.enabled: false</code>).</div></div>
-    </div>
-
-    ${ k===true ? `
-    <div class="conditional">
-      <label class="first">Wie viele gleichbleibende Zyklen, bevor der Sparmodus startet?</label>
-      <p class="hint" style="margin-top:-2px;">So oft muss der Output hintereinander innerhalb der Toleranz (Hysterese) bleiben, bevor die Abfragen pausiert werden.</p>
-      <input type="number" min="1" max="50" value="${state.idleSkipCyclesUnchanged}" oninput="state.idleSkipCyclesUnchanged=num(this.value,4)">
-
-      <label>Wie lange darf höchstens ausgesetzt werden (in Sekunden)?</label>
-      <p class="hint" style="margin-top:-2px;">Danach holt sich der Controller spätestens wieder einen frischen Status – auch wenn weiterhin nichts passiert. Verhindert, dass die Geräte-Daten zu alt werden.</p>
-      <input type="number" min="1" value="${state.idleSkipMaxSkipSeconds}" oninput="state.idleSkipMaxSkipSeconds=num(this.value,44)">
-
-      <div class="note">Wird automatisch auf sinnvolle Grenzen begrenzt (mind. so lang wie ein normaler Zyklus).</div>
-    </div>` : "" }
-  </div>`;
-}
-
-function renderStep7(){
   const e = state.signalEnabled;
   const t = state.signalTyp;
   return `
   <div class="panel">
-    <h2>7) Möchtest du Benachrichtigungen bei Störungen erhalten?</h2>
+    <h2>6) Möchtest du Benachrichtigungen bei Störungen erhalten?</h2>
     <p class="hint">Der Controller kann sich melden, wenn z. B. ein Gerät dauerhaft nicht erreichbar ist oder ein Schreibvorgang wiederholt fehlschlägt (nach mehreren aufeinanderfolgenden Fehlern) — und wieder, sobald der Fehler behoben ist. Die Kernregelung selbst braucht dafür kein Internet, nur der Versand dieser Nachrichten.</p>
 
     <div class="choice ${e===true?'selected':''}" onclick="setSignalEnabled(true)">
@@ -469,7 +434,7 @@ function renderStep7(){
   </div>`;
 }
 
-function renderStep8(){
+function renderStep7(){
   const cfg = buildConfig();
   return `
   <div class="panel">
@@ -480,7 +445,6 @@ function renderStep8(){
       <div><b>Laden vom Netz:</b> ${state.chargingEnabled===true ? ('Ja — ' + (state.devices.filter(d=>d.reverse).map(d=>d.label).join(', ') || 'keine Geräte ausgewählt')) : 'Nein'}</div>
       <div><b>Bei vollem Akku:</b> ${ {dynamic:'Automatisch sperren/freigeben', always1:'Export immer erlauben', always2:'Export immer sperren'}[state.gridReverseMode] || '—' }</div>
       <div><b>KVS-Fernsteuerung:</b> ${ state.kvsEnabled===true ? 'Ja — Live-Override per KVS aktiv (Doku Kapitel 13)' : 'Nein — alle Werte fest auf dieser Konfiguration' }</div>
-      <div><b>Sparmodus:</b> ${ state.idleSkipEnabled===true ? ('Ja — ab ' + num(state.idleSkipCyclesUnchanged,4) + ' gleichen Zyklen, max. ' + num(state.idleSkipMaxSkipSeconds,44) + ' s aussetzen') : 'Nein — jeder Zyklus fragt alle Geräte ab' }</div>
       <div><b>Benachrichtigungen:</b> ${ state.signalEnabled===true ? ('Ja — ' + state.signalTyp) : 'Nein' }</div>
       <div><b>Alles Übrige:</b> bleibt auf Standard (Setpoint 0 W, Hysterese 12 W, Damping 0,65, Entladen für alle Geräte erlaubt, u. a.)</div>
     </div>
@@ -597,13 +561,6 @@ ${gridBlock}
   debug: false,
 
   // ------------------------------------------------------------------
-  idleSkip: {
-    enabled: ${state.idleSkipEnabled === true},
-    cyclesUnchanged: ${num(state.idleSkipCyclesUnchanged, 4)},
-    maxSkipSeconds: ${num(state.idleSkipMaxSkipSeconds, 44)}
-  },
-
-  // ------------------------------------------------------------------
   signal: {
     enabled: ${state.signalEnabled === true},
     typ: "${state.signalTyp}",
@@ -639,7 +596,6 @@ function toggleReverse(idx, checked){
 }
 function setGrm(v){ state.gridReverseMode = v; render(); }
 function setKvsEnabled(v){ state.kvsEnabled = v; render(); }
-function setIdleSkipEnabled(v){ state.idleSkipEnabled = v; render(); }
 function setSignalEnabled(v){
   state.signalEnabled = v;
   render();
@@ -666,11 +622,6 @@ function validateStep(){
     return state.kvsEnabled !== null;
   }
   if(step===6){
-    if(state.idleSkipEnabled === null) return false;
-    if(state.idleSkipEnabled === false) return true;
-    return num(state.idleSkipCyclesUnchanged,0) > 0 && num(state.idleSkipMaxSkipSeconds,0) > 0;
-  }
-  if(step===7){
     if(state.signalEnabled === null) return false;
     if(state.signalEnabled === false) return true;
     if(state.signalTyp==='WEBHOOK') return !!state.signalWebhookUrl;
@@ -708,8 +659,7 @@ function render(){
   else if(step===4) html = renderStep4();
   else if(step===5) html = renderStep5();
   else if(step===6) html = renderStep6();
-  else if(step===7) html = renderStep7();
-  else html = renderStep8();
+  else html = renderStep7();
   html += renderNav();
   document.getElementById('stepContainer').innerHTML = html;
 }
