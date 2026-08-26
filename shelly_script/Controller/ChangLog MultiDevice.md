@@ -1,3 +1,13 @@
+# Changelog *Major Change* 4.2.2
+
+adressiert das Verhalten von mehr als zwei Solarflows im selektiven Bypass-Fall
+**Geräte im Bypass sind nicht mehr steuerbar** sie leifern einfach
+Hier geht es um die korrekte Berücksichtigung Ihres Anteils unter Berücksichtigung verschiedener Fallgruppen.
+
+* https://github.com/surfer1264/Zendure-Stuff/issues/80
+* https://github.com/surfer1264/Zendure-Stuff/issues/81
+
+
 # Changelog *Major Change* 4.2.1
 
 * https://github.com/surfer1264/Zendure-Stuff/issues/87

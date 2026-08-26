@@ -1,4 +1,4 @@
-// Zendure Dynamic Output Controller - Multi-Device Version 4.2.1
+// Zendure Dynamic Output Controller - Multi-Device Version
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 //
@@ -17,7 +17,7 @@ let CONFIG = {
     },
     {
       ip: "192.168.178.150",   
-      label: "SF800",     
+      label: "Fatamorgana",     
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
@@ -100,8 +100,14 @@ let CONFIG = {
   kvsForceReseed: false,
   // operation to keep the console output clean.
   debug: false,
+
   // ------------------------------------------------------------------
   // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
+  // wenn der berechnete Regel-Output ueber mehrere Zyklen innerhalb der
+  // Schreib-Hysterese (CONFIG.hysteresis) um den zuletzt geschriebenen
+  // Wert bleibt (z.B. beide Geraete socLimit:2, oder stabiler Export mit
+  // leichtem Rauschen). Der Netzmesswert wird davon UNBERUEHRT weiterhin
+  // JEDEN Zyklus gelesen - Lastwechsel werden also weiterhin sofort erkannt.
   idleSkip: {
     enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
     cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
@@ -119,7 +125,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.2.1";
+CONFIG.version = "4.2.2";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -957,6 +963,18 @@ function calculate(myCycle) {
     dischargeOutput = zeroOutputs();
   }
 
+  // v4.2.2: Bypass-Korrektur. socLimit=1-Geraete (Akku voll, "Laden vom Netz
+  // gesperrt") bekommen in computeDischargeWeights() weiterhin ganz normal
+  // einen Soll-Anteil zugeteilt (bewusst KEIN Ausschluss - sonst Deadlock,
+  // das Geraet wuerde nie wieder einen Soll bekommen und socLimit nie mehr
+  // verlassen). Liefert ein solches Geraet real (Ist) mehr, als ihm zugeteilt
+  // wurde (Bypass-Ueberschuss), wird dieser Mehrbetrag JEDEN Zyklus frisch
+  // aus aktuellem Ist/Soll ermittelt und von den uebrigen, nicht gesperrten
+  // Geraeten abgezogen. Unterlieferung (Geraet faehrt Akku gerade hoch) wird
+  // bewusst NICHT korrigiert - das gleicht der bestehende Regelkreis ueber
+  // den naechsten Zyklus (Netzsaldo -> dischargeTarget) von selbst aus.
+  dischargeOutput = applyBypassExcessCorrection(dischargeOutput);
+
   let output = [];
   for (let i = 0; i < n; i++) {
     output[i] = chargeOutput[i] !== 0 ? chargeOutput[i] : dischargeOutput[i];
@@ -996,7 +1014,7 @@ function calculate(myCycle) {
           print("Sparmodus: Output seit " + CONFIG.idleSkip.cyclesUnchanged +
             " Zyklen in Hysterese (" + CONFIG.hysteresis +
             " W) - setze Polling fuer " + IDLE_SKIP_CYCLES +
-            " Zyklen aus ");
+            " Zyklen aus");
         }
       } else {
         state.idleUnchangedCount = 0;
@@ -1386,6 +1404,57 @@ function distributeCharge(target) {
   }
 
   return waterFillCharge(target, weight, active);
+}
+
+// v4.2.2: Ermittelt pro Zyklus frisch, ob socLimit=1-Geraete (Bypass) mehr
+// liefern als ihnen zugeteilt wurde, und legt den Ueberschuss auf die
+// uebrigen, nicht gesperrten Geraete um. Kein Zustand, kein Timer - reine
+// Funktion der aktuellen Ist-/Soll-Werte dieses einen Zyklus.
+function applyBypassExcessCorrection(dischargeOutput) {
+  let n = CONFIG.devices.length;
+  let excess = 0;
+
+  for (let i = 0; i < n; i++) {
+    let ds = state.devices[i];
+    if (ds.available && ds.socLimit === 1) {
+      let e = ds.zenPower - dischargeOutput[i];
+      if (e > 0) excess += e; // nur Ueberlieferung zaehlt, Untershoot bewusst ignoriert
+    }
+  }
+
+  if (excess <= 0) return dischargeOutput;
+
+  let corrected = dischargeOutput.slice();
+  let poolTotal = 0;
+
+  for (let i = 0; i < n; i++) {
+    let ds = state.devices[i];
+    if (ds.available && ds.socLimit !== 1 && corrected[i] > 0) {
+      poolTotal += corrected[i];
+    }
+  }
+
+  if (poolTotal <= 0) {
+    // Niemand entlaedt gerade aktiv - hier kann die Korrektur nicht greifen.
+    // Wird ueber den normalen Regelkreis (Netzsaldo -> chargeTarget) im
+    // naechsten Zyklus abgefangen, da sumZenReverse socLimit=1 bereits
+    // ausschliesst.
+    return dischargeOutput;
+  }
+
+  for (let i = 0; i < n; i++) {
+    let ds = state.devices[i];
+    if (!ds.available || ds.socLimit === 1 || corrected[i] <= 0) continue;
+
+    let share = corrected[i] / poolTotal;
+    let cut = Math.round(excess * share);
+    corrected[i] -= cut; // darf negativ werden -> wirkt dann als Ladebefehl
+  }
+
+  print("Bypass-Korrektur: " + excess +
+    " W Ueberschuss von gesperrten Geraeten auf uebrige Geraete umgelegt");
+
+  return corrected;
 }
 
 // acMode/outputLimit/inputLimit aus dem Zielwert
