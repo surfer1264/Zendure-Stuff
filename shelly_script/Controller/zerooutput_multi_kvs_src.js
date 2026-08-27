@@ -89,9 +89,9 @@ let CONFIG = {
   interval: 4000,
   // Dont Change It
   // Anzahl Fehler bis Benachrichtigung
-  errorThreshold: 5,
+  errorThreshold: 6,
   // Cooldown-Takte Laden/Entladen-Wechsel
-  directionChangeHoldCycles: 2,
+  directionChangeHoldCycles: 4,
   // true->smartMode 0, false->1
   standbySmartModeZero: false,
   // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
@@ -103,11 +103,7 @@ let CONFIG = {
 
   // ------------------------------------------------------------------
   // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
-  // wenn der berechnete Regel-Output ueber mehrere Zyklen innerhalb der
-  // Schreib-Hysterese (CONFIG.hysteresis) um den zuletzt geschriebenen
-  // Wert bleibt (z.B. beide Geraete socLimit:2, oder stabiler Export mit
-  // leichtem Rauschen). Der Netzmesswert wird davon UNBERUEHRT weiterhin
-  // JEDEN Zyklus gelesen - Lastwechsel werden also weiterhin sofort erkannt.
+
   idleSkip: {
     enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
     cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
@@ -125,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.2.2";
+CONFIG.version = "4.2.3";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -621,6 +617,9 @@ function handleGenericGridResponse(myCycle, res, meterLabel, field, invert, call
     return;
   }
 
+  // Roh-Antwort sofort freigeben (siehe readDevice)
+  res = null;
+
   let value;
   let fieldLabel;
 
@@ -770,6 +769,10 @@ function readDevice(index, myCycle, callback) {
         return;
       }
 
+
+      // Roh-Antwort sofort freigeben: der JSON-String (mehrere kB)
+      // muss nicht parallel zum geparsten Objekt im Heap liegen.
+      res = null;
       reportSuccess(ds.errors, ds.notified, "json", cfg.label);
 
       if (data.sn) {
@@ -1800,6 +1803,10 @@ function syncSocLimitsDevice(index, callback) {
         return;
       }
 
+
+      // Roh-Antwort sofort freigeben: der JSON-String (mehrere kB)
+      // muss nicht parallel zum geparsten Objekt im Heap liegen.
+      res = null;
       if (!data.sn) {
         print("  " + cfg.label + ": SoC-Sync uebersprungen - keine Seriennummer gefunden");
         callback();
@@ -1861,86 +1868,117 @@ function syncSocLimitsAll(index, callback) {
   });
 }
 
-let bannerLines = [];
-
-bannerLines[bannerLines.length] = "--------------------------------";
-bannerLines[bannerLines.length] = "Verion " + CONFIG.version;
-bannerLines[bannerLines.length] = "Multi-Device Controller gestartet";
-bannerLines[bannerLines.length] = "Geraete    : " + CONFIG.devices.length;
-
-for (let i = 0; i < CONFIG.devices.length; i++) {
-  let cfg = CONFIG.devices[i];
-
-  bannerLines[bannerLines.length] =
-    "  - [dev" + i + "] " + cfg.label + " (" + cfg.ip + "): Entladen " +
-    (cfg.dischargeAllowed === false ? "nein" : "ja") +
-    ", minSoc " + cfg.minSoc +
-    "%, maxOutput " + cfg.maxOutput + " W, Laden vom Netz " +
-    (cfg.reverse
-      ? ("ja (maxInput " + cfg.maxInputPower + " W, maxSoc " + cfg.maxSoc + "%)")
-      : "nein") +
-    (cfg.dryRun ? "  [DRYRUN]" : "");
-}
-
-bannerLines[bannerLines.length] = "Grid source: " + CONFIG.gridSource +
-  (CONFIG.gridSource === "remote" ? " (" + CONFIG.gridSourceIp + ")" : "") +
-  (CONFIG.gridSource === "http_json" ?
-    " (" + CONFIG.gridSourceUrl + ", Feld: " + CONFIG.gridSourceField +
-    (CONFIG.gridSourceInvert ? ", invertiert" : "") + ")" : "");
-bannerLines[bannerLines.length] = "Interval   : " + CONFIG.interval + " ms";
-bannerLines[bannerLines.length] = "Watchdog   : " + CONFIG.watchdog + " ms";
-bannerLines[bannerLines.length] = "Setpoint   : " + CONFIG.setpoint + " W";
-bannerLines[bannerLines.length] = "Hysteresis : " + CONFIG.hysteresis + " W (pro Geraet)";
-bannerLines[bannerLines.length] = "Damping    : " + CONFIG.dampingFactor;
-bannerLines[bannerLines.length] = "Entladen   : ein Geraet unter " +
-  CONFIG.discharge.concentrateBelow + " W, verteilen ueber " +
-  CONFIG.discharge.spreadAbove + " W";
-bannerLines[bannerLines.length] = "Laden      : ein Geraet unter " +
-  CONFIG.charge.concentrateBelow + " W, verteilen ueber " +
-  CONFIG.charge.spreadAbove + " W";
-bannerLines[bannerLines.length] = "Konzentrieren-Haltezeit: " +
-  CONFIG.concentrateHoldMinutes + " min (" + CONCENTRATE_HOLD_CYCLES +
-  " Zyklen) - gilt fuer spread->single, discharge+charge";
-bannerLines[bannerLines.length] = "Ausgleich  : ab " + CONFIG.rebalance.socMargin +
-  " Prozentpunkten Vorsprung, sofort";
-bannerLines[bannerLines.length] = "Reverse Start/Stop: " +
-  CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
-bannerLines[bannerLines.length] = "Discharge Start/Stop: " +
-  CONFIG.dischargeStartupPower + " W / " + CONFIG.dischargeStopPower + " W";
-bannerLines[bannerLines.length] = "Richtungswechsel-Bremse: " +
-  (CONFIG.directionChangeHoldCycles > 0 ?
-    CONFIG.directionChangeHoldCycles + " Takt(e) (pro Geraet)" : "deaktiviert");
-bannerLines[bannerLines.length] = "Err.Thresh : " + CONFIG.errorThreshold;
-bannerLines[bannerLines.length] = "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
-bannerLines[bannerLines.length] = "Signal     : " + (CONFIG.signal.enabled ?
-  ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
-bannerLines[bannerLines.length] = "KVS-Feature: " + (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override)");
-bannerLines[bannerLines.length] = "gridReverse-Modus: " + CONFIG.gridReverseMode;
-bannerLines[bannerLines.length] = "Sparmodus  : " + (CONFIG.idleSkip.enabled ?
-  ("aktiviert (ab " + CONFIG.idleSkip.cyclesUnchanged + " gleichen Zyklen, max. " +
-    IDLE_SKIP_CYCLES + " Zyklen aussetzen / " + CONFIG.idleSkip.maxSkipSeconds + " s)") :
-  "deaktiviert");
-
-if (CONFIG.kvsEnabled) {
-  bannerLines[bannerLines.length] = "KVS-Live-Override: setpoint/" +
-    "dev{n}_dischargeAllowed/dev{n}_reverse/dev{n}_minSoc (Keys: " + KVS_MATCH + ")";
-  bannerLines[bannerLines.length] = "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
-    "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides!" :  
-    "aus (Standard, empfohlen)");
-}
-
-bannerLines[bannerLines.length] = "--------------------------------";
-
+// ---------------------------------------------------------------
+// Banner: Zeilen werden LAZY erzeugt - es liegt immer nur EINE
+// fertige Zeile im Heap. Vorher standen alle ~26 Strings gleichzeitig
+// im Speicher (plus der Verkettungs-Muell) -> groesster Peak-Treiber
+// der Startphase. Ausgabe ist zeichengleich zur Array-Variante.
+// ---------------------------------------------------------------
 let bannerIndex = 0;
 
+function bannerLine(i) {
+  let n = CONFIG.devices.length;
+
+  if (i === 0) return "--------------------------------";
+  if (i === 1) return "Verion " + CONFIG.version;
+  if (i === 2) return "Multi-Device Controller gestartet";
+  if (i === 3) return "Geraete    : " + n;
+
+  if (i < 4 + n) {
+    let k = i - 4;
+    let cfg = CONFIG.devices[k];
+
+    return "  - [dev" + k + "] " + cfg.label + " (" + cfg.ip + "): Entladen " +
+      (cfg.dischargeAllowed === false ? "nein" : "ja") +
+      ", minSoc " + cfg.minSoc +
+      "%, maxOutput " + cfg.maxOutput + " W, Laden vom Netz " +
+      (cfg.reverse
+        ? ("ja (maxInput " + cfg.maxInputPower + " W, maxSoc " + cfg.maxSoc + "%)")
+        : "nein") +
+      (cfg.dryRun ? "  [DRYRUN]" : "");
+  }
+
+  let j = i - 4 - n;
+
+  if (j === 0) return "Grid source: " + CONFIG.gridSource +
+    (CONFIG.gridSource === "remote" ? " (" + CONFIG.gridSourceIp + ")" : "") +
+    (CONFIG.gridSource === "http_json" ?
+      " (" + CONFIG.gridSourceUrl + ", Feld: " + CONFIG.gridSourceField +
+      (CONFIG.gridSourceInvert ? ", invertiert" : "") + ")" : "");
+
+  if (j === 1) return "Interval   : " + CONFIG.interval + " ms";
+  if (j === 2) return "Watchdog   : " + CONFIG.watchdog + " ms";
+  if (j === 3) return "Setpoint   : " + CONFIG.setpoint + " W";
+  if (j === 4) return "Hysteresis : " + CONFIG.hysteresis + " W (pro Geraet)";
+  if (j === 5) return "Damping    : " + CONFIG.dampingFactor;
+
+  if (j === 6) return "Entladen   : ein Geraet unter " +
+    CONFIG.discharge.concentrateBelow + " W, verteilen ueber " +
+    CONFIG.discharge.spreadAbove + " W";
+
+  if (j === 7) return "Laden      : ein Geraet unter " +
+    CONFIG.charge.concentrateBelow + " W, verteilen ueber " +
+    CONFIG.charge.spreadAbove + " W";
+
+  if (j === 8) return "Konzentrieren-Haltezeit: " +
+    CONFIG.concentrateHoldMinutes + " min (" + CONCENTRATE_HOLD_CYCLES +
+    " Zyklen) - gilt fuer spread->single, discharge+charge";
+
+  if (j === 9) return "Ausgleich  : ab " + CONFIG.rebalance.socMargin +
+    " Prozentpunkten Vorsprung, sofort";
+
+  if (j === 10) return "Reverse Start/Stop: " +
+    CONFIG.reverseStartupPower + " W / " + CONFIG.reverseStopPower + " W";
+
+  if (j === 11) return "Discharge Start/Stop: " +
+    CONFIG.dischargeStartupPower + " W / " + CONFIG.dischargeStopPower + " W";
+
+  if (j === 12) return "Richtungswechsel-Bremse: " +
+    (CONFIG.directionChangeHoldCycles > 0 ?
+      CONFIG.directionChangeHoldCycles + " Takt(e) (pro Geraet)" : "deaktiviert");
+
+  if (j === 13) return "Err.Thresh : " + CONFIG.errorThreshold;
+  if (j === 14) return "Debug      : " + (CONFIG.debug ? "aktiviert" : "deaktiviert");
+
+  if (j === 15) return "Signal     : " + (CONFIG.signal.enabled ?
+    ("aktiviert (" + CONFIG.signal.typ + ")") : "deaktiviert");
+
+  if (j === 16) return "KVS-Feature: " +
+    (CONFIG.kvsEnabled ? "aktiviert" : "deaktiviert (kein Live-Override)");
+
+  if (j === 17) return "gridReverse-Modus: " + CONFIG.gridReverseMode;
+
+  if (j === 18) return "Sparmodus  : " + (CONFIG.idleSkip.enabled ?
+    ("aktiviert (ab " + CONFIG.idleSkip.cyclesUnchanged + " gleichen Zyklen, max. " +
+      IDLE_SKIP_CYCLES + " Zyklen aussetzen / " + CONFIG.idleSkip.maxSkipSeconds + " s)") :
+    "deaktiviert");
+
+  if (CONFIG.kvsEnabled) {
+    if (j === 19) return "KVS-Live-Override: setpoint/" +
+      "dev{n}_dischargeAllowed/dev{n}_reverse/dev{n}_minSoc (Keys: " + KVS_MATCH + ")";
+
+    if (j === 20) return "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
+      "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides!" :
+      "aus (Standard, empfohlen)");
+
+    if (j === 21) return "--------------------------------";
+    return null;
+  }
+
+  if (j === 19) return "--------------------------------";
+
+  return null;
+}
+
 function printBannerLine(onDone) {
-  if (bannerIndex >= bannerLines.length) {
-    bannerLines = null;
+  let line = bannerLine(bannerIndex);
+
+  if (line === null) {
     if (onDone) onDone();
     return;
   }
 
-  print(bannerLines[bannerIndex]);
+  print(line);
   bannerIndex = bannerIndex + 1;
 
   Timer.set(150, false, function () {
@@ -1962,6 +2000,22 @@ printBannerLine(function () {
 
     // Hilfsfunktion zum Starten des Timers (vermeidet doppelten Code)
     let startController = function () {
+      // Einmal-Code der Startphase freigeben. Verzoegert per Timer.set(0),
+      // damit keine der Funktionen mehr auf dem Aufruf-Stack liegt.
+      Timer.set(0, false, function () {
+        try {
+          printBannerLine = null;
+          bannerLine = null;
+          syncSocLimitsDevice = null;
+          syncSocLimitsAll = null;
+          seedKvsDefaults = null;
+          seedKvsDefaultsStep = null;
+          checkBand = null;
+        } catch (e) {
+          // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
+        }
+      });
+
       print("Starte Regelbetrieb.");
       print("--------------------------------");
 
