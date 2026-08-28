@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.2.3";
+CONFIG.version = "4.3.0";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -153,12 +153,9 @@ let CONCENTRATE_HOLD_CYCLES = Math.max(
 );
 
 // idleSkip: Sekunden -> Zyklen, unabhaengig vom gewaehlten CONFIG.interval
-CONFIG.idleSkip.cyclesUnchanged = Math.max(1, Math.min(50, CONFIG.idleSkip.cyclesUnchanged));
+CONFIG.idleSkip.cyclesUnchanged = Math.max(3, Math.min(50, CONFIG.idleSkip.cyclesUnchanged));
 CONFIG.idleSkip.maxSkipSeconds  = Math.max(CONFIG.interval / 1000, CONFIG.idleSkip.maxSkipSeconds);
-let IDLE_SKIP_CYCLES = Math.max(
-  1,
-  Math.round((CONFIG.idleSkip.maxSkipSeconds * 1000) / CONFIG.interval)
-);
+let IDLE_SKIP_CYCLES = Math.max(3, Math.round((CONFIG.idleSkip.maxSkipSeconds * 1000) / CONFIG.interval));
 
 // Live parameter overrides (Key-Value-Store)
 let KVS_MATCH = "zdmc_*";

@@ -1,4 +1,4 @@
-# Changelog 4.2.3
+# Changelog 4.2.3 / 4.3.0
 
 only interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%) 
 

@@ -290,7 +290,7 @@ function renderStep3(){
   return `
   <div class="panel">
     <h2>3) Willst du Überschuss von anderen Anlagen aufnehmen?</h2>
-    <p class="hint">Gemeint ist: Sollen deine Zendure-Geräte aktiv aus dem Netz laden können, wenn andere Anlagen (weitere Solarflows, eine Dach-PV, ein Balkonkraftwerk) mehr einspeisen, als gerade verbraucht wird? Ein eigenständiges AC-Laden ohne solchen Überschuss löst der Controller nicht aus.</p>
+    <p class="hint">Gemeint ist: Sollen deine Zendure-Geräte aktiv aus dem Netz laden können, wenn andere Anlagen (weitere Solarflows, eine Dach-PV, ein Balkonkraftwerk) mehr einspeisen (Bypass Überschuß), als gerade verbraucht wird? Ein eigenständiges AC-Laden ohne solchen Überschuss löst der Controller nicht aus.</p>
 
     <div class="choice ${c===true?'selected':''}" onclick="setCharging(true)">
       <input type="radio" name="ch" ${c===true?'checked':''}>
@@ -303,7 +303,7 @@ function renderStep3(){
 
     ${ c===true ? `
     <div class="conditional">
-      <div style="font-weight:700; font-size:.85rem; margin-bottom:6px;">Relevante Felder pro Gerät</div>
+      <div style="font-weight:700; font-size:.85rem; margin-bottom:6px;">Wähle ein Gerät aus und fülle die relevanten Felder pro Gerät</div>
       ${ state.devices.map((d,i)=>`
         <div class="device-checkbox-row">
           <label style="display:flex; align-items:center; gap:8px; min-width:180px;">
@@ -337,7 +337,7 @@ function renderStep4(){
   <div class="panel">
     <h2>4) Wie soll mit Netzexport umgegangen werden, wenn die Akkustapel 100 % erreichen?</h2>
     <p class="hint">
-      Neben der eigenen Regellogik (Zielwerte je Gerät) besitzen die Solarflow-Hubs einen zusätzlichen, firmwareeigenen Schalter <code>gridReverse</code>, der Netzexport auf Hardware-Ebene komplett sperrt oder erlaubt — unabhängig davon, was der Controller gerade anfordert und unabhängig von Frage 3. <code>gridReverseMode</code> legt fest, wie der Controller diesen Schalter nutzt.
+      Neben der eigenen Regellogik (Zielwerte je Gerät) besitzen die Solarflow-Hubs einen zusätzlichen, firmwareeigenen Schalter <code>gridReverse</code>, der Netzexport auf Hardware-Ebene komplett sperrt oder erlaubt — unabhängig davon, was der Controller gerade anfordert und unabhängig von Frage 3. Hier wird festgelegt, wie der Controller diesen Schalter nutzt.
     </p>
 
     ${ allowed ? dynamicChoice : `
@@ -400,10 +400,10 @@ function renderStep6(){
     ${ k===true ? `
     <div class="conditional">
       <label class="first">Wie viele gleichbleibende Zyklen, bevor der Sparmodus startet?</label>
-      <p class="hint" style="margin-top:-2px;">So oft muss der Output hintereinander innerhalb der Toleranz (Hysterese) bleiben, bevor die Abfragen pausiert werden.</p>
+      <p class="hint" style="margin-top:-2px;">So oft muss der Output hintereinander innerhalb der Toleranz (Hysterese) bleiben, bevor die Abfragen pausiert werden. (min 3)</p>
       <input type="number" min="1" max="50" value="${state.idleSkipCyclesUnchanged}" oninput="state.idleSkipCyclesUnchanged=num(this.value,4)">
 
-      <label>Wie lange darf höchstens ausgesetzt werden (in Sekunden)?</label>
+      <label>Wie lange darf höchstens ausgesetzt werden (in Sekunden, min 15)?</label>
       <p class="hint" style="margin-top:-2px;">Danach holt sich der Controller spätestens wieder einen frischen Status – auch wenn weiterhin nichts passiert. Verhindert, dass die Geräte-Daten zu alt werden.</p>
       <input type="number" min="1" value="${state.idleSkipMaxSkipSeconds}" oninput="state.idleSkipMaxSkipSeconds=num(this.value,44)">
 
