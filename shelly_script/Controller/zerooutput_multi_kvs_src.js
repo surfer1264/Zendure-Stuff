@@ -144,7 +144,7 @@ CONFIG.chargeResetMargin   = Math.max(10, Math.min(25, CONFIG.chargeResetMargin)
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
-CONFIG.directionChangeHoldCycles = Math.max(0, Math.min(20, CONFIG.directionChangeHoldCycles));
+CONFIG.directionChangeHoldCycles = Math.max(3, Math.min(20, CONFIG.directionChangeHoldCycles));
 
 // Hold time (spread -> single) in cycles
 let CONCENTRATE_HOLD_CYCLES = Math.max(
