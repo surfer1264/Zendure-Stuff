@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.3.0";
+CONFIG.version = "4.4.0";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -1815,13 +1815,10 @@ function syncSocLimitsDevice(index, callback) {
       }
 
       ds.serial = data.sn;
-
       let minSocRaw = Math.round(cfg.minSoc * 10);
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
-
-      if (data.properties && data.properties.gridReverse === 2) {
-        state.allMaxedLogged = true;
-      }
+      if (data.properties && data.properties.gridReverse === 2) {state.allMaxedLogged = true;}
+	  data = null;
 
       let props = { minSoc: minSocRaw, socSet: maxSocRaw };
       if (CONFIG.gridReverseMode === "always1") props.gridReverse = 1;
@@ -1871,9 +1868,7 @@ function syncSocLimitsAll(index, callback) {
 
 // ---------------------------------------------------------------
 // Banner: Zeilen werden LAZY erzeugt - es liegt immer nur EINE
-// fertige Zeile im Heap. Vorher standen alle ~26 Strings gleichzeitig
-// im Speicher (plus der Verkettungs-Muell) -> groesster Peak-Treiber
-// der Startphase. Ausgabe ist zeichengleich zur Array-Variante.
+// fertige Zeile im Heap. 
 // ---------------------------------------------------------------
 let bannerIndex = 0;
 
@@ -1881,7 +1876,7 @@ function bannerLine(i) {
   let n = CONFIG.devices.length;
 
   if (i === 0) return "--------------------------------";
-  if (i === 1) return "Verion " + CONFIG.version;
+  if (i === 1) return "Version " + CONFIG.version;
   if (i === 2) return "Multi-Device Controller gestartet";
   if (i === 3) return "Geraete    : " + n;
 
