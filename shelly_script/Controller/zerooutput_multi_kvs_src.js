@@ -132,9 +132,7 @@ function checkBand(band) {
 }
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
-for (let i = 0; i < CONFIG.devices.length; i++) {
-  CONFIG.devices[i].minSoc = Math.max(10, Math.min(100, CONFIG.devices[i].minSoc));
-}
+
 for (let i = 0; i < CONFIG.devices.length; i++) {
   CONFIG.devices[i].minSoc = Math.max(10, Math.min(99, CONFIG.devices[i].minSoc));
   CONFIG.devices[i].maxSoc = Math.max(CONFIG.devices[i].minSoc+1, Math.min(100, CONFIG.devices[i].maxSoc));
