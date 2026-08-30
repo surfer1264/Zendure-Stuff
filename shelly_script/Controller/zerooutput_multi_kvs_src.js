@@ -135,6 +135,10 @@ checkBand(CONFIG.charge);
 for (let i = 0; i < CONFIG.devices.length; i++) {
   CONFIG.devices[i].minSoc = Math.max(10, Math.min(100, CONFIG.devices[i].minSoc));
 }
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  CONFIG.devices[i].minSoc = Math.max(10, Math.min(99, CONFIG.devices[i].minSoc));
+  CONFIG.devices[i].maxSoc = Math.max(CONFIG.devices[i].minSoc+1, Math.min(100, CONFIG.devices[i].maxSoc));
+}
 
 CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
 CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
