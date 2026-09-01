@@ -1,3 +1,7 @@
+# Upload Controller to Shelly 
+
+Das deploy Script ersetzt die generische Konfig mit deiner konkreten Config, lädt den Controller auf den Shelly und startet den Controller. Update erfolgt nach gleichem Muster.
+
 * Voraussetzung ist eine Python Umgebung
 	* gibt es für jede Umgebung, einfach nach installieren
 
