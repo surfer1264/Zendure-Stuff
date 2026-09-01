@@ -1,4 +1,4 @@
-* Voraussetzung ist ein Python Umgebung
+* Voraussetzung ist eine Python Umgebung
 	* gibt es für jede Umgebung, einfach nach installieren
 
 **Nur geeignet für den Upload auf ein Shelly-Device**
