@@ -9,9 +9,9 @@ Das deploy Script ersetzt die generische Konfig mit deiner konkreten Config, lä
 
 * Lade die drei Dateien in ein Verzeichnis
 * Lade den Shelly Multi-Device-Controller in das gleiche Verzeichnis
+* Bennene den Controller zerooutput_multi_kvs_mini.js
 * Stelle sicher, dass Deine myconfig.js im gleichen Verzeichnis liegt
     * die myconfig.js erzeuge Dir zuvor aus dem Webkonfigurator
-* Bennene den Controller zerooutput_multi_kvs_mini.js
 * Editiere die deploy.cmd
     * Trage die IP-Adresse des Shelly-Smartmeters ein
 * Fertig
