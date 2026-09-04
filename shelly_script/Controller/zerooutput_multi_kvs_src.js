@@ -492,7 +492,7 @@ function readKvsOverrides(myCycle, callback) {
 
     if (items["zdmc_setpoint"]) {
       applyKvsValue("zdmc_setpoint", items["zdmc_setpoint"].value, CONFIG.setpoint,
-      function (v) { return v >= -50 && v <= 50; },
+      function (v) { return v >= -40 && v <= 40; },
       function (v) { CONFIG.setpoint = v; });
     }
 
@@ -520,7 +520,7 @@ function readKvsOverrides(myCycle, callback) {
         let oldMinSoc = dev.minSoc;
 
         applyKvsValue(minSocKey, items[minSocKey].value, dev.minSoc,
-          function (v) { return v >= 10 && v <= 100; },
+          function (v) { return v >= 10 && v <= 99; },
           function (v) { dev.minSoc = v; });
 
         if (dev.minSoc !== oldMinSoc) {
