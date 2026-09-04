@@ -11,6 +11,8 @@ Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen 
 
 `zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit Python (Standardbibliothek reicht, kein `pip install` nötig).
 
+Es wird **nur** `zendure-dashboard.html` gepflegt. Die frühere Variante mit Direktabfrage (`zendure-grid-dashboard.html`) ist abgelöst und kann gelöscht werden.
+
 ---
 
 ## 1) Regel-Script auf dem Shelly
@@ -25,7 +27,8 @@ Hier der Vollständigkeit erwähnt, da die Vewrfügbarkeit dieses Scriptes berte
 
 1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf dem gleichen Shelly laufen, auf dem auch das Regel-Script läuft
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
-   - `devices` — gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS)
+   - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
+   - `hysteresis` — denselben Wert wie im Regel-Script eintragen (reine Anzeige, nicht über die KVS änderbar)
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
@@ -85,11 +88,29 @@ Für dauerhaften Zugriff eignet sich ein immer laufendes Gerät (Raspberry Pi, N
 
 ## 5) Bedienung
 
-- **Sollwert** (`zdmc_setpoint`, −50 bis +50 W, 10er-Schritte) / **Hysterese** (`zdmc_hysteresis`, 5–50 W, 5er-Schritte): werden per Shelly-KVS gesetzt, wirken beim nächsten Regelzyklus des Regel-Scripts. Grenzen entsprechen dem Clamping in `zerooutput_multi_kvs.js`.
-- **Entladen erlaubt** / **Laden vom Netz erlaubt** (je Hub): gleiches Prinzip, schreibt `zdmc_dev{id}_dischargeAllowed` bzw. `zdmc_dev{id}_reverse`.
-- **Poll-Intervall** (3–30 s, lokal einstellbar): bestimmt nur, wie oft die Dashboard-Seite die API abfragt — hat keinen Einfluss auf das Regel-Script.
-- Geräteliste, Sollwert/Hysterese-Anzeige und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst (vermeidet Doppelpflege).
+Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Regelzyklus des Regel-Scripts. Die Grenzen entsprechen exakt dem Clamping in `readKvsOverrides()` von `zerooutput_multi_kvs.js` — Werte außerhalb dieser Bereiche verwirft das Regel-Script kommentarlos.
+
+| Bedienelement | KVS-Key | Bereich |
+|---|---|---|
+| Sollwert (obere Reihe, links) | `zdmc_setpoint` | −40 bis +40 W, 10er-Schritte |
+| Entladen erlaubt | `zdmc_dev{id}_dischargeAllowed` | Schalter (0/1) |
+| Laden vom Netz erlaubt | `zdmc_dev{id}_reverse` | Schalter (0/1) |
+| Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10–98 %, 2er-Schritte |
+| Laden aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
+
+- **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern auch das Gerät selbst.
+- **Laden aus dem Netz** (`inputLimit`) ist eine Zusatzschnittstelle für manuelles AC-Laden. Das Regel-Script schreibt den Wert unverändert aufs Gerät; sinnvoll ist das nur, wenn der Hub vorher über die beiden Schalter aus der Regelung genommen wurde. Das Dashboard prüft das **nicht** — der Regler steht immer zur Verfügung.
+- **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb auch nicht mehr als Bedienelement auf. `config_api` liefert den Wert weiterhin mit — die Seite braucht ihn nur intern, um Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
+- **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „warum tut der Hub nichts"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
+- **Auffrischung der Seite**: fest alle 4 s (`POLL_SEC`), kein Bedienelement mehr. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
+- `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
+- Jedes Bedienelement sperrt sich nach einer Eingabe für 4 s (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
+- Geräteliste, Sollwerte, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst (vermeidet Doppelpflege).
+- Der Verlauf steckt als kompakte Kurve direkt in den beiden Kacheln oben: Netzsaldo in der linken, Hub-Summe in der rechten. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
+- Der Verlauf wird in der Seite geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
+- Die Seite startet immer in der Nachtsicht; der Schalter oben rechts wechselt zur Tagsicht, die Systemeinstellung des Geräts spielt keine Rolle mehr.
 - Unabhängig vom Browser-Poll-Intervall fragt das API-Script auf dem Shelly selbst alle 5 s (`pollIntervalSec`) Netzzähler und Hubs ab — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch (kein unnötiger Traffic zu den Zendure-Hubs).
+- Im API-Script sorgt ein `busy`-Flag dafür, dass Hintergrundabfrage und `config_api` nie gleichzeitig laufen. Beide sind speicherintensiv (Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`); zusammen trieben sie `memPeak` unnötig hoch. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus und `config_api` wartet bis zu 2 s auf einen freien Slot. Ein hängendes Flag wird nach 15 s (`BUSY_TIMEOUT_MS`) automatisch zurückgesetzt.
 
 ## 6) Kurz-Troubleshooting
 

@@ -30,7 +30,7 @@ import sys
 # Konfiguration - hier anpassen
 # ---------------------------------------------------------------
 SHELLY_IP = "192.168.178.117"
-SHELLY_SCRIPT_ID = 1
+SHELLY_SCRIPT_ID = 2
 PORT = 8000
 
 # "0.0.0.0" = auf allen Netzwerk-Schnittstellen lauschen (von jedem Rechner

@@ -138,24 +138,18 @@
   .hero-state{ font-size:.82rem; margin-top:8px; color:var(--text-muted); }
   .hero-state b{ font-weight:600; }
 
-  .chart-card{ padding:22px 22px 18px; margin-bottom:24px; }
-  .chart-wrap{ height:220px; margin-top:6px; }
-  .chart-wrap canvas{ display:block; width:100%; height:100%; }
-  .hero-foot{
-    display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
-    margin-top:10px; font-size:.72rem; color:var(--text-muted);
+  .spark{ height:52px; margin-top:12px; }
+  .spark canvas{ display:block; width:100%; height:100%; }
+  .meta-line{
+    display:flex; justify-content:center; flex-wrap:wrap; gap:6px 14px;
+    margin-top:8px; font-size:.72rem; color:var(--text-muted);
   }
 
-  .params{ padding:20px clamp(18px,3vw,26px) 18px; margin-bottom:24px; }
-  .param-row{ margin-bottom:20px; }
-  .param-row:last-of-type{ margin-bottom:8px; }
-  .param-head{
-    display:flex; justify-content:space-between; align-items:flex-start;
-    margin-bottom:10px; flex-wrap:wrap; gap:6px;
-  }
-  .param-label{ font-size:.88rem; display:flex; flex-direction:column; gap:3px; }
   .param-key{ font-size:.66rem; color:var(--text-muted); }
-  .param-value{ font-weight:600; font-size:1.05rem; }
+  .setpoint-card{ display:flex; flex-direction:column; }
+  /* Regler und Hinweis nach unten schieben, damit sie mit den Sparklines
+     der Nachbarkacheln auf einer Linie sitzen */
+  .setpoint-card input[type="range"]{ margin:auto 0 2px; }
   input[type="range"]{
     -webkit-appearance:none; appearance:none;
     width:100%; height:28px; background:transparent; accent-color:var(--teal-text); cursor:pointer;
@@ -169,7 +163,6 @@
     background:var(--teal-text); border:3px solid var(--surface);
     box-shadow:0 2px 6px rgba(0,0,0,0.25);
   }
-  .param-note{ font-size:.72rem; color:var(--text-muted); line-height:1.45; }
 
   .section-title{
     font-size:.8rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase;
@@ -217,6 +210,36 @@
   .power-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:.95rem; margin-top:2px; }
 
   .divider{ height:1px; background:var(--border); margin:14px 0; }
+
+  .hub-flags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .flag{
+    font-family:'IBM Plex Mono', monospace; font-size:.66rem;
+    color:var(--text-muted); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:6px; padding:3px 7px;
+  }
+  .flag.warn{ color:var(--amber-text); border-color:var(--amber-deep); }
+  .flag.block{ color:var(--alert-text); border-color:var(--alert); }
+  .flag.ok{ color:var(--teal-text); border-color:var(--teal-deep); }
+
+  .ctrl-row{ padding:6px 0 2px; }
+  .ctrl-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    gap:8px; margin-bottom:2px;
+  }
+  .ctrl-head .lbl{ font-size:.84rem; }
+  .ctrl-head .val{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:.88rem; }
+  .ctrl-row .key{ font-size:.66rem; color:var(--text-muted); }
+  .ctrl-row input[type="range"]{ height:24px; margin-top:2px; }
+
+  input[type="range"]:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
+  .switch input:focus-visible ~ .track{ outline:2px solid var(--teal-text); outline-offset:3px; }
+
+  /* Kurz gesperrt, während der Wert an die KVS geht */
+  input[type="range"]:disabled{ opacity:.45; cursor:progress; }
+  .switch input:disabled{ cursor:progress; }
+  .switch input:disabled ~ .track,
+  .switch input:disabled ~ .thumb{ opacity:.45; }
+
 
   .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
   .switch-text{ display:flex; flex-direction:column; }
@@ -269,65 +292,42 @@
           <div class="time mono" id="clockTime">--:--:--</div>
           <div class="date" id="clockDate">–</div>
         </div>
-        <button class="theme-toggle" id="themeToggle" title="Tag/Nacht umschalten">☾</button>
+        <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
       </div>
     </header>
 
     <div class="diag" id="diag" hidden></div>
 
     <div class="row">
+      <div class="card setpoint-card">
+        <div class="hero-label">Sollwert <span class="param-key mono">zdmc_setpoint</span></div>
+        <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
+        <input type="range" id="setpointSlider" min="-40" max="40" step="10" value="0">
+        <div class="hero-state">Ziel für den Netzsaldo, −40 bis +40 W</div>
+      </div>
       <div class="card">
         <div class="hero-label">Netzbezug / Einspeisung</div>
         <div class="hero-value"><span id="gridValue">0</span><span class="unit">W</span></div>
         <div class="hero-state" id="gridState">Ausgeglichen</div>
+        <div class="spark"><canvas id="gridSpark"></canvas></div>
       </div>
       <div class="card">
         <div class="hero-label">Batterieleistung (Solarflows)</div>
         <div class="hero-value"><span id="battValue">0</span><span class="unit">W</span></div>
         <div class="hero-state" id="battState">–</div>
+        <div class="spark"><canvas id="battSpark"></canvas></div>
       </div>
     </div>
-
-    <div class="card chart-card">
-      <div class="hero-label">Summe Hub-Leistung über Zeit</div>
-      <div class="chart-wrap"><canvas id="gridChart"></canvas></div>
-      <div class="hero-foot">
-        <span id="chartWindowLabel">Letzte Werte</span>
-        <span id="lastUpdate">zuletzt aktualisiert –</span>
-      </div>
-    </div>
-
-    <div class="section-title">Regelparameter</div>
-    <section class="card params">
-      <div class="param-row">
-        <div class="param-head">
-          <span class="param-label">Sollwert<span class="param-key mono">zdmc_setpoint</span></span>
-          <span class="param-value mono" id="setpointValue">0 W</span>
-        </div>
-        <input type="range" id="setpointSlider" min="-50" max="50" step="10" value="0">
-      </div>
-      <div class="param-row">
-        <div class="param-head">
-          <span class="param-label">Hysterese<span class="param-key mono">zdmc_hysteresis</span></span>
-          <span class="param-value mono" id="hysteresisValue">10 W</span>
-        </div>
-        <input type="range" id="hysteresisSlider" min="5" max="50" step="5" value="10">
-      </div>
-      <div class="param-row">
-        <div class="param-head">
-          <span class="param-label">Poll-Intervall<span class="param-key mono">nur lokal in dieser Seite</span></span>
-          <span class="param-value mono" id="pollIntervalValue">5 s</span>
-        </div>
-        <input type="range" id="pollIntervalSlider" min="3" max="30" step="1" value="5">
-      </div>
-      <div class="param-note">Sollwert/Hysterese werden per KVS an das Regel-Script übergeben (wirkt beim nächsten Regel-Zyklus). Das Poll-Intervall bestimmt nur, wie oft diese Seite die Shelly-API abfragt.</div>
-    </section>
 
     <div class="section-title">Geräte</div>
     <div class="hubs-grid" id="hubsGrid"></div>
 
     <footer>
       Eigenständige Seite · Daten &amp; Regelparameter über die Shelly-API (config_api / status_api / kvs_set_api).
+      <div class="meta-line">
+        <span id="chartWindowLabel">Verlauf wird aufgebaut</span>
+        <span id="lastUpdate">zuletzt aktualisiert –</span>
+      </div>
       <div class="toast" id="toast"></div>
     </footer>
 
@@ -355,15 +355,16 @@
 
   /* ---------------- Theme ---------------- */
   const themeToggle = document.getElementById('themeToggle');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  let theme = prefersDark ? 'dark' : 'light';
+  // Nachtsicht ist der Standard - die Seite laeuft meist im Dauerbetrieb auf
+  // einem Display, die Systemeinstellung entscheidet hier bewusst nicht mit.
+  let theme = 'dark';
   document.documentElement.setAttribute('data-theme', theme);
   themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
   themeToggle.addEventListener('click', function(){
     theme = theme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', theme);
     themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
-    drawChart();
+    drawSparks();
   });
 
   /* ---------------- Clock ---------------- */
@@ -408,117 +409,157 @@
     }
   }
 
+  /* ---------------- Bedienelemente kurz sperren ----------------
+     Nach jedem Klick/Zug wird das Element für LOCK_MS gesperrt. Das
+     verhindert zweierlei: mehrfaches Auslösen desselben Schreibvorgangs,
+     und dass der nächste config_api-Abgleich einen gerade gesetzten Wert
+     wieder auf den alten KVS-Stand zurückzieht, bevor das Regel-Script ihn
+     übernommen hat. */
+  const LOCK_MS = 4000;
+  const lockedUntil = {};
+
+  function lockControl(el){
+    if (!el) return;
+    lockedUntil[el.id] = Date.now() + LOCK_MS;
+    el.disabled = true;
+    setTimeout(function(){
+      if (Date.now() >= (lockedUntil[el.id] || 0)) {
+        delete lockedUntil[el.id];
+        el.disabled = false;
+      }
+    }, LOCK_MS);
+  }
+
+  // Nach einem Fehlschlag sofort wieder freigeben - der Wert steht ohnehin
+  // auf dem alten Stand, und der Nutzer soll es direkt erneut versuchen können.
+  function unlockControl(el){
+    if (!el) return;
+    delete lockedUntil[el.id];
+    el.disabled = false;
+  }
+
+  // "In Bearbeitung": entweder gerade gesperrt oder gerade im Fokus.
+  function isBusy(el){
+    if (!el) return false;
+    if ((lockedUntil[el.id] || 0) > Date.now()) return true;
+    return document.activeElement === el;
+  }
+
   /* ---------------- Regelparameter ---------------- */
   const setpointSlider = document.getElementById('setpointSlider');
-  const hysteresisSlider = document.getElementById('hysteresisSlider');
   const setpointValueEl = document.getElementById('setpointValue');
-  const hysteresisValueEl = document.getElementById('hysteresisValue');
+
+  function showSetpoint(v){
+    setpointValueEl.textContent = (v > 0 ? '+' : '') + v;
+  }
 
   setpointSlider.addEventListener('input', function(e){
-    setpointValueEl.textContent = (Number(e.target.value) > 0 ? '+' : '') + e.target.value + ' W';
+    showSetpoint(Number(e.target.value));
   });
   setpointSlider.addEventListener('change', function(e){
-    kvsSet('zdmc_setpoint', Number(e.target.value));
+    lockControl(e.target);
+    kvsSet('zdmc_setpoint', Number(e.target.value)).then(function(ok){
+      if (!ok) unlockControl(e.target);
+    });
   });
 
-  hysteresisSlider.addEventListener('input', function(e){
-    hysteresisValueEl.textContent = e.target.value + ' W';
-  });
-  hysteresisSlider.addEventListener('change', function(e){
-    kvsSet('zdmc_hysteresis', Number(e.target.value));
-  });
+  /* ---------------- Auffrischung ----------------
+     Fest auf 4 s. Der Wert muss unter IDLE_MS (15 s) im API-Script bleiben:
+     bleibt eine Anfrage laenger aus, pausiert dort die Hintergrundabfrage von
+     Netzzaehler und Hubs, und die Seite bekaeme veraltete Werte.
 
-  /* ---------------- Poll-Intervall (nur lokal in dieser Seite) ---------------- */
-  let pollIntervalSec = 5;
+     status_api ist billig (fertig gepufferter Wert). config_api macht dagegen
+     bei jedem Aufruf ein KVS.GetMany auf dem Shelly - das wird deshalb nur
+     jeden CONFIG_EVERY-ten Durchlauf abgefragt (4 s * 3 = alle 12 s). Wer
+     Regler oder Schalter in dieser Seite bedient, sieht seine Aenderung
+     sofort; nur eine Aenderung von aussen erscheint entsprechend spaeter. */
+  const POLL_SEC = 4;
+  const CONFIG_EVERY = 3;
+  let pollCount = 0;
   let pollTimer = null;
-  const pollIntervalSlider = document.getElementById('pollIntervalSlider');
-  const pollIntervalValueEl = document.getElementById('pollIntervalValue');
-  pollIntervalSlider.addEventListener('input', function(e){
-    pollIntervalValueEl.textContent = e.target.value + ' s';
-  });
-  pollIntervalSlider.addEventListener('change', function(e){
-    pollIntervalSec = Number(e.target.value);
-    startPolling();
-  });
 
   /* ---------------- Chart ---------------- */
-  const MAX_POINTS = 40;
-  const history = [];
-  const chartCanvas = document.getElementById('gridChart');
+  // Zeitreihe der Hub-Summenleistung: [{ t: Zeitstempel(ms), p: Watt }, ...].
+  // Wird in der Seite geführt, nicht im API-Script - dort war der Ringpuffer
+  // zu teuer für den Heap des Shelly. Preis dafür: der Verlauf beginnt nach
+  // jedem Reload wieder von vorn.
+  // Zeitfenster = MAX_POINTS * POLL_SEC, hier 30 * 4 s = 2 Minuten.
+  const MAX_POINTS = 30;
+  let history = [];      // Summe der Hub-Leistung
+  let gridHistory = [];  // Netzsaldo
 
-  function drawChart(){
-    if (!chartCanvas || history.length < 2) return;
-    const wrap = chartCanvas.parentElement;
+  const gridSpark = document.getElementById('gridSpark');
+  const battSpark = document.getElementById('battSpark');
+
+  // Kompakte Verlaufskurve ohne Achsen: Nulllinie in der Mitte, Flaeche
+  // oberhalb in Amber (Bezug/Entladen), unterhalb in Teal (Einspeisung/Laden).
+  // Jede Kurve skaliert auf ihr eigenes Maximum - die beiden Kacheln zeigen
+  // unterschiedliche Groessen und sind bewusst nicht gegeneinander lesbar.
+  function drawSpark(canvas, data){
+    if (!canvas) return;
+    const wrap = canvas.parentElement;
     const cssW = wrap.clientWidth, cssH = wrap.clientHeight;
+    if (cssW < 4 || cssH < 4) return;
+
     const dpr = window.devicePixelRatio || 1;
     const pxW = Math.round(cssW * dpr), pxH = Math.round(cssH * dpr);
-    if (chartCanvas.width !== pxW || chartCanvas.height !== pxH){
-      chartCanvas.width = pxW; chartCanvas.height = pxH;
+    if (canvas.width !== pxW || canvas.height !== pxH){
+      canvas.width = pxW; canvas.height = pxH;
     }
-    const g = chartCanvas.getContext('2d');
+    const g = canvas.getContext('2d');
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, cssW, cssH);
+    if (!data || data.length < 2) return;
 
     const dark = theme === 'dark';
-    const gridColor = dark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,32,0.08)';
-    const tickColor = dark ? '#8B9BB4' : '#5A6B82';
-    const pad = { l:46, r:8, t:10, b:22 };
-    const w = Math.max(10, cssW - pad.l - pad.r);
-    const h = Math.max(10, cssH - pad.t - pad.b);
+    const pad = 3;
+    const h = Math.max(4, cssH - pad * 2);
 
-    const maxAbs = Math.max(200, history.reduce(function(m, v){ return Math.max(m, Math.abs(v)); }, 0));
+    const maxAbs = Math.max(200, data.reduce(function(m, e){ return Math.max(m, Math.abs(e.p)); }, 0));
     const yMax = Math.ceil(maxAbs / 100) * 100;
     const yMin = -yMax;
 
-    function xAt(i){ return pad.l + (i / (history.length - 1)) * w; }
-    function yAt(v){ return pad.t + h - ((v - yMin) / (yMax - yMin)) * h; }
+    function xAt(i){ return (i / (data.length - 1)) * cssW; }
+    function yAt(v){ return pad + h - ((v - yMin) / (yMax - yMin)) * h; }
 
-    g.font = '10px "IBM Plex Mono", monospace';
-    g.textAlign = 'right'; g.textBaseline = 'middle';
-    [yMax, 0, yMin].forEach(function(v){
-      const y = yAt(v);
-      g.strokeStyle = gridColor; g.lineWidth = 1;
-      g.beginPath(); g.moveTo(pad.l, y); g.lineTo(pad.l + w, y); g.stroke();
-      g.fillStyle = tickColor;
-      g.fillText((v > 0 ? '+' : '') + v, pad.l - 8, y);
-    });
+    g.strokeStyle = dark ? 'rgba(255,255,255,0.10)' : 'rgba(15,23,32,0.12)';
+    g.lineWidth = 1;
+    g.beginPath(); g.moveTo(0, yAt(0)); g.lineTo(cssW, yAt(0)); g.stroke();
 
     function areaPath(clampFn){
       g.beginPath();
       g.moveTo(xAt(0), yAt(0));
-      history.forEach(function(v, i){ g.lineTo(xAt(i), yAt(clampFn(v))); });
-      g.lineTo(xAt(history.length - 1), yAt(0));
+      data.forEach(function(e, i){ g.lineTo(xAt(i), yAt(clampFn(e.p))); });
+      g.lineTo(xAt(data.length - 1), yAt(0));
       g.closePath();
     }
     areaPath(function(v){ return Math.max(v, 0); });
-    g.fillStyle = 'rgba(242,169,59,0.14)'; g.fill();
+    g.fillStyle = 'rgba(242,169,59,0.16)'; g.fill();
     areaPath(function(v){ return Math.min(v, 0); });
-    g.fillStyle = 'rgba(79,209,197,0.14)'; g.fill();
+    g.fillStyle = 'rgba(79,209,197,0.16)'; g.fill();
 
     const lineAmber = dark ? '#F2A93B' : '#99600A';
     const lineTeal  = dark ? '#4FD1C5' : '#207B73';
-    const grad = g.createLinearGradient(0, pad.t, 0, pad.t + h);
+    const grad = g.createLinearGradient(0, pad, 0, pad + h);
     grad.addColorStop(0, lineAmber); grad.addColorStop(1, lineTeal);
     g.beginPath();
-    history.forEach(function(v, i){
-      const x = xAt(i), y = yAt(v);
+    data.forEach(function(e, i){
+      const x = xAt(i), y = yAt(e.p);
       if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
     });
-    g.strokeStyle = grad; g.lineWidth = 2; g.lineJoin = 'round'; g.lineCap = 'round';
+    g.strokeStyle = grad; g.lineWidth = 1.75; g.lineJoin = 'round'; g.lineCap = 'round';
     g.stroke();
+  }
 
-    g.textAlign = 'center'; g.textBaseline = 'top'; g.fillStyle = tickColor;
-    const now = new Date();
-    [0, Math.floor((history.length - 1) / 2), history.length - 1].forEach(function(i){
-      const t = new Date(now.getTime() - (history.length - 1 - i) * pollIntervalSec * 1000);
-      g.fillText(t.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' }), xAt(i), pad.t + h + 6);
-    });
+  function drawSparks(){
+    drawSpark(gridSpark, gridHistory);
+    drawSpark(battSpark, history);
   }
 
   let resizeTimer = null;
   window.addEventListener('resize', function(){
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(drawChart, 150);
+    resizeTimer = setTimeout(drawSparks, 150);
   });
 
   /* ---------------- Hub-Karten: einmal aus config_api aufbauen ---------------- */
@@ -541,10 +582,11 @@
           '<div class="battery"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
           '<div class="hub-metrics">' +
             '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
-            '<div class="soc-sub">SoC · min ' + d.minSoc + '%</div>' +
+            '<div class="soc-sub" id="socSub-' + d.id + '">SoC · Reserve ' + d.minSoc + '%</div>' +
             '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
           '</div>' +
         '</div>' +
+        '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
         '<div class="divider"></div>' +
         '<div class="switch-row">' +
           '<div class="switch-text"><span class="lbl">Entladen erlaubt</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
@@ -553,19 +595,56 @@
         '<div class="switch-row">' +
           '<div class="switch-text"><span class="lbl">Laden vom Netz erlaubt</span><span class="key mono">zdmc_dev' + d.id + '_reverse</span></div>' +
           '<label class="switch teal"><input type="checkbox" id="reverse-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+        '</div>' +
+        '<div class="ctrl-row">' +
+          '<div class="ctrl-head"><span class="lbl">Reserve (min. SoC)</span><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span></div>' +
+          '<span class="key mono">zdmc_dev' + d.id + '_minSoc</span>' +
+          '<input type="range" id="minSoc-' + d.id + '" min="10" max="98" step="2" value="' + d.minSoc + '">' +
+        '</div>' +
+        '<div class="ctrl-row">' +
+          '<div class="ctrl-head"><span class="lbl">Laden aus dem Netz</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : 'aus') + '</span></div>' +
+          '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
+          '<input type="range" id="inputLimit-' + d.id + '" min="0" max="' + d.maxInputPower + '" step="50" value="' + d.inputLimit + '">' +
         '</div>';
       hubsGrid.appendChild(el);
 
       document.getElementById('discharge-' + d.id).addEventListener('change', function(e){
         const next = e.target.checked;
+        lockControl(e.target);
         kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', next ? 1 : 0).then(function(ok){
-          if (!ok) e.target.checked = !next;
+          if (!ok) { e.target.checked = !next; unlockControl(e.target); }
         });
       });
       document.getElementById('reverse-' + d.id).addEventListener('change', function(e){
         const next = e.target.checked;
+        lockControl(e.target);
         kvsSet('zdmc_dev' + d.id + '_reverse', next ? 1 : 0).then(function(ok){
-          if (!ok) e.target.checked = !next;
+          if (!ok) { e.target.checked = !next; unlockControl(e.target); }
+        });
+      });
+
+      const minSocEl = document.getElementById('minSoc-' + d.id);
+      const minSocValEl = document.getElementById('minSocValue-' + d.id);
+      minSocEl.addEventListener('input', function(e){
+        minSocValEl.textContent = e.target.value + ' %';
+      });
+      minSocEl.addEventListener('change', function(e){
+        lockControl(e.target);
+        kvsSet('zdmc_dev' + d.id + '_minSoc', Number(e.target.value)).then(function(ok){
+          if (!ok) unlockControl(e.target);
+        });
+      });
+
+      const inputLimitEl = document.getElementById('inputLimit-' + d.id);
+      const inputLimitValEl = document.getElementById('inputLimitValue-' + d.id);
+      inputLimitEl.addEventListener('input', function(e){
+        const v = Number(e.target.value);
+        inputLimitValEl.textContent = v ? v + ' W' : 'aus';
+      });
+      inputLimitEl.addEventListener('change', function(e){
+        lockControl(e.target);
+        kvsSet('zdmc_dev' + d.id + '_inputLimit', Number(e.target.value)).then(function(ok){
+          if (!ok) unlockControl(e.target);
         });
       });
     });
@@ -576,30 +655,50 @@
     const cfg = await fetchJ('config_api');
 
     setpointSlider.value = cfg.setpoint || 0;
-    setpointValueEl.textContent = ((cfg.setpoint || 0) > 0 ? '+' : '') + (cfg.setpoint || 0) + ' W';
-    hysteresisSlider.value = cfg.hysteresis || 10;
-    hysteresisValueEl.textContent = (cfg.hysteresis || 10) + ' W';
+    showSetpoint(Number(cfg.setpoint || 0));
+    // Nur Rechengroesse fuer die Import/Export/Ausgeglichen-Einstufung unten -
+    // im Regel-Script ist die Hysterese nicht ueber die KVS aenderbar.
+    liveHysteresis = Number(cfg.hysteresis || 12);
 
     hubs = (cfg.devices || []).map(function(d){
       return {
-        id: d.id, ip: d.ip, label: d.label, minSoc: d.minSoc,
+        id: d.id, ip: d.ip, label: d.label,
+        minSoc: d.minSoc, maxSoc: d.maxSoc,
         maxOutput: d.maxOutput, maxInputPower: d.maxInputPower,
+        inputLimit: Number(d.inputLimit || 0),
         dischargeAllowed: !!d.dischargeAllowed, reverse: !!d.reverse,
-        soc: null, power: 0, online: false
+        soc: null, power: 0, online: false,
+        acMode: null, socLimit: null, gridReverse: null
       };
     });
 
     buildHubCards();
   }
 
-  // Aktualisiert nur die Schalterstellung, ohne die Karten neu aufzubauen
-  // (damit ein gerade angeklickter Schalter nicht "flackert").
-  function refreshSwitchStates(devices){
+  // Gleicht Schalter und Regler mit den KVS-Werten ab, ohne die Karten neu
+  // aufzubauen. Elemente, die gerade bedient werden (Fokus), bleiben unberührt,
+  // damit ein Schalter oder Slider unter der Hand nicht zurückspringt.
+  function refreshDeviceControls(devices){
     (devices || []).forEach(function(d){
       const dis = document.getElementById('discharge-' + d.id);
       const rev = document.getElementById('reverse-' + d.id);
-      if (dis && document.activeElement !== dis) dis.checked = !!d.dischargeAllowed;
-      if (rev && document.activeElement !== rev) rev.checked = !!d.reverse;
+      if (dis && !isBusy(dis)) dis.checked = !!d.dischargeAllowed;
+      if (rev && !isBusy(rev)) rev.checked = !!d.reverse;
+
+      const ms = document.getElementById('minSoc-' + d.id);
+      const msVal = document.getElementById('minSocValue-' + d.id);
+      if (ms && !isBusy(ms) && d.minSoc !== undefined) {
+        ms.value = d.minSoc;
+        if (msVal) msVal.textContent = d.minSoc + ' %';
+      }
+
+      const il = document.getElementById('inputLimit-' + d.id);
+      const ilVal = document.getElementById('inputLimitValue-' + d.id);
+      if (il && !isBusy(il) && d.inputLimit !== undefined) {
+        const v = Number(d.inputLimit);
+        il.value = v;
+        if (ilVal) ilVal.textContent = v ? v + ' W' : 'aus';
+      }
     });
   }
 
@@ -618,18 +717,37 @@
     if (hasErrors) {
       dot.classList.add('offline'); text.textContent = 'Verbindungsproblem';
     } else {
-      dot.classList.remove('offline'); text.textContent = 'Live · Poll alle ' + pollIntervalSec + 's';
+      dot.classList.remove('offline'); text.textContent = 'Live · Poll alle ' + POLL_SEC + 's';
     }
   }
 
   async function pollAll(){
     try {
       const status = await fetchJ('status_api');
-      const cfg = await fetchJ('config_api');
 
-      liveSetpoint = Number(cfg.setpoint || 0);
-      liveHysteresis = Number(cfg.hysteresis || 10);
-      refreshSwitchStates(cfg.devices);
+      if (pollCount % CONFIG_EVERY === 0) {
+        const cfg = await fetchJ('config_api');
+
+        liveSetpoint = Number(cfg.setpoint || 0);
+        liveHysteresis = Number(cfg.hysteresis || liveHysteresis);
+        if (!isBusy(setpointSlider)) {
+          setpointSlider.value = liveSetpoint;
+          showSetpoint(liveSetpoint);
+        }
+        refreshDeviceControls(cfg.devices);
+
+        const cfgById = {};
+        (cfg.devices || []).forEach(function(c){ cfgById[c.id] = c; });
+        hubs.forEach(function(d){
+          const c = cfgById[d.id];
+          if (!c) return;
+          if (c.minSoc !== undefined) d.minSoc = Number(c.minSoc);
+          if (c.inputLimit !== undefined) d.inputLimit = Number(c.inputLimit);
+          d.dischargeAllowed = !!c.dischargeAllowed;
+          d.reverse = !!c.reverse;
+        });
+      }
+      pollCount++;
 
       gridOnline = !!(status.grid && status.grid.online);
       gridPower = status.grid ? status.grid.power : 0;
@@ -638,15 +756,26 @@
       (status.hubs || []).forEach(function(h){ byId[h.id] = h; });
       hubs.forEach(function(d){
         const h = byId[d.id];
-        if (h) { d.soc = h.soc; d.power = h.power; d.online = !!h.online; }
-        else { d.online = false; }
+        if (h) {
+          d.soc = h.soc; d.power = h.power; d.online = !!h.online;
+          d.acMode = h.acMode; d.socLimit = h.socLimit; d.gridReverse = h.gridReverse;
+        } else {
+          d.online = false;
+        }
       });
 
+      // Verlauf lokal fortschreiben. Nur bei erreichbarer Quelle, sonst
+      // zeichnet die Kurve bei einem Ausfall eine falsche Null.
+      const now = Date.now();
       const anyHubOnline = hubs.some(function(h){ return h.online; });
       if (anyHubOnline) {
         const totalHubPower = hubs.reduce(function(sum, h){ return sum + (h.online ? h.power : 0); }, 0);
-        history.push(totalHubPower);
+        history.push({ t: now, p: Math.round(totalHubPower) });
         if (history.length > MAX_POINTS) history.shift();
+      }
+      if (gridOnline) {
+        gridHistory.push({ t: now, p: Math.round(gridPower) });
+        if (gridHistory.length > MAX_POINTS) gridHistory.shift();
       }
 
       document.getElementById('diag').hidden = true;
@@ -660,8 +789,39 @@
 
   function startPolling(){
     if (pollTimer) clearInterval(pollTimer);
-    pollTimer = setInterval(pollAll, pollIntervalSec * 1000);
+    pollTimer = setInterval(pollAll, POLL_SEC * 1000);
     pollAll();
+  }
+
+  // Rohstatus des Hubs, wie ihn auch das Regel-Script auswertet:
+  //   acMode      1 = lädt über den AC-Eingang, 2 = speist ins Haus, sonst Standby
+  //   socLimit    1 = Laden vom Netz gesperrt (voll), 2 = Entladen gesperrt (leer)
+  //   gridReverse 1 = Netzladen freigegeben, 2 = vom Regel-Script gesperrt
+  function renderFlags(d){
+    const box = document.getElementById('flags-' + d.id);
+    if (!box) return;
+
+    if (!d.online) {
+      box.innerHTML = '<span class="flag block">nicht erreichbar</span>';
+      return;
+    }
+
+    const flags = [];
+
+    if (d.acMode === 2)      flags.push(['ok',   'acMode 2 · speist ein']);
+    else if (d.acMode === 1) flags.push(['ok',   'acMode 1 · lädt']);
+    else                     flags.push(['',     'acMode ' + (d.acMode === null ? '?' : d.acMode) + ' · Standby']);
+
+    if (d.socLimit === 1)      flags.push(['warn',  'socLimit 1 · voll, Laden gesperrt']);
+    else if (d.socLimit === 2) flags.push(['warn',  'socLimit 2 · leer, Entladen gesperrt']);
+    else if (d.socLimit === 0) flags.push(['',      'socLimit 0 · frei']);
+
+    if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · Netzladen gesperrt']);
+    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · Netzladen frei']);
+
+    box.innerHTML = flags.map(function(f){
+      return '<span class="flag ' + f[0] + '">' + f[1] + '</span>';
+    }).join('');
   }
 
   function render(){
@@ -693,18 +853,27 @@
     battValueEl.style.color = totalBatt > 0 ? 'var(--amber-text)' : (totalBatt < 0 ? 'var(--teal-text)' : '');
     battStateEl.textContent = totalBatt > 0 ? 'Entladen / Export' : (totalBatt < 0 ? 'Laden vom Netz' : 'Ruht');
 
-    drawChart();
+    drawSparks();
     lastUpdateEl.textContent = 'zuletzt aktualisiert ' + now.toLocaleTimeString('de-DE');
-    const totalSec = MAX_POINTS * pollIntervalSec;
-    document.getElementById('chartWindowLabel').textContent = totalSec < 60
-      ? ('Letzte ' + totalSec + ' s') : ('Letzte ~' + Math.round(totalSec / 60) + ' Min');
+    const windowEl = document.getElementById('chartWindowLabel');
+    if (history.length < 2) {
+      windowEl.textContent = 'Verlauf wird aufgebaut';
+    } else {
+      const totalSec = Math.round((history[history.length - 1].t - history[0].t) / 1000);
+      windowEl.textContent = totalSec < 90
+        ? ('Verlauf · letzte ' + totalSec + ' s')
+        : ('Verlauf · letzte ~' + Math.round(totalSec / 60) + ' Min');
+    }
 
     hubs.forEach(function(d){
       const dot = document.getElementById('hubDot-' + d.id);
       if (!dot) return;
       dot.classList.toggle('offline', !d.online);
+      renderFlags(d);
 
       const socEl = document.getElementById('socValue-' + d.id);
+      const socSubEl = document.getElementById('socSub-' + d.id);
+      if (socSubEl) socSubEl.textContent = 'SoC · Reserve ' + d.minSoc + '%';
       const fill = document.getElementById('battFill-' + d.id);
       const powerEl = document.getElementById('powerValue-' + d.id);
       const hubEl = document.getElementById('hub-' + d.id);

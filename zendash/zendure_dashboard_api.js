@@ -20,33 +20,56 @@
 // Endpunkte (alle mit CORS, koennen von jeder Seite/jedem Host aus
 // aufgerufen werden):
 //   GET config_api    -> { setpoint, hysteresis, devices:[...] }
-//   GET status_api    -> { grid:{power,online}, hubs:[{id,soc,power,online}] }
+//                        devices enthaelt die aktuellen KVS-Werte fuer
+//                        dischargeAllowed / reverse / minSoc / inputLimit.
+//                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
+//   GET status_api    -> { grid:{power,online},
+//                          hubs:[{id,soc,power,acMode,socLimit,gridReverse,online}] }
+//                        Kein Verlauf - den fuehrt die Dashboard-Seite selbst.
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
+//                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
 // =====================================================================
 
 let CONFIG = {
-  version: "1.0",
+  version: "1.1",
 
+  // ------------------------------------------------------------------
+  // GERAETEBLOCK - 1:1 aus zerooutput_multi_kvs.js kopieren, gleiche
+  // Reihenfolge (Index i == zdmc_dev{i}_... in der KVS). Alle Felder des
+  // Regel-Scripts duerfen stehen bleiben; dieses Script nutzt sie zum Teil
+  // nur als Grenzwerte fuer die Dashboard-Regler.
+  // ------------------------------------------------------------------
   devices: [
     {
       ip: "192.168.178.143",
       label: "SF2400",
-      minSoc: 18,
-      maxOutput: 800,
-      maxInputPower: 2400,
+      minSoc: 15,
+      maxSoc: 100,
       dischargeAllowed: true,
-      reverse: true
+      reverse: true,
+      maxInputPower: 1000,
+      maxOutput: 800,
+      inputLimit: 0,
+      dryRun: false
     },
     {
-      ip: "192.168.178.143",
+      ip: "192.168.178.150",
       label: "Fatamorgana",
       minSoc: 15,
-      maxOutput: 800,
-      maxInputPower: 1200,
-      dischargeAllowed: false,
-      reverse: true
+      maxSoc: 100,
+      dischargeAllowed: true,
+      reverse: true,
+      maxInputPower: 2000,
+      maxOutput: 2000,
+      inputLimit: 0,
+      dryRun: false
     }
   ],
+
+  // Hysterese ist im Regel-Script NICHT ueber die KVS veraenderbar. Der Wert
+  // wird hier nur gespiegelt, damit das Dashboard ihn anzeigen kann (gleicher
+  // Wert wie CONFIG.hysteresis im Regel-Script eintragen).
+  hysteresis: 12,
 
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js
@@ -73,6 +96,16 @@ let CONFIG = {
   pollIntervalSec: 5
 };
 
+// Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
+// dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
+for (let i = 0; i < CONFIG.devices.length; i++) {
+  let d = CONFIG.devices[i];
+  d.minSoc = Math.max(10, Math.min(99, d.minSoc));
+  d.maxSoc = Math.max(d.minSoc + 1, Math.min(100, d.maxSoc));
+  if (typeof d.inputLimit !== "number") d.inputLimit = 0;
+  d.inputLimit = Math.max(0, Math.min(d.maxInputPower, d.inputLimit));
+}
+
 let KVS_MATCH = "zdmc_*";
 
 // Zwischenspeicher fuer Hintergrund-Polling
@@ -87,6 +120,48 @@ let LATEST_STATUS = {
 // keine Anfragen noetig).
 let lastRequestAt = 0;
 let IDLE_MS = 15000;
+
+
+// =====================================================
+// Ueberlappungsschutz
+//
+// Die beiden speicherhungrigen Vorgaenge sind das Parsen der Hub-Antwort
+// (/properties/report, mehrere kB Rohtext + Objektbaum) und das KVS.GetMany
+// in config_api. Liefen sie gleichzeitig, addierten sich ihre Spitzen - genau
+// das treibt memPeak hoch. Das Flag laesst immer nur einen von beiden laufen.
+//
+// Zusaetzlich schuetzt es davor, dass sich der Hintergrund-Timer selbst
+// ueberholt, wenn ein Hub laenger braucht als pollIntervalSec.
+// =====================================================
+
+let busy = false;
+let busySince = 0;
+
+// Sicherung: bleibt ein Callback aus (z.B. abgewiesener Shelly.call), haengt
+// das Flag sonst dauerhaft und die Abfragen stehen still.
+let BUSY_TIMEOUT_MS = 15000;
+
+// Wie lange config_api hoechstens auf einen freien Slot wartet, bevor es
+// trotzdem loslegt: CONFIG_WAIT_MAX * CONFIG_WAIT_MS.
+let CONFIG_WAIT_MS = 200;
+let CONFIG_WAIT_MAX = 10;
+
+function busyNow() {
+  if (busy && (Date.now() - busySince) > BUSY_TIMEOUT_MS) {
+    print("busy-Flag haengt seit ueber " + (BUSY_TIMEOUT_MS / 1000) + " s - zurueckgesetzt");
+    busy = false;
+  }
+  return busy;
+}
+
+function busyLock() {
+  busy = true;
+  busySince = Date.now();
+}
+
+function busyRelease() {
+  busy = false;
+}
 
 
 // =====================================================
@@ -201,6 +276,7 @@ function updateGridPowerStatus(callback) {
         }
         let data;
         try { data = JSON.parse(res.body); } catch (e) { callback({ power: 0, online: false }); return; }
+        res = null;
         if (data.total_act_power === undefined) {
           callback({ power: 0, online: false });
           return;
@@ -225,6 +301,7 @@ function updateGridPowerStatus(callback) {
         }
         let data;
         try { data = JSON.parse(res.body); } catch (e) { callback({ power: 0, online: false }); return; }
+        res = null;
         let value = readFieldPath(data, CONFIG.gridSourceField);
         if (value === undefined) {
           callback({ power: 0, online: false });
@@ -240,6 +317,14 @@ function updateGridPowerStatus(callback) {
   callback({ power: 0, online: false });
 }
 
+function offlineHub(index) {
+  return {
+    id: index, soc: null, power: 0,
+    acMode: null, socLimit: null, gridReverse: null,
+    online: false
+  };
+}
+
 function updateHubStatus(index, callback) {
   let cfg = CONFIG.devices[index];
 
@@ -251,17 +336,24 @@ function updateHubStatus(index, callback) {
     },
     function (res, error_code) {
       if (error_code !== 0 || !res || res.code !== 200) {
-        callback({ id: index, soc: null, power: 0, online: false });
+        callback(offlineHub(index));
         return;
       }
       let data;
-      try { data = JSON.parse(res.body); } catch (e) { callback({ id: index, soc: null, power: 0, online: false }); return; }
+      try { data = JSON.parse(res.body); } catch (e) { callback(offlineHub(index)); return; }
+
+      // Roh-Antwort sofort freigeben: /properties/report ist mehrere kB gross
+      // und muss nicht parallel zum geparsten Objekt im Heap liegen.
+      res = null;
+
       if (!data.properties) {
-        callback({ id: index, soc: null, power: 0, online: false });
+        callback(offlineHub(index));
         return;
       }
 
       let p = data.properties;
+      data = null;
+
       let power = 0;
       if (p.acMode === 2) {
         power = p.outputHomePower || 0;
@@ -273,6 +365,13 @@ function updateHubStatus(index, callback) {
         id: index,
         soc: p.electricLevel,
         power: Math.round(power),
+        // Zusatzstatus fuer die Anzeige im Dashboard:
+        //   acMode     0/undef = Standby, 1 = Laden (AC-Eingang), 2 = Entladen
+        //   socLimit   0 = frei, 1 = Laden gesperrt (voll), 2 = Entladen gesperrt
+        //   gridReverse 1 = Netzladen freigegeben, 2 = gesperrt (Flotte voll)
+        acMode: (p.acMode !== undefined) ? p.acMode : null,
+        socLimit: (p.socLimit !== undefined) ? p.socLimit : null,
+        gridReverse: (p.gridReverse !== undefined) ? p.gridReverse : null,
         online: true
       });
     }
@@ -296,10 +395,17 @@ function backgroundPoll() {
     // kein Dashboard aktiv - Netzzaehler/Hubs nicht unnoetig abfragen
     return;
   }
+
+  // Belegt: entweder laeuft der vorige Durchlauf noch, oder config_api
+  // arbeitet gerade. Diesen Takt auslassen, beim naechsten neu versuchen.
+  if (busyNow()) return;
+
+  busyLock();
   updateGridPowerStatus(function (grid) {
     LATEST_STATUS.grid = grid;
     updateAllHubsStatus(0, [], function (hubs) {
       LATEST_STATUS.hubs = hubs;
+      busyRelease();
     });
   });
 }
@@ -321,8 +427,10 @@ function buildDeviceDefaults() {
       ip: d.ip,
       label: d.label,
       minSoc: d.minSoc,
+      maxSoc: d.maxSoc,
       maxOutput: d.maxOutput,
       maxInputPower: d.maxInputPower,
+      inputLimit: d.inputLimit,
       dischargeAllowed: d.dischargeAllowed !== false,
       reverse: !!d.reverse
     };
@@ -349,24 +457,35 @@ function handlePreflight(req, res) {
   return true;
 }
 
-HTTPServer.registerEndpoint("config_api", function (req, res) {
-  if (handlePreflight(req, res)) return;
-  lastRequestAt = Date.now();
+// Wartet auf einen freien Slot, bevor das KVS.GetMany losgeschickt wird.
+// Nach CONFIG_WAIT_MAX vergeblichen Anlaeufen wird trotzdem geantwortet -
+// lieber eine ueberlappende Spitze als eine haengende Dashboard-Abfrage.
+function serveConfig(res, attempt) {
+  if (busyNow() && attempt < CONFIG_WAIT_MAX) {
+    Timer.set(CONFIG_WAIT_MS, false, function () {
+      serveConfig(res, attempt + 1);
+    });
+    return;
+  }
+
+  busyLock();
   let devices = buildDeviceDefaults();
   let setpoint = 0;
-  let hysteresis = 10;
 
   Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
     if (error_code === 0 && result && result.items) {
       let items = kvsItemsToMap(result.items);
       if (items["zdmc_setpoint"] !== undefined) setpoint = Number(items["zdmc_setpoint"]);
-      if (items["zdmc_hysteresis"] !== undefined) hysteresis = Number(items["zdmc_hysteresis"]);
 
       for (let i = 0; i < devices.length; i++) {
         let dKey = "zdmc_dev" + i + "_dischargeAllowed";
         let rKey = "zdmc_dev" + i + "_reverse";
+        let mKey = "zdmc_dev" + i + "_minSoc";
+        let lKey = "zdmc_dev" + i + "_inputLimit";
         if (items[dKey] !== undefined) devices[i].dischargeAllowed = (Number(items[dKey]) !== 0);
         if (items[rKey] !== undefined) devices[i].reverse = (Number(items[rKey]) !== 0);
+        if (items[mKey] !== undefined) devices[i].minSoc = Number(items[mKey]);
+        if (items[lKey] !== undefined) devices[i].inputLimit = Number(items[lKey]);
       }
     }
 
@@ -377,11 +496,19 @@ HTTPServer.registerEndpoint("config_api", function (req, res) {
     ];
     res.body = JSON.stringify({
       setpoint: setpoint,
-      hysteresis: hysteresis,
+      // Nur zur Anzeige - das Regel-Script liest keinen KVS-Wert dafuer.
+      hysteresis: CONFIG.hysteresis,
       devices: devices
     });
+    busyRelease();
     res.send();
   });
+}
+
+HTTPServer.registerEndpoint("config_api", function (req, res) {
+  if (handlePreflight(req, res)) return;
+  lastRequestAt = Date.now();
+  serveConfig(res, 0);
 });
 
 HTTPServer.registerEndpoint("status_api", function (req, res) {
