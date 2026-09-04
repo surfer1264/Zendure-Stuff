@@ -12,7 +12,6 @@ let CONFIG = {
       dischargeAllowed: true,
       reverse: true,
       maxInputPower: 1000,
-      inputLimit: 0,            // manuelles AC-Laden (W), 0 = aus (KVS-live-overridable)
       maxOutput: 800,
       dryRun: false              
     },
@@ -24,7 +23,6 @@ let CONFIG = {
       dischargeAllowed: true,
       reverse: true,
       maxInputPower: 2000,
-      inputLimit: 0,            // manuelles AC-Laden (W), 0 = aus (KVS-live-overridable)
       maxOutput: 2000,
       dryRun: false
     },
