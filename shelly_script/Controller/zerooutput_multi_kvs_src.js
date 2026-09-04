@@ -12,6 +12,7 @@ let CONFIG = {
       dischargeAllowed: true,
       reverse: true,
       maxInputPower: 1000,
+      inputLimit: 0,            // manuelles AC-Laden (W), 0 = aus (KVS-live-overridable)
       maxOutput: 800,
       dryRun: false              
     },
@@ -23,6 +24,7 @@ let CONFIG = {
       dischargeAllowed: true,
       reverse: true,
       maxInputPower: 2000,
+      inputLimit: 0,            // manuelles AC-Laden (W), 0 = aus (KVS-live-overridable)
       maxOutput: 2000,
       dryRun: false
     },
@@ -121,7 +123,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "4.4.0";
+CONFIG.version = "5.0.0";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -136,6 +138,9 @@ checkBand(CONFIG.charge);
 for (let i = 0; i < CONFIG.devices.length; i++) {
   CONFIG.devices[i].minSoc = Math.max(10, Math.min(99, CONFIG.devices[i].minSoc));
   CONFIG.devices[i].maxSoc = Math.max(CONFIG.devices[i].minSoc+1, Math.min(100, CONFIG.devices[i].maxSoc));
+  if (typeof CONFIG.devices[i].inputLimit !== "number") CONFIG.devices[i].inputLimit = 0;
+  CONFIG.devices[i].inputLimit = Math.max(0,
+    Math.min(CONFIG.devices[i].maxInputPower, CONFIG.devices[i].inputLimit));
 }
 
 CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
@@ -223,11 +228,55 @@ function simpleEncode(str) {
   return out;
 }
 
+// ------------------------------------------------------------------
+// v4.5.1: Zentraler Wrapper um Shelly.call().
+//
+// Der Call-Pool des Shelly ist begrenzt. Ist er voll, wird der Aufruf
+// NICHT angenommen: Shelly.call wirft dann sofort ("Too many calls in
+// progress") und der Callback laeuft nie. Passiert das in einem Callback,
+// den das System aufgerufen hat (Timer, StatusHandler), gibt es keinen
+// Aufrufer im Skript, der den Fehler abfangen koennte - mJS beendet dann
+// das GESAMTE Skript, die Regelung steht.
+//
+// Hier wird der Wurf abgefangen und in den normalen Fehlerpfad umgeleitet:
+// der Callback wird mit res=null nachgezogen. Alle Aufrufer pruefen bereits
+// auf "res && res.code === 200" bzw. "err_code !== 0" und landen damit in
+// ihrer bestehenden Fehlerbehandlung. Ebenso wichtig: der Callback laeuft
+// UEBERHAUPT - in fast allen Ketten ist er es, der den Zyklus weiterschiebt
+// und unlock() ausloest. Ohne ihn haengt der Zyklus bis zum Watchdog.
+//
+// ACHTUNG: Das ist Schadensbegrenzung, keine Vermeidung. Der abgewiesene
+// Call geht verloren und wird nicht wiederholt.
+// ------------------------------------------------------------------
+function safeCall(method, params, callback) {
+  try {
+    Shelly.call(method, params, callback);
+  } catch (e) {
+    print("Shelly.call abgewiesen (" + method + "): " + e);
+
+    // NICHT synchron zurueckrufen - sonst laeuft der Callback noch im
+    // Frame des Aufrufers und rekursive Ketten bauen Stack auf.
+    try {
+      Timer.set(0, false, function () {
+        callback(null, -1, "call rejected");
+      });
+    } catch (e2) {
+      // Auch der Timer-Pool ist erschoepft. Dann lieber synchron
+      // zurueckrufen als das Skript sterben zu lassen.
+      try {
+        callback(null, -1, "call rejected");
+      } catch (e3) {
+        print("CB-Fehler: " + e3);
+      }
+    }
+  }
+}
+
 // Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}
 function sendWebhookMessage(text) {
   print("Sende Webhook-Benachrichtigung...");
 
-  Shelly.call(
+  safeCall(
     "HTTP.Request",
     {
       method: "POST",
@@ -266,7 +315,7 @@ function sendSignalMessage(text) {
 		
   print("Sende Signal-Nachricht...");
 
-  Shelly.call(
+  safeCall(
     "HTTP.GET",
     { url: url, timeout: 8 },
     function (result, error_code, error_msg) {
@@ -415,7 +464,7 @@ function readKvsOverrides(myCycle, callback) {
     return;
   }
 
-  Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
+  safeCall("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
     if (myCycle !== state.cycleId) {
       debugStale("readKvsOverrides", myCycle);
       return;
@@ -478,6 +527,19 @@ function readKvsOverrides(myCycle, callback) {
           syncMinSocDevice(i, function () {});
         }
       }
+
+      let inputLimitKey = "zdmc_dev" + i + "_inputLimit";
+      if (items[inputLimitKey]) {
+        let oldInputLimit = dev.inputLimit;
+
+        applyKvsValue(inputLimitKey, items[inputLimitKey].value, dev.inputLimit,
+          function (v) { return v >= 0 && v <= dev.maxInputPower; },
+          function (v) { dev.inputLimit = v; });
+
+        if (dev.inputLimit !== oldInputLimit) {
+          syncInputLimitDevice(i, function () {});
+        }
+      }
     }
 
     callback();
@@ -493,7 +555,7 @@ function seedKvsDefaultsStep(pairs, index, callback) {
 
   let pair = pairs[index];
 
-  Shelly.call("KVS.Set", { key: pair.key, value: pair.value }, function (res, err_code, err_msg) {
+  safeCall("KVS.Set", { key: pair.key, value: pair.value }, function (res, err_code, err_msg) {
     if (err_code !== 0) {
       print("KVS-Seed: " + pair.key + " konnte nicht geschrieben werden (" + err_msg + ")");
     } else if (CONFIG.debug) {
@@ -512,7 +574,7 @@ function seedKvsDefaults(callback) {
     return;
   }
 
-  Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
+  safeCall("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
     if (err_code !== 0 || !res || !res.items) {
       print("KVS-Seed uebersprungen - KVS.GetMany nicht verfuegbar");
       callback();
@@ -537,6 +599,8 @@ function seedKvsDefaults(callback) {
         CONFIG.devices[i].reverse ? 1 : 0);
       addPair("zdmc_dev" + i + "_minSoc",
         CONFIG.devices[i].minSoc);
+      addPair("zdmc_dev" + i + "_inputLimit",
+        CONFIG.devices[i].inputLimit);
     }
 
     if (pairs.length === 0) {
@@ -557,7 +621,7 @@ function seedKvsDefaults(callback) {
 }
 
 function httpGet(url, callback) {
-  Shelly.call(
+  safeCall(
     "HTTP.GET",
     {
       url: url,
@@ -574,7 +638,7 @@ function httpPost(url, body, callback) {
     print("DEBUG httpPost -> url: " + url + " | body: " + bodyStr);
   }
 
-  Shelly.call(
+  safeCall(
     "HTTP.Request",
     {
       method: "POST",
@@ -1743,7 +1807,7 @@ function syncMinSocDevice(index, callback) {
 
   if (cfg.dryRun || !ds.serial) {
     if (CONFIG.debug) {
-      print("  " + cfg.label + ": minSoc-Sync uebersprungen (DRYRUN oder keine Seriennummer)");
+      print("  " + cfg.label + ": minSoc-Sync skip");
     }
     callback();
     return;
@@ -1763,6 +1827,41 @@ function syncMinSocDevice(index, callback) {
             " | error_code: " + error_code + " | error_message: " + error_message);
         }
         print("  " + cfg.label + ": minSoc-Sync fehlgeschlagen beim Schreiben");
+      }
+      callback();
+    }
+  );
+}
+
+// v4.5.0: Schreibt CONFIG.devices[index].inputLimit (nach KVS-Live-Override)
+// als Ladeleistung aufs Geraet - analog syncMinSocDevice(). Reine Zusatz-
+// Schnittstelle fuer manuelles AC-Laden; die Regelung bleibt unveraendert.
+// Voraussetzung ist, dass der User das Geraet vorher aus der Lastverteilung
+// genommen hat (reverse:false, dischargeAllowed:false).
+function syncInputLimitDevice(index, callback) {
+  let cfg = CONFIG.devices[index];
+  let ds = state.devices[index];
+
+  if (cfg.dryRun || !ds.serial) {
+    if (CONFIG.debug) {
+      print("  " + cfg.label + ": inputLimit-Sync skip");
+    }
+    callback();
+    return;
+  }
+
+  httpPost(
+    "http://" + cfg.ip + "/properties/write",
+    { sn: ds.serial, properties: { inputLimit: cfg.inputLimit } },
+    function (res, error_code, error_message) {
+      if (res && res.code === 200) {
+        print("  " + cfg.label + ": inputLimit gesetzt: " + cfg.inputLimit + " W");
+      } else {
+        if (CONFIG.debug) {
+          print("DEBUG " + cfg.label + "/inputLimitSync - res: " + JSON.stringify(res) +
+            " | error_code: " + error_code + " | error_message: " + error_message);
+        }
+        print("  " + cfg.label + ": inputLimit-Sync fehlgeschlagen");
       }
       callback();
     }
@@ -1948,8 +2047,7 @@ function bannerLine(i) {
     "deaktiviert");
 
   if (CONFIG.kvsEnabled) {
-    if (j === 19) return "KVS-Live-Override: setpoint/" +
-      "dev{n}_dischargeAllowed/dev{n}_reverse/dev{n}_minSoc (Keys: " + KVS_MATCH + ")";
+    if (j === 19) return "KVS-Keys   : " + KVS_MATCH;
 
     if (j === 20) return "KVS-Force-Reseed  : " + (CONFIG.kvsForceReseed ?
       "AKTIV - ueberschreibt bei JEDEM Start alle Live-Overrides!" :

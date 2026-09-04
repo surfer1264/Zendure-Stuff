@@ -1,3 +1,9 @@
+# Changelog 4.5.2/5.0.0
+AC-input-Limit in KVS aufgenommen
+
+# Changelog 4.4.0
+doppelte Verifikation gelöscht
+
 # Changelog 4.2.3 / 4.3.0
 
 only interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%) 
