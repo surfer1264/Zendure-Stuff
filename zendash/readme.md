@@ -9,26 +9,38 @@ Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen 
 | `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus + fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
-`zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit Python (Standardbibliothek reicht, kein `pip install` nötig).
+`zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit **Python** .
 
 Es wird **nur** `zendure-dashboard.html` gepflegt. Die frühere Variante mit Direktabfrage (`zendure-grid-dashboard.html`) ist abgelöst und kann gelöscht werden.
 
+## Getting Started (für die ganz schnellen)
+
+* Python-Umgebung (gibt es für jede Plattform, einfach installieren, müsst ihr nie wieder anfassen: FERTIG)
+* Der Shelly Multi Device Controller läuft schon? siehe (1)
+* Das API Script konfigurieren (mit dem exakt gleichen Geräte-Config-Block, wei beim Controller => Copy/Paste), Smartmeter konfigurieren (exakt so wie im Controller)
+* Python Proxy konfigurieren (nur Shelly-IP auf dem die API läuft) und Script Nummer des API-Scriptes
+* Python Proxy starten: `http://localhost:8000/`
+
+Zur Vereinfachung für alle
+* ladet alle Daten aus dem Github-Ordner herunter 
+* schaut Euch die `deply.cmd` und die `start_proxy.cmd` an
+* die vereinfacht nach einmaliger Konfiguration einiges.
+
 ---
 
-## 1) Regel-Script auf dem Shelly
+## 1) Der Shelly Multi Device Controller läuft schon?
 
 Hier der Vollständigkeit erwähnt, da die Vewrfügbarkeit dieses Scriptes berteits vorausgesetzt wird. 
 
-1. **Settings → Scripts** → neues Script anlegen, Inhalt von `zerooutput_multi_kvs.js` einfügen. (hier nur der Vollständigkeithalber erwähnt, wenn das schon läuft, ist dieser Punkt erledigt)
+1. der **Shelly Multi Device Controller** läuft bereits !!
 2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nie an.
-3. Speichern, **„Run on startup"** aktivieren, Script starten.
+
 
 ## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
 
 1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf dem gleichen Shelly laufen, auf dem auch das Regel-Script läuft
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
    - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
-   - `hysteresis` — denselben Wert wie im Regel-Script eintragen (reine Anzeige, nicht über die KVS änderbar)
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
@@ -75,7 +87,7 @@ Der Proxy lauscht standardmäßig auf allen Netzwerkschnittstellen (`BIND_ADDRES
 
 ```
 Lokal:    http://localhost:8000/
-Im Netz:  http://192.168.x.x:8000/   (von jedem Rechner im selben Netzwerk, das ist die IP-Adresse des Rechners auf dem der Proxy läuft)
+Im Netz:  http://192.168.178.121:8000/   (von jedem Rechner im selben Netzwerk, das ist die IP-Adresse des Rechners auf dem der Proxy läuft)
 ```
 
 Einfach die „Im Netz"-Adresse auf einem anderen Gerät im selben WLAN/LAN öffnen.
