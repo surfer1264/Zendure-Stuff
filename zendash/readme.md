@@ -3,18 +3,16 @@
 
 # Zendure Grid Dashboard — Inbetriebnahme
 
-Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen eigenen, schlanken API-Endpunkt auf dem Shelly, getrennt vom Regel-Script):
+Drei Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen eigenen, schlanken API-Endpunkt auf dem Shelly, getrennt vom Regel-Script):
 
 | Datei | Läuft wo | Aufgabe |
 |---|---|---|
-| `zerooutput_multi_kvs.js` | als Script auf dem Shelly | balanciert die Zendure-Hubs gegen den Netzzähler |
 | `zendure_dashboard_api.js` | als **zweites, separates** Script auf dem Shelly | liefert reine JSON-Daten (`config_api`/`status_api`/`kvs_set_api`) für das Dashboard |
 | `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus + fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
 `zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit **Python** .
 
-Es wird **nur** `zendure-dashboard.html` gepflegt. Die frühere Variante mit Direktabfrage (`zendure-grid-dashboard.html`) ist abgelöst und kann gelöscht werden.
 
 ## Getting Started (für die ganz schnellen)
 
@@ -37,7 +35,6 @@ Hier der Vollständigkeit erwähnt, da die Vewrfügbarkeit dieses Scriptes berte
 
 1. der **Shelly Multi Device Controller** läuft bereits !!
 2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nie an.
-
 
 ## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
 
