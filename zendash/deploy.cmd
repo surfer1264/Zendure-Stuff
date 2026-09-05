@@ -4,7 +4,7 @@ setlocal
 REM ====================================================================
 REM  HIER ANPASSEN
 REM ====================================================================
-set SHELLY_IP=192.168.178.117
+set SHELLY_IP=192.168.178.149
 set SKRIPTNAME=zendash
 
 REM Generische Version (frisch von GitHub geladen)

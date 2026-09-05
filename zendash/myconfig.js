@@ -15,20 +15,44 @@ let CONFIG = {
       reverse: true,
       maxInputPower: 1000,
       maxOutput: 800,
+      inputLimit: 0,
       dryRun: false
     },
     {
       ip: "192.168.178.150",
-      label: "SF800",
+      label: "Fatamorgana",
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
       reverse: true,
-      maxInputPower: 1000,
-      maxOutput: 800,
+      maxInputPower: 2000,
+      maxOutput: 2000,
+      inputLimit: 0,
       dryRun: false
     }
   ],
+
+  // ------------------------------------------------------------------
+  // WO LIEGT DIE KVS?
+  //   "local"  - dieses Script laeuft auf demselben Geraet wie das
+  //              Regel-Script und greift direkt zu (Shelly.call).
+  //   <IP>     - dieses Script laeuft auf einem EIGENEN Shelly; die KVS
+  //              wird per nativer RPC ueber HTTP gelesen und geschrieben:
+  //              http://<IP>/rpc/KVS.GetMany bzw. /rpc/KVS.Set
+  //
+  // Die getrennte Variante ist die empfohlene: Espruino teilt sich einen
+  // Variablenpool von rund 1600 Eintraegen fuer ALLE Scripte eines Geraets.
+  // Laufen Regel-Script und dieses Script zusammen, fragen beide dieselben
+  // Hubs ab, und zwei gleichzeitige Antworten von je ~1,3 kB sprengen den
+  // Pool - es stirbt, wer als naechstes Speicher anfordert. Auf einem
+  // eigenen Geraet entfaellt das. Die RPC-Anfragen bedient drueben die
+  // Firmware, nicht ein Script, kosten dort also keine Variablen.
+  //
+  // Bei getrenntem Betrieb ausserdem gridSource auf "remote" stellen und
+  // gridSourceIp auf den Shelly mit der EM-Messung zeigen lassen.
+  // Voraussetzung: auf dem KVS-Geraet ist keine Authentifizierung aktiv.
+  // ------------------------------------------------------------------
+  kvsHost: "192.168.178.117",
 
   // Hysterese ist im Regel-Script NICHT ueber die KVS veraenderbar. Der Wert
   // wird hier nur gespiegelt, damit das Dashboard ihn anzeigen kann (gleicher
@@ -38,11 +62,11 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js
   // Where to read the household grid power from, there are three options
-  gridSource: "local", // "local", "remote", "http_json"
+  gridSource: "remote", // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
   // IP address of the Shelly Pro 3EM providing the grid measurement.
-  gridSourceIp: "<IP_OF_YOUR_3EM_PRO_SHELLY>",
+  gridSourceIp: "192.168.178.117",
   // EM channel id to read (usually 0). Only used when gridSource = "remote".
   gridSourceEmId: 0,
   // ------------------------------------------------------------------
@@ -57,10 +81,12 @@ let CONFIG = {
   gridSourceInvert: false,
 
   httpTimeout: 5,
-  pollIntervalSec: 5,
 
-  // Ringpuffer fuer den Dashboard-Chart: so viele Messpunkte werden im
-  // Script vorgehalten. Zeitfenster = historySize * pollIntervalSec.
-  // 30 * 5 s = 150 s. Groesser = laengeres Fenster, aber mehr Heap.
-  historySize: 30
+  // Bewusst langsamer als die Dashboard-Seite (4 s). Auf demselben Geraet
+  // laeuft das Regel-Script mit eigenem Zyklus und fragt DIESELBEN Hubs ab.
+  // Beide Scripte teilen sich einen Variablenpool von rund 1600 Eintraegen;
+  // treffen zwei Hub-Antworten von je ~1,3 kB gleichzeitig ein, reisst er.
+  // Ein langsamerer Takt senkt die Wahrscheinlichkeit dieser Kollision.
+  // Die Anzeige wird dadurch bis zu 8 s alt - das ist der Preis.
+  pollIntervalSec: 8
 };
