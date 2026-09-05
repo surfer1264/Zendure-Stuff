@@ -86,7 +86,8 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
 Im Kopf von `zendure_proxy.py` anpassen:
 
 ```python
-SHELLY_IP = "192.168.178.117"   # IP des Shelly mit dem API-Script
+SHELLY_IP = "192.168.178.149"   # Shelly mit dem API-Script
+                                # (bei getrenntem Betrieb NICHT der 3EM!)
 SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 3.4
 PORT = 8000                     # lokaler Port, an dem der Proxy lauscht
 ```
@@ -107,6 +108,39 @@ http://localhost:8000/
 (**Nicht** `.../zendure-dashboard.html` anhängen — der Proxy liefert die Seite direkt unter `/` aus.)
 
 Server beenden: `Strg+C` im Terminal. Das Terminal-Fenster muss offen bleiben, solange das Dashboard genutzt wird.
+
+### Startoptionen
+
+| Aufruf | Ausgabe |
+|---|---|
+| `python3 zendure_proxy.py` | Startmeldung + eine Protokollzeile je Anfrage |
+| `python3 zendure_proxy.py -q` | Startmeldung, kein Zugriffsprotokoll |
+| `python3 zendure_proxy.py -s` | gar nichts |
+
+Das Zugriffsprotokoll ist beim Einrichten nützlich — es zeigt sofort, ob eine Anfrage überhaupt ankommt. Im Dauerbetrieb ist es eher lästig, weil die Seite alle 4 Sekunden anfragt. Fehler gehen unabhängig von der Option immer nach stderr; ein stiller Proxy, der einen belegten Port verschweigt, wäre nicht zu diagnostizieren.
+
+Der Proxy bedient Anfragen nebenläufig (`ThreadingHTTPServer`). Ohne das würde eine hängende Shelly-Abfrage bis zu 5 Sekunden lang alle anderen Verbindungen blockieren — bei mehreren offenen Dashboards schnell spürbar.
+
+### Dauerbetrieb auf einer Synology
+
+Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology geht es so:
+
+1. **Python prüfen.** DSM bringt meist schon eines mit:
+   ```bash
+   which python3 && python3 --version
+   ```
+   Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+2. **Dateien ablegen.** `zendure_proxy.py` und `zendure-dashboard.html` in denselben Ordner, z. B. `/volume1/homes/<benutzer>/zendure`. Nicht in den `web`-Ordner — der gehört der Web Station.
+3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
+   ```bash
+   /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
+   ```
+4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
+5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
+
+Die Aufgabe bleibt dauerhaft als „läuft“ stehen, weil der Proxy nicht endet. Das ist richtig so.
+
+Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn der Prozess abstürzt**. Wer das möchte, nimmt statt der Aufgabe einen Container im Container Manager (`python:3-slim`, Ordner als Volume, Port 8000, Neustartrichtlinie „immer“).
 
 ### Warum ein Proxy?
 
@@ -205,6 +239,16 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | PV-Zeile fehlt bei einem Gerät | Das Gerät liefert kein `solarInputPower` (reine AC-Lader) | Kein Fehler. Zur Kontrolle `http://<hub-ip>/properties/report` im Browser aufrufen |
 | Zellspannung fehlt | Kein `packData` in der Antwort, oder alle Packs melden 0 | Wie oben mit `/properties/report` prüfen |
 
+### Proxy und Dauerbetrieb
+
+| Symptom | Ursache | Lösung |
+|---|---|---|
+| Aufgabenplaner-Log: `/usr/local/bin/python3: No such file or directory` | Python liegt woanders | Mit `which python3` den echten Pfad ermitteln (oft `/bin/python3`) und in der Aufgabe eintragen |
+| „Ergebnis anzeigen“ bleibt leer | Protokollierung nicht aktiviert | Aufgabenplaner → Einstellungen → „Ausgabeergebnisse speichern“ ankreuzen und Ordner wählen |
+| Dashboard erreichbar, aber nach NAS-Neustart weg | Aufgabe hat keinen Hochfahren-Auslöser | Als **ausgelöste** Aufgabe mit Ereignis „Hochfahren“ anlegen, nicht als geplante |
+| `ssh: connect ... port 22: Connection refused` | SSH aus, oder anderer Port | Systemsteuerung → Terminal & SNMP; abweichenden Port mit `ssh -p <port> ...` angeben |
+| `no matching cipher found` beim SSH-Verbinden | Gerät bietet nur veraltete CBC-Verfahren | Prüfen, ob es überhaupt die NAS ist (`http://<ip>:5000`). Für den Proxy wird SSH nicht benötigt — der Aufgabenplaner reicht |
+
 ### Zugriff aus dem Netz
 
 | Symptom | Ursache | Lösung |
@@ -223,4 +267,11 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | „out of memory", eines der beiden Scripte stürzt ab | Regel-Script und API-Script teilen sich den Variablenpool und fragen dieselben Hubs ab | API-Script auf einen eigenen Shelly umziehen (`kvsHost` auf die 3EM-IP, `gridSource: "remote"`). Als Zwischenlösung `pollIntervalSec` erhöhen |
 | `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
 
+## Impressionen
 
+*(Screenshots aus einer früheren Version der Oberfläche — bei Gelegenheit gegen aktuelle ersetzen.)*
+
+![alt text](<2026-07-25 21-24-16.PNG>)
+![alt text](<2026-07-25 21-24-24.PNG>)
+![alt text](<2026-07-25 21-24-31.PNG>)
+![alt text](<2026-07-25 21-49-18-1.PNG>)
