@@ -1,3 +1,24 @@
+// =====================================================================
+// Zendure Dashboard API (zendure_dashboard_api.js)
+//
+// WICHTIG: CONFIG.devices und CONFIG.gridSource* MUESSEN zu der CONFIG in
+// RegelController-Script passen (gleiche IPs, gleiche Reihenfolge der
+// Geraete = gleicher Index i wie "zdmc_dev{i}_..."). 
+//
+// Endpunkte (alle mit CORS, koennen von jeder Seite/jedem Host aus
+// aufgerufen werden):
+//   GET config_api    -> { version, setpoint, hysteresis, devices:[...] }
+//                        devices enthaelt die aktuellen KVS-Werte fuer
+//                        dischargeAllowed / reverse / minSoc / inputLimit.
+//                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
+//   GET status_api    -> { grid:{power,online},
+//                          hubs:[{id,soc,power,acMode,socLimit,
+//                                 gridReverse,pv,minVol,online}] }
+//                        Kein Verlauf - den fuehrt die Dashboard-Seite selbst.
+//   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
+//                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
+// =====================================================================
+
 let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - 1:1 aus zerooutput_multi_kvs.js kopieren, gleiche
@@ -20,7 +41,7 @@ let CONFIG = {
     },
     {
       ip: "192.168.178.150",
-      label: "Fatamorgana",
+      label: "SF800",
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
@@ -36,17 +57,9 @@ let CONFIG = {
   // WO LIEGT DIE KVS?
   //   "local"  - dieses Script laeuft auf demselben Geraet wie das
   //              Regel-Script und greift direkt zu (Shelly.call).
-  //   <IP>     - dieses Script laeuft auf einem EIGENEN Shelly; die KVS
+  //   "<IP>"   - dieses Script laeuft auf einem EIGENEN Shelly; die KVS
   //              wird per nativer RPC ueber HTTP gelesen und geschrieben:
   //              http://<IP>/rpc/KVS.GetMany bzw. /rpc/KVS.Set
-  //
-  // Die getrennte Variante ist die empfohlene: Espruino teilt sich einen
-  // Variablenpool von rund 1600 Eintraegen fuer ALLE Scripte eines Geraets.
-  // Laufen Regel-Script und dieses Script zusammen, fragen beide dieselben
-  // Hubs ab, und zwei gleichzeitige Antworten von je ~1,3 kB sprengen den
-  // Pool - es stirbt, wer als naechstes Speicher anfordert. Auf einem
-  // eigenen Geraet entfaellt das. Die RPC-Anfragen bedient drueben die
-  // Firmware, nicht ein Script, kosten dort also keine Variablen.
   //
   // Bei getrenntem Betrieb ausserdem gridSource auf "remote" stellen und
   // gridSourceIp auf den Shelly mit der EM-Messung zeigen lassen.
@@ -54,14 +67,10 @@ let CONFIG = {
   // ------------------------------------------------------------------
   kvsHost: "192.168.178.117",
 
-  // Hysterese ist im Regel-Script NICHT ueber die KVS veraenderbar. Der Wert
-  // wird hier nur gespiegelt, damit das Dashboard ihn anzeigen kann (gleicher
-  // Wert wie CONFIG.hysteresis im Regel-Script eintragen).
   hysteresis: 12,
 
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js
-  // Where to read the household grid power from, there are three options
   gridSource: "remote", // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
@@ -71,22 +80,16 @@ let CONFIG = {
   gridSourceEmId: 0,
   // ------------------------------------------------------------------
   // ONLY requested when gridSource = "http_json". Example is made for the Zendure Smart Meter 3CT, read the DOC for other devices.
-  // Full URL of a generic JSON grid meter. Only used when gridSource = "http_json".
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
   // Name of the JSON field in that response which holds the total grid power in watts.
   // Kann auch ein Array sein fuer verschachtelte Pfade, z.B. ["StatusSNS","SML","Watt_Summe"].
   gridSourceField: "total_power",
-  // Set to true if the sign of gridSourceField is inverted compared to what
-  // this script expects (positive = importing from grid).
+  // Set to true if the sign of gridSourceField is inverted 
   gridSourceInvert: false,
 
   httpTimeout: 5,
 
-  // Bewusst langsamer als die Dashboard-Seite (4 s). Auf demselben Geraet
-  // laeuft das Regel-Script mit eigenem Zyklus und fragt DIESELBEN Hubs ab.
-  // Beide Scripte teilen sich einen Variablenpool von rund 1600 Eintraegen;
-  // treffen zwei Hub-Antworten von je ~1,3 kB gleichzeitig ein, reisst er.
-  // Ein langsamerer Takt senkt die Wahrscheinlichkeit dieser Kollision.
-  // Die Anzeige wird dadurch bis zu 8 s alt - das ist der Preis.
+  // Bewusst langsamer als die Dashboard-Seite (4 s). 
+  // Die Anzeige wird dadurch bis zu 8 s alt
   pollIntervalSec: 8
 };
