@@ -28,9 +28,7 @@
 //                                 gridReverse,pv,minVol,online}] }
 //                        Kein Verlauf - den fuehrt die Dashboard-Seite selbst.
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
-//                        schreibt jeden Key mit Praefix zdmc_ ungeprueft,
-//                        nacheinander und nie parallel zu einem
-//                        anderen schweren Vorgang.
+//                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
 // =====================================================================
 
 // Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
@@ -147,10 +145,9 @@ let busySince = 0;
 let BUSY_TIMEOUT_MS = 15000;
 
 // Wie lange config_api hoechstens auf einen freien Slot wartet, bevor es
-// trotzdem loslegt: CONFIG_WAIT_MAX * CONFIG_WAIT_MS. Bewusst klein -
-// jeder Versuch kostet einen Timer, und davon hat ein Shelly-Script wenige.
+// trotzdem loslegt: CONFIG_WAIT_MAX * CONFIG_WAIT_MS.
 let CONFIG_WAIT_MS = 200;
-let CONFIG_WAIT_MAX = 5;
+let CONFIG_WAIT_MAX = 10;
 
 function busyNow() {
   if (busy && (Date.now() - busySince) > BUSY_TIMEOUT_MS) {
@@ -168,23 +165,6 @@ function busyLock() {
 function busyRelease() {
   busy = false;
 }
-
-// Shelly.call wirft sofort, wenn der Call-Pool voll ist. Passiert das in einem
-// Timer- oder Endpunkt-Callback, beendet mJS das komplette Script. Deshalb
-// jeder Aufruf ueber diesen Wrapper: im Fehlerfall wird der Callback mit einem
-// Fehlercode aufgerufen, das Script laeuft weiter.
-function safeCall(method, params, cb) {
-  try {
-    Shelly.call(method, params, cb);
-  } catch (e) {
-    // Nicht synchron zurueckrufen: die Schreibkette wuerde sich sonst im
-    // Fehlerfall selbst rekursiv aufrufen, ohne den Stack zwischendurch zu
-    // leeren. Ein einzelner Timer reicht, um das aufzubrechen.
-    print("Shelly.call abgewiesen: " + method);
-    Timer.set(1, false, function () { cb(null, -1); });
-  }
-}
-
 
 // =====================================================
 // KVS-Helfer
@@ -285,7 +265,7 @@ function updateGridPowerStatus(callback) {
   }
 
   if (CONFIG.gridSource === "remote") {
-    safeCall(
+    Shelly.call(
       "HTTP.GET",
       {
         url: "http://" + CONFIG.gridSourceIp + "/rpc/EM.GetStatus?id=" + CONFIG.gridSourceEmId,
@@ -310,7 +290,7 @@ function updateGridPowerStatus(callback) {
   }
 
   if (CONFIG.gridSource === "http_json") {
-    safeCall(
+    Shelly.call(
       "HTTP.GET",
       {
         url: CONFIG.gridSourceUrl,
@@ -351,7 +331,7 @@ function offlineHub(index) {
 function updateHubStatus(index, callback) {
   let cfg = CONFIG.devices[index];
 
-  safeCall(
+  Shelly.call(
     "HTTP.GET",
     {
       url: "http://" + cfg.ip + "/properties/report",
@@ -518,7 +498,7 @@ function serveConfig(res, attempt) {
   let devices = buildDeviceDefaults();
   let setpoint = 0;
 
-  safeCall("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
+  Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
     if (error_code === 0 && result && result.items) {
       let items = kvsItemsToMap(result.items);
       if (items["zdmc_setpoint"] !== undefined) setpoint = Number(items["zdmc_setpoint"]);
@@ -608,32 +588,23 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
     return;
   }
 
-  // Frueher wurden alle Keys in einer Schleife PARALLEL geschrieben - bei
-  // mehreren Keys also mehrere offene Shelly.call gleichzeitig. Jetzt der
-  // Reihe nach.
-  //
-  // Dieser Endpunkt wartet BEWUSST NICHT auf einen freien Slot: Warten liefe
-  // ueber Timer.set, und ein Shelly-Script hat nur wenige gleichzeitige Timer.
-  // KVS.Set ist gegenueber dem Hub-Parsing ohnehin billig; die Entzerrung
-  // uebernimmt die Dashboard-Seite, indem sie waehrend einer Schreibkette
-  // nicht pollt und zwischen den Schritten pausiert.
-  writeKeysSequential(res, data, allowedKeys, 0, true);
-});
+  let remaining = allowedKeys.length;
+  let allOk = true;
 
-function writeKeysSequential(res, data, keys, index, allOk) {
-  if (index >= keys.length) {
-    res.code = allOk ? 200 : 500;
-    res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
-    res.body = JSON.stringify({ success: allOk, written: keys.length });
-    res.send();
-    return;
+  for (let i = 0; i < allowedKeys.length; i++) {
+    let k = allowedKeys[i];
+    Shelly.call("KVS.Set", { key: k, value: String(data[k]) }, function (result, error_code) {
+      if (error_code !== 0) allOk = false;
+      remaining--;
+      if (remaining === 0) {
+        res.code = allOk ? 200 : 500;
+        res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+        res.body = JSON.stringify({ success: allOk, written: allowedKeys.length });
+        res.send();
+      }
+    });
   }
-
-  let k = keys[index];
-  safeCall("KVS.Set", { key: k, value: String(data[k]) }, function (result, error_code) {
-    writeKeysSequential(res, data, keys, index + 1, allOk && error_code === 0);
-  });
-}
+});
 
 print("Zendure Dashboard API v" + VERSION + " gestartet (nur JSON-Endpunkte, kein HTML).");
 print("config_api / status_api / kvs_set_api unter http://<shelly-ip>/script/<id>/<name>");
