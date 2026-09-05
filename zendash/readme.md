@@ -1,3 +1,6 @@
+<img width="1000" alt="image" src="https://github.com/user-attachments/assets/c0d895d6-cf44-4bad-85ff-3d6346015b26" />
+
+
 # Zendure Grid Dashboard — Inbetriebnahme
 
 Vier Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen eigenen, schlanken API-Endpunkt auf dem Shelly, getrennt vom Regel-Script):
@@ -66,6 +69,7 @@ Beide Dateien (`zendure_proxy.py`, `zendure-dashboard.html`) müssen im selben O
 ```bash
 python3 zendure_proxy.py
 ```
+<img width="749" alt="image" src="https://github.com/user-attachments/assets/6e57b539-54f3-43a7-ad06-765ef67f1262" />
 
 Danach im Browser öffnen:
 
