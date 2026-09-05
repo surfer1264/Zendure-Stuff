@@ -175,12 +175,13 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | Sollwert (obere Reihe, links) | `zdmc_setpoint` | −40 bis +40 W, 10er-Schritte |
 | Entladen erlaubt | `zdmc_dev{id}_dischargeAllowed` | Schalter (0/1) |
 | Laden vom Netz erlaubt | `zdmc_dev{id}_reverse` | Schalter (0/1) |
-| Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10–98 %, 2er-Schritte |
+| Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10 % bis `maxSoc` − 1, 1er-Schritte |
 | Ladeleistung aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
 
 ### Was die Regler bewirken
 
 * **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern das Gerät selbst.
+* Die **Obergrenze der Reserve** leitet das Dashboard aus `maxSoc` ab und hält einen Prozentpunkt Abstand. Das ist kein Schoenheitsfehler, sondern ein Schutz: Das Regel-Script gleicht `minSoc` und `maxSoc` nur beim **Start** gegeneinander ab, nicht beim Live-Override über die KVS. Rutschte `minSoc` über `maxSoc`, dürfte das Gerät weder unter die Reserve entladen noch bis dorthin laden — es fiele dauerhaft aus der Regelung, und `syncSocLimits()` schriebe das verdrehte Wertepaar zusätzlich auf die Hardware, wo es einen Scriptstopp überdauert. Wer den Wert direkt in der KVS setzt, umgeht diesen Schutz; dagegen hülfe nur eine Prüfung im Regel-Script selbst (`v < dev.maxSoc` statt `v <= 99`).
 * **Manuelles Laden** ist eine Aktion, kein einzelner Schalter. Der Regler „Ladeleistung aus dem Netz" wählt nur die Leistung aus und schreibt für sich genommen nichts; der Knopf darunter führt drei Schreibvorgänge in der richtigen Reihenfolge aus:
   1. `dischargeAllowed = 0`
   2. `reverse = 0`
@@ -199,6 +200,8 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
 ### Was die Anzeige zeigt
 
+* Unter dem SoC steht das **Arbeitsfenster** des Geräts in Kurzform, z. B. `SoC · 15–100 %`: von der Reserve (`minSoc`, einstellbar) bis zum Ladeziel (`maxSoc`, nur Anzeige — der Wert kommt aus der Konfiguration und ist nicht über die KVS änderbar).
+* Neben dem Sollwert steht die **Hysterese** als Toleranzangabe. Sie ist nicht einstellbar, gehört aber dorthin: Sie sagt, wie weit der Netzsaldo abweichen darf, bevor das Regel-Script überhaupt nachsteuert. Ohne sie wirkt ein Sollwert exakter, als er ist.
 * **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „Warum tut der Hub nichts?"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
 * **PV-Eingang und schwächste Zelle** stehen als kleine Zeile unter der Leistung jeder Hub-Karte:
   * Der PV-Wert ist `solarInputPower`, also der Gesamteingang des Geräts. Fehlt das Feld — etwa bei reinen AC-Ladern —, entfällt die Angabe komplett, statt fälschlich „0 W" zu zeigen.

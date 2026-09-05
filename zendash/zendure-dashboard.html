@@ -322,7 +322,7 @@
         <div class="hero-label">Sollwert <span class="param-key mono">zdmc_setpoint</span></div>
         <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
         <input type="range" id="setpointSlider" min="-40" max="40" step="10" value="0">
-        <div class="hero-state">Ziel für den Netzsaldo, −40 bis +40 W</div>
+        <div class="hero-state" id="setpointState">Ziel für den Netzsaldo, −40 bis +40 W</div>
       </div>
       <div class="card">
         <div class="hero-label">Netzbezug / Einspeisung</div>
@@ -535,8 +535,18 @@
   const setpointSlider = document.getElementById('setpointSlider');
   const setpointValueEl = document.getElementById('setpointValue');
 
+  const setpointStateEl = document.getElementById('setpointState');
+
   function showSetpoint(v){
     setpointValueEl.textContent = (v > 0 ? '+' : '') + v;
+  }
+
+  // Die Hysterese ist nicht einstellbar, gehoert aber neben den Sollwert:
+  // sie sagt, wie weit der Netzsaldo abweichen darf, bevor das Regel-Script
+  // ueberhaupt nachsteuert. Ohne sie wirkt ein Sollwert exakter, als er ist.
+  function showSetpointState(){
+    setpointStateEl.textContent =
+      'Toleranz ±' + liveHysteresis + ' W · einstellbar −40 bis +40 W';
   }
 
   setpointSlider.addEventListener('input', function(e){
@@ -655,6 +665,25 @@
   let hubs = [];
   const hubsGrid = document.getElementById('hubsGrid');
 
+  // Obergrenze fuer die Reserve. Sie muss UNTER maxSoc bleiben: Das
+  // Regel-Script normalisiert die beiden Werte nur beim Start gegeneinander,
+  // nicht beim Live-Override ueber die KVS. Kaeme minSoc ueber maxSoc, duerfte
+  // das Geraet weder unter die Reserve entladen noch bis dorthin laden - es
+  // fiele dauerhaft aus der Regelung, und der verdrehte Grenzwert landete
+  // per syncSocLimits() auch noch auf der Hardware.
+  // Arbeitsfenster des Geraets: von der Reserve bis zum Ladeziel. maxSoc
+  // stammt aus der Konfiguration und ist nicht ueber die KVS aenderbar -
+  // deshalb hier nur Anzeige, kein Regler.
+  function socSubText(d){
+    const max = Number(d.maxSoc);
+    return 'SoC · ' + d.minSoc + '–' + (max > 0 ? max : 100) + ' %';
+  }
+
+  function minSocCeiling(d){
+    const max = Number(d.maxSoc);
+    return Math.max(10, Math.min(99, (max > 0 ? max : 100) - 1));
+  }
+
   function buildHubCards(){
     hubsGrid.innerHTML = '';
     hubs.forEach(function(d){
@@ -671,7 +700,7 @@
           '<div class="battery"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
           '<div class="hub-metrics">' +
             '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
-            '<div class="soc-sub" id="socSub-' + d.id + '">SoC · Reserve ' + d.minSoc + '%</div>' +
+            '<div class="soc-sub" id="socSub-' + d.id + '" title="Arbeitsfenster: Reserve bis Ladeziel">' + socSubText(d) + '</div>' +
             '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
             '<div class="pack-line" id="packLine-' + d.id + '"></div>' +
           '</div>' +
@@ -688,8 +717,8 @@
         '</div>' +
         '<div class="ctrl-row">' +
           '<div class="ctrl-head"><span class="lbl">Reserve (min. SoC)</span><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span></div>' +
-          '<span class="key mono">zdmc_dev' + d.id + '_minSoc</span>' +
-          '<input type="range" id="minSoc-' + d.id + '" min="10" max="98" step="1" value="' + d.minSoc + '">' +
+          '<span class="key mono">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
+          '<input type="range" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
         '</div>' +
         '<div class="ctrl-row">' +
           '<div class="ctrl-head"><span class="lbl">Ladeleistung aus dem Netz</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : 'aus') + '</span></div>' +
@@ -898,6 +927,7 @@
     // Nur Rechengroesse fuer die Import/Export/Ausgeglichen-Einstufung unten -
     // im Regel-Script ist die Hysterese nicht ueber die KVS aenderbar.
     liveHysteresis = Number(cfg.hysteresis || 12);
+    showSetpointState();
     showVersion(cfg.version);
 
     hubs = (cfg.devices || []).map(function(d){
@@ -929,6 +959,9 @@
       const ms = document.getElementById('minSoc-' + d.id);
       const msVal = document.getElementById('minSocValue-' + d.id);
       if (ms && !isBusy(ms) && d.minSoc !== undefined) {
+        // Obergrenze mitfuehren - maxSoc kommt aus der Konfiguration und
+        // kann sich nach einem Neustart des API-Scripts geaendert haben.
+        ms.max = minSocCeiling(d);
         ms.value = d.minSoc;
         if (msVal) msVal.textContent = d.minSoc + ' %';
       }
@@ -972,6 +1005,7 @@
 
         liveSetpoint = Number(cfg.setpoint || 0);
         liveHysteresis = Number(cfg.hysteresis || liveHysteresis);
+        showSetpointState();
         showVersion(cfg.version);
         if (!isBusy(setpointSlider)) {
           setpointSlider.value = liveSetpoint;
@@ -1151,7 +1185,7 @@
 
       const socEl = document.getElementById('socValue-' + d.id);
       const socSubEl = document.getElementById('socSub-' + d.id);
-      if (socSubEl) socSubEl.textContent = 'SoC · Reserve ' + d.minSoc + '%';
+      if (socSubEl) socSubEl.textContent = socSubText(d);
       const fill = document.getElementById('battFill-' + d.id);
       const powerEl = document.getElementById('powerValue-' + d.id);
       const hubEl = document.getElementById('hub-' + d.id);
