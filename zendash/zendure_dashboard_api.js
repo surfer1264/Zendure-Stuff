@@ -31,10 +31,6 @@
 //                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
 // =====================================================================
 
-// Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-// Dashboard eine Abweichung zwischen Seite und API sichtbar machen kann.
-let VERSION = "2.0";
-
 let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - 1:1 aus zerooutput_multi_kvs.js kopieren, gleiche
@@ -69,6 +65,28 @@ let CONFIG = {
     }
   ],
 
+  // ------------------------------------------------------------------
+  // WO LIEGT DIE KVS?
+  //   "local"  - dieses Script laeuft auf demselben Geraet wie das
+  //              Regel-Script und greift direkt zu (Shelly.call).
+  //   <IP>     - dieses Script laeuft auf einem EIGENEN Shelly; die KVS
+  //              wird per nativer RPC ueber HTTP gelesen und geschrieben:
+  //              http://<IP>/rpc/KVS.GetMany bzw. /rpc/KVS.Set
+  //
+  // Die getrennte Variante ist die empfohlene: Espruino teilt sich einen
+  // Variablenpool von rund 1600 Eintraegen fuer ALLE Scripte eines Geraets.
+  // Laufen Regel-Script und dieses Script zusammen, fragen beide dieselben
+  // Hubs ab, und zwei gleichzeitige Antworten von je ~1,3 kB sprengen den
+  // Pool - es stirbt, wer als naechstes Speicher anfordert. Auf einem
+  // eigenen Geraet entfaellt das. Die RPC-Anfragen bedient drueben die
+  // Firmware, nicht ein Script, kosten dort also keine Variablen.
+  //
+  // Bei getrenntem Betrieb ausserdem gridSource auf "remote" stellen und
+  // gridSourceIp auf den Shelly mit der EM-Messung zeigen lassen.
+  // Voraussetzung: auf dem KVS-Geraet ist keine Authentifizierung aktiv.
+  // ------------------------------------------------------------------
+  kvsHost: "192.168.178.117",
+
   // Hysterese ist im Regel-Script NICHT ueber die KVS veraenderbar. Der Wert
   // wird hier nur gespiegelt, damit das Dashboard ihn anzeigen kann (gleicher
   // Wert wie CONFIG.hysteresis im Regel-Script eintragen).
@@ -77,11 +95,11 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js
   // Where to read the household grid power from, there are three options
-  gridSource: "local", // "local", "remote", "http_json"
+  gridSource: "remote", // "local", "remote", "http_json"
   // ------------------------------------------------------------------
   // ONLY required/used when gridSource = "remote".
   // IP address of the Shelly Pro 3EM providing the grid measurement.
-  gridSourceIp: "<IP_OF_YOUR_3EM_PRO_SHELLY>",
+  gridSourceIp: "192.168.178.117",
   // EM channel id to read (usually 0). Only used when gridSource = "remote".
   gridSourceEmId: 0,
   // ------------------------------------------------------------------
@@ -96,8 +114,20 @@ let CONFIG = {
   gridSourceInvert: false,
 
   httpTimeout: 5,
-  pollIntervalSec: 5
+
+  // Bewusst langsamer als die Dashboard-Seite (4 s). Auf demselben Geraet
+  // laeuft das Regel-Script mit eigenem Zyklus und fragt DIESELBEN Hubs ab.
+  // Beide Scripte teilen sich einen Variablenpool von rund 1600 Eintraegen;
+  // treffen zwei Hub-Antworten von je ~1,3 kB gleichzeitig ein, reisst er.
+  // Ein langsamerer Takt senkt die Wahrscheinlichkeit dieser Kollision.
+  // Die Anzeige wird dadurch bis zu 8 s alt - das ist der Preis.
+  pollIntervalSec: 8
 };
+
+// Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
+// Dashboard eine Abweichung zwischen Seite und API sichtbar machen kann -
+// die Fusszeile der Seite faerbt sich, wenn HTML und Script auseinanderlaufen.
+let VERSION = "2.1";
 
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
@@ -117,6 +147,11 @@ let LATEST_STATUS = {
   hubs: []
 };
 
+// Fertige JSON-Antwort fuer status_api. Wird einmal je Hintergrund-Durchlauf
+// gebaut statt bei jeder Anfrage: bei mehreren offenen Dashboards sparte das
+// sonst mehrfach dieselbe Serialisierung derselben Daten.
+let STATUS_BODY = JSON.stringify(LATEST_STATUS);
+
 // Zeitpunkt der letzten Anfrage von der Dashboard-Seite (irgendein
 // Endpunkt). Solange laenger nichts reinkam, pausiert backgroundPoll die
 // eigentlichen HTTP-Abfragen an Netzzaehler/Hubs (kein Dashboard offen =
@@ -128,21 +163,31 @@ let IDLE_MS = 15000;
 // =====================================================
 // Ueberlappungsschutz
 //
-// Die beiden speicherhungrigen Vorgaenge sind das Parsen der Hub-Antwort
+// Die beiden speicherhungrigen Vorgaenge sind das Parsen der Hub-Antworten
 // (/properties/report, mehrere kB Rohtext + Objektbaum) und das KVS.GetMany
-// in config_api. Liefen sie gleichzeitig, addierten sich ihre Spitzen - genau
-// das treibt memPeak hoch. Das Flag laesst immer nur einen von beiden laufen.
+// in config_api. Laufen sie gleichzeitig, addieren sich ihre Spitzen.
 //
-// Zusaetzlich schuetzt es davor, dass sich der Hintergrund-Timer selbst
-// ueberholt, wenn ein Hub laenger braucht als pollIntervalSec.
+// WICHTIG: Das war frueher EIN Boolean fuer ZWEI unabhaengige Nutzer - wer
+// zuerst freigab, gab auch fuer den anderen frei. Gab config_api nach seiner
+// Wartezeit auf und legte danach das Flag um, startete der naechste Timer-Takt
+// einen zweiten Hintergrund-Durchlauf, obwohl der erste noch lief. Bei
+// langsamen oder nicht erreichbaren Hubs stapelten sich so mehrere Durchlaeufe
+// mit je einem geparsten Report im Heap. Deshalb jetzt ein Zaehler statt eines
+// Flags, plus ein eigener Riegel fuer den Hintergrund-Durchlauf.
 // =====================================================
 
-let busy = false;
+let busyCount = 0;
 let busySince = 0;
 
-// Sicherung: bleibt ein Callback aus (z.B. abgewiesener Shelly.call), haengt
-// das Flag sonst dauerhaft und die Abfragen stehen still.
-let BUSY_TIMEOUT_MS = 15000;
+// Eigener Schutz des Hintergrund-Durchlaufs gegen sich selbst - unabhaengig
+// davon, was die Endpunkte mit dem Zaehler machen.
+let bgRunning = false;
+
+// Sicherung gegen ein haengendes Callback. Muss groesser sein als der
+// laengstmoegliche Durchlauf, sonst greift sie mitten im Normalbetrieb und
+// erlaubt genau die Ueberlappung, die sie verhindern soll:
+// jede Abfrage (Netzzaehler + jeder Hub) kann in den Timeout laufen.
+let BUSY_TIMEOUT_MS = (CONFIG.devices.length + 1) * CONFIG.httpTimeout * 1000 + 5000;
 
 // Wie lange config_api hoechstens auf einen freien Slot wartet, bevor es
 // trotzdem loslegt: CONFIG_WAIT_MAX * CONFIG_WAIT_MS.
@@ -150,20 +195,21 @@ let CONFIG_WAIT_MS = 200;
 let CONFIG_WAIT_MAX = 10;
 
 function busyNow() {
-  if (busy && (Date.now() - busySince) > BUSY_TIMEOUT_MS) {
-    print("busy-Flag haengt seit ueber " + (BUSY_TIMEOUT_MS / 1000) + " s - zurueckgesetzt");
-    busy = false;
+  if (busyCount > 0 && (Date.now() - busySince) > BUSY_TIMEOUT_MS) {
+    print("Ueberlappungsschutz haengt seit ueber " + (BUSY_TIMEOUT_MS / 1000) + " s - zurueckgesetzt");
+    busyCount = 0;
+    bgRunning = false;
   }
-  return busy;
+  return busyCount > 0;
 }
 
-function busyLock() {
-  busy = true;
+function busyEnter() {
+  busyCount++;
   busySince = Date.now();
 }
 
-function busyRelease() {
-  busy = false;
+function busyLeave() {
+  if (busyCount > 0) busyCount--;
 }
 
 // =====================================================
@@ -187,6 +233,96 @@ function kvsItemsToMap(rawItems) {
     }
   }
   return map;
+}
+
+// ---------------------------------------------------------------------
+// KVS-Zugriff: lokal per Shelly.call, entfernt per nativer RPC ueber HTTP.
+//
+// Beide Wege liefern denselben "store" an den Aufrufer:
+//   lokal    - ein fertiges Objekt {key: value, ...}
+//   entfernt - der ROHE Antworttext; einzelne Werte holt kvsValue() daraus,
+//              ohne JSON.parse (siehe Begruendung bei jsonNum unten)
+// Bei einem Fehler ist store null; der Aufrufer arbeitet dann mit den
+// Vorgabewerten aus CONFIG weiter, statt die Anfrage haengen zu lassen.
+// ---------------------------------------------------------------------
+
+function kvsIsRemote() {
+  return CONFIG.kvsHost !== "local" && CONFIG.kvsHost !== "";
+}
+
+function kvsGetAll(callback) {
+  if (!kvsIsRemote()) {
+    Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
+      if (error_code !== 0 || !result || !result.items) { callback(null); return; }
+      callback(kvsItemsToMap(result.items));
+    });
+    return;
+  }
+
+  Shelly.call(
+    "HTTP.GET",
+    {
+      url: "http://" + CONFIG.kvsHost + "/rpc/KVS.GetMany?match=" + KVS_MATCH,
+      timeout: CONFIG.httpTimeout
+    },
+    function (res, error_code) {
+      if (error_code !== 0 || !res || res.code !== 200) { callback(null); return; }
+      let body = res.body;
+      res = null;
+      callback(body);
+    }
+  );
+}
+
+// Holt einen einzelnen Wert aus dem store - egal welcher Form.
+function kvsValue(store, key) {
+  if (store === null || store === undefined) return undefined;
+
+  if (typeof store === "string") {
+    let i = store.indexOf('"' + key + '"');
+    if (i < 0) return undefined;
+    // Nach dem Schluessel folgt das Wertobjekt; dessen "value" lesen.
+    let v = jsonNum(store, "value", i);
+    return (v === null) ? undefined : v;
+  }
+
+  return store[key];
+}
+
+// Nur Zahlen zulassen. Schuetzt beim entfernten Schreiben davor, dass ein
+// Wert aus dem Query-String die URL zerlegt, und haelt die KVS sauber -
+// alle zdmc_-Werte sind numerisch.
+function kvsSafeNumber(value) {
+  let str = String(value);
+  if (str.length === 0 || str.length > 12) return null;
+  for (let i = 0; i < str.length; i++) {
+    let c = str.charAt(i);
+    if ((c < "0" || c > "9") && c !== "-" && c !== ".") return null;
+  }
+  return str;
+}
+
+function kvsSetOne(key, value, callback) {
+  let str = kvsSafeNumber(value);
+  if (str === null) { callback(false); return; }
+
+  if (!kvsIsRemote()) {
+    Shelly.call("KVS.Set", { key: key, value: str }, function (result, error_code) {
+      callback(error_code === 0);
+    });
+    return;
+  }
+
+  Shelly.call(
+    "HTTP.GET",
+    {
+      url: "http://" + CONFIG.kvsHost + "/rpc/KVS.Set?key=" + key + "&value=" + str,
+      timeout: CONFIG.httpTimeout
+    },
+    function (res, error_code) {
+      callback(error_code === 0 && !!res && res.code === 200);
+    }
+  );
 }
 
 // mJS kennt kein globales decodeURIComponent() - eigene, einfache
@@ -237,6 +373,64 @@ function getQueryParam(query, name) {
 // String-Key ODER ein Array verschachtelter Keys sein (z.B. fuer
 // gridSourceField: ["StatusSNS","SML","Watt_Summe"]). Spiegelbildlich zu
 // handleGenericGridResponse() in zerooutput_multi_kvs.js.
+// ---------------------------------------------------------------------
+// Werte aus der Hub-Antwort OHNE JSON.parse ziehen.
+//
+// Grund steht im Geraete-Log: Espruino teilt sich einen Variablenpool von
+// rund 1600 Eintraegen fuer ALLE Scripte zusammen. Eine geparste
+// /properties/report-Antwort (~1,3 kB, 60+ Felder) belegt davon mehrere
+// hundert. Laufen Regel-Script und dieses Script gleichzeitig durch ihren
+// Parse, reisst der Pool - und es stirbt, wer als naechstes anfordert.
+// Aus dem Rohtext gelesen bleibt nur der String selbst im Speicher.
+//
+// Preis dafuer: Aendert Zendure die Feldnamen, faellt das erst im Betrieb
+// auf. Deshalb liefert jede Funktion null statt zu raten, und ein fehlendes
+// electricLevel gilt als "Hub nicht auswertbar".
+// ---------------------------------------------------------------------
+
+// Liest die Zahl hinter "key": aus dem Rohtext. null, wenn nicht vorhanden.
+// "from" ist der Startoffset - bewusst ein Offset und kein Teilstring, denn
+// s.slice() wuerde bei jedem Aufruf den kompletten Rest kopieren.
+function jsonNum(s, key, from) {
+  let tag = '"' + key + '"';
+  let i = s.indexOf(tag, from || 0);
+  if (i < 0) return null;
+  i = s.indexOf(":", i + tag.length);
+  if (i < 0) return null;
+
+  let j = i + 1;
+  while (j < s.length && s.charAt(j) === " ") j++;
+  // KVS liefert Werte teils als String ("value":"12") - Anfuehrungszeichen
+  // ueberspringen, damit dieselbe Funktion beide Formen liest.
+  if (s.charAt(j) === '"') j++;
+  let start = j;
+  while (j < s.length) {
+    let c = s.charAt(j);
+    if ((c >= "0" && c <= "9") || c === "-" || c === "+" || c === "." || c === "e" || c === "E") j++;
+    else break;
+  }
+  if (j === start) return null;
+
+  let v = Number(s.slice(start, j));
+  return (v !== v) ? null : v;
+}
+
+// Kleinster Wert ueber ALLE Vorkommen eines Keys - fuer minVol, das je Pack
+// einmal auftaucht. Werte <= 0 (schlafender Pack) zaehlen nicht mit.
+function jsonMin(s, key) {
+  let tag = '"' + key + '"';
+  let best = null;
+  let from = 0;
+  while (true) {
+    let i = s.indexOf(tag, from);
+    if (i < 0) break;
+    from = i + tag.length;
+    let v = jsonNum(s, key, i);
+    if (v !== null && v > 0 && (best === null || v < best)) best = v;
+  }
+  return best;
+}
+
 function readFieldPath(data, field) {
   if (typeof field === "string") {
     return data[field];
@@ -276,14 +470,14 @@ function updateGridPowerStatus(callback) {
           callback({ power: 0, online: false });
           return;
         }
-        let data;
-        try { data = JSON.parse(res.body); } catch (e) { callback({ power: 0, online: false }); return; }
+        // Wie bei den Hubs ohne JSON.parse - spart Variablen im gemeinsamen Pool.
+        let power = jsonNum(res.body, "total_act_power");
         res = null;
-        if (data.total_act_power === undefined) {
+        if (power === null) {
           callback({ power: 0, online: false });
           return;
         }
-        callback({ power: Math.round(data.total_act_power), online: true });
+        callback({ power: Math.round(power), online: true });
       }
     );
     return;
@@ -342,64 +536,35 @@ function updateHubStatus(index, callback) {
         callback(offlineHub(index));
         return;
       }
-      let data;
-      try { data = JSON.parse(res.body); } catch (e) { callback(offlineHub(index)); return; }
 
-      // Roh-Antwort sofort freigeben: /properties/report ist mehrere kB gross
-      // und muss nicht parallel zum geparsten Objekt im Heap liegen.
+      let body = res.body;
       res = null;
 
-      if (!data.properties) {
+      let soc = jsonNum(body, "electricLevel");
+      if (soc === null) {
         callback(offlineHub(index));
         return;
       }
 
-      let p = data.properties;
-
-      // packData liegt NEBEN properties, nicht darin - also vor dem Freigeben
-      // von data auslesen. Pro Pack ist minVol bereits das Minimum ueber alle
-      // Zellen dieses Packs; das Minimum darueber ist die schwaechste Zelle im
-      // ganzen Stapel. Rohwert (Faktor 0.01 V) wird unveraendert
-      // durchgereicht, die Umrechnung macht die Dashboard-Seite.
-      let minVol = null;
-      let packs = data.packData;
-      if (packs && packs.length) {
-        for (let k = 0; k < packs.length; k++) {
-          let v = packs[k] ? packs[k].minVol : undefined;
-          // Schlafende Packs melden 0 - solche Werte nicht mitrechnen.
-          if (typeof v === "number" && v > 0) {
-            if (minVol === null || v < minVol) minVol = v;
-          }
-        }
-      }
-      data = null;
-
+      let acMode = jsonNum(body, "acMode");
       let power = 0;
-      if (p.acMode === 2) {
-        power = p.outputHomePower || 0;
-      } else if (p.acMode === 1) {
-        power = (p.gridInputPower || 0) * -1;
-      }
+      if (acMode === 2) power = jsonNum(body, "outputHomePower") || 0;
+      else if (acMode === 1) power = (jsonNum(body, "gridInputPower") || 0) * -1;
 
-      callback({
+      let hub = {
         id: index,
-        soc: p.electricLevel,
+        soc: soc,
         power: Math.round(power),
-        // Zusatzstatus fuer die Anzeige im Dashboard:
-        //   acMode     0/undef = Standby, 1 = Laden (AC-Eingang), 2 = Entladen
-        //   socLimit   0 = frei, 1 = Laden gesperrt (voll), 2 = Entladen gesperrt
-        //   gridReverse 1 = Netzladen freigegeben, 2 = gesperrt (Flotte voll)
-        acMode: (p.acMode !== undefined) ? p.acMode : null,
-        socLimit: (p.socLimit !== undefined) ? p.socLimit : null,
-        gridReverse: (p.gridReverse !== undefined) ? p.gridReverse : null,
-        // null bedeutet: Geraet kennt keinen PV-Eingang (AC-Lader). Eine 0
-        // dagegen heisst: Eingang vorhanden, liefert gerade nichts. Der
-        // Unterschied muss erhalten bleiben, sonst zeigt das Dashboard fuer
-        // AC-Geraete faelschlich "0 W" an.
-        pv: (p.solarInputPower !== undefined) ? p.solarInputPower : null,
-        minVol: minVol,
+        acMode: acMode,
+        socLimit: jsonNum(body, "socLimit"),
+        gridReverse: jsonNum(body, "gridReverse"),
+        pv: jsonNum(body, "solarInputPower"),
+        minVol: jsonMin(body, "minVol"),
         online: true
-      });
+      };
+      body = null;
+
+      callback(hub);
     }
   );
 }
@@ -422,16 +587,20 @@ function backgroundPoll() {
     return;
   }
 
-  // Belegt: entweder laeuft der vorige Durchlauf noch, oder config_api
-  // arbeitet gerade. Diesen Takt auslassen, beim naechsten neu versuchen.
+  // Laeuft der vorige Durchlauf noch, oder arbeitet gerade ein Endpunkt?
+  // Dann diesen Takt auslassen und beim naechsten neu versuchen.
+  if (bgRunning) return;
   if (busyNow()) return;
 
-  busyLock();
+  bgRunning = true;
+  busyEnter();
   updateGridPowerStatus(function (grid) {
     LATEST_STATUS.grid = grid;
     updateAllHubsStatus(0, [], function (hubs) {
       LATEST_STATUS.hubs = hubs;
-      busyRelease();
+      STATUS_BODY = JSON.stringify(LATEST_STATUS);
+      bgRunning = false;
+      busyLeave();
     });
   });
 }
@@ -483,10 +652,47 @@ function handlePreflight(req, res) {
   return true;
 }
 
-// Wartet auf einen freien Slot, bevor das KVS.GetMany losgeschickt wird.
-// Nach CONFIG_WAIT_MAX vergeblichen Anlaeufen wird trotzdem geantwortet -
-// lieber eine ueberlappende Spitze als eine haengende Dashboard-Abfrage.
+// Sammelabfrage fuer config_api: mehrere gleichzeitige Anfragen teilen sich
+// EIN KVS.GetMany. Bewusst ohne Ergebnis-Cache - ein dauerhaft gehaltener
+// Antwort-String kostet im knappen Variablenpool mehr, als er einspart.
+// Kurzzeit-Cache fuer config_api. Mehrere offene Dashboards (oder Tabs)
+// fragen sonst unabhaengig voneinander dieselben KVS-Werte ab, jedes mit einem
+// eigenen KVS.GetMany. Die Zeitspanne ist bewusst kurz und liegt unter der
+// Nachlaufzeit, die die Dashboard-Seite nach einer Schreibkette einhaelt -
+// eine gerade gesetzte Aenderung wird also nie aus dem Cache beantwortet.
+// Laeuft bereits eine Abfrage (inklusive Wartezeit auf einen freien Slot),
+// stellen sich weitere Anfragen hier an, statt ein eigenes KVS.GetMany
+// loszuschicken. Mehrere offene Dashboards erzeugen dadurch genau eine
+// Abfrage, nicht eine pro Seite.
+let configPending = false;
+let configWaiters = [];
+
+function sendConfigBody(res, body) {
+  res.code = 200;
+  res.headers = [
+    ["Content-Type", "application/json"],
+    ["Access-Control-Allow-Origin", "*"]
+  ];
+  res.body = body;
+  res.send();
+}
+
+function answerConfigWaiters(body) {
+  for (let i = 0; i < configWaiters.length; i++) {
+    sendConfigBody(configWaiters[i], body);
+  }
+  configWaiters = [];
+}
+
 function serveConfig(res, attempt) {
+  if (attempt === 0) {
+    if (configPending) {
+      configWaiters[configWaiters.length] = res;
+      return;
+    }
+    configPending = true;
+  }
+
   if (busyNow() && attempt < CONFIG_WAIT_MAX) {
     Timer.set(CONFIG_WAIT_MS, false, function () {
       serveConfig(res, attempt + 1);
@@ -494,41 +700,39 @@ function serveConfig(res, attempt) {
     return;
   }
 
-  busyLock();
+  busyEnter();
   let devices = buildDeviceDefaults();
   let setpoint = 0;
 
-  Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
-    if (error_code === 0 && result && result.items) {
-      let items = kvsItemsToMap(result.items);
-      if (items["zdmc_setpoint"] !== undefined) setpoint = Number(items["zdmc_setpoint"]);
+  kvsGetAll(function (store) {
+    // store === null: KVS nicht lesbar. Dann bleiben die Vorgabewerte aus
+    // CONFIG stehen, damit das Dashboard trotzdem eine Antwort bekommt.
+    let v = kvsValue(store, "zdmc_setpoint");
+    if (v !== undefined) setpoint = Number(v);
 
-      for (let i = 0; i < devices.length; i++) {
-        let dKey = "zdmc_dev" + i + "_dischargeAllowed";
-        let rKey = "zdmc_dev" + i + "_reverse";
-        let mKey = "zdmc_dev" + i + "_minSoc";
-        let lKey = "zdmc_dev" + i + "_inputLimit";
-        if (items[dKey] !== undefined) devices[i].dischargeAllowed = (Number(items[dKey]) !== 0);
-        if (items[rKey] !== undefined) devices[i].reverse = (Number(items[rKey]) !== 0);
-        if (items[mKey] !== undefined) devices[i].minSoc = Number(items[mKey]);
-        if (items[lKey] !== undefined) devices[i].inputLimit = Number(items[lKey]);
-      }
+    for (let i = 0; i < devices.length; i++) {
+      let d = kvsValue(store, "zdmc_dev" + i + "_dischargeAllowed");
+      let r = kvsValue(store, "zdmc_dev" + i + "_reverse");
+      let m = kvsValue(store, "zdmc_dev" + i + "_minSoc");
+      let l = kvsValue(store, "zdmc_dev" + i + "_inputLimit");
+      if (d !== undefined) devices[i].dischargeAllowed = (Number(d) !== 0);
+      if (r !== undefined) devices[i].reverse = (Number(r) !== 0);
+      if (m !== undefined) devices[i].minSoc = Number(m);
+      if (l !== undefined) devices[i].inputLimit = Number(l);
     }
 
-    res.code = 200;
-    res.headers = [
-      ["Content-Type", "application/json"],
-      ["Access-Control-Allow-Origin", "*"]
-    ];
-    res.body = JSON.stringify({
+    let body = JSON.stringify({
       version: VERSION,
       setpoint: setpoint,
-      // Nur zur Anzeige - das Regel-Script liest keinen KVS-Wert dafuer.
       hysteresis: CONFIG.hysteresis,
       devices: devices
     });
-    busyRelease();
-    res.send();
+
+    busyLeave();
+    configPending = false;
+
+    sendConfigBody(res, body);
+    answerConfigWaiters(body);
   });
 }
 
@@ -546,7 +750,7 @@ HTTPServer.registerEndpoint("status_api", function (req, res) {
     ["Content-Type", "application/json"],
     ["Access-Control-Allow-Origin", "*"]
   ];
-  res.body = JSON.stringify(LATEST_STATUS);
+  res.body = STATUS_BODY;
   res.send();
 });
 
@@ -588,23 +792,26 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
     return;
   }
 
-  let remaining = allowedKeys.length;
-  let allOk = true;
-
-  for (let i = 0; i < allowedKeys.length; i++) {
-    let k = allowedKeys[i];
-    Shelly.call("KVS.Set", { key: k, value: String(data[k]) }, function (result, error_code) {
-      if (error_code !== 0) allOk = false;
-      remaining--;
-      if (remaining === 0) {
-        res.code = allOk ? 200 : 500;
-        res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
-        res.body = JSON.stringify({ success: allOk, written: allowedKeys.length });
-        res.send();
-      }
-    });
-  }
+  writeKeys(res, data, allowedKeys, 0, true);
 });
+
+// Nacheinander schreiben, nicht parallel: bei entfernter KVS ist jeder
+// Schreibvorgang eine eigene HTTP-Anfrage, und mehrere gleichzeitig offene
+// Anfragen sind genau die Spitze, die wir vermeiden wollen.
+function writeKeys(res, data, keys, index, allOk) {
+  if (index >= keys.length) {
+    res.code = allOk ? 200 : 500;
+    res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+    res.body = JSON.stringify({ success: allOk, written: keys.length });
+    res.send();
+    return;
+  }
+
+  let k = keys[index];
+  kvsSetOne(k, data[k], function (ok) {
+    writeKeys(res, data, keys, index + 1, allOk && ok);
+  });
+}
 
 print("Zendure Dashboard API v" + VERSION + " gestartet (nur JSON-Endpunkte, kein HTML).");
 print("config_api / status_api / kvs_set_api unter http://<shelly-ip>/script/<id>/<name>");

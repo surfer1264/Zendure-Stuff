@@ -7,7 +7,7 @@ Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly
 
 | Datei | Läuft wo | Aufgabe |
 |---|---|---|
-| `zendure_dashboard_api.js` | als **zweites, separates** Script auf dem Shelly | liefert reine JSON-Daten (`config_api` / `status_api` / `kvs_set_api`) für das Dashboard |
+| `zendure_dashboard_api.js` | als Script auf dem Shelly (eigenes Gerät empfohlen, siehe Schritt 2) | liefert reine JSON-Daten (`config_api` / `status_api` / `kvs_set_api`) für das Dashboard |
 | `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus und fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
@@ -37,7 +37,33 @@ Hier nur der Vollständigkeit halber erwähnt, da die Verfügbarkeit dieses Scri
 2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script die vom Dashboard gesetzten Werte zwar aus der KVS, wendet sie aber nie an.
 3. **`kvsForceReseed` muss auf `false` stehen.** Andernfalls überschreibt der Controller bei jedem Start alle Werte, die ihr im Dashboard gesetzt habt.
 
-## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
+## 2) Wohin mit dem API-Script?
+
+Zwei Betriebsarten. **Getrennt ist die empfohlene.**
+
+| | Zusammen (`kvsHost: "local"`) | Getrennt (`kvsHost: "<3EM-IP>"`) |
+|---|---|---|
+| API-Script läuft | auf demselben Shelly wie das Regel-Script | auf einem **eigenen** Shelly (Plus/Pro/Gen3/Gen4 mit Scripting) |
+| KVS-Zugriff | direkt per `Shelly.call` | per nativer RPC über HTTP: `http://<3EM-IP>/rpc/KVS.GetMany` bzw. `/rpc/KVS.Set` |
+| `gridSource` | wie im Regel-Script | `"remote"`, `gridSourceIp` = Shelly mit der EM-Messung |
+| Speicher | **beide Scripte teilen sich einen Variablenpool** | jedes Gerät hat seinen eigenen |
+
+### Warum getrennt besser ist
+
+Espruino stellt pro Gerät einen gemeinsamen Variablenpool von rund 1600 Einträgen für **alle** Scripte bereit. Regel-Script und API-Script fragen dieselben Zendure-Hubs ab; treffen zwei Antworten von je etwa 1,3 kB gleichzeitig ein, reißt der Pool. Der Fehler lautet `out_of_memory`, und es stirbt nicht etwa der Verursacher, sondern wer als Nächstes Speicher anfordert — mal das eine Script, mal das andere. Im Geräte-Log (Settings → Debug) sieht das so aus:
+
+```
+JS Error [5] out_of_memory used=1135 peak=1368 total=1617
+UserScript.HandleError (script:1) [5] out_of_memory
+```
+
+Auf einem eigenen Gerät entfällt das. Die RPC-Anfragen an die KVS bedient drüben die **Firmware**, nicht ein Script — sie kosten dort also keine Variablen.
+
+Voraussetzung für den getrennten Betrieb: auf dem KVS-Gerät ist keine Authentifizierung aktiv (Settings → Authentication).
+
+Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. Dann hilft ein höherer `pollIntervalSec` (Vorgabe 8 s), weil er die Wahrscheinlichkeit gleichzeitiger Hub-Antworten senkt. Ganz ausschließen lässt sie sich so nicht.
+
+## 2b) API-Script einrichten
 
 1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf demselben Shelly laufen wie das Regel-Script.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
@@ -152,7 +178,9 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 * Die **Seite** frischt fest alle 4 s auf (`POLL_SEC`), es gibt kein Bedienelement dafür. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
 * `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
 * Das **API-Script** fragt Netzzähler und Hubs alle 5 s ab (`pollIntervalSec`) — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch. Kein unnötiger Traffic zu den Zendure-Hubs.
-* Ein `busy`-Flag sorgt dafür, dass Hintergrundabfrage und `config_api` **nie gleichzeitig** laufen. Beide sind speicherintensiv (Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`); zusammen trieben sie `memPeak` unnötig hoch. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus, und `config_api` wartet bis zu 2 s auf einen freien Slot. Ein hängendes Flag wird nach 15 s (`BUSY_TIMEOUT_MS`) automatisch zurückgesetzt.
+* Ein **Zähler** (früher ein Flag) sorgt dafür, dass Hintergrundabfrage und `config_api` nie gleichzeitig laufen. Beide sind speicherintensiv — Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus, und `config_api` wartet bis zu 2 s auf einen freien Slot. Zusätzlich hat der Hintergrund-Durchlauf mit `bgRunning` einen eigenen Riegel gegen sich selbst.
+* Die Notbremse (`BUSY_TIMEOUT_MS`) richtet sich nach der Gerätezahl: `(Geräte + 1) × httpTimeout + 5 s`. Sie muss länger sein als der längstmögliche Durchlauf, in dem jede einzelne Abfrage in den Timeout läuft — sonst greift sie mitten im Normalbetrieb und erlaubt genau die Überlappung, die sie verhindern soll.
+* `status_api` liefert eine fertig serialisierte Antwort, die einmal je Hintergrund-Durchlauf gebaut wird. `config_api` hat einen 1-Sekunden-Cache und sammelt gleichzeitige Anfragen zu einem einzigen `KVS.GetMany`. Bei einem Dashboard ändert das nichts; bei mehreren offenen Seiten oder einem Reload-Sturm fällt der Aufwand auf ein Zehntel. Ein Schreibvorgang verwirft den Cache sofort.
 
 ## 6) Kurz-Troubleshooting
 
@@ -189,7 +217,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| „out of memory", Script stürzt ab | Zu viele gleichzeitige Allokationen auf dem Shelly | Ab v2.0 schreibt `kvs_set_api` die Keys nacheinander statt parallel, respektiert das `busy`-Flag, und jeder `Shelly.call` läuft über einen Wrapper mit `try/catch` — ein abgewiesener Aufruf beendet das Script nicht mehr. Nach einem Update das Script einmal **stoppen und neu starten** |
+| „out of memory", eines der beiden Scripte stürzt ab | Regel-Script und API-Script teilen sich den Variablenpool und fragen dieselben Hubs ab | API-Script auf einen eigenen Shelly umziehen (`kvsHost` auf die 3EM-IP, `gridSource: "remote"`). Als Zwischenlösung `pollIntervalSec` erhöhen |
 | `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
 
 ## Impressionen

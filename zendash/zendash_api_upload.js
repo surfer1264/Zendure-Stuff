@@ -1,25 +1,10 @@
 // =====================================================================
 // Zendure Dashboard API (zendure_dashboard_api.js)
 //
-// Schlankes Backend-Script fuer den Shelly: liefert NUR noch JSON-Daten
-// ueber HTTP - keine HTML-Auslieferung mehr (das lag zu nah an der
-// Speichergrenze des Scripts, siehe unten). Die eigentliche Dashboard-
-// Seite ist jetzt eine eigenstaendige HTML-Datei (zendure-dashboard.html),
-// die diese Endpunkte per fetch() aufruft (dank Access-Control-Allow-Origin
-// funktioniert das auch von einer lokalen Datei / anderem Host aus).
-//
-// Laeuft als EIGENES Script neben zerooutput_multi_kvs.js auf demselben
-// Geraet (oder auf dem Geraet mit der lokalen EM-Messung, falls
-// gridSource "local" genutzt wird).
-//
-// WICHTIG: CONFIG.devices und CONFIG.gridSource* MUESSEN zu CONFIG in
-// zerooutput_multi_kvs.js passen (gleiche IPs, gleiche Reihenfolge der
-// Geraete = gleicher Index i wie "zdmc_dev{i}_..."). Aenderst du dort die
-// Geraeteliste, hier nachziehen.
 //
 // Endpunkte (alle mit CORS, koennen von jeder Seite/jedem Host aus
 // aufgerufen werden):
-//   GET config_api    -> { version, setpoint, hysteresis, devices:[...] }
+//   GET config_api    -> { setpoint, hysteresis, devices:[...] }
 //                        devices enthaelt die aktuellen KVS-Werte fuer
 //                        dischargeAllowed / reverse / minSoc / inputLimit.
 //                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
@@ -30,10 +15,6 @@
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
 //                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
 // =====================================================================
-
-// Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-// Dashboard eine Abweichung zwischen Seite und API sichtbar machen kann.
-let VERSION = "2.0";
 
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -102,6 +83,7 @@ let CONFIG = {
   historySize: 30
 };
 
+CONFIG.version="1.1";
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
 for (let i = 0; i < CONFIG.devices.length; i++) {
@@ -168,6 +150,7 @@ function busyLock() {
 function busyRelease() {
   busy = false;
 }
+
 
 // =====================================================
 // KVS-Helfer
@@ -524,7 +507,6 @@ function serveConfig(res, attempt) {
       ["Access-Control-Allow-Origin", "*"]
     ];
     res.body = JSON.stringify({
-      version: VERSION,
       setpoint: setpoint,
       // Nur zur Anzeige - das Regel-Script liest keinen KVS-Wert dafuer.
       hysteresis: CONFIG.hysteresis,
@@ -609,5 +591,5 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   }
 });
 
-print("Zendure Dashboard API v" + VERSION + " gestartet (nur JSON-Endpunkte, kein HTML).");
+print("Zendure Dashboard API gestartet (nur JSON-Endpunkte, kein HTML).");
 print("config_api / status_api / kvs_set_api unter http://<shelly-ip>/script/<id>/<name>");
