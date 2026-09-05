@@ -9,7 +9,13 @@ selbst holt die Daten serverseitig vom Shelly (dort gelten keine
 Browser-CORS-Regeln).
 
 Start:
-    python3 zendure_proxy.py
+    python3 zendure_proxy.py         normal, mit Zugriffsprotokoll
+    python3 zendure_proxy.py -q      leise: Startmeldung ja, Zugriffe nein
+    python3 zendure_proxy.py -s      still: gar keine Ausgabe (Fehler nach stderr)
+
+Das Zugriffsprotokoll ist im Normalbetrieb recht gespraechig - die Seite
+fragt alle 4 Sekunden an. Zum Einrichten ist es hilfreich, im Dauerbetrieb
+eher nicht.
 
 Danach im Browser oeffnen:
     http://localhost:8000/
@@ -37,6 +43,14 @@ PORT = 8000
 # im selben Netz erreichbar). Fuer "nur dieser Rechner" stattdessen wieder
 # "localhost" eintragen.
 BIND_ADDRESS = "0.0.0.0"
+
+# Ausgabefreudigkeit. Laesst sich beim Start ueberschreiben:
+#   -q / --quiet    kein Zugriffsprotokoll, Startmeldung bleibt
+#   -s / --silent   gar keine Ausgabe
+# Fehler gehen unabhaengig davon immer nach stderr - ein stiller Proxy, der
+# einen kaputten Port verschweigt, waere schwer zu diagnostizieren.
+QUIET = False
+SILENT = False
 
 # Erwartet die HTML-Datei im selben Ordner wie dieses Script.
 # Falls sie woanders liegt oder anders heisst, hier den Pfad anpassen.
@@ -69,6 +83,8 @@ ICON_PATHS = (
 class Handler(http.server.BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
+        if QUIET or SILENT:
+            return
         print("[proxy] " + (fmt % args))
 
     def do_GET(self):
@@ -158,31 +174,61 @@ def get_lan_ip():
         s.close()
 
 
-def main():
-    if not os.path.isfile(HTML_FILE):
-        print("WARNUNG: HTML-Datei nicht gefunden unter: " + HTML_FILE)
-        print("Lege zendure-dashboard.html in denselben Ordner wie dieses Script,")
-        print("oder passe HTML_FILE oben im Script an.\n")
+def parse_args():
+    global QUIET, SILENT
+    for arg in sys.argv[1:]:
+        if arg in ("-q", "--quiet"):
+            QUIET = True
+        elif arg in ("-s", "--silent"):
+            SILENT = True
+        elif arg in ("-h", "--help"):
+            print(__doc__)
+            sys.exit(0)
+        else:
+            sys.stderr.write("Unbekannte Option: {}  (-h fuer Hilfe)\n".format(arg))
+            sys.exit(1)
 
-    print("Zendure Dashboard Proxy")
-    print("  Shelly:   " + SHELLY_BASE)
-    print("  HTML:     " + HTML_FILE)
-    print("  Lokal:    http://localhost:{}/".format(PORT))
+
+def say(msg):
+    if not SILENT:
+        print(msg)
+
+
+def main():
+    parse_args()
+
+    if not os.path.isfile(HTML_FILE):
+        # Warnung auch im stillen Betrieb - ohne die Datei liefert der Proxy
+        # nur 404 aus, und die Ursache waere sonst nirgends zu sehen.
+        sys.stderr.write("WARNUNG: HTML-Datei nicht gefunden unter: " + HTML_FILE + "\n")
+        sys.stderr.write("Lege zendure-dashboard.html in denselben Ordner wie dieses Script,\n")
+        sys.stderr.write("oder passe HTML_FILE oben im Script an.\n\n")
+
+    say("Zendure Dashboard Proxy")
+    say("  Shelly:   " + SHELLY_BASE)
+    say("  HTML:     " + HTML_FILE)
+    say("  Lokal:    http://localhost:{}/".format(PORT))
     if BIND_ADDRESS == "0.0.0.0":
-        print("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
-    print("(Strg+C zum Beenden)\n")
+        say("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
+    if QUIET:
+        say("  Protokoll: aus (-q)")
+    say("(Strg+C zum Beenden)\n")
 
     try:
-        server = http.server.HTTPServer((BIND_ADDRESS, PORT), Handler)
+        # Mehrere gleichzeitige Anfragen: waehrend der Proxy auf den Shelly
+        # wartet (bis zu TIMEOUT Sekunden), blockierte ein einfacher
+        # HTTPServer alle anderen Verbindungen. Auf einem Dauerlaeufer mit
+        # mehreren offenen Dashboards ist das schnell spuerbar.
+        server = http.server.ThreadingHTTPServer((BIND_ADDRESS, PORT), Handler)
     except OSError as e:
-        print("Konnte Port {} nicht oeffnen: {}".format(PORT, e))
-        print("Laeuft eventuell schon ein anderer Prozess auf diesem Port?")
+        sys.stderr.write("Konnte Port {} nicht oeffnen: {}\n".format(PORT, e))
+        sys.stderr.write("Laeuft eventuell schon ein anderer Prozess auf diesem Port?\n")
         sys.exit(1)
 
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nBeendet.")
+        say("\nBeendet.")
 
 
 if __name__ == "__main__":
