@@ -18,7 +18,8 @@ Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly
 
 * Python installieren (gibt es für jede Plattform; einmal einrichten, danach nie wieder anfassen)
 * Der Shelly Multi Device Controller läuft schon? Siehe Schritt 1
-* API-Script konfigurieren: Geräte-Config-Block und Smartmeter-Einstellungen **exakt** wie im Controller (Copy/Paste)
+* Entscheiden, wo das API-Script laufen soll — eigener Shelly empfohlen, siehe Schritt 2
+* API-Script konfigurieren: Geräte-Config-Block und Smartmeter-Einstellungen **exakt** wie im Controller (Copy/Paste), dazu `kvsHost`
 * Python-Proxy konfigurieren: Shelly-IP und Script-Nummer des API-Scripts
 * Proxy starten, im Browser `http://localhost:8000/` öffnen
 
@@ -63,13 +64,14 @@ Voraussetzung für den getrennten Betrieb: auf dem KVS-Gerät ist keine Authenti
 
 Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. Dann hilft ein höherer `pollIntervalSec` (Vorgabe 8 s), weil er die Wahrscheinlichkeit gleichzeitiger Hub-Antworten senkt. Ganz ausschließen lässt sie sich so nicht.
 
-## 2b) API-Script einrichten
+## 3) API-Script einrichten
 
-1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf demselben Shelly laufen wie das Regel-Script.
+1. **Settings → Scripts** auf dem Gerät aus Schritt 2 → neues Script anlegen, Inhalt von `zendure_dashboard_api.js` einfügen. Liegt es auf demselben Shelly wie das Regel-Script, dieses **nicht** überschreiben, sondern ein zusätzliches anlegen.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
    - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
-   - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Schritt 5.
+   - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
+   - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script. Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
@@ -79,13 +81,13 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
    ```
    Beide sollten JSON liefern. Falls nicht: siehe Troubleshooting unten.
 
-## 3) Proxy konfigurieren und starten
+## 4) Proxy konfigurieren und starten
 
 Im Kopf von `zendure_proxy.py` anpassen:
 
 ```python
 SHELLY_IP = "192.168.178.117"   # IP des Shelly mit dem API-Script
-SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 2.4
+SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 3.4
 PORT = 8000                     # lokaler Port, an dem der Proxy lauscht
 ```
 
@@ -110,7 +112,7 @@ Server beenden: `Strg+C` im Terminal. Das Terminal-Fenster muss offen bleiben, s
 
 Ein direkter Aufruf der API-URL im Browser (Adresszeile) funktioniert, weil das eine normale Seiten-Navigation ist. Ein `fetch()` **aus** der Dashboard-Seite heraus ist dagegen eine Cross-Origin-Anfrage — und die Shelly-Firmware weist solche Anfragen bereits **unterhalb** des Scripts mit `403 Forbidden` ab, unabhängig davon, welche CORS-Header das Script selbst setzt. Betroffen sind sowohl `file://`-Seiten als auch andere `http://`-Ursprünge (z. B. `localhost`). Der Proxy fragt stattdessen **serverseitig** ab (dort gelten keine Browser-CORS-Regeln) und reicht die Antwort same-origin ans Dashboard weiter — das umgeht das Problem vollständig, unabhängig von der genauen Ursache auf Shelly-Seite.
 
-## 4) Von einem anderen Rechner im selben Netz zugreifen
+## 5) Von einem anderen Rechner im selben Netz zugreifen
 
 Der Proxy lauscht standardmäßig auf allen Netzwerkschnittstellen (`BIND_ADDRESS = "0.0.0.0"`) und zeigt beim Start direkt die passende Adresse an:
 
@@ -130,7 +132,7 @@ Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **„Zugriff zula
 
 Für dauerhaften Zugriff eignet sich ein immer laufendes Gerät (Raspberry Pi, NAS, Mini-PC) besser als ein Laptop, den man zuklappt.
 
-## 5) Bedienung
+## 6) Bedienung
 
 Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Regelzyklus des Regel-Scripts. Die Grenzen entsprechen exakt dem Clamping in `readKvsOverrides()` von `zerooutput_multi_kvs.js` — Werte außerhalb dieser Bereiche verwirft das Regel-Script kommentarlos.
 
@@ -177,19 +179,20 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
 * Die **Seite** frischt fest alle 4 s auf (`POLL_SEC`), es gibt kein Bedienelement dafür. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
 * `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
-* Das **API-Script** fragt Netzzähler und Hubs alle 5 s ab (`pollIntervalSec`) — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch. Kein unnötiger Traffic zu den Zendure-Hubs.
+* Das **API-Script** fragt Netzzähler und Hubs alle 8 s ab (`pollIntervalSec`) — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch. Kein unnötiger Traffic zu den Zendure-Hubs.
 * Ein **Zähler** (früher ein Flag) sorgt dafür, dass Hintergrundabfrage und `config_api` nie gleichzeitig laufen. Beide sind speicherintensiv — Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus, und `config_api` wartet bis zu 2 s auf einen freien Slot. Zusätzlich hat der Hintergrund-Durchlauf mit `bgRunning` einen eigenen Riegel gegen sich selbst.
 * Die Notbremse (`BUSY_TIMEOUT_MS`) richtet sich nach der Gerätezahl: `(Geräte + 1) × httpTimeout + 5 s`. Sie muss länger sein als der längstmögliche Durchlauf, in dem jede einzelne Abfrage in den Timeout läuft — sonst greift sie mitten im Normalbetrieb und erlaubt genau die Überlappung, die sie verhindern soll.
-* `status_api` liefert eine fertig serialisierte Antwort, die einmal je Hintergrund-Durchlauf gebaut wird. `config_api` hat einen 1-Sekunden-Cache und sammelt gleichzeitige Anfragen zu einem einzigen `KVS.GetMany`. Bei einem Dashboard ändert das nichts; bei mehreren offenen Seiten oder einem Reload-Sturm fällt der Aufwand auf ein Zehntel. Ein Schreibvorgang verwirft den Cache sofort.
+* `status_api` liefert eine fertig serialisierte Antwort, die einmal je Hintergrund-Durchlauf gebaut wird. `config_api` sammelt gleichzeitige Anfragen zu einem einzigen `KVS.GetMany` — bei einem Dashboard ändert das nichts, bei einem Reload-Sturm fällt der Aufwand auf ein Zehntel. Einen Ergebnis-Cache gibt es bewusst nicht: ein dauerhaft gehaltener Antwort-String kostet im knappen Variablenpool mehr, als er einspart.
+* Die Antworten der Hubs werden **ohne `JSON.parse`** ausgewertet. Die benötigten Zahlen holt das Script per `indexOf`/`slice` aus dem Rohtext. Eine geparste `/properties/report`-Antwort (~1,3 kB, 60+ Felder) belegt mehrere hundert Variablen, der Rohtext allein nur einen Bruchteil davon. Preis dafür: ändert Zendure die Feldnamen, fällt das erst im Betrieb auf — deshalb liefert jede Extraktion `null` statt zu raten, und ein fehlendes `electricLevel` gilt als „Hub nicht auswertbar".
 
-## 6) Kurz-Troubleshooting
+## 7) Kurz-Troubleshooting
 
 ### Dashboard
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
 | Weißes/leeres Fenster, Konsole zeigt „Failed to fetch" | Datei per Doppelklick geöffnet (`file://`) statt über den Proxy | Immer über `http://localhost:8000/` öffnen, nicht die `.html`-Datei direkt |
-| Roter Hinweis-Banner „Fehler beim Laden der Konfiguration" | Proxy läuft nicht, oder `SHELLY_IP`/`SHELLY_SCRIPT_ID` im Proxy falsch | Proxy-Konsole prüfen; `config_api`/`status_api` direkt im Browser testen (Schritt 2.5) |
+| Roter Hinweis-Banner „Fehler beim Laden der Konfiguration" | Proxy läuft nicht, oder `SHELLY_IP`/`SHELLY_SCRIPT_ID` im Proxy falsch | Proxy-Konsole prüfen; `config_api`/`status_api` direkt im Browser testen (Schritt 3.5) |
 | `config_api`/`status_api` liefern im Browser JSON, die Seite bleibt trotzdem leer | CORS/Origin-Block der Shelly-Firmware bei `fetch()` (siehe „Warum ein Proxy?") | Sicherstellen, dass die Seite über den Proxy läuft (`localhost:8000`), nicht per `file://` |
 | 404 beim Öffnen von `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
 | Netzbezug bleibt „n/a" | `gridSource`/`gridSourceIp` im API-Script falsch, oder Gerät ohne EM-Kanal | `gridSource`-Werte im API-Script gegen das Regel-Script abgleichen |
@@ -198,7 +201,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | Regler/Schalter wirken nicht auf die Hubs | `kvsEnabled` im Regel-Script steht auf `false` | Im Regel-Script auf `true` setzen, Script neu starten |
 | Eingestellte Werte sind nach einem Shelly-Neustart wieder weg | `kvsForceReseed` im Regel-Script steht auf `true` | Auf `false` setzen |
 | Fußzeile zeigt zwei verschiedene Versionen | HTML und API-Script sind nicht auf demselben Stand | Beide Dateien gemeinsam aktualisieren, Shelly-Script neu starten |
-| Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (Schritt 2.2) |
+| Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (Schritt 3.2) |
 | PV-Zeile fehlt bei einem Gerät | Das Gerät liefert kein `solarInputPower` (reine AC-Lader) | Kein Fehler. Zur Kontrolle `http://<hub-ip>/properties/report` im Browser aufrufen |
 | Zellspannung fehlt | Kein `packData` in der Antwort, oder alle Packs melden 0 | Wie oben mit `/properties/report` prüfen |
 
