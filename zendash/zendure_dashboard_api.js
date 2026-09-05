@@ -169,21 +169,6 @@ function busyRelease() {
   busy = false;
 }
 
-// Wartet auf einen freien Slot und fuehrt run() dann mit gesetztem Flag aus.
-// Nach CONFIG_WAIT_MAX vergeblichen Anlaeufen wird trotzdem gestartet -
-// lieber eine ueberlappende Spitze als eine haengende Antwort.
-// WICHTIG: run() muss busyRelease() aufrufen, wenn es fertig ist.
-function whenFree(attempt, run) {
-  if (busyNow() && attempt < CONFIG_WAIT_MAX) {
-    Timer.set(CONFIG_WAIT_MS, false, function () {
-      whenFree(attempt + 1, run);
-    });
-    return;
-  }
-  busyLock();
-  run();
-}
-
 // Shelly.call wirft sofort, wenn der Call-Pool voll ist. Passiert das in einem
 // Timer- oder Endpunkt-Callback, beendet mJS das komplette Script. Deshalb
 // jeder Aufruf ueber diesen Wrapper: im Fehlerfall wird der Callback mit einem
@@ -521,8 +506,15 @@ function handlePreflight(req, res) {
 // Wartet auf einen freien Slot, bevor das KVS.GetMany losgeschickt wird.
 // Nach CONFIG_WAIT_MAX vergeblichen Anlaeufen wird trotzdem geantwortet -
 // lieber eine ueberlappende Spitze als eine haengende Dashboard-Abfrage.
-function serveConfig(res) {
-  whenFree(0, function () {
+function serveConfig(res, attempt) {
+  if (busyNow() && attempt < CONFIG_WAIT_MAX) {
+    Timer.set(CONFIG_WAIT_MS, false, function () {
+      serveConfig(res, attempt + 1);
+    });
+    return;
+  }
+
+  busyLock();
   let devices = buildDeviceDefaults();
   let setpoint = 0;
 
@@ -558,13 +550,12 @@ function serveConfig(res) {
     busyRelease();
     res.send();
   });
-  });
 }
 
 HTTPServer.registerEndpoint("config_api", function (req, res) {
   if (handlePreflight(req, res)) return;
   lastRequestAt = Date.now();
-  serveConfig(res);
+  serveConfig(res, 0);
 });
 
 HTTPServer.registerEndpoint("status_api", function (req, res) {
@@ -621,11 +612,9 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   // mehreren Keys also mehrere offene Shelly.call gleichzeitig. Jetzt der
   // Reihe nach.
   //
-  // BEWUSST OHNE whenFree(): Dieser Endpunkt darf nicht auf einen freien Slot
-  // warten. Das Warten laeuft ueber Timer.set, und ein Shelly-Script hat nur
-  // wenige gleichzeitige Timer - dazu muesste das res-Objekt ueber mehrere
-  // Timer-Callbacks am Leben bleiben. Beides hat sich als zu fragil erwiesen.
-  // KVS.Set ist im Vergleich zum Hub-Parsing ohnehin billig; die Entzerrung
+  // Dieser Endpunkt wartet BEWUSST NICHT auf einen freien Slot: Warten liefe
+  // ueber Timer.set, und ein Shelly-Script hat nur wenige gleichzeitige Timer.
+  // KVS.Set ist gegenueber dem Hub-Parsing ohnehin billig; die Entzerrung
   // uebernimmt die Dashboard-Seite, indem sie waehrend einer Schreibkette
   // nicht pollt und zwischen den Schritten pausiert.
   writeKeysSequential(res, data, allowedKeys, 0, true);
