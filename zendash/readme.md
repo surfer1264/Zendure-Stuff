@@ -223,11 +223,4 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | „out of memory", eines der beiden Scripte stürzt ab | Regel-Script und API-Script teilen sich den Variablenpool und fragen dieselben Hubs ab | API-Script auf einen eigenen Shelly umziehen (`kvsHost` auf die 3EM-IP, `gridSource: "remote"`). Als Zwischenlösung `pollIntervalSec` erhöhen |
 | `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
 
-## Impressionen
 
-*(Screenshots aus einer früheren Version der Oberfläche — bei Gelegenheit gegen aktuelle ersetzen.)*
-
-![alt text](<2026-07-25 21-24-16.PNG>)
-![alt text](<2026-07-25 21-24-24.PNG>)
-![alt text](<2026-07-25 21-24-31.PNG>)
-![alt text](<2026-07-25 21-49-18-1.PNG>)
