@@ -126,6 +126,8 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
   Beim Beenden umgekehrt: erst `inputLimit = 0`, dann die Schalter zurück auf den Stand vor dem Start. Die Reihenfolge ist nicht kosmetisch — wird `inputLimit` gesetzt, solange das Gerät noch in der Regelung hängt, überschreibt das Regel-Script den Wert im nächsten Zyklus. Umgekehrt würde ein stehengebliebenes Ladelimit mit der wieder aktiven Regelung kollidieren.
 
+  Während der Kette pausiert der Seiten-Poll, zwischen den Schritten liegen 500 ms (`STEP_PAUSE_MS`), und danach vergehen weitere 1,5 s (`SETTLE_MS`), bevor wieder abgefragt wird. Ohne diese Entzerrung treffen drei `KVS.Set`, der laufende Hintergrund-Poll und die Reaktion des Regel-Scripts — das bei geändertem `inputLimit` sofort aufs Gerät schreibt — innerhalb weniger hundert Millisekunden auf demselben Shelly zusammen. Der ganze Vorgang dauert dadurch rund 2,5 s.
+
   Bricht die Kette in der Mitte ab (Shelly nicht erreichbar), erscheint ein Warnbanner — der Zustand ist dann unvollständig und gehört auf der Karte geprüft.
 
   Ob manuelles Laden läuft, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`). Das überlebt einen Reload und stimmt auch dann, wenn jemand anders die Werte gesetzt hat. Nur der Schalterzustand *vor* dem Start geht bei einem Reload verloren; das Beenden schaltet dann beide Schalter wieder ein.
@@ -187,7 +189,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| „out of memory", Script stürzt ab | Zu viele gleichzeitige Allokationen auf dem Shelly | `busy`-Flag und die sofortige Freigabe der Roh-Antworten sind im aktuellen API-Script bereits enthalten. Nach einem Update das Script einmal **stoppen und neu starten** |
+| „out of memory", Script stürzt ab | Zu viele gleichzeitige Allokationen auf dem Shelly | Ab v2.0 schreibt `kvs_set_api` die Keys nacheinander statt parallel, respektiert das `busy`-Flag, und jeder `Shelly.call` läuft über einen Wrapper mit `try/catch` — ein abgewiesener Aufruf beendet das Script nicht mehr. Nach einem Update das Script einmal **stoppen und neu starten** |
 | `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
 
 ## Impressionen

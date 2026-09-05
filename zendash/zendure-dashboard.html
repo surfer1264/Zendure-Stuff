@@ -765,6 +765,20 @@
   // Geht bei einem Reload verloren; dann werden beide wieder eingeschaltet.
   const preManual = {};
 
+  // Abstand zwischen zwei Schreibvorgaengen der Kette. Ohne Pause treffen drei
+  // KVS.Set plus der laufende Hintergrund-Poll plus die Reaktion des
+  // Regel-Scripts (es schreibt bei geaendertem inputLimit sofort aufs Geraet)
+  // innerhalb weniger hundert Millisekunden auf demselben Shelly zusammen.
+  const STEP_PAUSE_MS = 500;
+
+  // Nachlauf, bevor wieder gepollt wird - gibt dem Regel-Script Zeit, seinen
+  // eigenen Zyklus samt Geraete-Schreibvorgang abzuschliessen.
+  const SETTLE_MS = 1500;
+
+  function pause(ms){
+    return new Promise(function(resolve){ setTimeout(resolve, ms); });
+  }
+
   function isManualActive(d){
     return !d.dischargeAllowed && !d.reverse && Number(d.inputLimit) > 0;
   }
@@ -789,9 +803,13 @@
     preManual[d.id] = { dischargeAllowed: d.dischargeAllowed, reverse: d.reverse };
     setManualBusy(d.id, true, 'wird gestartet …');
 
+    // Waehrend der Kette nicht pollen: sonst laufen status_api/config_api
+    // parallel zu den Schreibvorgaengen auf denselben Shelly.
+    stopPolling();
+
     let ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', 0, true);
-    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_reverse', 0, true);
-    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', watt, true);
+    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_reverse', 0, true); }
+    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', watt, true); }
 
     if (ok) {
       d.dischargeAllowed = false; d.reverse = false; d.inputLimit = watt;
@@ -803,17 +821,23 @@
     }
 
     setManualBusy(d.id, false);
+    render();
+    await pause(SETTLE_MS);
     forceConfigNext = true;
-    pollAll();
+    startPolling();
   }
 
   async function stopManual(d){
     const prev = preManual[d.id] || { dischargeAllowed: true, reverse: true };
     setManualBusy(d.id, true, 'wird beendet …');
 
+    stopPolling();
+
+    // inputLimit zuerst - das loest im Regel-Script einen Schreibvorgang aufs
+    // Geraet aus. Danach eine Pause, bevor die Schalter folgen.
     let ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', 0, true);
-    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', prev.dischargeAllowed ? 1 : 0, true);
-    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_reverse', prev.reverse ? 1 : 0, true);
+    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', prev.dischargeAllowed ? 1 : 0, true); }
+    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_reverse', prev.reverse ? 1 : 0, true); }
 
     if (ok) {
       d.inputLimit = 0;
@@ -827,8 +851,10 @@
     }
 
     setManualBusy(d.id, false);
+    render();
+    await pause(SETTLE_MS);
     forceConfigNext = true;
-    pollAll();
+    startPolling();
   }
 
   // Knopfbeschriftung, Hinweistext und Reglerzustand aus dem Live-Zustand
@@ -1004,6 +1030,11 @@
       updateStatusPill(true);
     }
     render();
+  }
+
+  function stopPolling(){
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = null;
   }
 
   function startPolling(){
