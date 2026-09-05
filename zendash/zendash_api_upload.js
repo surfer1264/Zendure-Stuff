@@ -19,7 +19,7 @@
 //
 // Endpunkte (alle mit CORS, koennen von jeder Seite/jedem Host aus
 // aufgerufen werden):
-//   GET config_api    -> { setpoint, hysteresis, devices:[...] }
+//   GET config_api    -> { version, setpoint, hysteresis, devices:[...] }
 //                        devices enthaelt die aktuellen KVS-Werte fuer
 //                        dischargeAllowed / reverse / minSoc / inputLimit.
 //                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
@@ -30,6 +30,10 @@
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
 //                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
 // =====================================================================
+
+// Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
+// Dashboard eine Abweichung zwischen Seite und API sichtbar machen kann.
+let VERSION = "2.0";
 
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -521,6 +525,7 @@ function serveConfig(res, attempt) {
       ["Access-Control-Allow-Origin", "*"]
     ];
     res.body = JSON.stringify({
+      version: VERSION,
       setpoint: setpoint,
       // Nur zur Anzeige - das Regel-Script liest keinen KVS-Wert dafuer.
       hysteresis: CONFIG.hysteresis,
@@ -605,5 +610,5 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   }
 });
 
-print("Zendure Dashboard API gestartet (nur JSON-Endpunkte, kein HTML).");
+print("Zendure Dashboard API v" + VERSION + " gestartet (nur JSON-Endpunkte, kein HTML).");
 print("config_api / status_api / kvs_set_api unter http://<shelly-ip>/script/<id>/<name>");

@@ -114,13 +114,23 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | Entladen erlaubt | `zdmc_dev{id}_dischargeAllowed` | Schalter (0/1) |
 | Laden vom Netz erlaubt | `zdmc_dev{id}_reverse` | Schalter (0/1) |
 | Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10–98 %, 2er-Schritte |
-| Laden aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
+| Ladeleistung aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
 
 ### Was die Regler bewirken
 
 * **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern das Gerät selbst.
-* **Laden aus dem Netz** (`inputLimit`) ist eine Zusatzschnittstelle für manuelles AC-Laden. Das Regel-Script schreibt den Wert unverändert aufs Gerät; sinnvoll ist das nur, wenn der Hub vorher über die beiden Schalter aus der Regelung genommen wurde. **Das Dashboard prüft das nicht** — der Regler steht immer zur Verfügung.
+* **Manuelles Laden** ist eine Aktion, kein einzelner Schalter. Der Regler „Ladeleistung aus dem Netz" wählt nur die Leistung aus und schreibt für sich genommen nichts; der Knopf darunter führt drei Schreibvorgänge in der richtigen Reihenfolge aus:
+  1. `dischargeAllowed = 0`
+  2. `reverse = 0`
+  3. `inputLimit = <gewählte Leistung>`
+
+  Beim Beenden umgekehrt: erst `inputLimit = 0`, dann die Schalter zurück auf den Stand vor dem Start. Die Reihenfolge ist nicht kosmetisch — wird `inputLimit` gesetzt, solange das Gerät noch in der Regelung hängt, überschreibt das Regel-Script den Wert im nächsten Zyklus. Umgekehrt würde ein stehengebliebenes Ladelimit mit der wieder aktiven Regelung kollidieren.
+
+  Bricht die Kette in der Mitte ab (Shelly nicht erreichbar), erscheint ein Warnbanner — der Zustand ist dann unvollständig und gehört auf der Karte geprüft.
+
+  Ob manuelles Laden läuft, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`). Das überlebt einen Reload und stimmt auch dann, wenn jemand anders die Werte gesetzt hat. Nur der Schalterzustand *vor* dem Start geht bei einem Reload verloren; das Beenden schaltet dann beide Schalter wieder ein.
 * **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb nicht als Bedienelement auf. `config_api` liefert den Wert trotzdem mit; die Seite braucht ihn nur intern, um den Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
+* Die Seite startet **gesperrt**. Das Schloss-Symbol oben rechts gibt die Bedienung frei; nach 60 s ohne Eingabe (`RELOCK_MS`) sperrt sie sich von selbst wieder. Der Zustand wird absichtlich nicht gespeichert — jeder Reload beginnt gesperrt. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
 * Jedes Bedienelement **sperrt sich nach einer Eingabe für 4 s** (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
 
 ### Was die Anzeige zeigt
@@ -132,6 +142,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 * **Der Verlauf** steckt als kompakte Kurve in den beiden Kacheln oben: Netzsaldo links, Hub-Summe rechts. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
 * Der Verlauf wird **in der Seite** geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
 * Die Seite startet immer in der **Nachtsicht**; der Schalter oben rechts wechselt zur Tagsicht. Die Systemeinstellung des Geräts spielt keine Rolle.
+* In der Fußzeile stehen die Versionen von Seite und API-Script. Laufen sie auseinander, wird der Hinweis amber — typischer Fall: HTML aktualisiert, das Script auf dem Shelly aber nicht.
 * Geräteliste, Sollwert, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst. Das vermeidet Doppelpflege.
 
 ### Wer wie oft fragt
@@ -152,8 +163,11 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | `config_api`/`status_api` liefern im Browser JSON, die Seite bleibt trotzdem leer | CORS/Origin-Block der Shelly-Firmware bei `fetch()` (siehe „Warum ein Proxy?") | Sicherstellen, dass die Seite über den Proxy läuft (`localhost:8000`), nicht per `file://` |
 | 404 beim Öffnen von `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
 | Netzbezug bleibt „n/a" | `gridSource`/`gridSourceIp` im API-Script falsch, oder Gerät ohne EM-Kanal | `gridSource`-Werte im API-Script gegen das Regel-Script abgleichen |
+| Alles ist ausgegraut, nichts lässt sich bedienen | Die Seite ist gesperrt (Standard nach Laden und nach 60 s Ruhe) | Schloss-Symbol oben rechts anklicken |
+| „Manuelles Laden" lässt sich nicht starten | Ladeleistung steht auf 0 W | Regler darüber auf einen Wert größer 0 ziehen |
 | Regler/Schalter wirken nicht auf die Hubs | `kvsEnabled` im Regel-Script steht auf `false` | Im Regel-Script auf `true` setzen, Script neu starten |
 | Eingestellte Werte sind nach einem Shelly-Neustart wieder weg | `kvsForceReseed` im Regel-Script steht auf `true` | Auf `false` setzen |
+| Fußzeile zeigt zwei verschiedene Versionen | HTML und API-Script sind nicht auf demselben Stand | Beide Dateien gemeinsam aktualisieren, Shelly-Script neu starten |
 | Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (Schritt 2.2) |
 | PV-Zeile fehlt bei einem Gerät | Das Gerät liefert kein `solarInputPower` (reine AC-Lader) | Kein Fehler. Zur Kontrolle `http://<hub-ip>/properties/report` im Browser aufrufen |
 | Zellspannung fehlt | Kein `packData` in der Antwort, oder alle Packs melden 0 | Wie oben mit `/properties/report` prüfen |

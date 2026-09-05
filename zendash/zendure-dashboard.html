@@ -119,6 +119,21 @@
     color:var(--text); font-size:1.05rem;
   }
   .theme-toggle:active{ transform:scale(.92); }
+  .lock-toggle.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
+
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif; font-size:.82rem; font-weight:600;
+    color:var(--text); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:8px 14px; cursor:pointer; width:100%;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .btn.stop{ color:var(--amber-text); border-color:var(--amber-deep); }
+  .btn:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
+
+  .manual-row{ padding:8px 0 2px; }
+  .manual-row .hint{ font-size:.68rem; color:var(--text-muted); line-height:1.4; margin-bottom:7px; display:block; }
 
   .card{
     background:var(--surface); border:1px solid var(--border);
@@ -295,6 +310,7 @@
           <div class="time mono" id="clockTime">--:--:--</div>
           <div class="date" id="clockDate">–</div>
         </div>
+        <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" title="Bedienung sperren/entsperren">⚿</button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
       </div>
     </header>
@@ -330,6 +346,7 @@
       <div class="meta-line">
         <span id="chartWindowLabel">Verlauf wird aufgebaut</span>
         <span id="lastUpdate">zuletzt aktualisiert –</span>
+        <span id="versionLine">v–</span>
       </div>
       <div class="toast" id="toast"></div>
     </footer>
@@ -346,6 +363,11 @@
      Die Shelly-IP/Script-ID muss nur noch im Proxy-Script gepflegt werden.
      ================================================================ */
   const API_BASE = "";
+
+  // Versionsstand dieser Seite. Muss zur Version des API-Scripts passen -
+  // stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
+  // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
+  const VERSION = "2.0";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -392,25 +414,80 @@
   let toastTimer = null;
   function showToast(msg){
     const t = document.getElementById('toast');
-    t.textContent = '→ KVS gesetzt: ' + msg;
+    t.textContent = '→ ' + msg;
     t.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
   }
 
-  async function kvsSet(key, value){
+  async function kvsSet(key, value, quiet){
     const obj = {};
     obj[key] = value;
     try {
       const r = await fetchJ('kvs_set_api?data=' + encodeURIComponent(JSON.stringify(obj)));
       if (!r.success) throw new Error('Shelly meldet Fehler beim Setzen');
-      showToast(key + ' = ' + value);
+      if (!quiet) showToast('KVS gesetzt: ' + key + ' = ' + value);
       return true;
     } catch (err) {
       showDiag('Konnte "' + key + '" nicht setzen: ' + err.message + '.');
       return false;
     }
   }
+
+  /* ---------------- Globale Bediensperre ----------------
+     Die Seite startet gesperrt und sperrt sich nach RELOCK_MS ohne Eingabe
+     wieder von selbst. Absicht: das Dashboard laeuft meist nur zum Zuschauen,
+     ein versehentlicher Fingertipper soll nicht die Regelung verstellen.
+     Der Zustand wird bewusst NICHT gespeichert - jeder Reload beginnt
+     gesperrt. */
+  const RELOCK_MS = 60000;
+  let uiLocked = true;
+  let relockTimer = null;
+
+  const lockToggle = document.getElementById('lockToggle');
+
+  // Alle Bedienelemente einsammeln - die Hub-Karten entstehen erst spaeter,
+  // deshalb bei jedem Aufruf frisch abfragen.
+  function controlElements(){
+    return document.querySelectorAll('.setpoint-card input, .hub input, .hub button');
+  }
+
+  function applyLockState(){
+    const els = controlElements();
+    for (let i = 0; i < els.length; i++) {
+      const el = els[i];
+      if (uiLocked) {
+        el.disabled = true;
+      } else if (!isTempLocked(el)) {
+        // Nicht pauschal freigeben: ein Element, das gerade seinen Wert
+        // schreibt, bleibt bis zum Ablauf seiner eigenen Sperre gesperrt.
+        el.disabled = false;
+      }
+    }
+    lockToggle.textContent = uiLocked ? '⚿' : '⚽';
+    lockToggle.classList.toggle('locked', uiLocked);
+    lockToggle.title = uiLocked ? 'Bedienung entsperren' : 'Bedienung sperren';
+  }
+
+  function setLocked(next){
+    uiLocked = next;
+    clearTimeout(relockTimer);
+    if (!uiLocked) relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
+    applyLockState();
+  }
+
+  // Jede Eingabe schiebt die automatische Sperre nach hinten.
+  function touchLockTimer(){
+    if (uiLocked) return;
+    clearTimeout(relockTimer);
+    relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
+  }
+
+  lockToggle.addEventListener('click', function(){ setLocked(!uiLocked); });
+
+  // Startzustand herstellen, bevor die Hub-Karten existieren - der
+  // Sollwert-Regler ist bereits da und muss ebenfalls gesperrt sein.
+  applyLockState();
 
   /* ---------------- Bedienelemente kurz sperren ----------------
      Nach jedem Klick/Zug wird das Element für LOCK_MS gesperrt. Das
@@ -421,14 +498,20 @@
   const LOCK_MS = 4000;
   const lockedUntil = {};
 
+  function isTempLocked(el){
+    return !!el && (lockedUntil[el.id] || 0) > Date.now();
+  }
+
   function lockControl(el){
     if (!el) return;
+    touchLockTimer();
     lockedUntil[el.id] = Date.now() + LOCK_MS;
     el.disabled = true;
     setTimeout(function(){
       if (Date.now() >= (lockedUntil[el.id] || 0)) {
         delete lockedUntil[el.id];
-        el.disabled = false;
+        // Nicht blind freigeben - die globale Sperre hat Vorrang.
+        el.disabled = uiLocked;
       }
     }, LOCK_MS);
   }
@@ -438,13 +521,13 @@
   function unlockControl(el){
     if (!el) return;
     delete lockedUntil[el.id];
-    el.disabled = false;
+    el.disabled = uiLocked;
   }
 
   // "In Bearbeitung": entweder gerade gesperrt oder gerade im Fokus.
   function isBusy(el){
     if (!el) return false;
-    if ((lockedUntil[el.id] || 0) > Date.now()) return true;
+    if (isTempLocked(el)) return true;
     return document.activeElement === el;
   }
 
@@ -479,6 +562,9 @@
   const POLL_SEC = 4;
   const CONFIG_EVERY = 3;
   let pollCount = 0;
+  // Nach einer Aktion einmalig sofort die Konfiguration nachziehen,
+  // statt bis zum naechsten regulaeren Abgleich zu warten.
+  let forceConfigNext = false;
   let pollTimer = null;
 
   /* ---------------- Chart ---------------- */
@@ -606,9 +692,13 @@
           '<input type="range" id="minSoc-' + d.id + '" min="10" max="98" step="2" value="' + d.minSoc + '">' +
         '</div>' +
         '<div class="ctrl-row">' +
-          '<div class="ctrl-head"><span class="lbl">Laden aus dem Netz</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : 'aus') + '</span></div>' +
+          '<div class="ctrl-head"><span class="lbl">Ladeleistung aus dem Netz</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : 'aus') + '</span></div>' +
           '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
           '<input type="range" id="inputLimit-' + d.id + '" min="0" max="' + d.maxInputPower + '" step="50" value="' + d.inputLimit + '">' +
+        '</div>' +
+        '<div class="manual-row">' +
+          '<span class="hint" id="manualHint-' + d.id + '"></span>' +
+          '<button class="btn" id="manualBtn-' + d.id + '">Manuelles Laden starten</button>' +
         '</div>';
       hubsGrid.appendChild(el);
 
@@ -645,16 +735,135 @@
         const v = Number(e.target.value);
         inputLimitValEl.textContent = v ? v + ' W' : 'aus';
       });
-      inputLimitEl.addEventListener('change', function(e){
-        lockControl(e.target);
-        kvsSet('zdmc_dev' + d.id + '_inputLimit', Number(e.target.value)).then(function(ok){
-          if (!ok) unlockControl(e.target);
-        });
+      // Bewusst KEIN Schreiben bei 'change': ein inputLimit, das gesetzt wird,
+      // waehrend das Geraet noch in der Regelung haengt, wird vom Regel-Script
+      // im naechsten Zyklus ueberschrieben. Der Regler waehlt hier nur die
+      // Leistung aus; geschrieben wird sie von startManual() in der richtigen
+      // Reihenfolge.
+      inputLimitEl.addEventListener('change', function(){ touchLockTimer(); });
+
+      document.getElementById('manualBtn-' + d.id).addEventListener('click', function(){
+        touchLockTimer();
+        if (isManualActive(d)) stopManual(d); else startManual(d);
       });
     });
+
+    applyLockState();
+  }
+
+  /* ---------------- Manuelles AC-Laden ----------------
+     Drei Schreibvorgaenge, deren Reihenfolge zaehlt. Erst das Geraet aus der
+     Regelung nehmen, dann die Ladeleistung setzen - andersherum ueberschreibt
+     das Regel-Script den Wert im naechsten Zyklus. Beim Beenden entsprechend
+     umgekehrt: erst die Leistung auf 0, dann die Schalter zurueck.
+
+     kvs_set_api koennte zwar mehrere Keys auf einmal entgegennehmen, schreibt
+     sie aber parallel - ohne garantierte Reihenfolge. Deshalb hier bewusst
+     einzelne, nacheinander abgewartete Aufrufe. */
+
+  // Zustand vor dem Start, um die Schalter beim Beenden zurueckzustellen.
+  // Geht bei einem Reload verloren; dann werden beide wieder eingeschaltet.
+  const preManual = {};
+
+  function isManualActive(d){
+    return !d.dischargeAllowed && !d.reverse && Number(d.inputLimit) > 0;
+  }
+
+  function setManualBusy(id, busy, label){
+    const btn = document.getElementById('manualBtn-' + id);
+    if (!btn) return;
+    btn.disabled = busy || uiLocked;
+    if (label) btn.textContent = label;
+  }
+
+  async function startManual(d){
+    const slider = document.getElementById('inputLimit-' + d.id);
+    const watt = Number(slider ? slider.value : 0);
+
+    if (!watt) {
+      showDiag('Bitte zuerst eine Ladeleistung größer 0 W wählen.');
+      return;
+    }
+    if (!window.confirm(d.label + ' aus der Regelung nehmen und mit ' + watt + ' W aus dem Netz laden?')) return;
+
+    preManual[d.id] = { dischargeAllowed: d.dischargeAllowed, reverse: d.reverse };
+    setManualBusy(d.id, true, 'wird gestartet …');
+
+    let ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', 0, true);
+    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_reverse', 0, true);
+    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', watt, true);
+
+    if (ok) {
+      d.dischargeAllowed = false; d.reverse = false; d.inputLimit = watt;
+      showToast(d.label + ': manuelles Laden mit ' + watt + ' W');
+    } else {
+      // Abbruch mitten in der Kette - der Zustand ist jetzt unvollstaendig.
+      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht vollständig gesetzt werden. ' +
+               'Bitte Schalter und Ladeleistung auf der Karte prüfen.');
+    }
+
+    setManualBusy(d.id, false);
+    forceConfigNext = true;
+    pollAll();
+  }
+
+  async function stopManual(d){
+    const prev = preManual[d.id] || { dischargeAllowed: true, reverse: true };
+    setManualBusy(d.id, true, 'wird beendet …');
+
+    let ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', 0, true);
+    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', prev.dischargeAllowed ? 1 : 0, true);
+    if (ok) ok = await kvsSet('zdmc_dev' + d.id + '_reverse', prev.reverse ? 1 : 0, true);
+
+    if (ok) {
+      d.inputLimit = 0;
+      d.dischargeAllowed = prev.dischargeAllowed;
+      d.reverse = prev.reverse;
+      delete preManual[d.id];
+      showToast(d.label + ': zurück in der Regelung');
+    } else {
+      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht sauber beendet werden. ' +
+               'Bitte Schalter und Ladeleistung auf der Karte prüfen.');
+    }
+
+    setManualBusy(d.id, false);
+    forceConfigNext = true;
+    pollAll();
+  }
+
+  // Knopfbeschriftung, Hinweistext und Reglerzustand aus dem Live-Zustand
+  // ableiten - dadurch stimmt die Anzeige auch nach einem Reload oder wenn
+  // jemand anders die Schalter gesetzt hat.
+  function renderManual(d){
+    const btn = document.getElementById('manualBtn-' + d.id);
+    const hint = document.getElementById('manualHint-' + d.id);
+    const slider = document.getElementById('inputLimit-' + d.id);
+    if (!btn || !hint) return;
+
+    const active = isManualActive(d);
+    btn.textContent = active ? 'Manuelles Laden beenden' : 'Manuelles Laden starten';
+    btn.classList.toggle('stop', active);
+
+    if (active) {
+      hint.textContent = 'Aktiv mit ' + d.inputLimit + ' W. Das Gerät ist aus der Regelung genommen.';
+      if (slider) slider.disabled = true;
+    } else {
+      hint.textContent = 'Nimmt das Gerät aus der Regelung (beide Schalter aus) und setzt die gewählte Ladeleistung.';
+      if (slider && !isTempLocked(slider)) slider.disabled = uiLocked;
+    }
   }
 
   /* ---------------- Initiale Konfiguration ---------------- */
+  function showVersion(apiVersion){
+    const el = document.getElementById('versionLine');
+    if (!el) return;
+    if (!apiVersion) { el.textContent = 'v' + VERSION + ' · API unbekannt'; return; }
+    el.textContent = 'v' + VERSION + ' · API v' + apiVersion;
+    // Auseinanderlaufende Staende sind die haeufigste Ursache fuer seltsames
+    // Verhalten nach einem Update - deshalb sichtbar machen.
+    el.style.color = (apiVersion === VERSION) ? '' : 'var(--amber-text)';
+  }
+
   async function loadConfig(){
     const cfg = await fetchJ('config_api');
 
@@ -663,6 +872,7 @@
     // Nur Rechengroesse fuer die Import/Export/Ausgeglichen-Einstufung unten -
     // im Regel-Script ist die Hysterese nicht ueber die KVS aenderbar.
     liveHysteresis = Number(cfg.hysteresis || 12);
+    showVersion(cfg.version);
 
     hubs = (cfg.devices || []).map(function(d){
       return {
@@ -730,11 +940,13 @@
     try {
       const status = await fetchJ('status_api');
 
-      if (pollCount % CONFIG_EVERY === 0) {
+      if (forceConfigNext || pollCount % CONFIG_EVERY === 0) {
+        forceConfigNext = false;
         const cfg = await fetchJ('config_api');
 
         liveSetpoint = Number(cfg.setpoint || 0);
         liveHysteresis = Number(cfg.hysteresis || liveHysteresis);
+        showVersion(cfg.version);
         if (!isBusy(setpointSlider)) {
           setpointSlider.value = liveSetpoint;
           showSetpoint(liveSetpoint);
@@ -904,6 +1116,7 @@
       dot.classList.toggle('offline', !d.online);
       renderFlags(d);
       renderPackLine(d);
+      renderManual(d);
 
       const socEl = document.getElementById('socValue-' + d.id);
       const socSubEl = document.getElementById('socSub-' + d.id);
