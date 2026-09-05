@@ -3,45 +3,47 @@
 
 # Zendure Grid Dashboard — Inbetriebnahme
 
-Drei Teile gehören zusammen (nicht mehr drei — das Dashboard hat jetzt einen eigenen, schlanken API-Endpunkt auf dem Shelly, getrennt vom Regel-Script):
+Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly Multi Device Controller** (`zerooutput_multi_kvs.js`) — das Dashboard steuert ihn nur, es ersetzt ihn nicht.
 
 | Datei | Läuft wo | Aufgabe |
 |---|---|---|
-| `zendure_dashboard_api.js` | als **zweites, separates** Script auf dem Shelly | liefert reine JSON-Daten (`config_api`/`status_api`/`kvs_set_api`) für das Dashboard |
-| `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus + fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
+| `zendure_dashboard_api.js` | als **zweites, separates** Script auf dem Shelly | liefert reine JSON-Daten (`config_api` / `status_api` / `kvs_set_api`) für das Dashboard |
+| `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus und fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
-`zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit **Python** .
+`zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit **Python**.
 
 
-## Getting Started (für die ganz schnellen)
+## Getting Started (für die ganz Schnellen)
 
-* Python-Umgebung (gibt es für jede Plattform, einfach installieren, müsst ihr nie wieder anfassen: FERTIG)
-* Der Shelly Multi Device Controller läuft schon? siehe (1)
-* Das API Script konfigurieren (mit dem exakt gleichen Geräte-Config-Block, wei beim Controller => Copy/Paste), Smartmeter konfigurieren (exakt so wie im Controller)
-* Python Proxy konfigurieren (nur Shelly-IP auf dem die API läuft) und Script Nummer des API-Scriptes
-* Python Proxy starten: `http://localhost:8000/`
+* Python installieren (gibt es für jede Plattform; einmal einrichten, danach nie wieder anfassen)
+* Der Shelly Multi Device Controller läuft schon? Siehe Schritt 1
+* API-Script konfigurieren: Geräte-Config-Block und Smartmeter-Einstellungen **exakt** wie im Controller (Copy/Paste)
+* Python-Proxy konfigurieren: Shelly-IP und Script-Nummer des API-Scripts
+* Proxy starten, im Browser `http://localhost:8000/` öffnen
 
-Zur Vereinfachung für alle
-* ladet alle Daten aus dem Github-Ordner herunter 
-* schaut Euch die `deply.cmd` und die `start_proxy.cmd` an
-* die vereinfacht nach einmaliger Konfiguration einiges.
+Zur Vereinfachung:
+
+* Ladet alle Dateien aus dem GitHub-Ordner herunter
+* Schaut euch `deploy.cmd` und `start_proxy.cmd` an — die nehmen euch nach einmaliger Konfiguration einiges ab
 
 ---
 
 ## 1) Der Shelly Multi Device Controller läuft schon?
 
-Hier der Vollständigkeit erwähnt, da die Vewrfügbarkeit dieses Scriptes berteits vorausgesetzt wird. 
+Hier nur der Vollständigkeit halber erwähnt, da die Verfügbarkeit dieses Scripts bereits vorausgesetzt wird.
 
-1. der **Shelly Multi Device Controller** läuft bereits !!
-2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script zwar die vom Dashboard gesetzten Werte aus der KVS, wendet sie aber nie an.
+1. Der **Shelly Multi Device Controller** läuft bereits.
+2. **Wichtig:** `kvsEnabled: true` setzen — sonst liest das Script die vom Dashboard gesetzten Werte zwar aus der KVS, wendet sie aber nie an.
+3. **`kvsForceReseed` muss auf `false` stehen.** Andernfalls überschreibt der Controller bei jedem Start alle Werte, die ihr im Dashboard gesetzt habt.
 
 ## 2) API-Script auf dem Shelly (zweites, eigenständiges Script!)
 
-1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf dem gleichen Shelly laufen, auf dem auch das Regel-Script läuft
+1. **Settings → Scripts** → **neues, zusätzliches** Script anlegen (nicht das Regel-Script überschreiben), Inhalt von `zendure_dashboard_api.js` einfügen. Das Script muss auf demselben Shelly laufen wie das Regel-Script.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
    - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
+   - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Schritt 5.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
@@ -80,7 +82,7 @@ Server beenden: `Strg+C` im Terminal. Das Terminal-Fenster muss offen bleiben, s
 
 ### Warum ein Proxy?
 
-Ein direkter Aufruf der API-URL im Browser (Adresszeile) funktioniert, weil das eine normale Seiten-Navigation ist. Ein `fetch()` **aus** der Dashboard-Seite heraus ist dagegen eine Cross-Origin-Anfrage — und die Shelly-Firmware weist solche Anfragen bereits **unterhalb** des Scripts mit `403 Forbidden` ab (unabhängig davon, welche CORS-Header das Script selbst setzt). Betroffen sind sowohl `file://`-Seiten als auch andere `http://`-Ursprünge (z. B. `localhost`). Der Proxy fragt stattdessen **serverseitig** ab (dort gelten keine Browser-CORS-Regeln) und reicht die Antwort same-origin ans Dashboard weiter — das umgeht das Problem vollständig, unabhängig von der genauen Ursache auf Shelly-Seite.
+Ein direkter Aufruf der API-URL im Browser (Adresszeile) funktioniert, weil das eine normale Seiten-Navigation ist. Ein `fetch()` **aus** der Dashboard-Seite heraus ist dagegen eine Cross-Origin-Anfrage — und die Shelly-Firmware weist solche Anfragen bereits **unterhalb** des Scripts mit `403 Forbidden` ab, unabhängig davon, welche CORS-Header das Script selbst setzt. Betroffen sind sowohl `file://`-Seiten als auch andere `http://`-Ursprünge (z. B. `localhost`). Der Proxy fragt stattdessen **serverseitig** ab (dort gelten keine Browser-CORS-Regeln) und reicht die Antwort same-origin ans Dashboard weiter — das umgeht das Problem vollständig, unabhängig von der genauen Ursache auf Shelly-Seite.
 
 ## 4) Von einem anderen Rechner im selben Netz zugreifen
 
@@ -88,14 +90,17 @@ Der Proxy lauscht standardmäßig auf allen Netzwerkschnittstellen (`BIND_ADDRES
 
 ```
 Lokal:    http://localhost:8000/
-Im Netz:  http://192.168.178.121:8000/   (von jedem Rechner im selben Netzwerk, das ist die IP-Adresse des Rechners auf dem der Proxy läuft)
+Im Netz:  http://192.168.178.21:8000/   (IP-Adresse des Rechners, auf dem der Proxy läuft)
 ```
 
-Einfach die „Im Netz"-Adresse auf einem anderen Gerät im selben WLAN/LAN öffnen.
+Nehmt genau die Adresse aus der Zeile „Im Netz" — am besten per Copy/Paste. Zwei Stolpersteine, die dabei regelmäßig auftreten:
 
-Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **„Zugriff zulassen"** (privates Netzwerk) bestätigen, sonst kommen andere Rechner nicht durch.
+* **`http://`, nicht `https://`.** Der Proxy spricht kein TLS. Bei `localhost` korrigiert der Browser das oft stillschweigend, bei einer IP-Adresse nicht.
+* **Die richtige IP.** Hat der Rechner mehrere Schnittstellen (WLAN und LAN gleichzeitig, VPN, Docker), gibt es auch mehrere Adressen. `ipconfig` bzw. `ip addr` schafft Klarheit.
 
-⚠️ **Kein Login/Zugriffsschutz** — jeder im selben Netz kann mit der URL das Dashboard öffnen und Regelparameter ändern. Für ein Heimnetz meist unproblematisch; **nicht** per Portweiterleitung offen ins Internet stellen.
+Falls beim ersten Start ein Windows-Firewall-Dialog erscheint: **„Zugriff zulassen"** (privates Netzwerk) bestätigen, sonst kommen andere Rechner nicht durch. Der Dialog erscheint **nur einmal** — wurde er weggeklickt, hilft nur eine manuelle Freigabe (siehe Troubleshooting).
+
+⚠️ **Kein Login/Zugriffsschutz** — jeder im selben Netz kann mit der URL das Dashboard öffnen und Regelparameter ändern. Im Heimnetz meist unproblematisch; **nicht** per Portweiterleitung offen ins Internet stellen.
 
 Für dauerhaften Zugriff eignet sich ein immer laufendes Gerät (Raspberry Pi, NAS, Mini-PC) besser als ein Laptop, den man zuklappt.
 
@@ -111,32 +116,65 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 | Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10–98 %, 2er-Schritte |
 | Laden aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
 
-- **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern auch das Gerät selbst.
-- **Laden aus dem Netz** (`inputLimit`) ist eine Zusatzschnittstelle für manuelles AC-Laden. Das Regel-Script schreibt den Wert unverändert aufs Gerät; sinnvoll ist das nur, wenn der Hub vorher über die beiden Schalter aus der Regelung genommen wurde. Das Dashboard prüft das **nicht** — der Regler steht immer zur Verfügung.
-- **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb auch nicht mehr als Bedienelement auf. `config_api` liefert den Wert weiterhin mit — die Seite braucht ihn nur intern, um Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
-- **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „warum tut der Hub nichts"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
-- **Auffrischung der Seite**: fest alle 4 s (`POLL_SEC`), kein Bedienelement mehr. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
-- `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
-- Jedes Bedienelement sperrt sich nach einer Eingabe für 4 s (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
-- Geräteliste, Sollwerte, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst (vermeidet Doppelpflege).
-- Der Verlauf steckt als kompakte Kurve direkt in den beiden Kacheln oben: Netzsaldo in der linken, Hub-Summe in der rechten. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
-- Der Verlauf wird in der Seite geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
-- Die Seite startet immer in der Nachtsicht; der Schalter oben rechts wechselt zur Tagsicht, die Systemeinstellung des Geräts spielt keine Rolle mehr.
-- Unabhängig vom Browser-Poll-Intervall fragt das API-Script auf dem Shelly selbst alle 5 s (`pollIntervalSec`) Netzzähler und Hubs ab — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch (kein unnötiger Traffic zu den Zendure-Hubs).
-- Im API-Script sorgt ein `busy`-Flag dafür, dass Hintergrundabfrage und `config_api` nie gleichzeitig laufen. Beide sind speicherintensiv (Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`); zusammen trieben sie `memPeak` unnötig hoch. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus und `config_api` wartet bis zu 2 s auf einen freien Slot. Ein hängendes Flag wird nach 15 s (`BUSY_TIMEOUT_MS`) automatisch zurückgesetzt.
+### Was die Regler bewirken
+
+* **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern das Gerät selbst.
+* **Laden aus dem Netz** (`inputLimit`) ist eine Zusatzschnittstelle für manuelles AC-Laden. Das Regel-Script schreibt den Wert unverändert aufs Gerät; sinnvoll ist das nur, wenn der Hub vorher über die beiden Schalter aus der Regelung genommen wurde. **Das Dashboard prüft das nicht** — der Regler steht immer zur Verfügung.
+* **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb nicht als Bedienelement auf. `config_api` liefert den Wert trotzdem mit; die Seite braucht ihn nur intern, um den Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
+* Jedes Bedienelement **sperrt sich nach einer Eingabe für 4 s** (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
+
+### Was die Anzeige zeigt
+
+* **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „Warum tut der Hub nichts?"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
+* **PV-Eingang und schwächste Zelle** stehen als kleine Zeile unter der Leistung jeder Hub-Karte:
+  * Der PV-Wert ist `solarInputPower`, also der Gesamteingang des Geräts. Fehlt das Feld — etwa bei reinen AC-Ladern —, entfällt die Angabe komplett, statt fälschlich „0 W" zu zeigen.
+  * Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs, umgerechnet mit Faktor 0,01 (325 → 3,25 V). Packs, die 0 melden, werden übersprungen. Unter 3,0 V wird der Wert amber, unter 2,8 V rot. Aussagekräftig ist er nur unter Last — im Ruhezustand liegen alle Zellen dicht beieinander.
+* **Der Verlauf** steckt als kompakte Kurve in den beiden Kacheln oben: Netzsaldo links, Hub-Summe rechts. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
+* Der Verlauf wird **in der Seite** geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
+* Die Seite startet immer in der **Nachtsicht**; der Schalter oben rechts wechselt zur Tagsicht. Die Systemeinstellung des Geräts spielt keine Rolle.
+* Geräteliste, Sollwert, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst. Das vermeidet Doppelpflege.
+
+### Wer wie oft fragt
+
+* Die **Seite** frischt fest alle 4 s auf (`POLL_SEC`), es gibt kein Bedienelement dafür. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
+* `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
+* Das **API-Script** fragt Netzzähler und Hubs alle 5 s ab (`pollIntervalSec`) — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch. Kein unnötiger Traffic zu den Zendure-Hubs.
+* Ein `busy`-Flag sorgt dafür, dass Hintergrundabfrage und `config_api` **nie gleichzeitig** laufen. Beide sind speicherintensiv (Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`); zusammen trieben sie `memPeak` unnötig hoch. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus, und `config_api` wartet bis zu 2 s auf einen freien Slot. Ein hängendes Flag wird nach 15 s (`BUSY_TIMEOUT_MS`) automatisch zurückgesetzt.
 
 ## 6) Kurz-Troubleshooting
+
+### Dashboard
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
 | Weißes/leeres Fenster, Konsole zeigt „Failed to fetch" | Datei per Doppelklick geöffnet (`file://`) statt über den Proxy | Immer über `http://localhost:8000/` öffnen, nicht die `.html`-Datei direkt |
 | Roter Hinweis-Banner „Fehler beim Laden der Konfiguration" | Proxy läuft nicht, oder `SHELLY_IP`/`SHELLY_SCRIPT_ID` im Proxy falsch | Proxy-Konsole prüfen; `config_api`/`status_api` direkt im Browser testen (Schritt 2.5) |
-| `config_api`/`status_api` liefern direkt im Browser JSON, aber die Seite bleibt trotzdem leer | CORS/Origin-Block der Shelly-Firmware bei `fetch()` (siehe „Warum ein Proxy?") | Sicherstellen, dass die Seite tatsächlich über den Proxy läuft (`localhost:8000`), nicht per `file://` |
+| `config_api`/`status_api` liefern im Browser JSON, die Seite bleibt trotzdem leer | CORS/Origin-Block der Shelly-Firmware bei `fetch()` (siehe „Warum ein Proxy?") | Sicherstellen, dass die Seite über den Proxy läuft (`localhost:8000`), nicht per `file://` |
 | 404 beim Öffnen von `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py` | Beide Dateien zusammenlegen, Proxy neu starten |
 | Netzbezug bleibt „n/a" | `gridSource`/`gridSourceIp` im API-Script falsch, oder Gerät ohne EM-Kanal | `gridSource`-Werte im API-Script gegen das Regel-Script abgleichen |
 | Regler/Schalter wirken nicht auf die Hubs | `kvsEnabled` im Regel-Script steht auf `false` | Im Regel-Script auf `true` setzen, Script neu starten |
-| Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (siehe Schritt 2.2) |
-| Shelly-Script stürzt ab / „out of memory" o. ä. | Passiert nur beim (mittlerweile entfernten) HTML-Endpunkt direkt auf dem Shelly — nicht mehr relevant, seit das Dashboard als eigenständige Datei läuft | Sicherstellen, dass auf dem Shelly wirklich `zendure_dashboard_api.js` läuft (keine HTML-Auslieferung mehr an Bord) |
+| Eingestellte Werte sind nach einem Shelly-Neustart wieder weg | `kvsForceReseed` im Regel-Script steht auf `true` | Auf `false` setzen |
+| Schalter/Regler zeigen falschen oder alten Wert an | API-Script und Regel-Script haben unterschiedliche `devices`-Konfiguration (Reihenfolge/IP) | Beide `CONFIG.devices`-Blöcke exakt abgleichen (Schritt 2.2) |
+| PV-Zeile fehlt bei einem Gerät | Das Gerät liefert kein `solarInputPower` (reine AC-Lader) | Kein Fehler. Zur Kontrolle `http://<hub-ip>/properties/report` im Browser aufrufen |
+| Zellspannung fehlt | Kein `packData` in der Antwort, oder alle Packs melden 0 | Wie oben mit `/properties/report` prüfen |
+
+### Zugriff aus dem Netz
+
+| Symptom | Ursache | Lösung |
+|---|---|---|
+| `localhost` geht, IP-Adresse nicht | `https://` statt `http://` eingegeben | Der Proxy spricht kein TLS — immer `http://` |
+| dito | Falsche IP-Adresse | Adresse aus der Zeile „Im Netz" beim Proxy-Start verwenden, oder per `ipconfig` prüfen |
+| Aufruf läuft in einen Timeout | Windows-Firewall blockiert; der Freigabedialog kam nur beim ersten Start | Als Administrator: `netsh advfirewall firewall add rule name="Zendure Proxy 8000" dir=in action=allow protocol=TCP localport=8000 profile=private` |
+| dito | Netzwerkprofil steht auf „Öffentlich" | `Get-NetConnectionProfile` prüfen, ggf. mit `Set-NetConnectionProfile … -NetworkCategory Private` umstellen |
+| dito, alles andere passt | Gast-WLAN oder Client-Isolation im Router | Gerät ins normale Netz holen |
+| Verbindung wird sofort abgelehnt | Proxy lauscht nur lokal | `BIND_ADDRESS = "0.0.0.0"` prüfen; `netstat -ano \| findstr :8000` muss `0.0.0.0:8000` zeigen |
+
+### Shelly-Script
+
+| Symptom | Ursache | Lösung |
+|---|---|---|
+| „out of memory", Script stürzt ab | Zu viele gleichzeitige Allokationen auf dem Shelly | `busy`-Flag und die sofortige Freigabe der Roh-Antworten sind im aktuellen API-Script bereits enthalten. Nach einem Update das Script einmal **stoppen und neu starten** |
+| `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
 
 ## Impressionen
 

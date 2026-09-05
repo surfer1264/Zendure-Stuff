@@ -208,6 +208,9 @@
   .soc-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:1.3rem; }
   .soc-sub{ font-size:.72rem; color:var(--text-muted); }
   .power-value{ font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:.95rem; margin-top:2px; }
+  .pack-line{ font-family:'IBM Plex Mono', monospace; font-size:.7rem; color:var(--text-muted); margin-top:3px; }
+  .pack-line .low{ color:var(--amber-text); }
+  .pack-line .crit{ color:var(--alert-text); }
 
   .divider{ height:1px; background:var(--border); margin:14px 0; }
 
@@ -584,6 +587,7 @@
             '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
             '<div class="soc-sub" id="socSub-' + d.id + '">SoC · Reserve ' + d.minSoc + '%</div>' +
             '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
+            '<div class="pack-line" id="packLine-' + d.id + '"></div>' +
           '</div>' +
         '</div>' +
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
@@ -668,7 +672,8 @@
         inputLimit: Number(d.inputLimit || 0),
         dischargeAllowed: !!d.dischargeAllowed, reverse: !!d.reverse,
         soc: null, power: 0, online: false,
-        acMode: null, socLimit: null, gridReverse: null
+        acMode: null, socLimit: null, gridReverse: null,
+        pv: null, minVol: null
       };
     });
 
@@ -759,6 +764,8 @@
         if (h) {
           d.soc = h.soc; d.power = h.power; d.online = !!h.online;
           d.acMode = h.acMode; d.socLimit = h.socLimit; d.gridReverse = h.gridReverse;
+          d.pv = (h.pv === undefined) ? null : h.pv;
+          d.minVol = (h.minVol === undefined) ? null : h.minVol;
         } else {
           d.online = false;
         }
@@ -824,6 +831,32 @@
     }).join('');
   }
 
+  // Zusatzzeile unter der Leistung: PV-Gesamteingang und schwaechste Zelle.
+  //   pv === null      -> Geraet kennt keinen PV-Eingang (AC-Lader), nichts anzeigen
+  //   pv === 0         -> Eingang vorhanden, liefert gerade nichts -> "PV 0 W"
+  //   minVol === null  -> kein packData geliefert, nichts anzeigen
+  // minVol kommt als Rohwert (Faktor 0,01 V), z.B. 325 -> 3,25 V.
+  function renderPackLine(d){
+    const el = document.getElementById('packLine-' + d.id);
+    if (!el) return;
+
+    if (!d.online) { el.textContent = ''; return; }
+
+    const parts = [];
+    if (d.pv !== null && d.pv !== undefined) parts.push('PV ' + Math.round(d.pv) + ' W');
+
+    if (d.minVol !== null && d.minVol !== undefined) {
+      const volt = d.minVol / 100;
+      // Im Ruhezustand liegen alle Zellen dicht beieinander - aussagekraeftig
+      // wird der Wert erst unter Last.
+      const cls = volt < 2.8 ? 'crit' : (volt < 3.0 ? 'low' : '');
+      const txt = 'min ' + volt.toFixed(2).replace('.', ',') + ' V';
+      parts.push(cls ? '<span class="' + cls + '">' + txt + '</span>' : txt);
+    }
+
+    el.innerHTML = parts.join(' · ');
+  }
+
   function render(){
     const now = new Date();
 
@@ -870,6 +903,7 @@
       if (!dot) return;
       dot.classList.toggle('offline', !d.online);
       renderFlags(d);
+      renderPackLine(d);
 
       const socEl = document.getElementById('socValue-' + d.id);
       const socSubEl = document.getElementById('socSub-' + d.id);

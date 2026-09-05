@@ -24,7 +24,8 @@
 //                        dischargeAllowed / reverse / minSoc / inputLimit.
 //                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
 //   GET status_api    -> { grid:{power,online},
-//                          hubs:[{id,soc,power,acMode,socLimit,gridReverse,online}] }
+//                          hubs:[{id,soc,power,acMode,socLimit,
+//                                 gridReverse,pv,minVol,online}] }
 //                        Kein Verlauf - den fuehrt die Dashboard-Seite selbst.
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
 //                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
@@ -322,6 +323,7 @@ function offlineHub(index) {
   return {
     id: index, soc: null, power: 0,
     acMode: null, socLimit: null, gridReverse: null,
+    pv: null, minVol: null,
     online: false
   };
 }
@@ -353,6 +355,23 @@ function updateHubStatus(index, callback) {
       }
 
       let p = data.properties;
+
+      // packData liegt NEBEN properties, nicht darin - also vor dem Freigeben
+      // von data auslesen. Pro Pack ist minVol bereits das Minimum ueber alle
+      // Zellen dieses Packs; das Minimum darueber ist die schwaechste Zelle im
+      // ganzen Stapel. Rohwert (Faktor 0.01 V) wird unveraendert
+      // durchgereicht, die Umrechnung macht die Dashboard-Seite.
+      let minVol = null;
+      let packs = data.packData;
+      if (packs && packs.length) {
+        for (let k = 0; k < packs.length; k++) {
+          let v = packs[k] ? packs[k].minVol : undefined;
+          // Schlafende Packs melden 0 - solche Werte nicht mitrechnen.
+          if (typeof v === "number" && v > 0) {
+            if (minVol === null || v < minVol) minVol = v;
+          }
+        }
+      }
       data = null;
 
       let power = 0;
@@ -373,6 +392,12 @@ function updateHubStatus(index, callback) {
         acMode: (p.acMode !== undefined) ? p.acMode : null,
         socLimit: (p.socLimit !== undefined) ? p.socLimit : null,
         gridReverse: (p.gridReverse !== undefined) ? p.gridReverse : null,
+        // null bedeutet: Geraet kennt keinen PV-Eingang (AC-Lader). Eine 0
+        // dagegen heisst: Eingang vorhanden, liefert gerade nichts. Der
+        // Unterschied muss erhalten bleiben, sonst zeigt das Dashboard fuer
+        // AC-Geraete faelschlich "0 W" an.
+        pv: (p.solarInputPower !== undefined) ? p.solarInputPower : null,
+        minVol: minVol,
         online: true
       });
     }
