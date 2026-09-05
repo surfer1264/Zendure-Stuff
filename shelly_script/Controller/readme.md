@@ -1,15 +1,13 @@
 # Getting Started – in 10 Minuten startklar
 
 Diese Kurzanleitung deckt nur das ab, was für einen **funktionierenden ersten
-Lauf** nötig ist. 
-Einen perfekten EINstieg erhälst Du hier 
+Lauf** nötig ist.
+Einen perfekten EINstieg erhälst Du hier
 [Benutzerdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-SMDC-‐-Benutzerdokumentation)
 
 Alles Weitere (mehrere Geräte, Signal-/WhatsApp-Meldungen, KVS-Live-Override, Debug, Feinabstimmung) ist bewusst ausgeklammert und wird
 in der [Gesamtdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController)
 verlinkt.
-
-
 
 ---
 
@@ -41,15 +39,13 @@ Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
-
-
 ### 2a) Geräteblock
 
 Vollständiger Geräteeintrag (ein Feld pro Zeile, Kommentar dahinter) – pro
 Zendure-Gerät ein solcher Block in `CONFIG.devices[]`:
 
 Für den ersten Lauf reicht es, `ip` korrekt zu setzen – die übrigen Werte
-oben sind bereits sinnvolle, geräte-typische Startwerte. 
+oben sind bereits sinnvolle, geräte-typische Startwerte.
 Mehrere Geräte:
 Block kopieren, mit Komma trennen [Kapitel 4b](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController#4b-mehrere-solarflow-geräte-einpflegen).
 
@@ -65,6 +61,7 @@ Block kopieren, mit Komma trennen [Kapitel 4b](https://github.com/surfer1264/Zen
   generische JSON-Smartmeter wie das Zendure Smart Meter 3CT).
 
 ### 2c) Schwellwerte
+
 Entweder die Standardwerte (erstmal) verwenden (für den Start Gut Genug), oder
 
 `discharge`/`charge` → `concentrateBelow`/`spreadAbove` nach Faustformel
@@ -101,8 +98,7 @@ Entweder die Standardwerte (erstmal) verwenden (für den Start Gut Genug), oder
 Shelly-Adresse ersetzen):
 
 | Zweck | Befehl |
-|---|---|
+| --- | --- |
 | Laufende Scripts auflisten (IDs, Name, Status) | `http://<IP>/rpc/Script.List` |
 | Speicherverbrauch eines bestimmten Scripts | `http://<IP>/rpc/Script.GetStatus?id=<ID>` |
 | Geräte-Betriebszeit, RAM des Gesamtsystems | `http://<IP>/rpc/Sys.GetStatus` |
-
