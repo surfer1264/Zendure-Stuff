@@ -3,6 +3,8 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
+## [HIGHLIGHT: Shelly-Zendure-Suite](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S))
+
 ## [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
 ## [Mein Wiki rund um HA und NodeRed](https://github.com/surfer1264/Zendure-Stuff/wiki)
