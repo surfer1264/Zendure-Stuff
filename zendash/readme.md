@@ -1,4 +1,9 @@
-<img width="1000" alt="image" src="https://github.com/user-attachments/assets/c0d895d6-cf44-4bad-85ff-3d6346015b26" />
+<a href="https://ko-fi.com/surfer1264">
+  <img width="800" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
+</a>
+
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c0d895d6-cf44-4bad-85ff-3d6346015b26" />
 
 
 # Zendure Grid Dashboard — Inbetriebnahme
