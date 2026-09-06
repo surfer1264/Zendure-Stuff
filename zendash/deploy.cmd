@@ -8,12 +8,12 @@ set SHELLY_IP=192.168.178.149
 set SKRIPTNAME=zendash
 
 REM Generische Version (frisch von GitHub geladen)
-set QUELLE=zendure_dashboard_api.js
+set QUELLE=zendash_api_src.js
 REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
 REM Zwischendatei, die hochgeladen wird
 set FERTIG=tmp.js
-set MINI=zendash_api_upload_mini.js
+set MINI=zendash_api_mini.js
 REM ====================================================================
 
 cd /d "%~dp0"

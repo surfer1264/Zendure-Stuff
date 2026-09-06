@@ -7,7 +7,7 @@ Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly
 
 | Datei | Läuft wo | Aufgabe |
 |---|---|---|
-| `zendure_dashboard_api.js` | als Script auf dem Shelly (eigenes Gerät empfohlen, siehe Schritt 2) | liefert reine JSON-Daten (`config_api` / `status_api` / `kvs_set_api`) für das Dashboard |
+| `zendash_api_mini.js` | als Script auf dem Shelly (eigenes Gerät empfohlen, siehe Schritt 2) | liefert reine JSON-Daten (`config_api` / `status_api` / `kvs_set_api`) für das Dashboard |
 | `zendure_proxy.py` | auf eurem PC/Mac/Raspi/NAS | liefert die Dashboard-Seite aus und fragt die Shelly-API stellvertretend ab (löst ein Zugriffsproblem, siehe unten) |
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
@@ -66,7 +66,7 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
 
 ## 3) API-Script einrichten
 
-1. **Settings → Scripts** auf dem Gerät aus Schritt 2 → neues Script anlegen, Inhalt von `zendure_dashboard_api.js` einfügen. Liegt es auf demselben Shelly wie das Regel-Script, dieses **nicht** überschreiben, sondern ein zusätzliches anlegen.
+1. **Settings → Scripts** auf dem Gerät aus Schritt 2 → neues Script anlegen, Inhalt von `zendash_api_mini.js` einfügen. Liegt es auf demselben Shelly wie das Regel-Script, dieses **nicht** überschreiben, sondern ein zusätzliches anlegen.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
    - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
