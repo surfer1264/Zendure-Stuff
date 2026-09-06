@@ -10,6 +10,7 @@ REM ====================================================================
 REM Generische Version (frisch von GitHub geladen)
 set QUELLE=zerooutput_multi_kvs_src.js
 REM ====================================================================
+REM Gepatchte Version (mit der myconfig.js)
 set PATCH=zerooutput_multi_kvs_patch.js
 REM ====================================================================
 REM Datei mit deinem CONFIG-Block
