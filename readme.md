@@ -1,6 +1,7 @@
 
-<img width="1000" alt="image" src="https://github.com/user-attachments/assets/543ef11f-5c50-478d-8968-51bc9828549f" />
-
+<a href="https://ko-fi.com/surfer1264">
+  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
+</a>
 
 ## [Das Zendure Universum und Datenblätter](https://github.com/surfer1264/ZendureWiki/wiki/Links)
 
