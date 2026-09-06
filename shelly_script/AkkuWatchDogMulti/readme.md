@@ -1,3 +1,7 @@
+<a href="https://ko-fi.com/surfer1264">
+  <img width="800" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
+</a>
+
 # AkkuVolt Watchdog — Multi-Device (zenSDK) — Schnellstart
 
 > ⚠️ Beobachtet nur, greift nicht aktiv ein. Auf eigene Verantwortung nutzen, ordentlich testen.
