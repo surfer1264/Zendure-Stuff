@@ -521,7 +521,7 @@ function buildConfig(){
     const reverse = !!(state.chargingEnabled && d.reverse);
     const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
     return `    {
-      ip: "${d.ip || '192.168.X.X'}",
+      ip: "${(d.ip || '192.168.X.X').replace(/"/g,'')}",
       label: "${(d.label||'').replace(/"/g,'')}",
 
       minSoc: ${num(d.minSoc,15)},
@@ -536,10 +536,10 @@ function buildConfig(){
   }).join(",\n");
 
   let gridBlock = `  gridSource: "${state.gridSource}",\n`;
-  gridBlock += `  gridSourceIp: "${state.gridSource==='remote' ? (state.gridSourceIp||'<IP address Shelly Pro 3EM>') : '<IP address Shelly Pro 3EM>'}",\n`;
+  gridBlock += `  gridSourceIp: "${(state.gridSource==='remote' ? (state.gridSourceIp||'<IP address Shelly Pro 3EM>') : '<IP address Shelly Pro 3EM>').replace(/"/g,'')}",\n`;
   gridBlock += `  gridSourceEmId: ${state.gridSourceEmId},\n`;
-  gridBlock += `  gridSourceUrl: "${state.gridSource==='http_json' ? (state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report') : 'http://<IP-of-your-meter>/properties/report'}",\n`;
-  gridBlock += `  gridSourceField: "${state.gridSource==='http_json' ? (state.gridSourceField||'total_power') : 'total_power'}",\n`;
+  gridBlock += `  gridSourceUrl: "${(state.gridSource==='http_json' ? (state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report') : 'http://<IP-of-your-meter>/properties/report').replace(/"/g,'')}",\n`;
+  gridBlock += `  gridSourceField: "${(state.gridSource==='http_json' ? (state.gridSourceField||'total_power') : 'total_power').replace(/"/g,'')}",\n`;
   gridBlock += `  gridSourceInvert: ${state.gridSource==='http_json' ? !!state.gridSourceInvert : false},`;
 
   const grm = state.gridReverseMode || "dynamic";

@@ -8,23 +8,30 @@ set SHELLY_IP=192.168.178.117
 set SKRIPTNAME=zerooutput
 
 REM Generische Version (frisch von GitHub geladen)
-set QUELLE=zerooutput_multi_kvs_mini.js
+set QUELLE=D:\Uspace\git\Zendure-Stuff\shelly_script\Controller\zerooutput_multi_kvs_src.js
+set PATCH=zerooutput_multi_kvs_patch.js
 REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
 REM Zwischendatei, die hochgeladen wird
-set FERTIG=fertig1.js
+set FERTIG=upload_mini.js
 REM ====================================================================
 
 cd /d "%~dp0"
 
 echo.
-echo === 1/2  CONFIG-Block einsetzen ===
-python swap_config.py "%QUELLE%" --config-from "%MEINE_CONFIG%" -o "%FERTIG%"
+echo === 1/3  CONFIG-Block einsetzen ===
+python3 swap_config.py "%QUELLE%" --config-from "%MEINE_CONFIG%" -o "%PATCH%"
 if errorlevel 1 goto :fehler
 
 echo.
-echo === 2/2  Auf Shelly %SHELLY_IP% laden ===
-python upload_shelly.py "%FERTIG%" --ip %SHELLY_IP% --name %SKRIPTNAME%
+echo === 2/3  MINIFY ===
+python3 minify_keep_config.py "%PATCH%" "%FERTIG%"
+del "%PATCH%"
+if errorlevel 1 goto :fehler
+
+echo.
+echo === 2/3  Auf Shelly %SHELLY_IP% laden ===
+python3 upload_shelly.py "%FERTIG%" --ip %SHELLY_IP% --name %SKRIPTNAME%
 if errorlevel 1 goto :fehler
 
 echo.
