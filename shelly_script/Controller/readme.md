@@ -1,3 +1,8 @@
+buy me a coffee
+
+https://ko-fi.com/surfer1264
+
+
 # Getting Started – in 10 Minuten startklar
 
 Diese Kurzanleitung deckt nur das ab, was für einen **funktionierenden ersten
