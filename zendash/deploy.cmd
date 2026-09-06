@@ -12,23 +12,25 @@ set QUELLE=zendure_dashboard_api.js
 REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
 REM Zwischendatei, die hochgeladen wird
-set FERTIG=zendash_api_upload.js
+set FERTIG=tmp.js
 set MINI=zendash_api_upload_mini.js
 REM ====================================================================
 
 cd /d "%~dp0"
 
 echo.
-echo === 1/2  CONFIG-Block einsetzen ===
-python swap_config.py "%QUELLE%" --config-from "%MEINE_CONFIG%" -o "%FERTIG%"
+echo === 1/3  CONFIG-Block einsetzen ===
+python3 swap_config.py "%QUELLE%" --config-from "%MEINE_CONFIG%" -o "%FERTIG%"
 if errorlevel 1 goto :fehler
 
+echo === 2/3  MINIFY ===
 python3 minify_keep_config.py "%FERTIG%" "%MINI%"
+del "%FERTIG%"
 if errorlevel 1 goto :fehler
 
 echo.
-echo === 2/2  Auf Shelly %SHELLY_IP% laden ===
-python upload_shelly.py "%MINI%" --ip %SHELLY_IP% --name %SKRIPTNAME%
+echo === 3/3  Auf Shelly %SHELLY_IP% laden ===
+python3 upload_shelly.py "%MINI%" --ip %SHELLY_IP% --name %SKRIPTNAME%
 if errorlevel 1 goto :fehler
 
 

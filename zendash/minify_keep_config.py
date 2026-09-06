@@ -157,7 +157,11 @@ def main():
 
         ok = verify(before + after, before_min + after_min, output, tmp_dir)
 
-    with open(output_path, "w", encoding="utf-8") as f:
+    # newline="" auch hier - sonst uebersetzt Python unter Windows jedes "\n"
+    # in os.linesep ("\r\n"), und zwar auch das "\n", das bereits Teil eines
+    # schon vorhandenen "\r\n" im byte-genau erhaltenen CONFIG-Block ist.
+    # Aus "\r\n" wuerde so "\r\r\n" - genau die verdoppelten Zeilenenden.
+    with open(output_path, "w", encoding="utf-8", newline="") as f:
         f.write(output)
 
     orig_size = len(text.encode("utf-8"))
