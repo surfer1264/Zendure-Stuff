@@ -1,7 +1,6 @@
-// Zendure Dynamic Output Controller - Multi-Device Version
-// Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
-// Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
-//
+// ERSETZEN mit EUER KONFIG
+// Ergebnis des Web-Konfigurators HIER in dieser Datei speichern
+// ------------------------------------------------------------------
 let CONFIG = {
   devices: [
      {

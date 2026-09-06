@@ -6,12 +6,15 @@ REM  HIER ANPASSEN
 REM ====================================================================
 set SHELLY_IP=192.168.178.117
 set SKRIPTNAME=zerooutput
-
+REM ====================================================================
 REM Generische Version (frisch von GitHub geladen)
-set QUELLE=D:\Uspace\git\Zendure-Stuff\shelly_script\Controller\zerooutput_multi_kvs_src.js
+set QUELLE=zerooutput_multi_kvs_src.js
+REM ====================================================================
 set PATCH=zerooutput_multi_kvs_patch.js
+REM ====================================================================
 REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
+REM ====================================================================
 REM Zwischendatei, die hochgeladen wird
 set FERTIG=upload_mini.js
 REM ====================================================================
