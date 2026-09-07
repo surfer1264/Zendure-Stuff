@@ -45,7 +45,11 @@ Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
+….natürlich die Konfiguration per Copy/ Paste in den Controller bringen ( austauschen ) 
+
 ### 2a) Geräteblock
+
+Edituere jetzt den Konfigblock im Controller mit Deinen Daten.
 
 Vollständiger Geräteeintrag (ein Feld pro Zeile, Kommentar dahinter) – pro
 Zendure-Gerät ein solcher Block in `CONFIG.devices[]`:
