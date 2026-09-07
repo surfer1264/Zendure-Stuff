@@ -49,7 +49,7 @@ Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt
 
 ### 2a) Geräteblock
 
-Edituere jetzt den Konfigblock im Controller mit Deinen Daten.
+Falls du den Konfigurator nicht benutzt hast, editiere jetzt den Konfigblock im Controller mit Deinen Daten.
 
 Vollständiger Geräteeintrag (ein Feld pro Zeile, Kommentar dahinter) – pro
 Zendure-Gerät ein solcher Block in `CONFIG.devices[]`:
