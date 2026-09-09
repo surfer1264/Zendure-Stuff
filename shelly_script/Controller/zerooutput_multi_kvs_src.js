@@ -95,15 +95,15 @@ let CONFIG = {
   // true->smartMode 0, false->1
   standbySmartModeZero: false,
   // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
+  // ------------------------------------------------------------------
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG, danach false
   kvsForceReseed: false,
   // operation to keep the console output clean.
+  // ------------------------------------------------------------------
   debug: false,
-
   // ------------------------------------------------------------------
   // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
-
   idleSkip: {
     enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
     cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
@@ -146,14 +146,14 @@ CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
 CONFIG.hysteresis          = Math.max(5, Math.min(40, CONFIG.hysteresis));
 CONFIG.rebalance.socMargin = Math.max(5, Math.min(25, CONFIG.rebalance.socMargin));
 CONFIG.chargeResetMargin   = Math.max(10, Math.min(25, CONFIG.chargeResetMargin));
-if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 10; }
-if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 0;
-if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 10; }
-CONFIG.directionChangeHoldCycles = Math.max(3, Math.min(20, CONFIG.directionChangeHoldCycles));
+if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 15; }
+if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 15;
+if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 15; }
+CONFIG.directionChangeHoldCycles = Math.max(4, Math.min(20, CONFIG.directionChangeHoldCycles));
 
 // Hold time (spread -> single) in cycles
 let CONCENTRATE_HOLD_CYCLES = Math.max(
-  1,
+  5,
   Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
 );
 

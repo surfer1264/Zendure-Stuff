@@ -54,6 +54,12 @@
 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
+  /* Schriftgröße in drei Stufen - fast alle font-size-Werte unten sind in
+     rem angegeben, deshalb skaliert das Umstellen der html-Basisgröße den
+     gesamten Text proportional mit. */
+  html{ font-size:100%; }
+  html[data-fontsize="large"]{ font-size:115%; }
+  html[data-fontsize="xlarge"]{ font-size:130%; }
   body{
     font-family:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     color:var(--text);
@@ -120,6 +126,12 @@
   }
   .theme-toggle:active{ transform:scale(.92); }
   .lock-toggle.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
+  .font-toggle{ font-weight:700; position:relative; }
+  .font-toggle .lvl{
+    position:absolute; bottom:6px; right:7px;
+    font-family:'IBM Plex Mono', monospace; font-weight:600;
+    font-size:.62rem; line-height:1; color:var(--text-muted);
+  }
 
   .btn{
     font-family:'IBM Plex Sans', sans-serif; font-size:.82rem; font-weight:600;
@@ -311,6 +323,7 @@
           <div class="date" id="clockDate">–</div>
         </div>
         <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" title="Bedienung sperren/entsperren">⚿</button>
+        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" title="Schriftgröße: Normal">A<span class="lvl" id="fontSizeLvl">1</span></button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
       </div>
     </header>
@@ -390,6 +403,30 @@
     document.documentElement.setAttribute('data-theme', theme);
     themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
     drawSparks();
+  });
+
+  /* ---------------- Schriftgröße ----------------
+     Drei Stufen, wie beim Sperr-Status bewusst nicht gespeichert - jeder
+     Reload startet bei "Normal". */
+  const fontSizeToggle = document.getElementById('fontSizeToggle');
+  const fontSizeLvl = document.getElementById('fontSizeLvl');
+  const FONT_LEVELS = [
+    { key: 'normal', label: 'Normal' },
+    { key: 'large',  label: 'Groß' },
+    { key: 'xlarge', label: 'Sehr groß' }
+  ];
+  let fontSizeIdx = 0;
+  function applyFontSize(){
+    const lvl = FONT_LEVELS[fontSizeIdx];
+    if (lvl.key === 'normal') document.documentElement.removeAttribute('data-fontsize');
+    else document.documentElement.setAttribute('data-fontsize', lvl.key);
+    fontSizeLvl.textContent = fontSizeIdx + 1;
+    fontSizeToggle.title = 'Schriftgröße: ' + lvl.label + ' (antippen für nächste Stufe)';
+    drawSparks();
+  }
+  fontSizeToggle.addEventListener('click', function(){
+    fontSizeIdx = (fontSizeIdx + 1) % FONT_LEVELS.length;
+    applyFontSize();
   });
 
   /* ---------------- Clock ---------------- */
