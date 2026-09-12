@@ -31,7 +31,7 @@ verlinkt.
 
 ## Schritt 1 – Script installieren (~2 Min)
 
-1. [ab Version 4.x.x Source](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) ohne Minifyer
+1. [ab Version 4.x.x Source](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) ohne Minifyer, lässt sich nicht laden in den Shelly !!!!
 2. [ab Version 4.x.x Minified](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) Minifyer eingesetzt (nur diese Fassung lässt sich in den Shelly laden)
 3. Im Shelly Web-UI: **Scripts → Add Script**
 4. Code einfügen, **Save**
@@ -63,12 +63,10 @@ Block kopieren, mit Komma trennen [Kapitel 4b](https://github.com/surfer1264/Zen
 
 `gridSource` passend wählen:
 
-- **`"local"`** (Standard) – das Script läuft direkt auf einem **Shelly Pro
-  3EM**, keine Änderung nötig.
+- **`"local"`** (Standard) – das Script läuft direkt auf einem **Shelly Pro 3EM**, keine Änderung nötig.
 - **Anderer Smartmeter oder Script läuft auf einem anderen Shelly?** Dann
   reicht `"local"` **nicht** – bitte im Detail in [Kapitel 5](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-Zendure-‐-MultiController#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick)
-  nachschauen (`"remote"` für einen entfernten Pro 3EM, `"http_json"` für
-  generische JSON-Smartmeter wie das Zendure Smart Meter 3CT).
+  nachschauen (`"remote"` für einen entfernten Pro 3EM, `"http_json"` für generische JSON-Smartmeter wie das Zendure Smart Meter 3CT und auch den Shelly 3EM (ohne Pro)).
 
 ### 2c) Schwellwerte
 
