@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "5.0.0";
+CONFIG.version = "5.0.2";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -152,10 +152,11 @@ if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.discharg
 CONFIG.directionChangeHoldCycles = Math.max(4, Math.min(20, CONFIG.directionChangeHoldCycles));
 
 // Hold time (spread -> single) in cycles
-let CONCENTRATE_HOLD_CYCLES = Math.max(
-  5,
-  Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval)
-);
+let CONCENTRATE_HOLD_CYCLES = Math.max(5, Math.round((CONFIG.concentrateHoldMinutes * 60000) / CONFIG.interval));
+
+// Entprellung single -> spread: so viele Zyklen wird eine Ueberschreitung von
+let SPREAD_TRIGGER_CYCLES = 1;
+SPREAD_TRIGGER_CYCLES = Math.max(1, SPREAD_TRIGGER_CYCLES);
 
 // idleSkip: Sekunden -> Zyklen, unabhaengig vom gewaehlten CONFIG.interval
 CONFIG.idleSkip.cyclesUnchanged = Math.max(3, Math.min(50, CONFIG.idleSkip.cyclesUnchanged));
@@ -178,8 +179,8 @@ let state = {
   errors: { em: 0, watchdog: 0, kvs: 0 },
   notified: { em: false, watchdog: false, kvs: false },
 
-  discharge: { mode: "single", active: null, holdCycles: 0 },
-  charge: { mode: "single", active: null, holdCycles: 0 },
+  discharge: { mode: "single", active: null, holdCycles: 0, triggerCycles: 0 },
+  charge: { mode: "single", active: null, holdCycles: 0, triggerCycles: 0 },
   allMaxedLogged: false,
 
   idleUnchangedCount: 0,
@@ -231,11 +232,7 @@ function simpleEncode(str) {
 //
 // Der Call-Pool des Shelly ist begrenzt. Ist er voll, wird der Aufruf
 // NICHT angenommen: Shelly.call wirft dann sofort ("Too many calls in
-// progress") und der Callback laeuft nie. Passiert das in einem Callback,
-// den das System aufgerufen hat (Timer, StatusHandler), gibt es keinen
-// Aufrufer im Skript, der den Fehler abfangen koennte - mJS beendet dann
-// das GESAMTE Skript, die Regelung steht.
-//
+// progress") und der Callback laeuft nie. 
 // Hier wird der Wurf abgefangen und in den normalen Fehlerpfad umgeleitet:
 // der Callback wird mit res=null nachgezogen. Alle Aufrufer pruefen bereits
 // auf "res && res.code === 200" bzw. "err_code !== 0" und landen damit in
@@ -1089,15 +1086,23 @@ function calculate(myCycle) {
   applyOutputs(output, myCycle);
 }
 
-function updateMode(directionState, targetMagnitude, cfg) {
+function updateMode(directionState, targetMagnitude, cfg, capExceeded) {
   let currentMode = directionState.mode;
 
   if (currentMode === "single") {
-    if (targetMagnitude > cfg.spreadAbove) {
-      directionState.holdCycles = 0; // fresh start for the next spread->single evaluation
-      return "spread";
+    if (targetMagnitude > cfg.spreadAbove || capExceeded) {
+      directionState.triggerCycles = directionState.triggerCycles + 1;
+
+      if (directionState.triggerCycles > SPREAD_TRIGGER_CYCLES) {
+        directionState.triggerCycles = 0;
+        directionState.holdCycles = 0; // fresh start for the next spread->single evaluation
+        return "spread";
+      }
+
+      return "single"; // Zyklus wird ausgesetzt - noch nicht bestaetigt
     }
 
+    directionState.triggerCycles = 0;
     return "single";
   }
 
@@ -1404,7 +1409,13 @@ function distributeDischarge(target, exclude) {
   let weight = weights.weight;
   let active = weights.active;
 
-  state.discharge.mode = updateMode(state.discharge, target, CONFIG.discharge);
+  // Kapazitaet des AKTUELL aktiven Geraets (Stand letzter Zyklus) pruefen -
+  // das ist die Grundlage fuer den Debounce, NICHT ein sofortiger Bypass.
+  let stickyIdx = state.discharge.active;
+  let capExceeded = (stickyIdx !== null && stickyIdx !== -1 &&
+    CONFIG.devices[stickyIdx] && target > CONFIG.devices[stickyIdx].maxOutput);
+
+  state.discharge.mode = updateMode(state.discharge, target, CONFIG.discharge, capExceeded);
 
   if (state.discharge.mode === "single") {
     let idx = pickStickyDevice(weight, active, state.discharge);
@@ -1413,22 +1424,25 @@ function distributeDischarge(target, exclude) {
       return zeroOutputs(); // nobody has any headroom at all
     }
 
-    if (target <= CONFIG.devices[idx].maxOutput) {
-      let output = zeroOutputs();
-      let o = Math.round(target);
+    let cfg = CONFIG.devices[idx];
+    let output = zeroOutputs();
+    let o = Math.round(target);
 
-      if (o < CONFIG.dischargeStopPower) {
-        o = 0;
+    if (o > cfg.maxOutput) {
+      if (CONFIG.debug) {
+        print("DEBUG " + cfg.label + ": Ziel " + o +
+          " W ueber maxOutput - waehrend Entprellung am Deckel (" +
+          cfg.maxOutput + " W) gehalten");
       }
-
-      output[idx] = o;
-      return output;
+      o = cfg.maxOutput;
     }
 
-    print("Ziel ueber maxOutput von " + CONFIG.devices[idx].label +
-      " - wechsle sofort in den Mehrere-Geraete-Modus");
-    state.discharge.mode = "spread";
-    state.discharge.holdCycles = 0;
+    if (o < CONFIG.dischargeStopPower) {
+      o = 0;
+    }
+
+    output[idx] = o;
+    return output;
   }
 
   return waterFillDischarge(target, weight, active);
@@ -1440,7 +1454,11 @@ function distributeCharge(target) {
   let active = weights.active;
   let magnitude = -target;
 
-  state.charge.mode = updateMode(state.charge, magnitude, CONFIG.charge);
+  let stickyIdx = state.charge.active;
+  let capExceeded = (stickyIdx !== null && stickyIdx !== -1 &&
+    CONFIG.devices[stickyIdx] && magnitude > CONFIG.devices[stickyIdx].maxInputPower);
+
+  state.charge.mode = updateMode(state.charge, magnitude, CONFIG.charge, capExceeded);
 
   if (state.charge.mode === "single") {
     let idx = pickStickyDevice(weight, active, state.charge);
@@ -1449,22 +1467,25 @@ function distributeCharge(target) {
       return zeroOutputs();
     }
 
-    if (magnitude <= CONFIG.devices[idx].maxInputPower) {
-      let output = zeroOutputs();
-      let o = Math.round(magnitude);
+    let cfg = CONFIG.devices[idx];
+    let output = zeroOutputs();
+    let o = Math.round(magnitude);
 
-      if (o < CONFIG.reverseStopPower) {
-        o = 0;
+    if (o > cfg.maxInputPower) {
+      if (CONFIG.debug) {
+        print("DEBUG " + cfg.label + ": Ladebedarf " + o +
+          " W ueber maxInputPower - waehrend Entprellung am Deckel (" +
+          cfg.maxInputPower + " W) gehalten");
       }
-
-      output[idx] = o > 0 ? (o * -1) : 0;
-      return output;
+      o = cfg.maxInputPower;
     }
 
-    print("Ladebedarf ueber maxInputPower von " + CONFIG.devices[idx].label +
-      " - wechsle sofort in den Mehrere-Geraete-Modus");
-    state.charge.mode = "spread";
-    state.charge.holdCycles = 0;
+    if (o < CONFIG.reverseStopPower) {
+      o = 0;
+    }
+
+    output[idx] = o > 0 ? (o * -1) : 0;
+    return output;
   }
 
   return waterFillCharge(target, weight, active);

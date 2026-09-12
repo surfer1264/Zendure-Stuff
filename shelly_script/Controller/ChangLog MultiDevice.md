@@ -1,3 +1,12 @@
+# Changlog 5.0.2
+Entprellung Concentrate => Above 
+
+Beispiel:
+ein kurzer Lastimpuls (Kühlschrank-Kompressor: 1500 W) soll nicht zu einer Zuschaltung von weiteren Geräten führen...
+1 Takt sorgt dafür , dass solche kurzen Impulse Entprellt werden
+Parameter SPREAD_TRIGGER_CYCLES ist NICHT Teil des CONfig-Blockes und steht per Default auf 1
+
+
 # Changelog 4.5.2/5.0.0
 AC-input-Limit in KVS aufgenommen
 
