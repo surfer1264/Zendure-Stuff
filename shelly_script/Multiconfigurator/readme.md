@@ -6,6 +6,10 @@
 
 Die HTML-Seite auf eine Laufwerk laden und aufrufen
 
+oder
+
+[NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
+
 Für alle drei Tools wird eine passende Konfiguration erstellt
 
 * Conreoller - die Regelmaschine
@@ -25,3 +29,6 @@ Diese Konfigurationen müssen in den jewweiligen Shelly-Script-Code übernommen 
 Der Configurator erzeugt nur die Konfiguration, übernehmen müsst Ihr sie selbst !!
 
 Bei jedem Code-Update ist dieser Schritt erneut durchzuführen.
+
+
+Mit folgenden Tools https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Upload_Controller können diese manuellen Schritte automatisiert werden.
