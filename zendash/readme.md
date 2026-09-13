@@ -51,7 +51,7 @@ Zwei Betriebsarten. **Getrennt ist die empfohlene.**
 |---|---|---|
 | API-Script läuft | auf demselben Shelly wie das Regel-Script | auf einem **eigenen** Shelly (Plus/Pro/Gen3/Gen4 mit Scripting) |
 | KVS-Zugriff | direkt per `Shelly.call` | per nativer RPC über HTTP: `http://<3EM-IP>/rpc/KVS.GetMany` bzw. `/rpc/KVS.Set` |
-| `gridSource` | wie im Regel-Script | `"remote"`, `gridSourceIp` = Shelly mit der EM-Messung |
+| `gridSource` | wie im Regel-Script | `"remote"`, `gridSourceIp` = Shelly mit der EM-Messung oder `http_json` |
 | Speicher | **beide Scripte teilen sich einen Variablenpool** | jedes Gerät hat seinen eigenen |
 
 ### Warum getrennt besser ist
@@ -76,8 +76,7 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
   - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
   - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
   - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
-  - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script.
-  - Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
+  - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script. - Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
