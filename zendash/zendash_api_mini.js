@@ -6,30 +6,28 @@ let CONFIG = {
   // nur als Grenzwerte fuer die Dashboard-Regler.
   // ------------------------------------------------------------------
   devices: [
-    {
-      ip: "192.168.178.143",
-      label: "SF2400",
-      minSoc: 15,
-      maxSoc: 100,
-      dischargeAllowed: true,
-      reverse: true,
-      maxInputPower: 1000,
-      maxOutput: 800,
-      inputLimit: 0,
-      dryRun: false
+     {
+      ip: "192.168.178.143",    
+      label: "SF2400",          
+      minSoc: 20,               
+      maxSoc: 100,              
+      dischargeAllowed: true,   
+      reverse: true,            
+      maxInputPower: 1200,       
+      maxOutput: 800,          
+      dryRun: false            
+     },
+     {
+      ip: "192.168.178.150",   
+      label: "SF800",          
+      minSoc: 20,              
+      maxSoc: 100,             
+      dischargeAllowed: true,  
+      reverse: true,           
+      maxInputPower: 1200,      
+      maxOutput: 800,          
+      dryRun: false            
     },
-    {
-      ip: "192.168.178.150",
-      label: "SF800",
-      minSoc: 15,
-      maxSoc: 100,
-      dischargeAllowed: true,
-      reverse: true,
-      maxInputPower: 2000,
-      maxOutput: 2000,
-      inputLimit: 0,
-      dryRun: false
-    }
   ],
 
   // ------------------------------------------------------------------
@@ -46,7 +44,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   kvsHost: "192.168.178.117",
 
-  hysteresis: 12,
+  hysteresis: 13,
 
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js

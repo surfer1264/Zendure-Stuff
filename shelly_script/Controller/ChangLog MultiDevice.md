@@ -1,3 +1,8 @@
+# Changlog 5.0.4
+Bug: manuelles Laden startet nur sporadisch
+
+* https://github.com/surfer1264/Zendure-Stuff/issues/104
+
 # Changlog 5.0.2
 Entprellung Concentrate => Above 
 

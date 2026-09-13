@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "5.0.2";
+CONFIG.version = "5.0.4";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -1604,6 +1604,23 @@ function applyOutputs(output, myCycle) {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
+    // v5.0.3: Geraet steht im manuellen AC-Laden (Dashboard-Knopf) - beide
+    // Schalter aus UND ein Ladelimit gesetzt. Die Verteilrechnung schliesst
+    // solche Geraete zwar schon ueber Gewicht=0 aus, berechnet aber trotzdem
+    // ein Soll von 0 W und wuerde es bei naechster Gelegenheit auch schreiben
+    // (sobald der Cache vom Ziel abweicht) - das hat bisher das manuelle
+    // Laden nach wenigen Sekunden wieder auf Standby zurueckgesetzt. Deshalb
+    // hier komplett aussteigen: kein Plan, kein Schreiben, Geraet bleibt
+    // unberuehrt, bis der Nutzer "Manuelles Laden beenden" klickt (dann
+    // wird inputLimit wieder 0 und dieser Zweig greift nicht mehr).
+    if (cfg.dischargeAllowed === false && cfg.reverse === false && cfg.inputLimit > 0) {
+      print(
+        "  " + cfg.label + ": manuelles Laden aktiv (" + cfg.inputLimit +
+        " W) - Regelung fuer dieses Geraet pausiert"
+      );
+      continue;
+    }
+
     let rawPlan = planWrite(output[i], cfg, ds);
     let plan = enforceDirectionCooldown(rawPlan, ds);
     let signedPower = planSignedPower(plan);
@@ -1857,6 +1874,21 @@ function syncMinSocDevice(index, callback) {
 // Schnittstelle fuer manuelles AC-Laden; die Regelung bleibt unveraendert.
 // Voraussetzung ist, dass der User das Geraet vorher aus der Lastverteilung
 // genommen hat (reverse:false, dischargeAllowed:false).
+//
+// v5.0.3: Schreibt zusaetzlich acMode/outputLimit/smartMode statt nur
+// inputLimit. Vorher hing es vom zufaelligen acMode des Geraets im Moment
+// des Klicks ab, ob das AC-Laden ueberhaupt anspringt - stand der Hub noch
+// auf acMode 2 (Export) o.ae., blieb inputLimit wirkungslos gesetzt und das
+// Geraet in seinem bisherigen Modus haengen (sporadisch: Standby oder
+// unbemerkt weiterlaufendes Entladen, je nach Ausgangszustand). Jetzt wird
+// acMode 1 (Laden) explizit erzwungen, genau wie es writeDevice() fuer den
+// automatischen Pfad ohnehin tut.
+//
+// Nach erfolgreichem Schreiben werden Software-Cache (ds.acMode/outputLimit/
+// smartMode) und der Richtungswechsel-Schutz (ds.realDirection via
+// updateRealDirection()) nachgezogen. Sonst haette applyOutputs() im naechsten
+// regulaeren Zyklus einen veralteten Stand und der Cooldown-Schutz wuerde
+// waehrend/nach manuellem Laden nicht mehr greifen bzw. faelschlich ausloesen.
 function syncInputLimitDevice(index, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
@@ -1871,10 +1903,17 @@ function syncInputLimitDevice(index, callback) {
 
   httpPost(
     "http://" + cfg.ip + "/properties/write",
-    { sn: ds.serial, properties: { inputLimit: cfg.inputLimit } },
+    { sn: ds.serial, properties: { acMode: 1, outputLimit: 0, inputLimit: cfg.inputLimit, smartMode: 1 } },
     function (res, error_code, error_message) {
       if (res && res.code === 200) {
-        print("  " + cfg.label + ": inputLimit gesetzt: " + cfg.inputLimit + " W");
+        // updateRealDirection() bricht bei outputLimit===0 && inputLimit===0
+        // (Beenden des manuellen Ladens) selbst ab - hier also unbedingt
+        // aufrufen, kein Sonderfall fuer inputLimit=0 noetig.
+        updateRealDirection(ds, 1, 0, cfg.inputLimit);
+        ds.acMode = 1;
+        ds.outputLimit = cfg.inputLimit * -1;
+        ds.smartMode = 1;
+        print("  " + cfg.label + ": manuelles Laden erzwungen (acMode 1), inputLimit gesetzt: " + cfg.inputLimit + " W");
       } else {
         if (CONFIG.debug) {
           print("DEBUG " + cfg.label + "/inputLimitSync - res: " + JSON.stringify(res) +
