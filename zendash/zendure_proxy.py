@@ -129,6 +129,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        # Ohne diese Angabe entscheidet der Browser selbst, wie lange er die
+        # Seite behaelt - iOS Safari ist dabei sehr grosszuegig, erst recht
+        # wenn die Seite als Web-App auf dem Home-Bildschirm liegt. Dann zeigt
+        # das Geraet nach einem Update tagelang die alte Fassung. Im LAN kostet
+        # das erneute Laden nichts.
+        self.send_header("Cache-Control", "no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
         self.end_headers()
         self.wfile.write(body)
 
