@@ -73,10 +73,11 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
 
 1. **Settings → Scripts** auf dem Gerät aus Schritt 2 → neues Script anlegen, Inhalt von `zendash_api_mini.js` einfügen. Liegt es auf demselben Shelly wie das Regel-Script, dieses **nicht** überschreiben, sondern ein zusätzliches anlegen.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
-   - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
-   - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
-   - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
-   - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script. Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
+  - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
+  - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
+  - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
+  - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script.
+  - Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
