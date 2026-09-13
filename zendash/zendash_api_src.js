@@ -7,10 +7,16 @@
 //
 // Endpunkte (alle mit CORS, koennen von jeder Seite/jedem Host aus
 // aufgerufen werden):
-//   GET config_api    -> { version, setpoint, hysteresis, devices:[...] }
+//   GET config_api    -> { version, setpoint, hysteresis, dischargeFixed,
+//                          dischargeStartupPower, devices:[...] }
 //                        devices enthaelt die aktuellen KVS-Werte fuer
 //                        dischargeAllowed / reverse / minSoc / inputLimit.
 //                        hysteresis ist reine ANZEIGE (siehe CONFIG unten).
+//                        dischargeFixed ist der aktuelle KVS-Wert des
+//                        globalen Fix-Sollwerts (zdmc_dischargeFixed).
+//                        dischargeStartupPower ist reine ANZEIGE/Grenzwert
+//                        fuers Dashboard (siehe CONFIG unten) - gueltige
+//                        dischargeFixed-Werte sind 0 ODER >= dieser Wert.
 //   GET status_api    -> { grid:{power,online},
 //                          hubs:[{id,soc,power,acMode,socLimit,
 //                                 gridReverse,pv,minVol,online}] }
@@ -69,6 +75,11 @@ let CONFIG = {
 
   hysteresis: 12,
 
+  // Untere Grenze fuer zdmc_dischargeFixed (0 ausgenommen) - 1:1 aus
+  // CONFIG.dischargeStartupPower im RegelController-Script kopieren, sonst
+  // laesst das Dashboard Werte zu, die der Controller wieder verwirft.
+  dischargeStartupPower: 35,
+
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js
   gridSource: "remote", // "local", "remote", "http_json"
@@ -94,8 +105,12 @@ let CONFIG = {
   pollIntervalSec: 8
 };
 
+if (typeof CONFIG.dischargeStartupPower !== "number" || CONFIG.dischargeStartupPower < 1) {
+  CONFIG.dischargeStartupPower = 35;
+}
+
 // Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-let VERSION = "2.1";
+let VERSION = "2.3";
 
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
@@ -671,12 +686,16 @@ function serveConfig(res, attempt) {
   busyEnter();
   let devices = buildDeviceDefaults();
   let setpoint = 0;
+  let dischargeFixed = 0;
 
   kvsGetAll(function (store) {
     // store === null: KVS nicht lesbar. Dann bleiben die Vorgabewerte aus
     // CONFIG stehen, damit das Dashboard trotzdem eine Antwort bekommt.
     let v = kvsValue(store, "zdmc_setpoint");
     if (v !== undefined) setpoint = Number(v);
+
+    let df = kvsValue(store, "zdmc_dischargeFixed");
+    if (df !== undefined) dischargeFixed = Number(df);
 
     for (let i = 0; i < devices.length; i++) {
       let d = kvsValue(store, "zdmc_dev" + i + "_dischargeAllowed");
@@ -693,6 +712,8 @@ function serveConfig(res, attempt) {
       version: VERSION,
       setpoint: setpoint,
       hysteresis: CONFIG.hysteresis,
+      dischargeFixed: dischargeFixed,
+      dischargeStartupPower: CONFIG.dischargeStartupPower,
       devices: devices
     });
 

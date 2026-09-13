@@ -66,6 +66,11 @@ let CONFIG = {
   kvsHost: "192.168.178.117",
 
   hysteresis: 13,
+  
+  // Untere Grenze fuer zdmc_dischargeFixed (0 ausgenommen) - 1:1 aus
+  // CONFIG.dischargeStartupPower im RegelController-Script kopieren, sonst
+  // laesst das Dashboard Werte zu, die der Controller wieder verwirft.
+  dischargeStartupPower: 35,
 
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - 1:1 Struktur/Feldnamen wie in zerooutput_multi_kvs.js

@@ -218,6 +218,22 @@
     -webkit-appearance:none; appearance:none;
     width:100%; height:28px; background:transparent; accent-color:var(--teal-text); cursor:pointer;
   }
+
+  /* Zahleneingabe fuer zdmc_dischargeFixed - optisch wie der Sollwert-Wert,
+     aber editierbar statt per Regler. Kein Slider, siehe Anforderung. */
+  .hero-input{
+    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
+    font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
+    background:transparent; border:none; color:inherit; width:3.6ch; padding:0;
+    -moz-appearance:textfield;
+  }
+  .hero-input::-webkit-outer-spin-button, .hero-input::-webkit-inner-spin-button{
+    opacity:1; margin-left:4px;
+  }
+  .hero-input:focus{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
+  .hero-input:disabled{ opacity:.55; }
+  .hero-input.invalid{ outline:2px solid var(--alert); outline-offset:3px; border-radius:4px; }
+  .discharge-fixed-card .hero-state{ margin-top:auto; }
   input[type="range"]::-webkit-slider-runnable-track{
     height:6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
   }
@@ -382,6 +398,11 @@
         <input type="range" id="setpointSlider" min="-40" max="40" step="5" value="0">
         <div class="hero-state" id="setpointState">Ziel für den Netzsaldo, −40 bis +40 W</div>
       </div>
+      <div class="card setpoint-card discharge-fixed-card">
+        <div class="hero-label">Fix-Entladung <span class="param-key mono">zdmc_dischargeFixed</span></div>
+        <div class="hero-value"><input type="number" id="dischargeFixedInput" class="hero-input" min="0" step="5" value="0" inputmode="numeric"><span class="unit">W</span></div>
+        <div class="hero-state" id="dischargeFixedState">0 = aus · sonst ≥ 35 W</div>
+      </div>
       <div class="card">
         <div class="hero-label">Netzbezug / Einspeisung</div>
         <div class="hero-value"><span id="gridValue">0</span><span class="unit">W</span></div>
@@ -425,7 +446,7 @@
   // Versionsstand dieser Seite. Muss zur Version des API-Scripts passen -
   // stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "2.2";
+  const VERSION = "2.3";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -665,6 +686,49 @@
     lockControl(e.target);
     kvsSet('zdmc_setpoint', Number(e.target.value)).then(function(ok){
       if (!ok) unlockControl(e.target);
+    });
+  });
+
+  /* ---------------- Fix-Entladung (zdmc_dischargeFixed) ----------------
+     Zahleneingabe statt Regler. Gueltig: 0 (aus) ODER >= dischargeStartupPower
+     (kommt aus config_api - Spiegel von CONFIG.dischargeStartupPower im
+     RegelController). Negative Werte sind nie erlaubt. Ungueltige Eingaben
+     werden NICHT geschrieben, sondern auf den letzten bekannten Gueltigwert
+     zurueckgesetzt - der Controller wuerde sie ohnehin verwerfen (siehe
+     applyKvsValue dort), das Dashboard soll das aber schon vorher abfangen. */
+  const dischargeFixedInput = document.getElementById('dischargeFixedInput');
+  const dischargeFixedStateEl = document.getElementById('dischargeFixedState');
+  let liveDischargeFixed = 0;
+  let dischargeStartupPower = 35; // Vorgabe, wird von config_api ueberschrieben
+
+  function showDischargeFixedState(){
+    dischargeFixedStateEl.textContent =
+      '0 = aus · sonst \u2265 ' + dischargeStartupPower + ' W';
+  }
+
+  function isDischargeFixedValid(v){
+    return Number.isFinite(v) && v >= 0 && (v === 0 || v >= dischargeStartupPower);
+  }
+
+  dischargeFixedInput.addEventListener('input', function(){
+    dischargeFixedInput.classList.remove('invalid');
+  });
+
+  dischargeFixedInput.addEventListener('change', function(e){
+    const v = Math.round(Number(e.target.value));
+
+    if (!isDischargeFixedValid(v)) {
+      dischargeFixedInput.classList.add('invalid');
+      showToast('Ungültig: 0 W oder \u2265 ' + dischargeStartupPower + ' W');
+      e.target.value = liveDischargeFixed;
+      return;
+    }
+
+    e.target.value = v;
+    lockControl(e.target);
+    kvsSet('zdmc_dischargeFixed', v).then(function(ok){
+      if (ok) liveDischargeFixed = v;
+      else unlockControl(e.target);
     });
   });
 
@@ -1037,6 +1101,12 @@
     // im Regel-Script ist die Hysterese nicht ueber die KVS aenderbar.
     liveHysteresis = Number(cfg.hysteresis || 12);
     showSetpointState();
+
+    dischargeStartupPower = Number(cfg.dischargeStartupPower || dischargeStartupPower);
+    liveDischargeFixed = Number(cfg.dischargeFixed || 0);
+    dischargeFixedInput.value = liveDischargeFixed;
+    showDischargeFixedState();
+
     showVersion(cfg.version);
 
     hubs = (cfg.devices || []).map(function(d){
@@ -1115,6 +1185,15 @@
         liveSetpoint = Number(cfg.setpoint || 0);
         liveHysteresis = Number(cfg.hysteresis || liveHysteresis);
         showSetpointState();
+
+        dischargeStartupPower = Number(cfg.dischargeStartupPower || dischargeStartupPower);
+        liveDischargeFixed = Number(cfg.dischargeFixed || 0);
+        showDischargeFixedState();
+        if (!isBusy(dischargeFixedInput)) {
+          dischargeFixedInput.value = liveDischargeFixed;
+          dischargeFixedInput.classList.remove('invalid');
+        }
+
         showVersion(cfg.version);
         if (!isBusy(setpointSlider)) {
           setpointSlider.value = liveSetpoint;
