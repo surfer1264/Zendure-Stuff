@@ -31,7 +31,7 @@ verlinkt.
 
 ## Schritt 1 – Script installieren (~2 Min)
 
-1. [ab Version 4.x.x Source](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) ohne Minifyer, lässt sich nicht laden in den Shelly !!!!
+1. INFO: [ab Version 4.x.x Source](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) ohne Minifyer, lässt sich nicht laden in den Shelly !!!!
 2. [ab Version 4.x.x Minified](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) Minifyer eingesetzt (nur diese Fassung lässt sich in den Shelly laden)
 3. Im Shelly Web-UI: **Scripts → Add Script**
 4. Code einfügen, **Save**
@@ -46,6 +46,9 @@ Falls DU nicht weißt wie man Scripte im Shelly installiert: https://github.com/
 Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt 3,
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+
+[NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
+
 
 ….natürlich die Konfiguration per Copy/ Paste in den Controller bringen ( austauschen ) 
 
