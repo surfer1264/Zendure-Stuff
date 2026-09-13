@@ -37,6 +37,8 @@ verlinkt.
 4. Code einfügen, **Save**
 5. Noch **nicht** starten – erst nach Schritt 2.
 
+Falls DU nicht weißt wie man Scripte im Shelly installiert: https://github.com/surfer1264/Zendure-Stuff/wiki/Install-and-Run-Shelly-Script 
+
 ---
 
 ## Schritt 2 – Minimalkonfiguration (~5 Min)
