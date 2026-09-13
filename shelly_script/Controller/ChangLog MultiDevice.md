@@ -1,3 +1,17 @@
+# Changlog 5.0.6
+NEUER Parameter hinter dem CONFIG-Block (da Default:0)
+`CONFIG.dischargeFixed`
+
+Erweiterung: Regelung wird mit einem festen Regeltarget (Fixer Wert) überschrieben
+Die Regelugn wird damit deaktiviert und nur der fixe Wert geliefert
+
+`CONFIG.dischargeFixed=0` : Regelung aktiv
+`CONFIG.dischargeFixed>0 und >dischargeStartupPower` : Regelung deaktiv, System gibt `dischargeFixed` aus
+nur als KVS-Wert verfügbar wenn kvsEnabled: true
+
+* https://github.com/surfer1264/Zendure-Stuff/issues/103
+
+
 # Changlog 5.0.4
 Bug: manuelles Laden startet nur sporadisch
 

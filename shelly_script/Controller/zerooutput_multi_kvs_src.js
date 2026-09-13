@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "5.0.4";
+CONFIG.version = "5.0.6";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -149,6 +149,13 @@ CONFIG.chargeResetMargin   = Math.max(10, Math.min(25, CONFIG.chargeResetMargin)
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 15; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 15;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 15; }
+
+// Globaler Fix-Sollwert fuer Entladung in Watt (KVS-live-overridable).
+// 0 = aus (normale Netzsaldo-Regelung). Gueltige Werte: 0 ODER >= dischargeStartupPower.
+// Ersetzt bei aktivem Wert die Netzsaldo-basierte Berechnung im Entladepfad komplett -
+// Ladepfad (chargeTarget) bleibt unberuehrt.
+CONFIG.dischargeFixed=0;
+
 CONFIG.directionChangeHoldCycles = Math.max(4, Math.min(20, CONFIG.directionChangeHoldCycles));
 
 // Hold time (spread -> single) in cycles
@@ -491,6 +498,12 @@ function readKvsOverrides(myCycle, callback) {
       function (v) { CONFIG.setpoint = v; });
     }
 
+    if (items["zdmc_dischargeFixed"]) {
+      applyKvsValue("zdmc_dischargeFixed", items["zdmc_dischargeFixed"].value, CONFIG.dischargeFixed,
+      function (v) { return v === 0 || v >= CONFIG.dischargeStartupPower; },
+      function (v) { CONFIG.dischargeFixed = v; });
+    }
+
     for (let i = 0; i < CONFIG.devices.length; i++) {
       let dev = CONFIG.devices[i];
 
@@ -586,6 +599,7 @@ function seedKvsDefaults(callback) {
     }
 
     addPair("zdmc_setpoint", CONFIG.setpoint);
+    addPair("zdmc_dischargeFixed", CONFIG.dischargeFixed);
 
     for (let i = 0; i < CONFIG.devices.length; i++) {
       addPair("zdmc_dev" + i + "_dischargeAllowed",
@@ -978,6 +992,11 @@ function calculate(myCycle) {
   }
 
   let dischargeTarget = Math.round(state.smoothedOutput);
+  let dischargeFixedActive = CONFIG.dischargeFixed > 0;
+
+  if (dischargeFixedActive) {
+    dischargeTarget = CONFIG.dischargeFixed;
+  }
 
   let rawCharge = Math.round((state.gridPower - CONFIG.setpoint) + sumZenReverse);
 
@@ -1045,7 +1064,9 @@ function calculate(myCycle) {
 
   print(
     "Netzsaldo: " + Math.round(state.gridPower) + " W | Ist-Summe: " + sumZen +
-    " W | Regelsignal: " + dischargeTarget + " W | Ladekorrektur: " + ladeKorrektur + " W"
+    " W | Regelsignal: " + dischargeTarget +
+    (dischargeFixedActive ? " W [FIX]" : " W") +
+    " | Ladekorrektur: " + ladeKorrektur + " W"
   );
 
   if (CONFIG.idleSkip.enabled) {
