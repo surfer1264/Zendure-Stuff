@@ -336,7 +336,7 @@ function renderGridSource(){
     <div class="choice ${s==='http_json'?'selected':''}" onclick="setGridSource('http_json')">
       <input type="radio" name="gs" ${s==='http_json'?'checked':''}>
       <div><div class="ct">Ich habe ein anderes Smartmeter mit JSON-über-HTTP-Schnittstelle</div>
-      <div class="cd">Z. B. Zendure Smart Meter 3CT, Shelly3EM (ohne Pro), Tasmota oder anderes Gerät mit REST-Schnittstelle.</div></div>
+      <div class="cd">Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät.</div></div>
     </div>
 
     ${ s!=='http_json' ? `
@@ -365,7 +365,7 @@ function renderGridSource(){
         Vorzeichen ist invertiert (nach Test einmalig prüfen)
       </label>
       ${ (state.products.zendash && state.products.controller) ? `
-      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">Dein Smartmeter ist kein Shelly — der Controller läuft trotzdem auf einem eigenen Shelly, dessen IP für die zenDash-API benötigt wird.</p>
+      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">Dein Smartmeter ist kein Shelly — der Controller läuft trotzdem auf einem eigenen Shelly, dessen IP zenDash-API für die KVS braucht.</p>
       ${controllerHostIpField()}
       ` : "" }
       ${ (state.products.zendash && !state.products.controller) ? `
@@ -524,7 +524,7 @@ function renderCtrlGridReverse(){
       <div class="cd">Der Schalter wird einmal beim Start auf "gesperrt" gesetzt und danach nie wieder verändert.</div></div>
     </div>
 
-    ${ allowed ? `<div class="note">Der zugehörige Toleranzwert <code>chargeResetMargin</code> (nur bei "Automatisch" relevant) bleibt auf dem Standardwert 10 Prozentpunkte.</div>` : "" }
+    ${ allowed ? `<div class="note">Der zugehörige Toleranzwert <code>chargeResetMargin</code> (nur bei "Automatisch" relevant) bleibt auf dem Standardwert 5 Prozentpunkte.</div>` : "" }
   </div>`;
 }
 
@@ -784,6 +784,9 @@ ${gridBlock}
 }
 
 // ---------- Ergebnis ----------
+const CONFIG_FILENAMES = { ctrl: 'controller-config.js', wd: 'watchdog-config.js', zd: 'zendash-api-config.js' };
+const CONFIG_BUILDERS = { ctrl: buildControllerConfig, wd: buildWatchdogConfig, zd: buildZenDashConfig };
+
 function resultBlock(title, key, cfg, hint){
   return `
   <div class="panel">
@@ -791,19 +794,32 @@ function resultBlock(title, key, cfg, hint){
     <p class="hint">${hint}</p>
     <div class="copy-row">
       <button class="btn" onclick="copyConfig('${key}')">📋 In Zwischenablage kopieren</button>
+      <button class="btn" onclick="downloadConfig('${key}')">💾 Als Datei speichern</button>
     </div>
     <pre id="configOut_${key}">${escapeHtml(cfg)}</pre>
   </div>`;
 }
 
 function copyConfig(key){
-  const builders = { ctrl: buildControllerConfig, wd: buildWatchdogConfig, zd: buildZenDashConfig };
-  const text = builders[key]();
+  const text = CONFIG_BUILDERS[key]();
   navigator.clipboard.writeText(text).then(()=>{
     const t = document.getElementById('toast');
     t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'), 1600);
   });
+}
+
+function downloadConfig(key){
+  const text = CONFIG_BUILDERS[key]();
+  const blob = new Blob([text], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = CONFIG_FILENAMES[key];
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderResult(){
