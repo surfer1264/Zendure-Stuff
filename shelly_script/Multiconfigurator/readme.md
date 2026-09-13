@@ -24,9 +24,9 @@ Der Configurator fragt die wesentlichen insbedondere geräteabhängigen Paranete
 
 **ACHTUNG**
 
-Diese Konfigurationen müssen in den jewweiligen Shelly-Script-Code übernommen werden. Der Shelly Script-Code enthält eine anonyme Konfiguration, die ausgetasucht werden muss
+Diese Konfigurationen müssen in den jeweiligen Shelly-Script-Code übernommen werden. Der Shelly Script-Code enthält eine anonyme Konfiguration, die aber ausgetauscht werden muss!
 
-Der Configurator erzeugt nur die Konfiguration, übernehmen müsst Ihr sie selbst !!
+Der Configurator **erzeugt nur die Konfiguration**, übernehmen müsst Ihr sie selbst !!
 
 Bei jedem Code-Update ist dieser Schritt erneut durchzuführen.
 
