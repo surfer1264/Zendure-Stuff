@@ -47,7 +47,7 @@ Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
-[NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
+[NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
 
 
 ….natürlich die Konfiguration per Copy/ Paste in den Controller bringen ( austauschen ) 
