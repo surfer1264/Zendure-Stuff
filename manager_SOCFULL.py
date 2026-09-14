@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import hmac
 import json
 import logging
 import traceback
@@ -134,7 +135,10 @@ class ZendureManager(DataUpdateCoordinator[None], EntityDevice):
                 auto_mqtt = self.config_entry.data.get(CONF_AUTO_MQTT_USER, False)
                 if auto_mqtt and Api.localServer is not None and Api.localServer != "":
                     try:
-                        psw = hashlib.md5(deviceId.encode()).hexdigest().upper()[8:24]  # noqa: S324
+                        # Derive a per-device MQTT password using HMAC-SHA256 keyed with the
+                        # config entry's secret entry_id, avoiding the collision-prone MD5
+                        # hash of the (often guessable) deviceId alone.
+                        psw = hmac.new(self.config_entry.entry_id.encode(), deviceId.encode(), hashlib.sha256).hexdigest().upper()[:16]
                         provider: auth_ha.HassAuthProvider = auth_ha.async_get_provider(self.hass)
                         credentials = await provider.async_get_or_create_credentials({"username": deviceId.lower()})
                         user = await self.hass.auth.async_get_user_by_credentials(credentials)
