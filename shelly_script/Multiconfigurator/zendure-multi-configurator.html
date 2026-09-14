@@ -257,6 +257,193 @@ function removeDevice(idx){
   render();
 }
 
+// ---------- Config-Import ----------
+// Findet ab der ersten "{" das dazugehoerige, korrekt verschachtelte "}"
+// (ignoriert Klammern in Strings/Kommentaren) und liefert den Objekt-Text.
+function extractBalancedObjectText(raw){
+  const start = raw.indexOf('{');
+  if(start === -1) throw new Error('Kein "{" gefunden');
+  let depth = 0, inStr = null, i = start;
+  for(; i < raw.length; i++){
+    const c = raw[i];
+    if(inStr){
+      if(c === '\\'){ i++; continue; }
+      if(c === inStr) inStr = null;
+      continue;
+    }
+    if(c === '/' && raw[i+1] === '/'){
+      const nl = raw.indexOf('\n', i);
+      i = (nl === -1 ? raw.length-1 : nl);
+      continue;
+    }
+    if(c === '/' && raw[i+1] === '*'){
+      const end = raw.indexOf('*/', i+2);
+      i = (end === -1 ? raw.length-1 : end+1);
+      continue;
+    }
+    if(c === '"' || c === "'" || c === '`'){ inStr = c; continue; }
+    if(c === '{') depth++;
+    else if(c === '}'){
+      depth--;
+      if(depth === 0){ i++; break; }
+    }
+  }
+  if(depth !== 0) throw new Error('Klammern nicht ausgeglichen — vollständigen CONFIG-Block einfügen');
+  return raw.slice(start, i);
+}
+
+function parseConfigObject(raw){
+  const objText = extractBalancedObjectText(raw);
+  // eslint-disable-next-line no-new-func
+  return (new Function('return (' + objText + ');'))();
+}
+
+function detectProductType(obj){
+  if(!obj || typeof obj !== 'object') return null;
+  if('vollSchwelle' in obj && 'watchdog' in obj) return 'watchdog';
+  if('kvsHost' in obj && 'dischargeStartupPower' in obj) return 'zendash';
+  if('dampingFactor' in obj && 'reverseStartupPower' in obj) return 'controller';
+  return null;
+}
+
+// Findet ein Gerät per IP in state.devices oder legt es neu an; wendet dann
+// die uebergebenen Felder an (andere Felder — z. B. wdEnabled — bleiben erhalten).
+function mergeImportedDevice(ip, label, fields){
+  if(!ip) return;
+  let d = state.devices.find(x => x.ip === ip);
+  if(!d){
+    d = { label: label||ip, ip: ip, maxOutput: 800, minSoc: 15, maxSoc: 100, reverse: false, maxInputPower: undefined, wdEnabled: true };
+    state.devices.push(d);
+  }
+  if(label) d.label = label;
+  Object.assign(d, fields);
+  return d;
+}
+
+function applyControllerImport(obj){
+  (obj.devices||[]).forEach(dev=>{
+    mergeImportedDevice(dev.ip, dev.label, {
+      maxOutput: num(dev.maxOutput, 800),
+      minSoc: num(dev.minSoc, 15),
+      maxSoc: num(dev.maxSoc, 100),
+      reverse: !!dev.reverse,
+      maxInputPower: dev.reverse ? num(dev.maxInputPower, dev.maxOutput) : undefined
+    });
+  });
+  state.chargingEnabled = state.chargingEnabled || (obj.devices||[]).some(d=>d.reverse);
+
+  if(obj.gridSource){
+    state.gridSource = obj.gridSource;
+    state.gridSourceEmId = num(obj.gridSourceEmId, 0);
+    if(obj.gridSource === 'remote'){
+      state.gridSourceIp = obj.gridSourceIp || '';
+    } else if(obj.gridSource === 'local'){
+      if(obj.gridSourceIp && /^\d+\.\d+\.\d+\.\d+$/.test(obj.gridSourceIp)) state.gridSourceIp = obj.gridSourceIp;
+    } else if(obj.gridSource === 'http_json'){
+      state.gridSourceUrl = obj.gridSourceUrl || '';
+      state.gridSourceField = obj.gridSourceField || 'total_power';
+      state.gridSourceInvert = !!obj.gridSourceInvert;
+    }
+  }
+  if(obj.gridReverseMode) state.gridReverseMode = obj.gridReverseMode;
+  state.kvsEnabled = !!obj.kvsEnabled;
+  applyImportedSignal(obj.signal);
+  state.products.controller = true;
+}
+
+function applyWatchdogImport(obj){
+  (obj.devices||[]).forEach(dev=>{
+    mergeImportedDevice(dev.ip, dev.label, { wdEnabled: dev.enabled !== false });
+  });
+  applyImportedSignal(obj.signal);
+  state.products.watchdog = true;
+}
+
+function applyZendashImport(obj){
+  (obj.devices||[]).forEach(dev=>{
+    mergeImportedDevice(dev.ip, dev.label, {
+      maxOutput: num(dev.maxOutput, 800),
+      minSoc: num(dev.minSoc, 15),
+      maxSoc: num(dev.maxSoc, 100),
+      reverse: !!dev.reverse,
+      maxInputPower: dev.reverse ? num(dev.maxInputPower, dev.maxOutput) : undefined
+    });
+  });
+  state.chargingEnabled = state.chargingEnabled || (obj.devices||[]).some(d=>d.reverse);
+
+  if(obj.kvsHost && obj.kvsHost !== 'local'){
+    state.controllerHostIp = obj.kvsHost;
+  }
+  if(obj.gridSource === 'http_json'){
+    state.gridSource = 'http_json';
+    state.gridSourceUrl = obj.gridSourceUrl || '';
+    state.gridSourceField = obj.gridSourceField || 'total_power';
+    state.gridSourceInvert = !!obj.gridSourceInvert;
+  } else if(obj.gridSourceIp){
+    // zenDash speichert local/remote des Controllers immer als "remote" auf
+    // dieselbe IP — der Modus (local vs. remote) laesst sich daraus allein
+    // nicht sicher rekonstruieren, deshalb nur die IP uebernehmen und den
+    // Modus unangetastet lassen (Nutzer prueft ihn im Schritt "Netzquelle").
+    state.gridSourceIp = obj.gridSourceIp;
+    if(obj.gridSourceEmId !== undefined) state.gridSourceEmId = num(obj.gridSourceEmId, 0);
+  }
+  state.products.zendash = true;
+}
+
+function applyImportedSignal(signal){
+  if(!signal) return;
+  state.signalEnabled = !!signal.enabled;
+  if(signal.typ) state.signalTyp = signal.typ;
+  if(signal.phone && signal.phone !== 'PHONE-STRING') state.signalPhone = signal.phone;
+  if(signal.apiKey && signal.apiKey !== 'YOUR_API_KEY') state.signalApiKey = signal.apiKey;
+  if(signal.webhookUrl && signal.webhookUrl.indexOf('<deine-webhook-id>') === -1) state.signalWebhookUrl = signal.webhookUrl;
+}
+
+function isValidIp(ip){
+  return typeof ip === 'string' && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip.trim());
+}
+
+const IMPORT_NAMES = { controller: 'Controller', watchdog: 'Watchdog', zendash: 'zenDash-API' };
+
+function importConfig(){
+  const el = document.getElementById('importText');
+  const statusEl = document.getElementById('importStatus');
+  const raw = el.value;
+  if(!raw || !raw.trim()){
+    statusEl.textContent = 'Bitte zuerst einen CONFIG-Block einfügen.';
+    statusEl.className = 'error';
+    return;
+  }
+  let obj;
+  try{
+    obj = parseConfigObject(raw);
+  } catch(e){
+    statusEl.textContent = 'Konnte den Text nicht lesen: ' + e.message;
+    statusEl.className = 'error';
+    return;
+  }
+  const type = detectProductType(obj);
+  if(!type){
+    statusEl.textContent = 'Konnte nicht erkennen, zu welchem Produkt diese Config gehört.';
+    statusEl.className = 'error';
+    return;
+  }
+  // unvollständige/unbenutzte Platzhalter-Geräte (noch keine echte IP) vor
+  // dem Merge entfernen, sonst blieben sie neben den importierten stehen
+  state.devices = state.devices.filter(d => isValidIp(d.ip));
+
+  if(type === 'controller') applyControllerImport(obj);
+  else if(type === 'watchdog') applyWatchdogImport(obj);
+  else if(type === 'zendash') applyZendashImport(obj);
+
+  let msg = '✓ ' + IMPORT_NAMES[type] + '-Config eingelesen und übernommen.';
+  if(type === 'zendash') msg += ' Bitte im Schritt "Netzquelle" prüfen, ob local/remote/http_json noch stimmt — das lässt sich aus einer zenDash-API-Config allein nicht sicher ableiten.';
+  statusEl.textContent = msg;
+  statusEl.className = 'hint';
+  el.value = '';
+  render();
+}
+
 // ---------- Step: Produkte ----------
 function toggleProduct(key){
   state.products[key] = !state.products[key];
@@ -286,6 +473,18 @@ function renderProducts(){
     </div>
 
     ${ p.zendash && !p.controller ? `<div class="note">zenDash-API erwartet in der Praxis dieselbe Geräteliste wie ein laufender Controller. Ohne Controller-Auswahl hier fragen wir trotzdem alle nötigen Felder ab, damit der Block für sich funktioniert.</div>` : "" }
+
+    <details style="margin-top:20px;">
+      <summary style="cursor:pointer; font-weight:700; font-size:.85rem; color:var(--muted);">Bestehende Config einlesen, um sie zu aktualisieren</summary>
+      <div style="margin-top:12px;">
+        <p class="hint" style="margin-top:0;">Füge einen kompletten <code>let CONFIG = { ... };</code>-Block ein — Controller, Watchdog oder zenDash-API, wird automatisch erkannt. Für mehrere Produkte: nacheinander einfügen und jedes Mal "Einlesen" klicken.</p>
+        <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
+        <div style="margin-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <button class="btn" onclick="importConfig()">Einlesen &amp; übernehmen</button>
+          <span id="importStatus" class="hint" style="margin:0;"></span>
+        </div>
+      </div>
+    </details>
   </div>`;
 }
 
@@ -646,7 +845,7 @@ ${gridBlock}
   idleSkip: {
     enabled: true,
     cyclesUnchanged: 4,
-    maxSkipSeconds: 48
+    maxSkipSeconds: 44
   },
 
   // ------------------------------------------------------------------
@@ -678,7 +877,7 @@ ${devicesJs}
   minVoltWarn: 2.9,        // V
   minVoltReset: 3.1,       // V
   tempWarn: 45.0,          // °C
-  tempReset: 35.0,         // °C
+  tempReset: 30.0,         // °C
 
   // Astro-Offset
   sunriseOffset: 0,        // Min
@@ -697,7 +896,7 @@ ${devicesJs}
 
   // Polling & Timer
   pollIntervalMs: 120000,
-  httpTimeout: 4,
+  httpTimeout: 5,
   watchdog: 15000,
   errorThreshold: 5,
 

@@ -32,3 +32,9 @@ Bei jedem Code-Update ist dieser Schritt erneut durchzuführen.
 
 
 Mit folgenden Tools https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Upload_Controller können diese manuellen Schritte automatisiert werden.
+
+
+**Neu**
+
+Es können nun auch alte Konfigurationen eingelesen und verändert/erneuert werden. 
+Damit kann sichergestellt werden, dass gleiche Konfigurationen auch für andere Scripte wertgleich übernimmen werden.
