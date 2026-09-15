@@ -8,7 +8,7 @@
 
 Diese Kurzanleitung deckt nur das ab, was für einen **funktionierenden ersten
 Lauf** nötig ist.
-Einen perfekten Einstieg erhälst Du hier
+Einen perfekten Einstieg erhältst Du hier:
 [Benutzerdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-SMDC-‐-Benutzerdokumentation)
 
 Alles Weitere (mehrere Geräte, Signal-/WhatsApp-Meldungen, KVS-Live-Override, Debug, Feinabstimmung) ist bewusst ausgeklammert und wird
