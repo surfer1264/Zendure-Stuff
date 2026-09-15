@@ -45,7 +45,7 @@ Falls DU nicht weißt wie man Scripte im Shelly installiert: https://github.com/
 
 Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt 3,
 
-[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
+[Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html) (only Controller)
 
 [NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
 
