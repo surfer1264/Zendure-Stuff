@@ -192,7 +192,11 @@
   .row{ display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
   .row>.card{ flex:1; min-width:240px; padding:22px 22px 18px; }
 
-  .hero-label{ font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:6px; }
+  .hero-label{
+    font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:6px;
+    line-height:1.3; min-height:2.6em; /* immer 2 Zeilen reserviert, egal ob 1 oder 2 Zeilen genutzt -
+                                           sonst stehen die Werte je nach Labellaenge/Umbruch nicht auf gleicher Hoehe */
+  }
   .hero-value{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
     font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
@@ -234,6 +238,21 @@
   .hero-input:disabled{ opacity:.55; }
   .hero-input.invalid{ outline:2px solid var(--alert); outline-offset:3px; border-radius:4px; }
   .discharge-fixed-card .hero-state{ margin-top:auto; }
+
+  /* Schalter/Slider der Geräte-Karten haben im gesperrten Normalbetrieb
+     keinen Mehrwert (nicht bedienbar) - deshalb an die globale Sperre
+     gekoppelt unsichtbar, nicht nur deaktiviert. Betrifft bewusst NUR
+     .switch-row/.ctrl-row/.manual-row in .hub - Sollwert- und Fix-Entladung-Kachel
+     bleiben immer sichtbar. */
+  #app.hide-hub-controls .hub .switch-row,
+  #app.hide-hub-controls .hub .ctrl-row,
+  #app.hide-hub-controls .hub .manual-row{ display:none; }
+
+  /* Ersatz-Anzeige fuer die ausgeblendeten Schalter: reiner Text, nur im
+     gesperrten Zustand sichtbar (genau umgekehrt zu switch-row/ctrl-row
+     oben), damit Entladen/Netzladen-Status auch gesperrt ablesbar bleibt. */
+  .lock-status{ display:none; font-size:.78rem; color:var(--text-muted); padding:6px 0 10px; }
+  #app.hide-hub-controls .hub .lock-status{ display:block; }
   input[type="range"]::-webkit-slider-runnable-track{
     height:6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
   }
@@ -384,7 +403,7 @@
           <div class="date" id="clockDate">–</div>
         </div>
         <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" title="Bedienung sperren/entsperren">⚿</button>
-        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" title="Schriftgröße: Normal">A<span class="lvl" id="fontSizeLvl">1</span></button>
+        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" title="Schriftgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
       </div>
     </header>
@@ -499,8 +518,8 @@
   }
 
   /* ---------------- Schriftgröße ----------------
-     Drei Stufen, wie beim Sperr-Status bewusst nicht gespeichert - jeder
-     Reload startet bei "Normal". */
+     Drei Stufen, weiterhin bewusst nicht gespeichert (jeder Reload startet
+     wieder bei diesem Standard) - Standard ist jetzt A2 (Groß) statt A1. */
   const fontSizeToggle = document.getElementById('fontSizeToggle');
   const fontSizeLvl = document.getElementById('fontSizeLvl');
   const FONT_LEVELS = [
@@ -508,7 +527,7 @@
     { key: 'large',  label: 'Groß' },
     { key: 'xlarge', label: 'Sehr groß' }
   ];
-  let fontSizeIdx = 0;
+  let fontSizeIdx = 1; // Standard: A2 / "Groß"
   function applyFontSize(){
     const lvl = FONT_LEVELS[fontSizeIdx];
     if (lvl.key === 'normal') document.documentElement.removeAttribute('data-fontsize');
@@ -575,6 +594,7 @@
   let relockTimer = null;
 
   const lockToggle = document.getElementById('lockToggle');
+  const appEl = document.getElementById('app');
 
   // Alle Bedienelemente einsammeln - die Hub-Karten entstehen erst spaeter,
   // deshalb bei jedem Aufruf frisch abfragen.
@@ -594,6 +614,10 @@
         el.disabled = false;
       }
     }
+    // Nur die Geraete-Schalter/-Slider ein-/ausblenden (siehe CSS), nicht
+    // Sollwert oder Fix-Entladung - die bleiben immer sichtbar.
+    appEl.classList.toggle('hide-hub-controls', uiLocked);
+
     lockToggle.textContent = uiLocked ? '⚿' : '⚽';
     lockToggle.classList.toggle('locked', uiLocked);
     lockToggle.title = uiLocked ? 'Bedienung entsperren' : 'Bedienung sperren';
@@ -828,6 +852,8 @@
     drawSpark(battSpark, history);
   }
 
+  applyFontSize(); // Standardgröße (A2) jetzt anwenden - erst hier sind gridSpark/battSpark, die drawSparks() braucht, tatsächlich initialisiert
+
   let resizeTimer = null;
   window.addEventListener('resize', function(){
     clearTimeout(resizeTimer);
@@ -857,6 +883,13 @@
     return Math.max(10, Math.min(99, (max > 0 ? max : 100) - 1));
   }
 
+  // Reiner Text-Ersatz fuer die ausgeblendeten Schalter im gesperrten
+  // Zustand (siehe .lock-status in CSS).
+  function lockStatusText(dischargeAllowed, reverse){
+    return 'Entladen: ' + (dischargeAllowed ? 'erlaubt' : 'gesperrt') +
+      ' · Netzladen: ' + (reverse ? 'erlaubt' : 'gesperrt');
+  }
+
   function buildHubCards(){
     hubsGrid.innerHTML = '';
     hubs.forEach(function(d){
@@ -880,6 +913,7 @@
         '</div>' +
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
         '<div class="divider"></div>' +
+        '<div class="lock-status" id="lockStatus-' + d.id + '">' + lockStatusText(d.dischargeAllowed, d.reverse) + '</div>' +
         '<div class="switch-row">' +
           '<div class="switch-text"><span class="lbl">Entladen erlaubt</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
           '<label class="switch amber"><input type="checkbox" id="discharge-' + d.id + '" ' + (d.dischargeAllowed ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
@@ -1134,6 +1168,9 @@
       const rev = document.getElementById('reverse-' + d.id);
       if (dis && !isBusy(dis)) dis.checked = !!d.dischargeAllowed;
       if (rev && !isBusy(rev)) rev.checked = !!d.reverse;
+
+      const ls = document.getElementById('lockStatus-' + d.id);
+      if (ls) ls.textContent = lockStatusText(!!d.dischargeAllowed, !!d.reverse);
 
       const ms = document.getElementById('minSoc-' + d.id);
       const msVal = document.getElementById('minSocValue-' + d.id);
