@@ -1325,8 +1325,8 @@
     else if (d.socLimit === 2) flags.push(['warn',  'socLimit 2 · leer, Entladen gesperrt']);
     else if (d.socLimit === 0) flags.push(['',      'socLimit 0 · frei']);
 
-    if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · Netzladen gesperrt']);
-    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · Netzladen frei']);
+    if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · Export gesperrt']);
+    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · Export frei']);
 
     box.innerHTML = flags.map(function(f){
       return '<span class="flag ' + f[0] + '">' + f[1] + '</span>';
