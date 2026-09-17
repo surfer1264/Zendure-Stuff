@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "5.0.6";
+CONFIG.version = "5.0.7";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -201,6 +201,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
   state.devices[i] = {
     soc: 0,
     socLimit: null,
+    socStatus: null,
     serial: null,
     zenPower: 0,   
     available: false,  
@@ -873,6 +874,17 @@ function readDevice(index, myCycle, callback) {
       }
       ds.socLimit = newSocLimit;
 
+      let newSocStatus = (data.properties.socStatus !== undefined) ?
+        data.properties.socStatus : null;
+      if (ds.socStatus !== null && newSocStatus !== ds.socStatus) {
+        if (newSocStatus === 1) {
+          print(cfg.label + ": socStatus=1 - SOC-Kalibrierung gestartet, Geraet wird aus Verteilung ausgenommen (Firmware verwaltet Kalibrierung selbst)");
+        } else if (newSocStatus === 0) {
+          print(cfg.label + ": socStatus=0 - SOC-Kalibrierung beendet, Geraet wieder normal verfuegbar");
+        }
+      }
+      ds.socStatus = newSocStatus;
+
       ds.gridReverse = (data.properties.gridReverse !== undefined) ?
         data.properties.gridReverse : null;
 
@@ -1198,7 +1210,7 @@ function computeDischargeWeights(exclude) {
     let cfg = CONFIG.devices[i];
 
     if (!ds.available || cfg.dischargeAllowed === false || ds.socLimit === 2 ||
-        (exclude && exclude[i])) {
+        ds.socStatus === 1 || (exclude && exclude[i])) {
       weight[i] = 0;
       active[i] = false;
       continue;
@@ -1245,7 +1257,7 @@ function evaluateChargeCapacity() {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
-    if (ds.socLimit === 1) {
+    if (ds.socLimit === 1 || ds.socStatus === 1) {
       weight[i] = 0;
       active[i] = false;
       continue;

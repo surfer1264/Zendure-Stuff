@@ -32,8 +32,8 @@ from urllib.error import URLError, HTTPError
 
 CSV_FIELDS = [
     "timestamp",
-    "host",
     "script_id",
+    "host",
     "label",
     "running",
     "cpu",
@@ -101,7 +101,8 @@ def fetch_script_status(host, script_id, timeout):
 
 
 def poll_once(targets, timeout, csv_writer, csv_file_handle):
-    ts = datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+    now = datetime.now(timezone.utc).astimezone()
+    ts = f"[{now.strftime('%Y-%m-%d %H:%M:%S')}]"
 
     for t in targets:
         status, error = fetch_script_status(t["host"], t["script_id"], timeout)
@@ -109,7 +110,7 @@ def poll_once(targets, timeout, csv_writer, csv_file_handle):
         row = {
             "timestamp": ts,
             "host": t["host"],
-            "script_id": t["script_id"],
+            "script_id": f"[Script {t['script_id']}]",
             "label": t["label"],
             "running": "",
             "cpu": "",
@@ -121,7 +122,7 @@ def poll_once(targets, timeout, csv_writer, csv_file_handle):
 
         if error:
             row["error"] = error
-            print(f"[{ts}] {t['label']} ({t['host']}): FEHLER - {error}")
+            print(f"{ts} {t['label']} ({t['host']}): FEHLER - {error}")
         else:
             row["running"] = status.get("running")
             row["cpu"] = status.get("cpu")
@@ -129,7 +130,7 @@ def poll_once(targets, timeout, csv_writer, csv_file_handle):
             row["mem_peak"] = status.get("mem_peak")
             row["mem_free"] = status.get("mem_free")
             print(
-                f"[{ts}] {t['label']} ({t['host']}): running={row['running']} "
+                f"{ts} {t['label']} ({t['host']}): running={row['running']} "
                 f"cpu={row['cpu']} mem_used={row['mem_used']} mem_peak={row['mem_peak']} mem_free={row['mem_free']}"
             )
 
