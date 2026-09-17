@@ -1,0 +1,79 @@
+- resource: "http://192.168.178.117/rpc/KVS.GetMany?match=zdmc_*"
+  scan_interval: 600
+  timeout: 10
+  sensor:
+    - name: "ZDMC dischargeFixed"
+      unique_id: zdmc_kvs_dischargefixed
+      unit_of_measurement: "W"
+      icon: mdi:transmission-tower
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dischargeFixed') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC Setpoint"
+      unique_id: zdmc_kvs_setpoint
+      unit_of_measurement: "W"
+      icon: mdi:transmission-tower
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_setpoint') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev0 minSoc"
+      unique_id: zdmc_kvs_dev0_minsoc
+      unit_of_measurement: "%"
+      icon: mdi:battery-low
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev0_minSoc') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev1 minSoc"
+      unique_id: zdmc_kvs_dev1_minsoc
+      unit_of_measurement: "%"
+      icon: mdi:battery-low
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev1_minSoc') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev0 inputLimit"
+      unique_id: zdmc_kvs_dev0_inputlimit
+      unit_of_measurement: "W"
+      icon: mdi:import
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev0_inputLimit') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev1 inputLimit"
+      unique_id: zdmc_kvs_dev1_inputlimit
+      unit_of_measurement: "W"
+      icon: mdi:import
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev1_inputLimit') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev0 dischargeAllowed"
+      unique_id: zdmc_kvs_dev0_discharge
+      icon: mdi:battery-arrow-down
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev0_dischargeAllowed') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev1 dischargeAllowed"
+      unique_id: zdmc_kvs_dev1_discharge
+      icon: mdi:battery-arrow-down
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev1_dischargeAllowed') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev0 reverse"
+      unique_id: zdmc_kvs_dev0_reverse
+      icon: mdi:battery-arrow-up
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev0_reverse') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dev1 reverse"
+      unique_id: zdmc_kvs_dev1_reverse
+      icon: mdi:battery-arrow-up
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dev1_reverse') | list %}
+        {{ m[0].value if m else none }}

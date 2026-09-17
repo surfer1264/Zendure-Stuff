@@ -1,0 +1,3 @@
+template: !include_dir_merge_list templates/
+rest_command: !include rest_commands.yaml
+rest: !include rest.yaml

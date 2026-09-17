@@ -1,0 +1,5 @@
+zdmc_kvs_set:
+  url: "http://192.168.178.117/rpc/KVS.Set"
+  method: POST
+  content_type: "application/json"
+  payload: '{"key":"{{ key }}","value":{{ value }}}'

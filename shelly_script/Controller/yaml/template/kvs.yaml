@@ -1,0 +1,195 @@
+- number:
+  - name: "Zendure Setpoint"
+    unique_id: zdmc_setpoint
+    state: "{{ states('sensor.zdmc_setpoint') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_setpoint') not in ['unknown','unavailable'] }}"
+    min: -40
+    max: 40
+    step: 5
+    unit_of_measurement: "W"
+    icon: mdi:transmission-tower
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_setpoint
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_setpoint
+
+  - name: "Zendure Fixed"
+    unique_id: zdmc_dischargefixed
+    state: "{{ states('sensor.zdmc_dischargefixed') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dischargefixed') not in ['unknown','unavailable'] }}"
+    min: 0
+    max: 1600
+    step: 20
+    unit_of_measurement: "W"
+    icon: mdi:transmission-tower
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dischargeFixed
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dischargefixed
+
+  - name: "Zendure dev0minSoc"
+    unique_id: zdmc_dev0_minsoc
+    state: "{{ states('sensor.zdmc_dev0_minsoc') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dev0_minsoc') not in ['unknown','unavailable'] }}"
+    min: 10
+    max: 90
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:battery-low
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dev0_minSoc
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_minsoc
+
+  - name: "Zendure dev1minSoc"
+    unique_id: zdmc_dev1_minsoc
+    state: "{{ states('sensor.zdmc_dev1_minsoc') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dev1_minsoc') not in ['unknown','unavailable'] }}"
+    min: 10
+    max: 90
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:battery-low
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dev1_minSoc
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_minsoc
+
+  - name: "Zendure dev0 AC-Laden"
+    unique_id: zdmc_dev0_inputlimit
+    state: "{{ states('sensor.zdmc_dev0_inputlimit') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dev0_inputlimit') not in ['unknown','unavailable'] }}"
+    min: 0
+    max: 1000
+    step: 50
+    unit_of_measurement: "W"
+    icon: mdi:battery-charging-medium
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dev0_inputLimit
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_inputlimit
+
+  - name: "Zendure dev1 AC-Laden"
+    unique_id: zdmc_dev1_inputlimit
+    state: "{{ states('sensor.zdmc_dev1_inputlimit') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dev1_inputlimit') not in ['unknown','unavailable'] }}"
+    min: 0
+    max: 1000
+    step: 50
+    unit_of_measurement: "W"
+    icon: mdi:battery-charging-medium
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dev1_inputLimit
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_inputlimit
+
+- switch:
+  - name: "Zendure dev1 Entladen erlaubt"
+    unique_id: zdmc_dev1_discharge_allowed
+    state: "{{ states('sensor.zdmc_dev1_dischargeallowed') | int(0) > 0 }}"
+    availability: "{{ states('sensor.zdmc_dev1_dischargeallowed') not in ['unknown','unavailable'] }}"
+    icon: mdi:battery-arrow-down
+    turn_on:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev1_dischargeAllowed, value: 1 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_dischargeallowed
+    turn_off:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev1_dischargeAllowed, value: 0 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_dischargeallowed
+
+  - name: "Zendure dev0 Entladen erlaubt"
+    unique_id: zdmc_dev0_discharge_allowed
+    state: "{{ states('sensor.zdmc_dev0_dischargeallowed') | int(0) > 0 }}"
+    availability: "{{ states('sensor.zdmc_dev0_dischargeallowed') not in ['unknown','unavailable'] }}"
+    icon: mdi:battery-arrow-down
+    turn_on:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev0_dischargeAllowed, value: 1 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_dischargeallowed
+    turn_off:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev0_dischargeAllowed, value: 0 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_dischargeallowed
+
+  - name: "Zendure dev1 Laden erlaubt"
+    unique_id: zdmc_dev1_charge_allowed
+    state: "{{ states('sensor.zdmc_dev1_reverse') | int(0) > 0 }}"
+    availability: "{{ states('sensor.zdmc_dev1_reverse') not in ['unknown','unavailable'] }}"
+    icon: mdi:battery-arrow-up
+    turn_on:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev1_reverse, value: 1 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_reverse
+    turn_off:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev1_reverse, value: 0 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev1_reverse
+
+  - name: "Zendure dev0 Laden erlaubt"
+    unique_id: zdmc_dev0_charge_allowed
+    state: "{{ states('sensor.zdmc_dev0_reverse') | int(0) > 0 }}"
+    availability: "{{ states('sensor.zdmc_dev0_reverse') not in ['unknown','unavailable'] }}"
+    icon: mdi:battery-arrow-up
+    turn_on:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev0_reverse, value: 1 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_reverse
+    turn_off:
+      - action: rest_command.zdmc_kvs_set
+        data: { key: zdmc_dev0_reverse, value: 0 }
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dev0_reverse
