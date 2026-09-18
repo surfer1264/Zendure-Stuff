@@ -1,2 +1,0 @@
-python3 minify_keep_config.py zendash_api_upload.js zendash_api_upload_mini.js
-Pause

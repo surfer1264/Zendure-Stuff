@@ -1,1 +1,0 @@
-python3 zendure_proxy.py 
