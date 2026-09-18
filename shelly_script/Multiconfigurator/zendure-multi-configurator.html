@@ -986,6 +986,19 @@ ${gridBlock}
 const CONFIG_FILENAMES = { ctrl: 'controller-config.js', wd: 'watchdog-config.js', zd: 'zendash-api-config.js' };
 const CONFIG_BUILDERS = { ctrl: buildControllerConfig, wd: buildWatchdogConfig, zd: buildZenDashConfig };
 
+// Quell-Repo auf GitHub — hier zentral hinterlegt (raw.githubusercontent.com,
+// damit fetch() im Browser ohne CORS-Probleme funktioniert).
+const SOURCE_URLS = {
+  ctrl: 'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js',
+  wd:   'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/AkkuWatchDogMulti/zenSDKWatchDog_mini.js',
+  zd:   'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash/zendash_api_mini.js'
+};
+const FULL_SCRIPT_FILENAMES = {
+  ctrl: 'zerooutput_multi_kvs_mini.js',
+  wd:   'zenSDKWatchDog_mini.js',
+  zd:   'zendash_api_mini.js'
+};
+
 function resultBlock(title, key, cfg, hint){
   return `
   <div class="panel">
@@ -993,9 +1006,17 @@ function resultBlock(title, key, cfg, hint){
     <p class="hint">${hint}</p>
     <div class="copy-row">
       <button class="btn" onclick="copyConfig('${key}')">📋 In Zwischenablage kopieren</button>
-      <button class="btn" onclick="downloadConfig('${key}')">💾 Als Datei speichern</button>
+      <button class="btn" onclick="downloadConfig('${key}')">💾 Nur CONFIG-Block speichern</button>
     </div>
     <pre id="configOut_${key}">${escapeHtml(cfg)}</pre>
+
+    <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
+      <div class="copy-row" style="justify-content:flex-start;">
+        <button class="btn btn-primary" onclick="downloadFullScript('${key}')">🔗 Komplettes Script von GitHub speichern</button>
+        <span id="scriptStatus_${key}" class="hint" style="margin:0;"></span>
+      </div>
+      <p class="hint" style="margin-top:8px; margin-bottom:0;">Lädt <code>${FULL_SCRIPT_FILENAMES[key]}</code> live von GitHub, ersetzt darin nur den <code>CONFIG</code>-Block durch deine Angaben und bietet das komplette, einsatzbereite Script zum Speichern an — kein manuelles Copy-Paste mehr nötig. Braucht eine Internetverbindung.</p>
+    </div>
   </div>`;
 }
 
@@ -1019,6 +1040,82 @@ function downloadConfig(key){
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+function triggerFileDownload(text, filename){
+  const blob = new Blob([text], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Findet im Original-Script Start/Ende des "let/const CONFIG = { ... };"-
+// Statements (klammer- und string-sicher, ignoriert Kommentare), damit nur
+// dieser Block ersetzt wird und der Rest des Scripts unangetastet bleibt.
+function findConfigBlockRange(scriptText){
+  const declMatch = /\b(?:let|const|var)\s+CONFIG\s*=\s*/.exec(scriptText);
+  if(!declMatch) throw new Error('Konnte "CONFIG = {" im Script nicht finden');
+  const declStart = declMatch.index;
+  const braceStart = declMatch.index + declMatch[0].length;
+  if(scriptText[braceStart] !== '{') throw new Error('Nach "CONFIG =" wurde kein "{" gefunden');
+  let depth = 0, inStr = null, i = braceStart;
+  for(; i < scriptText.length; i++){
+    const c = scriptText[i];
+    if(inStr){
+      if(c === '\\'){ i++; continue; }
+      if(c === inStr) inStr = null;
+      continue;
+    }
+    if(c === '/' && scriptText[i+1] === '/'){
+      const nl = scriptText.indexOf('\n', i);
+      i = (nl === -1 ? scriptText.length-1 : nl);
+      continue;
+    }
+    if(c === '/' && scriptText[i+1] === '*'){
+      const end = scriptText.indexOf('*/', i+2);
+      i = (end === -1 ? scriptText.length-1 : end+1);
+      continue;
+    }
+    if(c === '"' || c === "'" || c === '`'){ inStr = c; continue; }
+    if(c === '{') depth++;
+    else if(c === '}'){
+      depth--;
+      if(depth === 0){ i++; break; }
+    }
+  }
+  if(depth !== 0) throw new Error('Klammern im Script nicht ausgeglichen — CONFIG-Block nicht sicher erkennbar');
+  let end = i;
+  while(scriptText[end] === ' ' || scriptText[end] === '\t') end++;
+  if(scriptText[end] === ';') end++;
+  return { start: declStart, end: end };
+}
+
+function mergeConfigIntoScript(scriptText, newConfigText){
+  const range = findConfigBlockRange(scriptText);
+  return scriptText.slice(0, range.start) + newConfigText + scriptText.slice(range.end);
+}
+
+async function downloadFullScript(key){
+  const statusEl = document.getElementById('scriptStatus_' + key);
+  statusEl.textContent = 'Lade Original-Script von GitHub...';
+  statusEl.className = 'hint';
+  try{
+    const res = await fetch(SOURCE_URLS[key]);
+    if(!res.ok) throw new Error('HTTP ' + res.status + ' beim Laden von GitHub');
+    const original = await res.text();
+    const newConfig = CONFIG_BUILDERS[key]();
+    const merged = mergeConfigIntoScript(original, newConfig);
+    triggerFileDownload(merged, FULL_SCRIPT_FILENAMES[key]);
+    statusEl.textContent = '✓ Komplettes Script heruntergeladen (' + FULL_SCRIPT_FILENAMES[key] + ').';
+  } catch(e){
+    statusEl.textContent = 'Fehler: ' + e.message + ' — Internetverbindung prüfen, oder Script manuell von GitHub laden und den CONFIG-Block ersetzen.';
+    statusEl.className = 'error';
+  }
 }
 
 function renderResult(){
