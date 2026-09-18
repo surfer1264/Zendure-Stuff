@@ -1318,7 +1318,7 @@
     const flags = [];
 
     if (d.acMode === 2)      flags.push(['ok',   'acMode 2 · speist ein']);
-    else if (d.acMode === 1) flags.push(['ok',   'acMode 1 · lädt']);
+    else if (d.acMode === 1) flags.push(['ok',   'acMode 1 · lädt/Stby']);
     else                     flags.push(['',     'acMode ' + (d.acMode === null ? '?' : d.acMode) + ' · Standby']);
 
     if (d.socLimit === 1)      flags.push(['warn',  'socLimit 1 · voll, Laden gesperrt']);
@@ -1326,7 +1326,7 @@
     else if (d.socLimit === 0) flags.push(['',      'socLimit 0 · frei']);
 
     if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · Export gesperrt']);
-    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · Export frei']);
+    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · Export erlaubt']);
 
     box.innerHTML = flags.map(function(f){
       return '<span class="flag ' + f[0] + '">' + f[1] + '</span>';
