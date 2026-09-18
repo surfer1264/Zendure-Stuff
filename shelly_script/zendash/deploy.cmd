@@ -10,7 +10,7 @@ set SKRIPTNAME=zendash
 REM Generische Version (frisch von GitHub geladen)
 set QUELLE=zendash_api_src.js
 REM Datei mit deinem CONFIG-Block
-set MEINE_CONFIG=myconfig.js
+set MEINE_CONFIG=myconfig_zendash.js
 REM Zwischendatei, die hochgeladen wird
 set FERTIG=tmp.js
 set MINI=zendash_api_mini.js
