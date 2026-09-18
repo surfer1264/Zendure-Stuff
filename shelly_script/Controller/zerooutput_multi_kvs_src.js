@@ -121,7 +121,7 @@ let CONFIG = {
   }
 };
 
-CONFIG.version = "5.0.7";
+CONFIG.version = "5.0.8";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -155,6 +155,14 @@ if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.discharg
 // Ersetzt bei aktivem Wert die Netzsaldo-basierte Berechnung im Entladepfad komplett -
 // Ladepfad (chargeTarget) bleibt unberuehrt.
 CONFIG.dischargeFixed=0;
+
+// Mindestanzahl aufeinanderfolgender Standby-Zyklen (acMode 1, output=0,
+// input=0 - egal ob natuerlich in der Totzone oder durch
+// directionChangeHoldCycles erzwungen), bevor smartMode wirklich auf 0
+// geschrieben wird. Nur relevant bei standbySmartModeZero:true. Verhindert
+// Flash-Writes bei kurzen Nulldurchgaengen/Pendelbewegungen um den
+// Netto-Nullpunkt (z.B. schwankender PV-Ertrag nahe 0 W).
+CONFIG.standbyHoldCycles = 15;
 
 CONFIG.directionChangeHoldCycles = Math.max(4, Math.min(20, CONFIG.directionChangeHoldCycles));
 
@@ -211,7 +219,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     acMode: null,       
     smartMode: null,
 
-    realDirection: null, reversalHoldCount: 0,
+    realDirection: null, reversalHoldCount: 0, standbyHoldCount: 0,
 
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
@@ -1578,8 +1586,10 @@ function applyBypassExcessCorrection(dischargeOutput) {
 // acMode/outputLimit/inputLimit aus dem Zielwert
 function planWrite(target, cfg, ds) {
   if (target === 0) {
-    // Standby (auch Volltank): immer acMode 1
-    return { acMode: 1, outputLimit: 0, inputLimit: 0, smartMode: CONFIG.standbySmartModeZero ? 0 : 1 };
+    // Standby (auch Volltank): immer acMode 1.
+    // smartMode wird NICHT hier entschieden - das macht einheitlich
+    // resolveStandbySmartMode(), auch fuer den per Cooldown erzwungenen Fall.
+    return { acMode: 1, outputLimit: 0, inputLimit: 0, smartMode: 1 };
   }
 
   if (target > 0) {
@@ -1620,7 +1630,34 @@ function enforceDirectionCooldown(plan, ds) {
       CONFIG.directionChangeHoldCycles + "), halte Standby");
   }
 
-  return { acMode: 1, outputLimit: 0, inputLimit: 0, smartMode: CONFIG.standbySmartModeZero ? 0 : 1 };
+  return { acMode: 1, outputLimit: 0, inputLimit: 0, smartMode: 1 };
+  // smartMode final: siehe resolveStandbySmartMode()
+}
+
+// Gibt smartMode:0 erst frei, wenn das Geraet eine Mindestanzahl Zyklen
+// ununterbrochen im Standby war (acMode 1, outputLimit=0, inputLimit=0) -
+// unabhaengig davon, ob planWrite() das natuerlich lieferte oder
+// enforceDirectionCooldown() einen Richtungswechsel blockiert hat.
+// Jeder Nicht-Standby-Zyklus resettet den Zaehler sofort. Nur bei
+// standbySmartModeZero:true relevant - sonst reiner Passthrough.
+function resolveStandbySmartMode(plan, ds) {
+  let isStandby = (plan.outputLimit === 0 && plan.inputLimit === 0);
+
+  if (!isStandby || !CONFIG.standbySmartModeZero) {
+    ds.standbyHoldCount = 0;
+    return plan;
+  }
+
+  ds.standbyHoldCount = ds.standbyHoldCount + 1;
+
+  if (ds.standbyHoldCount >= CONFIG.standbyHoldCycles) {
+    if (CONFIG.debug && ds.standbyHoldCount === CONFIG.standbyHoldCycles) {
+      print("smartMode 0 freigegeben nach " + ds.standbyHoldCount + " Standby-Zyklen");
+    }
+    plan.smartMode = 0;
+  }
+
+  return plan;
 }
 
 function updateRealDirection(ds, acMode, outputLimit, inputLimit) {
@@ -1656,6 +1693,7 @@ function applyOutputs(output, myCycle) {
 
     let rawPlan = planWrite(output[i], cfg, ds);
     let plan = enforceDirectionCooldown(rawPlan, ds);
+    plan = resolveStandbySmartMode(plan, ds);
     let signedPower = planSignedPower(plan);
     plans[i] = plan;
 

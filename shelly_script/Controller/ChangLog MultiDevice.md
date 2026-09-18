@@ -1,5 +1,17 @@
 # Changelog
 
+## Changelog 5.0.8
+
+only für Verhalten bei `standbySmartModeZero: false` (aktueller Stand) unverändert zu vorher
+
+aber wenn `standbySmartModeZero: true`
+wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird 
+
+`standbySmartModeZero: true` ist grundsätzlich nicht empfohlen
+Es gibt Geräte, die nicht sauber in den (echten) Standby wechseln und latent z.B: 20W einspeisen oder laden
+
+Obige ANpassung sorgt dafpr, dass ein Pendeln um den Nullpunkt nicht zu einem latenten Flash-Schreiben führt, sondern erst nach einer Wartezeit (15 Takte = 1 Minute) zu einem Standby führt. 
+
 ## Changelog 5.0.7
 
 Manuelle Kalibrierung wird über `socStatus`gemeldet
