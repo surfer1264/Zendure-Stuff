@@ -4,7 +4,7 @@ let CONFIG = {
 
   devices: [
     { ip: "192.168.178.143", label: "SF2400", enabled: true },
-    { ip: "192.168.178.143", label: "SF2400-2", enabled: false }
+    { ip: "192.168.178.150", label: "SF800", enabled: true }
   ],
 
   // Warnschwellen (global)
