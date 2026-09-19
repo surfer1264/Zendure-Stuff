@@ -3,7 +3,11 @@
 </a>
 
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c0d895d6-cf44-4bad-85ff-3d6346015b26" />
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/37575e2e-1564-44df-b77b-5641f87a4af6" />
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/79a3acfa-5e91-43cc-b358-97fbfe1b2a0c" />
+
+
+
 
 
 # Zendure Grid Dashboard — Inbetriebnahme
