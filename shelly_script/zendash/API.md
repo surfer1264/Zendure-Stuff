@@ -1,6 +1,6 @@
 # ZenDash API
 
-Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.3). Sie liefern
+Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.4). Sie liefern
 Messwerte und Einstellungen für das Dashboard und schreiben Sollwerte in die
 Shelly-KVS, aus der das Regel-Script `zerooutput_multi_kvs.js` seine Vorgaben liest.
 
@@ -62,6 +62,10 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
 | `minVol` | Niedrigste Zellspannung über alle Packs, Rohwert. Faktor 0,01 V, also `325` → 3,25 V. `null`, wenn kein `packData` geliefert wird |
 | `online` | Hub erreichbar. Bei `false` sind alle Messwerte `null` bzw. `0` |
 
+`socLimit` ist auch die Grundlage für den automatischen Stopp des manuellen Ladens
+(siehe [„Manuelles Laden“](#manuelles-laden) weiter unten): Meldet ein Gerät im
+manuellen Modus `socLimit: 1`, beendet das API-Script den Modus von selbst.
+
 Die Antwort kommt aus einem Zwischenspeicher, der einmal je Hintergrund-Durchlauf
 gebaut wird (Standard alle 8 s, `CONFIG.pollIntervalSec`). Der Endpunkt selbst
 fragt nichts ab und ist entsprechend billig.
@@ -80,7 +84,7 @@ eigenen Eingabe zusätzlich sofort.
 
 ```json
 {
-  "version": "2.3",
+  "version": "2.4",
   "setpoint": -20,
   "hysteresis": 12,
   "dischargeFixed": 0,
@@ -170,15 +174,72 @@ aus der Regelung.
 **`inputLimit` setzt eine Reihenfolge voraus.** Erst `dischargeAllowed` und `reverse`
 auf `0`, dann die Ladeleistung — sonst überschreibt das Regel-Script den Wert im
 nächsten Zyklus. Beim Beenden umgekehrt: erst `inputLimit` auf `0`, dann die Schalter
-zurück.
+zurück. Bei einem kombinierten Aufruf mit mehreren Schlüsseln (siehe unten) übernimmt
+das API-Script diese Reihenfolge selbst — die Schlüssel innerhalb eines `data`-Objekts
+müssen dafür nicht in einer bestimmten Reihenfolge stehen.
+
+---
+
+## Manuelles Laden
+
+„Manueller Lademodus" ist kein eigener Schalter, sondern die Kombination
+`dischargeAllowed=0`, `reverse=0`, `inputLimit>0` für ein Gerät. Das API-Script
+erkennt diesen Zustand an jedem über `kvs_set_api` geschriebenen Wert und hält ihn
+in einem eigenen Zustandsspeicher fest (rein im Arbeitsspeicher, nicht in der KVS).
+
+### Aufruf (ein Gerät, ein Request)
+
+Alle drei Schlüssel eines Geräts in einem `data`-Objekt, URL-kodiert:
+
+```
+GET kvs_set_api?data={"zdmc_dev1_dischargeAllowed":0,"zdmc_dev1_reverse":0,"zdmc_dev1_inputLimit":500}
+```
+
+```bash
+curl -g 'http://<shelly-ip>/script/<script-id>/kvs_set_api?data={"zdmc_dev1_dischargeAllowed":0,"zdmc_dev1_reverse":0,"zdmc_dev1_inputLimit":500}'
+```
+
+Antwort: `{"success":true,"written":3}`
+
+Beenden (umgekehrte Werte, gleiche Form):
+
+```
+GET kvs_set_api?data={"zdmc_dev1_inputLimit":0,"zdmc_dev1_dischargeAllowed":1,"zdmc_dev1_reverse":1}
+```
+
+Das funktioniert unabhängig davon, ob der Aufruf vom Dashboard, curl, einer
+Shelly-Automation oder Home Assistant kommt — entscheidend ist nur, dass er über
+`kvs_set_api` läuft und nicht die KVS am Script vorbei direkt beschreibt (siehe
+Warnung unten).
+
+### Automatischer Stopp bei voller Batterie
+
+Meldet der Hub für ein Gerät im manuellen Modus `socLimit: 1` (siehe `status_api`),
+beendet das API-Script den manuellen Modus von selbst — gleiche Schreibreihenfolge
+wie beim manuellen Beenden (`inputLimit` zuerst, danach die beiden Schalter).
+Zurückgesetzt wird auf den Zustand unmittelbar vor dem Start des manuellen Modus,
+sofern das API-Script seither nicht neu gestartet ist; andernfalls auf
+`dischargeAllowed=1` / `reverse=1`.
+
+Damit das funktioniert:
+
+- **Der Start muss über `kvs_set_api` laufen.** Ein Schreiben direkt per Shelly-RPC
+  (`KVS.Set`, lokal oder entfernt) am API-Script vorbei wird nicht erkannt — der
+  interne Zustandsspeicher bleibt dann auf „automatisch" stehen, und weder der
+  automatische Stopp noch die folgende Ausnahme greifen.
+- **Die Hintergrundabfrage pausiert nicht mehr,** solange irgendein Gerät im
+  manuellen Modus ist — auch wenn 15 s lang kein Dashboard aufgerufen wurde. Ohne
+  diese Ausnahme würde die Abfrage (und damit die Kenntnis von `socLimit`) genau
+  dann einschlafen, wenn niemand mehr zuschaut.
 
 ---
 
 ## Betriebsverhalten
 
 **Hintergrundabfrage.** Ein Timer fragt alle `pollIntervalSec` Netzzähler und Hubs ab —
-aber nur, solange in den letzten 15 s ein Endpunkt aufgerufen wurde. Ist kein Dashboard
-offen, pausiert er vollständig.
+aber nur, solange in den letzten 15 s ein Endpunkt aufgerufen wurde **oder** mindestens
+ein Gerät im manuellen Lademodus ist (siehe [„Manuelles Laden“](#manuelles-laden)).
+Trifft beides nicht zu, pausiert die Abfrage vollständig.
 
 **Überlappungsschutz.** Ein Zähler verhindert, dass Hintergrundabfrage und `config_api`
 gleichzeitig laufen; ein eigener Riegel schützt den Durchlauf gegen sich selbst. Beides
