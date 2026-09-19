@@ -23,6 +23,15 @@
 //                        Kein Verlauf - den fuehrt die Dashboard-Seite selbst.
 //   GET kvs_set_api?data={"zdmc_...":wert}  -> { success, written }
 //                        schreibt jeden Key mit Praefix zdmc_ ungeprueft.
+//
+// AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
+// reverse=0, inputLimit>0 - gesetzt ueber kvs_set_api) und meldet der Hub
+// socLimit=1, wird der manuelle Modus automatisch beendet (siehe
+// checkAutoStop/autoStopDevice weiter unten). Laeuft unabhaengig davon, ob
+// ein Dashboard geoeffnet ist - siehe anyManualActive()-Ausnahme in
+// backgroundPoll(). Der Vorzustand (preManual) lebt nur im Speicher dieses
+// Scripts, kein KVS-Schreiben dafuer; geht bei einem Script-Neustart
+// verloren, Fallback dann dischargeAllowed=1/reverse=1.
 // =====================================================================
 
 let CONFIG = {
@@ -110,7 +119,7 @@ if (typeof CONFIG.dischargeStartupPower !== "number" || CONFIG.dischargeStartupP
 }
 
 // Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-let VERSION = "2.3";
+let VERSION = "2.4";
 
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
@@ -307,6 +316,213 @@ function kvsSetOne(key, value, callback) {
     }
   );
 }
+
+// =====================================================
+// Manueller Lademodus - Zustandsspiegel & Auto-Stop bei voller Batterie
+//
+// "Manuell aktiv" ist wie im Dashboard definiert: dischargeAllowed=0,
+// reverse=0, inputLimit>0 fuer ein Geraet (siehe isManualActive unten).
+// Es gibt keinen eigenen KVS-Merker dafuer - nur diese Kombination.
+//
+// deviceState spiegelt den zuletzt bekannten Zustand jedes Geraets, damit
+// diese Automatik auch OHNE offenes Dashboard weiss, ob gerade manuell
+// geladen wird. Wird an genau einer Stelle aktuell gehalten: nach jedem
+// erfolgreichen Schreiben in kvs_set_api (siehe applyDeviceKeysToState).
+//
+// preManual haelt den Zustand, zu dem beim Beenden zurueckgekehrt wird -
+// bewusst NUR im Speicher (kein KVS-Schreiben, wie besprochen). Geht bei
+// einem Script-Neustart verloren; Fallback dann true/true, genau wie das
+// Dashboard es nach einem Seiten-Reload auch tut.
+// =====================================================
+
+let deviceState = [];
+for (let dsi = 0; dsi < CONFIG.devices.length; dsi++) {
+  let dsd = CONFIG.devices[dsi];
+  deviceState[dsi] = {
+    dischargeAllowed: dsd.dischargeAllowed !== false,
+    reverse: !!dsd.reverse,
+    inputLimit: dsd.inputLimit || 0
+  };
+}
+let preManual = [];
+
+// Pause zwischen den einzelnen KVS-Schreibvorgaengen beim Auto-Stop -
+// gleicher Wert und gleicher Grund wie STEP_PAUSE_MS im Dashboard (das
+// Regel-Script reagiert auf ein geaendertes inputLimit sofort mit einem
+// eigenen Schreibvorgang aufs Geraet).
+let AUTO_STOP_STEP_PAUSE_MS = 500;
+
+function isManualActive(ds) {
+  return !!ds && !ds.dischargeAllowed && !ds.reverse && Number(ds.inputLimit) > 0;
+}
+
+function deviceLooksAutomatic(ds) {
+  return !!ds && !!ds.dischargeAllowed && !!ds.reverse && Number(ds.inputLimit) === 0;
+}
+
+function anyManualActive() {
+  for (let i = 0; i < deviceState.length; i++) {
+    if (isManualActive(deviceState[i])) return true;
+  }
+  return false;
+}
+
+// Zerlegt "zdmc_devN_<feld>" in {index, field}. Andere zdmc_-Keys (z.B.
+// zdmc_setpoint, zdmc_dischargeFixed) liefern null.
+function parseDeviceKey(key) {
+  if (key.indexOf("zdmc_dev") !== 0) return null;
+  let rest = key.slice(8);
+  let us = rest.indexOf("_");
+  if (us < 0) return null;
+  let idx = Number(rest.slice(0, us));
+  if (idx !== idx) return null; // NaN
+  let field = rest.slice(us + 1);
+  if (field !== "dischargeAllowed" && field !== "reverse" && field !== "inputLimit") return null;
+  return { index: idx, field: field };
+}
+
+// Vor dem eigentlichen Schreiben aufgerufen (siehe kvs_set_api): sichert
+// preManual, sobald ein Geraet aus dem vollautomatischen Zustand heraus
+// bewegt wird, und loescht preManual wieder, sobald es (ueber diesen aufruf)
+// dort erneut ankommt - unabhaengig davon, ob "manuell aktiv" im engen Sinn
+// (inputLimit>0) je erreicht wurde. Arbeitet bewusst noch mit dem ALTEN
+// deviceState (vor diesem Aufruf), damit bei den drei einzelnen Schreib-
+// schritten des Dashboards (dischargeAllowed, reverse, inputLimit
+// nacheinander) der allererste Schritt den wahren Ausgangszustand einfaengt
+// und nicht schon den vom vorherigen Teilschritt veraenderten.
+function captureManualTransitions(data, keys) {
+  let touched = [];
+  for (let i = 0; i < keys.length; i++) {
+    let pk = parseDeviceKey(keys[i]);
+    if (!pk || !deviceState[pk.index]) continue;
+    let idx = pk.index;
+    if (!touched[idx]) {
+      touched[idx] = {
+        dischargeAllowed: deviceState[idx].dischargeAllowed,
+        reverse: deviceState[idx].reverse,
+        inputLimit: deviceState[idx].inputLimit
+      };
+    }
+    let v = data[keys[i]];
+    if (pk.field === "dischargeAllowed") touched[idx].dischargeAllowed = (Number(v) !== 0);
+    else if (pk.field === "reverse") touched[idx].reverse = (Number(v) !== 0);
+    else touched[idx].inputLimit = Number(v);
+  }
+
+  for (let idx = 0; idx < touched.length; idx++) {
+    if (!touched[idx]) continue;
+    if (!isManualActive(deviceState[idx]) && !preManual[idx]) {
+      preManual[idx] = {
+        dischargeAllowed: deviceState[idx].dischargeAllowed,
+        reverse: deviceState[idx].reverse
+      };
+    }
+    if (deviceLooksAutomatic(touched[idx])) {
+      preManual[idx] = null;
+    }
+  }
+}
+
+// Nach erfolgreichem Schreiben aufgerufen: deviceState auf den neuen,
+// tatsaechlich geschriebenen Stand bringen.
+function applyDeviceKeysToState(data, keys) {
+  for (let i = 0; i < keys.length; i++) {
+    let pk = parseDeviceKey(keys[i]);
+    if (!pk || !deviceState[pk.index]) continue;
+    let v = Number(data[keys[i]]);
+    if (pk.field === "dischargeAllowed") deviceState[pk.index].dischargeAllowed = (v !== 0);
+    else if (pk.field === "reverse") deviceState[pk.index].reverse = (v !== 0);
+    else deviceState[pk.index].inputLimit = v;
+  }
+}
+
+// Prueft nach jedem Hintergrund-Poll, ob ein manuell ladendes Geraet laut
+// Hub-Meldung fertig ist (socLimit=1), und beendet den manuellen Modus dann
+// automatisch. Laeuft bewusst nur, wenn gerade kein anderer Schreibvorgang
+// aktiv ist (busyNow()) - kollidiert sonst mit einem zeitgleichen
+// Dashboard-Klick auf denselben KVS-Keys. Faellt der Zyklus deshalb aus,
+// greift der naechste Poll (pollIntervalSec Sekunden spaeter).
+function checkAutoStop(hubs) {
+  if (busyNow()) return;
+  for (let i = 0; i < hubs.length; i++) {
+    let hub = hubs[i];
+    if (!hub || !hub.online) continue;
+    if (!isManualActive(deviceState[i])) continue;
+    if (hub.socLimit !== 1) continue;
+    autoStopDevice(i);
+    return; // ein Geraet je Durchlauf - der Rest folgt im naechsten Zyklus
+  }
+}
+
+// Beendet den manuellen Lademodus fuer ein Geraet: gleiche Reihenfolge und
+// gleicher Grund fuer die Pausen wie stopManual() im Dashboard (erst
+// inputLimit=0, dann die beiden Schalter, mit Abstand dazwischen). Kein
+// KVS-Schreiben fuer den Vorzustand selbst - preManual lebt nur im Speicher;
+// fehlt es (z.B. nach einem Script-Neustart), wird auf true/true
+// zurueckgefallen, wie auch das Dashboard es tut.
+function autoStopDevice(idx) {
+  let restore = preManual[idx] || { dischargeAllowed: true, reverse: true };
+  print("Auto-Stop: " + CONFIG.devices[idx].label + " meldet socLimit=1 - beende manuelles Laden.");
+
+  busyEnter();
+  kvsSetOne("zdmc_dev" + idx + "_inputLimit", 0, function (ok1) {
+    if (!ok1) {
+      print("Auto-Stop fuer " + CONFIG.devices[idx].label + " abgebrochen (inputLimit). Bitte Dashboard pruefen.");
+      busyLeave();
+      return;
+    }
+    deviceState[idx].inputLimit = 0;
+
+    Timer.set(AUTO_STOP_STEP_PAUSE_MS, false, function () {
+      kvsSetOne("zdmc_dev" + idx + "_dischargeAllowed", restore.dischargeAllowed ? 1 : 0, function (ok2) {
+        if (!ok2) {
+          print("Auto-Stop fuer " + CONFIG.devices[idx].label + " abgebrochen (dischargeAllowed). Bitte Dashboard pruefen.");
+          busyLeave();
+          return;
+        }
+        deviceState[idx].dischargeAllowed = !!restore.dischargeAllowed;
+
+        Timer.set(AUTO_STOP_STEP_PAUSE_MS, false, function () {
+          kvsSetOne("zdmc_dev" + idx + "_reverse", restore.reverse ? 1 : 0, function (ok3) {
+            if (ok3) {
+              deviceState[idx].reverse = !!restore.reverse;
+              preManual[idx] = null;
+              print("Auto-Stop: " + CONFIG.devices[idx].label + " zurueck in der Regelung.");
+            } else {
+              print("Auto-Stop fuer " + CONFIG.devices[idx].label + " abgebrochen (reverse). Bitte Dashboard pruefen.");
+            }
+            busyLeave();
+          });
+        });
+      });
+    });
+  });
+}
+
+// Liest beim Start den ECHTEN KVS-Zustand ein und korrigiert deviceState
+// entsprechend (die obige Initialisierung kennt nur die CONFIG-Vorgaben).
+// Wichtig fuer den Fall, dass das Script waehrend eines laufenden manuellen
+// Ladevorgangs neu startet - sonst wuerde anyManualActive() faelschlich
+// "nein" melden und der Hintergrund-Poll bei geschlossenem Dashboard sofort
+// wieder einschlafen. preManual bleibt in diesem Fall trotzdem leer (siehe
+// Fallback oben) - das war ausdruecklich als ausreichend abgesegnet.
+function initDeviceState() {
+  kvsGetAll(function (store) {
+    for (let i = 0; i < CONFIG.devices.length; i++) {
+      let d = CONFIG.devices[i];
+      let da = kvsValue(store, "zdmc_dev" + i + "_dischargeAllowed");
+      let rv = kvsValue(store, "zdmc_dev" + i + "_reverse");
+      let il = kvsValue(store, "zdmc_dev" + i + "_inputLimit");
+      deviceState[i] = {
+        dischargeAllowed: (da !== undefined) ? (Number(da) !== 0) : (d.dischargeAllowed !== false),
+        reverse: (rv !== undefined) ? (Number(rv) !== 0) : !!d.reverse,
+        inputLimit: (il !== undefined) ? Number(il) : (d.inputLimit || 0)
+      };
+    }
+  });
+}
+initDeviceState();
+
 
 // mJS kennt kein globales decodeURIComponent() - eigene, einfache
 // Prozent-Dekodierung (reicht fuer unsere ASCII-JSON-Payloads).
@@ -565,8 +781,11 @@ function updateAllHubsStatus(index, results, callback) {
 
 // Hauptfunktion fuer das periodische Hintergrund-Update
 function backgroundPoll() {
-  if (Date.now() - lastRequestAt > IDLE_MS) {
-    // kein Dashboard aktiv - Netzzaehler/Hubs nicht unnoetig abfragen
+  if (Date.now() - lastRequestAt > IDLE_MS && !anyManualActive()) {
+    // kein Dashboard aktiv UND kein Geraet im manuellen Lademodus -
+    // Netzzaehler/Hubs nicht unnoetig abfragen. Laedt gerade ein Geraet
+    // manuell, muss trotzdem weiter gepollt werden - sonst erfaehrt
+    // checkAutoStop() nie, dass die Batterie voll ist.
     return;
   }
 
@@ -584,6 +803,10 @@ function backgroundPoll() {
       STATUS_BODY = JSON.stringify(LATEST_STATUS);
       bgRunning = false;
       busyLeave();
+      // Erst NACH busyLeave() pruefen: busyNow() soll hier echte externe
+      // Nebenlaeufigkeit (z.B. ein zeitgleicher Dashboard-Schreibvorgang)
+      // widerspiegeln, nicht den eigenen, gerade beendeten Poll-Durchlauf.
+      checkAutoStop(hubs);
     });
   });
 }
@@ -795,6 +1018,7 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
     return;
   }
 
+  captureManualTransitions(data, allowedKeys);
   writeKeys(res, data, allowedKeys, 0, true);
 });
 
@@ -803,6 +1027,7 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
 // Anfragen sind genau die Spitze, die wir vermeiden wollen.
 function writeKeys(res, data, keys, index, allOk) {
   if (index >= keys.length) {
+    if (allOk) applyDeviceKeysToState(data, keys);
     res.code = allOk ? 200 : 500;
     res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
     res.body = JSON.stringify({ success: allOk, written: keys.length });
