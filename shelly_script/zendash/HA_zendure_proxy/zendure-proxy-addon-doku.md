@@ -13,11 +13,7 @@ diesem Add-on, das die Daten serverseitig vom Shelly abruft.
   `zendure-dashboard.html`
 
 > **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons" im
-> Frontend **„Apps"** (Einstellungen → Apps → App Store). Die interne
-> Struktur und `config.yaml` sind unverändert. Der frühere
-> „Erweiterter Modus"-Schalter im Benutzerprofil wurde ebenfalls entfernt –
-> alle Funktionen (inkl. lokale Apps) sind ohne diesen Schalter direkt
-> sichtbar.
+> Frontend **„Apps"** (Einstellungen → Apps → App Store).
 
 ## Verzeichnisstruktur
 
@@ -106,14 +102,27 @@ exec python3 zendure_proxy.py -q
    (per Samba-Freigabe oder SSH).
 2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
    drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
-   ebenfalls einen Rescan von `/addons/`).
+   ebenfalls einen Rescan von `/addons/`). siehe Bild1
 3. Das Add-on **„Zendure Dashboard Proxy"** erscheint im lokalen Bereich →
-   auswählen → **Install** (baut das Docker-Image).
+   auswählen → **Install** (baut das Docker-Image). 
 4. Starten. In der Add-on-Konfiguration **„Beim Booten starten"** und
    **„Watchdog"** aktivieren, damit der Proxy nach einem HA-Neustart
    automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
-   startet.
+   startet. siehe Bild2
 5. Dashboard aufrufen: `http://<ha-ip>:8000/`
+
+----
+
+**Bild1: Vor Installation**
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/1f669708-a57e-4e73-a7d0-69d4192b50d7" />
+
+**Bild2: Nach Installation**
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/cb24431a-f998-4aee-ac1b-1aa81445240d" />
+
+
+---
 
 **Bei Änderungen an den Add-on-Dateien** (`config.yaml`, `Dockerfile`,
 `run.sh` etc.): Add-on **deinstallieren** und **neu installieren** – ein
