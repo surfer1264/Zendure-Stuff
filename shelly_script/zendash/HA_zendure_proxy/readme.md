@@ -11,6 +11,7 @@ diesem Add-on, das die Daten serverseitig vom Shelly abruft.
 - Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
 - Die beiden bestehenden Dateien `zendure_proxy.py` und
   `zendure-dashboard.html`
+  - **Achtung** `zendure_proxy`muss natürlich sauber konfiguriert sein (IP-Adresse des Shelly, auf dem die API installiert ist)
 
 > **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons" im
 > Frontend **„Apps"** (Einstellungen → Apps → App Store).
@@ -104,7 +105,7 @@ exec python3 zendure_proxy.py -q
    drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
    ebenfalls einen Rescan von `/addons/`). siehe Bild1
 3. Das Add-on **„Zendure Dashboard Proxy"** erscheint im lokalen Bereich →
-   auswählen → **Install** (baut das Docker-Image). 
+   auswählen → **Install** (baut das Docker-Image).
 4. Starten. In der Add-on-Konfiguration **„Beim Booten starten"** und
    **„Watchdog"** aktivieren, damit der Proxy nach einem HA-Neustart
    automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
@@ -121,13 +122,14 @@ exec python3 zendure_proxy.py -q
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/cb24431a-f998-4aee-ac1b-1aa81445240d" />
 
-
 ---
 
 **Bei Änderungen an den Add-on-Dateien** (`config.yaml`, `Dockerfile`,
-`run.sh` etc.): Add-on **deinstallieren** und **neu installieren** – ein
+`run.sh` `zendure-dashboard` etc.): Add-on **deinstallieren** und **neu installieren** – ein
 bloßer Restart liest die geänderten Dateien nicht neu ein, es muss neu
 gebaut werden.
+
+Nochmal ganz deutlich: ändert sich `zendure-dashboard` muss die App in HA deinstalliert und neu gebaut werden, nach obigem Muster! Nur der Austausch der Datei im addon-Verzeichnis bewirkt gar nichts.
 
 ## Troubleshooting-Log (aufgetretene Probleme & Lösungen)
 
