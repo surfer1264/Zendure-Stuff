@@ -177,7 +177,8 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 
 | Bedienelement | KVS-Key | Bereich |
 |---|---|---|
-| Sollwert (obere Reihe, links) | `zdmc_setpoint` | −40 bis +40 W, 10er-Schritte |
+| Sollwert (obere Reihe, links) | `zdmc_setpoint` | −40 bis +40 W, 5er-Schritte |
+| Fix-Entladung (Zahleneingabe) | `zdmc_dischargeFixed` | 0 (= aus) oder ≥ `dischargeStartupPower` |
 | Entladen erlaubt | `zdmc_dev{id}_dischargeAllowed` | Schalter (0/1) |
 | Laden vom Netz erlaubt | `zdmc_dev{id}_reverse` | Schalter (0/1) |
 | Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10 % bis `maxSoc` − 1, 1er-Schritte |
@@ -199,6 +200,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
   Bricht die Kette in der Mitte ab (Shelly nicht erreichbar), erscheint ein Warnbanner — der Zustand ist dann unvollständig und gehört auf der Karte geprüft.
 
   Ob manuelles Laden läuft, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`). Das überlebt einen Reload und stimmt auch dann, wenn jemand anders die Werte gesetzt hat. Nur der Schalterzustand *vor* dem Start geht bei einem Reload verloren; das Beenden schaltet dann beide Schalter wieder ein.
+* **Fix-Entladung** (`zdmc_dischargeFixed`) ist ein globaler, geräteübergreifender Wert — anders als die übrigen Regler, die pro Gerät (`zdmc_dev{id}_...`) wirken. Sie ist eine Zahleneingabe statt eines Reglers, weil nur zwei Zustände gültig sind: `0` (aus) oder ≥ `dischargeStartupPower`. Werte dazwischen verwirft schon `kvs_set_api` mit einer Fehlermeldung, bevor sie in der KVS landen — das Regel-Script würde sie ohnehin kommentarlos ignorieren. `dischargeStartupPower` kommt aus `config_api` (Spiegel von `CONFIG.dischargeStartupPower` im API-Script) und steht als Hinweistext unter dem Feld (`0 = aus · sonst ≥ NN W`). Ein ungültiger Wert wird beim Verlassen des Felds sofort auf den zuletzt gültigen zurückgesetzt.
 * **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb nicht als Bedienelement auf. `config_api` liefert den Wert trotzdem mit; die Seite braucht ihn nur intern, um den Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
 * Die Seite startet **gesperrt**. Das Schloss-Symbol oben rechts gibt die Bedienung frei; nach 60 s ohne Eingabe (`RELOCK_MS`) sperrt sie sich von selbst wieder. Der Zustand wird absichtlich nicht gespeichert — jeder Reload beginnt gesperrt. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
 * Jedes Bedienelement **sperrt sich nach einer Eingabe für 4 s** (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
@@ -213,7 +215,8 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
   * Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs, umgerechnet mit Faktor 0,01 (325 → 3,25 V). Packs, die 0 melden, werden übersprungen. Unter 3,0 V wird der Wert amber, unter 2,8 V rot. Aussagekräftig ist er nur unter Last — im Ruhezustand liegen alle Zellen dicht beieinander.
 * **Der Verlauf** steckt als kompakte Kurve in den beiden Kacheln oben: Netzsaldo links, Hub-Summe rechts. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
 * Der Verlauf wird **in der Seite** geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
-* Die Seite startet immer in der **Nachtsicht**; der Schalter oben rechts wechselt zur Tagsicht. Die Systemeinstellung des Geräts spielt keine Rolle.
+* Die Seite folgt beim Start der **Systemeinstellung des Geräts** (`prefers-color-scheme`) — Nachtmodus am Handy schaltet auch hier die Nachtsicht ein, sonst startet sie in der Tagsicht, und ein späterer Systemwechsel wird live nachgezogen. Der Schalter oben rechts schaltet manuell um; ab dem ersten Antippen wird die Systemeinstellung ignoriert, damit ein automatischer Wechsel am Abend die bewusste Wahl nicht wieder überschreibt. Das gilt nur für die laufende Sitzung — ein Reload startet wieder bei der Systemeinstellung.
+* Der dritte Knopf oben rechts (**A**) schaltet die **Schriftgröße** in drei Stufen um: Normal, Groß (115 %) und Sehr groß (130 %). Vorgabe beim Laden ist „Groß". Wie beim Theme wird der Zustand nicht gespeichert; ein Reload beginnt wieder bei „Groß".
 * In der Fußzeile stehen die Versionen von Seite und API-Script. Laufen sie auseinander, wird der Hinweis amber — typischer Fall: HTML aktualisiert, das Script auf dem Shelly aber nicht.
 * Geräteliste, Sollwert, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst. Das vermeidet Doppelpflege.
 
