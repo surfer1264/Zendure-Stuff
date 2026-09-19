@@ -15,6 +15,8 @@ oder
 
 [NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator.html)
 
+[NEU Multi Language Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
+
 Für alle drei Tools wird in einem einzigen Durchgang eine passende Konfiguration erstellt:
 
 * **Controller** – die Regelmaschine
