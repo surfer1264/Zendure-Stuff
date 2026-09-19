@@ -635,18 +635,12 @@ function handlePreflight(req, res) {
   return true;
 }
 
-// Sammelabfrage fuer config_api: mehrere gleichzeitige Anfragen teilen sich
-// EIN KVS.GetMany. Bewusst ohne Ergebnis-Cache - ein dauerhaft gehaltener
-// Antwort-String kostet im knappen Variablenpool mehr, als er einspart.
-// Kurzzeit-Cache fuer config_api. Mehrere offene Dashboards (oder Tabs)
-// fragen sonst unabhaengig voneinander dieselben KVS-Werte ab, jedes mit einem
-// eigenen KVS.GetMany. Die Zeitspanne ist bewusst kurz und liegt unter der
-// Nachlaufzeit, die die Dashboard-Seite nach einer Schreibkette einhaelt -
-// eine gerade gesetzte Aenderung wird also nie aus dem Cache beantwortet.
-// Laeuft bereits eine Abfrage (inklusive Wartezeit auf einen freien Slot),
-// stellen sich weitere Anfragen hier an, statt ein eigenes KVS.GetMany
-// loszuschicken. Mehrere offene Dashboards erzeugen dadurch genau eine
-// Abfrage, nicht eine pro Seite.
+// Sammelabfrage fuer config_api: laeuft bereits eine Abfrage (inklusive der
+// Wartezeit auf einen freien Slot), stellen sich weitere Anfragen hier an,
+// statt ein eigenes KVS.GetMany loszuschicken. Mehrere offene Dashboards
+// erzeugen dadurch genau eine Abfrage, nicht eine pro Seite. Bewusst ohne
+// Ergebnis-Cache - ein dauerhaft gehaltener Antwort-String kostet im knappen
+// Variablenpool mehr, als er einspart.
 let configPending = false;
 let configWaiters = [];
 
@@ -770,7 +764,27 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   let keys = Object.keys(data);
   let allowedKeys = [];
   for (let i = 0; i < keys.length; i++) {
-    if (keys[i].indexOf("zdmc_") === 0) allowedKeys[allowedKeys.length] = keys[i];
+    if (keys[i].indexOf("zdmc_") !== 0) continue;
+
+    // zdmc_dischargeFixed: das Regel-Script akzeptiert 0 ODER einen Wert ab
+    // dischargeStartupPower und verwirft alles dazwischen kommentarlos. Damit
+    // ein solcher Wert nicht doch in der KVS landet (Dashboard zeigt ihn dann
+    // an, die Regelung ignoriert ihn), hier vorab pruefen und ablehnen.
+    if (keys[i] === "zdmc_dischargeFixed") {
+      let dv = Number(data[keys[i]]);
+      if (dv !== 0 && !(dv >= CONFIG.dischargeStartupPower)) {
+        res.code = 400;
+        res.headers = [["Content-Type", "application/json"], ["Access-Control-Allow-Origin", "*"]];
+        res.body = JSON.stringify({
+          success: false,
+          error: "dischargeFixed muss 0 oder >= " + CONFIG.dischargeStartupPower + " sein"
+        });
+        res.send();
+        return;
+      }
+    }
+
+    allowedKeys[allowedKeys.length] = keys[i];
   }
 
   if (allowedKeys.length === 0) {
@@ -803,4 +817,4 @@ function writeKeys(res, data, keys, index, allOk) {
 }
 
 print("Zendure Dashboard API v" + VERSION + " gestartet (nur JSON-Endpunkte, kein HTML).");
-print("config_api / status_api / kvs_set_api unter " + CONFIG.kvsHost);
+print("Endpunkte: config_api / status_api / kvs_set_api auf DIESEM Geraet");
