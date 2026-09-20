@@ -304,15 +304,7 @@ de: {
   upload_guide_step6_title: "Speichern, starten, Autostart aktivieren",
   upload_guide_step6_desc: "„Save\" klicken, danach „Start\" bzw. „Save and Run\". Zusätzlich „Enable on boot\" aktivieren, damit das Skript nach einem Neustart automatisch wieder anläuft.",
   upload_guide_step7_title: "Funktion prüfen",
-  upload_guide_step7_desc: "Im Logs-Tab der Shelly-Oberfläche kontrollieren, ob das Skript fehlerfrei läuft. Bei Problemen meist an falschen Geräte-IPs im CONFIG-Block liegen.",
-
-  upload_target_label: "Ziel-Shelly (IP-Adresse)",
-  upload_direct_hint: "Lokaler Helfer erkannt. IP des Ziel-Shelly eintragen und direkt hochladen — jedes Script kann auf ein anderes Gerät gehen.",
-  btn_direct_upload: "⚡ Direkt hochladen",
-  upload_loading: "Übertrage an {ip}...",
-  upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
-  upload_error: "Fehler: {msg}",
-  upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen."
+  upload_guide_step7_desc: "Im Logs-Tab der Shelly-Oberfläche kontrollieren, ob das Skript fehlerfrei läuft. Bei Problemen meist an falschen Geräte-IPs im CONFIG-Block liegen."
 },
 
 en: {
@@ -484,15 +476,7 @@ en: {
   upload_guide_step6_title: "Save, start, enable autostart",
   upload_guide_step6_desc: "Click \"Save\", then \"Start\" (or \"Save and Run\"). Also enable \"Enable on boot\" so the script restarts automatically after a reboot.",
   upload_guide_step7_title: "Check it's working",
-  upload_guide_step7_desc: "Check the Logs tab in the Shelly web interface for errors. Most issues trace back to wrong device IPs in the CONFIG block.",
-
-  upload_target_label: "Target Shelly (IP address)",
-  upload_direct_hint: "Local helper detected. Enter the target Shelly's IP and upload directly — each script can go to a different device.",
-  btn_direct_upload: "⚡ Upload directly",
-  upload_loading: "Uploading to {ip}...",
-  upload_success: "✓ Successfully uploaded to {ip} and started.",
-  upload_error: "Error: {msg}",
-  upload_err_ip: "Please enter a valid IP address for the target device first."
+  upload_guide_step7_desc: "Check the Logs tab in the Shelly web interface for errors. Most issues trace back to wrong device IPs in the CONFIG block."
 },
 
 fr: {
@@ -664,15 +648,7 @@ fr: {
   upload_guide_step6_title: "Enregistrer, démarrer, activer le démarrage auto",
   upload_guide_step6_desc: "Clique sur « Save », puis « Start » (ou « Save and Run »). Active aussi « Enable on boot » pour que le script redémarre automatiquement après un reboot.",
   upload_guide_step7_title: "Vérifier que ça fonctionne",
-  upload_guide_step7_desc: "Vérifie l'onglet Logs de l'interface Shelly pour repérer d'éventuelles erreurs. La plupart des problèmes viennent d'IP d'appareils erronées dans le bloc CONFIG.",
-
-  upload_target_label: "Shelly cible (adresse IP)",
-  upload_direct_hint: "Assistant local détecté. Indique l'IP du Shelly cible et charge directement — chaque script peut aller vers un appareil différent.",
-  btn_direct_upload: "⚡ Charger directement",
-  upload_loading: "Transfert vers {ip}...",
-  upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
-  upload_error: "Erreur : {msg}",
-  upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible."
+  upload_guide_step7_desc: "Vérifie l'onglet Logs de l'interface Shelly pour repérer d'éventuelles erreurs. La plupart des problèmes viennent d'IP d'appareils erronées dans le bloc CONFIG."
 }
 };
 
@@ -718,9 +694,7 @@ const state = {
   signalTyp: "WEBHOOK",
   signalPhone: "",
   signalApiKey: "",
-  signalWebhookUrl: "",
-
-  uploadTargets: { ctrl: "", wd: "", zd: "" }   // pro Script eigene Ziel-Shelly-IP fuer den lokalen Helfer
+  signalWebhookUrl: ""
 };
 state.lang = detectLang();
 
@@ -1590,16 +1564,6 @@ function resultBlock(title, key, cfg, hintKey){
       </div>
       <p class="hint" style="margin-top:8px; margin-bottom:0;">${t('fullscript_hint', {filename: FULL_SCRIPT_FILENAMES[key]})}</p>
     </div>
-
-    <div class="helper-row" id="helperRow_${key}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
-      <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
-      <label class="first">${t('upload_target_label')}</label>
-      <input type="text" id="targetIp_${key}" value="${escapeHtml(state.uploadTargets[key]||'')}" placeholder="192.168.178.151" oninput="state.uploadTargets['${key}']=this.value">
-      <div class="copy-row" style="margin-top:10px;">
-        <button class="btn btn-primary" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
-        <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
-      </div>
-    </div>
   </div>`;
 }
 
@@ -1704,76 +1668,20 @@ function mergeConfigIntoScript(scriptText, newConfigText){
   return scriptText.slice(0, range.start) + newConfigText + scriptText.slice(range.end);
 }
 
-// Holt das generische (bereits minifizierte) Template von GitHub und setzt
-// den persoenlichen CONFIG-Block ein. Gemeinsam genutzt vom Datei-Download
-// und vom Direct-Upload ueber den lokalen Helfer.
-async function fetchMergedScript(key){
-  const res = await fetch(SOURCE_URLS[key]);
-  if(!res.ok) throw new Error('HTTP ' + res.status);
-  const original = await res.text();
-  return mergeConfigIntoScript(original, CONFIG_BUILDERS[key]());
-}
-
 async function downloadFullScript(key){
   const statusEl = document.getElementById('scriptStatus_' + key);
   statusEl.textContent = t('fs_loading');
   statusEl.className = 'hint';
   try{
-    const merged = await fetchMergedScript(key);
+    const res = await fetch(SOURCE_URLS[key]);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const original = await res.text();
+    const newConfig = CONFIG_BUILDERS[key]();
+    const merged = mergeConfigIntoScript(original, newConfig);
     triggerFileDownload(merged, FULL_SCRIPT_FILENAMES[key]);
     statusEl.textContent = t('fs_success', {filename: FULL_SCRIPT_FILENAMES[key]});
   } catch(e){
     statusEl.textContent = t('fs_error', {msg: e.message});
-    statusEl.className = 'error';
-  }
-}
-
-// ---------- Lokaler Helfer (optionaler Ein-Klick-Upload) ----------
-// Der Helfer laeuft als eigener Prozess auf 127.0.0.1 und spricht dort
-// unabhaengig vom Ursprung dieser Seite (auch von https gehostet) per
-// CORS mit dem Browser - er selbst redet dann serverseitig per RPC mit
-// dem jeweiligen Shelly. Jeder Upload-Aufruf traegt seine eigene Ziel-IP,
-// verschiedene Scripts koennen also auf verschiedene Shellys gehen.
-const HELPER_URL = 'http://127.0.0.1:8787';
-let helperAvailable = false;
-
-async function detectHelper(){
-  try{
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 800);
-    const res = await fetch(HELPER_URL + '/api/health', { signal: ctrl.signal });
-    clearTimeout(timer);
-    helperAvailable = res.ok;
-  } catch(e){
-    helperAvailable = false;
-  }
-  document.querySelectorAll('.helper-row').forEach(function(el){
-    el.style.display = helperAvailable ? 'block' : 'none';
-  });
-}
-
-async function directUpload(key){
-  const ip = (state.uploadTargets[key] || '').trim();
-  const statusEl = document.getElementById('uploadStatus_' + key);
-  if(!isValidIp(ip)){
-    statusEl.textContent = t('upload_err_ip');
-    statusEl.className = 'error';
-    return;
-  }
-  statusEl.textContent = t('upload_loading', {ip: ip});
-  statusEl.className = 'hint';
-  try{
-    const merged = await fetchMergedScript(key);
-    const res = await fetch(HELPER_URL + '/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip: ip, name: key, code: merged })
-    });
-    const data = await res.json();
-    if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
-    statusEl.textContent = t('upload_success', {ip: ip});
-  } catch(e){
-    statusEl.textContent = t('upload_error', {msg: e.message});
     statusEl.className = 'error';
   }
 }
@@ -1903,7 +1811,6 @@ function render(){
   let html = renderStepById(steps[stepIndex]);
   html += renderNav(steps);
   document.getElementById('stepContainer').innerHTML = html;
-  if(steps[stepIndex] === 'result') detectHelper();
 }
 
 render();
