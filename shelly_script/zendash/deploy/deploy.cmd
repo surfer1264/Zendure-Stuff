@@ -5,7 +5,7 @@ REM ====================================================================
 REM  HIER ANPASSEN
 REM ====================================================================
 set SHELLY_IP=192.168.178.149
-set SKRIPTNAME=zendash
+set SKRIPTNAME=zd
 
 REM Generische Version (frisch von GitHub geladen)
 set QUELLE=..\zendash_api_src.js

@@ -5,7 +5,7 @@ REM ====================================================================
 REM  HIER ANPASSEN
 REM ====================================================================
 set SHELLY_IP=192.168.178.117
-set SKRIPTNAME=zerooutput
+set SKRIPTNAME=ctrl
 
 REM Generische Version (frisch von GitHub geladen)
 set QUELLE=..\zerooutput_multi_kvs_src.js

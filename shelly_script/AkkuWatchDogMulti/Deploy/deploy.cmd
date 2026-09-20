@@ -5,7 +5,7 @@ REM ====================================================================
 REM  HIER ANPASSEN
 REM ====================================================================
 set SHELLY_IP=192.168.178.151
-set SKRIPTNAME=watchdog
+set SKRIPTNAME=wd
 
 REM Generische Version (frisch von GitHub geladen)
 set QUELLE=..\zenSDKWatchDog_src.js
