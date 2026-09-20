@@ -3,27 +3,34 @@
 zendure_local_helper.py - lokaler Ein-Klick-Upload-Helfer fuer den
 Zendure-Multi-Configurator (zendure-multi-configurator_multilang.html).
 
-Loest zwei Probleme, die ein reiner Browser nicht loesen kann:
+Loest drei Probleme, die ein reiner Browser nicht loesen kann:
 
   1. CORS: die Shelly-Firmware sendet keine CORS-Header, ein direkter
      fetch() vom Configurator zum Shelly wuerde vom Browser blockiert.
      Dieser Helfer laeuft lokal auf 127.0.0.1 und spricht das Shelly
      stattdessen serverseitig per RPC an - dort gelten keine
-     Browser-CORS-Regeln (dasselbe Prinzip wie zendure_proxy.py fuers
-     Dashboard).
+     Browser-CORS-Regeln.
   2. Chunked Upload: Shellys RPC hat ein Groessenlimit pro Aufruf, der
      Code muss daher in mehreren Script.PutCode-Aufrufen uebertragen
      werden (siehe upload_script()) - identisch zu upload_shelly.py.
+  3. Start-Komfort: der Helfer liefert die Configurator-Seite gleich
+     selbst aus (genau wie zendure_proxy.py es heute fuers Dashboard
+     macht) und oeffnet sie beim Start automatisch im Standardbrowser -
+     kein manuelles Suchen der HTML-Datei noetig. Als Nebeneffekt laufen
+     Seite und Helfer dann auf demselben Origin, das CORS-Thema aus
+     Punkt 1 betrifft nur noch den Sonderfall "Configurator woanders
+     geoeffnet" (z.B. die ueber GitHub Pages gehostete Version).
 
 Kein "pip install" noetig, nur Python-Standardbibliothek.
 
 Start:
     python3 zendure_local_helper.py
 
-Danach den Configurator im Browser offen lassen (egal ob als lokale
-Datei oder z.B. ueber GitHub Pages gehostet) - er erkennt den Helfer
-automatisch per GET /api/health und zeigt pro Script ein Eingabefeld
-fuer die Ziel-IP plus einen "Direkt hochladen"-Button.
+Der Browser oeffnet sich automatisch auf http://127.0.0.1:8787/ - dort
+liegt der komplette Configurator, inklusive Erkennung des Helfers und
+der Ziel-IP-Felder pro Script. Klappt der Auto-Open nicht (z.B. auf
+einem Rechner ohne Standardbrowser-Registrierung), die Adresse manuell
+in einen Browser eintragen.
 
 WICHTIG - anders als zendure_proxy.py: es gibt hier bewusst KEINE feste
 SHELLY_IP. Jeder Upload-Aufruf (POST /api/upload) traegt seine eigene
@@ -31,16 +38,21 @@ Ziel-IP im Request-Body mit ("ip"). Controller-, Watchdog- und
 zenDash-API-Script koennen so ohne weitere Konfiguration auf drei
 verschiedene Shellys gehen.
 
+Fuers Bauen als exe (PyInstaller) muss die HTML-Datei mitgegeben werden,
+siehe --add-data im build-and-release.yml-Workflow.
+
 Beenden: Strg+C im Terminal.
 """
 
 import http.server
 import json
+import os
 import re
 import sys
 import time
 import urllib.error
 import urllib.request
+import webbrowser
 
 # ---------------------------------------------------------------
 # Konfiguration - hier anpassen
@@ -48,6 +60,15 @@ import urllib.request
 PORT = 8787
 BIND_ADDRESS = "127.0.0.1"   # bewusst NUR dieser Rechner, nicht das ganze Netz
 CHUNK_SIZE = 1024            # Zeichen pro Script.PutCode-Aufruf
+HTML_FILENAME = "zendure-multi-configurator_multilang.html"
+
+
+def resource_path(filename):
+    """Findet eine mitgelieferte Datei - im normalen Skriptbetrieb neben
+    diesem Skript, in einer mit PyInstaller --onefile gebauten exe
+    stattdessen im temporaeren Entpack-Ordner sys._MEIPASS."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, filename)
 
 
 class RpcError(Exception):
@@ -163,8 +184,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/health":
             self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": "1.0"})
+        elif self.path in ("/", "/index.html"):
+            self._serve_html()
         else:
             self._json(404, {"ok": False, "error": "not found"})
+
+    def _serve_html(self):
+        try:
+            with open(resource_path(HTML_FILENAME), "rb") as fh:
+                body = fh.read()
+        except OSError as err:
+            self._json(
+                500,
+                {"ok": False, "error": "Configurator-HTML nicht gefunden (%s): %s" % (HTML_FILENAME, err)},
+            )
+            return
+        self.send_response(200)
+        self._cors()
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def do_POST(self):
         if self.path != "/api/upload":
@@ -198,9 +238,15 @@ def main():
               file=sys.stderr)
         return 1
 
-    print("Lokaler Helfer laeuft auf http://%s:%s" % (BIND_ADDRESS, PORT))
-    print("Configurator-Tab offen lassen - er erkennt den Helfer automatisch.")
-    print("Beenden mit Strg+C.")
+    url = "http://%s:%s/" % (BIND_ADDRESS, PORT)
+    print("Lokaler Helfer laeuft auf %s" % url)
+    print("Oeffne den Configurator automatisch im Browser...")
+    try:
+        webbrowser.open(url)
+    except Exception as err:
+        print("Konnte den Browser nicht automatisch oeffnen (%s) - Adresse manuell aufrufen: %s"
+              % (err, url))
+    print("Dieses Fenster offen lassen, solange hochgeladen wird. Beenden mit Strg+C.")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
