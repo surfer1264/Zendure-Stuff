@@ -465,7 +465,7 @@
   // Versionsstand dieser Seite. Muss zur Version des API-Scripts passen -
   // stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "2.3";
+  const VERSION = "2.5";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -988,14 +988,16 @@
   }
 
   /* ---------------- Manuelles AC-Laden ----------------
-     Drei Schreibvorgaenge, deren Reihenfolge zaehlt. Erst das Geraet aus der
-     Regelung nehmen, dann die Ladeleistung setzen - andersherum ueberschreibt
-     das Regel-Script den Wert im naechsten Zyklus. Beim Beenden entsprechend
-     umgekehrt: erst die Leistung auf 0, dann die Schalter zurueck.
+     Start: drei Schreibvorgaenge, deren Reihenfolge zaehlt. Erst das Geraet
+     aus der Regelung nehmen, dann die Ladeleistung setzen - andersherum
+     ueberschreibt das Regel-Script den Wert im naechsten Zyklus.
 
-     kvs_set_api koennte zwar mehrere Keys auf einmal entgegennehmen, schreibt
-     sie aber parallel - ohne garantierte Reihenfolge. Deshalb hier bewusst
-     einzelne, nacheinander abgewartete Aufrufe. */
+     Beenden: nur noch EIN Schreibvorgang (inputLimit=0). Die beiden Schalter
+     ergaenzt das API-Script selbst aus seinem serverseitigen preManual-
+     Speicher (fillManualStopDefaults in zendash_api_src.js, ab Version 2.5) -
+     der uebersteht auch einen Browser-Reload zwischen Start und Stopp, anders
+     als das preManual hier unten, das nur noch fuer die sofortige UI-Anzeige
+     gebraucht wird. */
 
   // Zustand vor dem Start, um die Schalter beim Beenden zurueckzustellen.
   // Geht bei einem Reload verloren; dann werden beide wieder eingeschaltet.
@@ -1064,25 +1066,27 @@
   }
 
   async function stopManual(d){
-    const prev = preManual[d.id] || { dischargeAllowed: true, reverse: true };
+    // Nur noch inputLimit=0 senden - dischargeAllowed/reverse ergaenzt das
+    // API-Script selbst aus seinem eigenen, serverseitigen preManual-Speicher
+    // (fillManualStopDefaults in zendash_api_src.js). Der lokale preManual
+    // hier dient nur noch der sofortigen UI-Anzeige, bevor die naechste
+    // config_api-Antwort den tatsaechlichen Stand bestaetigt - er ist NICHT
+    // mehr die Quelle der Wahrheit fuer den geschriebenen Wert.
+    const prev = preManual[d.id];
     setManualBusy(d.id, true, 'wird beendet …');
 
     stopPolling();
 
-    // inputLimit zuerst - das loest im Regel-Script einen Schreibvorgang aufs
-    // Geraet aus. Danach eine Pause, bevor die Schalter folgen.
     let ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', 0, true);
-    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', prev.dischargeAllowed ? 1 : 0, true); }
-    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_reverse', prev.reverse ? 1 : 0, true); }
 
     if (ok) {
       d.inputLimit = 0;
-      d.dischargeAllowed = prev.dischargeAllowed;
-      d.reverse = prev.reverse;
+      d.dischargeAllowed = prev ? prev.dischargeAllowed : true;
+      d.reverse = prev ? prev.reverse : true;
       delete preManual[d.id];
       showToast(d.label + ': zurück in der Regelung');
     } else {
-      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht sauber beendet werden. ' +
+      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht beendet werden. ' +
                'Bitte Schalter und Ladeleistung auf der Karte prüfen.');
     }
 

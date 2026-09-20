@@ -1,6 +1,6 @@
 # ZenDash API
 
-Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.4). Sie liefern
+Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.5). Sie liefern
 Messwerte und Einstellungen für das Dashboard und schreiben Sollwerte in die
 Shelly-KVS, aus der das Regel-Script `zerooutput_multi_kvs.js` seine Vorgaben liest.
 
@@ -84,7 +84,7 @@ eigenen Eingabe zusätzlich sofort.
 
 ```json
 {
-  "version": "2.4",
+  "version": "2.5",
   "setpoint": -20,
   "hysteresis": 12,
   "dischargeFixed": 0,
@@ -173,10 +173,13 @@ aus der Regelung.
 
 **`inputLimit` setzt eine Reihenfolge voraus.** Erst `dischargeAllowed` und `reverse`
 auf `0`, dann die Ladeleistung — sonst überschreibt das Regel-Script den Wert im
-nächsten Zyklus. Beim Beenden umgekehrt: erst `inputLimit` auf `0`, dann die Schalter
-zurück. Bei einem kombinierten Aufruf mit mehreren Schlüsseln (siehe unten) übernimmt
-das API-Script diese Reihenfolge selbst — die Schlüssel innerhalb eines `data`-Objekts
-müssen dafür nicht in einer bestimmten Reihenfolge stehen.
+nächsten Zyklus. Beim Beenden reicht `inputLimit` auf `0` allein: Ist das Gerät zu
+diesem Zeitpunkt im manuellen Modus und werden `dischargeAllowed`/`reverse` nicht im
+selben Request mitgeschickt, ergänzt das API-Script sie selbst aus dem gespeicherten
+Vorzustand (siehe [„Manuelles Laden"](#manuelles-laden)). Bei einem kombinierten
+Aufruf mit mehreren Schlüsseln übernimmt das API-Script die Schreibreihenfolge
+selbst — die Schlüssel innerhalb eines `data`-Objekts müssen dafür nicht in einer
+bestimmten Reihenfolge stehen.
 
 ---
 
@@ -201,11 +204,25 @@ curl -g 'http://<shelly-ip>/script/<script-id>/kvs_set_api?data={"zdmc_dev1_disc
 
 Antwort: `{"success":true,"written":3}`
 
-Beenden (umgekehrte Werte, gleiche Form):
+Beenden — nur noch `inputLimit=0` nötig:
 
 ```
-GET kvs_set_api?data={"zdmc_dev1_inputLimit":0,"zdmc_dev1_dischargeAllowed":1,"zdmc_dev1_reverse":1}
+GET kvs_set_api?data={"zdmc_dev1_inputLimit":0}
 ```
+
+```bash
+curl -g 'http://<shelly-ip>/script/<script-id>/kvs_set_api?data={"zdmc_dev1_inputLimit":0}'
+```
+
+Antwort: `{"success":true,"written":3}` — das API-Script ergänzt `dischargeAllowed`
+und `reverse` selbst aus seinem gespeicherten Vorzustand (`preManual`, siehe unten)
+und meldet sie im `written`-Zähler mit, auch wenn nur ein Schlüssel geschickt wurde.
+
+Werden `dischargeAllowed`/`reverse` stattdessen explizit mitgeschickt (z. B.
+`{"zdmc_dev1_inputLimit":0,"zdmc_dev1_dischargeAllowed":1,"zdmc_dev1_reverse":1}`),
+gilt das als bewusste Vorgabe des Aufrufers und wird unverändert übernommen — dann
+**nicht** aus `preManual` ergänzt. Für den Normalfall („zurück in die Regelung, wie
+davor“) reicht `inputLimit=0` allein.
 
 Das funktioniert unabhängig davon, ob der Aufruf vom Dashboard, curl, einer
 Shelly-Automation oder Home Assistant kommt — entscheidend ist nur, dass er über
@@ -216,7 +233,8 @@ Warnung unten).
 
 Meldet der Hub für ein Gerät im manuellen Modus `socLimit: 1` (siehe `status_api`),
 beendet das API-Script den manuellen Modus von selbst — gleiche Schreibreihenfolge
-wie beim manuellen Beenden (`inputLimit` zuerst, danach die beiden Schalter).
+und derselbe Rückfallmechanismus wie beim Beenden mit bloßem `inputLimit=0` (siehe
+oben): `inputLimit` zuerst, danach die beiden Schalter, aus `preManual` ergänzt.
 Zurückgesetzt wird auf den Zustand unmittelbar vor dem Start des manuellen Modus,
 sofern das API-Script seither nicht neu gestartet ist; andernfalls auf
 `dischargeAllowed=1` / `reverse=1`.

@@ -119,7 +119,7 @@ if (typeof CONFIG.dischargeStartupPower !== "number" || CONFIG.dischargeStartupP
 }
 
 // Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-let VERSION = "2.4";
+let VERSION = "2.5";
 
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
@@ -960,6 +960,47 @@ HTTPServer.registerEndpoint("status_api", function (req, res) {
   res.send();
 });
 
+// Ergaenzt beim Beenden des manuellen Ladens die Schalter aus preManual, wenn
+// der Aufrufer nur inputLimit=0 schickt (z.B. das Dashboard nach dieser
+// Aenderung, oder eine Automation). Werden dischargeAllowed/reverse im selben
+// Request explizit mitgegeben, ist das eine bewusste Vorgabe des Aufrufers -
+// die bleibt unangetastet. Muss VOR captureManualTransitions laufen, damit
+// deren Ruecksprung-Erkennung (deviceLooksAutomatic) den vollstaendigen,
+// ergaenzten Zielzustand sieht.
+function keysHasField(keys, key) {
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i] === key) return true;
+  }
+  return false;
+}
+
+function fillManualStopDefaults(data, keys) {
+  // Ueber die urspruengliche Laenge iterieren, nicht ueber keys.length direkt -
+  // die Funktion haengt neue Keys an dasselbe Array an, sonst wuerden die neu
+  // angehaengten Keys erneut betrachtet.
+  let originalLen = keys.length;
+  for (let i = 0; i < originalLen; i++) {
+    let pk = parseDeviceKey(keys[i]);
+    if (!pk || pk.field !== "inputLimit") continue;
+    if (Number(data[keys[i]]) !== 0) continue;
+    let idx = pk.index;
+    if (!deviceState[idx] || !isManualActive(deviceState[idx])) continue;
+
+    let daKey = "zdmc_dev" + idx + "_dischargeAllowed";
+    let rvKey = "zdmc_dev" + idx + "_reverse";
+    let restore = preManual[idx] || { dischargeAllowed: true, reverse: true };
+
+    if (!keysHasField(keys, daKey)) {
+      data[daKey] = restore.dischargeAllowed ? 1 : 0;
+      keys[keys.length] = daKey;
+    }
+    if (!keysHasField(keys, rvKey)) {
+      data[rvKey] = restore.reverse ? 1 : 0;
+      keys[keys.length] = rvKey;
+    }
+  }
+}
+
 HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
   if (handlePreflight(req, res)) return;
   lastRequestAt = Date.now();
@@ -1018,6 +1059,7 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
     return;
   }
 
+  fillManualStopDefaults(data, allowedKeys);
   captureManualTransitions(data, allowedKeys);
   writeKeys(res, data, allowedKeys, 0, true);
 });
