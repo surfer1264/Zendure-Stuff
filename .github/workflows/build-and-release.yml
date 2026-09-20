@@ -6,9 +6,12 @@ name: Build & Release lokaler Helfer
 # Endnutzer laedt danach nur noch eine fertige Datei von der
 # Release-Seite herunter - kein Python-Setup, kein Terminal.
 #
-# Anpassen: HELPER_PATH unten, falls die Datei umbenannt wird oder
-# woanders liegt. Aktuell: shelly_script/local_helper/zendure_local_helper.py
+# Anpassen: HELPER_PATH und HTML_PATH unten, falls Dateien umbenannt
+# werden oder woanders liegen. Beide Pfade sind vom Nutzer bestaetigt:
+# HELPER_PATH: shelly_script/local_helper/zendure_local_helper.py
 # (https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/local_helper)
+# HTML_PATH:   shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
 # nicht - "Publish release" bzw. "gh release create" ohne --draft).
@@ -22,6 +25,7 @@ permissions:
 
 env:
   HELPER_PATH: shelly_script/local_helper/zendure_local_helper.py
+  HTML_PATH: shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
 
 jobs:
   build:
@@ -29,9 +33,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            data_sep: ";"
             built_path: dist/zendure_local_helper.exe
             asset_name: zendure_local_helper-windows.exe
           - os: macos-latest
+            data_sep: ":"
             built_path: dist/zendure_local_helper
             asset_name: zendure_local_helper-macos
     runs-on: ${{ matrix.os }}
@@ -47,8 +53,14 @@ jobs:
       - name: PyInstaller installieren
         run: pip install pyinstaller
 
-      - name: Ausfuehrbare Datei bauen
-        run: pyinstaller --onefile --console --name zendure_local_helper "${{ env.HELPER_PATH }}"
+      - name: Ausfuehrbare Datei bauen (mit gebuendelter HTML)
+        # --add-data SRC{sep}DEST bettet die Configurator-HTML in die exe
+        # ein; ". " als DEST legt sie direkt ins sys._MEIPASS-Wurzelverzeichnis,
+        # wo resource_path() in zendure_local_helper.py sie erwartet.
+        run: >-
+          pyinstaller --onefile --console --name zendure_local_helper
+          --add-data "${{ env.HTML_PATH }}${{ matrix.data_sep }}."
+          "${{ env.HELPER_PATH }}"
 
       - name: Asset benennen
         shell: bash
