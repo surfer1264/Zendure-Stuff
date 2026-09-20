@@ -288,7 +288,23 @@ de: {
 
   fs_loading: "Lade Original-Script von GitHub...",
   fs_success: "✓ Komplettes Script heruntergeladen ({filename}).",
-  fs_error: "Fehler: {msg} — Internetverbindung prüfen, oder Script manuell von GitHub laden und den CONFIG-Block ersetzen."
+  fs_error: "Fehler: {msg} — Internetverbindung prüfen, oder Script manuell von GitHub laden und den CONFIG-Block ersetzen.",
+
+  upload_guide_summary: "So lädst du das Script auf den Shelly hoch",
+  upload_guide_step1_title: "Script herunterladen",
+  upload_guide_step1_desc: "Oben auf „🔗 Komplettes Script von GitHub speichern\" klicken. Die Datei landet mit passendem Namen im Download-Ordner — der CONFIG-Block ist bereits mit deinen Angaben befüllt.",
+  upload_guide_step2_title: "Shelly-Oberfläche öffnen",
+  upload_guide_step2_desc: "Die IP-Adresse deines Shelly-Geräts im Browser aufrufen (z. B. http://192.168.178.151). Der Rechner muss im selben lokalen Netz wie das Gerät sein.",
+  upload_guide_step3_title: "Zum Scripts-Menü wechseln",
+  upload_guide_step3_desc: "In der Shelly-Weboberfläche den Menüpunkt „Scripts\" öffnen. Dort sind alle auf dem Gerät gespeicherten Skripte aufgelistet.",
+  upload_guide_step4_title: "Script anlegen oder ersetzen",
+  upload_guide_step4_desc: "Existiert schon ein gleichnamiges Skript von einem früheren Versuch, dieses zuerst stoppen und löschen. Danach „Add script\" klicken, einen Namen vergeben und speichern — das öffnet den Code-Editor.",
+  upload_guide_step5_title: "Code einfügen",
+  upload_guide_step5_desc: "Die heruntergeladene Datei mit einem Texteditor öffnen, den gesamten Inhalt kopieren und im Shelly-Code-Editor einfügen (vorhandenen Platzhalter-Inhalt vorher löschen).",
+  upload_guide_step6_title: "Speichern, starten, Autostart aktivieren",
+  upload_guide_step6_desc: "„Save\" klicken, danach „Start\" bzw. „Save and Run\". Zusätzlich „Enable on boot\" aktivieren, damit das Skript nach einem Neustart automatisch wieder anläuft.",
+  upload_guide_step7_title: "Funktion prüfen",
+  upload_guide_step7_desc: "Im Logs-Tab der Shelly-Oberfläche kontrollieren, ob das Skript fehlerfrei läuft. Bei Problemen meist an falschen Geräte-IPs im CONFIG-Block liegen."
 },
 
 en: {
@@ -444,7 +460,23 @@ en: {
 
   fs_loading: "Loading original script from GitHub...",
   fs_success: "✓ Complete script downloaded ({filename}).",
-  fs_error: "Error: {msg} — check your internet connection, or load the script manually from GitHub and replace the CONFIG block yourself."
+  fs_error: "Error: {msg} — check your internet connection, or load the script manually from GitHub and replace the CONFIG block yourself.",
+
+  upload_guide_summary: "How to upload the script to your Shelly",
+  upload_guide_step1_title: "Download the script",
+  upload_guide_step1_desc: "Click \"🔗 Save complete script from GitHub\" above. The file is saved with the matching name in your downloads folder — the CONFIG block is already filled in with your settings.",
+  upload_guide_step2_title: "Open the Shelly web interface",
+  upload_guide_step2_desc: "Open your Shelly device's IP address in the browser (e.g. http://192.168.178.151). Your computer needs to be on the same local network as the device.",
+  upload_guide_step3_title: "Go to the Scripts menu",
+  upload_guide_step3_desc: "In the Shelly web interface, open the \"Scripts\" menu. It lists every script currently stored on the device.",
+  upload_guide_step4_title: "Create or replace the script",
+  upload_guide_step4_desc: "If a script with the same name already exists from an earlier attempt, stop and delete it first. Then click \"Add script\", give it a name and save — this opens the code editor.",
+  upload_guide_step5_title: "Paste the code",
+  upload_guide_step5_desc: "Open the downloaded file in a text editor, select and copy the whole content, then paste it into the Shelly code editor (clear the placeholder content first).",
+  upload_guide_step6_title: "Save, start, enable autostart",
+  upload_guide_step6_desc: "Click \"Save\", then \"Start\" (or \"Save and Run\"). Also enable \"Enable on boot\" so the script restarts automatically after a reboot.",
+  upload_guide_step7_title: "Check it's working",
+  upload_guide_step7_desc: "Check the Logs tab in the Shelly web interface for errors. Most issues trace back to wrong device IPs in the CONFIG block."
 },
 
 fr: {
@@ -600,7 +632,23 @@ fr: {
 
   fs_loading: "Chargement du script original depuis GitHub...",
   fs_success: "✓ Script complet téléchargé ({filename}).",
-  fs_error: "Erreur : {msg} — vérifie ta connexion internet, ou charge le script manuellement depuis GitHub et remplace toi-même le bloc CONFIG."
+  fs_error: "Erreur : {msg} — vérifie ta connexion internet, ou charge le script manuellement depuis GitHub et remplace toi-même le bloc CONFIG.",
+
+  upload_guide_summary: "Comment charger le script sur ton Shelly",
+  upload_guide_step1_title: "Télécharger le script",
+  upload_guide_step1_desc: "Clique sur « 🔗 Enregistrer le script complet depuis GitHub » ci-dessus. Le fichier est enregistré avec le bon nom dans ton dossier de téléchargements — le bloc CONFIG est déjà rempli avec tes réglages.",
+  upload_guide_step2_title: "Ouvrir l'interface web du Shelly",
+  upload_guide_step2_desc: "Ouvre l'adresse IP de ton appareil Shelly dans le navigateur (par ex. http://192.168.178.151). Ton ordinateur doit être sur le même réseau local que l'appareil.",
+  upload_guide_step3_title: "Aller dans le menu Scripts",
+  upload_guide_step3_desc: "Dans l'interface web du Shelly, ouvre le menu « Scripts ». Il liste tous les scripts déjà présents sur l'appareil.",
+  upload_guide_step4_title: "Créer ou remplacer le script",
+  upload_guide_step4_desc: "Si un script du même nom existe déjà suite à un essai précédent, arrête-le et supprime-le d'abord. Clique ensuite sur « Add script », donne-lui un nom et enregistre — cela ouvre l'éditeur de code.",
+  upload_guide_step5_title: "Coller le code",
+  upload_guide_step5_desc: "Ouvre le fichier téléchargé dans un éditeur de texte, sélectionne et copie tout le contenu, puis colle-le dans l'éditeur de code du Shelly (efface d'abord le contenu de remplacement).",
+  upload_guide_step6_title: "Enregistrer, démarrer, activer le démarrage auto",
+  upload_guide_step6_desc: "Clique sur « Save », puis « Start » (ou « Save and Run »). Active aussi « Enable on boot » pour que le script redémarre automatiquement après un reboot.",
+  upload_guide_step7_title: "Vérifier que ça fonctionne",
+  upload_guide_step7_desc: "Vérifie l'onglet Logs de l'interface Shelly pour repérer d'éventuelles erreurs. La plupart des problèmes viennent d'IP d'appareils erronées dans le bloc CONFIG."
 }
 };
 
@@ -1519,6 +1567,27 @@ function resultBlock(title, key, cfg, hintKey){
   </div>`;
 }
 
+// Bebilderte Kurzanleitung fuer den letzten Schritt (Copy&Paste in den
+// Shelly-eigenen Skripteditor) - einmal fuer alle gewaehlten Produkte,
+// da der Ablauf immer identisch ist. Direkte Browser->Shelly-Uploads
+// scheitern an fehlenden CORS-Headern der Shelly-Firmware, siehe
+// zendure_proxy.py; ein generischer lokaler Helfer ist als naechster
+// Ausbauschritt vorgesehen.
+function uploadGuideBlock(){
+  const steps = [1,2,3,4,5,6,7].map(function(n){
+    return `<li style="margin-bottom:10px;"><b>${t('upload_guide_step'+n+'_title')}</b><br>${t('upload_guide_step'+n+'_desc')}</li>`;
+  }).join('');
+  return `
+  <div class="panel">
+    <details>
+      <summary style="cursor:pointer; font-weight:700; font-size:.85rem; color:var(--muted);">${t('upload_guide_summary')}</summary>
+      <ol style="margin:14px 0 0; padding-left:20px; font-size:.88rem; line-height:1.6;">
+        ${steps}
+      </ol>
+    </details>
+  </div>`;
+}
+
 function copyConfig(key){
   const text = CONFIG_BUILDERS[key]();
   navigator.clipboard.writeText(text).then(()=>{
@@ -1659,6 +1728,8 @@ function renderResult(){
   if(p.controller) html += resultBlock('Controller', 'ctrl', buildControllerConfig(), 'hint_ctrl');
   if(p.watchdog) html += resultBlock('Watchdog', 'wd', buildWatchdogConfig(), 'hint_wd');
   if(p.zendash) html += resultBlock('zenDash-API', 'zd', buildZenDashConfig(), 'hint_zd');
+
+  if(anyProduct()) html += uploadGuideBlock();
 
   return html;
 }
