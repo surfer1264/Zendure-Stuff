@@ -119,7 +119,7 @@ if (typeof CONFIG.dischargeStartupPower !== "number" || CONFIG.dischargeStartupP
 }
 
 // Versionsstand dieses Scripts. Wird von config_api mitgeliefert, damit das
-let VERSION = "2.5";
+let VERSION = "2.7";
 
 // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
 // dieselben Bereiche anbieten, die readKvsOverrides() dort auch akzeptiert.
@@ -346,18 +346,19 @@ for (let dsi = 0; dsi < CONFIG.devices.length; dsi++) {
 }
 let preManual = [];
 
-// Pause zwischen den einzelnen KVS-Schreibvorgaengen beim Auto-Stop -
-// gleicher Wert und gleicher Grund wie STEP_PAUSE_MS im Dashboard (das
-// Regel-Script reagiert auf ein geaendertes inputLimit sofort mit einem
-// eigenen Schreibvorgang aufs Geraet).
-let AUTO_STOP_STEP_PAUSE_MS = 500;
+// Pause zwischen einzelnen KVS-Schreibvorgaengen, wenn kvs_set_api mehrere
+// Schluessel in einem Request bekommt (Auto-Stop, oder ein kombinierter
+// Start-/Stopp-Aufruf vom Dashboard bzw. einer Automation) - siehe writeKeys.
+// Ohne diese Pause treffen mehrere KVS.Set-Aufrufe, der laufende
+// Hintergrund-Poll UND die Reaktion des Regel-Scripts (es schreibt bei
+// geaendertem inputLimit sofort aufs Geraet) innerhalb weniger hundert
+// Millisekunden auf demselben Shelly zusammen - Espruino stellt aber nur
+// rund 1600 Variablen fuer ALLE Scripte zusammen bereit, das sprengt den
+// Pool sonst zuverlaessig.
+let KVS_STEP_PAUSE_MS = 500;
 
 function isManualActive(ds) {
   return !!ds && !ds.dischargeAllowed && !ds.reverse && Number(ds.inputLimit) > 0;
-}
-
-function deviceLooksAutomatic(ds) {
-  return !!ds && !!ds.dischargeAllowed && !!ds.reverse && Number(ds.inputLimit) === 0;
 }
 
 function anyManualActive() {
@@ -382,14 +383,20 @@ function parseDeviceKey(key) {
 }
 
 // Vor dem eigentlichen Schreiben aufgerufen (siehe kvs_set_api): sichert
-// preManual, sobald ein Geraet aus dem vollautomatischen Zustand heraus
-// bewegt wird, und loescht preManual wieder, sobald es (ueber diesen aufruf)
-// dort erneut ankommt - unabhaengig davon, ob "manuell aktiv" im engen Sinn
-// (inputLimit>0) je erreicht wurde. Arbeitet bewusst noch mit dem ALTEN
-// deviceState (vor diesem Aufruf), damit bei den drei einzelnen Schreib-
-// schritten des Dashboards (dischargeAllowed, reverse, inputLimit
-// nacheinander) der allererste Schritt den wahren Ausgangszustand einfaengt
-// und nicht schon den vom vorherigen Teilschritt veraenderten.
+// preManual GENAU beim Uebergang in den manuellen Modus (isManualActive wird
+// durch diesen Request wahr) und loescht preManual GENAU beim Uebergang
+// wieder heraus - beides anhand des einen, unveraenderten deviceState vor
+// diesem Request. Ueberschreibt preManual dabei bewusst IMMER (kein "nur
+// falls noch nicht gesetzt"), weil Start (siehe Dashboard) mittlerweile ein
+// einziger kombinierter Request ist: deviceState ist zum Zeitpunkt dieses
+// Aufrufs garantiert der echte, unverfaelschte Vorzustand, auch wenn eine
+// fruehere, unabhaengige Schalteraktion schon einmal preManual gesetzt
+// (und liegen gelassen) hatte - ein solcher Altwert waere sonst faelschlich
+// stehengeblieben. Wird der Start ausnahmsweise doch in mehreren Requests
+// nachgebildet (z.B. eine Automation, die Einzelaufrufe verwendet), fuehrt
+// das ohne Sonderbehandlung zu genau der Ungenauigkeit, die "Manuelles
+// Laden" in API.md fuer diesen Fall beschreibt - deshalb dort der kombinierte
+// Aufruf als empfohlener Weg.
 function captureManualTransitions(data, keys) {
   let touched = [];
   for (let i = 0; i < keys.length; i++) {
@@ -411,13 +418,15 @@ function captureManualTransitions(data, keys) {
 
   for (let idx = 0; idx < touched.length; idx++) {
     if (!touched[idx]) continue;
-    if (!isManualActive(deviceState[idx]) && !preManual[idx]) {
+    let wasActive = isManualActive(deviceState[idx]);
+    let willBeActive = isManualActive(touched[idx]);
+    if (willBeActive && !wasActive) {
       preManual[idx] = {
         dischargeAllowed: deviceState[idx].dischargeAllowed,
         reverse: deviceState[idx].reverse
       };
     }
-    if (deviceLooksAutomatic(touched[idx])) {
+    if (wasActive && !willBeActive) {
       preManual[idx] = null;
     }
   }
@@ -473,7 +482,7 @@ function autoStopDevice(idx) {
     }
     deviceState[idx].inputLimit = 0;
 
-    Timer.set(AUTO_STOP_STEP_PAUSE_MS, false, function () {
+    Timer.set(KVS_STEP_PAUSE_MS, false, function () {
       kvsSetOne("zdmc_dev" + idx + "_dischargeAllowed", restore.dischargeAllowed ? 1 : 0, function (ok2) {
         if (!ok2) {
           print("Auto-Stop fuer " + CONFIG.devices[idx].label + " abgebrochen (dischargeAllowed). Bitte Dashboard pruefen.");
@@ -482,7 +491,7 @@ function autoStopDevice(idx) {
         }
         deviceState[idx].dischargeAllowed = !!restore.dischargeAllowed;
 
-        Timer.set(AUTO_STOP_STEP_PAUSE_MS, false, function () {
+        Timer.set(KVS_STEP_PAUSE_MS, false, function () {
           kvsSetOne("zdmc_dev" + idx + "_reverse", restore.reverse ? 1 : 0, function (ok3) {
             if (ok3) {
               deviceState[idx].reverse = !!restore.reverse;
@@ -965,8 +974,8 @@ HTTPServer.registerEndpoint("status_api", function (req, res) {
 // Aenderung, oder eine Automation). Werden dischargeAllowed/reverse im selben
 // Request explizit mitgegeben, ist das eine bewusste Vorgabe des Aufrufers -
 // die bleibt unangetastet. Muss VOR captureManualTransitions laufen, damit
-// deren Ruecksprung-Erkennung (deviceLooksAutomatic) den vollstaendigen,
-// ergaenzten Zielzustand sieht.
+// deren Ruecksprung-Erkennung (isManualActive wird durch diesen Request
+// falsch) den vollstaendigen, ergaenzten Zielzustand sieht.
 function keysHasField(keys, key) {
   for (let i = 0; i < keys.length; i++) {
     if (keys[i] === key) return true;
@@ -1066,7 +1075,10 @@ HTTPServer.registerEndpoint("kvs_set_api", function (req, res) {
 
 // Nacheinander schreiben, nicht parallel: bei entfernter KVS ist jeder
 // Schreibvorgang eine eigene HTTP-Anfrage, und mehrere gleichzeitig offene
-// Anfragen sind genau die Spitze, die wir vermeiden wollen.
+// Anfragen sind genau die Spitze, die wir vermeiden wollen. Zwischen den
+// Schritten eine kurze Pause (KVS_STEP_PAUSE_MS) - siehe deren Begruendung
+// oben. Bei genau einem Schluessel (der bisherige Normalfall) entfaellt sie:
+// dann gibt es nichts, worauf zu warten waere.
 function writeKeys(res, data, keys, index, allOk) {
   if (index >= keys.length) {
     if (allOk) applyDeviceKeysToState(data, keys);
@@ -1079,7 +1091,15 @@ function writeKeys(res, data, keys, index, allOk) {
 
   let k = keys[index];
   kvsSetOne(k, data[k], function (ok) {
-    writeKeys(res, data, keys, index + 1, allOk && ok);
+    let nextOk = allOk && ok;
+    let nextIndex = index + 1;
+    if (nextIndex >= keys.length) {
+      writeKeys(res, data, keys, nextIndex, nextOk);
+      return;
+    }
+    Timer.set(KVS_STEP_PAUSE_MS, false, function () {
+      writeKeys(res, data, keys, nextIndex, nextOk);
+    });
   });
 }
 

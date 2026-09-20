@@ -1,6 +1,6 @@
 # ZenDash API
 
-Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.5). Sie liefern
+Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.7). Sie liefern
 Messwerte und Einstellungen für das Dashboard und schreiben Sollwerte in die
 Shelly-KVS, aus der das Regel-Script `zerooutput_multi_kvs.js` seine Vorgaben liest.
 
@@ -84,7 +84,7 @@ eigenen Eingabe zusätzlich sofort.
 
 ```json
 {
-  "version": "2.5",
+  "version": "2.7",
   "setpoint": -20,
   "hysteresis": 12,
   "dischargeFixed": 0,
@@ -133,7 +133,12 @@ GET kvs_set_api?data={"zdmc_setpoint":-20}
 ```
 
 Der `data`-Parameter ist ein URL-kodiertes JSON-Objekt. Mehrere Schlüssel sind
-erlaubt und werden **nacheinander** geschrieben, nicht parallel.
+erlaubt und werden **nacheinander** geschrieben, nicht parallel — mit einer
+kurzen Pause dazwischen (500 ms), damit mehrere `KVS.Set`, der laufende
+Hintergrund-Poll und die Reaktion des Regel-Scripts nicht alle gleichzeitig
+auf demselben Shelly landen und dessen knappen Variablenpool sprengen. Bei
+drei Schlüsseln (z. B. beim Start des manuellen Ladens) dauert ein Aufruf
+entsprechend rund eine Sekunde.
 
 ```json
 { "success": true, "written": 1 }
@@ -189,6 +194,16 @@ bestimmten Reihenfolge stehen.
 `dischargeAllowed=0`, `reverse=0`, `inputLimit>0` für ein Gerät. Das API-Script
 erkennt diesen Zustand an jedem über `kvs_set_api` geschriebenen Wert und hält ihn
 in einem eigenen Zustandsspeicher fest (rein im Arbeitsspeicher, nicht in der KVS).
+
+**Start und Beenden jeweils als EIN kombinierter Aufruf.** Nicht nur der
+Übersichtlichkeit halber: Das API-Script sichert den Vorzustand (für die
+Wiederherstellung beim Beenden bzw. beim automatischen Stopp) genau in dem
+Moment, in dem ein Request das Gerät von automatisch auf manuell umschaltet.
+Kämen `dischargeAllowed`, `reverse` und `inputLimit` in getrennten,
+nacheinander abgesetzten Requests an, würde der erste Teilschritt bereits den
+vom zweiten Teilschritt noch unveränderten Zustand verfälschen — der
+gesicherte Vorzustand wäre dann falsch. Ein einziger Request mit allen
+betroffenen Schlüsseln vermeidet das zuverlässig.
 
 ### Aufruf (ein Gerät, ein Request)
 

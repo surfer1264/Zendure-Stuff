@@ -465,7 +465,7 @@
   // Versionsstand dieser Seite. Muss zur Version des API-Scripts passen -
   // stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "2.5";
+  const VERSION = "2.7";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -579,6 +579,18 @@
       return true;
     } catch (err) {
       showDiag('Konnte "' + key + '" nicht setzen: ' + err.message + '.');
+      return false;
+    }
+  }
+
+  async function kvsSetMulti(obj, quiet){
+    try {
+      const r = await fetchJ('kvs_set_api?data=' + encodeURIComponent(JSON.stringify(obj)));
+      if (!r.success) throw new Error('Shelly meldet Fehler beim Setzen');
+      if (!quiet) showToast('KVS gesetzt: ' + Object.keys(obj).join(', '));
+      return true;
+    } catch (err) {
+      showDiag('Konnte Werte nicht setzen: ' + err.message + '.');
       return false;
     }
   }
@@ -988,26 +1000,18 @@
   }
 
   /* ---------------- Manuelles AC-Laden ----------------
-     Start: drei Schreibvorgaenge, deren Reihenfolge zaehlt. Erst das Geraet
-     aus der Regelung nehmen, dann die Ladeleistung setzen - andersherum
-     ueberschreibt das Regel-Script den Wert im naechsten Zyklus.
+     Start und Beenden sind jeweils EIN kombinierter kvs_set_api-Aufruf
+     (mehrere Schluessel in einem data-Objekt). Das API-Script schreibt sie
+     serverseitig in der Reihenfolge des Objekts - beim Start also erst
+     dischargeAllowed/reverse, dann inputLimit (sonst ueberschreibt das
+     Regel-Script den Wert im naechsten Zyklus), beim Beenden erst
+     inputLimit=0.
 
-     Beenden: nur noch EIN Schreibvorgang (inputLimit=0). Die beiden Schalter
-     ergaenzt das API-Script selbst aus seinem serverseitigen preManual-
-     Speicher (fillManualStopDefaults in zendash_api_src.js, ab Version 2.5) -
-     der uebersteht auch einen Browser-Reload zwischen Start und Stopp, anders
-     als das preManual hier unten, das nur noch fuer die sofortige UI-Anzeige
-     gebraucht wird. */
-
-  // Zustand vor dem Start, um die Schalter beim Beenden zurueckzustellen.
-  // Geht bei einem Reload verloren; dann werden beide wieder eingeschaltet.
-  const preManual = {};
-
-  // Abstand zwischen zwei Schreibvorgaengen der Kette. Ohne Pause treffen drei
-  // KVS.Set plus der laufende Hintergrund-Poll plus die Reaktion des
-  // Regel-Scripts (es schreibt bei geaendertem inputLimit sofort aufs Geraet)
-  // innerhalb weniger hundert Millisekunden auf demselben Shelly zusammen.
-  const STEP_PAUSE_MS = 500;
+     Den Vorzustand fuer die Wiederherstellung beim Beenden (bzw. beim
+     automatischen Stopp, wenn die Batterie voll ist) haelt ausschliesslich
+     das API-Script selbst vor (preManual in zendash_api_src.js) - das
+     uebersteht auch einen Reload hier im Browser zwischen Start und Stopp.
+     Der Browser muss dafuer nur noch inputLimit=0 senden. */
 
   // Nachlauf, bevor wieder gepollt wird - gibt dem Regel-Script Zeit, seinen
   // eigenen Zyklus samt Geraete-Schreibvorgang abzuschliessen.
@@ -1038,23 +1042,30 @@
     }
     if (!window.confirm(d.label + ' aus der Regelung nehmen und mit ' + watt + ' W aus dem Netz laden?')) return;
 
-    preManual[d.id] = { dischargeAllowed: d.dischargeAllowed, reverse: d.reverse };
     setManualBusy(d.id, true, 'wird gestartet …');
 
     // Waehrend der Kette nicht pollen: sonst laufen status_api/config_api
     // parallel zu den Schreibvorgaengen auf denselben Shelly.
     stopPolling();
 
-    let ok = await kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', 0, true);
-    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_reverse', 0, true); }
-    if (ok) { await pause(STEP_PAUSE_MS); ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', watt, true); }
+    // EIN kombinierter Aufruf statt drei einzelner: das API-Script schreibt
+    // die Schluessel serverseitig in der Reihenfolge dieses Objekts (erst
+    // dischargeAllowed und reverse, dann inputLimit) und sieht dabei den
+    // echten Vorzustand in einem Rutsch, unverfaelscht von zwischenzeitlich
+    // schon geschriebenen Teilschritten - das speist preManual auf dem
+    // Server (fillManualStopDefaults/captureManualTransitions in
+    // zendash_api_src.js) fuer den spaeteren Auto-Stopp bzw. das Beenden.
+    const payload = {};
+    payload['zdmc_dev' + d.id + '_dischargeAllowed'] = 0;
+    payload['zdmc_dev' + d.id + '_reverse'] = 0;
+    payload['zdmc_dev' + d.id + '_inputLimit'] = watt;
+    const ok = await kvsSetMulti(payload, true);
 
     if (ok) {
       d.dischargeAllowed = false; d.reverse = false; d.inputLimit = watt;
       showToast(d.label + ': manuelles Laden mit ' + watt + ' W');
     } else {
-      // Abbruch mitten in der Kette - der Zustand ist jetzt unvollstaendig.
-      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht vollständig gesetzt werden. ' +
+      showDiag('Manuelles Laden für ' + d.label + ' konnte nicht gesetzt werden. ' +
                'Bitte Schalter und Ladeleistung auf der Karte prüfen.');
     }
 
@@ -1066,13 +1077,11 @@
   }
 
   async function stopManual(d){
-    // Nur noch inputLimit=0 senden - dischargeAllowed/reverse ergaenzt das
-    // API-Script selbst aus seinem eigenen, serverseitigen preManual-Speicher
-    // (fillManualStopDefaults in zendash_api_src.js). Der lokale preManual
-    // hier dient nur noch der sofortigen UI-Anzeige, bevor die naechste
-    // config_api-Antwort den tatsaechlichen Stand bestaetigt - er ist NICHT
-    // mehr die Quelle der Wahrheit fuer den geschriebenen Wert.
-    const prev = preManual[d.id];
+    // Nur inputLimit=0 senden - dischargeAllowed/reverse ergaenzt das
+    // API-Script selbst aus seinem serverseitigen preManual-Speicher
+    // (fillManualStopDefaults in zendash_api_src.js). Die tatsaechlich
+    // wiederhergestellten Werte zeigt erst die naechste config_api-Antwort
+    // zuverlaessig an - bis dahin optimistisch true/true anzeigen.
     setManualBusy(d.id, true, 'wird beendet …');
 
     stopPolling();
@@ -1081,9 +1090,8 @@
 
     if (ok) {
       d.inputLimit = 0;
-      d.dischargeAllowed = prev ? prev.dischargeAllowed : true;
-      d.reverse = prev ? prev.reverse : true;
-      delete preManual[d.id];
+      d.dischargeAllowed = true;
+      d.reverse = true;
       showToast(d.label + ': zurück in der Regelung');
     } else {
       showDiag('Manuelles Laden für ' + d.label + ' konnte nicht beendet werden. ' +
