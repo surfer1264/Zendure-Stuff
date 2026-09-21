@@ -535,7 +535,7 @@ function renderGridSource(){
     <div class="choice ${s==='http_json'?'selected':''}" onclick="setGridSource('http_json')">
       <input type="radio" name="gs" ${s==='http_json'?'checked':''}>
       <div><div class="ct">Ich habe ein anderes Smartmeter mit JSON-über-HTTP-Schnittstelle</div>
-      <div class="cd">Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät.</div></div>
+      <div class="cd">Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät oder einen 3EM (ohne Pro).</div></div>
     </div>
 
     ${ s!=='http_json' ? `
@@ -564,7 +564,7 @@ function renderGridSource(){
         Vorzeichen ist invertiert (nach Test einmalig prüfen)
       </label>
       ${ (state.products.zendash && state.products.controller) ? `
-      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">Dein Smartmeter ist kein Shelly — der Controller läuft trotzdem auf einem eigenen Shelly, dessen IP zenDash-API für die KVS braucht.</p>
+      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">Dein Smartmeter ist kein Shelly 3EMPro — der Controller läuft trotzdem auf einem eigenen Shelly, dessen IP zenDash-API für die KVS braucht.</p>
       ${controllerHostIpField()}
       ` : "" }
       ${ (state.products.zendash && !state.products.controller) ? `
