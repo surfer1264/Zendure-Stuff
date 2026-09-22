@@ -124,6 +124,7 @@
   <div class="lang-switch" id="langSwitch"></div>
   <h1 id="pageH1"></h1>
   <p class="sub" id="pageSub"></p>
+  <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:16px;"></a>
 
   <div class="steps" id="steps"></div>
 
@@ -139,6 +140,7 @@ de: {
   pageTitle: "Zendure Multi-Device Suite – Konfigurations-Assistent",
   h1: "Zendure Multi-Device Suite",
   subtitle: "Ein Assistent für Controller, Watchdog und zenDash-API — gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal erfragt und konsistent in alle passenden Configs übernommen.",
+  intro_doc_link: "Systemüberblick im Wiki ↗",
   toastCopied: "In Zwischenablage kopiert",
 
   step_products: "Produkte", step_devices: "Geräte", step_gridsource: "Netzquelle",
@@ -320,6 +322,7 @@ en: {
   pageTitle: "Zendure Multi-Device Suite – Configuration Wizard",
   h1: "Zendure Multi-Device Suite",
   subtitle: "One wizard for Controller, Watchdog and zenDash-API — shared details (devices, grid source, notifications) are asked once and applied consistently to every matching config.",
+  intro_doc_link: "System overview in the wiki ↗",
   toastCopied: "Copied to clipboard",
 
   step_products: "Products", step_devices: "Devices", step_gridsource: "Grid source",
@@ -501,6 +504,7 @@ fr: {
   pageTitle: "Zendure Multi-Device Suite – Assistant de configuration",
   h1: "Zendure Multi-Device Suite",
   subtitle: "Un assistant unique pour Controller, Watchdog et zenDash-API — les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées dans toutes les configurations concernées.",
+  intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
   toastCopied: "Copié dans le presse-papiers",
 
   step_products: "Produits", step_devices: "Appareils", step_gridsource: "Source réseau",
@@ -775,6 +779,7 @@ function renderHeader(){
   document.title = t('pageTitle');
   document.getElementById('pageH1').textContent = t('h1');
   document.getElementById('pageSub').textContent = t('subtitle');
+  document.getElementById('introDocLink').textContent = t('intro_doc_link');
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
   document.getElementById('langSwitch').innerHTML = langs.map(function(l){
