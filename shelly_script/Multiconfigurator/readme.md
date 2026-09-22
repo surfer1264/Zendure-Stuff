@@ -25,6 +25,9 @@ Für alle drei Tools erstellt der Configurator in einem einzigen Durchgang eine 
 
 Jedes der drei Tools kann eigenständig laufen oder zusammen mit den anderen eingesetzt werden. Jedes braucht dafür seine eigene Konfiguration – vieles darin ist aber gleich (z. B. die Geräteliste). Der Configurator fragt die wichtigsten, vor allem geräteabhängigen Angaben deshalb nur einmal ab und erstellt daraus passend für jedes ausgewählte Tool eine eigene Konfiguration.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/487e63fb-734d-4bb1-b795-19f81921acb6" />
+
+
 ## Ersteinrichtung
 
 Am Ende bietet dir der Configurator für jedes ausgewählte Tool mehrere Wege an:
@@ -53,7 +56,6 @@ Ebenfalls über den lokalen Helfer: IP eines beliebigen Shelly eintragen, „Spe
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
-
 ### Der lokale Helfer
 
 Ein optionales, separat herunterladbares Programm (Windows/macOS), das lokal auf dem eigenen Rechner läuft, den Configurator automatisch im Browser öffnet und Direct-Upload sowie Speicherprüfung erst ermöglicht (löst das CORS-Problem der Shelly-Firmware). Kein Python-Setup nötig – einmal von der [Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest) herunterladen und starten.
@@ -68,6 +70,9 @@ Ein optionales, separat herunterladbares Programm (Windows/macOS), das lokal auf
 Eine bestehende Konfiguration lässt sich jederzeit wieder in den Configurator einlesen, statt alles neu einzugeben. Dabei bleiben nicht nur die im Wizard sichtbaren Angaben erhalten, sondern auch von Hand feinjustierte Werte, die der Configurator selbst gar nicht direkt abfragt (z. B. `hysteresis`, `dampingFactor`, die `discharge`-/`charge`-Schwellen) – sie werden übernommen statt auf ihren Standardwert zurückgesetzt. Gleiche Angaben (z. B. die Geräteliste) bleiben dabei automatisch über alle drei Tools hinweg konsistent, und die `hysteresis` von zenDash-API folgt dabei immer der des Controllers, falls beide gemeinsam konfiguriert werden.
 
 **Wichtig:** Bei jedem Update eines Shelly-Scripts sollte dieser Schritt wiederholt werden, damit deine Konfiguration erhalten bleibt.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/e23c3b85-03a4-4502-9868-81c742d8e7c5" />
+
 
 ## Restriktionen
 
