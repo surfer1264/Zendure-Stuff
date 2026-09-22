@@ -1089,7 +1089,9 @@ function renderProducts(){
     <h2>${t('prod_h2')}</h2>
     <p class="hint">${t('prod_hint')}</p>
     <p class="note">${t('prod_hardware_note')}</p>
-
+  </div>
+  ${memCheckBlock()}
+  <div class="panel">
     <div class="choice ${p.controller?'selected':''}" onclick="toggleProduct('controller')">
       <input type="checkbox" ${p.controller?'checked':''}>
       <div><div class="ct">${t('prod_controller_title')}</div>
@@ -2026,7 +2028,7 @@ function render(){
   let html = renderStepById(steps[stepIndex]);
   html += renderNav(steps);
   document.getElementById('stepContainer').innerHTML = html;
-  if(steps[stepIndex] === 'result') detectHelper();
+  if(steps[stepIndex] === 'result' || steps[stepIndex] === 'products') detectHelper();
 }
 
 render();
