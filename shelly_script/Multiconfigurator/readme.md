@@ -15,7 +15,7 @@ Der **Installer** startet den Web-Configurator automatisch im Browser — **dann
 
 **Alternativ (ohne Shelly Upload Funktion) der Web-Configurator PUR**
 
-[Multi Language Multi-Tool-Konfigurator ohne Shelly-Upload](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
+[Multi Language Multi-Tool-Konfigurator ohne Shelly-Upload](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 
 ## Was richtet der Configurator ein?
 
