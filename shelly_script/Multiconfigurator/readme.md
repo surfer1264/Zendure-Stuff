@@ -65,6 +65,31 @@ Ein optionales, separat herunterladbares Programm (Windows/macOS), das lokal auf
 * **Windows:** Meldet der Download beim ersten Start „Windows hat den Computer geschützt" (SmartScreen), auf „Weitere Informationen“ → „Trotzdem ausführen“ klicken.
 * **macOS:** Rechtsklick auf die Datei → „Öffnen“ → im Dialog erneut „Öffnen“ bestätigen (Gatekeeper), da die Datei nicht signiert ist.
 
+#### Integrität prüfen (optional)
+
+Zu jeder `.exe`/`macos`-Datei liegt auf der [Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest) eine gleichnamige `.sha256`-Datei als eigenes Asset. Damit lässt sich nachprüfen, dass die heruntergeladene Datei wirklich unverändert die ist, die der Build-Workflow erzeugt hat – unabhängig von SmartScreen/Gatekeeper.
+
+**Windows (PowerShell):**
+
+```powershell
+Get-FileHash .\zendure_local_helper-windows.exe -Algorithm SHA256
+Get-Content .\zendure_local_helper-windows.exe.sha256
+```
+
+Die ersten 64 Zeichen aus beiden Ausgaben vergleichen (Groß-/Kleinschreibung egal) – oder als Ein-Zeiler, der direkt `True`/`False` ausgibt:
+
+```powershell
+(Get-FileHash .\zendure_local_helper-windows.exe -Algorithm SHA256).Hash -eq (Get-Content .\zendure_local_helper-windows.exe.sha256).Split(' ')[0]
+```
+
+**macOS (Terminal):**
+
+```bash
+shasum -a 256 -c zendure_local_helper-macos.sha256
+```
+
+Prüft automatisch gegen die mitgelieferte `.sha256`-Datei. `OK` bedeutet: passt genau, `FAILED` bedeutet: nicht ausführen, Datei neu herunterladen.
+
 ## Update
 
 **Übernahme der eigenen Konfiguration**
