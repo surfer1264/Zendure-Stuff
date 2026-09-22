@@ -11,9 +11,10 @@
 
 
 
-[NEU Multi Language Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
+[Multi Language Multi-Tool-Konfigurator ohne Shelly-Upload](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
 
-Alternativ startet auch der [lokale Helfer](#der-lokale-helfer) weiter unten den Configurator automatisch im Browser — dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet.
+[Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/install)
+Alternativ startet  der [lokale Helfer](#der-lokale-helfer) den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
 ## Was richtet der Configurator ein?
 
@@ -25,6 +26,9 @@ Für alle drei Tools erstellt der Configurator in einem einzigen Durchgang eine 
 
 Jedes der drei Tools kann eigenständig laufen oder zusammen mit den anderen eingesetzt werden. Jedes braucht dafür seine eigene Konfiguration – vieles darin ist aber gleich (z. B. die Geräteliste). Der Configurator fragt die wichtigsten, vor allem geräteabhängigen Angaben deshalb nur einmal ab und erstellt daraus passend für jedes ausgewählte Tool eine eigene Konfiguration.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/487e63fb-734d-4bb1-b795-19f81921acb6" />
+
+
 ## Ersteinrichtung
 
 Am Ende bietet dir der Configurator für jedes ausgewählte Tool mehrere Wege an:
@@ -33,17 +37,25 @@ Am Ende bietet dir der Configurator für jedes ausgewählte Tool mehrere Wege an
 
 Die Konfiguration zum Kopieren in die Zwischenablage oder als kleine Datei zum Speichern – für alle, die ein Shelly-Script bereits selbst angepasst haben oder lieber von Hand arbeiten. Die vorhandene (Platzhalter-)Konfiguration im eigenen Script wird damit ersetzt.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/1ccd9b90-9d83-42b8-892b-932ad12df4db" />
+
 **Speichern des gesamten Scripts**
 
 Ein Klick auf den Button lädt das passende Original-Script direkt von GitHub herunter, trägt deine Konfiguration automatisch darin ein und bietet dir das fertige, sofort einsatzbereite Script zum Speichern an. Du musst es danach nur noch auf deinen Shelly hochladen – fertig. Dafür brauchst du kurz eine Internetverbindung.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
 **Uploadfunktion auf den Shelly**
 
 Läuft der [lokale Helfer](#der-lokale-helfer), entfällt auch dieser letzte manuelle Schritt: Ziel-IP eintragen, „Direkt hochladen" klicken – fertig, kein Copy & Paste im Shelly-eigenen Skripteditor mehr nötig. Jedes der drei Scripts kann dabei auf ein eigenes Zielgerät gehen. Ohne laufenden Helfer bleibt im Configurator selbst eine aufklappbare Schritt-für-Schritt-Anleitung für den manuellen Weg verfügbar.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/5082cdf4-1a6c-43a1-825c-8fc51bf18173" />
+
 **Speicherprüffunktion eines Shelly**
 
 Ebenfalls über den lokalen Helfer: IP eines beliebigen Shelly eintragen, „Speicher prüfen" klicken – zeigt, wie viel freier Skript-/Laufzeitspeicher (`mem_free`) auf dem Gerät noch da ist, bevor man ein weiteres Script hochlädt. Mehr dazu unter [Restriktionen](#restriktionen).
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
 ### Der lokale Helfer
 
@@ -59,6 +71,9 @@ Ein optionales, separat herunterladbares Programm (Windows/macOS), das lokal auf
 Eine bestehende Konfiguration lässt sich jederzeit wieder in den Configurator einlesen, statt alles neu einzugeben. Dabei bleiben nicht nur die im Wizard sichtbaren Angaben erhalten, sondern auch von Hand feinjustierte Werte, die der Configurator selbst gar nicht direkt abfragt (z. B. `hysteresis`, `dampingFactor`, die `discharge`-/`charge`-Schwellen) – sie werden übernommen statt auf ihren Standardwert zurückgesetzt. Gleiche Angaben (z. B. die Geräteliste) bleiben dabei automatisch über alle drei Tools hinweg konsistent, und die `hysteresis` von zenDash-API folgt dabei immer der des Controllers, falls beide gemeinsam konfiguriert werden.
 
 **Wichtig:** Bei jedem Update eines Shelly-Scripts sollte dieser Schritt wiederholt werden, damit deine Konfiguration erhalten bleibt.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/e23c3b85-03a4-4502-9868-81c742d8e7c5" />
+
 
 ## Restriktionen
 
