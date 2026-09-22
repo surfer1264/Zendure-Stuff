@@ -47,6 +47,8 @@ Der Konfigurator hilft zur Ersteinrichtung (Empfehlung). Weiter dann mit Schritt
 
 [NEU der Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 
+oder gleich die [Install-Exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest) laden mit Upload Funktion
+
 
 ….natürlich die Konfiguration per Copy/ Paste in den Controller bringen ( austauschen ) 
 
