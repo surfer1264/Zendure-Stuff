@@ -124,7 +124,8 @@
   <div class="lang-switch" id="langSwitch"></div>
   <h1 id="pageH1"></h1>
   <p class="sub" id="pageSub"></p>
-  <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:16px;"></a>
+  <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
+  <div id="buildDate" style="font-size:.72rem; color:var(--muted); margin-bottom:16px;"></div>
 
   <div class="steps" id="steps"></div>
 
@@ -135,12 +136,18 @@
 
 <script>
 // ---------- i18n ----------
+// Sichtbares Build-Datum - bei jeder inhaltlichen Aenderung an dieser
+// Datei hier anpassen. Hilft zu erkennen, ob eine gebuendelte exe (siehe
+// zendure_local_helper.py) noch den alten Stand ausliefert.
+const BUILD_DATE = "2026-09-21";
+
 const I18N = {
 de: {
   pageTitle: "Zendure Multi-Device Suite – Konfigurations-Assistent",
   h1: "Zendure Multi-Device Suite",
   subtitle: "Ein Assistent für Controller, Watchdog und zenDash-API — gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal erfragt und konsistent in alle passenden Configs übernommen.",
   intro_doc_link: "Systemüberblick im Wiki ↗",
+  build_label: "Build:",
   toastCopied: "In Zwischenablage kopiert",
 
   step_products: "Produkte", step_devices: "Geräte", step_gridsource: "Netzquelle",
@@ -151,6 +158,7 @@ de: {
 
   prod_h2: "Welche Produkte möchtest du konfigurieren?",
   prod_hint: "Mehrfachauswahl möglich. Gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal abgefragt und für alle passenden Produkte übernommen.",
+  prod_hardware_note: "⚠️ Der Controller läuft immer allein auf einem eigenen Shelly — nie zusammen mit Watchdog oder zenDash-API auf demselben Gerät (Speicherlimit). Watchdog und zenDash-API dürfen sich ein zweites Gerät teilen.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Regelt Netzbezug/-export über deine Geräte (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
@@ -323,6 +331,7 @@ en: {
   h1: "Zendure Multi-Device Suite",
   subtitle: "One wizard for Controller, Watchdog and zenDash-API — shared details (devices, grid source, notifications) are asked once and applied consistently to every matching config.",
   intro_doc_link: "System overview in the wiki ↗",
+  build_label: "Build:",
   toastCopied: "Copied to clipboard",
 
   step_products: "Products", step_devices: "Devices", step_gridsource: "Grid source",
@@ -333,6 +342,7 @@ en: {
 
   prod_h2: "Which products do you want to configure?",
   prod_hint: "Multiple selection possible. Shared details (devices, grid source, notifications) are only asked once and applied to every matching product.",
+  prod_hardware_note: "⚠️ The Controller always runs alone on its own Shelly — never together with Watchdog or zenDash-API on the same device (memory limit). Watchdog and zenDash-API can share a second device.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Controls grid import/export through your devices (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
@@ -505,6 +515,7 @@ fr: {
   h1: "Zendure Multi-Device Suite",
   subtitle: "Un assistant unique pour Controller, Watchdog et zenDash-API — les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées dans toutes les configurations concernées.",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
+  build_label: "Version :",
   toastCopied: "Copié dans le presse-papiers",
 
   step_products: "Produits", step_devices: "Appareils", step_gridsource: "Source réseau",
@@ -515,6 +526,7 @@ fr: {
 
   prod_h2: "Quels produits veux-tu configurer ?",
   prod_hint: "Sélection multiple possible. Les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées pour tous les produits concernés.",
+  prod_hardware_note: "⚠️ Le Controller tourne toujours seul sur son propre Shelly — jamais avec Watchdog ou zenDash-API sur le même appareil (limite de mémoire). Watchdog et zenDash-API peuvent en revanche partager un deuxième appareil.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Régule l'import/export réseau via tes appareils (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
@@ -727,7 +739,15 @@ const state = {
   signalApiKey: "",
   signalWebhookUrl: "",
 
-  uploadTargets: { ctrl: "", wd: "", zd: "" }   // pro Script eigene Ziel-Shelly-IP fuer den lokalen Helfer
+  uploadTargets: { ctrl: "", wd: "", zd: "" },  // pro Script eigene Ziel-Shelly-IP fuer den lokalen Helfer
+
+  // Loesung A: beim Import roh gespeicherte Felder, die der Wizard nicht
+  // kennt (z.B. hysteresis, dampingFactor, vollSchwelle) - werden beim
+  // Bauen der Config als Fallback ueber ?? gelesen, damit sie nicht auf
+  // den Default zurückfallen. Leer = frischer Wizard-Lauf, alles Default.
+  controllerAdvanced: {},
+  watchdogAdvanced: {},
+  zendashAdvanced: {}
 };
 state.lang = detectLang();
 
@@ -780,6 +800,7 @@ function renderHeader(){
   document.getElementById('pageH1').textContent = t('h1');
   document.getElementById('pageSub').textContent = t('subtitle');
   document.getElementById('introDocLink').textContent = t('intro_doc_link');
+  document.getElementById('buildDate').textContent = t('build_label') + ' ' + BUILD_DATE;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
   document.getElementById('langSwitch').innerHTML = langs.map(function(l){
@@ -906,6 +927,7 @@ function mergeImportedDevice(ip, label, fields){
 }
 
 function applyControllerImport(obj){
+  state.controllerAdvanced = obj;
   (obj.devices||[]).forEach(dev=>{
     mergeImportedDevice(dev.ip, dev.label, {
       maxOutput: num(dev.maxOutput, 800),
@@ -937,6 +959,7 @@ function applyControllerImport(obj){
 }
 
 function applyWatchdogImport(obj){
+  state.watchdogAdvanced = obj;
   (obj.devices||[]).forEach(dev=>{
     mergeImportedDevice(dev.ip, dev.label, { wdEnabled: dev.enabled !== false });
   });
@@ -945,6 +968,7 @@ function applyWatchdogImport(obj){
 }
 
 function applyZendashImport(obj){
+  state.zendashAdvanced = obj;
   (obj.devices||[]).forEach(dev=>{
     mergeImportedDevice(dev.ip, dev.label, {
       maxOutput: num(dev.maxOutput, 800),
@@ -1040,6 +1064,7 @@ function renderProducts(){
   <div class="panel">
     <h2>${t('prod_h2')}</h2>
     <p class="hint">${t('prod_hint')}</p>
+    <p class="note">${t('prod_hardware_note')}</p>
 
     <div class="choice ${p.controller?'selected':''}" onclick="toggleProduct('controller')">
       <input type="checkbox" ${p.controller?'checked':''}>
@@ -1337,13 +1362,14 @@ function renderCtrlKvs(){
 
 // ---------- Config generation (bleibt unabhängig von der UI-Sprache) ----------
 function buildControllerConfig(){
+  const ca = state.controllerAdvanced || {};
   const outputs = state.devices.map(d=>d.maxOutput||0).filter(v=>v>0);
-  const spreadAboveDischarge = outputs.length ? Math.min(...outputs) : 800;
-  const concentrateBelowDischarge = Math.round(spreadAboveDischarge*0.6);
+  const spreadAboveDischarge = ca.discharge?.spreadAbove ?? (outputs.length ? Math.min(...outputs) : 800);
+  const concentrateBelowDischarge = ca.discharge?.concentrateBelow ?? Math.round(spreadAboveDischarge*0.6);
 
   const inputPowers = state.chargingEnabled ? state.devices.filter(d=>d.reverse).map(d=>num(d.maxInputPower, d.maxOutput)).filter(v=>v>0) : [];
-  const spreadAboveCharge = inputPowers.length ? Math.min(...inputPowers) : spreadAboveDischarge;
-  const concentrateBelowCharge = Math.round(spreadAboveCharge*0.6);
+  const spreadAboveCharge = ca.charge?.spreadAbove ?? (inputPowers.length ? Math.min(...inputPowers) : spreadAboveDischarge);
+  const concentrateBelowCharge = ca.charge?.concentrateBelow ?? Math.round(spreadAboveCharge*0.6);
 
   const devicesJs = state.devices.map(d=>{
     const reverse = !!(state.chargingEnabled && d.reverse);
@@ -1382,9 +1408,9 @@ ${gridBlock}
 
   // ------------------------------------------------------------------
   // RULES ENGINE CORE PARAMETERS — Standard, siehe Doku Kapitel 4
-  setpoint: 0,
-  hysteresis: 12,
-  dampingFactor: 0.65,
+  setpoint: ${ca.setpoint ?? 0},
+  hysteresis: ${ca.hysteresis ?? 12},
+  dampingFactor: ${ca.dampingFactor ?? 0.65},
 
   // ------------------------------------------------------------------
   // aus deiner Geräteliste abgeleitet (Faustformel, Doku Kapitel 7b) —
@@ -1398,38 +1424,38 @@ ${gridBlock}
     concentrateBelow: ${concentrateBelowCharge},
     spreadAbove: ${spreadAboveCharge}
   },
-  concentrateHoldMinutes: 2,
+  concentrateHoldMinutes: ${ca.concentrateHoldMinutes ?? 2},
 
   // ------------------------------------------------------------------
   rebalance: {
-    socMargin: 5
+    socMargin: ${ca.rebalance?.socMargin ?? 5}
   },
 
   // ------------------------------------------------------------------
-  reverseStartupPower: 35,
-  reverseStopPower: 15,
+  reverseStartupPower: ${ca.reverseStartupPower ?? 35},
+  reverseStopPower: ${ca.reverseStopPower ?? 15},
   gridReverseMode: "${grm}",
-  chargeResetMargin: 10,
+  chargeResetMargin: ${ca.chargeResetMargin ?? 10},
 
   // ------------------------------------------------------------------
-  dischargeStartupPower: 35,
-  dischargeStopPower: 15,
+  dischargeStartupPower: ${ca.dischargeStartupPower ?? 35},
+  dischargeStopPower: ${ca.dischargeStopPower ?? 15},
 
   // ------------------------------------------------------------------
-  interval: 4000,
-  errorThreshold: 5,
-  directionChangeHoldCycles: 4,
-  standbySmartModeZero: false,
+  interval: ${ca.interval ?? 4000},
+  errorThreshold: ${ca.errorThreshold ?? 5},
+  directionChangeHoldCycles: ${ca.directionChangeHoldCycles ?? 4},
+  standbySmartModeZero: ${ca.standbySmartModeZero ?? false},
   kvsEnabled: ${state.kvsEnabled === true},
-  kvsForceReseed: false,
-  debug: false,
+  kvsForceReseed: ${ca.kvsForceReseed ?? false},
+  debug: ${ca.debug ?? false},
 
   // ------------------------------------------------------------------
   // Sparmodus — Standard, siehe Doku Kapitel 6
   idleSkip: {
-    enabled: true,
-    cyclesUnchanged: 4,
-    maxSkipSeconds: 44
+    enabled: ${ca.idleSkip?.enabled ?? true},
+    cyclesUnchanged: ${ca.idleSkip?.cyclesUnchanged ?? 4},
+    maxSkipSeconds: ${ca.idleSkip?.maxSkipSeconds ?? 44}
   },
 
   // ------------------------------------------------------------------
@@ -1444,6 +1470,7 @@ ${gridBlock}
 }
 
 function buildWatchdogConfig(){
+  const wa = state.watchdogAdvanced || {};
   const devicesJs = state.devices.map(d=>
     `    { ip: "${(d.ip||'192.168.X.X').replace(/"/g,'')}", label: "${(d.label||'').replace(/"/g,'')}", enabled: ${d.wdEnabled!==false} }`
   ).join(",\n");
@@ -1456,18 +1483,18 @@ ${devicesJs}
   ],
 
   // Warnschwellen (global) — Standard, siehe Doku
-  vollSchwelle: 99,        // %
-  entladeReset: 90,        // %
-  minVoltWarn: 2.9,        // V
-  minVoltReset: 3.1,       // V
-  tempWarn: 45.0,          // °C
-  tempReset: 30.0,         // °C
+  vollSchwelle: ${wa.vollSchwelle ?? 99},        // %
+  entladeReset: ${wa.entladeReset ?? 90},        // %
+  minVoltWarn: ${wa.minVoltWarn ?? 2.9},        // V
+  minVoltReset: ${wa.minVoltReset ?? 3.1},       // V
+  tempWarn: ${wa.tempWarn ?? 45.0},          // °C
+  tempReset: ${wa.tempReset ?? 30.0},         // °C
 
   // Astro-Offset
-  sunriseOffset: 0,        // Min
-  sunsetOffset: 0,
+  sunriseOffset: ${wa.sunriseOffset ?? 0},        // Min
+  sunsetOffset: ${wa.sunsetOffset ?? 0},
 
-  maxMessageLength: 900,   // Zeichen vor Trim
+  maxMessageLength: ${wa.maxMessageLength ?? 900},   // Zeichen vor Trim
 
   // Nachrichtenversand
   signal: {
@@ -1479,18 +1506,19 @@ ${devicesJs}
   },
 
   // Polling & Timer
-  pollIntervalMs: 120000,
-  httpTimeout: 5,
-  watchdog: 15000,
-  errorThreshold: 5,
+  pollIntervalMs: ${wa.pollIntervalMs ?? 120000},
+  httpTimeout: ${wa.httpTimeout ?? 5},
+  watchdog: ${wa.watchdog ?? 15000},
+  errorThreshold: ${wa.errorThreshold ?? 5},
 
   // Extended Logging
-  debug: false,
-  bannerVerbose: false
+  debug: ${wa.debug ?? false},
+  bannerVerbose: ${wa.bannerVerbose ?? false}
 };`;
 }
 
 function buildZenDashConfig(){
+  const za = state.zendashAdvanced || {};
   const devicesJs = state.devices.map(d=>{
     const reverse = !!(state.chargingEnabled && d.reverse);
     const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
@@ -1539,6 +1567,17 @@ function buildZenDashConfig(){
     gridBlock += `  gridSourceInvert: false,`;
   }
 
+  // hysteresis ist ein Regelungsparameter des Controllers - zenDash-API
+  // zeigt ihn nur an. Ist der Controller Teil dieser Wizard-Session, gilt
+  // dessen Wert immer als fuehrend (auch wenn ein frueherer zenDash-Import
+  // einen abweichenden Wert mitgebracht hat), damit Dashboard und
+  // tatsaechlich laufender Controller nie auseinanderlaufen. Nur wenn
+  // zenDash-API eigenstaendig ohne Controller konfiguriert wird, zaehlt der
+  // eigene importierte/Default-Wert.
+  const hysteresis = state.products.controller
+    ? (state.controllerAdvanced?.hysteresis ?? 12)
+    : (za.hysteresis ?? 12);
+
   return `let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - 1:1 identisch zum Controller-Block (gleiche
@@ -1550,9 +1589,9 @@ ${devicesJs}
 
   kvsHost: "${kvsHost}",
 
-  hysteresis: 12,
+  hysteresis: ${hysteresis},
 
-  dischargeStartupPower: 35,
+  dischargeStartupPower: ${za.dischargeStartupPower ?? 35},
 
   // ------------------------------------------------------------------
   // SMARTMETER SECTION - zeigt auf dieselbe Quelle wie der Controller;
@@ -1560,9 +1599,9 @@ ${devicesJs}
   // zenDash-API in aller Regel auf einem eigenen Geraet laeuft.
 ${gridBlock}
 
-  httpTimeout: 5,
+  httpTimeout: ${za.httpTimeout ?? 5},
 
-  pollIntervalSec: 8
+  pollIntervalSec: ${za.pollIntervalSec ?? 8}
 };`;
 }
 
