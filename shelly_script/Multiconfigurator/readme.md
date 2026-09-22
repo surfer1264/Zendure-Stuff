@@ -33,17 +33,26 @@ Am Ende bietet dir der Configurator für jedes ausgewählte Tool mehrere Wege an
 
 Die Konfiguration zum Kopieren in die Zwischenablage oder als kleine Datei zum Speichern – für alle, die ein Shelly-Script bereits selbst angepasst haben oder lieber von Hand arbeiten. Die vorhandene (Platzhalter-)Konfiguration im eigenen Script wird damit ersetzt.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/1ccd9b90-9d83-42b8-892b-932ad12df4db" />
+
 **Speichern des gesamten Scripts**
 
 Ein Klick auf den Button lädt das passende Original-Script direkt von GitHub herunter, trägt deine Konfiguration automatisch darin ein und bietet dir das fertige, sofort einsatzbereite Script zum Speichern an. Du musst es danach nur noch auf deinen Shelly hochladen – fertig. Dafür brauchst du kurz eine Internetverbindung.
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
 **Uploadfunktion auf den Shelly**
 
 Läuft der [lokale Helfer](#der-lokale-helfer), entfällt auch dieser letzte manuelle Schritt: Ziel-IP eintragen, „Direkt hochladen" klicken – fertig, kein Copy & Paste im Shelly-eigenen Skripteditor mehr nötig. Jedes der drei Scripts kann dabei auf ein eigenes Zielgerät gehen. Ohne laufenden Helfer bleibt im Configurator selbst eine aufklappbare Schritt-für-Schritt-Anleitung für den manuellen Weg verfügbar.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/5082cdf4-1a6c-43a1-825c-8fc51bf18173" />
+
 **Speicherprüffunktion eines Shelly**
 
 Ebenfalls über den lokalen Helfer: IP eines beliebigen Shelly eintragen, „Speicher prüfen" klicken – zeigt, wie viel freier Skript-/Laufzeitspeicher (`mem_free`) auf dem Gerät noch da ist, bevor man ein weiteres Script hochlädt. Mehr dazu unter [Restriktionen](#restriktionen).
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
+
 
 ### Der lokale Helfer
 
