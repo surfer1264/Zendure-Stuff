@@ -9,7 +9,7 @@
 
 [Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/install)
 
-Der [lokale Helfer](#der-lokale-helfer) den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
+Der [lokale Helfer](#der-lokale-helfer) startet den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
 **Alternativ (ohne Shelly Upload, der Configurator PUR)**
 
