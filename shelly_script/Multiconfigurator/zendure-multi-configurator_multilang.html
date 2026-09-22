@@ -323,7 +323,15 @@ de: {
   upload_loading: "Übertrage an {ip}...",
   upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
   upload_error: "Fehler: {msg}",
-  upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen."
+  upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen.",
+
+  memcheck_title: "Speicher prüfen",
+  memcheck_hint: "Bevor du ein Script hochlädst: prüft, wie viel freier Skriptspeicher (mem_free) auf einem Shelly noch da ist. ≥ 25200 Bytes = voller Standard-Heap, alles gut.",
+  btn_memcheck: "🔍 Speicher prüfen",
+  memcheck_loading: "Prüfe {ip}...",
+  memcheck_ok: "✓ {mem_free} Bytes frei auf {ip} — passt.",
+  memcheck_low: "⚠️ Nur {mem_free} Bytes frei auf {ip} — evtl. knapp für ein weiteres Script.",
+  memcheck_error: "Fehler: {msg}"
 },
 
 en: {
@@ -507,7 +515,15 @@ en: {
   upload_loading: "Uploading to {ip}...",
   upload_success: "✓ Successfully uploaded to {ip} and started.",
   upload_error: "Error: {msg}",
-  upload_err_ip: "Please enter a valid IP address for the target device first."
+  upload_err_ip: "Please enter a valid IP address for the target device first.",
+
+  memcheck_title: "Check memory",
+  memcheck_hint: "Before uploading a script: checks how much free script memory (mem_free) a Shelly still has. ≥ 25200 bytes = full standard heap, all good.",
+  btn_memcheck: "🔍 Check memory",
+  memcheck_loading: "Checking {ip}...",
+  memcheck_ok: "✓ {mem_free} bytes free on {ip} — looks fine.",
+  memcheck_low: "⚠️ Only {mem_free} bytes free on {ip} — might be tight for another script.",
+  memcheck_error: "Error: {msg}"
 },
 
 fr: {
@@ -691,7 +707,15 @@ fr: {
   upload_loading: "Transfert vers {ip}...",
   upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
   upload_error: "Erreur : {msg}",
-  upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible."
+  upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible.",
+
+  memcheck_title: "Vérifier la mémoire",
+  memcheck_hint: "Avant de charger un script : vérifie combien de mémoire de script libre (mem_free) il reste sur un Shelly. ≥ 25200 octets = heap standard complet, tout va bien.",
+  btn_memcheck: "🔍 Vérifier la mémoire",
+  memcheck_loading: "Vérification de {ip}...",
+  memcheck_ok: "✓ {mem_free} octets libres sur {ip} — c'est bon.",
+  memcheck_low: "⚠️ Seulement {mem_free} octets libres sur {ip} — pourrait être juste pour un script de plus.",
+  memcheck_error: "Erreur : {msg}"
 }
 };
 
@@ -1680,6 +1704,25 @@ function uploadGuideBlock(){
   </div>`;
 }
 
+// Produktunabhaengiges Diagnose-Tool: prueft mem_free eines beliebigen
+// Shelly per Script.GetStatus (siehe zendure_local_helper.py -
+// /api/memcheck). Sichtbar wie der Direct-Upload nur, wenn der lokale
+// Helfer laeuft (gleiche .helper-row-Klasse, von detectHelper() ein-
+// bzw. ausgeblendet).
+function memCheckBlock(){
+  return `
+  <div class="panel helper-row" id="memCheckBlock" style="display:none;">
+    <h2>${t('memcheck_title')}</h2>
+    <p class="hint">${t('memcheck_hint')}</p>
+    <label class="first">${t('upload_target_label')}</label>
+    <input type="text" id="memCheckIp" placeholder="192.168.178.151">
+    <div class="copy-row" style="margin-top:10px;">
+      <button class="btn btn-primary" onclick="checkMemory()">${t('btn_memcheck')}</button>
+      <span id="memCheckStatus" class="hint" style="margin:0;"></span>
+    </div>
+  </div>`;
+}
+
 function copyConfig(key){
   const text = CONFIG_BUILDERS[key]();
   navigator.clipboard.writeText(text).then(()=>{
@@ -1834,6 +1877,29 @@ async function directUpload(key){
   }
 }
 
+async function checkMemory(){
+  const ip = (document.getElementById('memCheckIp').value || '').trim();
+  const statusEl = document.getElementById('memCheckStatus');
+  if(!isValidIp(ip)){
+    statusEl.textContent = t('upload_err_ip');
+    statusEl.className = 'error';
+    return;
+  }
+  statusEl.textContent = t('memcheck_loading', {ip: ip});
+  statusEl.className = 'hint';
+  try{
+    const res = await fetch(HELPER_URL + '/api/memcheck?ip=' + encodeURIComponent(ip));
+    const data = await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    const key = (data.mem_free >= 25200) ? 'memcheck_ok' : 'memcheck_low';
+    statusEl.textContent = t(key, {ip: ip, mem_free: data.mem_free});
+    statusEl.className = (data.mem_free >= 25200) ? 'hint' : 'error';
+  } catch(e){
+    statusEl.textContent = t('memcheck_error', {msg: e.message});
+    statusEl.className = 'error';
+  }
+}
+
 function renderResult(){
   const p = state.products;
   const names = { controller: 'Controller', watchdog: 'Watchdog', zendash: 'zenDash-API' };
@@ -1878,6 +1944,7 @@ function renderResult(){
   if(p.zendash) html += resultBlock('zenDash-API', 'zd', buildZenDashConfig(), 'hint_zd');
 
   if(anyProduct()) html += uploadGuideBlock();
+  html += memCheckBlock();
 
   return html;
 }
