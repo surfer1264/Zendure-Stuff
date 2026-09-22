@@ -16,6 +16,7 @@ Ausführliche Hintergründe (Zendure-Zugangsdaten für ältere Geräte, CallMeBo
 - IP-Adresse(n) der Hub(s) (zenSDK-Geräte werden lokal per REST angesprochen, keine Cloud-Zugangsdaten nötig)
 - Optional: CallMeBot-API-Key (Signal/WhatsApp) oder eine Webhook-URL (z. B. Home Assistant) — siehe Gesamtdoku Abschnitt 3
 - [Dokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
+- [Download](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/WatchdogZenSDK/zenSDKWatchDog_mini.js)
 
 ## Schnellstart
 
