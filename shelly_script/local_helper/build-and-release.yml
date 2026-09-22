@@ -7,11 +7,11 @@ name: Build & Release lokaler Helfer
 # Release-Seite herunter - kein Python-Setup, kein Terminal.
 #
 # Anpassen: HELPER_PATH und HTML_PATH unten, falls Dateien umbenannt
-# werden oder woanders liegen.
-# HELPER_PATH bestaetigt: shelly_script/local_helper/zendure_local_helper.py
+# werden oder woanders liegen. Beide Pfade sind vom Nutzer bestaetigt:
+# HELPER_PATH: shelly_script/local_helper/zendure_local_helper.py
 # (https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/local_helper)
-# HTML_PATH ist eine ANNAHME (Repo-Root) - bitte einmal pruefen/anpassen,
-# falls die Configurator-HTML tatsaechlich woanders im Repo liegt.
+# HTML_PATH:   shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
 # nicht - "Publish release" bzw. "gh release create" ohne --draft).
@@ -66,8 +66,22 @@ jobs:
         shell: bash
         run: cp "${{ matrix.built_path }}" "${{ matrix.asset_name }}"
 
+      - name: SHA-256 berechnen
+        # sha256sum (Linux/Windows-Git-Bash) oder shasum -a 256 (macOS
+        # Standard) - je nachdem, was auf dem Runner vorhanden ist.
+        # Format "<hash>  <dateiname>" laesst sich spaeter direkt mit
+        # "sha256sum -c" bzw. PowerShells Get-FileHash gegenpruefen.
+        shell: bash
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${{ matrix.asset_name }}" > "${{ matrix.asset_name }}.sha256"
+          else
+            shasum -a 256 "${{ matrix.asset_name }}" > "${{ matrix.asset_name }}.sha256"
+          fi
+          cat "${{ matrix.asset_name }}.sha256"
+
       - name: An Release anhaengen
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
