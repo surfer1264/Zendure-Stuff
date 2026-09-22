@@ -11,9 +11,9 @@ mit wenigen Klicks zur lokalen Steuerung deiner Zendure Flotte.
 
 [Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/install)
 
-Der [lokale Helfer](#der-lokale-helfer) startet den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
+Der **Installer** startet den Web-Configurator automatisch im Browser — **dann ist auch zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
-**Alternativ (ohne Shelly Upload, der Configurator PUR)**
+**Alternativ (ohne Shelly Upload Funktion) der Web-Configurator PUR**
 
 [Multi Language Multi-Tool-Konfigurator ohne Shelly-Upload](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
 
