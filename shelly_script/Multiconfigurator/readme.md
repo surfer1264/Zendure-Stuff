@@ -11,9 +11,10 @@
 
 
 
-[NEU Multi Language Multi-Tool-Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
+[Multi Language Multi-Tool-Konfigurator ohne Shelly-Upload](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang_only.html)
 
-Alternativ startet auch der [lokale Helfer](#der-lokale-helfer) weiter unten den Configurator automatisch im Browser — dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet.
+[Installer hier runtreladen](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/install)
+Alternativ startet  der [lokale Helfer](#der-lokale-helfer) den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
 ## Was richtet der Configurator ein?
 
