@@ -7,6 +7,8 @@
 ---
 **Der Installer**
 
+mit wenigen Klicks zur lokalen Steuerung deiner Zendure Flotte.
+
 [Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/install)
 
 Der [lokale Helfer](#der-lokale-helfer) startet den Configurator automatisch im Browser — **dann ist zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
