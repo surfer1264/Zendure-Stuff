@@ -1,7 +1,7 @@
-node_red
-shelly_script/testController
-effizienz
-Battery_Card
-simplemon
-yaml
-zendure_ha
+node_red export-ignore
+shelly_script/testController export-ignore
+effizienz export-ignore
+Battery_Card export-ignore
+simplemon export-ignore
+yaml export-ignore
+zendure_ha export-ignore
