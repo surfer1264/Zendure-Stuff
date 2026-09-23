@@ -139,47 +139,36 @@
 // Sichtbares Build-Datum - bei jeder inhaltlichen Aenderung an dieser
 // Datei hier anpassen. Hilft zu erkennen, ob eine gebuendelte exe (siehe
 // zendure_local_helper.py) noch den alten Stand ausliefert.
-const BUILD_DATE = "2026-09-21";
+const BUILD_DATE = "2026-09-23";
 
 const I18N = {
 de: {
   pageTitle: "Zendure Multi-Device Suite – Konfigurations-Assistent",
   h1: "Zendure Multi-Device Suite",
-  subtitle: "Ein Assistent für Controller, Watchdog und zenDash-API — gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal erfragt und konsistent in alle passenden Configs übernommen.",
   intro_doc_link: "Systemüberblick im Wiki ↗",
   build_label: "Build:",
   toastCopied: "In Zwischenablage kopiert",
 
-  step_products: "Produkte", step_devices: "Geräte", step_gridsource: "Netzquelle",
+  step_products: "Start", step_devices: "Geräte", step_gridsource: "Netzquelle",
   step_charging: "Laden vom Netz", step_signal: "Benachrichtigungen",
-  step_ctrl_gridreverse: "Bei vollem Akku", step_ctrl_kvs: "KVS (Controller)", step_result: "Ergebnis",
+  step_ctrl_gridreverse: "Bei vollem Akku", step_ctrl_kvs: "KVS (Controller)", step_regel: "Regelparameter", step_result: "Ergebnis",
 
   navBack: "← Zurück", navNext: "Weiter →",
 
-  prod_h2: "Welche Produkte möchtest du konfigurieren?",
-  prod_hint: "Mehrfachauswahl möglich. Gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal abgefragt und für alle passenden Produkte übernommen.",
-  prod_hardware_note: "⚠️ Der Controller läuft immer allein auf einem eigenen Shelly — nie zusammen mit Watchdog oder zenDash-API auf demselben Gerät (Speicherlimit). Watchdog und zenDash-API dürfen sich ein zweites Gerät teilen.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Regelt Netzbezug/-export über deine Geräte (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
-  prod_watchdog_desc: "Überwacht SOC, Temperatur und Zellspannung, meldet Störungen.",
-  prod_zendash_title: "zenDash-API",
-  prod_zendash_desc: "Liefert Live-Daten fürs Dashboard und schreibt Regler-Werte in dieselbe KVS wie der Controller.",
-  prod_note_zendash_only: "zenDash-API erwartet in der Praxis dieselbe Geräteliste wie ein laufender Controller. Ohne Controller-Auswahl hier fragen wir trotzdem alle nötigen Felder ab, damit der Block für sich funktioniert.",
   doc_link: "Zur Doku ↗",
   prod_import_summary: "Bestehende Config einlesen, um sie zu aktualisieren",
-  prod_import_hint: "Füge einen kompletten <code>let CONFIG = { ... };</code>-Block ein — Controller, Watchdog oder zenDash-API, wird automatisch erkannt. Für mehrere Produkte: nacheinander einfügen und jedes Mal \"Einlesen\" klicken.",
   prod_import_button: "Einlesen &amp; übernehmen",
 
   import_err_empty: "Bitte zuerst einen CONFIG-Block einfügen.",
   import_err_parse: "Konnte den Text nicht lesen: {msg}",
   import_err_unknown_type: "Konnte nicht erkennen, zu welchem Produkt diese Config gehört.",
   import_success: "✓ {name}-Config eingelesen und übernommen.",
-  import_zendash_note: " Bitte im Schritt \"Netzquelle\" prüfen, ob local/remote/http_json noch stimmt — das lässt sich aus einer zenDash-API-Config allein nicht sicher ableiten.",
 
   dev_h2: "Deine Geräte",
   dev_hint_full: "Für jedes Zendure-Gerät: IP-Adresse, maximale Lade-/Entladeleistung sowie minSoc/maxSoc. Diese beiden SoC-Grenzen synchronisiert der Controller beim Start immer direkt in die Geräte-Firmware.",
-  dev_hint_simple: "Für jedes Zendure-Gerät: Label und IP-Adresse.",
   dev_hint_watchdog_suffix: " Zusätzlich: Soll der Watchdog dieses Gerät überwachen?",
   dev_add_button: "+ weiteres Gerät",
   dev_remove: "entfernen",
@@ -192,27 +181,17 @@ de: {
   dev_watchdog_checkbox: "Watchdog überwacht dieses Gerät",
 
   grid_h2: "Wie ermittelst du deine Netzleistung?",
-  grid_hint: "Bestimmt, woher Controller bzw. zenDash-API den aktuellen Netzbezug/-export bekommen.",
-  grid_local_title: "Läuft direkt auf einem Shelly Pro 3EM",
-  grid_local_desc: "Schnellste, robusteste Variante — kein zusätzlicher Netzwerk-Request pro Zyklus.",
   grid_remote_title: "Läuft auf einem anderen Shelly, liest einen Pro 3EM übers Netzwerk",
   grid_remote_desc: "Der Pro 3EM bleibt unangetastet mit Standard-Firmware.",
   grid_httpjson_title: "Ich habe ein anderes Smartmeter mit JSON-über-HTTP-Schnittstelle",
   grid_httpjson_desc: "Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät. Auch mit einem Shelly 3EM (ohne Pro) möglich.",
   grid_emid_field: "EM-Kanal-ID (in der Regel 0)",
   grid_ip_field_remote: "IP-Adresse des Shelly Pro 3EM (Netzmessung)",
-  grid_ip_field_local: "IP-Adresse dieses Shelly Pro 3EM",
-  grid_local_kvs_hint: "Wird auch als KVS-Adresse für zenDash-API verwendet, falls die API auf einem anderen Gerät läuft als der Controller — dort deshalb nicht nochmal abgefragt.",
   grid_remote_hint: "Nur die Adresse des Smartmeters — im Remote-Modus läuft der Controller NICHT auf dem 3EM selbst.",
-  grid_controllerHostIp_field: "IP-Adresse des Shelly, auf dem der Controller läuft (KVS-Host)",
-  grid_controllerHostIp_hint: "Diese IP braucht zenDash-API, um die KVS des Controllers zu erreichen — der Controller läuft hier auf einem eigenen Shelly, nicht auf dem Smartmeter selbst.",
-  grid_zendash_no_controller_hint: "Kein Controller in dieser Konfiguration — zenDash-API bekommt <code>kvsHost: \"local\"</code> als Platzhalter. Läuft dein (separat konfigurierter) Controller auf einem anderen Gerät, trag dessen IP nachträglich im Code-Block ein.",
   grid_url_field: "URL des Smartmeters",
   grid_field_field: "Feldname mit der Gesamtleistung (W)",
   grid_invert_checkbox: "Vorzeichen ist invertiert (nach Test einmalig prüfen)",
-  grid_httpjson_zendash_hint: "Dein Smartmeter ist kein Shelly 3EM Pro — der Controller läuft trotzdem auf einem eigenen Shelly, dessen IP zenDash-API für die KVS braucht.",
 
-  gridsum_local: "lokal auf dem Shelly Pro 3EM {ip} (EM-Kanal {em})",
   gridsum_remote: "entfernter Pro 3EM unter {ip} (EM-Kanal {em})",
   gridsum_httpjson: "generisches JSON-Smartmeter unter {url} (Feld \"{field}\"{invert})",
   gridsum_invert_suffix: ", invertiert",
@@ -231,9 +210,7 @@ de: {
   sig_h2: "Möchtest du Benachrichtigungen bei Störungen erhalten?",
   sig_hint: "Meldet sich z. B., wenn ein Gerät dauerhaft nicht erreichbar ist oder Warnschwellen überschritten werden — und wieder, sobald der Fehler behoben ist.",
   sig_yes_title: "Ja",
-  sig_yes_desc: "Setzt <code>signal.enabled: true</code> und fragt die nötigen Zugangsdaten ab.",
   sig_no_title: "Nein",
-  sig_no_desc: "Standard — keine Benachrichtigungen, <code>signal.enabled: false</code>.",
   sig_via_label: "Auf welchem Weg?",
   sig_webhook_title: "Webhook",
   sig_webhook_desc: "Eigener HTTP-Endpunkt, z. B. eine Home-Assistant-Automation.",
@@ -266,7 +243,6 @@ de: {
   kvs_note_flash: "Nur externe Schreibvorgänge (z. B. aus Home Assistant) verschleißen den Flash-Speicher des Shelly — Automations sollten daher nur bei echter Bedienung schreiben, nicht zyklisch.",
 
   result_h2: "Deine Entscheidungen",
-  result_products: "Produkte:",
   result_devices: "Geräte:",
   result_gridsource: "Netzquelle:",
   result_charging: "Laden vom Netz:",
@@ -281,16 +257,9 @@ de: {
   result_grm_always1: "Export immer erlauben",
   result_grm_always2: "Export immer sperren",
   result_kvs: "KVS-Fernsteuerung (Controller):",
-  result_zdhost: "zenDash-API KVS-Host:",
-  result_zdhost_gridsource_suffix: " (aus der Netzquelle übernommen)",
-  result_zdhost_controller_suffix: " (separat angegebener Controller-Shelly)",
-  result_zdhost_placeholder: "\"local\" (Platzhalter — kein Controller in dieser Konfiguration, bei Bedarf manuell anpassen)",
   result_rest: "Alles Übrige:",
   result_rest_value: "bleibt auf dem jeweiligen empfohlenen Standardwert.",
 
-  hint_ctrl: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Controller-Script (zerooutput_multi_kvs.js).",
-  hint_wd: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Watchdog-Script.",
-  hint_zd: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im zenDash-API-Script. Geräteliste und Netzquelle sind absichtlich identisch zum Controller-Block.",
 
   btn_copy: "📋 In Zwischenablage kopieren",
   btn_savefile: "💾 Nur CONFIG-Block speichern",
@@ -318,7 +287,6 @@ de: {
   upload_guide_step7_desc: "Im Logs-Tab der Shelly-Oberfläche kontrollieren, ob das Skript fehlerfrei läuft. Bei Problemen meist an falschen Geräte-IPs im CONFIG-Block liegen.",
 
   upload_target_label: "Ziel-Shelly (IP-Adresse)",
-  upload_direct_hint: "Lokaler Helfer erkannt. IP des Ziel-Shelly eintragen und direkt hochladen — jedes Script kann auf ein anderes Gerät gehen.",
   btn_direct_upload: "⚡ Direkt hochladen",
   upload_loading: "Übertrage an {ip}...",
   upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
@@ -331,47 +299,93 @@ de: {
   memcheck_loading: "Prüfe {ip}...",
   memcheck_ok: "✓ {mem_free} Bytes frei auf {ip} — passt.",
   memcheck_low: "⚠️ Nur {mem_free} Bytes frei auf {ip} — evtl. knapp für ein weiteres Script.",
-  memcheck_error: "Fehler: {msg}"
+  memcheck_error: "Fehler: {msg}",
+
+  // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
+  subtitle: "Ein Assistent für Controller, zenDash-API und Watchdog auf zwei Shellys — gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal erfragt und konsistent in beide Configs übernommen.",
+  prod_h2: "Welche Funktionen möchtest du konfigurieren?",
+  prod_hint: "Mehrfachauswahl möglich. Das System nutzt immer zwei Shellys: den <b>Controller-Shelly</b> (Controller + KVS) und den <b>Dashboard-Shelly</b> (zenDash-API und Watchdog in einem gemeinsamen Script).",
+  prod_hardware_note: "⚠️ Controller-Shelly und Dashboard-Shelly sind immer zwei verschiedene Geräte. zenDash-API und Watchdog laufen zusammen in einem Script auf dem Dashboard-Shelly und sind darin einzeln ein- und ausschaltbar.",
+  prod_api_title: "zenDash-API",
+  prod_api_desc: "Liefert Live-Daten fürs Dashboard und schreibt Regler-Werte in die KVS des Controllers. Läuft auf dem Dashboard-Shelly.",
+  prod_watchdog_desc: "Überwacht SoC, Temperatur, Zellspannung und Erreichbarkeit und meldet Störungen. Läuft zusammen mit der API auf dem Dashboard-Shelly.",
+  ip_h3: "Deine beiden Shellys",
+  ip_hint: "Die IPs werden in beiden Configs im Block <code>runtime</code> gespeichert — beim nächsten Einlesen musst du sie nicht erneut eingeben.",
+  ip_ctr_field: "Controller-Shelly (Controller + KVS)",
+  ip_dash_field: "Dashboard-Shelly (zenDash-API + Watchdog)",
+  ip_not_needed: "für diese Auswahl nicht nötig",
+  prod_import_hint: "Füge einen kompletten <code>let CONFIG = { ... };</code>-Block ein — Controller oder zenDash-API + Watchdog, wird automatisch erkannt. Am besten beide nacheinander einlesen. Die Shelly-IPs werden aus dem Block <code>runtime</code> übernommen.",
+  import_err_legacy: "Das ist eine Config im alten Format (zenDash-API 2.x oder Watchdog 1.x) — diese wird nicht mehr unterstützt. Lies die Controller-Config ein und ergänze die übrigen Angaben im Assistenten.",
+  grid_hint: "Bestimmt, woher Controller und zenDash-API den aktuellen Netzbezug/-export bekommen.",
+  grid_local_title: "Der Controller läuft direkt auf einem Shelly Pro 3EM",
+  grid_local_desc: "Controller-Shelly und Messgerät sind dasselbe Gerät — schnellste, robusteste Variante.",
+  grid_local_info: "Netzmessung am Controller-Shelly <b>{ip}</b> — die zenDash-API liest sie von dort.",
+  gridsum_local: "Controller-Shelly {ip} als Pro 3EM (EM-Kanal {em})",
+  sig_yes_desc: "Setzt <code>signal.enabled</code> (Controller) bzw. <code>notify.enabled</code> (zenDash-API + Watchdog) auf true und fragt die nötigen Zugangsdaten ab.",
+  sig_no_desc: "Standard — keine Benachrichtigungen.",
+  kvs_note_api_readonly: "Hinweis: Ohne KVS kann das Dashboard nur anzeigen — Einstellungen aus dem Dashboard (Sollwert, manuelles Laden usw.) wirken nicht auf den Controller.",
+  regel_h2: "Regelparameter des Controllers",
+  regel_hint: "Vorbelegt aus deiner eingelesenen Controller-Config bzw. aus deiner Geräteliste abgeleitet (Faustformel). Prüfe die Werte und passe sie bei Bedarf an.",
+  regel_warn: "⚠️ Diese Werte bestimmen das Regelverhalten direkt. Sie werden <b>nicht</b> automatisch angepasst, wenn du später Geräte oder Leistungen änderst — Änderungen liegen in deiner Verantwortung. Bedeutung und Empfehlungen: {link}",
+  regel_doclink: "Controller-Dokumentation ↗",
+  regel_setpoint: "Sollwert Netzleistung (W)",
+  regel_hysteresis: "Hysterese (W)",
+  regel_discharge: "Entladen",
+  regel_charge: "Laden",
+  regel_conc: "concentrateBelow (W) — darunter nur ein Gerät",
+  regel_spread: "spreadAbove (W) — darüber alle Geräte",
+  regel_charge_off: "Laden vom Netz ist nicht aktiv — die Lade-Werte werden unverändert in die Config übernommen.",
+  result_products: "Funktionen:",
+  result_ip_ctr: "Controller-Shelly (KVS):",
+  result_ip_dash: "Dashboard-Shelly:",
+  result_ver_ctrl: "Version Controller:",
+  result_ver_api: "Version zenDash-API:",
+  result_ver_wd: "Version Watchdog:",
+  ver_loading: "wird geladen …",
+  ver_na: "nicht verfügbar (keine Verbindung zu GitHub?)",
+  result_regel: "Regelparameter:",
+  result_regel_value: "Sollwert {sp} W, Hysterese {hy} W, Entladen {dc}/{ds} W, Laden {cc}/{cs} W",
+  result_watch: "Watchdog überwacht:",
+  result_legacy_note: "Umstieg: Das Script „zenDash-API + Watchdog“ ersetzt die alten Einzelscripte (zenDash-API 2.x, Watchdog 1.x). Stoppe diese auf ihren Shellys und schalte dort den Autostart aus — sonst laufen sie parallel weiter.",
+  hint_ctrl: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Controller-Script (zerooutput_multi_kvs). Ziel: Controller-Shelly <b>{ip}</b>.",
+  hint_zdw: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Script zendash_watch (zenDash-API + Watchdog). Ziel: Dashboard-Shelly <b>{ip}</b>. Geräteliste und Reihenfolge sind identisch zum Controller.",
+  upload_direct_hint: "Lokaler Helfer erkannt — das Script wird direkt auf den Shelly aus Schritt 1 geladen und gestartet.",
+  upload_target_fixed: "Ziel-Shelly: <b>{ip}</b> (aus Schritt 1)",
+  nav_err_products: "Bitte mindestens eine Funktion auswählen.",
+  nav_err_ip_ctr: "Bitte eine gültige IP für den Controller-Shelly eintragen.",
+  nav_err_ip_dash: "Bitte eine gültige IP für den Dashboard-Shelly eintragen.",
+  nav_err_ip_same: "Controller-Shelly und Dashboard-Shelly müssen zwei verschiedene Geräte sein.",
+  nav_err_regel: "Bitte die Regelparameter prüfen: Hysterese und Leistungen ≥ 0, concentrateBelow kleiner als spreadAbove.",
+  nav_err_generic: "Bitte fehlende oder ungültige Angaben ergänzen."
 },
 
 en: {
   pageTitle: "Zendure Multi-Device Suite – Configuration Wizard",
   h1: "Zendure Multi-Device Suite",
-  subtitle: "One wizard for Controller, Watchdog and zenDash-API — shared details (devices, grid source, notifications) are asked once and applied consistently to every matching config.",
   intro_doc_link: "System overview in the wiki ↗",
   build_label: "Build:",
   toastCopied: "Copied to clipboard",
 
-  step_products: "Products", step_devices: "Devices", step_gridsource: "Grid source",
+  step_products: "Start", step_devices: "Devices", step_gridsource: "Grid source",
   step_charging: "Charge from grid", step_signal: "Notifications",
-  step_ctrl_gridreverse: "Battery full", step_ctrl_kvs: "KVS (Controller)", step_result: "Result",
+  step_ctrl_gridreverse: "Battery full", step_ctrl_kvs: "KVS (Controller)", step_regel: "Control parameters", step_result: "Result",
 
   navBack: "← Back", navNext: "Next →",
 
-  prod_h2: "Which products do you want to configure?",
-  prod_hint: "Multiple selection possible. Shared details (devices, grid source, notifications) are only asked once and applied to every matching product.",
-  prod_hardware_note: "⚠️ The Controller always runs alone on its own Shelly — never together with Watchdog or zenDash-API on the same device (memory limit). Watchdog and zenDash-API can share a second device.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Controls grid import/export through your devices (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
-  prod_watchdog_desc: "Monitors SOC, temperature and cell voltage, and reports issues.",
-  prod_zendash_title: "zenDash-API",
-  prod_zendash_desc: "Feeds live data to the dashboard and writes controller values to the same KVS.",
-  prod_note_zendash_only: "In practice zenDash-API expects the same device list as a running Controller. Without selecting Controller here we still ask for every field it needs so the block works on its own.",
   doc_link: "Docs ↗",
   prod_import_summary: "Import an existing config to update it",
-  prod_import_hint: "Paste a complete <code>let CONFIG = { ... };</code> block — Controller, Watchdog or zenDash-API, it's detected automatically. For several products: paste one after another and click \"Import\" each time.",
   prod_import_button: "Import &amp; apply",
 
   import_err_empty: "Please paste a CONFIG block first.",
   import_err_parse: "Couldn't read the text: {msg}",
   import_err_unknown_type: "Couldn't tell which product this config belongs to.",
   import_success: "✓ {name} config imported and applied.",
-  import_zendash_note: " Please check the \"Grid source\" step to confirm local/remote/http_json is still correct — that can't be reliably inferred from a zenDash-API config alone.",
 
   dev_h2: "Your devices",
   dev_hint_full: "For every Zendure device: IP address, maximum charge/discharge power and minSoc/maxSoc. The Controller always syncs these two SoC limits into the device firmware on startup.",
-  dev_hint_simple: "For every Zendure device: a label and its IP address.",
   dev_hint_watchdog_suffix: " Also: should Watchdog monitor this device?",
   dev_add_button: "+ add another device",
   dev_remove: "remove",
@@ -384,27 +398,17 @@ en: {
   dev_watchdog_checkbox: "Watchdog monitors this device",
 
   grid_h2: "How do you measure your grid power?",
-  grid_hint: "Determines where Controller and/or zenDash-API get the current grid import/export from.",
-  grid_local_title: "Runs directly on a Shelly Pro 3EM",
-  grid_local_desc: "Fastest, most robust option — no extra network request per cycle.",
   grid_remote_title: "Runs on a different Shelly, reads a Pro 3EM over the network",
   grid_remote_desc: "The Pro 3EM stays untouched with stock firmware.",
   grid_httpjson_title: "I have a different smart meter with a JSON-over-HTTP interface",
   grid_httpjson_desc: "E.g. Zendure Smart Meter 3CT or a Tasmota device. Also works with a Shelly 3EM (non-Pro).",
   grid_emid_field: "EM channel ID (usually 0)",
   grid_ip_field_remote: "IP address of the Shelly Pro 3EM (grid measurement)",
-  grid_ip_field_local: "IP address of this Shelly Pro 3EM",
-  grid_local_kvs_hint: "Also used as the KVS address for zenDash-API if the API runs on a different device than the Controller — so it isn't asked again there.",
   grid_remote_hint: "Just the smart meter's address — in remote mode the Controller does NOT run on the 3EM itself.",
-  grid_controllerHostIp_field: "IP address of the Shelly the Controller runs on (KVS host)",
-  grid_controllerHostIp_hint: "zenDash-API needs this IP to reach the Controller's KVS — here the Controller runs on its own Shelly, not on the smart meter itself.",
-  grid_zendash_no_controller_hint: "No Controller in this configuration — zenDash-API gets <code>kvsHost: \"local\"</code> as a placeholder. If your (separately configured) Controller runs on a different device, enter its IP into the code block afterwards.",
   grid_url_field: "Smart meter URL",
   grid_field_field: "Field name holding total power (W)",
   grid_invert_checkbox: "Sign is inverted (check once after testing)",
-  grid_httpjson_zendash_hint: "Your smart meter isn't a Shelly 3EM Pro — the Controller still runs on its own Shelly, and zenDash-API needs that IP for the KVS.",
 
-  gridsum_local: "local on Shelly Pro 3EM {ip} (EM channel {em})",
   gridsum_remote: "remote Pro 3EM at {ip} (EM channel {em})",
   gridsum_httpjson: "generic JSON smart meter at {url} (field \"{field}\"{invert})",
   gridsum_invert_suffix: ", inverted",
@@ -423,9 +427,7 @@ en: {
   sig_h2: "Do you want to be notified about issues?",
   sig_hint: "Sends a message e.g. when a device is unreachable for a while, or a warning threshold is exceeded — and again once the issue is resolved.",
   sig_yes_title: "Yes",
-  sig_yes_desc: "Sets <code>signal.enabled: true</code> and asks for the needed credentials.",
   sig_no_title: "No",
-  sig_no_desc: "Default — no notifications, <code>signal.enabled: false</code>.",
   sig_via_label: "Which channel?",
   sig_webhook_title: "Webhook",
   sig_webhook_desc: "Your own HTTP endpoint, e.g. a Home Assistant automation.",
@@ -458,7 +460,6 @@ en: {
   kvs_note_flash: "Only external writes (e.g. from Home Assistant) wear out the Shelly's flash storage — automations should therefore only write on real user actions, not on a cycle.",
 
   result_h2: "Your choices",
-  result_products: "Products:",
   result_devices: "Devices:",
   result_gridsource: "Grid source:",
   result_charging: "Charge from grid:",
@@ -473,16 +474,9 @@ en: {
   result_grm_always1: "Always allow export",
   result_grm_always2: "Always block export",
   result_kvs: "KVS remote control (Controller):",
-  result_zdhost: "zenDash-API KVS host:",
-  result_zdhost_gridsource_suffix: " (taken from the grid source)",
-  result_zdhost_controller_suffix: " (separately entered Controller Shelly)",
-  result_zdhost_placeholder: "\"local\" (placeholder — no Controller in this configuration, adjust manually if needed)",
   result_rest: "Everything else:",
   result_rest_value: "stays at its recommended default value.",
 
-  hint_ctrl: "Replaces the <code>let CONFIG = { ... };</code> block in the Controller script (zerooutput_multi_kvs.js).",
-  hint_wd: "Replaces the <code>let CONFIG = { ... };</code> block in the Watchdog script.",
-  hint_zd: "Replaces the <code>let CONFIG = { ... };</code> block in the zenDash-API script. The device list and grid source deliberately match the Controller block.",
 
   btn_copy: "📋 Copy to clipboard",
   btn_savefile: "💾 Save CONFIG block only",
@@ -510,7 +504,6 @@ en: {
   upload_guide_step7_desc: "Check the Logs tab in the Shelly web interface for errors. Most issues trace back to wrong device IPs in the CONFIG block.",
 
   upload_target_label: "Target Shelly (IP address)",
-  upload_direct_hint: "Local helper detected. Enter the target Shelly's IP and upload directly — each script can go to a different device.",
   btn_direct_upload: "⚡ Upload directly",
   upload_loading: "Uploading to {ip}...",
   upload_success: "✓ Successfully uploaded to {ip} and started.",
@@ -523,47 +516,93 @@ en: {
   memcheck_loading: "Checking {ip}...",
   memcheck_ok: "✓ {mem_free} bytes free on {ip} — looks fine.",
   memcheck_low: "⚠️ Only {mem_free} bytes free on {ip} — might be tight for another script.",
-  memcheck_error: "Error: {msg}"
+  memcheck_error: "Error: {msg}",
+
+  // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
+  subtitle: "One wizard for Controller, zenDash-API and Watchdog on two Shellys — shared details (devices, grid source, notifications) are asked once and applied consistently to both configs.",
+  prod_h2: "Which functions do you want to configure?",
+  prod_hint: "Multiple selection possible. The system always uses two Shellys: the <b>Controller Shelly</b> (Controller + KVS) and the <b>Dashboard Shelly</b> (zenDash-API and Watchdog in one shared script).",
+  prod_hardware_note: "⚠️ Controller Shelly and Dashboard Shelly are always two different devices. zenDash-API and Watchdog run together in one script on the Dashboard Shelly and can be switched on and off individually.",
+  prod_api_title: "zenDash-API",
+  prod_api_desc: "Provides live data for the dashboard and writes control values to the Controller's KVS. Runs on the Dashboard Shelly.",
+  prod_watchdog_desc: "Monitors SoC, temperature, cell voltage and reachability and reports problems. Runs together with the API on the Dashboard Shelly.",
+  ip_h3: "Your two Shellys",
+  ip_hint: "The IPs are stored in both configs in the <code>runtime</code> block — you won't have to enter them again the next time you import.",
+  ip_ctr_field: "Controller Shelly (Controller + KVS)",
+  ip_dash_field: "Dashboard Shelly (zenDash-API + Watchdog)",
+  ip_not_needed: "not needed for this selection",
+  prod_import_hint: "Paste a complete <code>let CONFIG = { ... };</code> block — Controller or zenDash-API + Watchdog, detected automatically. Ideally import both, one after the other. The Shelly IPs are taken from the <code>runtime</code> block.",
+  import_err_legacy: "This is a config in the old format (zenDash-API 2.x or Watchdog 1.x), which is no longer supported. Import the Controller config and complete the remaining details in the wizard.",
+  grid_hint: "Determines where Controller and zenDash-API get the current grid import/export from.",
+  grid_local_title: "The Controller runs directly on a Shelly Pro 3EM",
+  grid_local_desc: "Controller Shelly and meter are the same device — fastest, most robust option.",
+  grid_local_info: "Grid measurement on the Controller Shelly <b>{ip}</b> — the zenDash-API reads it from there.",
+  gridsum_local: "Controller Shelly {ip} as Pro 3EM (EM channel {em})",
+  sig_yes_desc: "Sets <code>signal.enabled</code> (Controller) and <code>notify.enabled</code> (zenDash-API + Watchdog) to true and asks for the needed credentials.",
+  sig_no_desc: "Default — no notifications.",
+  kvs_note_api_readonly: "Note: without KVS the dashboard can only display — settings made in the dashboard (setpoint, manual charging etc.) have no effect on the Controller.",
+  regel_h2: "Controller control parameters",
+  regel_hint: "Prefilled from your imported Controller config or derived from your device list (rule of thumb). Check the values and adjust them if needed.",
+  regel_warn: "⚠️ These values directly determine the control behaviour. They are <b>not</b> adjusted automatically if you change devices or power ratings later — changes are your responsibility. Meaning and recommendations: {link}",
+  regel_doclink: "Controller documentation ↗",
+  regel_setpoint: "Grid power setpoint (W)",
+  regel_hysteresis: "Hysteresis (W)",
+  regel_discharge: "Discharge",
+  regel_charge: "Charge",
+  regel_conc: "concentrateBelow (W) — below: one device only",
+  regel_spread: "spreadAbove (W) — above: all devices",
+  regel_charge_off: "Charging from the grid is not active — the charge values are written to the config unchanged.",
+  result_products: "Functions:",
+  result_ip_ctr: "Controller Shelly (KVS):",
+  result_ip_dash: "Dashboard Shelly:",
+  result_ver_ctrl: "Controller version:",
+  result_ver_api: "zenDash-API version:",
+  result_ver_wd: "Watchdog version:",
+  ver_loading: "loading …",
+  ver_na: "not available (no connection to GitHub?)",
+  result_regel: "Control parameters:",
+  result_regel_value: "setpoint {sp} W, hysteresis {hy} W, discharge {dc}/{ds} W, charge {cc}/{cs} W",
+  result_watch: "Watchdog monitors:",
+  result_legacy_note: "Migration: the \"zenDash-API + Watchdog\" script replaces the old separate scripts (zenDash-API 2.x, Watchdog 1.x). Stop them on their Shellys and disable autostart there — otherwise they keep running in parallel.",
+  hint_ctrl: "Replaces the <code>let CONFIG = { ... };</code> block in the Controller script (zerooutput_multi_kvs). Target: Controller Shelly <b>{ip}</b>.",
+  hint_zdw: "Replaces the <code>let CONFIG = { ... };</code> block in the zendash_watch script (zenDash-API + Watchdog). Target: Dashboard Shelly <b>{ip}</b>. Device list and order are identical to the Controller.",
+  upload_direct_hint: "Local helper detected — the script is uploaded directly to the Shelly from step 1 and started.",
+  upload_target_fixed: "Target Shelly: <b>{ip}</b> (from step 1)",
+  nav_err_products: "Please select at least one function.",
+  nav_err_ip_ctr: "Please enter a valid IP for the Controller Shelly.",
+  nav_err_ip_dash: "Please enter a valid IP for the Dashboard Shelly.",
+  nav_err_ip_same: "Controller Shelly and Dashboard Shelly must be two different devices.",
+  nav_err_regel: "Please check the control parameters: hysteresis and power values ≥ 0, concentrateBelow smaller than spreadAbove.",
+  nav_err_generic: "Please complete missing or invalid entries."
 },
 
 fr: {
   pageTitle: "Zendure Multi-Device Suite – Assistant de configuration",
   h1: "Zendure Multi-Device Suite",
-  subtitle: "Un assistant unique pour Controller, Watchdog et zenDash-API — les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées dans toutes les configurations concernées.",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
   build_label: "Version :",
   toastCopied: "Copié dans le presse-papiers",
 
-  step_products: "Produits", step_devices: "Appareils", step_gridsource: "Source réseau",
+  step_products: "Départ", step_devices: "Appareils", step_gridsource: "Source réseau",
   step_charging: "Charge depuis le réseau", step_signal: "Notifications",
-  step_ctrl_gridreverse: "Batterie pleine", step_ctrl_kvs: "KVS (Controller)", step_result: "Résultat",
+  step_ctrl_gridreverse: "Batterie pleine", step_ctrl_kvs: "KVS (Controller)", step_regel: "Paramètres de régulation", step_result: "Résultat",
 
   navBack: "← Retour", navNext: "Suivant →",
 
-  prod_h2: "Quels produits veux-tu configurer ?",
-  prod_hint: "Sélection multiple possible. Les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées pour tous les produits concernés.",
-  prod_hardware_note: "⚠️ Le Controller tourne toujours seul sur son propre Shelly — jamais avec Watchdog ou zenDash-API sur le même appareil (limite de mémoire). Watchdog et zenDash-API peuvent en revanche partager un deuxième appareil.",
   prod_controller_title: "Controller",
   prod_controller_desc: "Régule l'import/export réseau via tes appareils (zerooutput_multi_kvs.js).",
   prod_watchdog_title: "Watchdog",
-  prod_watchdog_desc: "Surveille le SOC, la température et la tension des cellules, et signale les problèmes.",
-  prod_zendash_title: "zenDash-API",
-  prod_zendash_desc: "Fournit les données en direct pour le tableau de bord et écrit les valeurs de régulation dans la même KVS que le Controller.",
-  prod_note_zendash_only: "En pratique, zenDash-API attend la même liste d'appareils qu'un Controller en fonctionnement. Sans sélectionner Controller ici, nous demandons quand même tous les champs nécessaires pour que le bloc fonctionne seul.",
   doc_link: "Voir la doc ↗",
   prod_import_summary: "Importer une configuration existante pour la mettre à jour",
-  prod_import_hint: "Colle un bloc <code>let CONFIG = { ... };</code> complet — Controller, Watchdog ou zenDash-API, il est détecté automatiquement. Pour plusieurs produits : colle-les l'un après l'autre et clique sur « Importer » à chaque fois.",
   prod_import_button: "Importer &amp; appliquer",
 
   import_err_empty: "Merci de coller d'abord un bloc CONFIG.",
   import_err_parse: "Impossible de lire le texte : {msg}",
   import_err_unknown_type: "Impossible de déterminer à quel produit appartient cette configuration.",
   import_success: "✓ Configuration {name} importée et appliquée.",
-  import_zendash_note: " Merci de vérifier à l'étape « Source réseau » si local/remote/http_json est toujours correct — cela ne peut pas être déduit de façon fiable d'une configuration zenDash-API seule.",
 
   dev_h2: "Tes appareils",
   dev_hint_full: "Pour chaque appareil Zendure : adresse IP, puissance maximale de charge/décharge ainsi que minSoc/maxSoc. Le Controller synchronise toujours ces deux limites de SoC directement dans le firmware de l'appareil au démarrage.",
-  dev_hint_simple: "Pour chaque appareil Zendure : un nom et son adresse IP.",
   dev_hint_watchdog_suffix: " De plus : Watchdog doit-il surveiller cet appareil ?",
   dev_add_button: "+ ajouter un appareil",
   dev_remove: "supprimer",
@@ -576,27 +615,17 @@ fr: {
   dev_watchdog_checkbox: "Watchdog surveille cet appareil",
 
   grid_h2: "Comment mesures-tu ta puissance réseau ?",
-  grid_hint: "Détermine d'où le Controller et/ou zenDash-API obtiennent l'import/export réseau actuel.",
-  grid_local_title: "Fonctionne directement sur un Shelly Pro 3EM",
-  grid_local_desc: "L'option la plus rapide et la plus robuste — aucune requête réseau supplémentaire par cycle.",
   grid_remote_title: "Fonctionne sur un autre Shelly, lit un Pro 3EM via le réseau",
   grid_remote_desc: "Le Pro 3EM reste intact avec son firmware d'origine.",
   grid_httpjson_title: "J'ai un autre compteur intelligent avec une interface JSON via HTTP",
   grid_httpjson_desc: "Par ex. Zendure Smart Meter 3CT ou un appareil Tasmota. Fonctionne aussi avec un Shelly 3EM (sans Pro).",
   grid_emid_field: "ID du canal EM (généralement 0)",
   grid_ip_field_remote: "Adresse IP du Shelly Pro 3EM (mesure réseau)",
-  grid_ip_field_local: "Adresse IP de ce Shelly Pro 3EM",
-  grid_local_kvs_hint: "Sert aussi d'adresse KVS pour zenDash-API si l'API tourne sur un autre appareil que le Controller — elle n'est donc pas redemandée là-bas.",
   grid_remote_hint: "Uniquement l'adresse du compteur intelligent — en mode distant, le Controller ne fonctionne PAS sur le 3EM lui-même.",
-  grid_controllerHostIp_field: "Adresse IP du Shelly sur lequel tourne le Controller (hôte KVS)",
-  grid_controllerHostIp_hint: "zenDash-API a besoin de cette IP pour atteindre la KVS du Controller — ici, le Controller tourne sur son propre Shelly, pas sur le compteur intelligent lui-même.",
-  grid_zendash_no_controller_hint: "Aucun Controller dans cette configuration — zenDash-API reçoit <code>kvsHost: \"local\"</code> comme valeur provisoire. Si ton Controller (configuré séparément) tourne sur un autre appareil, saisis son IP ensuite directement dans le bloc de code.",
   grid_url_field: "URL du compteur intelligent",
   grid_field_field: "Nom du champ contenant la puissance totale (W)",
   grid_invert_checkbox: "Le signe est inversé (à vérifier une fois après un test)",
-  grid_httpjson_zendash_hint: "Ton compteur intelligent n'est pas un Shelly 3EM Pro — le Controller tourne quand même sur son propre Shelly, et zenDash-API a besoin de cette IP pour la KVS.",
 
-  gridsum_local: "local sur le Shelly Pro 3EM {ip} (canal EM {em})",
   gridsum_remote: "Pro 3EM distant à {ip} (canal EM {em})",
   gridsum_httpjson: "compteur JSON générique à {url} (champ « {field} »{invert})",
   gridsum_invert_suffix: ", inversé",
@@ -615,9 +644,7 @@ fr: {
   sig_h2: "Veux-tu être notifié en cas de problème ?",
   sig_hint: "Envoie un message par ex. lorsqu'un appareil est injoignable durablement ou qu'un seuil d'alerte est dépassé — et à nouveau une fois le problème résolu.",
   sig_yes_title: "Oui",
-  sig_yes_desc: "Définit <code>signal.enabled: true</code> et demande les identifiants nécessaires.",
   sig_no_title: "Non",
-  sig_no_desc: "Par défaut — pas de notifications, <code>signal.enabled: false</code>.",
   sig_via_label: "Par quel canal ?",
   sig_webhook_title: "Webhook",
   sig_webhook_desc: "Ton propre point d'accès HTTP, par ex. une automatisation Home Assistant.",
@@ -650,7 +677,6 @@ fr: {
   kvs_note_flash: "Seules les écritures externes (par ex. depuis Home Assistant) usent la mémoire flash du Shelly — les automatisations ne devraient donc écrire qu'en cas d'action réelle, pas à chaque cycle.",
 
   result_h2: "Tes choix",
-  result_products: "Produits :",
   result_devices: "Appareils :",
   result_gridsource: "Source réseau :",
   result_charging: "Charge depuis le réseau :",
@@ -665,16 +691,9 @@ fr: {
   result_grm_always1: "Toujours autoriser l'export",
   result_grm_always2: "Toujours bloquer l'export",
   result_kvs: "Pilotage KVS à distance (Controller) :",
-  result_zdhost: "Hôte KVS de zenDash-API :",
-  result_zdhost_gridsource_suffix: " (repris de la source réseau)",
-  result_zdhost_controller_suffix: " (Shelly du Controller saisi séparément)",
-  result_zdhost_placeholder: "« local » (valeur provisoire — aucun Controller dans cette configuration, à ajuster manuellement si besoin)",
   result_rest: "Tout le reste :",
   result_rest_value: "reste à la valeur par défaut recommandée.",
 
-  hint_ctrl: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script Controller (zerooutput_multi_kvs.js).",
-  hint_wd: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script Watchdog.",
-  hint_zd: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script zenDash-API. La liste d'appareils et la source réseau correspondent volontairement au bloc du Controller.",
 
   btn_copy: "📋 Copier dans le presse-papiers",
   btn_savefile: "💾 Enregistrer seulement le bloc CONFIG",
@@ -702,7 +721,6 @@ fr: {
   upload_guide_step7_desc: "Vérifie l'onglet Logs de l'interface Shelly pour repérer d'éventuelles erreurs. La plupart des problèmes viennent d'IP d'appareils erronées dans le bloc CONFIG.",
 
   upload_target_label: "Shelly cible (adresse IP)",
-  upload_direct_hint: "Assistant local détecté. Indique l'IP du Shelly cible et charge directement — chaque script peut aller vers un appareil différent.",
   btn_direct_upload: "⚡ Charger directement",
   upload_loading: "Transfert vers {ip}...",
   upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
@@ -715,7 +733,64 @@ fr: {
   memcheck_loading: "Vérification de {ip}...",
   memcheck_ok: "✓ {mem_free} octets libres sur {ip} — c'est bon.",
   memcheck_low: "⚠️ Seulement {mem_free} octets libres sur {ip} — pourrait être juste pour un script de plus.",
-  memcheck_error: "Erreur : {msg}"
+  memcheck_error: "Erreur : {msg}",
+
+  // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
+  subtitle: "Un assistant unique pour Controller, zenDash-API et Watchdog sur deux Shelly — les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées dans les deux configurations.",
+  prod_h2: "Quelles fonctions veux-tu configurer ?",
+  prod_hint: "Sélection multiple possible. Le système utilise toujours deux Shelly : le <b>Shelly Controller</b> (Controller + KVS) et le <b>Shelly Dashboard</b> (zenDash-API et Watchdog dans un script commun).",
+  prod_hardware_note: "⚠️ Le Shelly Controller et le Shelly Dashboard sont toujours deux appareils différents. zenDash-API et Watchdog tournent ensemble dans un script sur le Shelly Dashboard et peuvent y être activés ou désactivés séparément.",
+  prod_api_title: "zenDash-API",
+  prod_api_desc: "Fournit les données en direct pour le tableau de bord et écrit les valeurs de régulation dans la KVS du Controller. Tourne sur le Shelly Dashboard.",
+  prod_watchdog_desc: "Surveille le SoC, la température, la tension des cellules et la joignabilité, et signale les problèmes. Tourne avec l'API sur le Shelly Dashboard.",
+  ip_h3: "Tes deux Shelly",
+  ip_hint: "Les IP sont enregistrées dans les deux configurations dans le bloc <code>runtime</code> — tu n'auras pas à les ressaisir lors du prochain import.",
+  ip_ctr_field: "Shelly Controller (Controller + KVS)",
+  ip_dash_field: "Shelly Dashboard (zenDash-API + Watchdog)",
+  ip_not_needed: "non nécessaire pour cette sélection",
+  prod_import_hint: "Colle un bloc <code>let CONFIG = { ... };</code> complet — Controller ou zenDash-API + Watchdog, détecté automatiquement. Idéalement, importe les deux l'un après l'autre. Les IP des Shelly sont reprises du bloc <code>runtime</code>.",
+  import_err_legacy: "Il s'agit d'une configuration dans l'ancien format (zenDash-API 2.x ou Watchdog 1.x), qui n'est plus prise en charge. Importe la configuration du Controller et complète le reste dans l'assistant.",
+  grid_hint: "Détermine d'où le Controller et zenDash-API obtiennent l'import/export réseau actuel.",
+  grid_local_title: "Le Controller tourne directement sur un Shelly Pro 3EM",
+  grid_local_desc: "Le Shelly Controller et le compteur sont le même appareil — la variante la plus rapide et la plus robuste.",
+  grid_local_info: "Mesure réseau sur le Shelly Controller <b>{ip}</b> — zenDash-API la lit depuis celui-ci.",
+  gridsum_local: "Shelly Controller {ip} en tant que Pro 3EM (canal EM {em})",
+  sig_yes_desc: "Met <code>signal.enabled</code> (Controller) et <code>notify.enabled</code> (zenDash-API + Watchdog) à true et demande les identifiants nécessaires.",
+  sig_no_desc: "Par défaut — pas de notifications.",
+  kvs_note_api_readonly: "Remarque : sans KVS, le tableau de bord peut seulement afficher — les réglages faits dans le tableau de bord (consigne, charge manuelle, etc.) n'ont aucun effet sur le Controller.",
+  regel_h2: "Paramètres de régulation du Controller",
+  regel_hint: "Pré-remplis depuis ta configuration Controller importée ou dérivés de ta liste d'appareils (règle empirique). Vérifie les valeurs et adapte-les si nécessaire.",
+  regel_warn: "⚠️ Ces valeurs déterminent directement le comportement de régulation. Elles ne sont <b>pas</b> ajustées automatiquement si tu modifies plus tard les appareils ou les puissances — les modifications relèvent de ta responsabilité. Signification et recommandations : {link}",
+  regel_doclink: "Documentation du Controller ↗",
+  regel_setpoint: "Consigne puissance réseau (W)",
+  regel_hysteresis: "Hystérésis (W)",
+  regel_discharge: "Décharge",
+  regel_charge: "Charge",
+  regel_conc: "concentrateBelow (W) — en dessous : un seul appareil",
+  regel_spread: "spreadAbove (W) — au-dessus : tous les appareils",
+  regel_charge_off: "La charge depuis le réseau n'est pas active — les valeurs de charge sont reprises telles quelles dans la configuration.",
+  result_products: "Fonctions :",
+  result_ip_ctr: "Shelly Controller (KVS) :",
+  result_ip_dash: "Shelly Dashboard :",
+  result_ver_ctrl: "Version Controller :",
+  result_ver_api: "Version zenDash-API :",
+  result_ver_wd: "Version Watchdog :",
+  ver_loading: "chargement …",
+  ver_na: "non disponible (pas de connexion à GitHub ?)",
+  result_regel: "Paramètres de régulation :",
+  result_regel_value: "consigne {sp} W, hystérésis {hy} W, décharge {dc}/{ds} W, charge {cc}/{cs} W",
+  result_watch: "Watchdog surveille :",
+  result_legacy_note: "Migration : le script « zenDash-API + Watchdog » remplace les anciens scripts séparés (zenDash-API 2.x, Watchdog 1.x). Arrête-les sur leurs Shelly et désactive le démarrage automatique — sinon ils continuent de tourner en parallèle.",
+  hint_ctrl: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script Controller (zerooutput_multi_kvs). Cible : Shelly Controller <b>{ip}</b>.",
+  hint_zdw: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script zendash_watch (zenDash-API + Watchdog). Cible : Shelly Dashboard <b>{ip}</b>. La liste et l'ordre des appareils sont identiques au Controller.",
+  upload_direct_hint: "Assistant local détecté — le script est chargé directement sur le Shelly de l'étape 1 et démarré.",
+  upload_target_fixed: "Shelly cible : <b>{ip}</b> (de l'étape 1)",
+  nav_err_products: "Merci de sélectionner au moins une fonction.",
+  nav_err_ip_ctr: "Merci d'indiquer une IP valide pour le Shelly Controller.",
+  nav_err_ip_dash: "Merci d'indiquer une IP valide pour le Shelly Dashboard.",
+  nav_err_ip_same: "Le Shelly Controller et le Shelly Dashboard doivent être deux appareils différents.",
+  nav_err_regel: "Merci de vérifier les paramètres de régulation : hystérésis et puissances ≥ 0, concentrateBelow inférieur à spreadAbove.",
+  nav_err_generic: "Merci de compléter les informations manquantes ou invalides."
 }
 };
 
@@ -738,7 +813,14 @@ function t(key, vars){
 const state = {
   lang: 'de',
 
-  products: { controller: false, watchdog: false, zendash: false },
+  // Drei Funktionen auf immer zwei Shellys: Controller auf dem
+  // Controller-Shelly, zenDash-API und Watchdog gemeinsam im Script
+  // zendash_watch auf dem Dashboard-Shelly.
+  products: { controller: false, api: false, watchdog: false },
+
+  // Shelly-IPs - landen in BEIDEN Configs als CONFIG.runtime.*, damit sie
+  // beim naechsten Einlesen nicht neu erfasst werden muessen.
+  runtime: { ctr_kvs: "", apidash_watch: "" },
 
   devices: [
     { label: "SF2400", ip: "192.168.178.", maxOutput: 800, minSoc: 15, maxSoc: 100, reverse: false, maxInputPower: undefined, wdEnabled: true }
@@ -746,8 +828,7 @@ const state = {
 
   gridSource: "local",
   gridSourceEmId: 0,
-  gridSourceIp: "",
-  controllerHostIp: "",          // Shelly-IP des Controllers/KVS-Host — bei remote UND http_json nötig
+  gridSourceIp: "",               // nur bei "remote": IP des Pro 3EM
   gridSourceUrl: "",
   gridSourceField: "total_power",
   gridSourceInvert: false,
@@ -757,21 +838,23 @@ const state = {
   gridReverseMode: "dynamic",     // Controller-spezifisch
   kvsEnabled: false,              // Controller-spezifisch — Default: Nein
 
-  signalEnabled: false,           // zentrale Frage (Controller + Watchdog) — Default: Nein
+  signalEnabled: false,           // zentrale Frage — Default: Nein
   signalTyp: "WEBHOOK",
   signalPhone: "",
   signalApiKey: "",
   signalWebhookUrl: "",
 
-  uploadTargets: { ctrl: "", wd: "", zd: "" },  // pro Script eigene Ziel-Shelly-IP fuer den lokalen Helfer
+  // Regelparameter des Controllers (Schritt "Regelparameter"). null = noch
+  // nicht belegt; wird beim ersten Zugriff aus der importierten Config bzw.
+  // aus der Geraeteliste berechnet und danach NICHT automatisch nachgefuehrt.
+  regel: null,
 
-  // Loesung A: beim Import roh gespeicherte Felder, die der Wizard nicht
-  // kennt (z.B. hysteresis, dampingFactor, vollSchwelle) - werden beim
-  // Bauen der Config als Fallback ueber ?? gelesen, damit sie nicht auf
-  // den Default zurückfallen. Leer = frischer Wizard-Lauf, alles Default.
+  // Loesung A: beim Import roh gespeicherte Configs. Nicht abgefragte Werte
+  // kommen beim Bauen per ?? aus diesen Objekten, sonst gilt der Standard.
   controllerAdvanced: {},
-  watchdogAdvanced: {},
-  zendashAdvanced: {}
+  zdwAdvanced: {},
+
+  navError: ""
 };
 state.lang = detectLang();
 
@@ -781,7 +864,8 @@ function stepLabels(){
   return {
     products: t('step_products'), devices: t('step_devices'), gridsource: t('step_gridsource'),
     charging: t('step_charging'), signal: t('step_signal'),
-    ctrl_gridreverse: t('step_ctrl_gridreverse'), ctrl_kvs: t('step_ctrl_kvs'), result: t('step_result')
+    ctrl_gridreverse: t('step_ctrl_gridreverse'), ctrl_kvs: t('step_ctrl_kvs'), regel: t('step_regel'),
+    result: t('step_result')
   };
 }
 
@@ -791,23 +875,27 @@ function num(v, fallback){
   return isNaN(n) ? fallback : n;
 }
 function escapeHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// welche Produkte brauchen die "vollen" Geräte-Felder (minSoc/maxSoc/maxOutput/reverse)?
-function needsFullDevice(){ return state.products.controller || state.products.zendash; }
-// welche Produkte brauchen eine Netzquelle?
-function needsGrid(){ return state.products.controller || state.products.zendash; }
-// welche Produkte brauchen den Benachrichtigungsblock?
-function needsSignal(){ return state.products.controller || state.products.watchdog; }
-function anyProduct(){ return state.products.controller || state.products.watchdog || state.products.zendash; }
+// welche Funktionen brauchen die "vollen" Geräte-Felder (minSoc/maxSoc/maxOutput/reverse)?
+function needsFullDevice(){ return state.products.controller || state.products.api; }
+// welche Funktionen brauchen eine Netzquelle?
+function needsGrid(){ return state.products.controller || state.products.api; }
+// Benachrichtigungen nutzen alle drei (API: Meldungen zum Auto-Stop)
+function needsSignal(){ return anyProduct(); }
+function anyProduct(){ return state.products.controller || state.products.api || state.products.watchdog; }
+// Controller-Shelly-IP: fuer den Controller selbst und als KVS-Host der API
+function needsCtrIp(){ return state.products.controller || state.products.api; }
+// Dashboard-Shelly-IP: fuer das gemeinsame Script zendash_watch
+function needsDashIp(){ return state.products.api || state.products.watchdog; }
 
 function computeStepList(){
   const s = ['products', 'devices'];
   if(needsGrid()) s.push('gridsource');
   if(needsFullDevice()) s.push('charging');
   if(needsSignal()) s.push('signal');
-  if(state.products.controller){ s.push('ctrl_gridreverse', 'ctrl_kvs'); }
+  if(state.products.controller){ s.push('ctrl_gridreverse', 'ctrl_kvs', 'regel'); }
   s.push('result');
   return s;
 }
@@ -930,10 +1018,16 @@ function parseConfigObject(raw){
 
 function detectProductType(obj){
   if(!obj || typeof obj !== 'object') return null;
-  if('vollSchwelle' in obj && 'watchdog' in obj) return 'watchdog';
-  if('kvsHost' in obj && 'dischargeStartupPower' in obj) return 'zendash';
+  // neues gemeinsames Script: Bloecke "api" und "watchdog" als Objekte
+  if(obj.api && typeof obj.api === 'object' && obj.watchdog && typeof obj.watchdog === 'object') return 'zdw';
   if('dampingFactor' in obj && 'reverseStartupPower' in obj) return 'controller';
+  // alte Einzelscripte (Watchdog 1.x: watchdog ist eine Zahl; zenDash-API 2.x)
+  if(('vollSchwelle' in obj && 'watchdog' in obj) || ('kvsHost' in obj && 'dischargeStartupPower' in obj)) return 'legacy';
   return null;
+}
+
+function isValidIp(ip){
+  return typeof ip === 'string' && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip.trim());
 }
 
 // Findet ein Gerät per IP in state.devices oder legt es neu an; wendet dann
@@ -950,18 +1044,31 @@ function mergeImportedDevice(ip, label, fields){
   return d;
 }
 
+function fullDeviceFields(dev){
+  return {
+    maxOutput: num(dev.maxOutput, 800),
+    minSoc: num(dev.minSoc, 15),
+    maxSoc: num(dev.maxSoc, 100),
+    reverse: !!dev.reverse,
+    maxInputPower: dev.reverse ? num(dev.maxInputPower, dev.maxOutput) : undefined
+  };
+}
+
+// runtime-Block: die zuletzt eingelesene Config gewinnt
+function applyRuntime(rt){
+  if(!rt || typeof rt !== 'object') return;
+  if(isValidIp(rt.ctr_kvs)) state.runtime.ctr_kvs = rt.ctr_kvs.trim();
+  if(isValidIp(rt.apidash_watch)) state.runtime.apidash_watch = rt.apidash_watch.trim();
+}
+
 function applyControllerImport(obj){
   state.controllerAdvanced = obj;
+  state.regel = null;   // Regelparameter neu aus dieser Config vorbelegen
   (obj.devices||[]).forEach(dev=>{
-    mergeImportedDevice(dev.ip, dev.label, {
-      maxOutput: num(dev.maxOutput, 800),
-      minSoc: num(dev.minSoc, 15),
-      maxSoc: num(dev.maxSoc, 100),
-      reverse: !!dev.reverse,
-      maxInputPower: dev.reverse ? num(dev.maxInputPower, dev.maxOutput) : undefined
-    });
+    mergeImportedDevice(dev.ip, dev.label, fullDeviceFields(dev));
   });
   state.chargingEnabled = state.chargingEnabled || (obj.devices||[]).some(d=>d.reverse);
+  applyRuntime(obj.runtime);
 
   if(obj.gridSource){
     state.gridSource = obj.gridSource;
@@ -969,7 +1076,9 @@ function applyControllerImport(obj){
     if(obj.gridSource === 'remote'){
       state.gridSourceIp = obj.gridSourceIp || '';
     } else if(obj.gridSource === 'local'){
-      if(obj.gridSourceIp && /^\d+\.\d+\.\d+\.\d+$/.test(obj.gridSourceIp)) state.gridSourceIp = obj.gridSourceIp;
+      // aeltere Controller-Configs ohne runtime-Block: bei "local" ist die
+      // dort eingetragene IP die des Controller-Shelly selbst
+      if(!state.runtime.ctr_kvs && isValidIp(obj.gridSourceIp)) state.runtime.ctr_kvs = obj.gridSourceIp.trim();
     } else if(obj.gridSource === 'http_json'){
       state.gridSourceUrl = obj.gridSourceUrl || '';
       state.gridSourceField = obj.gridSourceField || 'total_power';
@@ -982,61 +1091,58 @@ function applyControllerImport(obj){
   state.products.controller = true;
 }
 
-function applyWatchdogImport(obj){
-  state.watchdogAdvanced = obj;
+function applyZdwImport(obj){
+  state.zdwAdvanced = obj;
+  const ctrlDevs = (state.controllerAdvanced && state.controllerAdvanced.devices) || [];
   (obj.devices||[]).forEach(dev=>{
-    mergeImportedDevice(dev.ip, dev.label, { wdEnabled: dev.enabled !== false });
-  });
-  applyImportedSignal(obj.signal);
-  state.products.watchdog = true;
-}
-
-function applyZendashImport(obj){
-  state.zendashAdvanced = obj;
-  (obj.devices||[]).forEach(dev=>{
-    mergeImportedDevice(dev.ip, dev.label, {
-      maxOutput: num(dev.maxOutput, 800),
-      minSoc: num(dev.minSoc, 15),
-      maxSoc: num(dev.maxSoc, 100),
-      reverse: !!dev.reverse,
-      maxInputPower: dev.reverse ? num(dev.maxInputPower, dev.maxOutput) : undefined
-    });
+    // Ist die Controller-Config schon eingelesen, ist sie fuer die
+    // Geraete-Details fuehrend - von hier kommt dann nur "watch".
+    const fromCtrl = ctrlDevs.some(c => c.ip === dev.ip);
+    const fields = fromCtrl ? {} : fullDeviceFields(dev);
+    fields.wdEnabled = dev.watch !== false;
+    mergeImportedDevice(dev.ip, dev.label, fields);
   });
   state.chargingEnabled = state.chargingEnabled || (obj.devices||[]).some(d=>d.reverse);
+  applyRuntime(obj.runtime);
 
-  if(obj.kvsHost && obj.kvsHost !== 'local'){
-    state.controllerHostIp = obj.kvsHost;
+  const a = obj.api || {};
+  if(!state.runtime.ctr_kvs && isValidIp(a.kvsHost)) state.runtime.ctr_kvs = a.kvsHost.trim();
+
+  // Netzquelle nur ableiten, wenn keine Controller-Config sie vorgegeben hat
+  if(!state.controllerAdvanced || !state.controllerAdvanced.gridSource){
+    if(a.gridSource === 'http_json'){
+      state.gridSource = 'http_json';
+      state.gridSourceUrl = a.gridSourceUrl || '';
+      state.gridSourceField = a.gridSourceField || 'total_power';
+      state.gridSourceInvert = !!a.gridSourceInvert;
+    } else if(isValidIp(a.gridSourceIp)){
+      // Das Script liest bei "local" am Controller per remote auf den
+      // Controller-Shelly - zeigt die IP genau dorthin, war es "local".
+      if(a.gridSourceIp.trim() === state.runtime.ctr_kvs){
+        state.gridSource = 'local';
+      } else {
+        state.gridSource = 'remote';
+        state.gridSourceIp = a.gridSourceIp.trim();
+      }
+      state.gridSourceEmId = num(a.gridSourceEmId, 0);
+    }
   }
-  if(obj.gridSource === 'http_json'){
-    state.gridSource = 'http_json';
-    state.gridSourceUrl = obj.gridSourceUrl || '';
-    state.gridSourceField = obj.gridSourceField || 'total_power';
-    state.gridSourceInvert = !!obj.gridSourceInvert;
-  } else if(obj.gridSourceIp){
-    // zenDash speichert local/remote des Controllers immer als "remote" auf
-    // dieselbe IP — der Modus (local vs. remote) laesst sich daraus allein
-    // nicht sicher rekonstruieren, deshalb nur die IP uebernehmen und den
-    // Modus unangetastet lassen (Nutzer prueft ihn im Schritt "Netzquelle").
-    state.gridSourceIp = obj.gridSourceIp;
-    if(obj.gridSourceEmId !== undefined) state.gridSourceEmId = num(obj.gridSourceEmId, 0);
-  }
-  state.products.zendash = true;
+  applyImportedSignal(obj.notify);
+  state.products.api = a.enabled !== false;
+  state.products.watchdog = (obj.watchdog || {}).enabled !== false;
 }
 
+// Nachrichten-Block - "signal" (Controller) bzw. "notify" (zendash_watch)
 function applyImportedSignal(signal){
   if(!signal) return;
   state.signalEnabled = !!signal.enabled;
-  if(signal.typ) state.signalTyp = signal.typ;
+  if(signal.typ) state.signalTyp = String(signal.typ).toUpperCase();
   if(signal.phone && signal.phone !== 'PHONE-STRING') state.signalPhone = signal.phone;
   if(signal.apiKey && signal.apiKey !== 'YOUR_API_KEY') state.signalApiKey = signal.apiKey;
-  if(signal.webhookUrl && signal.webhookUrl.indexOf('<deine-webhook-id>') === -1) state.signalWebhookUrl = signal.webhookUrl;
+  if(signal.webhookUrl && signal.webhookUrl.indexOf('<deine-webhook-id>') === -1 && signal.webhookUrl.indexOf('<id>') === -1) state.signalWebhookUrl = signal.webhookUrl;
 }
 
-function isValidIp(ip){
-  return typeof ip === 'string' && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip.trim());
-}
-
-const IMPORT_NAMES = { controller: 'Controller', watchdog: 'Watchdog', zendash: 'zenDash-API' };
+const IMPORT_NAMES = { controller: 'Controller', zdw: 'zenDash-API + Watchdog' };
 
 function importConfig(){
   const el = document.getElementById('importText');
@@ -1056,6 +1162,11 @@ function importConfig(){
     return;
   }
   const type = detectProductType(obj);
+  if(type === 'legacy'){
+    statusEl.textContent = t('import_err_legacy');
+    statusEl.className = 'error';
+    return;
+  }
   if(!type){
     statusEl.textContent = t('import_err_unknown_type');
     statusEl.className = 'error';
@@ -1066,24 +1177,42 @@ function importConfig(){
   state.devices = state.devices.filter(d => isValidIp(d.ip));
 
   if(type === 'controller') applyControllerImport(obj);
-  else if(type === 'watchdog') applyWatchdogImport(obj);
-  else if(type === 'zendash') applyZendashImport(obj);
+  else applyZdwImport(obj);
 
-  let msg = t('import_success', {name: IMPORT_NAMES[type]});
-  if(type === 'zendash') msg += t('import_zendash_note');
-  statusEl.textContent = msg;
-  statusEl.className = 'hint';
-  el.value = '';
+  state.navError = '';
   render();
+  // render() baut den Schritt neu auf - Status danach setzen
+  const st = document.getElementById('importStatus');
+  if(st){ st.textContent = t('import_success', {name: IMPORT_NAMES[type]}); st.className = 'hint'; }
+  const det = document.getElementById('importDetails');
+  if(det) det.open = true;
 }
 
 // ---------- Step: Produkte ----------
 function toggleProduct(key){
   state.products[key] = !state.products[key];
+  state.navError = '';
   render();
 }
+function productChoice(key, titleKey, descKey, docUrl){
+  const on = state.products[key];
+  return `
+    <div class="choice ${on?'selected':''}" onclick="toggleProduct('${key}')">
+      <input type="checkbox" ${on?'checked':''}>
+      <div><div class="ct">${t(titleKey)}</div>
+      <div class="cd">${t(descKey)}</div>
+      <a href="${docUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.8rem; color:var(--accent-text);">${t('doc_link')}</a></div>
+    </div>`;
+}
+function ipField(key, labelKey, needed){
+  return `
+      <div>
+        <label class="first">${t(labelKey)}</label>
+        <input type="text" value="${escapeHtml(state.runtime[key])}" placeholder="${needed ? '192.168.178.' : t('ip_not_needed')}"
+          ${needed ? '' : 'style="opacity:.55;"'} oninput="state.runtime['${key}']=this.value.trim()">
+      </div>`;
+}
 function renderProducts(){
-  const p = state.products;
   return `
   <div class="panel">
     <h2>${t('prod_h2')}</h2>
@@ -1092,28 +1221,18 @@ function renderProducts(){
   </div>
   ${memCheckBlock()}
   <div class="panel">
-    <div class="choice ${p.controller?'selected':''}" onclick="toggleProduct('controller')">
-      <input type="checkbox" ${p.controller?'checked':''}>
-      <div><div class="ct">${t('prod_controller_title')}</div>
-      <div class="cd">${t('prod_controller_desc')}</div>
-      <a href="${DOC_URLS.ctrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.8rem; color:var(--accent-text);">${t('doc_link')}</a></div>
-    </div>
-    <div class="choice ${p.watchdog?'selected':''}" onclick="toggleProduct('watchdog')">
-      <input type="checkbox" ${p.watchdog?'checked':''}>
-      <div><div class="ct">${t('prod_watchdog_title')}</div>
-      <div class="cd">${t('prod_watchdog_desc')}</div>
-      <a href="${DOC_URLS.wd}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.8rem; color:var(--accent-text);">${t('doc_link')}</a></div>
-    </div>
-    <div class="choice ${p.zendash?'selected':''}" onclick="toggleProduct('zendash')">
-      <input type="checkbox" ${p.zendash?'checked':''}>
-      <div><div class="ct">${t('prod_zendash_title')}</div>
-      <div class="cd">${t('prod_zendash_desc')}</div>
-      <a href="${DOC_URLS.zd}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:.8rem; color:var(--accent-text);">${t('doc_link')}</a></div>
+    ${productChoice('controller', 'prod_controller_title', 'prod_controller_desc', DOC_URLS.ctrl)}
+    ${productChoice('api', 'prod_api_title', 'prod_api_desc', DOC_URLS.zdw)}
+    ${productChoice('watchdog', 'prod_watchdog_title', 'prod_watchdog_desc', DOC_URLS.zdw)}
+
+    <h2 style="margin-top:22px;">${t('ip_h3')}</h2>
+    <p class="hint">${t('ip_hint')}</p>
+    <div class="row">
+      ${ipField('ctr_kvs', 'ip_ctr_field', needsCtrIp())}
+      ${ipField('apidash_watch', 'ip_dash_field', needsDashIp())}
     </div>
 
-    ${ p.zendash && !p.controller ? `<div class="note">${t('prod_note_zendash_only')}</div>` : "" }
-
-    <details style="margin-top:20px;">
+    <details id="importDetails" style="margin-top:20px;">
       <summary style="cursor:pointer; font-weight:700; font-size:.85rem; color:var(--muted);">${t('prod_import_summary')}</summary>
       <div style="margin-top:12px;">
         <p class="hint" style="margin-top:0;">${t('prod_import_hint')}</p>
@@ -1129,8 +1248,7 @@ function renderProducts(){
 
 // ---------- Step: Geräte ----------
 function renderDevices(){
-  const full = needsFullDevice();
-  let hint = full ? t('dev_hint_full') : t('dev_hint_simple');
+  let hint = t('dev_hint_full');
   if(state.products.watchdog) hint += t('dev_hint_watchdog_suffix');
   return `
   <div class="panel">
@@ -1145,12 +1263,6 @@ function renderDevices(){
 
 // ---------- Step: Netzquelle (Controller + zenDash-API) ----------
 function setGridSource(v){ state.gridSource = v; render(); }
-function controllerHostIpField(){
-  return `
-      <label>${t('grid_controllerHostIp_field')}</label>
-      <input type="text" value="${state.controllerHostIp}" placeholder="192.168.178.117" oninput="state.controllerHostIp=this.value">
-      <p class="hint" style="margin-top:-2px; margin-bottom:0;">${t('grid_controllerHostIp_hint')}</p>`;
-}
 
 function renderGridSource(){
   const s = state.gridSource;
@@ -1175,43 +1287,33 @@ function renderGridSource(){
       <div class="cd">${t('grid_httpjson_desc')}</div></div>
     </div>
 
-    ${ s!=='http_json' ? `
+    ${ s==='local' ? `
+    <div class="conditional">
+      <p class="hint" style="margin-top:0;">${t('grid_local_info', {ip: escapeHtml(state.runtime.ctr_kvs||'—')})}</p>
+      <label>${t('grid_emid_field')}</label>
+      <input type="number" value="${state.gridSourceEmId}" oninput="state.gridSourceEmId=num(this.value,0)">
+    </div>` : s==='remote' ? `
     <div class="conditional">
       <label class="first">${t('grid_emid_field')}</label>
       <input type="number" value="${state.gridSourceEmId}" oninput="state.gridSourceEmId=num(this.value,0)">
-      <label>${ s==='remote' ? t('grid_ip_field_remote') : t('grid_ip_field_local') }</label>
-      <input type="text" value="${state.gridSourceIp}" placeholder="192.168.178.10" oninput="state.gridSourceIp=this.value">
-      ${ s==='local' ? `
-      <p class="hint" style="margin-top:-2px; margin-bottom:0;">${t('grid_local_kvs_hint')}</p>
-      ` : `
-      <p class="hint" style="margin-top:-2px; margin-bottom:${(state.products.zendash&&state.products.controller)?'16px':'0'};">${t('grid_remote_hint')}</p>
-      ${ (state.products.zendash && state.products.controller) ? controllerHostIpField() : "" }
-      ${ (state.products.zendash && !state.products.controller) ? `
-      <p class="hint" style="margin-top:8px; margin-bottom:0;">${t('grid_zendash_no_controller_hint')}</p>
-      ` : "" }
-      ` }
+      <label>${t('grid_ip_field_remote')}</label>
+      <input type="text" value="${escapeHtml(state.gridSourceIp)}" placeholder="192.168.178.10" oninput="state.gridSourceIp=this.value.trim()">
+      <p class="hint" style="margin-top:-2px; margin-bottom:0;">${t('grid_remote_hint')}</p>
     </div>` : `
     <div class="conditional">
       <label class="first">${t('grid_url_field')}</label>
-      <input type="text" value="${state.gridSourceUrl}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
+      <input type="text" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
       <label>${t('grid_field_field')}</label>
-      <input type="text" value="${state.gridSourceField}" placeholder="total_power" oninput="state.gridSourceField=this.value">
+      <input type="text" value="${escapeHtml(state.gridSourceField)}" placeholder="total_power" oninput="state.gridSourceField=this.value">
       <label style="margin-top:12px; display:flex; align-items:center; gap:8px; font-weight:600;">
         <input type="checkbox" style="width:auto;" ${state.gridSourceInvert?'checked':''} onchange="state.gridSourceInvert=this.checked">
         ${t('grid_invert_checkbox')}
       </label>
-      ${ (state.products.zendash && state.products.controller) ? `
-      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">${t('grid_httpjson_zendash_hint')}</p>
-      ${controllerHostIpField()}
-      ` : "" }
-      ${ (state.products.zendash && !state.products.controller) ? `
-      <p class="hint" style="margin-top:14px; margin-bottom:-2px;">${t('grid_zendash_no_controller_hint')}</p>
-      ` : "" }
     </div>` }
   </div>`;
 }
 function gridSourceSummary(){
-  if(state.gridSource==='local') return t('gridsum_local', {ip: state.gridSourceIp||'—', em: state.gridSourceEmId});
+  if(state.gridSource==='local') return t('gridsum_local', {ip: state.runtime.ctr_kvs||'—', em: state.gridSourceEmId});
   if(state.gridSource==='remote') return t('gridsum_remote', {ip: state.gridSourceIp||'—', em: state.gridSourceEmId});
   return t('gridsum_httpjson', {url: state.gridSourceUrl||'—', field: state.gridSourceField, invert: state.gridSourceInvert ? t('gridsum_invert_suffix') : ''});
 }
@@ -1383,43 +1485,140 @@ function renderCtrlKvs(){
     ${ k===true ? `
     <div class="note">${t('kvs_note_flash')}</div>
     ` : "" }
+    ${ (k===false && state.products.api) ? `
+    <div class="note">${t('kvs_note_api_readonly')}</div>
+    ` : "" }
   </div>`;
 }
 
+// ---------- Controller-spezifisch: Regelparameter ----------
+// Vorbelegung: Werte aus der eingelesenen Controller-Config, sonst die
+// bisherige Faustformel aus der Geraeteliste. Einmal belegt, wird nichts
+// mehr nachgefuehrt - Aenderungen sind Sache des Nutzers (Hinweis im Schritt).
+function defaultRegel(){
+  const ca = state.controllerAdvanced || {};
+  const outputs = state.devices.map(d=>num(d.maxOutput,0)).filter(v=>v>0);
+  const dSpread = outputs.length ? Math.min(...outputs) : 800;
+  const inputs = state.chargingEnabled ? state.devices.filter(d=>d.reverse).map(d=>num(d.maxInputPower, d.maxOutput)).filter(v=>v>0) : [];
+  const cSpread = inputs.length ? Math.min(...inputs) : dSpread;
+  const dS = ca.discharge?.spreadAbove ?? dSpread;
+  const cS = ca.charge?.spreadAbove ?? cSpread;
+  return {
+    setpoint: ca.setpoint ?? 0,
+    hysteresis: ca.hysteresis ?? 12,
+    dConc: ca.discharge?.concentrateBelow ?? Math.round(dS*0.6),
+    dSpread: dS,
+    cConc: ca.charge?.concentrateBelow ?? Math.round(cS*0.6),
+    cSpread: cS
+  };
+}
+function regel(){
+  if(!state.regel) state.regel = defaultRegel();
+  return state.regel;
+}
+function chargeParamsShown(){
+  return state.chargingEnabled === true && state.devices.some(d => d.reverse);
+}
+function regelField(key, labelKey, min){
+  const r = regel();
+  return `
+      <div>
+        <label>${t(labelKey)}</label>
+        <input type="number" ${min!==undefined ? 'min="'+min+'"' : ''} value="${r[key]}" oninput="state.regel['${key}']=num(this.value, state.regel['${key}'])">
+      </div>`;
+}
+function renderRegel(){
+  regel();
+  const link = `<a href="${DOC_URLS.ctrl}" target="_blank" rel="noopener" style="color:inherit; font-weight:700;">${t('regel_doclink')}</a>`;
+  return `
+  <div class="panel">
+    <h2>${t('regel_h2')} <span class="badge">Controller</span></h2>
+    <p class="hint">${t('regel_hint')}</p>
+    <div class="note" style="margin-top:0; margin-bottom:6px;">${t('regel_warn', {link: link})}</div>
+
+    <div class="row">
+      ${regelField('setpoint', 'regel_setpoint')}
+      ${regelField('hysteresis', 'regel_hysteresis', 0)}
+    </div>
+
+    <div style="font-weight:700; font-size:.9rem; margin-top:22px;">${t('regel_discharge')} <span class="badge">discharge</span></div>
+    <div class="row">
+      ${regelField('dConc', 'regel_conc', 0)}
+      ${regelField('dSpread', 'regel_spread', 0)}
+    </div>
+
+    <div style="font-weight:700; font-size:.9rem; margin-top:22px;">${t('regel_charge')} <span class="badge">charge</span></div>
+    ${ chargeParamsShown() ? `
+    <div class="row">
+      ${regelField('cConc', 'regel_conc', 0)}
+      ${regelField('cSpread', 'regel_spread', 0)}
+    </div>` : `
+    <p class="hint" style="margin-top:6px; margin-bottom:0;">${t('regel_charge_off')}</p>` }
+  </div>`;
+}
+function regelValid(){
+  const r = regel();
+  const ok = v => typeof v === 'number' && isFinite(v);
+  if(!ok(r.setpoint) || !ok(r.hysteresis) || r.hysteresis < 0) return false;
+  if(!ok(r.dConc) || !ok(r.dSpread) || r.dConc < 0 || r.dConc >= r.dSpread) return false;
+  if(chargeParamsShown() && (!ok(r.cConc) || !ok(r.cSpread) || r.cConc < 0 || r.cConc >= r.cSpread)) return false;
+  return true;
+}
+
 // ---------- Config generation (bleibt unabhängig von der UI-Sprache) ----------
+function q(s){ return String(s == null ? '' : s).replace(/"/g,''); }
+
+function runtimeBlock(){
+  return `  // ------------------------------------------------------------------
+  // RUNTIME — vom Configurator gepflegt (IPs der beiden Shellys), vom
+  // Script nicht ausgewertet. Nicht entfernen: beim naechsten Einlesen
+  // uebernimmt der Configurator die IPs von hier.
+  runtime: {
+    ctr_kvs: "${q(state.runtime.ctr_kvs)}",
+    apidash_watch: "${q(state.runtime.apidash_watch)}"
+  }`;
+}
+
+function notifyFields(indent){
+  const on = state.signalEnabled === true;
+  const cb = on && state.signalTyp !== 'WEBHOOK';
+  const wh = on && state.signalTyp === 'WEBHOOK';
+  return `${indent}enabled: ${on},
+${indent}typ: "${state.signalTyp}",
+${indent}phone: "${cb ? q(state.signalPhone||'PHONE-STRING') : 'PHONE-STRING'}",
+${indent}apiKey: "${cb ? q(state.signalApiKey||'YOUR_API_KEY') : 'YOUR_API_KEY'}",
+${indent}webhookUrl: "${wh ? q(state.signalWebhookUrl||'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>') : 'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>'}"`;
+}
+
 function buildControllerConfig(){
   const ca = state.controllerAdvanced || {};
-  const outputs = state.devices.map(d=>d.maxOutput||0).filter(v=>v>0);
-  const spreadAboveDischarge = ca.discharge?.spreadAbove ?? (outputs.length ? Math.min(...outputs) : 800);
-  const concentrateBelowDischarge = ca.discharge?.concentrateBelow ?? Math.round(spreadAboveDischarge*0.6);
+  const r = regel();
 
-  const inputPowers = state.chargingEnabled ? state.devices.filter(d=>d.reverse).map(d=>num(d.maxInputPower, d.maxOutput)).filter(v=>v>0) : [];
-  const spreadAboveCharge = ca.charge?.spreadAbove ?? (inputPowers.length ? Math.min(...inputPowers) : spreadAboveDischarge);
-  const concentrateBelowCharge = ca.charge?.concentrateBelow ?? Math.round(spreadAboveCharge*0.6);
-
+  const caDev = ip => (ca.devices || []).find(x => x.ip === ip) || {};
   const devicesJs = state.devices.map(d=>{
     const reverse = !!(state.chargingEnabled && d.reverse);
     const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
+    const old = caDev(d.ip);
     return `    {
-      ip: "${(d.ip || '192.168.X.X').replace(/"/g,'')}",
-      label: "${(d.label||'').replace(/"/g,'')}",
+      ip: "${q(d.ip || '192.168.X.X')}",
+      label: "${q(d.label)}",
 
       minSoc: ${num(d.minSoc,15)},
       maxSoc: ${num(d.maxSoc,100)},
-      dischargeAllowed: true,
+      dischargeAllowed: ${old.dischargeAllowed ?? true},
       reverse: ${reverse},
       maxInputPower: ${maxInputPower},
       maxOutput: ${num(d.maxOutput,800)},
 
-      dryRun: false
+      dryRun: ${old.dryRun ?? false}
     }`;
   }).join(",\n");
 
   let gridBlock = `  gridSource: "${state.gridSource}",\n`;
-  gridBlock += `  gridSourceIp: "${(state.gridSource==='remote' ? (state.gridSourceIp||'<IP address Shelly Pro 3EM>') : '<IP address Shelly Pro 3EM>').replace(/"/g,'')}",\n`;
+  gridBlock += `  gridSourceIp: "${state.gridSource==='remote' ? q(state.gridSourceIp||'<IP address Shelly Pro 3EM>') : '<IP address Shelly Pro 3EM>'}",\n`;
   gridBlock += `  gridSourceEmId: ${state.gridSourceEmId},\n`;
-  gridBlock += `  gridSourceUrl: "${(state.gridSource==='http_json' ? (state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report') : 'http://<IP-of-your-meter>/properties/report').replace(/"/g,'')}",\n`;
-  gridBlock += `  gridSourceField: "${(state.gridSource==='http_json' ? (state.gridSourceField||'total_power') : 'total_power').replace(/"/g,'')}",\n`;
+  gridBlock += `  gridSourceUrl: "${state.gridSource==='http_json' ? q(state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report') : 'http://<IP-of-your-meter>/properties/report'}",\n`;
+  gridBlock += `  gridSourceField: "${state.gridSource==='http_json' ? q(state.gridSourceField||'total_power') : 'total_power'}",\n`;
   gridBlock += `  gridSourceInvert: ${state.gridSource==='http_json' ? !!state.gridSourceInvert : false},`;
 
   const grm = state.gridReverseMode || "dynamic";
@@ -1433,22 +1632,23 @@ ${devicesJs}
 ${gridBlock}
 
   // ------------------------------------------------------------------
-  // RULES ENGINE CORE PARAMETERS — Standard, siehe Doku Kapitel 4
-  setpoint: ${ca.setpoint ?? 0},
-  hysteresis: ${ca.hysteresis ?? 12},
+  // RULES ENGINE CORE PARAMETERS — im Configurator-Schritt
+  // "Regelparameter" festgelegt, siehe Doku Kapitel 4
+  setpoint: ${r.setpoint},
+  hysteresis: ${r.hysteresis},
   dampingFactor: ${ca.dampingFactor ?? 0.65},
 
   // ------------------------------------------------------------------
-  // aus deiner Geräteliste abgeleitet (Faustformel, Doku Kapitel 7b) —
-  // bei Bedarf von Hand feinjustieren
+  // Konzentrieren/Verteilen — im Schritt "Regelparameter" festgelegt
+  // (Doku Kapitel 7b)
   discharge: {
-    concentrateBelow: ${concentrateBelowDischarge},
-    spreadAbove: ${spreadAboveDischarge}
+    concentrateBelow: ${r.dConc},
+    spreadAbove: ${r.dSpread}
   },
 
   charge: {
-    concentrateBelow: ${concentrateBelowCharge},
-    spreadAbove: ${spreadAboveCharge}
+    concentrateBelow: ${r.cConc},
+    spreadAbove: ${r.cSpread}
   },
   concentrateHoldMinutes: ${ca.concentrateHoldMinutes ?? 2},
 
@@ -1486,179 +1686,150 @@ ${gridBlock}
 
   // ------------------------------------------------------------------
   signal: {
-    enabled: ${state.signalEnabled === true},
-    typ: "${state.signalTyp}",
-    phone: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalPhone||'PHONE-STRING').replace(/"/g,'') : 'PHONE-STRING'}",
-    apiKey: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalApiKey||'YOUR_API_KEY').replace(/"/g,'') : 'YOUR_API_KEY'}",
-    webhookUrl: "${state.signalEnabled===true && state.signalTyp==='WEBHOOK' ? (state.signalWebhookUrl||'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>').replace(/"/g,'') : 'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>'}"
-  }
-};`;
-}
-
-function buildWatchdogConfig(){
-  const wa = state.watchdogAdvanced || {};
-  const devicesJs = state.devices.map(d=>
-    `    { ip: "${(d.ip||'192.168.X.X').replace(/"/g,'')}", label: "${(d.label||'').replace(/"/g,'')}", enabled: ${d.wdEnabled!==false} }`
-  ).join(",\n");
-
-  return `let CONFIG = {
-  version: "1.3.2-opt",
-
-  devices: [
-${devicesJs}
-  ],
-
-  // Warnschwellen (global) — Standard, siehe Doku
-  vollSchwelle: ${wa.vollSchwelle ?? 99},        // %
-  entladeReset: ${wa.entladeReset ?? 90},        // %
-  minVoltWarn: ${wa.minVoltWarn ?? 2.9},        // V
-  minVoltReset: ${wa.minVoltReset ?? 3.1},       // V
-  tempWarn: ${wa.tempWarn ?? 45.0},          // °C
-  tempReset: ${wa.tempReset ?? 30.0},         // °C
-
-  // Astro-Offset
-  sunriseOffset: ${wa.sunriseOffset ?? 0},        // Min
-  sunsetOffset: ${wa.sunsetOffset ?? 0},
-
-  maxMessageLength: ${wa.maxMessageLength ?? 900},   // Zeichen vor Trim
-
-  // Nachrichtenversand
-  signal: {
-    enabled: ${state.signalEnabled === true},
-    typ: "${state.signalTyp}",
-    phone: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalPhone||'PHONE-STRING').replace(/"/g,'') : 'PHONE-STRING'}",
-    apiKey: "${state.signalEnabled===true && state.signalTyp!=='WEBHOOK' ? (state.signalApiKey||'YOUR_API_KEY').replace(/"/g,'') : 'YOUR_API_KEY'}",
-    webhookUrl: "${state.signalEnabled===true && state.signalTyp==='WEBHOOK' ? (state.signalWebhookUrl||'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>').replace(/"/g,'') : 'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>'}"
+${notifyFields('    ')}
   },
 
-  // Polling & Timer
-  pollIntervalMs: ${wa.pollIntervalMs ?? 120000},
-  httpTimeout: ${wa.httpTimeout ?? 5},
-  watchdog: ${wa.watchdog ?? 15000},
-  errorThreshold: ${wa.errorThreshold ?? 5},
-
-  // Extended Logging
-  debug: ${wa.debug ?? false},
-  bannerVerbose: ${wa.bannerVerbose ?? false}
+${runtimeBlock()}
 };`;
 }
 
-function buildZenDashConfig(){
-  const za = state.zendashAdvanced || {};
+// Gemeinsames Script zendash_watch (zenDash-API + Watchdog) auf dem
+// Dashboard-Shelly. Nicht abgefragte Werte: aus der eingelesenen
+// zendash_watch-Config, sonst Standard (Loesung A).
+function buildZdwConfig(){
+  const za = state.zdwAdvanced || {};
+  const zapi = za.api || {}, zwd = za.watchdog || {}, zno = za.notify || {};
+  const ca = state.controllerAdvanced || {};
+  const zaDev = ip => (za.devices || []).find(x => x.ip === ip) || {};
+  const caDev = ip => (ca.devices || []).find(x => x.ip === ip) || {};
+
   const devicesJs = state.devices.map(d=>{
     const reverse = !!(state.chargingEnabled && d.reverse);
     const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
+    const old = zaDev(d.ip);
+    const da = caDev(d.ip).dischargeAllowed ?? old.dischargeAllowed ?? true;
     return `    {
-      ip: "${(d.ip || '192.168.X.X').replace(/"/g,'')}",
-      label: "${(d.label||'').replace(/"/g,'')}",
+      ip: "${q(d.ip || '192.168.X.X')}",
+      label: "${q(d.label)}",
       minSoc: ${num(d.minSoc,15)},
       maxSoc: ${num(d.maxSoc,100)},
-      dischargeAllowed: true,
+      dischargeAllowed: ${da},
       reverse: ${reverse},
       maxInputPower: ${maxInputPower},
       maxOutput: ${num(d.maxOutput,800)},
-      inputLimit: 0,
-      dryRun: false
+      inputLimit: ${old.inputLimit ?? 0},
+      watch: ${d.wdEnabled !== false}
     }`;
   }).join(",\n");
 
-  // KVS-Host: bei local aus der zentralen Shelly-IP uebernommen (Controller
-  // laeuft dort direkt auf dem 3EM/Smartmeter-Shelly). Bei remote/http_json
-  // mit Controller in der Auswahl: separat erfragte Controller-IP. Ohne
-  // Controller in dieser Konfiguration gibt es keine bekannte KVS-Adresse —
-  // "local" als Platzhalter, vom Nutzer bei Bedarf manuell anzupassen.
-  const kvsHost = state.gridSource==='local'
-    ? (state.gridSourceIp||'<IP-address-Shelly-Pro-3EM>').replace(/"/g,'')
-    : state.products.controller
-      ? (state.controllerHostIp||'<IP-des-Controller-Shelly>').replace(/"/g,'')
-      : 'local';
-
-  // zenDash-API laeuft in aller Regel NICHT auf demselben Geraet wie der
-  // Controller — deshalb wird "local" hier zu "remote" auf dieselbe IP
-  // uebersetzt. http_json wird 1:1 vom Controller-Block uebernommen.
-  let gridBlock;
-  if(state.gridSource==='http_json'){
-    gridBlock  = `  gridSource: "http_json",\n`;
-    gridBlock += `  gridSourceIp: "<IP address Shelly Pro 3EM>",\n`;
-    gridBlock += `  gridSourceEmId: ${state.gridSourceEmId},\n`;
-    gridBlock += `  gridSourceUrl: "${(state.gridSourceUrl||'http://<IP-of-your-meter>/properties/report').replace(/"/g,'')}",\n`;
-    gridBlock += `  gridSourceField: "${(state.gridSourceField||'total_power').replace(/"/g,'')}",\n`;
-    gridBlock += `  gridSourceInvert: ${!!state.gridSourceInvert},`;
+  // Netzquelle: "local" am Controller heisst fuer dieses Script "remote" auf
+  // den Controller-Shelly (dort sitzt der Pro 3EM).
+  let grid;
+  if(state.gridSource === 'http_json'){
+    grid = { src: 'http_json', ip: '<IP address Shelly Pro 3EM>',
+      url: q(state.gridSourceUrl || 'http://<IP-of-your-meter>/properties/report'),
+      field: q(state.gridSourceField || 'total_power'), inv: !!state.gridSourceInvert };
   } else {
-    gridBlock  = `  gridSource: "remote",\n`;
-    gridBlock += `  gridSourceIp: "${(state.gridSourceIp||'<IP address Shelly Pro 3EM>').replace(/"/g,'')}",\n`;
-    gridBlock += `  gridSourceEmId: ${state.gridSourceEmId},\n`;
-    gridBlock += `  gridSourceUrl: "http://<IP-of-your-meter>/properties/report",\n`;
-    gridBlock += `  gridSourceField: "total_power",\n`;
-    gridBlock += `  gridSourceInvert: false,`;
+    const ip = state.gridSource === 'local' ? state.runtime.ctr_kvs : state.gridSourceIp;
+    grid = { src: 'remote', ip: q(ip || '<IP address Shelly Pro 3EM>'),
+      url: 'http://<IP-of-your-meter>/properties/report', field: 'total_power', inv: false };
   }
 
-  // hysteresis ist ein Regelungsparameter des Controllers - zenDash-API
-  // zeigt ihn nur an. Ist der Controller Teil dieser Wizard-Session, gilt
-  // dessen Wert immer als fuehrend (auch wenn ein frueherer zenDash-Import
-  // einen abweichenden Wert mitgebracht hat), damit Dashboard und
-  // tatsaechlich laufender Controller nie auseinanderlaufen. Nur wenn
-  // zenDash-API eigenstaendig ohne Controller konfiguriert wird, zaehlt der
-  // eigene importierte/Default-Wert.
-  const hysteresis = state.products.controller
-    ? (state.controllerAdvanced?.hysteresis ?? 12)
-    : (za.hysteresis ?? 12);
+  // Hysterese nur zur Anzeige - mit Controller in dieser Sitzung gilt immer
+  // dessen Wert, damit Dashboard und Regler nie auseinanderlaufen.
+  const hysteresis = state.products.controller ? regel().hysteresis : (zapi.hysteresis ?? 12);
+  const dsp = ca.dischargeStartupPower ?? zapi.dischargeStartupPower ?? 35;
 
   return `let CONFIG = {
   // ------------------------------------------------------------------
-  // GERAETEBLOCK - 1:1 identisch zum Controller-Block (gleiche
-  // Reihenfolge = gleicher Index i wie "zdmc_dev{i}_..." in der KVS)
+  // GERAETEBLOCK — Reihenfolge identisch zum Controller (gleicher Index i
+  // wie "zdmc_dev{i}_..." in der KVS). watch = Watchdog ueberwacht
   // ------------------------------------------------------------------
   devices: [
 ${devicesJs}
   ],
 
-  kvsHost: "${kvsHost}",
-
-  hysteresis: ${hysteresis},
-
-  dischargeStartupPower: ${za.dischargeStartupPower ?? 35},
+  // ------------------------------------------------------------------
+  // MODUL API (Dashboard)
+  // ------------------------------------------------------------------
+  api: {
+    enabled: ${state.products.api === true},
+    kvsHost: "${q(state.runtime.ctr_kvs || 'local')}",
+    hysteresis: ${hysteresis},
+    dischargeStartupPower: ${dsp},
+    gridSource: "${grid.src}",
+    gridSourceIp: "${grid.ip}",
+    gridSourceEmId: ${state.gridSourceEmId},
+    gridSourceUrl: "${grid.url}",
+    gridSourceField: "${grid.field}",
+    gridSourceInvert: ${grid.inv},
+    pollIntervalSec: ${zapi.pollIntervalSec ?? 8}
+  },
 
   // ------------------------------------------------------------------
-  // SMARTMETER SECTION - zeigt auf dieselbe Quelle wie der Controller;
-  // "local" wird hier zu "remote" auf dieselbe IP uebersetzt, da die
-  // zenDash-API in aller Regel auf einem eigenen Geraet laeuft.
-${gridBlock}
+  // MODUL WATCHDOG — Schwellen: Standard, siehe Doku
+  // ------------------------------------------------------------------
+  watchdog: {
+    enabled: ${state.products.watchdog === true},
+    intervalSec: ${zwd.intervalSec ?? 120},
+    vollSchwelle: ${zwd.vollSchwelle ?? 99},
+    entladeReset: ${zwd.entladeReset ?? 90},
+    minVoltWarn: ${zwd.minVoltWarn ?? 2.9},
+    minVoltReset: ${zwd.minVoltReset ?? 3.1},
+    tempWarn: ${zwd.tempWarn ?? 45},
+    tempReset: ${zwd.tempReset ?? 30},
+    offlineAlarmMin: ${zwd.offlineAlarmMin ?? 10},
+    sunriseOffset: ${zwd.sunriseOffset ?? 0},
+    sunsetOffset: ${zwd.sunsetOffset ?? 0}
+  },
+
+  // ------------------------------------------------------------------
+  // NACHRICHTEN (beide Module)
+  // ------------------------------------------------------------------
+  notify: {
+${notifyFields('    ')},
+    maxMessageLength: ${zno.maxMessageLength ?? 900},
+    apiEvents: ${zno.apiEvents ?? true}
+  },
 
   httpTimeout: ${za.httpTimeout ?? 5},
+  debug: ${za.debug ?? false},
 
-  pollIntervalSec: ${za.pollIntervalSec ?? 8}
+${runtimeBlock()}
 };`;
 }
 
 // ---------- Ergebnis ----------
-const CONFIG_FILENAMES = { ctrl: 'controller-config.js', wd: 'watchdog-config.js', zd: 'zendash-api-config.js' };
-const CONFIG_BUILDERS = { ctrl: buildControllerConfig, wd: buildWatchdogConfig, zd: buildZenDashConfig };
+const CONFIG_FILENAMES = { ctrl: 'controller-config.js', zdw: 'zendash-watch-config.js' };
+const CONFIG_BUILDERS = { ctrl: buildControllerConfig, zdw: buildZdwConfig };
 
 // Quell-Repo auf GitHub — hier zentral hinterlegt (raw.githubusercontent.com,
 // damit fetch() im Browser ohne CORS-Probleme funktioniert).
 const SOURCE_URLS = {
   ctrl: 'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js',
-  wd:   'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/AkkuWatchDogMulti/zenSDKWatchDog_mini.js',
-  zd:   'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash/zendash_api_mini.js'
+  zdw:  'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js'
 };
 const FULL_SCRIPT_FILENAMES = {
   ctrl: 'zerooutput_multi_kvs_mini.js',
-  wd:   'zenSDKWatchDog_mini.js',
-  zd:   'zendash_api_mini.js'
+  zdw:  'zendash_watch_mini.js'
 };
-// Wiki- bzw. Readme-Links pro Produkt.
+// Wiki- bzw. Readme-Links pro Script.
 const DOC_URLS = {
   ctrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md',
-  wd:   'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/WatchdogZenSDK/readme.md',
-  zd:   'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash/readme.md'
+  zdw:  'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/readme.md'
 };
+// Script-Name auf dem Shelly beim Direkt-Upload. Der Helfer ersetzt ein
+// gleichnamiges Script - "zd" ersetzt so eine per Helfer installierte alte
+// zenDash-API automatisch.
+const UPLOAD_NAMES = { ctrl: 'ctrl', zdw: 'zd' };
+function targetIp(key){ return key === 'ctrl' ? state.runtime.ctr_kvs : state.runtime.apidash_watch; }
 
 function resultBlock(title, key, cfg, hintKey){
+  const ip = targetIp(key);
   return `
   <div class="panel">
-    <h2>${title}-CONFIG</h2>
-    <p class="hint">${t(hintKey)}</p>
+    <h2>${title}-CONFIG <span class="badge">→ ${escapeHtml(ip || '?')}</span></h2>
+    <p class="hint">${t(hintKey, {ip: escapeHtml(ip || '—')})}</p>
     <div class="copy-row">
       <button class="btn" onclick="copyConfig('${key}')">${t('btn_copy')}</button>
       <button class="btn" onclick="downloadConfig('${key}')">${t('btn_savefile')}</button>
@@ -1675,8 +1846,7 @@ function resultBlock(title, key, cfg, hintKey){
 
     <div class="helper-row" id="helperRow_${key}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
       <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
-      <label class="first">${t('upload_target_label')}</label>
-      <input type="text" id="targetIp_${key}" value="${escapeHtml(state.uploadTargets[key]||'')}" placeholder="192.168.178.151" oninput="state.uploadTargets['${key}']=this.value">
+      <p style="font-size:.88rem; margin:0;">${t('upload_target_fixed', {ip: escapeHtml(ip || '—')})}</p>
       <div class="copy-row" style="margin-top:10px;">
         <button class="btn btn-primary" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
         <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
@@ -1808,10 +1978,58 @@ function mergeConfigIntoScript(scriptText, newConfigText){
 // Holt das generische (bereits minifizierte) Template von GitHub und setzt
 // den persoenlichen CONFIG-Block ein. Gemeinsam genutzt vom Datei-Download
 // und vom Direct-Upload ueber den lokalen Helfer.
+// Original-Scripte werden je Sitzung nur einmal von GitHub geholt und fuer
+// Versionsanzeige, Datei-Download und Direkt-Upload gemeinsam genutzt.
+const SOURCE_CACHE = {};
+function fetchSource(key){
+  if(!SOURCE_CACHE[key]){
+    SOURCE_CACHE[key] = fetch(SOURCE_URLS[key]).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    });
+    // Fehlschlag nicht cachen - naechster Versuch holt neu
+    SOURCE_CACHE[key].catch(function(){ delete SOURCE_CACHE[key]; });
+  }
+  return SOURCE_CACHE[key];
+}
+
+// Versionsnummer aus dem (minifizierten) Script: Controller setzt
+// CONFIG.version = "...", zendash_watch hat eine gemeinsame VERSION.
+function parseScriptVersion(key, text){
+  const re = key === 'ctrl'
+    ? /CONFIG\.version\s*=\s*["']([^"']+)["']/
+    : /\bVERSION\s*=\s*["']([^"']+)["']/;
+  const m = re.exec(text);
+  return m ? m[1] : null;
+}
+
+function setVersionText(id, text){
+  const el = document.getElementById(id);
+  if(el) el.textContent = text;
+}
+
+function loadVersions(){
+  const jobs = [];
+  if(state.products.controller) jobs.push(['ctrl', ['ver_ctrl']]);
+  const ids = [];
+  if(state.products.api) ids.push('ver_api');
+  if(state.products.watchdog) ids.push('ver_wd');
+  if(ids.length) jobs.push(['zdw', ids]);
+  jobs.forEach(function(job){
+    fetchSource(job[0]).then(function(text){
+      const v = parseScriptVersion(job[0], text);
+      job[1].forEach(function(id){ setVersionText(id, v ? 'v' + v : t('ver_na')); });
+    }).catch(function(){
+      job[1].forEach(function(id){ setVersionText(id, t('ver_na')); });
+    });
+  });
+}
+
+// Holt das generische (bereits minifizierte) Template von GitHub und setzt
+// den persoenlichen CONFIG-Block ein. Gemeinsam genutzt vom Datei-Download
+// und vom Direct-Upload ueber den lokalen Helfer.
 async function fetchMergedScript(key){
-  const res = await fetch(SOURCE_URLS[key]);
-  if(!res.ok) throw new Error('HTTP ' + res.status);
-  const original = await res.text();
+  const original = await fetchSource(key);
   return mergeConfigIntoScript(original, CONFIG_BUILDERS[key]());
 }
 
@@ -1854,7 +2072,7 @@ async function detectHelper(){
 }
 
 async function directUpload(key){
-  const ip = (state.uploadTargets[key] || '').trim();
+  const ip = (targetIp(key) || '').trim();
   const statusEl = document.getElementById('uploadStatus_' + key);
   if(!isValidIp(ip)){
     statusEl.textContent = t('upload_err_ip');
@@ -1868,7 +2086,7 @@ async function directUpload(key){
     const res = await fetch(HELPER_URL + '/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip: ip, name: key, code: merged })
+      body: JSON.stringify({ ip: ip, name: UPLOAD_NAMES[key], code: merged })
     });
     const data = await res.json();
     if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
@@ -1904,46 +2122,48 @@ async function checkMemory(){
 
 function renderResult(){
   const p = state.products;
-  const names = { controller: 'Controller', watchdog: 'Watchdog', zendash: 'zenDash-API' };
+  const names = { controller: 'Controller', api: 'zenDash-API', watchdog: 'Watchdog' };
+  const row = (label, value) => `<div><b>${label}</b> ${value}</div>`;
 
   let html = `
   <div class="panel">
     <h2>${t('result_h2')}</h2>
-    <div class="summary-list">
-      <div><b>${t('result_products')}</b> ${['controller','watchdog','zendash'].filter(k=>p[k]).map(k=>names[k]).join(', ')}</div>
-      <div><b>${t('result_devices')}</b> ${state.devices.length} — ${state.devices.map(d=>d.label||'?').join(', ')}</div>`;
+    <div class="summary-list">`;
+  html += row(t('result_products'), ['controller','api','watchdog'].filter(k=>p[k]).map(k=>names[k]).join(', '));
+  if(needsCtrIp()) html += row(t('result_ip_ctr'), escapeHtml(state.runtime.ctr_kvs || '—'));
+  if(needsDashIp()) html += row(t('result_ip_dash'), escapeHtml(state.runtime.apidash_watch || '—'));
+  if(p.controller) html += row(t('result_ver_ctrl'), `<span id="ver_ctrl">${t('ver_loading')}</span>`);
+  if(p.api) html += row(t('result_ver_api'), `<span id="ver_api">${t('ver_loading')}</span>`);
+  if(p.watchdog) html += row(t('result_ver_wd'), `<span id="ver_wd">${t('ver_loading')}</span>`);
+  html += row(t('result_devices'), `${state.devices.length} — ${escapeHtml(state.devices.map(d=>d.label||'?').join(', '))}`);
+  if(p.watchdog) html += row(t('result_watch'), escapeHtml(state.devices.filter(d=>d.wdEnabled!==false).map(d=>d.label||'?').join(', ') || '—'));
 
-  if(needsGrid()) html += `<div><b>${t('result_gridsource')}</b> ${gridSourceSummary()}</div>`;
+  if(needsGrid()) html += row(t('result_gridsource'), escapeHtml(gridSourceSummary()));
   if(needsFullDevice()){
     const chargingText = state.chargingEnabled===true
       ? t('result_charging_yes', {list: state.devices.filter(d=>d.reverse).map(d=>d.label).join(', ') || t('result_charging_none')})
       : t('result_no');
-    html += `<div><b>${t('result_charging')}</b> ${chargingText}</div>`;
+    html += row(t('result_charging'), escapeHtml(chargingText));
   }
   if(needsSignal()){
     const sigText = state.signalEnabled===true ? t('result_signal_yes', {typ: state.signalTyp}) : t('result_no');
-    html += `<div><b>${t('result_signal')}</b> ${sigText}</div>`;
+    html += row(t('result_signal'), sigText);
   }
   if(p.controller){
     const grmMap = {dynamic:t('result_grm_dynamic'), always1:t('result_grm_always1'), always2:t('result_grm_always2')};
-    html += `<div><b>${t('result_grm')}</b> ${ grmMap[state.gridReverseMode] || '—' }</div>`;
-    html += `<div><b>${t('result_kvs')}</b> ${ state.kvsEnabled===true ? t('result_yes') : t('result_no') }</div>`;
+    html += row(t('result_grm'), grmMap[state.gridReverseMode] || '—');
+    html += row(t('result_kvs'), state.kvsEnabled===true ? t('result_yes') : t('result_no'));
+    const r = regel();
+    html += row(t('result_regel'), t('result_regel_value', {sp: r.setpoint, hy: r.hysteresis, dc: r.dConc, ds: r.dSpread, cc: r.cConc, cs: r.cSpread}));
   }
-  if(p.zendash){
-    const zdHostSummary = state.gridSource==='local'
-      ? ((state.gridSourceIp||'—') + t('result_zdhost_gridsource_suffix'))
-      : state.products.controller
-        ? ((state.controllerHostIp||'—') + t('result_zdhost_controller_suffix'))
-        : t('result_zdhost_placeholder');
-    html += `<div><b>${t('result_zdhost')}</b> ${zdHostSummary}</div>`;
-  }
-  html += `<div><b>${t('result_rest')}</b> ${t('result_rest_value')}</div>
+  html += row(t('result_rest'), t('result_rest_value'));
+  html += `
     </div>
+    ${ needsDashIp() ? `<div class="note">${t('result_legacy_note')}</div>` : '' }
   </div>`;
 
   if(p.controller) html += resultBlock('Controller', 'ctrl', buildControllerConfig(), 'hint_ctrl');
-  if(p.watchdog) html += resultBlock('Watchdog', 'wd', buildWatchdogConfig(), 'hint_wd');
-  if(p.zendash) html += resultBlock('zenDash-API', 'zd', buildZenDashConfig(), 'hint_zd');
+  if(needsDashIp()) html += resultBlock('zenDash-API + Watchdog', 'zdw', buildZdwConfig(), 'hint_zdw');
 
   if(anyProduct()) html += uploadGuideBlock();
   html += memCheckBlock();
@@ -1973,34 +2193,46 @@ function renderStepById(id){
     case 'signal': return renderSignal();
     case 'ctrl_gridreverse': return renderCtrlGridReverse();
     case 'ctrl_kvs': return renderCtrlKvs();
+    case 'regel': return renderRegel();
     default: return renderResult();
   }
 }
 
+// Liefert '' wenn der Schritt vollstaendig ist, sonst den i18n-Schluessel
+// der Fehlermeldung.
 function validateStepById(id){
   switch(id){
-    case 'products': return anyProduct();
-    case 'devices': return state.devices.every(d => d.ip && d.ip.trim().length>3 && (!needsFullDevice() || d.maxOutput>0));
+    case 'products': {
+      if(!anyProduct()) return 'nav_err_products';
+      const c = (state.runtime.ctr_kvs||'').trim(), d = (state.runtime.apidash_watch||'').trim();
+      if(needsCtrIp() && !isValidIp(c)) return 'nav_err_ip_ctr';
+      if(needsDashIp() && !isValidIp(d)) return 'nav_err_ip_dash';
+      if(needsCtrIp() && needsDashIp() && c === d) return 'nav_err_ip_same';
+      return '';
+    }
+    case 'devices':
+      return state.devices.length > 0 && state.devices.every(d => isValidIp(d.ip) && (!needsFullDevice() || d.maxOutput>0)) ? '' : 'nav_err_generic';
     case 'gridsource':
-      if(state.gridSource==='local') return !!state.gridSourceIp;
-      if(state.gridSource==='remote') return !!state.gridSourceIp && (!(state.products.zendash && state.products.controller) || !!state.controllerHostIp);
-      if(state.gridSource==='http_json') return !!state.gridSourceUrl && !!state.gridSourceField && (!(state.products.zendash && state.products.controller) || !!state.controllerHostIp);
-      return true;
-    case 'charging': return state.chargingEnabled !== null;
+      if(state.gridSource==='remote') return isValidIp(state.gridSourceIp) ? '' : 'nav_err_generic';
+      if(state.gridSource==='http_json') return (state.gridSourceUrl && state.gridSourceField) ? '' : 'nav_err_generic';
+      return '';
+    case 'charging': return state.chargingEnabled !== null ? '' : 'nav_err_generic';
     case 'signal':
-      if(state.signalEnabled === null) return false;
-      if(state.signalEnabled === false) return true;
-      if(state.signalTyp==='WEBHOOK') return !!state.signalWebhookUrl;
-      return !!state.signalPhone && !!state.signalApiKey;
-    case 'ctrl_gridreverse': return !!state.gridReverseMode;
-    case 'ctrl_kvs': return state.kvsEnabled !== null;
-    default: return true;
+      if(state.signalEnabled === null) return 'nav_err_generic';
+      if(state.signalEnabled === false) return '';
+      if(state.signalTyp==='WEBHOOK') return state.signalWebhookUrl ? '' : 'nav_err_generic';
+      return (state.signalPhone && state.signalApiKey) ? '' : 'nav_err_generic';
+    case 'ctrl_gridreverse': return state.gridReverseMode ? '' : 'nav_err_generic';
+    case 'ctrl_kvs': return state.kvsEnabled !== null ? '' : 'nav_err_generic';
+    case 'regel': return regelValid() ? '' : 'nav_err_regel';
+    default: return '';
   }
 }
 
 function renderNav(steps){
   const isLast = stepIndex === steps.length-1;
   return `
+  ${ state.navError ? `<div class="error" style="text-align:right; font-size:.85rem; margin-top:14px;">${t(state.navError)}</div>` : '' }
   <div class="nav">
     <button class="btn" onclick="back()" ${stepIndex===0?'style="visibility:hidden;"':''}>${t('navBack')}</button>
     ${ isLast ? "" : `<button class="btn btn-primary" onclick="next()">${t('navNext')}</button>` }
@@ -2009,11 +2241,14 @@ function renderNav(steps){
 
 function next(){
   const steps = computeStepList();
-  if(!validateStepById(steps[stepIndex])) return;
+  const err = validateStepById(steps[stepIndex]);
+  if(err){ state.navError = err; render(); return; }
+  state.navError = '';
   stepIndex++;
   render();
 }
 function back(){
+  state.navError = '';
   stepIndex--;
   if(stepIndex<0) stepIndex=0;
   render();
@@ -2029,6 +2264,7 @@ function render(){
   html += renderNav(steps);
   document.getElementById('stepContainer').innerHTML = html;
   if(steps[stepIndex] === 'result' || steps[stepIndex] === 'products') detectHelper();
+  if(steps[stepIndex] === 'result') loadVersions();
 }
 
 render();
