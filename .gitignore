@@ -5,3 +5,5 @@ simplemon/zendure_packs.csv
 Zendure-Stuff.wiki/
 ZendureWiki.wiki/
 myconfig.js
+*.csv
+*.log
