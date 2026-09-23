@@ -1,5 +1,10 @@
 # zenDash-API + Watchdog v3.1
 
+<a href="https://ko-fi.com/surfer1264">
+  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
+</a>
+
+
 Ein Shelly-Script, das zwei Aufgaben rund um deine Zendure-Speicher übernimmt:
 
 - **API für das Dashboard** – Das zenDash-Dashboard zeigt darüber Netzbezug, Ladestand und Leistung deiner Speicher an. Außerdem kannst du Einstellungen des Regel-Scripts ändern und manuelles Laden starten.
