@@ -140,11 +140,15 @@ let CONFIG = {
   },
 
   httpTimeout: 5,
+
+  // false = nur wichtige Meldungen
+  // true  = zusaetzlich API-Aufrufe mit Werten, KVS-Schreibvorgaenge,
+  //         Moduswechsel, Nachrichtenversand, Watchdog-Ereignisse
   debug: false
 };
 
 // Versionsstand dieses Scripts (Banner).
-let VERSION = "3.0";
+let VERSION = "3.1";
 // Schnittstellenstand fuer das Dashboard (config_api liefert ihn aus). Die
 // Endpunkte sind unveraendert gegenueber zendash_api v2.7.
 let API_VERSION = "2.7";
@@ -156,7 +160,28 @@ let API_VERSION = "2.7";
 let API_ON = !!(CONFIG.api && CONFIG.api.enabled);
 let WD_ON = !!(CONFIG.watchdog && CONFIG.watchdog.enabled);
 let W = CONFIG.watchdog;
+
+let DBG = !!CONFIG.debug;
+
+// Nachrichten-Block. Fehlt "notify", aber ein alter Watchdog-Block
+// "signal" ist vorhanden (aus myconfig_Watchdog.js uebernommen), wird der
+// verwendet - sonst ginge die Einstellung stillschweigend verloren.
 let N = CONFIG.notify;
+if (!N && CONFIG.signal) {
+  N = CONFIG.signal;
+  print("HINWEIS: CONFIG.signal (altes Watchdog-Format) wird als CONFIG.notify verwendet.");
+}
+if (N && CONFIG.signal && N !== CONFIG.signal) {
+  print("HINWEIS: CONFIG.signal (altes Watchdog-Format) wird ignoriert - es gilt CONFIG.notify (typ " + N.typ + ").");
+}
+if (!N) N = { enabled: false };
+N.typ = String(N.typ || "").toUpperCase();
+if (N.typ !== "SIGNAL" && N.typ !== "WHATSAPP" && N.typ !== "WEBHOOK") {
+  print("WARNUNG: notify.typ '" + N.typ + "' unbekannt (SIGNAL, WHATSAPP, WEBHOOK) - Nachrichten abgeschaltet.");
+  N.enabled = false;
+}
+if (!(N.maxMessageLength > 50)) N.maxMessageLength = 900;
+if (N.apiEvents === undefined) N.apiEvents = true;
 
 if (CONFIG.httpTimeout < 3) CONFIG.httpTimeout = 3;
 if (!(CONFIG.api.pollIntervalSec >= 4)) CONFIG.api.pollIntervalSec = 8;
@@ -191,8 +216,10 @@ if (!API_ON && !WD_ON) print("WARNUNG: api und watchdog sind beide abgeschaltet 
 // Allgemeine Helfer
 // =====================================================
 
+// Aufrufer pruefen DBG VOR dem Zusammenbau des Textes ("if (DBG) ..."),
+// damit bei abgeschaltetem Debug keine Strings gebaut werden.
 function logDebug(msg) {
-  if (CONFIG.debug) print("[DEBUG] " + msg);
+  print("[DEBUG] " + msg);
 }
 
 function isNum(v) {
@@ -337,6 +364,7 @@ function notify(text) {
     print("Nachrichten-Warteschlange voll - aelteste Meldung verworfen.");
   }
   notifyQueue[notifyQueue.length] = text;
+  if (DBG) logDebug("Nachricht eingereiht (" + N.typ + "), Warteschlange: " + notifyQueue.length);
 }
 
 function notifyPump() {
@@ -345,11 +373,12 @@ function notifyPump() {
 
   let text = notifyQueue[0];
   notifyQueue.splice(0, 1);
+  if (DBG) logDebug("Sende Nachricht ueber " + N.typ + " (" + text.length + " Zeichen), danach noch " + notifyQueue.length + " in der Schlange");
   notifySending = true;
   busyEnter();
 
   let done = function (ok, info) {
-    if (ok) logDebug("Nachricht gesendet (" + info + ").");
+    if (ok) { if (DBG) logDebug("Nachricht gesendet (" + N.typ + ", " + info + ")."); }
     else print("Fehler beim Senden der Nachricht: " + info);
     notifySending = false;
     busyLeave();
@@ -464,7 +493,18 @@ function kvsSafeNumber(value) {
 
 function kvsSetOne(key, value, callback) {
   let str = kvsSafeNumber(value);
-  if (str === null) { callback(false); return; }
+  if (str === null) {
+    print("KVS: Wert fuer " + key + " abgelehnt (keine Zahl): " + value);
+    callback(false);
+    return;
+  }
+  if (DBG) {
+    let cb0 = callback;
+    callback = function (ok) {
+      logDebug("KVS.Set " + key + "=" + str + (kvsIsRemote() ? " @" + CONFIG.api.kvsHost : " (lokal)") + " -> " + (ok ? "ok" : "FEHLER"));
+      cb0(ok);
+    };
+  }
   if (!kvsIsRemote()) {
     Shelly.call("KVS.Set", { key: key, value: str }, function (result, error_code) {
       callback(error_code === 0);
@@ -557,8 +597,13 @@ function captureManualTransitions(data, keys) {
         dischargeAllowed: deviceState[idx].dischargeAllowed,
         reverse: deviceState[idx].reverse
       };
+      if (DBG) logDebug("Manuelles Laden START dev" + idx + " - Vorzustand gemerkt: dischargeAllowed=" +
+        preManual[idx].dischargeAllowed + ", reverse=" + preManual[idx].reverse);
     }
-    if (wasActive && !willBeActive) preManual[idx] = null;
+    if (wasActive && !willBeActive) {
+      preManual[idx] = null;
+      if (DBG) logDebug("Manuelles Laden ENDE dev" + idx);
+    }
   }
 }
 
@@ -577,7 +622,10 @@ function applyDeviceKeysToState(data, keys) {
 // (socLimit=1)? Nur wenn gerade nichts anderes schreibt; faellt es aus,
 // greift der naechste Poll.
 function checkAutoStop() {
-  if (busyNow()) return;
+  if (busyNow()) {
+    if (DBG && anyManualActive()) logDebug("Auto-Stop-Pruefung verschoben (Slot belegt)");
+    return;
+  }
   for (let i = 0; i < HUBS.length; i++) {
     let hub = HUBS[i];
     if (!hub.online) continue;
@@ -644,6 +692,12 @@ function initDeviceState(done) {
       };
     }
     if (store === null) print("KVS beim Start nicht lesbar - Vorgaben aus CONFIG verwendet.");
+    if (DBG) {
+      for (let j = 0; j < deviceState.length; j++) {
+        logDebug("Start dev" + j + ": dischargeAllowed=" + deviceState[j].dischargeAllowed + ", reverse=" +
+          deviceState[j].reverse + ", inputLimit=" + deviceState[j].inputLimit + (isManualActive(deviceState[j]) ? " [MANUELL]" : ""));
+      }
+    }
     store = null;
     busyLeave();
     done();
@@ -791,7 +845,9 @@ function setHubOffline(index) {
 // Suche auf das jeweilige Pack-Objekt begrenzt - Feldreihenfolge egal.
 // Setzt minVol (kleinste Zellspannung > 0, schlafende Packs zaehlen nicht)
 // und prueft - falls ueberwacht - die Unterspannung je Pack.
-function scanPacks(index, body, checkVolt) {
+// logPacks: bei debug=true nur im Watchdog-Poll - liefert eine kompakte
+// Zeile "sn:soc%/volt" je Pack zurueck, sonst "".
+function scanPacks(index, body, checkVolt, logPacks) {
   let hub = HUBS[index];
   let ws = WSTATE[index];
   let lbl = CONFIG.devices[index].label;
@@ -801,9 +857,10 @@ function scanPacks(index, body, checkVolt) {
   ws.minVolSoc = null;
 
   let p = jsonValuePos(body, "packData", 0, -1);
-  if (p < 0 || body.charAt(p) !== "[") return;
+  if (p < 0 || body.charAt(p) !== "[") return logPacks ? "keine packData" : "";
   let arrEnd = body.indexOf("]", p);
-  if (arrEnd < 0) return;
+  if (arrEnd < 0) return logPacks ? "packData unvollstaendig" : "";
+  let packLog = "";
 
   let pos = p + 1;
   let count = 0;
@@ -815,6 +872,13 @@ function scanPacks(index, body, checkVolt) {
     count++;
 
     let raw = jsonNum(body, "minVol", objStart, objEnd);
+    if (logPacks) {
+      let lsn = jsonStr(body, "sn", objStart, objEnd);
+      let lsoc = jsonNum(body, "socLevel", objStart, objEnd);
+      packLog += (count > 1 ? ", " : "") + (lsn !== null ? lsn : "#" + count) + ":" +
+        (lsoc !== null ? lsoc + "%" : "?%") + "/" +
+        (raw === null ? "?V" : raw > 0 ? (raw / 100).toFixed(2) + "V" : "0V (schlaeft)");
+    }
     if (raw !== null && raw > 0) {
       let sn = null;
       let packSoc = null;
@@ -826,7 +890,6 @@ function scanPacks(index, body, checkVolt) {
 
       if (checkVolt) {
         let volt = raw / 100;
-        logDebug("  Pack [" + sn + "]: SoC=" + packSoc + "%, MinVol=" + volt + "V");
         if (volt < W.minVoltWarn) {
           if (!ws.lowVoltMsgSent[sn]) {
             ws.lowVoltMsgSent[sn] = true;
@@ -845,11 +908,11 @@ function scanPacks(index, body, checkVolt) {
     }
     pos = objEnd + 1;
   }
-  logDebug(lbl + ": " + count + " Akkupack(s) gefunden.");
+  return packLog;
 }
 
 // Wertet einen Report aus. true = ok, false = nicht auswertbar.
-function extractHub(index, body, watchNow) {
+function extractHub(index, body, watchNow, logPacks) {
   if (!endsWithBrace(body)) return false;
   let soc = jsonNum(body, "electricLevel");
   if (soc === null) return false;
@@ -871,18 +934,22 @@ function extractHub(index, body, watchNow) {
   let ht = jsonNum(body, "hyperTmp");
   WSTATE[index].hyperTemp = (ht !== null) ? (ht - 2731) / 10 : null;
 
-  scanPacks(index, body, watchNow);
+  let packLog = scanPacks(index, body, watchNow, logPacks);
+  if (logPacks) {
+    logDebug(CONFIG.devices[index].label + ": SoC " + soc + "%, " +
+      (ht !== null ? ((ht - 2731) / 10).toFixed(1) + "C" : "?C") + " | Packs: " + (packLog || "keine"));
+  }
   return true;
 }
 
-function pollHub(index, watchNow, callback) {
+function pollHub(index, watchNow, logPacks, callback) {
   let cfg = CONFIG.devices[index];
   Shelly.call("HTTP.GET", {
     url: "http://" + cfg.ip + "/properties/report",
     timeout: CONFIG.httpTimeout
   }, function (res, error_code, error_msg) {
     if (error_code !== 0 || !res || res.code !== 200) {
-      logDebug("HTTP-Fehler bei " + cfg.label + ": Code=" + error_code + " HTTP=" + (res ? res.code : "null") + " " + error_msg);
+      if (DBG) logDebug("HTTP-Fehler bei " + cfg.label + ": Code=" + error_code + " HTTP=" + (res ? res.code : "null") + " " + error_msg);
       res = null;
       setHubOffline(index);
       callback(index, "nicht erreichbar");
@@ -891,7 +958,7 @@ function pollHub(index, watchNow, callback) {
     let body = res.body;
     res = null;
     let ok = false;
-    try { ok = !!body && extractHub(index, body, watchNow); } catch (e) { ok = false; }
+    try { ok = !!body && extractHub(index, body, watchNow, logPacks); } catch (e) { ok = false; }
     body = null;
     if (!ok) {
       setHubOffline(index);
@@ -917,7 +984,7 @@ function watchdogCheckHub(index, failReason) {
     if (ws.failSince === 0) ws.failSince = now;
     ws.failReason = failReason;
     let mins = Math.floor((now - ws.failSince) / 60000);
-    logDebug(cfg.label + ": " + failReason + " seit " + mins + " min");
+    if (DBG) logDebug("Watchdog: " + cfg.label + " " + failReason + " seit " + mins + " min");
     if (!ws.offlineMsgSent && (now - ws.failSince) >= W.offlineAlarmMin * 60000) {
       ws.offlineMsgSent = true;
       notify("❌ " + cfg.label + ": " + failReason + " seit " + mins + " min");
@@ -975,7 +1042,7 @@ function sendDigest(headerText) {
 
 // Wird per Schedule (Script.Eval) aufgerufen.
 function sendAstroStatus(type) {
-  logDebug("Astro-Event: " + type);
+  if (DBG) logDebug("Astro-Event: " + type);
   sendDigest(type === "sunset" ? "🌇 Abend-Update:" : "🌅 Morgen-Update:");
   notifyPump();
 }
@@ -1008,7 +1075,7 @@ function setupAstroSchedules(done) {
       "calls": [{ "method": "Script.Eval", "params": { "id": scriptId, "code": "sendAstroStatus('" + specs[n][1] + "')" } }]
     }, function (res, err, msg) {
       if (err !== 0) print("Fehler Schedule (" + spec + "): " + msg);
-      else logDebug("Schedule angelegt: " + spec);
+      else if (DBG) logDebug("Schedule angelegt: " + spec);
       createNext(n + 1);
     });
   };
@@ -1048,6 +1115,7 @@ function setupAstroSchedules(done) {
 let lastRequestAt = 0;
 let IDLE_MS = 15000;
 let lastWatchPoll = 0;
+let lastFast = false;
 
 function pollHubsSeq(index, fast, due, callback) {
   if (index >= CONFIG.devices.length) { callback(); return; }
@@ -1056,7 +1124,8 @@ function pollHubsSeq(index, fast, due, callback) {
     pollHubsSeq(index + 1, fast, due, callback);
     return;
   }
-  pollHub(index, watch, function (idx, failReason) {
+  // Pack-Details nur im Watchdog-Poll ins Log - im 8-s-Takt waere das zu viel
+  pollHub(index, watch, DBG && due && watch, function (idx, failReason) {
     if (watch) {
       try { watchdogCheckHub(idx, failReason); } catch (e) { print("Watchdog-Fehler bei " + CONFIG.devices[idx].label + ": " + e); }
     }
@@ -1070,6 +1139,11 @@ function tick() {
   // 1 s Toleranz: der Takt trifft das Intervall sonst je nach Timer-Jitter
   // erst einen Tick spaeter.
   let due = WD_ON && WATCH_COUNT > 0 && (now - lastWatchPoll) >= W.intervalSec * 1000 - 1000;
+
+  if (DBG && fast !== lastFast) {
+    logDebug(fast ? ("Schneller Takt AN (" + (anyManualActive() ? "manuelles Laden" : "Dashboard aktiv") + ")") : "Schneller Takt AUS - Leerlauf");
+  }
+  lastFast = fast;
 
   if (!fast && !due) { notifyPump(); return; }
   if (bgRunning || busyNow()) return;
@@ -1167,6 +1241,8 @@ function serveConfig(res, attempt) {
     Timer.set(CONFIG_WAIT_MS, false, function () { serveConfig(res, attempt + 1); });
     return;
   }
+  if (DBG) logDebug("config_api: lese KVS" + (attempt > 0 ? " (nach " + (attempt * CONFIG_WAIT_MS) + " ms Wartezeit" +
+    (busyNow() ? ", Slot weiter belegt - trotzdem" : "") + ")" : ""));
 
   busyEnter();
   let devices = buildDeviceDefaults();
@@ -1189,6 +1265,7 @@ function serveConfig(res, attempt) {
       if (m !== undefined) devices[i].minSoc = Number(m);
       if (l !== undefined) devices[i].inputLimit = Number(l);
     }
+    let kvsOk = (store !== null);
     store = null;
 
     let body = JSON.stringify({
@@ -1202,6 +1279,15 @@ function serveConfig(res, attempt) {
 
     busyLeave();
     configPending = false;
+    if (DBG) {
+      let line = "config_api: Antwort" + (!kvsOk ? " (KVS NICHT lesbar - CONFIG-Vorgaben)" : "") +
+        " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed;
+      for (let j = 0; j < devices.length; j++) {
+        line += " | dev" + j + " da=" + (devices[j].dischargeAllowed ? 1 : 0) + " rv=" + (devices[j].reverse ? 1 : 0) +
+          " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit;
+      }
+      logDebug(line + (configWaiters.length ? " (+" + configWaiters.length + " wartende Anfragen)" : ""));
+    }
     sendJson(res, 200, body);
     answerConfigWaiters(body);
   });
@@ -1230,6 +1316,8 @@ function fillManualStopDefaults(data, keys) {
     let restore = preManual[idx] || { dischargeAllowed: true, reverse: true };
     if (!keysHasField(keys, daKey)) { data[daKey] = restore.dischargeAllowed ? 1 : 0; keys[keys.length] = daKey; }
     if (!keysHasField(keys, rvKey)) { data[rvKey] = restore.reverse ? 1 : 0; keys[keys.length] = rvKey; }
+    if (DBG) logDebug("kvs_set_api: Stopp dev" + idx + " ergaenzt um " + daKey + "=" + data[daKey] + ", " + rvKey + "=" + data[rvKey] +
+      (preManual[idx] ? " (aus Vorzustand)" : " (Fallback 1/1)"));
   }
 }
 
@@ -1238,6 +1326,8 @@ function writeKeys(res, data, keys, index, allOk) {
   if (index >= keys.length) {
     if (allOk) applyDeviceKeysToState(data, keys);
     busyLeave();
+    if (DBG) logDebug("kvs_set_api: " + (allOk ? "OK" : "FEHLER") + ", " + keys.length + " Key(s) geschrieben" +
+      (anyManualActive() ? " - manuelles Laden aktiv" : ""));
     sendJson(res, allOk ? 200 : 500, JSON.stringify({ success: allOk, written: keys.length }));
     return;
   }
@@ -1252,6 +1342,7 @@ function writeKeys(res, data, keys, index, allOk) {
 
 function handleKvsSet(req, res) {
   let dataParam = getQueryParam(req.query, "data");
+  if (DBG) logDebug("kvs_set_api: Aufruf data=" + dataParam);
   if (dataParam === undefined) {
     sendJson(res, 400, JSON.stringify({ success: false, error: "missing data param" }));
     return;
@@ -1273,6 +1364,7 @@ function handleKvsSet(req, res) {
     if (keys[i] === "zdmc_dischargeFixed") {
       let dv = Number(data[keys[i]]);
       if (dv !== 0 && !(dv >= CONFIG.api.dischargeStartupPower)) {
+        if (DBG) logDebug("kvs_set_api: abgelehnt - zdmc_dischargeFixed=" + dv + " (erlaubt 0 oder >= " + CONFIG.api.dischargeStartupPower + ")");
         sendJson(res, 400, JSON.stringify({
           success: false,
           error: "dischargeFixed muss 0 oder >= " + CONFIG.api.dischargeStartupPower + " sein"
@@ -1282,6 +1374,7 @@ function handleKvsSet(req, res) {
     }
     allowedKeys[allowedKeys.length] = keys[i];
   }
+  if (DBG && allowedKeys.length < keys.length) logDebug("kvs_set_api: " + (keys.length - allowedKeys.length) + " Key(s) ohne Praefix zdmc_ ignoriert");
 
   if (allowedKeys.length === 0) {
     sendJson(res, 200, JSON.stringify({ success: true, written: 0 }));
@@ -1301,6 +1394,7 @@ function writeWhenFree(res, data, keys, attempt) {
     Timer.set(CONFIG_WAIT_MS, false, function () { writeWhenFree(res, data, keys, attempt + 1); });
     return;
   }
+  if (DBG && attempt > 0) logDebug("kvs_set_api: schreibe nach " + (attempt * CONFIG_WAIT_MS) + " ms Wartezeit" + (busyNow() ? " (Slot weiter belegt - trotzdem)" : ""));
   fillManualStopDefaults(data, keys);
   captureManualTransitions(data, keys);
   // Schreibvorgang belegt den Schutz: kein Poll und kein Nachrichtenversand
@@ -1351,7 +1445,9 @@ function printBanner() {
   }
   print(line);
   if (WD_ON) print("Watchdog   : alle " + W.intervalSec + " s, Offline-Alarm nach " + W.offlineAlarmMin + " min");
-  print("Nachrichten: " + (N.enabled ? N.typ : "aus"));
+  let ziel = "";
+  if (N.enabled) ziel = (N.typ === "WEBHOOK") ? (" -> " + String(N.webhookUrl).split("/")[2]) : " -> callmebot";
+  print("Nachrichten: " + (N.enabled ? N.typ + ziel : "aus") + " | Debug: " + (DBG ? "AN" : "AUS"));
   print("--------------------------------");
 }
 
