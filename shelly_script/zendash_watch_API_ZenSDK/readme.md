@@ -22,6 +22,7 @@ Die Zusammenfassung war nötig, da beide (alte) Scripte auf einem Shelly sehr na
 - [So arbeitet das Script](#so-arbeitet-das-script)
 - [Installation](#installation)
 - [Konfiguration](#konfiguration)
+- [Dashboard einrichten (Python-Proxy)](#dashboard-einrichten-python-proxy)
 - [Nachrichten](#nachrichten)
 - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
 - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
@@ -226,6 +227,117 @@ notify: {
 |---|---|
 | `httpTimeout` | Wie viele Sekunden das Script höchstens auf eine Antwort wartet. Standard 5. |
 | `debug` | `false`: normale Ausgabe. `true`: ausführliches Log zur Fehlersuche (siehe [Fehlersuche](#fehlersuche)). |
+
+---
+
+## Dashboard einrichten (Python-Proxy)
+
+Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Der Browser darf die Daten aber nicht direkt beim Shelly abfragen – die Shelly-Firmware lehnt solche Zugriffe aus einer fremden Webseite ab. Deshalb läuft auf einem Rechner im Heimnetz ein kleiner **Python-Proxy**: Er liefert die Dashboard-Seite aus und fragt den Shelly stellvertretend ab.
+
+```
+Browser  ──►  Python-Proxy (PC/NAS/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
+```
+
+### Was du dafür brauchst
+
+- **`api.enabled: true`** in diesem Script (siehe [Konfiguration](#konfiguration))
+- einen **Rechner, der dauerhaft läuft** – PC, NAS (z. B. Synology), Raspberry Pi, Mini-PC
+- **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden.
+- die zwei Dateien aus dem [Dashboard-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash), beide **im selben Ordner** abgelegt:
+  - `zendure_proxy.py` – der Proxy
+  - `zendure-dashboard.html` – die Dashboard-Seite
+
+Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles Laden …), muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
+
+### In 5 Schritten zum Dashboard
+
+**1. Script-ID nachsehen**
+
+In der Weboberfläche des Dashboard-Shelly unter **Scripts** steht die Nummer des Scripts (z. B. `id: 1`). Über den Configurator hochgeladen, heißt das Script `zd`.
+
+**2. Kurz testen, ob das Script antwortet**
+
+Im Browser direkt aufrufen (IP und Nummer einsetzen):
+
+```
+http://<IP-des-Dashboard-Shelly>/script/<Script-ID>/status_api
+```
+
+Es sollte eine Zeile mit Daten (JSON) erscheinen. Kommt ein Fehler, läuft das Script nicht oder die Nummer stimmt nicht.
+
+**3. Proxy einstellen**
+
+`zendure_proxy.py` mit einem Texteditor öffnen und oben drei Werte anpassen:
+
+```python
+SHELLY_IP = "192.168.178.149"   # IP des Dashboard-Shelly (NICHT der Controller-Shelly!)
+SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 1
+PORT = 8000                     # Port, unter dem das Dashboard erreichbar ist
+```
+
+**4. Proxy starten**
+
+Im Ordner mit den beiden Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
+
+```bash
+python3 zendure_proxy.py
+```
+
+Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fenster muss offen bleiben, solange das Dashboard genutzt wird; beenden mit `Strg+C`. Mit `-q` am Ende startet der Proxy ohne Protokollzeile je Aufruf – praktisch im Dauerbetrieb.
+
+**5. Dashboard öffnen**
+
+```
+http://localhost:8000/
+```
+
+Von einem anderen Gerät (Handy, Tablet) die Adresse nehmen, die der Proxy beim Start unter **„Im Netz“** anzeigt, z. B. `http://192.168.178.21:8000/`.
+
+- immer `http://`, nicht `https://`
+- die Seite startet **gesperrt** – das Schloss oben rechts gibt die Bedienung frei
+- fragt Windows beim ersten Start nach der Firewall: **„Zugriff zulassen“** (privates Netzwerk)
+
+### Gut zu wissen
+
+- **Dauerbetrieb:** Der Proxy muss laufen, solange du das Dashboard nutzen willst. Ein Laptop, der zugeklappt wird, eignet sich dafür schlecht. Wie der Proxy auf einer Synology automatisch beim Hochfahren startet, steht in der [Dashboard-Doku](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash/readme.md).
+- **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
+- **Nach einem Script-Update:** Wird das Script neu angelegt (z. B. beim Hochladen über den Configurator), kann sich die **Script-ID ändern**. Geht das Dashboard danach nicht mehr, die Nummer in `zendure_proxy.py` anpassen und den Proxy neu starten.
+- **Umstieg von zenDash-API 2.x:** Dashboard-Seite und Proxy bleiben unverändert – nur `SHELLY_SCRIPT_ID` (und ggf. `SHELLY_IP`) auf das neue Script umstellen.
+
+### Wenn es nicht klappt
+
+| Symptom | Lösung |
+|---|---|
+| Seite leer, „Failed to fetch“ | Die HTML-Datei wurde per Doppelklick geöffnet. Immer über `http://localhost:8000/` öffnen. |
+| Roter Hinweis „Fehler beim Laden der Konfiguration“ | `SHELLY_IP` oder `SHELLY_SCRIPT_ID` im Proxy falsch – mit dem Test aus Schritt 2 prüfen. |
+| 404 unter `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py`. |
+| Einstellungen wirken nicht | Im Controller `kvsEnabled: true` setzen. |
+| Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
+| Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Windows-Firewall-Freigabe prüfen. |
+| Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss oben rechts antippen. |
+
+Alle weiteren Details (Bedienelemente, Anzeigen, Startoptionen, Synology, ausführliche Fehlersuche) stehen in der [Dashboard-Doku](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash/readme.md).
+
+### Dauerbetrieb auf einer Synology
+
+Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology geht es so:
+
+1. **Python prüfen.** DSM bringt meist schon eines mit:
+   ```bash
+   which python3 && python3 --version
+   ```
+   Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+2. **Dateien ablegen.** `zendure_proxy.py` und `zendure-dashboard.html` in denselben Ordner, z. B. `/volume1/homes/<benutzer>/zendure`. Nicht in den `web`-Ordner — der gehört der Web Station.
+3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
+   ```bash
+   /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
+   ```
+4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
+5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
+
+Die Aufgabe bleibt dauerhaft als „läuft“ stehen, weil der Proxy nicht endet. Das ist richtig so.
+
+Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn der Prozess abstürzt**. Wer das möchte, nimmt statt der Aufgabe einen Container im Container Manager (`python:3-slim`, Ordner als Volume, Port 8000, Neustartrichtlinie „immer“).
 
 ---
 
