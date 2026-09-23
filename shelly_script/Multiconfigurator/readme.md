@@ -9,7 +9,9 @@
 
 mit wenigen Klicks zur lokalen Steuerung deiner Zendure Flotte.
 
-[Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/releases/latest)
+[diverse Installer hier runterladen](https://github.com/surfer1264/Zendure-Stuff/releases/latest) (macOS, Windows, Windows-x86 (32Bit))
+
+oder [Windows-Exe:](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) direkt.
 
 Der **Installer** startet den Web-Configurator automatisch im Browser — **dann ist auch zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
