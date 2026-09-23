@@ -1,10 +1,13 @@
 name: Build & Release lokaler Helfer
 
 # Baut zendure_local_helper.py bei jedem veroeffentlichten GitHub-Release
-# fuer Windows und macOS zu je einer einzigen ausfuehrbaren Datei
-# (PyInstaller, --onefile) und haengt sie als Release-Asset an. Der
-# Endnutzer laedt danach nur noch eine fertige Datei von der
-# Release-Seite herunter - kein Python-Setup, kein Terminal.
+# fuer Windows (64-Bit und 32-Bit) und macOS zu je einer einzigen
+# ausfuehrbaren Datei (PyInstaller, --onefile) und haengt sie als
+# Release-Asset an. Der Endnutzer laedt danach nur noch eine fertige
+# Datei von der Release-Seite herunter - kein Python-Setup, kein
+# Terminal. Die 32-Bit-Variante ist fuer aeltere Geraete mit 32-Bit-
+# Windows 10 gedacht (dort scheitert eine 64-Bit-exe mit "Diese App
+# kann auf dem PC nicht ausgefuehrt werden").
 #
 # Anpassen: HELPER_PATH und HTML_PATH unten, falls Dateien umbenannt
 # werden oder woanders liegen. Beide Pfade sind vom Nutzer bestaetigt:
@@ -33,10 +36,17 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            python_arch: x64
             data_sep: ";"
             built_path: dist/zendure_local_helper.exe
             asset_name: zendure_local_helper-windows.exe
+          - os: windows-latest
+            python_arch: x86
+            data_sep: ";"
+            built_path: dist/zendure_local_helper.exe
+            asset_name: zendure_local_helper-windows-x86.exe
           - os: macos-latest
+            python_arch: x64
             data_sep: ":"
             built_path: dist/zendure_local_helper
             asset_name: zendure_local_helper-macos
@@ -49,6 +59,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          architecture: ${{ matrix.python_arch }}
 
       - name: PyInstaller installieren
         run: pip install pyinstaller
