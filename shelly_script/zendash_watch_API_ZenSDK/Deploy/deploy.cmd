@@ -4,17 +4,17 @@ setlocal
 REM ====================================================================
 REM  HIER ANPASSEN
 REM ====================================================================
-set SHELLY_IP=192.168.178.151
-set SKRIPTNAME=wd
+set SHELLY_IP=192.168.178.149
+set SKRIPTNAME=zd
 
 REM Generische Version (frisch von GitHub geladen)
-set QUELLE=..\zenSDKWatchDog_src.js
+set QUELLE=..\zendash_watch_src.js
 REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
 REM Gepatchte Version
 set PATCH=patch.js
 REM Zieldatei, die hochgeladen werden kann
-set FERTIG=..\zenSDKWatchDog_mini.js
+set FERTIG=..\zendash_watch_mini.js
 REM ====================================================================
 
 cd /d "%~dp0"

@@ -5,7 +5,6 @@
 
   "targets": [
     { "host": "192.168.178.117", "script_id": 1, "label": "Regler" },
-    { "host": "192.168.178.149", "script_id": 1, "label": "zenDash" },
-    { "host": "192.168.178.151", "script_id": 1, "label": "watchdog" }
+    { "host": "192.168.178.149", "script_id": 1, "label": "zenDash_watch" }
   ]
 }

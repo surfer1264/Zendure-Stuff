@@ -1,0 +1,2 @@
+python3 minify_keep_config.py zenSDKWatchDog zenSDKWatchDog_mini.js
+Pause
