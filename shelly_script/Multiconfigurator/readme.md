@@ -13,6 +13,10 @@ mit wenigen Klicks zur lokalen Steuerung deiner Zendure Flotte.
 
 oder [Windows-Exe:](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) direkt.
 
+oder [Windows-Exe: 32Bit](https://github.com/surfer1264/Zendure-Stuff/releases/download/6.6.5/zendure_local_helper-windows-x86.exe) direkt.
+
+oder [MACOS](https://github.com/surfer1264/Zendure-Stuff/releases/download/6.6.5/zendure_local_helper-macos) direkt.
+
 Der **Installer** startet den Web-Configurator automatisch im Browser — **dann ist auch zusätzlich das direkte Hochladen und die Speicherprüfung freigeschaltet**
 
 **Alternativ (ohne Shelly Upload Funktion) der Web-Configurator PUR**
