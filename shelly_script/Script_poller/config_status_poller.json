@@ -4,7 +4,8 @@
   "csv_file": "script_status.csv",
 
   "targets": [
-    { "host": "192.168.178.117", "script_id": 8, "label": "Regler" },
-    { "host": "192.168.178.117", "script_id": 4, "label": "Watchdog" }
+    { "host": "192.168.178.117", "script_id": 1, "label": "Regler" },
+    { "host": "192.168.178.149", "script_id": 1, "label": "zenDash" },
+    { "host": "192.168.178.151", "script_id": 1, "label": "watchdog" }
   ]
 }
