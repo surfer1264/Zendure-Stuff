@@ -8,3 +8,4 @@ myconfig.js
 *.csv
 *.log
 script_status.csv
+controller-config.js
