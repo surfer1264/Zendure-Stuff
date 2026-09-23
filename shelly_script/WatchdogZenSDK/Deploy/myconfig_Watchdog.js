@@ -1,5 +1,5 @@
 let CONFIG = {
-  version: "1.3.2-opt",
+  version: "1.4.0",
 
   devices: [
     { ip: "192.168.178.143", label: "SF2400", enabled: true },
