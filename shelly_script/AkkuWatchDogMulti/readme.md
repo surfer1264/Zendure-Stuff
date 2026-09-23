@@ -2,8 +2,9 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
-> ⚠️ DIESER BEEICH WIRD NICHT MEHR ALTUALISIERT WEITER ENTWICKELT (23.09.2026)
-> 
+> ⚠️
+> ⚠️ **DIESER BEEICH WIRD NICHT MEHR ALTUALISIERT WEITER ENTWICKELT (23.09.2026)**
+> ⚠️
 
 
 # AkkuVolt Watchdog — Multi-Device (zenSDK) — Schnellstart
