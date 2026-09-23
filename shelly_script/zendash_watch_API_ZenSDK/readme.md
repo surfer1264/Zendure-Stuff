@@ -7,6 +7,8 @@ Ein Shelly-Script, das zwei Aufgaben rund um deine Zendure-Speicher übernimmt:
 
 Beide Teile lassen sich einzeln ein- und ausschalten. Früher waren es zwei getrennte Scripte (zenDash-API 2.x und AkkuVolt-Watchdog 1.x). Jetzt fragt ein einziges Script die Speicher ab und teilt die Daten zwischen beiden Aufgaben. Das spart Speicher auf dem Shelly und entlastet deine Zendure-Geräte.
 
+Die Zusammenfassung war nötig, da beide (alte) Scripte auf einem Shelly sehr nahe an der verfügbaren Speichergrenze operierten. Je nach Ausbaustufe (Anzahl Geräte und Anzahl Akkus) war ein "out of memory" möglich. 
+
 ---
 
 ## Inhalt
@@ -294,7 +296,7 @@ Ein Shelly-Script hat rund **25 kB** Arbeitsspeicher. Gemessen auf einem echten 
 | v3.1, Dashboard geschlossen | ca. 13,5 kB | ca. 17,8 kB |
 | v3.1, Dashboard geöffnet | ca. 13,5 kB | ca. 17,7–18,0 kB |
 
-Es bleiben also im ungünstigsten Moment noch gut **7 kB** frei. Zum Vergleich: Die beiden alten Scripte zusammen brauchten im Ruhezustand rund 15 kB, verteilt auf zwei Shellys.
+Es bleiben also im ungünstigsten Moment noch gut **7 kB** frei. Zum Vergleich: Die beiden alten Scripte zusammen brauchten in der Spitze bereits nahezu 25kB. 
 
 ---
 
