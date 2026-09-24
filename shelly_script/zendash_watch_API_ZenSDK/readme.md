@@ -23,6 +23,7 @@ Die Zusammenfassung war nötig, da beide (alte) Scripte auf einem Shelly sehr na
 - [Installation](#installation)
 - [Konfiguration](#konfiguration)
 - [Dashboard einrichten (Python-Proxy)](#dashboard-einrichten-python-proxy)
+- [Dashboard bedienen](#dashboard-bedienen)    
 - [Nachrichten](#nachrichten)
 - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
 - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
@@ -238,12 +239,13 @@ Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Der Brow
 Browser  ──►  Python-Proxy (PC/NAS/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
 ```
 
+
 ### Was du dafür brauchst
 
 - **`api.enabled: true`** in diesem Script (siehe [Konfiguration](#konfiguration))
 - einen **Rechner, der dauerhaft läuft** – PC, NAS (z. B. Synology), Raspberry Pi, Mini-PC
 - **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden.
-- die zwei Dateien aus dem [Dashboard-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash), beide **im selben Ordner** abgelegt:
+- die zwei Dateien aus dem [Dashboard-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK), beide **im selben Ordner** abgelegt:
   - `zendure_proxy.py` – der Proxy
   - `zendure-dashboard.html` – die Dashboard-Seite
 
@@ -253,6 +255,8 @@ Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles L
 
 **1. Script-ID nachsehen**
 
+Der `zendure_proxy.py` braucht Kenntnisse von der IP Adresse des Dashboard-Shelly und der Scriptnummer.
+ 
 In der Weboberfläche des Dashboard-Shelly unter **Scripts** steht die Nummer des Scripts (z. B. `id: 1`). Über den Configurator hochgeladen, heißt das Script `zd`.
 
 **2. Kurz testen, ob das Script antwortet**
@@ -264,6 +268,8 @@ http://<IP-des-Dashboard-Shelly>/script/<Script-ID>/status_api
 ```
 
 Es sollte eine Zeile mit Daten (JSON) erscheinen. Kommt ein Fehler, läuft das Script nicht oder die Nummer stimmt nicht.
+
+Wenn das funktioniert habt Ihr die richtige IÜ-Adresse und Script-Nummer.
 
 **3. Proxy einstellen**
 
@@ -291,6 +297,8 @@ Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fens
 http://localhost:8000/
 ```
 
+Das Dashboard ist auch von jedem anderen Rechner, ipad, Telefon erreichbar. Dazu muss man die IP-Adresse des Rechners kennen auf dem der Proxy gestartet wurde. Der Proxy zeigt die beim Start an!!
+
 Von einem anderen Gerät (Handy, Tablet) die Adresse nehmen, die der Proxy beim Start unter **„Im Netz“** anzeigt, z. B. `http://192.168.178.21:8000/`.
 
 - immer `http://`, nicht `https://`
@@ -299,10 +307,10 @@ Von einem anderen Gerät (Handy, Tablet) die Adresse nehmen, die der Proxy beim 
 
 ### Gut zu wissen
 
-- **Dauerbetrieb:** Der Proxy muss laufen, solange du das Dashboard nutzen willst. Ein Laptop, der zugeklappt wird, eignet sich dafür schlecht. Wie der Proxy auf einer Synology automatisch beim Hochfahren startet, steht in der [Dashboard-Doku](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash/readme.md).
+- **Dauerbetrieb:** Der Proxy muss laufen, solange du das Dashboard nutzen willst. Ein Laptop, der zugeklappt wird, eignet sich dafür schlecht. Wie der Proxy auf einer Synology automatisch beim Hochfahren startet, seht ihr im Folgekapitel.
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Nach einem Script-Update:** Wird das Script neu angelegt (z. B. beim Hochladen über den Configurator), kann sich die **Script-ID ändern**. Geht das Dashboard danach nicht mehr, die Nummer in `zendure_proxy.py` anpassen und den Proxy neu starten.
-- **Umstieg von zenDash-API 2.x:** Dashboard-Seite und Proxy bleiben unverändert – nur `SHELLY_SCRIPT_ID` (und ggf. `SHELLY_IP`) auf das neue Script umstellen.
+
 
 ### Wenn es nicht klappt
 
@@ -316,7 +324,6 @@ Von einem anderen Gerät (Handy, Tablet) die Adresse nehmen, die der Proxy beim 
 | Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Windows-Firewall-Freigabe prüfen. |
 | Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss oben rechts antippen. |
 
-Alle weiteren Details (Bedienelemente, Anzeigen, Startoptionen, Synology, ausführliche Fehlersuche) stehen in der [Dashboard-Doku](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash/readme.md).
 
 ### Dauerbetrieb auf einer Synology
 
@@ -338,6 +345,67 @@ Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology g
 Die Aufgabe bleibt dauerhaft als „läuft“ stehen, weil der Proxy nicht endet. Das ist richtig so.
 
 Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn der Prozess abstürzt**. Wer das möchte, nimmt statt der Aufgabe einen Container im Container Manager (`python:3-slim`, Ordner als Volume, Port 8000, Neustartrichtlinie „immer“).
+
+---
+
+## Dashboard Bedienung
+
+Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Regelzyklus des Regel-Scripts. Die Grenzen entsprechen exakt dem Clamping in `readKvsOverrides()` von `zerooutput_multi_kvs.js` — Werte außerhalb dieser Bereiche verwirft das Regel-Script kommentarlos.
+
+| Bedienelement | KVS-Key | Bereich |
+|---|---|---|
+| Sollwert (obere Reihe, links) | `zdmc_setpoint` | −40 bis +40 W, 5er-Schritte |
+| Fix-Entladung (Zahleneingabe) | `zdmc_dischargeFixed` | 0 (= aus) oder ≥ `dischargeStartupPower` |
+| Entladen erlaubt | `zdmc_dev{id}_dischargeAllowed` | Schalter (0/1) |
+| Laden vom Netz erlaubt | `zdmc_dev{id}_reverse` | Schalter (0/1) |
+| Reserve (min. SoC) | `zdmc_dev{id}_minSoc` | 10 % bis `maxSoc` − 1, 1er-Schritte |
+| Ladeleistung aus dem Netz | `zdmc_dev{id}_inputLimit` | 0 bis `maxInputPower`, 50er-Schritte |
+
+### Was die Regler bewirken
+
+* **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern das Gerät selbst.
+* Die **Obergrenze der Reserve** leitet das Dashboard aus `maxSoc` ab und hält einen Prozentpunkt Abstand. Das ist kein Schoenheitsfehler, sondern ein Schutz: Das Regel-Script gleicht `minSoc` und `maxSoc` nur beim **Start** gegeneinander ab, nicht beim Live-Override über die KVS. Rutschte `minSoc` über `maxSoc`, dürfte das Gerät weder unter die Reserve entladen noch bis dorthin laden — es fiele dauerhaft aus der Regelung, und `syncSocLimits()` schriebe das verdrehte Wertepaar zusätzlich auf die Hardware, wo es einen Scriptstopp überdauert. Wer den Wert direkt in der KVS setzt, umgeht diesen Schutz; dagegen hülfe nur eine Prüfung im Regel-Script selbst (`v < dev.maxSoc` statt `v <= 99`).
+* **Manuelles Laden** ist eine Aktion, kein einzelner Schalter. Der Regler „Ladeleistung aus dem Netz" wählt nur die Leistung aus und schreibt für sich genommen nichts; der Knopf darunter führt drei Schreibvorgänge in der richtigen Reihenfolge aus:
+  1. `dischargeAllowed = 0`
+  2. `reverse = 0`
+  3. `inputLimit = <gewählte Leistung>`
+
+  Beim Beenden umgekehrt: erst `inputLimit = 0`, dann die Schalter zurück auf den Stand vor dem Start. Die Reihenfolge ist nicht kosmetisch — wird `inputLimit` gesetzt, solange das Gerät noch in der Regelung hängt, überschreibt das Regel-Script den Wert im nächsten Zyklus. Umgekehrt würde ein stehengebliebenes Ladelimit mit der wieder aktiven Regelung kollidieren.
+
+  Während der Kette pausiert der Seiten-Poll, zwischen den Schritten liegen 500 ms (`STEP_PAUSE_MS`), und danach vergehen weitere 1,5 s (`SETTLE_MS`), bevor wieder abgefragt wird. Ohne diese Entzerrung treffen drei `KVS.Set`, der laufende Hintergrund-Poll und die Reaktion des Regel-Scripts — das bei geändertem `inputLimit` sofort aufs Gerät schreibt — innerhalb weniger hundert Millisekunden auf demselben Shelly zusammen. Der ganze Vorgang dauert dadurch rund 2,5 s.
+
+  Bricht die Kette in der Mitte ab (Shelly nicht erreichbar), erscheint ein Warnbanner — der Zustand ist dann unvollständig und gehört auf der Karte geprüft.
+
+  Ob manuelles Laden läuft, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`). Das überlebt einen Reload und stimmt auch dann, wenn jemand anders die Werte gesetzt hat. Nur der Schalterzustand *vor* dem Start geht bei einem Reload verloren; das Beenden schaltet dann beide Schalter wieder ein.
+* **Fix-Entladung** (`zdmc_dischargeFixed`) ist ein globaler, geräteübergreifender Wert — anders als die übrigen Regler, die pro Gerät (`zdmc_dev{id}_...`) wirken. Sie ist eine Zahleneingabe statt eines Reglers, weil nur zwei Zustände gültig sind: `0` (aus) oder ≥ `dischargeStartupPower`. Werte dazwischen verwirft schon `kvs_set_api` mit einer Fehlermeldung, bevor sie in der KVS landen — das Regel-Script würde sie ohnehin kommentarlos ignorieren. `dischargeStartupPower` kommt aus `config_api` (Spiegel von `CONFIG.dischargeStartupPower` im API-Script) und steht als Hinweistext unter dem Feld (`0 = aus · sonst ≥ NN W`). Ein ungültiger Wert wird beim Verlassen des Felds sofort auf den zuletzt gültigen zurückgesetzt.
+* **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb nicht als Bedienelement auf. `config_api` liefert den Wert trotzdem mit; die Seite braucht ihn nur intern, um den Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
+* Die Seite startet **gesperrt**. Das Schloss-Symbol oben rechts gibt die Bedienung frei; nach 60 s ohne Eingabe (`RELOCK_MS`) sperrt sie sich von selbst wieder. Der Zustand wird absichtlich nicht gespeichert — jeder Reload beginnt gesperrt. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
+* Jedes Bedienelement **sperrt sich nach einer Eingabe für 4 s** (`LOCK_MS`). Das verhindert mehrfaches Auslösen und schützt den frisch gesetzten Wert vor dem nächsten `config_api`-Abgleich. Schlägt das Schreiben fehl, wird sofort wieder freigegeben.
+
+### Was die Anzeige zeigt
+
+* Unter dem SoC steht das **Arbeitsfenster** des Geräts in Kurzform, z. B. `SoC · 15–100 %`: von der Reserve (`minSoc`, einstellbar) bis zum Ladeziel (`maxSoc`, nur Anzeige — der Wert kommt aus der Konfiguration und ist nicht über die KVS änderbar).
+* Neben dem Sollwert steht die **Hysterese** als Toleranzangabe. Sie ist nicht einstellbar, gehört aber dorthin: Sie sagt, wie weit der Netzsaldo abweichen darf, bevor das Regel-Script überhaupt nachsteuert. Ohne sie wirkt ein Sollwert exakter, als er ist.
+* **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „Warum tut der Hub nichts?"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
+* **PV-Eingang und schwächste Zelle** stehen als kleine Zeile unter der Leistung jeder Hub-Karte:
+  * Der PV-Wert ist `solarInputPower`, also der Gesamteingang des Geräts. Fehlt das Feld — etwa bei reinen AC-Ladern —, entfällt die Angabe komplett, statt fälschlich „0 W" zu zeigen.
+  * Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs, umgerechnet mit Faktor 0,01 (325 → 3,25 V). Packs, die 0 melden, werden übersprungen. Unter 3,0 V wird der Wert amber, unter 2,8 V rot. Aussagekräftig ist er nur unter Last — im Ruhezustand liegen alle Zellen dicht beieinander.
+* **Der Verlauf** steckt als kompakte Kurve in den beiden Kacheln oben: Netzsaldo links, Hub-Summe rechts. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
+* Der Verlauf wird **in der Seite** geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
+* Die Seite folgt beim Start der **Systemeinstellung des Geräts** (`prefers-color-scheme`) — Nachtmodus am Handy schaltet auch hier die Nachtsicht ein, sonst startet sie in der Tagsicht, und ein späterer Systemwechsel wird live nachgezogen. Der Schalter oben rechts schaltet manuell um; ab dem ersten Antippen wird die Systemeinstellung ignoriert, damit ein automatischer Wechsel am Abend die bewusste Wahl nicht wieder überschreibt. Das gilt nur für die laufende Sitzung — ein Reload startet wieder bei der Systemeinstellung.
+* Der dritte Knopf oben rechts (**A**) schaltet die **Schriftgröße** in drei Stufen um: Normal, Groß (115 %) und Sehr groß (130 %). Vorgabe beim Laden ist „Groß". Wie beim Theme wird der Zustand nicht gespeichert; ein Reload beginnt wieder bei „Groß".
+* In der Fußzeile stehen die Versionen von Seite und API-Script. Laufen sie auseinander, wird der Hinweis amber — typischer Fall: HTML aktualisiert, das Script auf dem Shelly aber nicht.
+* Geräteliste, Sollwert, Reglerstände und Schalterstellungen kommen bei jedem Laden/Poll frisch von `config_api` — es gibt **keine** Geräte-Konfiguration mehr in der HTML-Datei selbst. Das vermeidet Doppelpflege.
+
+### Wer wie oft fragt
+
+* Die **Seite** frischt fest alle 4 s auf (`POLL_SEC`), es gibt kein Bedienelement dafür. Der Wert muss unter `IDLE_MS` (15 s) im API-Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen und die Anzeige hängt hinterher.
+* `status_api` wird bei jedem Durchlauf geholt, `config_api` nur jeden dritten (`CONFIG_EVERY`, also alle 12 s) — dieser Endpunkt macht auf dem Shelly jedes Mal ein `KVS.GetMany`. Eigene Eingaben wirken trotzdem sofort; nur eine Änderung von außen erscheint entsprechend später.
+* Das **API-Script** fragt Netzzähler und Hubs alle 8 s ab (`pollIntervalSec`) — aber nur, solange in den letzten 15 s (`IDLE_MS`) tatsächlich ein Dashboard-Aufruf einging. Ist kein Dashboard offen, pausiert diese Hintergrundabfrage automatisch. Kein unnötiger Traffic zu den Zendure-Hubs.
+* Ein **Zähler** (früher ein Flag) sorgt dafür, dass Hintergrundabfrage und `config_api` nie gleichzeitig laufen. Beide sind speicherintensiv — Parsen der mehrere kB großen Hub-Antwort bzw. `KVS.GetMany`. Kollidieren sie, lässt der Hintergrund-Timer den Takt aus, und `config_api` wartet bis zu 2 s auf einen freien Slot. Zusätzlich hat der Hintergrund-Durchlauf mit `bgRunning` einen eigenen Riegel gegen sich selbst.
+* Die Notbremse (`BUSY_TIMEOUT_MS`) richtet sich nach der Gerätezahl: `(Geräte + 1) × httpTimeout + 5 s`. Sie muss länger sein als der längstmögliche Durchlauf, in dem jede einzelne Abfrage in den Timeout läuft — sonst greift sie mitten im Normalbetrieb und erlaubt genau die Überlappung, die sie verhindern soll.
+* `status_api` liefert eine fertig serialisierte Antwort, die einmal je Hintergrund-Durchlauf gebaut wird. `config_api` sammelt gleichzeitige Anfragen zu einem einzigen `KVS.GetMany` — bei einem Dashboard ändert das nichts, bei einem Reload-Sturm fällt der Aufwand auf ein Zehntel. Einen Ergebnis-Cache gibt es bewusst nicht: ein dauerhaft gehaltener Antwort-String kostet im knappen Variablenpool mehr, als er einspart.
+* Die Antworten der Hubs werden **ohne `JSON.parse`** ausgewertet. Die benötigten Zahlen holt das Script per `indexOf`/`slice` aus dem Rohtext. Eine geparste `/properties/report`-Antwort (~1,3 kB, 60+ Felder) belegt mehrere hundert Variablen, der Rohtext allein nur einen Bruchteil davon. Preis dafür: ändert Zendure die Feldnamen, fällt das erst im Betrieb auf — deshalb liefert jede Extraktion `null` statt zu raten, und ein fehlendes `electricLevel` gilt als „Hub nicht auswertbar".
 
 ---
 
@@ -378,29 +446,8 @@ Gut zu wissen:
 
 ---
 
-## Umstieg von den alten Scripten
 
-Wenn du bisher **zenDash-API 2.x** und den **AkkuVolt-Watchdog 1.x** getrennt genutzt hast:
 
-1. Installiere v3.1 wie oben beschrieben, am besten auf dem Shelly, auf dem bisher die zenDash-API lief.
-2. **Stoppe die alte zenDash-API** auf diesem Shelly. Zwei Scripte mit denselben Endpunkten vertragen sich nicht.
-3. Lass den **alten Watchdog** ruhig noch einen Tag parallel laufen. Du bekommst die Meldungen dann doppelt und kannst vergleichen. Danach stoppst du ihn und schaltest bei ihm **Run on startup** aus.
-
-Die Adresse für das Dashboard bleibt gleich, sofern das neue Script auf demselben Shelly läuft. Beachte dabei, dass die Script-Nummer in der Adresse (`/script/<Nummer>/...`) zum neuen Script passen muss.
-
-### Wo landen meine alten Einstellungen?
-
-| Alte Einstellung | Neu |
-|---|---|
-| API: `kvsHost`, `hysteresis`, `dischargeStartupPower`, `gridSource…`, `pollIntervalSec` | in den Block `api: { ... }` verschieben |
-| API: Geräteblock | bleibt `devices`, pro Gerät `watch` ergänzen, `dryRun` kann weg |
-| Watchdog: Gerät `enabled: true/false` | wird zu `watch: true/false` im gemeinsamen Geräteblock |
-| Watchdog: `vollSchwelle`, `entladeReset`, `minVolt…`, `temp…`, `sunriseOffset`, `sunsetOffset` | in den Block `watchdog: { ... }` |
-| Watchdog: `pollIntervalMs: 120000` | `watchdog.intervalSec: 120` (Sekunden statt Millisekunden) |
-| Watchdog: `errorThreshold: 5` | `watchdog.offlineAlarmMin: 10`. Jetzt in Minuten statt Fehlversuchen: 5 Fehlversuche à 2 Minuten ≈ 10 Minuten. |
-| Watchdog: `signal: { ... }` | heißt jetzt `notify: { ... }`. Ein alter `signal`-Block wird notfalls noch erkannt (Hinweis im Log). |
-| Watchdog: `maxMessageLength` | `notify.maxMessageLength` |
-| Watchdog: `watchdog` (Timer), `bannerVerbose`, `version` | entfallen |
 
 ---
 
