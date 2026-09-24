@@ -23,7 +23,7 @@ Die Zusammenfassung war nötig, da beide (alte) Scripte auf einem Shelly sehr na
 - [Installation](#installation)
 - [Konfiguration](#konfiguration)
 - [Dashboard einrichten (Python-Proxy)](#dashboard-einrichten-python-proxy)
-- [Dashboard bedienen](#dashboard-bedienen)    
+- [Dashboard Bedienung](#dashboard-bedienung)    
 - [Nachrichten](#nachrichten)
 - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
 - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
