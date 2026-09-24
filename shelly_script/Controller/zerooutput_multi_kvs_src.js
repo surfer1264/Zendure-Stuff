@@ -3,6 +3,7 @@
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
 let VERSION = "5.0.8";
+let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
      {
