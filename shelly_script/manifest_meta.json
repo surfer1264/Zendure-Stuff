@@ -1,0 +1,6 @@
+{
+  "helperMin": "1.0",
+  "requires": {
+    "zdmc-zendash-watch": { "zdmc-controller": ">=5.0" }
+  }
+}
