@@ -1,0 +1,78 @@
+name: Versions-Manifest
+
+# Erzeugt shelly_script-Manifest versions.json aus den minifizierten
+# Scripten auf main und veroeffentlicht es auf dem eigenen Branch
+# "manifest" (enthaelt nur diese eine Datei). main bleibt dadurch frei von
+# Bot-Commits - kein "git pull" vor dem naechsten eigenen Push noetig.
+#
+# Oeffentliche Adresse fuer Helper und Configurator:
+#   https://raw.githubusercontent.com/<owner>/<repo>/manifest/versions.json
+#
+# Schlaegt eine Pruefung fehl (z.B. Code geaendert, VERSION nicht
+# hochgezaehlt), wird das Manifest NICHT veraendert und der Lauf ist rot -
+# GitHub schickt dann die uebliche Fehler-Mail.
+#
+# Pushes mit dem GITHUB_TOKEN loesen keine weiteren Workflows aus - der
+# Push auf den Branch "manifest" erzeugt also keine Schleife.
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - "shelly_script/**/*_mini.js"
+      - "shelly_script/**/*[Cc]hang*[Ll]og*.md"
+      - "shelly_script/manifest_meta.json"
+      - ".github/scripts/build_manifest.py"
+      - ".github/workflows/versions-manifest.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # noetig fuer den Push auf den Branch "manifest"
+
+concurrency:
+  group: versions-manifest
+  cancel-in-progress: false   # Laeufe nacheinander, keiner geht verloren
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v7
+
+      - name: Branch "manifest" als Arbeitsordner vorbereiten
+        run: |
+          set -e
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin manifest >/dev/null 2>&1; then
+            git fetch --depth 1 origin manifest:refs/remotes/origin/manifest
+            git worktree add -B manifest _pub origin/manifest
+            echo "Bestehender Branch 'manifest' geladen."
+          else
+            git worktree add --detach _pub
+            cd _pub
+            git checkout --orphan manifest
+            git rm -rfq . || true
+            echo "Branch 'manifest' wird neu angelegt."
+          fi
+
+      - name: Manifest erzeugen und pruefen
+        run: |
+          OLD=_pub/versions.json
+          [ -f "$OLD" ] || OLD=-
+          python3 .github/scripts/build_manifest.py "$OLD" versions.json
+
+      - name: Auf Branch "manifest" veroeffentlichen
+        run: |
+          set -e
+          cp versions.json _pub/versions.json
+          cd _pub
+          git add versions.json
+          if git diff --cached --quiet; then
+            echo "Manifest unveraendert - nichts zu veroeffentlichen."
+            exit 0
+          fi
+          git commit -q -m "Manifest aktualisiert (main ${GITHUB_SHA::7})"
+          git push origin manifest
+          echo "Veroeffentlicht: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/manifest/versions.json"
