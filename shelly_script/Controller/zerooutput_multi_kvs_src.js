@@ -1,7 +1,8 @@
 // Zendure Dynamic Output Controller - Multi-Device Version
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
-//
+let SCRIPT_TYPE = "zdmc-controller";
+let VERSION = "5.0.8";
 let CONFIG = {
   devices: [
      {
@@ -120,8 +121,6 @@ let CONFIG = {
     webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
   }
 };
-
-CONFIG.version = "5.0.8";
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 CONFIG.watchdog = CONFIG.interval * 2.5;
 
@@ -2102,7 +2101,7 @@ function bannerLine(i) {
   let n = CONFIG.devices.length;
 
   if (i === 0) return "--------------------------------";
-  if (i === 1) return "Version " + CONFIG.version;
+  if (i === 1) return "Version " + VERSION;
   if (i === 2) return "Multi-Device Controller gestartet";
   if (i === 3) return "Geraete    : " + n;
 

@@ -1993,13 +1993,12 @@ function fetchSource(key){
   return SOURCE_CACHE[key];
 }
 
-// Versionsnummer aus dem (minifizierten) Script: Controller setzt
-// CONFIG.version = "...", zendash_watch hat eine gemeinsame VERSION.
+// Versionsnummer aus dem (minifizierten) Script. Neues Format: beide
+// Scripte haben VERSION vor dem CONFIG-Block. Fallback fuer aeltere
+// Controller-Staende mit CONFIG.version = "...".
 function parseScriptVersion(key, text){
-  const re = key === 'ctrl'
-    ? /CONFIG\.version\s*=\s*["']([^"']+)["']/
-    : /\bVERSION\s*=\s*["']([^"']+)["']/;
-  const m = re.exec(text);
+  let m = /\bVERSION\s*=\s*["']([^"']+)["']/.exec(text);
+  if(!m && key === 'ctrl') m = /CONFIG\.version\s*=\s*["']([^"']+)["']/.exec(text);
   return m ? m[1] : null;
 }
 

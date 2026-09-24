@@ -34,7 +34,8 @@
 // Vorzustand (preManual) lebt nur im Speicher; nach einem Neustart
 // Fallback dischargeAllowed=1/reverse=1.
 // =====================================================================
-
+let SCRIPT_TYPE = "zdmc-zendash-watch";
+let VERSION = "3.1";
 let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - wie im Regel-Script, gleiche Reihenfolge.
@@ -147,8 +148,6 @@ let CONFIG = {
   debug: false
 };
 
-// Versionsstand dieses Scripts (Banner).
-let VERSION = "3.1";
 // Schnittstellenstand fuer das Dashboard (config_api liefert ihn aus). Die
 // Endpunkte sind unveraendert gegenueber zendash_api v2.7.
 let API_VERSION = "2.7";
