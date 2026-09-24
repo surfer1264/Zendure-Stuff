@@ -1,4 +1,4 @@
-let SCRIPT_TYPE="zdmc-zendash-watch";let VERSION="3.1";
+let SCRIPT_TYPE="zdmc-zendash-watch";let VERSION="3.1";let CONFIG_SCHEMA=1;
 let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - wie im Regel-Script, gleiche Reihenfolge.
