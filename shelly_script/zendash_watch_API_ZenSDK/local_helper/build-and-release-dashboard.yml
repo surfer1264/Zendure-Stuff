@@ -24,7 +24,7 @@ permissions:
 
 env:
   PROXY_PATH: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
-  HTML_PATH: PFAD/ZU/zendure-dashboard.html
+  HTML_PATH: https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
 
 jobs:
   build:
