@@ -446,11 +446,6 @@ Gut zu wissen:
 
 ---
 
-
-
-
----
-
 ## Speicherbedarf
 
 Ein Shelly-Script hat rund **25 kB** Arbeitsspeicher. Gemessen auf einem echten Gerät mit zwei Speichern:
