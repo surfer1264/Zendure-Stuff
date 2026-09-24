@@ -8,16 +8,26 @@ name: Build & Release Dashboard-Proxy
 # Bauen festgelegt, sondern beim ersten Start ueber die eingebaute
 # Einrichtungsseite (/setup) - siehe zendure_proxy.py.
 #
-# ANPASSEN: PROXY_PATH und HTML_PATH unten sind Platzhalter - bitte auf
-# die tatsaechlichen Pfade im Repo setzen (analog zu HELPER_PATH/HTML_PATH
-# im lokalen-Helfer-Workflow).
+# PROXY_PATH und HTML_PATH sind repo-relative Pfade (nicht die GitHub-Web-URL!) -
+# der Workflow checkt das Repo lokal aus (actions/checkout) und uebergibt
+# diese Pfade direkt an pyinstaller auf dem Runner.
+# PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py)
+# HTML_PATH:  shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html)
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
-# nicht - "Publish release" bzw. "gh release create" ohne --draft).
+# nicht - "Publish release" bzw. "gh release create" ohne --draft) - ODER
+# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch), z.B. zum
+# Testen des Builds ohne gleich ein Release zu veroeffentlichen. Bei einem
+# manuellen Lauf gibt es kein Release, an das etwas angehaengt werden
+# koennte - die gebaute Datei landet dann stattdessen als Workflow-Artifact
+# (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
 
 "on":
   release:
     types: [published]
+  workflow_dispatch: {}
 
 permissions:
   contents: write   # noetig, um Assets am Release hochzuladen
@@ -83,7 +93,18 @@ jobs:
           cat "${{ matrix.asset_name }}.sha256"
 
       - name: An Release anhaengen
+        if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
+
+      - name: Als Workflow-Artifact bereitstellen (Testlauf ohne Release)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: |
+            ${{ matrix.asset_name }}
+            ${{ matrix.asset_name }}.sha256
+          retention-days: 90
