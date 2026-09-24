@@ -17,17 +17,23 @@ name: Build & Release lokaler Helfer
 # (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
-# nicht - "Publish release" bzw. "gh release create" ohne --draft).
+# nicht - "Publish release" bzw. "gh release create" ohne --draft) - ODER
+# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch), z.B. zum
+# Testen des Builds ohne gleich ein Release zu veroeffentlichen. Bei einem
+# manuellen Lauf gibt es kein Release, an das etwas angehaengt werden
+# koennte - die gebauten Dateien landen dann stattdessen als
+# Workflow-Artifacts (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
 
 "on":
   release:
     types: [published]
+  workflow_dispatch: {}
 
 permissions:
   contents: write   # noetig, um Assets am Release hochzuladen
 
 env:
-  HELPER_PATH: shelly_script/local_helper/zendure_local_helper.py
+  HELPER_PATH: shelly_script/Multiconfigurator/local_helper/zendure_local_helper.py
   HTML_PATH: shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
 
 jobs:
@@ -92,7 +98,18 @@ jobs:
           cat "${{ matrix.asset_name }}.sha256"
 
       - name: An Release anhaengen
+        if: github.event_name == 'release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
+
+      - name: Als Workflow-Artifact bereitstellen (Testlauf ohne Release)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: |
+            ${{ matrix.asset_name }}
+            ${{ matrix.asset_name }}.sha256
+          retention-days: 10

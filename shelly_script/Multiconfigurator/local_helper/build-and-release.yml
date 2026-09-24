@@ -1,28 +1,28 @@
-name: Build & Release Dashboard-Proxy
+name: Build & Release lokaler Helfer
 
-# Baut zendure_proxy.py bei jedem veroeffentlichten GitHub-Release fuer
-# Windows und macOS zu je einer einzigen ausfuehrbaren Datei (PyInstaller,
-# --onefile) und haengt sie als Release-Asset an. Der Endnutzer laedt
-# danach nur noch eine fertige Datei von der Release-Seite herunter -
-# kein Python-Setup, kein Terminal. Die Shelly-IP wird nicht mehr beim
-# Bauen festgelegt, sondern beim ersten Start ueber die eingebaute
-# Einrichtungsseite (/setup) - siehe zendure_proxy.py.
+# Baut zendure_local_helper.py bei jedem veroeffentlichten GitHub-Release
+# fuer Windows (64-Bit und 32-Bit) und macOS zu je einer einzigen
+# ausfuehrbaren Datei (PyInstaller, --onefile) und haengt sie als
+# Release-Asset an. Der Endnutzer laedt danach nur noch eine fertige
+# Datei von der Release-Seite herunter - kein Python-Setup, kein
+# Terminal. Die 32-Bit-Variante ist fuer aeltere Geraete mit 32-Bit-
+# Windows 10 gedacht (dort scheitert eine 64-Bit-exe mit "Diese App
+# kann auf dem PC nicht ausgefuehrt werden").
 #
-# PROXY_PATH und HTML_PATH sind repo-relative Pfade (nicht die GitHub-Web-URL!) -
-# der Workflow checkt das Repo lokal aus (actions/checkout) und uebergibt
-# diese Pfade direkt an pyinstaller auf dem Runner.
-# PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
-# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py)
-# HTML_PATH:  shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
-# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html)
+# Anpassen: HELPER_PATH und HTML_PATH unten, falls Dateien umbenannt
+# werden oder woanders liegen. Beide Pfade sind vom Nutzer bestaetigt:
+# HELPER_PATH: shelly_script/local_helper/zendure_local_helper.py
+# (https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/local_helper)
+# HTML_PATH:   shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html)
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
 # nicht - "Publish release" bzw. "gh release create" ohne --draft) - ODER
 # manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch), z.B. zum
 # Testen des Builds ohne gleich ein Release zu veroeffentlichen. Bei einem
 # manuellen Lauf gibt es kein Release, an das etwas angehaengt werden
-# koennte - die gebaute Datei landet dann stattdessen als Workflow-Artifact
-# (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
+# koennte - die gebauten Dateien landen dann stattdessen als
+# Workflow-Artifacts (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
 
 "on":
   release:
@@ -33,8 +33,8 @@ permissions:
   contents: write   # noetig, um Assets am Release hochzuladen
 
 env:
-  PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
-  HTML_PATH: shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
+  HELPER_PATH: shelly_script/Multiconfigurator/local_helper/zendure_local_helper.py
+  HTML_PATH: shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html
 
 jobs:
   build:
@@ -42,13 +42,20 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            python_arch: x64
             data_sep: ";"
-            built_path: dist/zendure_proxy.exe
-            asset_name: zendure_proxy-windows.exe
+            built_path: dist/zendure_local_helper.exe
+            asset_name: zendure_local_helper-windows.exe
+          - os: windows-latest
+            python_arch: x86
+            data_sep: ";"
+            built_path: dist/zendure_local_helper.exe
+            asset_name: zendure_local_helper-windows-x86.exe
           - os: macos-latest
+            python_arch: x64
             data_sep: ":"
-            built_path: dist/zendure_proxy
-            asset_name: zendure_proxy-macos
+            built_path: dist/zendure_local_helper
+            asset_name: zendure_local_helper-macos
     runs-on: ${{ matrix.os }}
     steps:
       - name: Repo auschecken
@@ -58,21 +65,19 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
+          architecture: ${{ matrix.python_arch }}
 
       - name: PyInstaller installieren
         run: pip install pyinstaller
 
-      - name: Ausfuehrbare Datei bauen (mit gebuendelter Dashboard-HTML)
-        # --add-data SRC{sep}DEST bettet die Dashboard-HTML in die exe
-        # ein; "." als DEST legt sie direkt ins sys._MEIPASS-Wurzelverzeichnis,
-        # wo resource_path() in zendure_proxy.py sie erwartet. Die
-        # config.json mit der Shelly-IP wird NICHT mitgebaut - die
-        # entsteht erst beim ersten Start ueber /setup, siehe app_dir()
-        # im Script.
+      - name: Ausfuehrbare Datei bauen (mit gebuendelter HTML)
+        # --add-data SRC{sep}DEST bettet die Configurator-HTML in die exe
+        # ein; ". " als DEST legt sie direkt ins sys._MEIPASS-Wurzelverzeichnis,
+        # wo resource_path() in zendure_local_helper.py sie erwartet.
         run: >-
-          pyinstaller --onefile --console --name zendure_proxy
+          pyinstaller --onefile --console --name zendure_local_helper
           --add-data "${{ env.HTML_PATH }}${{ matrix.data_sep }}."
-          "${{ env.PROXY_PATH }}"
+          "${{ env.HELPER_PATH }}"
 
       - name: Asset benennen
         shell: bash
@@ -107,4 +112,4 @@ jobs:
           path: |
             ${{ matrix.asset_name }}
             ${{ matrix.asset_name }}.sha256
-          retention-days: 90
+          retention-days: 10
