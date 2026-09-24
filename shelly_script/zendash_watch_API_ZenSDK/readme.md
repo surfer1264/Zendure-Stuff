@@ -269,7 +269,7 @@ http://<IP-des-Dashboard-Shelly>/script/<Script-ID>/status_api
 
 Es sollte eine Zeile mit Daten (JSON) erscheinen. Kommt ein Fehler, läuft das Script nicht oder die Nummer stimmt nicht.
 
-Wenn das funktioniert habt Ihr die richtige IÜ-Adresse und Script-Nummer.
+Wenn das funktioniert habt Ihr die richtige IP-Adresse und Script-Nummer.
 
 **3. Proxy einstellen**
 
