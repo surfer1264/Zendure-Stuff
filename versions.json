@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-24T19:13:09Z",
+  "generated": "2026-09-24T19:16:38Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -128,9 +128,7 @@
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
-      "requires": {
-        "zdmc-controller": ">=5.0"
-      },
+      "requires": {},
       "history": []
     }
   }
