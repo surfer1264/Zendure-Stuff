@@ -1,0 +1,110 @@
+name: Build & Release Dashboard-Proxy
+
+# Baut zendure_proxy.py bei jedem veroeffentlichten GitHub-Release fuer
+# Windows und macOS zu je einer einzigen ausfuehrbaren Datei (PyInstaller,
+# --onefile) und haengt sie als Release-Asset an. Der Endnutzer laedt
+# danach nur noch eine fertige Datei von der Release-Seite herunter -
+# kein Python-Setup, kein Terminal. Die Shelly-IP wird nicht mehr beim
+# Bauen festgelegt, sondern beim ersten Start ueber die eingebaute
+# Einrichtungsseite (/setup) - siehe zendure_proxy.py.
+#
+# PROXY_PATH und HTML_PATH sind repo-relative Pfade (nicht die GitHub-Web-URL!) -
+# der Workflow checkt das Repo lokal aus (actions/checkout) und uebergibt
+# diese Pfade direkt an pyinstaller auf dem Runner.
+# PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py)
+# HTML_PATH:  shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
+# (https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html)
+#
+# Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
+# nicht - "Publish release" bzw. "gh release create" ohne --draft) - ODER
+# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch), z.B. zum
+# Testen des Builds ohne gleich ein Release zu veroeffentlichen. Bei einem
+# manuellen Lauf gibt es kein Release, an das etwas angehaengt werden
+# koennte - die gebaute Datei landet dann stattdessen als Workflow-Artifact
+# (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
+
+"on":
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # noetig, um Assets am Release hochzuladen
+
+env:
+  PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
+  HTML_PATH: shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            data_sep: ";"
+            built_path: dist/zendure_proxy.exe
+            asset_name: zendure_proxy-windows.exe
+          - os: macos-latest
+            data_sep: ":"
+            built_path: dist/zendure_proxy
+            asset_name: zendure_proxy-macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v7
+
+      - name: Python einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: PyInstaller installieren
+        run: pip install pyinstaller
+
+      - name: Ausfuehrbare Datei bauen (mit gebuendelter Dashboard-HTML)
+        # --add-data SRC{sep}DEST bettet die Dashboard-HTML in die exe
+        # ein; "." als DEST legt sie direkt ins sys._MEIPASS-Wurzelverzeichnis,
+        # wo resource_path() in zendure_proxy.py sie erwartet. Die
+        # config.json mit der Shelly-IP wird NICHT mitgebaut - die
+        # entsteht erst beim ersten Start ueber /setup, siehe app_dir()
+        # im Script.
+        run: >-
+          pyinstaller --onefile --console --name zendure_proxy
+          --add-data "${{ env.HTML_PATH }}${{ matrix.data_sep }}."
+          "${{ env.PROXY_PATH }}"
+
+      - name: Asset benennen
+        shell: bash
+        run: cp "${{ matrix.built_path }}" "${{ matrix.asset_name }}"
+
+      - name: SHA-256 berechnen
+        # sha256sum (Linux/Windows-Git-Bash) oder shasum -a 256 (macOS
+        # Standard) - je nachdem, was auf dem Runner vorhanden ist.
+        # Format "<hash>  <dateiname>" laesst sich spaeter direkt mit
+        # "sha256sum -c" bzw. PowerShells Get-FileHash gegenpruefen.
+        shell: bash
+        run: |
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${{ matrix.asset_name }}" > "${{ matrix.asset_name }}.sha256"
+          else
+            shasum -a 256 "${{ matrix.asset_name }}" > "${{ matrix.asset_name }}.sha256"
+          fi
+          cat "${{ matrix.asset_name }}.sha256"
+
+      - name: An Release anhaengen
+        if: github.event_name == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
+
+      - name: Als Workflow-Artifact bereitstellen (Testlauf ohne Release)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: |
+            ${{ matrix.asset_name }}
+            ${{ matrix.asset_name }}.sha256
+          retention-days: 10
