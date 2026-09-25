@@ -375,6 +375,10 @@
     padding:12px 16px; margin-bottom:20px; font-size:.82rem; line-height:1.4;
   }
   .diag b{ color:var(--alert-text); }
+  /* Vollbild-Knopf: im Vollbild farblich hervorgehoben, damit klar ist,
+     wie man wieder herauskommt. hidden, wenn der Browser kein Vollbild kann. */
+  .fs-toggle[hidden]{ display:none; }
+  .fs-toggle.active{ color:var(--teal-text); border-color:var(--teal-text); }
 
   @media (max-width:640px){
     /* Rechte Gruppe auf eine eigene volle Zeile - dann konkurriert sie nicht
@@ -405,6 +409,7 @@
         <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" title="Bedienung sperren/entsperren">⚿</button>
         <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" title="Schriftgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
+        <button class="theme-toggle fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" title="Vollbild" hidden>⛶</button>
       </div>
     </header>
 
@@ -462,10 +467,12 @@
      ================================================================ */
   const API_BASE = "";
 
-  // Versionsstand dieser Seite. Muss zur Version des API-Scripts passen -
-  // stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
+  // Versionsstand dieser Seite. Dashboard, API und Shelly-Script
+  // (zendash_watch_src.js) tragen seit 3.2 immer DIESELBE Nummer - bei jeder
+  // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
+  // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "2.7";
+  const VERSION = "3.2";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -540,6 +547,45 @@
     fontSizeIdx = (fontSizeIdx + 1) % FONT_LEVELS.length;
     applyFontSize();
   });
+
+  /* ---------------- Vollbild ----------------
+     Ein Klick holt die Seite ins Vollbild (Browserleisten weg, volle
+     Displayflaeche), ein zweiter Klick - oder Esc - wieder zurueck. Nutzt die
+     Fullscreen-API inkl. webkit-Praefix (Safari/iPad, aeltere Chrome-WebViews).
+     Wo der Browser das nicht kann (z. B. Safari auf dem iPhone), bleibt der
+     Knopf ausgeblendet. Hinweis: Browser-F11 ist ein anderer Mechanismus und
+     wird von der Seite nicht erkannt - der Knopf zeigt nur das Seiten-Vollbild. */
+  const fullscreenToggle = document.getElementById('fullscreenToggle');
+  const docEl = document.documentElement;
+  const fsSupported = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+  function fsElement(){
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+  function applyFullscreenState(){
+    const on = !!fsElement();
+    fullscreenToggle.classList.toggle('active', on);
+    fullscreenToggle.title = on ? 'Vollbild beenden' : 'Vollbild';
+    fullscreenToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function toggleFullscreen(){
+    try {
+      if (fsElement()) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      } else {
+        if (docEl.requestFullscreen) docEl.requestFullscreen({ navigationUI: 'hide' }).catch(function(){});
+        else if (docEl.webkitRequestFullscreen) docEl.webkitRequestFullscreen();
+      }
+    } catch(e) {}
+  }
+  if (fsSupported) {
+    fullscreenToggle.hidden = false;
+    fullscreenToggle.addEventListener('click', toggleFullscreen);
+    // Auch Esc/Wischgeste beenden das Vollbild - Knopf dann nachziehen.
+    document.addEventListener('fullscreenchange', applyFullscreenState);
+    document.addEventListener('webkitfullscreenchange', applyFullscreenState);
+    applyFullscreenState();
+  }
 
   /* ---------------- Clock ---------------- */
   const clockTime = document.getElementById('clockTime');
@@ -1132,7 +1178,9 @@
     const el = document.getElementById('versionLine');
     if (!el) return;
     if (!apiVersion) { el.textContent = 'v' + VERSION + ' · API unbekannt'; return; }
-    el.textContent = 'v' + VERSION + ' · API v' + apiVersion;
+    el.textContent = (apiVersion === VERSION)
+      ? 'v' + VERSION
+      : 'v' + VERSION + ' · Script v' + apiVersion + ' (abweichend!)';
     // Auseinanderlaufende Staende sind die haeufigste Ursache fuer seltsames
     // Verhalten nach einem Update - deshalb sichtbar machen.
     el.style.color = (apiVersion === VERSION) ? '' : 'var(--amber-text)';

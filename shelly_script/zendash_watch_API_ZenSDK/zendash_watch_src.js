@@ -35,7 +35,7 @@
 // Fallback dischargeAllowed=1/reverse=1.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.1";
+let VERSION = "3.2";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -149,9 +149,8 @@ let CONFIG = {
   debug: false
 };
 
-// Schnittstellenstand fuer das Dashboard (config_api liefert ihn aus). Die
-// Endpunkte sind unveraendert gegenueber zendash_api v2.7.
-let API_VERSION = "2.7";
+// Ab 3.2 gibt es keine eigene API-Version mehr: config_api liefert VERSION
+// aus, und das Dashboard traegt immer dieselbe Nummer wie dieses Script.
 
 // =====================================================
 // Plausibilitaets-Checks
@@ -1269,7 +1268,7 @@ function serveConfig(res, attempt) {
     store = null;
 
     let body = JSON.stringify({
-      version: API_VERSION,
+      version: VERSION,
       setpoint: setpoint,
       hysteresis: CONFIG.api.hysteresis,
       dischargeFixed: dischargeFixed,
@@ -1437,7 +1436,7 @@ function registerEndpoints() {
 
 function printBanner() {
   print("--------------------------------");
-  print("zenDash-API + Watchdog v" + VERSION + " (API-Schnittstelle " + API_VERSION + ")");
+  print("zenDash-API + Watchdog v" + VERSION + " (Dashboard muss ebenfalls v" + VERSION + " sein)");
   print("Module     : API " + (API_ON ? "AN" : "AUS") + " | Watchdog " + (WD_ON ? "AN" : "AUS"));
   let line = "Geraete    :";
   for (let i = 0; i < CONFIG.devices.length; i++) {
