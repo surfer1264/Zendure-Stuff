@@ -1,0 +1,1 @@
+python3 zendure_local_helper.py

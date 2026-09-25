@@ -13,9 +13,10 @@ Loest drei Probleme, die ein reiner Browser nicht loesen kann:
   2. Chunked Upload: Shellys RPC hat ein Groessenlimit pro Aufruf, der
      Code muss daher in mehreren Script.PutCode-Aufrufen uebertragen
      werden (siehe upload_script()). Vorher wird der Bestand geprueft:
-     pro Shelly ist genau EIN Script erlaubt. Ein Update ueberschreibt
+     pro Shelly wird genau EIN Script empfohlen. Ein Update ueberschreibt
      das vorhandene Script auf derselben ID; fremde, vertauschte oder
-     mehrere Scripte werden nur nach Bestaetigung im Browser entfernt.
+     mehrere Scripte fuehren zu einer Rueckfrage im Browser - der Nutzer
+     entscheidet, ob die anderen Scripte geloescht oder behalten werden.
      Nach jedem erfolgreichen Upload merkt sich der Helfer die IP in
      zendure_helper_config.json (siehe save_settings()); der Configurator
      liest sie beim Start ueber GET /api/settings.
@@ -72,6 +73,12 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Gemeinsame Version von Helfer und Configurator: steht NUR in der
 # Configurator-HTML (const APP_VERSION = "..."), der Helfer liest sie beim
 # Start von dort. So gibt es genau eine Stelle zum Hochzaehlen.
+# Faehigkeiten DIESES Helfer-Codes. Wichtig, weil die Seite bei jedem
+# Aufruf frisch von der Platte gelesen wird, der Python-Code aber nur beim
+# Start: laeuft noch ein alter Helfer-Prozess (oder eine alte exe mit dem
+# Configurator per githack), kennt er neue Optionen nicht. Der Configurator
+# bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
+HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -247,9 +254,10 @@ def rpc(ip, method, params=None, timeout=15, lenient=False):
 #                                         fuer den Dashboard-Proxy)
 #   - sonst (fremdes Script, anderer   -> NICHTS veraendern, sondern
 #     Typ = vermutlich IP vertauscht,     needs_confirm an den Browser;
-#     mehrere Scripte)                    erst nach Bestaetigung (force +
-#                                         confirm_ids) werden alle
-#                                         Scripte entfernt und neu angelegt
+#     mehrere Scripte)                    der Nutzer entscheidet Ja/Nein,
+#                                         ob die anderen Scripte geloescht
+#                                         werden (force + confirm_ids +
+#                                         delete_others)
 # ---------------------------------------------------------------
 KEY_TO_TYPE = {"ctrl": "zdmc-controller", "zdw": "zdmc-zendash-watch"}
 READ_CHUNK = 2048            # Zeichen pro Script.GetCode-Aufruf
@@ -416,12 +424,57 @@ def _start(ip, sid, name):
     return bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running", False))
 
 
-def upload_script(ip, name, code, key=None, force=False, confirm_ids=None):
+def _update_in_place(ip, script, code, name):
+    """Ueberschreibt ein vorhandenes Script auf derselben ID (Update)."""
+    sid = script["id"]
+    was_running = script["running"]
+    if was_running:
+        rpc(ip, "Script.Stop", {"id": sid})
+    try:
+        _put_code(ip, sid, code, first_append=False)
+    except UploadIncomplete:
+        raise
+    except RpcError:
+        # Schon der erste Block kam nicht an -> der alte Code ist noch
+        # vollstaendig; wieder starten, damit die Regelung weiterlaeuft.
+        if was_running:
+            try:
+                rpc(ip, "Script.Start", {"id": sid})
+            except RpcError:
+                pass
+        raise
+    return {"action": "updated", "id": sid, "running": _start(ip, sid, name)}
+
+
+def _install_new(ip, code, name, action="installed"):
+    sid = rpc(ip, "Script.Create", {"name": name})["id"]
+    _put_code(ip, sid, code, first_append=False)
+    return {"action": action, "id": sid, "running": _start(ip, sid, name)}
+
+
+def _delete(ip, script):
+    if script["running"]:
+        try:
+            rpc(ip, "Script.Stop", {"id": script["id"]})
+        except RpcError:
+            pass  # wird gleich sowieso geloescht
+    rpc(ip, "Script.Delete", {"id": script["id"]})
+
+
+def upload_script(ip, name, code, key=None, force=False, confirm_ids=None,
+                  delete_others=True):
     """Laedt code auf den Shelly (siehe Regel oben). Rueckgabe:
-      {"action": "installed"|"updated"|"replaced", "id", "running"}
+      {"action": "installed"|"updated"|"replaced", "id", "running",
+       "kept_others": n}
     oder, wenn eine Bestaetigung noetig ist:
       {"needs_confirm": True, "reason": "foreign"|"wrong_type"|"multiple",
-       "expected_type", "scripts": [...]}
+       "expected_type", "scripts": [...], "target_id", "keep_possible"}
+    Nach der Rueckfrage entscheidet der Nutzer (delete_others):
+      True  -> alle anderen Scripte loeschen
+      False -> andere Scripte behalten, nur das eigene installieren bzw.
+               aktualisieren
+    Ein vorhandenes Script vom gleichen Typ wird in beiden Faellen auf
+    seiner ID aktualisiert (Script-ID bleibt, z.B. fuer den Dashboard-Proxy).
     Wirft RpcError / UploadIncomplete bei Fehlern."""
     if not re.match(r"^\d{1,3}(\.\d{1,3}){3}$", ip):
         raise RpcError("Ungueltige IP-Adresse: %r" % ip)
@@ -433,35 +486,18 @@ def upload_script(ip, name, code, key=None, force=False, confirm_ids=None):
         raise RpcError("Script-Typ des hochzuladenden Codes unbekannt")
 
     scripts = inspect_scripts(ip)
+    matching = [s for s in scripts if s["type"] == expected]
+    others = [s for s in scripts if s["type"] != expected]
 
     # Fall 1: leer -> neu anlegen
     if not scripts:
-        sid = rpc(ip, "Script.Create", {"name": name})["id"]
-        _put_code(ip, sid, code, first_append=False)
-        return {"action": "installed", "id": sid, "running": _start(ip, sid, name)}
+        return _install_new(ip, code, name)
 
     # Fall 2: genau ein Script vom gleichen Typ -> auf derselben ID ueberschreiben
-    if len(scripts) == 1 and scripts[0]["type"] == expected:
-        sid = scripts[0]["id"]
-        was_running = scripts[0]["running"]
-        if was_running:
-            rpc(ip, "Script.Stop", {"id": sid})
-        try:
-            _put_code(ip, sid, code, first_append=False)
-        except UploadIncomplete:
-            raise
-        except RpcError:
-            # Schon der erste Block kam nicht an -> der alte Code ist noch
-            # vollstaendig; wieder starten, damit die Regelung weiterlaeuft.
-            if was_running:
-                try:
-                    rpc(ip, "Script.Start", {"id": sid})
-                except RpcError:
-                    pass
-            raise
-        return {"action": "updated", "id": sid, "running": _start(ip, sid, name)}
+    if len(scripts) == 1 and matching:
+        return _update_in_place(ip, matching[0], code, name)
 
-    # Fall 3: alles andere -> nur nach ausdruecklicher Bestaetigung
+    # Fall 3: alles andere -> erst Rueckfrage, dann entscheidet der Nutzer
     current_ids = sorted(s["id"] for s in scripts)
     if not force or sorted(confirm_ids or []) != current_ids:
         if len(scripts) > 1:
@@ -471,18 +507,32 @@ def upload_script(ip, name, code, key=None, force=False, confirm_ids=None):
         else:
             reason = "foreign"
         return {"needs_confirm": True, "reason": reason,
-                "expected_type": expected, "scripts": scripts}
+                "expected_type": expected, "scripts": scripts,
+                "target_id": matching[0]["id"] if len(matching) == 1 else None,
+                # Mehrere Scripte vom gleichen Typ: unklar, welches
+                # aktualisiert werden soll -> "Behalten" nicht moeglich
+                "keep_possible": len(matching) <= 1}
 
+    if not delete_others:
+        if len(matching) > 1:
+            raise RpcError("Mehrere Scripte vom gleichen Typ auf %s - "
+                           "bitte andere Scripte entfernen lassen." % ip)
+        if matching:
+            result = _update_in_place(ip, matching[0], code, name)
+        else:
+            result = _install_new(ip, code, name)
+        result["kept_others"] = len(others)
+        return result
+
+    if len(matching) == 1:
+        for s in others:
+            _delete(ip, s)
+        result = _update_in_place(ip, matching[0], code, name)
+        result["action"] = "replaced"
+        return result
     for s in scripts:
-        if s["running"]:
-            try:
-                rpc(ip, "Script.Stop", {"id": s["id"]})
-            except RpcError:
-                pass  # wird gleich sowieso geloescht
-        rpc(ip, "Script.Delete", {"id": s["id"]})
-    sid = rpc(ip, "Script.Create", {"name": name})["id"]
-    _put_code(ip, sid, code, first_append=False)
-    return {"action": "replaced", "id": sid, "running": _start(ip, sid, name)}
+        _delete(ip, s)
+    return _install_new(ip, code, name, action="replaced")
 
 
 def check_memory(ip):
@@ -577,7 +627,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         parsed = urllib.parse.urlsplit(self.path)
         if parsed.path == "/api/health":
-            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": APP_VERSION})
+            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": APP_VERSION,
+                             "features": HELPER_FEATURES})
         elif parsed.path == "/api/inspect":
             self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
         elif parsed.path == "/api/config":
@@ -656,12 +707,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             key = data.get("key")
             force = bool(data.get("force"))
             confirm_ids = data.get("confirm_ids") or []
+            delete_others = data.get("delete_others", True) is not False
             if not ip or not code:
                 raise RpcError("ip und code sind Pflichtfelder")
             print("Upload: %d Zeichen -> %s (Name: %s%s)"
-                  % (len(code), ip, name, ", bestaetigt" if force else ""))
+                  % (len(code), ip, name,
+                     "" if not force else (", andere Scripte loeschen" if delete_others
+                                           else ", andere Scripte behalten")))
             result = upload_script(ip, name, code, key=key, force=force,
-                                   confirm_ids=confirm_ids)
+                                   confirm_ids=confirm_ids, delete_others=delete_others)
             if result.get("needs_confirm"):
                 print("  -> Bestaetigung noetig (%s), nichts veraendert" % result["reason"])
                 self._json(200, dict({"ok": False}, **result))
