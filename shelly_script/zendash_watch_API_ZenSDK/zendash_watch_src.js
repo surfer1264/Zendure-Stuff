@@ -35,13 +35,14 @@
 // Fallback dischargeAllowed=1/reverse=1.
 //
 // LETZTE VOLLLADUNG: Meldet ein Hub SoC = 100 % (nur echte 100 %), wird
-// das lokale Datum als JJJJMMTT in zdmc_dev{i}_lastFull abgelegt - hoechstens
-// EIN KVS-Schreibvorgang je Geraet und Tag. config_api liefert den Wert je
-// Geraet als lastFull (0 = noch nie erfasst). Der Watchdog meldet einmalig,
-// wenn ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
+// das lokale Datum als JJJJMMTT in zdmc_dev{i}_lastFull abgelegt - EIN
+// KVS-Schreibvorgang je Geraet und Tag, danach ruht die Funktion bis
+// Mitternacht. config_api liefert den Wert je Geraet als lastFull (0 = noch
+// nie erfasst). Der Watchdog prueft einmal taeglich beim Morgen-Update, ob
+// ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.3";
+let VERSION = "3.3.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -525,40 +526,37 @@ function kvsSetOne(key, value, callback) {
 }
 
 // =====================================================
-// Letzte Vollladung (echte 100 %)
+// Letzte Vollladung (echte 100 %) - ereignisgesteuert (seit 3.3.1)
 //
-// Gespeichert wird nur das lokale DATUM als Zahl JJJJMMTT (z.B. 20260925),
-// nicht die Uhrzeit. Damit ist "hoechstens einmal am Tag schreiben" ein
-// einfacher Zahlenvergleich: geschrieben wird nur, wenn das heutige Datum
-// groesser ist als das zuletzt gespeicherte.
+// Ablauf je Geraet:
+//   1. Im bestehenden Poll: SoC == 100 und nextCheckAt erreicht?
+//      -> nur einen Merker setzen (reiner Zahlenvergleich, kein Datum).
+//   2. Nach dem Poll (Report schon freigegeben): EINMAL das lokale Datum
+//      lesen. Ist es schon gespeichert -> Ruhe bis Mitternacht. Sonst EIN
+//      KVS-Schreibvorgang, danach ebenfalls Ruhe bis Mitternacht.
+//   3. Bis Mitternacht passiert fuer dieses Geraet nichts mehr - kein
+//      Datum, keine Statusabfrage, kein Schreiben.
+// Fehler (Uhr noch nicht synchron, KVS nicht erreichbar): naechster Versuch
+// fruehestens nach FULL_RETRY_MS beim naechsten gesehenen 100 %, hoechstens
+// FULL_MAX_TRIES Schreibversuche je Tag.
 //
-// Erkannt wird im Poll (extractHub), geschrieben aber erst danach in einem
-// freien Slot (flushLastFull) - nie mitten in einem laufenden Poll.
-// Erfasst wird, solange ein Geraet abgefragt wird: ueberwachte Geraete immer,
-// Geraete mit watch:false nur bei offenem Dashboard.
+// Gespeichert wird nur das lokale DATUM als Zahl JJJJMMTT (z.B. 20260925).
+// Erfasst wird, solange ein Geraet ohnehin abgefragt wird: ueberwachte
+// Geraete immer, Geraete mit watch:false nur bei offenem Dashboard.
 // =====================================================
 
-let FULL_SOC = 100;          // nur echte 100 % zaehlen
-let NOT_FULL_DAYS = 20;      // Watchdog-Meldung ab so vielen Tagen
-let FULL_RETRY_S = 600;      // nach Schreibfehler fruehestens in 10 min erneut
-let FULL_MAX_WRITES = 3;     // harte Obergrenze je Geraet und 24 h Laufzeit
-let FULL_WINDOW_S = 86400;
+let FULL_SOC = 100;              // nur echte 100 % zaehlen
+let NOT_FULL_DAYS = 20;          // Watchdog-Meldung ab so vielen Tagen
+let FULL_RETRY_MS = 600000;      // nach Fehler fruehestens in 10 min erneut
+let FULL_MAX_TRIES = 3;          // hoechstens so viele Schreibversuche je Tag
 
 let LASTFULL = [];
 for (let lfi = 0; lfi < CONFIG.devices.length; lfi++) {
-  // day      - zuletzt gespeichertes Datum (JJJJMMTT, 0 = unbekannt)
-  // pending  - erkannt, aber noch nicht geschrieben (0 = nichts offen)
-  // retryAt  - fruehester naechster Versuch nach Fehler (Laufzeit in s)
-  // winStart/writes - Schreibversuche im aktuellen 24-h-Fenster
-  LASTFULL[lfi] = { day: 0, pending: 0, retryAt: 0, winStart: -1, writes: 0, capMsg: false };
-}
-
-// Geraete-Laufzeit in Sekunden. Laeuft immer vorwaerts - anders als
-// Date.now() springt sie nicht, wenn die Uhr (NTP) korrigiert wird.
-function upSec() {
-  let s = Shelly.getComponentStatus("sys");
-  if (s && isNum(s.uptime)) return s.uptime;
-  return Math.floor(Date.now() / 1000);
+  // day         - gespeichertes Datum (JJJJMMTT, 0 = unbekannt)
+  // seen        - 100 % im letzten Poll gesehen, noch nicht bearbeitet
+  // nextCheckAt - vorher wird 100 % gar nicht erst beachtet (Date.now, ms)
+  // tries/triesDay - Schreibversuche am Tag triesDay
+  LASTFULL[lfi] = { day: 0, seen: false, nextCheckAt: 0, tries: 0, triesDay: 0 };
 }
 
 // Tage seit 1970-01-01 -> JJJJMMTT (reine Ganzzahl-Rechnung, ohne Date).
@@ -589,22 +587,33 @@ function dateNumToDays(n) {
   return era * 146097 + doe - 719468;
 }
 
-// Heutiges LOKALES Datum als JJJJMMTT, oder 0 solange die Uhr nicht
-// synchronisiert ist. Die Zeitzonen-Verschiebung ergibt sich aus der
-// Differenz zwischen sys.time (lokal, HH:MM) und sys.unixtime (UTC) -
-// damit gelten Sommer-/Winterzeit automatisch.
-function localDateNum() {
+// Ergebnis von readLocalDate() - bewusst globale Werte statt eines neuen
+// Objekts je Aufruf.
+let TODAY = 0;           // heutiges lokales Datum JJJJMMTT, 0 = Uhr nicht synchron
+let MS_TO_MIDNIGHT = 0;  // Millisekunden bis zur naechsten lokalen Mitternacht
+
+// Liest EINMAL den Systemstatus. Die Zeitzonen-Verschiebung ergibt sich aus
+// der Differenz zwischen sys.time (lokal, HH:MM) und sys.unixtime (UTC) -
+// damit gelten Sommer-/Winterzeit automatisch. Nur bei einem 100-%-Ereignis
+// bzw. einmal taeglich beim Morgen-Update aufrufen.
+function readLocalDate() {
+  TODAY = 0;
+  MS_TO_MIDNIGHT = 0;
   let s = Shelly.getComponentStatus("sys");
-  if (!s || !isNum(s.unixtime) || s.unixtime < 1600000000 || typeof s.time !== "string") return 0;
+  if (!s || !isNum(s.unixtime) || s.unixtime < 1600000000 || typeof s.time !== "string") return;
   let c = s.time.indexOf(":");
-  if (c < 1) return 0;
+  if (c < 1) return;
   let localMin = Number(s.time.slice(0, c)) * 60 + Number(s.time.slice(c + 1));
-  if (!isNum(localMin)) return 0;
+  if (!isNum(localMin)) return;
   let off = localMin - (Math.floor(s.unixtime / 60) % 1440);
   if (off < -720) off += 1440;
   if (off > 840) off -= 1440;
   off = Math.round(off / 15) * 15;
-  return daysToDateNum(Math.floor((s.unixtime + off * 60) / 86400));
+  let local = s.unixtime + off * 60;
+  s = null;
+  TODAY = daysToDateNum(Math.floor(local / 86400));
+  // +5 s Sicherheitsabstand, damit nach Mitternacht sicher der neue Tag gilt
+  MS_TO_MIDNIGHT = (86400 - (local % 86400)) * 1000 + 5000;
 }
 
 // Wert aus der KVS uebernehmen (Start und config_api). Die KVS ist die
@@ -616,58 +625,52 @@ function adoptLastFull(index, v) {
   LASTFULL[index].day = n;
 }
 
-// Aus extractHub: SoC 100 % gesehen -> fuer heute vormerken, falls heute
-// noch nicht gespeichert. Ein gespeichertes Datum in der ZUKUNFT (falsche
-// Uhr, Tippfehler) gilt als ungueltig und darf ueberschrieben werden -
-// sonst wuerde es jede weitere Erfassung bis zu diesem Datum blockieren.
-function markFull(index) {
-  let lf = LASTFULL[index];
-  let today = localDateNum();
-  if (!today) return;
-  if (today === lf.day || lf.pending === today) return;
-  lf.pending = today;
-  if (DBG) logDebug(CONFIG.devices[index].label + ": 100 % erkannt - lastFull " + today + " vorgemerkt");
-}
-
-// Nach dem Poll: hoechstens EIN offener Eintrag je Durchlauf, nur bei
-// freiem Slot. Nach einem Fehler erst nach FULL_RETRY_S erneut.
-// Unabhaengig von Datum und Uhr gilt eine harte Obergrenze von
-// FULL_MAX_WRITES Versuchen je Geraet und 24 h Laufzeit - sie greift nur
-// in Fehlerfaellen (Antwort geht verloren, Uhr springt hin und her).
-function flushLastFull() {
-  if (busyNow()) return;
-  let up = upSec();
+// Nach dem Poll: gesehene 100-%-Ereignisse bearbeiten. Das Datum wird
+// hoechstens einmal je Durchlauf gelesen, geschrieben wird hoechstens ein
+// Geraet je Durchlauf und nur bei freiem Slot.
+function handleFullEvents() {
+  let dateRead = false;
   for (let i = 0; i < LASTFULL.length; i++) {
     let lf = LASTFULL[i];
-    if (!lf.pending || up < lf.retryAt) continue;
-    if (lf.winStart < 0 || up - lf.winStart >= FULL_WINDOW_S) {
-      lf.winStart = up;
-      lf.writes = 0;
-      lf.capMsg = false;
-    }
-    if (lf.writes >= FULL_MAX_WRITES) {
-      if (!lf.capMsg) {
-        lf.capMsg = true;
-        print(CONFIG.devices[i].label + ": lastFull - Obergrenze von " + FULL_MAX_WRITES + " Schreibversuchen in 24 h erreicht, pausiert.");
-      }
+    if (!lf.seen) continue;
+    if (busyNow()) return;              // Merker bleibt - naechster Durchlauf
+    lf.seen = false;
+    let now = Date.now();
+
+    if (!dateRead) { readLocalDate(); dateRead = true; }
+    if (!TODAY) {                       // Uhr noch nicht synchron
+      lf.nextCheckAt = now + FULL_RETRY_MS;
       continue;
     }
-    lf.writes++;
-    let day = lf.pending;
+    // Schon gespeichert (auch von Hand gesetzt) -> Ruhe bis Mitternacht.
+    // Ein Datum in der ZUKUNFT gilt als ungueltig und wird ueberschrieben.
+    if (lf.day === TODAY) {
+      lf.nextCheckAt = now + MS_TO_MIDNIGHT;
+      continue;
+    }
+    if (lf.triesDay !== TODAY) { lf.triesDay = TODAY; lf.tries = 0; }
+    if (lf.tries >= FULL_MAX_TRIES) {
+      lf.nextCheckAt = now + MS_TO_MIDNIGHT;
+      print(CONFIG.devices[i].label + ": lastFull - " + FULL_MAX_TRIES + " Schreibversuche erfolglos, neuer Versuch morgen.");
+      continue;
+    }
+    lf.tries++;
+    let day = TODAY;
+    let rest = MS_TO_MIDNIGHT;
+    if (DBG) logDebug(CONFIG.devices[i].label + ": 100 % erkannt - speichere lastFull " + day);
     busyEnter();
     kvsSetOne("zdmc_dev" + i + "_lastFull", day, function (ok) {
       busyLeave();
       if (ok) {
         lf.day = day;
-        if (lf.pending === day) lf.pending = 0;
-        lf.retryAt = 0;
+        lf.nextCheckAt = Date.now() + rest;
         print(CONFIG.devices[i].label + ": Vollladung (100 %) am " + day + " gespeichert.");
       } else {
-        lf.retryAt = upSec() + FULL_RETRY_S;
-        print(CONFIG.devices[i].label + ": lastFull konnte nicht gespeichert werden - neuer Versuch in 10 min.");
+        lf.nextCheckAt = Date.now() + FULL_RETRY_MS;
+        print(CONFIG.devices[i].label + ": lastFull konnte nicht gespeichert werden - neuer Versuch fruehestens in 10 min.");
       }
     });
-    return;
+    return;                             // ein Schreibvorgang je Durchlauf
   }
 }
 
@@ -1086,7 +1089,8 @@ function extractHub(index, body, watchNow, logPacks) {
   hub.gridReverse = jsonNum(body, "gridReverse");
   hub.pv = jsonNum(body, "solarInputPower");
   hub.online = true;
-  if (soc === FULL_SOC) markFull(index);
+  // Letzte Vollladung: nur Merker setzen, alles Weitere nach dem Poll
+  if (soc === FULL_SOC && Date.now() >= LASTFULL[index].nextCheckAt) LASTFULL[index].seen = true;
 
   let ht = jsonNum(body, "hyperTmp");
   WSTATE[index].hyperTemp = (ht !== null) ? (ht - 2731) / 10 : null;
@@ -1163,8 +1167,6 @@ function watchdogCheckHub(index, failReason) {
     ws.akkuVollMsgSent = false;
   }
 
-  checkNotFull(index);
-
   if (isNum(ws.hyperTemp)) {
     if (ws.hyperTemp > W.tempWarn) {
       if (!ws.hyperTempMsgSent) {
@@ -1177,25 +1179,30 @@ function watchdogCheckHub(index, failReason) {
   }
 }
 
-// Einmalige Meldung, wenn die letzte echte Vollladung NOT_FULL_DAYS oder
-// mehr Tage zurueckliegt; Reset bei der naechsten Vollladung. Ohne
-// gespeichertes Datum (noch nie erfasst) keine Meldung. Der Merker lebt nur
-// im Speicher - nach einem Script-Neustart kommt die Meldung ggf. noch einmal.
-function checkNotFull(index) {
-  let ws = WSTATE[index];
-  let lf = LASTFULL[index].day;
-  if (!lf) return;
-  let today = localDateNum();
-  if (!today) return;
-  let age = dateNumToDays(today) - dateNumToDays(lf);
-  // age < 0: Datum in der Zukunft - ungueltig, keine Meldung
-  if (age >= NOT_FULL_DAYS) {
-    if (!ws.notFullMsgSent) {
-      ws.notFullMsgSent = true;
-      notify("⚠️ " + CONFIG.devices[index].label + " seit " + age + " Tagen nicht voll");
+// Einmal taeglich (Morgen-Update): Meldung, wenn die letzte echte
+// Vollladung NOT_FULL_DAYS oder mehr Tage zurueckliegt - je Geraet nur
+// einmal, Reset nach der naechsten Vollladung. Ohne gespeichertes Datum
+// (noch nie erfasst) keine Meldung. Der Merker lebt nur im Speicher - nach
+// einem Script-Neustart kommt die Meldung ggf. noch einmal.
+function checkNotFullAll() {
+  readLocalDate();
+  if (!TODAY) return;
+  let todayDays = dateNumToDays(TODAY);
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    if (!CONFIG.devices[i].watch) continue;
+    let lf = LASTFULL[i].day;
+    if (!lf) continue;
+    let ws = WSTATE[i];
+    let age = todayDays - dateNumToDays(lf);
+    // age < 0: Datum in der Zukunft - ungueltig, keine Meldung
+    if (age >= NOT_FULL_DAYS) {
+      if (!ws.notFullMsgSent) {
+        ws.notFullMsgSent = true;
+        notify("⚠️ " + CONFIG.devices[i].label + " seit " + age + " Tagen nicht voll");
+      }
+    } else {
+      ws.notFullMsgSent = false;
     }
-  } else {
-    ws.notFullMsgSent = false;
   }
 }
 
@@ -1225,6 +1232,9 @@ function sendDigest(headerText) {
 function sendAstroStatus(type) {
   if (DBG) logDebug("Astro-Event: " + type);
   sendDigest(type === "sunset" ? "🌇 Abend-Update:" : "🌅 Morgen-Update:");
+  if (type !== "sunset") {
+    try { checkNotFullAll(); } catch (e) { print("lastFull-Pruefung: " + e); }
+  }
   notifyPump();
 }
 
@@ -1348,7 +1358,7 @@ function tick() {
     }
     // Nach dem Auto-Stop: belegt der gerade den Slot, wartet lastFull auf
     // den naechsten Durchlauf.
-    try { flushLastFull(); } catch (e) { print("lastFull-Fehler: " + e); }
+    try { handleFullEvents(); } catch (e) { print("lastFull-Fehler: " + e); }
     notifyPump();
   };
 
@@ -1657,4 +1667,4 @@ if (API_ON) {
 } else if (WD_ON) {
   // Auch ohne API den KVS-Stand lesen - lastFull braucht der Watchdog.
   initDeviceState(startWatchdogPart);
-}
+}

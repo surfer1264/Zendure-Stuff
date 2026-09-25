@@ -1,5 +1,12 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.3.1
+
+- Letzte Vollladung jetzt ereignisgesteuert: Im Poll wird bei SoC 100 % nur ein Merker gesetzt; Datum lesen und `zdmc_dev{i}_lastFull` schreiben passiert einmal nach dem Poll, danach ruht die Funktion je Geraet bis Mitternacht
+- Keine Systemstatus-Abfrage (`sys`) mehr in jedem Poll - vorher bis zu drei je 8-s-Takt, erhoehte den Speicher-Peak bei offenem Dashboard
+- Meldung "seit N Tagen nicht voll" wird einmal taeglich beim Morgen-Update geprueft statt in jedem Poll
+- Schreibfehler: neuer Versuch fruehestens nach 10 min, hoechstens 3 Versuche je Tag
+
 ## Changelog 3.3
 
 - Letzte Vollladung: echte 100 % SoC werden je Geraet als Datum (JJJJMMTT) in `zdmc_dev{i}_lastFull` gespeichert, hoechstens ein KVS-Schreibvorgang pro Geraet und Tag
