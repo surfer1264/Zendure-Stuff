@@ -100,10 +100,21 @@ SETTINGS_FILENAME = "zendure_helper_config.json"
 
 def resource_path(filename):
     """Findet eine mitgelieferte Datei - im normalen Skriptbetrieb neben
-    diesem Skript, in einer mit PyInstaller --onefile gebauten exe
-    stattdessen im temporaeren Entpack-Ordner sys._MEIPASS."""
-    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, filename)
+    diesem Skript oder im Ordner darueber, in einer mit PyInstaller
+    --onefile gebauten exe stattdessen im temporaeren Entpack-Ordner
+    sys._MEIPASS."""
+    base = getattr(sys, "_MEIPASS", None)
+    if base:
+        return os.path.join(base, filename)
+    # Skriptbetrieb: erst neben diesem Skript, sonst eine Ebene hoeher
+    # (Repo-Layout: local_helper/ liegt unter Multiconfigurator/, wo auch
+    # die HTML liegt) - so ist keine Kopie der HTML im Repo noetig.
+    here = os.path.dirname(os.path.abspath(__file__))
+    for base in (here, os.path.dirname(here)):
+        path = os.path.join(base, filename)
+        if os.path.isfile(path):
+            return path
+    return os.path.join(here, filename)
 
 
 # ---------------------------------------------------------------
