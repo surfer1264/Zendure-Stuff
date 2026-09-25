@@ -160,7 +160,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 4. Gewünschte Scripte anhaken → **„Jetzt updaten“**. Der Configurator liest deine aktuelle Konfiguration direkt vom Shelly und springt zum Ergebnis.
 5. Dort **„⚡ Direkt hochladen“** klicken. Das neue Script ersetzt das alte an derselben Stelle (die Script-Nummer bleibt gleich – wichtig z. B. für den Dashboard-Proxy) und wird wieder gestartet.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/28f6d1bf-8f5f-4311-8cd9-2e441b986157" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/fb19b123-4555-4be9-bc5d-39c16310bf12" />
 
 ### Was beim Update mit deinen Einstellungen passiert
 
