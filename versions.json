@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-25T08:58:32Z",
+  "generated": "2026-09-25T09:36:36Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -138,7 +138,8 @@
       "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4103847a68ae677408afacdc56356fea06a6c2e7/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
         "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
-        "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr – beim Hochladen folgt die Rückfrage, sie zu entfernen"
+        "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr",
+        "Liegen weitere Scripte auf dem Shelly, entscheidest du vor dem Hochladen, ob sie gelöscht oder behalten werden"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
