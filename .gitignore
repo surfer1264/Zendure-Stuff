@@ -7,8 +7,7 @@ ZendureWiki.wiki/
 myconfig.js
 *.csv
 *.log
-script_status.csv
-controller-config.js
-zendure_helper_config.json
-zendure_proxy_config.json
+*.csv
+*config.js
+*config.json
 *.exe
