@@ -4,7 +4,7 @@
 // Ein Script, zwei einzeln abschaltbare Module:
 //   API      - JSON-Endpunkte fuers Dashboard (config_api / status_api /
 //              kvs_set_api) und Auto-Stop beim manuellen Laden.
-//              Schnittstelle unveraendert gegenueber zendash_api v2.7.
+//              Ab 3.3 liefert config_api je Geraet zusaetzlich lastFull.
 //   Watchdog - Meldungen bei vollem Akku, hoher Temperatur, Zell-
 //              Unterspannung und nicht erreichbaren Hubs, dazu ein
 //              Digest zu Sonnenauf- und -untergang.
@@ -22,7 +22,7 @@
 //
 // Endpunkte (nur bei api.enabled, alle mit CORS):
 //   GET config_api  -> { version, setpoint, hysteresis, dischargeFixed,
-//                        dischargeStartupPower, devices:[...] }
+//                        dischargeStartupPower, devices:[{..., lastFull}] }
 //   GET status_api  -> { grid:{power,online},
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online}] }
@@ -33,9 +33,15 @@
 // Modus automatisch beendet. Laeuft auch ohne offenes Dashboard. Der
 // Vorzustand (preManual) lebt nur im Speicher; nach einem Neustart
 // Fallback dischargeAllowed=1/reverse=1.
+//
+// LETZTE VOLLLADUNG: Meldet ein Hub SoC = 100 % (nur echte 100 %), wird
+// das lokale Datum als JJJJMMTT in zdmc_dev{i}_lastFull abgelegt - hoechstens
+// EIN KVS-Schreibvorgang je Geraet und Tag. config_api liefert den Wert je
+// Geraet als lastFull (0 = noch nie erfasst). Der Watchdog meldet einmalig,
+// wenn ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.2";
+let VERSION = "3.3";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -519,6 +525,122 @@ function kvsSetOne(key, value, callback) {
 }
 
 // =====================================================
+// Letzte Vollladung (echte 100 %)
+//
+// Gespeichert wird nur das lokale DATUM als Zahl JJJJMMTT (z.B. 20260925),
+// nicht die Uhrzeit. Damit ist "hoechstens einmal am Tag schreiben" ein
+// einfacher Zahlenvergleich: geschrieben wird nur, wenn das heutige Datum
+// groesser ist als das zuletzt gespeicherte.
+//
+// Erkannt wird im Poll (extractHub), geschrieben aber erst danach in einem
+// freien Slot (flushLastFull) - nie mitten in einem laufenden Poll.
+// Erfasst wird, solange ein Geraet abgefragt wird: ueberwachte Geraete immer,
+// Geraete mit watch:false nur bei offenem Dashboard.
+// =====================================================
+
+let FULL_SOC = 100;          // nur echte 100 % zaehlen
+let NOT_FULL_DAYS = 20;      // Watchdog-Meldung ab so vielen Tagen
+let FULL_RETRY_MS = 600000;  // nach Schreibfehler fruehestens in 10 min erneut
+
+let LASTFULL = [];
+for (let lfi = 0; lfi < CONFIG.devices.length; lfi++) {
+  // day     - zuletzt gespeichertes Datum (JJJJMMTT, 0 = unbekannt)
+  // pending - erkannt, aber noch nicht geschrieben (0 = nichts offen)
+  LASTFULL[lfi] = { day: 0, pending: 0, retryAt: 0 };
+}
+
+// Tage seit 1970-01-01 -> JJJJMMTT (reine Ganzzahl-Rechnung, ohne Date).
+function daysToDateNum(z) {
+  z += 719468;
+  let era = Math.floor(z / 146097);
+  let doe = z - era * 146097;
+  let yoe = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365);
+  let y = yoe + era * 400;
+  let doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100));
+  let mp = Math.floor((5 * doy + 2) / 153);
+  let d = doy - Math.floor((153 * mp + 2) / 5) + 1;
+  let m = (mp < 10) ? mp + 3 : mp - 9;
+  if (m <= 2) y++;
+  return y * 10000 + m * 100 + d;
+}
+
+// JJJJMMTT -> Tage seit 1970-01-01.
+function dateNumToDays(n) {
+  let y = Math.floor(n / 10000);
+  let m = Math.floor(n / 100) % 100;
+  let d = n % 100;
+  if (m <= 2) y--;
+  let era = Math.floor(y / 400);
+  let yoe = y - era * 400;
+  let doy = Math.floor((153 * (m > 2 ? m - 3 : m + 9) + 2) / 5) + d - 1;
+  let doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+
+// Heutiges LOKALES Datum als JJJJMMTT, oder 0 solange die Uhr nicht
+// synchronisiert ist. Die Zeitzonen-Verschiebung ergibt sich aus der
+// Differenz zwischen sys.time (lokal, HH:MM) und sys.unixtime (UTC) -
+// damit gelten Sommer-/Winterzeit automatisch.
+function localDateNum() {
+  let s = Shelly.getComponentStatus("sys");
+  if (!s || !isNum(s.unixtime) || s.unixtime < 1600000000 || typeof s.time !== "string") return 0;
+  let c = s.time.indexOf(":");
+  if (c < 1) return 0;
+  let localMin = Number(s.time.slice(0, c)) * 60 + Number(s.time.slice(c + 1));
+  if (!isNum(localMin)) return 0;
+  let off = localMin - (Math.floor(s.unixtime / 60) % 1440);
+  if (off < -720) off += 1440;
+  if (off > 840) off -= 1440;
+  off = Math.round(off / 15) * 15;
+  return daysToDateNum(Math.floor((s.unixtime + off * 60) / 86400));
+}
+
+// Wert aus der KVS uebernehmen (Start und config_api). Nur vorwaerts - ein
+// aelterer KVS-Wert ueberschreibt kein neueres Datum im Speicher.
+function adoptLastFull(index, v) {
+  let n = Number(v);
+  if (!isNum(n) || n < 19700101 || n > 99991231) return;
+  if (n > LASTFULL[index].day) LASTFULL[index].day = n;
+}
+
+// Aus extractHub: SoC 100 % gesehen -> fuer heute vormerken, falls heute
+// noch nicht gespeichert.
+function markFull(index) {
+  let lf = LASTFULL[index];
+  let today = localDateNum();
+  if (!today) return;
+  if (today <= lf.day || lf.pending === today) return;
+  lf.pending = today;
+  if (DBG) logDebug(CONFIG.devices[index].label + ": 100 % erkannt - lastFull " + today + " vorgemerkt");
+}
+
+// Nach dem Poll: hoechstens EIN offener Eintrag je Durchlauf, nur bei
+// freiem Slot. Nach einem Fehler erst nach FULL_RETRY_MS erneut.
+function flushLastFull() {
+  if (busyNow()) return;
+  let now = Date.now();
+  for (let i = 0; i < LASTFULL.length; i++) {
+    let lf = LASTFULL[i];
+    if (!lf.pending || now < lf.retryAt) continue;
+    let day = lf.pending;
+    busyEnter();
+    kvsSetOne("zdmc_dev" + i + "_lastFull", day, function (ok) {
+      busyLeave();
+      if (ok) {
+        if (day > lf.day) lf.day = day;
+        if (lf.pending === day) lf.pending = 0;
+        lf.retryAt = 0;
+        print(CONFIG.devices[i].label + ": Vollladung (100 %) am " + day + " gespeichert.");
+      } else {
+        lf.retryAt = Date.now() + FULL_RETRY_MS;
+        print(CONFIG.devices[i].label + ": lastFull konnte nicht gespeichert werden - neuer Versuch in 10 min.");
+      }
+    });
+    return;
+  }
+}
+
+// =====================================================
 // Manueller Lademodus - Zustandsspiegel & Auto-Stop (Modul API)
 //
 // "Manuell aktiv" = dischargeAllowed=0, reverse=0, inputLimit>0.
@@ -689,12 +811,15 @@ function initDeviceState(done) {
         reverse: (rv !== undefined) ? (Number(rv) !== 0) : !!d.reverse,
         inputLimit: (il !== undefined) ? Number(il) : (d.inputLimit || 0)
       };
+      let lfv = kvsValue(store, "zdmc_dev" + i + "_lastFull");
+      if (lfv !== undefined) adoptLastFull(i, lfv);
     }
     if (store === null) print("KVS beim Start nicht lesbar - Vorgaben aus CONFIG verwendet.");
     if (DBG) {
       for (let j = 0; j < deviceState.length; j++) {
         logDebug("Start dev" + j + ": dischargeAllowed=" + deviceState[j].dischargeAllowed + ", reverse=" +
-          deviceState[j].reverse + ", inputLimit=" + deviceState[j].inputLimit + (isManualActive(deviceState[j]) ? " [MANUELL]" : ""));
+          deviceState[j].reverse + ", inputLimit=" + deviceState[j].inputLimit + ", lastFull=" + LASTFULL[j].day +
+          (isManualActive(deviceState[j]) ? " [MANUELL]" : ""));
       }
     }
     store = null;
@@ -824,6 +949,7 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     offlineMsgSent: false,
     akkuVollMsgSent: false,
     hyperTempMsgSent: false,
+    notFullMsgSent: false,
     lowVoltMsgSent: {}
   };
 }
@@ -929,6 +1055,7 @@ function extractHub(index, body, watchNow, logPacks) {
   hub.gridReverse = jsonNum(body, "gridReverse");
   hub.pv = jsonNum(body, "solarInputPower");
   hub.online = true;
+  if (soc === FULL_SOC) markFull(index);
 
   let ht = jsonNum(body, "hyperTmp");
   WSTATE[index].hyperTemp = (ht !== null) ? (ht - 2731) / 10 : null;
@@ -1005,6 +1132,8 @@ function watchdogCheckHub(index, failReason) {
     ws.akkuVollMsgSent = false;
   }
 
+  checkNotFull(index);
+
   if (isNum(ws.hyperTemp)) {
     if (ws.hyperTemp > W.tempWarn) {
       if (!ws.hyperTempMsgSent) {
@@ -1014,6 +1143,27 @@ function watchdogCheckHub(index, failReason) {
     } else if (ws.hyperTemp < W.tempReset) {
       ws.hyperTempMsgSent = false;
     }
+  }
+}
+
+// Einmalige Meldung, wenn die letzte echte Vollladung NOT_FULL_DAYS oder
+// mehr Tage zurueckliegt; Reset bei der naechsten Vollladung. Ohne
+// gespeichertes Datum (noch nie erfasst) keine Meldung. Der Merker lebt nur
+// im Speicher - nach einem Script-Neustart kommt die Meldung ggf. noch einmal.
+function checkNotFull(index) {
+  let ws = WSTATE[index];
+  let lf = LASTFULL[index].day;
+  if (!lf) return;
+  let today = localDateNum();
+  if (!today) return;
+  let age = dateNumToDays(today) - dateNumToDays(lf);
+  if (age >= NOT_FULL_DAYS) {
+    if (!ws.notFullMsgSent) {
+      ws.notFullMsgSent = true;
+      notify("⚠️ " + CONFIG.devices[index].label + " seit " + age + " Tagen nicht voll");
+    }
+  } else {
+    ws.notFullMsgSent = false;
   }
 }
 
@@ -1164,6 +1314,9 @@ function tick() {
     if (fast) {
       try { checkAutoStop(); } catch (e) { print("Auto-Stop-Fehler: " + e); }
     }
+    // Nach dem Auto-Stop: belegt der gerade den Slot, wartet lastFull auf
+    // den naechsten Durchlauf.
+    try { flushLastFull(); } catch (e) { print("lastFull-Fehler: " + e); }
     notifyPump();
   };
 
@@ -1263,6 +1416,9 @@ function serveConfig(res, attempt) {
       if (r !== undefined) devices[i].reverse = (Number(r) !== 0);
       if (m !== undefined) devices[i].minSoc = Number(m);
       if (l !== undefined) devices[i].inputLimit = Number(l);
+      let lfv = kvsValue(store, "zdmc_dev" + i + "_lastFull");
+      if (lfv !== undefined) adoptLastFull(i, lfv);
+      devices[i].lastFull = LASTFULL[i].day;
     }
     let kvsOk = (store !== null);
     store = null;
@@ -1467,5 +1623,6 @@ if (API_ON) {
   registerEndpoints();
   initDeviceState(startWatchdogPart);
 } else if (WD_ON) {
-  startWatchdogPart();
+  // Auch ohne API den KVS-Stand lesen - lastFull braucht der Watchdog.
+  initDeviceState(startWatchdogPart);
 }

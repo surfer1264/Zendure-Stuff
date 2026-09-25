@@ -55,6 +55,7 @@
     --shadow:0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
     --amber-text:#F2A93B;
     --teal-text:#4FD1C5;
+    --green-text:#5CCB76;
     --alert-text:#E2574C;
   }
   html[data-theme="light"]{
@@ -70,6 +71,7 @@
     --shadow:0 10px 24px rgba(20,30,45,0.10), 0 2px 6px rgba(20,30,45,0.06);
     --amber-text:#99600A;
     --teal-text:#207B73;
+    --green-text:#2F8A46;
     --alert-text:#CF2E22;
   }
 
@@ -310,6 +312,17 @@
   .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem; color:var(--text-muted); margin-top:3px; }
   .pack-line .low{ color:var(--amber-text); }
   .pack-line .crit{ color:var(--alert-text); }
+  /* Letzte echte Vollladung (100 %). Farbe nach Alter: gruen < 7 Tage,
+     gelb 7-20 Tage, rot darueber. Antippen wechselt zwischen Alter und
+     Datum. */
+  .full-line{
+    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem;
+    color:var(--text-muted); margin-top:3px; cursor:pointer; user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .full-line.fresh{ color:var(--green-text); }
+  .full-line.aging{ color:var(--amber-text); }
+  .full-line.stale{ color:var(--alert-text); }
 
   .divider{ height:1px; background:var(--border); margin:14px 0; }
 
@@ -472,7 +485,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.2";
+  const VERSION = "3.3";
 
   function showDiag(msg){
     const el = document.getElementById('diag');
@@ -967,6 +980,7 @@
             '<div class="soc-sub" id="socSub-' + d.id + '" title="Arbeitsfenster: Reserve bis Ladeziel">' + socSubText(d) + '</div>' +
             '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
             '<div class="pack-line" id="packLine-' + d.id + '"></div>' +
+            '<div class="full-line" id="fullLine-' + d.id + '" role="button" tabindex="0" title="Letzte Vollladung (100 %) - antippen für Datum"></div>' +
           '</div>' +
         '</div>' +
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
@@ -995,6 +1009,16 @@
           '<button class="btn" id="manualBtn-' + d.id + '">Manuelles Laden starten</button>' +
         '</div>';
       hubsGrid.appendChild(el);
+
+      const fullLineEl = document.getElementById('fullLine-' + d.id);
+      const toggleFullDate = function(){
+        d.showFullDate = !d.showFullDate;
+        renderFullLine(d);
+      };
+      fullLineEl.addEventListener('click', toggleFullDate);
+      fullLineEl.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFullDate(); }
+      });
 
       document.getElementById('discharge-' + d.id).addEventListener('change', function(e){
         const next = e.target.checked;
@@ -1212,7 +1236,8 @@
         dischargeAllowed: !!d.dischargeAllowed, reverse: !!d.reverse,
         soc: null, power: 0, online: false,
         acMode: null, socLimit: null, gridReverse: null,
-        pv: null, minVol: null
+        pv: null, minVol: null,
+        lastFull: Number(d.lastFull || 0), showFullDate: false
       };
     });
 
@@ -1307,6 +1332,7 @@
           if (c.inputLimit !== undefined) d.inputLimit = Number(c.inputLimit);
           d.dischargeAllowed = !!c.dischargeAllowed;
           d.reverse = !!c.reverse;
+          if (c.lastFull !== undefined) d.lastFull = Number(c.lastFull || 0);
         });
       }
       pollCount++;
@@ -1419,6 +1445,33 @@
     el.innerHTML = parts.join(' · ');
   }
 
+  // lastFull kommt als JJJJMMTT (lokales Datum des Shelly), 0 = nie erfasst.
+  // Alter in Kalendertagen gegenueber heute (lokales Datum des Browsers).
+  function fullAgeDays(n){
+    const y = Math.floor(n / 10000), m = Math.floor(n / 100) % 100, day = n % 100;
+    const now = new Date();
+    const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.max(0, Math.round((today - Date.UTC(y, m - 1, day)) / 86400000));
+  }
+
+  function renderFullLine(d){
+    const el = document.getElementById('fullLine-' + d.id);
+    if (!el) return;
+    el.classList.remove('fresh', 'aging', 'stale');
+    const n = Number(d.lastFull || 0);
+    if (!(n > 19700101)) { el.textContent = '100 %: noch nicht erfasst'; return; }
+
+    const age = fullAgeDays(n);
+    el.classList.add(age < 7 ? 'fresh' : (age <= 20 ? 'aging' : 'stale'));
+    if (d.showFullDate) {
+      const dd = String(n % 100).padStart(2, '0');
+      const mm = String(Math.floor(n / 100) % 100).padStart(2, '0');
+      el.textContent = '100 %: ' + dd + '.' + mm + '.' + Math.floor(n / 10000);
+    } else {
+      el.textContent = '100 %: ' + (age === 0 ? 'heute' : (age === 1 ? 'gestern' : 'vor ' + age + ' Tagen'));
+    }
+  }
+
   function render(){
     const now = new Date();
 
@@ -1466,6 +1519,7 @@
       dot.classList.toggle('offline', !d.online);
       renderFlags(d);
       renderPackLine(d);
+      renderFullLine(d);
       renderManual(d);
 
       const socEl = document.getElementById('socValue-' + d.id);
