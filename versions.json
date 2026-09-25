@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-25T08:31:27Z",
+  "generated": "2026-09-25T08:58:32Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -133,17 +133,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.0",
+      "version": "2.0.1",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/847f552f2e58f0ed111526c24f79f93ace46fc9f/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4103847a68ae677408afacdc56356fea06a6c2e7/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Startdialog: Neu konfigurieren oder Updaten",
-        "Update: installierte Versionen mit GitHub vergleichen und mit bisherigen Einstellungen aktualisieren",
-        "Helfer merkt sich die Shelly-IPs und prüft vor dem Upload, ob nur ein Script auf dem Shelly liegt"
+        "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
+        "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr – beim Hochladen folgt die Rückfrage, sie zu entfernen"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
-      "history": []
+      "history": [
+        {
+          "version": "2.0",
+          "changes": [
+            "Startdialog: Neu konfigurieren oder Updaten",
+            "Update: installierte Versionen mit GitHub vergleichen und mit bisherigen Einstellungen aktualisieren",
+            "Helfer merkt sich die Shelly-IPs und prüft vor dem Upload, ob nur ein Script auf dem Shelly liegt"
+          ],
+          "notice": null
+        }
+      ]
     }
   }
 }
