@@ -69,7 +69,25 @@ PORT = 8787
 BIND_ADDRESS = "127.0.0.1"   # bewusst NUR dieser Rechner, nicht das ganze Netz
 CHUNK_SIZE = 1024            # Zeichen pro Script.PutCode-Aufruf
 HTML_FILENAME = "zendure-multi-configurator_multilang.html"
-HELPER_VERSION = "1.1"
+# Gemeinsame Version von Helfer und Configurator: steht NUR in der
+# Configurator-HTML (const APP_VERSION = "..."), der Helfer liest sie beim
+# Start von dort. So gibt es genau eine Stelle zum Hochzaehlen.
+RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
+
+# Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
+# ansprechen. Der Browser setzt den Origin-Header selbst, eine Webseite
+# kann ihn nicht faelschen. Anfragen OHNE Origin (curl, upload_shelly.py,
+# andere lokale Programme) bleiben erlaubt - wer lokal Programme startet,
+# hat ohnehin vollen Zugriff.
+# githack ist bewusst zugelassen (Configurator per githack-Link + Helfer).
+# Hinweis: githack liefert ALLE oeffentlichen GitHub-Repos unter derselben
+# Adresse aus - diese Freigabe gilt damit auch fuer fremde Repos dort.
+ALLOWED_ORIGINS = {
+    "http://127.0.0.1:%d" % PORT,
+    "http://localhost:%d" % PORT,
+    "https://raw.githack.com",
+    "https://rawcdn.githack.com",
+}
 SETTINGS_FILENAME = "zendure_helper_config.json"
 
 
@@ -168,6 +186,15 @@ def save_settings(updates):
     return None
 
 
+def app_version():
+    try:
+        with open(resource_path(HTML_FILENAME), "r", encoding="utf-8") as fh:
+            m = RE_APP_VERSION.search(fh.read())
+        return m.group(1) if m else "?"
+    except OSError:
+        return "?"
+
+
 class RpcError(Exception):
     pass
 
@@ -224,6 +251,46 @@ READ_CHUNK = 2048            # Zeichen pro Script.GetCode-Aufruf
 RE_SCRIPT_TYPE = re.compile(r"""\bSCRIPT_TYPE\s*=\s*["']([^"']+)["']""")
 RE_VERSION = re.compile(r"""\bVERSION\s*=\s*["']([^"']+)["']""")
 RE_LEGACY_VERSION = re.compile(r"""CONFIG\.version\s*=\s*["']([^"']+)["']""")
+RE_SCHEMA = re.compile(r"""\bCONFIG_SCHEMA\s*=\s*(\d+)""")
+RE_CONFIG_START = re.compile(r"^let CONFIG\s*=\s*\{", re.MULTILINE)
+
+
+def find_config_block(text):
+    """(start, ende) des Blocks 'let CONFIG = {...};' - beachtet Strings
+    und Kommentare (gleiche Logik wie .github/scripts/build_manifest.py)."""
+    m = RE_CONFIG_START.search(text)
+    if not m:
+        return None
+    i, depth, n = m.end() - 1, 0, len(text)
+    while i < n:
+        c = text[i]
+        if c == "/" and i + 1 < n and text[i + 1] == "/":
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+            continue
+        if c == "/" and i + 1 < n and text[i + 1] == "*":
+            j = text.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+            continue
+        if c in "\"'":
+            i += 1
+            while i < n and text[i] != c:
+                if text[i] == "\\":
+                    i += 1
+                i += 1
+            i += 1
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                if end < n and text[end] == ";":
+                    end += 1
+                return m.start(), end
+        i += 1
+    return None
 
 
 class UploadIncomplete(RpcError):
@@ -270,7 +337,7 @@ def inspect_scripts(ip):
     for s in rpc(ip, "Script.List").get("scripts", []):
         entry = {"id": s.get("id"), "name": s.get("name") or "",
                  "running": bool(s.get("running")),
-                 "type": None, "version": None, "legacy": False}
+                 "type": None, "version": None, "schema": None, "legacy": False}
         try:
             code = read_code(ip, s["id"], full=False)
             stype, ver, legacy = detect_type(code)
@@ -279,11 +346,31 @@ def inspect_scripts(ip):
                 # aeltere Staende den ganzen Code lesen.
                 code = read_code(ip, s["id"], full=True)
                 stype, ver, legacy = detect_type(code)
-            entry.update(type=stype, version=ver, legacy=legacy)
+            m_schema = RE_SCHEMA.search(code)
+            entry.update(type=stype, version=ver, legacy=legacy,
+                         schema=int(m_schema.group(1)) if m_schema else None)
         except RpcError:
             pass  # Code nicht lesbar -> Typ bleibt unbekannt
         result.append(entry)
     return result
+
+
+def read_config(ip, key):
+    """Liest den CONFIG-Block des installierten Scripts (fuer den
+    Update-Weg im Configurator). Erwartet genau ein Script vom Typ zu key
+    auf dem Shelly - sonst Fehler (dann bitte 'Neu konfigurieren')."""
+    expected = KEY_TO_TYPE.get(key)
+    if not expected:
+        raise RpcError("Unbekannter Script-Schluessel: %r" % key)
+    scripts = inspect_scripts(ip)
+    if len(scripts) != 1 or scripts[0]["type"] != expected:
+        raise RpcError("Auf %s liegt nicht genau ein passendes Script "
+                       "- bitte 'Neu konfigurieren' waehlen." % ip)
+    code = read_code(ip, scripts[0]["id"], full=True)
+    rng = find_config_block(code.replace("\r\n", "\n"))
+    if rng is None:
+        raise RpcError("CONFIG-Block im Script auf %s nicht gefunden." % ip)
+    return dict(scripts[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]])
 
 
 def _put_code(ip, sid, code, first_append):
@@ -420,18 +507,37 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
 
+    def _origin_ok(self):
+        origin = self.headers.get("Origin")
+        return origin is None or origin in ALLOWED_ORIGINS
+
+    def _reject(self):
+        body = b'{"ok": false, "error": "origin not allowed"}'
+        self.send_response(403)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+        sys.stderr.write("Abgelehnt: Anfrage von %s\n" % self.headers.get("Origin"))
+
     def _cors(self):
-        origin = self.headers.get("Origin", "*")
+        origin = self.headers.get("Origin")
+        if origin not in ALLOWED_ORIGINS:
+            return
         self.send_header("Access-Control-Allow-Origin", origin)
+        self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         # Chromes "Private Network Access": erlaubt einer von aussen (auch
-        # https, z.B. GitHub Pages) geladenen Seite, dieses 127.0.0.1
+        # https, z.B. githack) geladenen Seite, dieses 127.0.0.1
         # anzusprechen - ohne diesen Header blockt neueres Chrome sonst
         # den Preflight-Request.
         self.send_header("Access-Control-Allow-Private-Network", "true")
 
     def do_OPTIONS(self):
+        if not self._origin_ok():
+            self._reject()
+            return
         self.send_response(204)
         self._cors()
         self.end_headers()
@@ -446,9 +552,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if not self._origin_ok():
+            self._reject()
+            return
         parsed = urllib.parse.urlsplit(self.path)
         if parsed.path == "/api/health":
-            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": HELPER_VERSION})
+            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": APP_VERSION})
+        elif parsed.path == "/api/inspect":
+            self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
+        elif parsed.path == "/api/config":
+            self._handle_ip_call(parsed.query, lambda ip, q: read_config(ip, (q.get("key") or [""])[0]))
         elif parsed.path == "/api/memcheck":
             self._handle_memcheck(parsed.query)
         elif parsed.path == "/api/settings":
@@ -458,6 +571,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._serve_html()
         else:
             self._json(404, {"ok": False, "error": "not found"})
+
+    def _handle_ip_call(self, query, func):
+        params = urllib.parse.parse_qs(query)
+        ip = (params.get("ip") or [""])[0].strip()
+        try:
+            if not RE_IP.match(ip):
+                raise RpcError("ungueltige oder fehlende IP")
+            self._json(200, dict({"ok": True}, **func(ip, params)))
+        except RpcError as err:
+            self._json(200, {"ok": False, "error": str(err)})
+        except Exception as err:
+            self._json(500, {"ok": False, "error": str(err)})
 
     def _handle_memcheck(self, query):
         params = urllib.parse.parse_qs(query)
@@ -490,8 +615,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):
+        if not self._origin_ok():
+            self._reject()
+            return
         if self.path != "/api/upload":
             self._json(404, {"ok": False, "error": "not found"})
+            return
+        # Nur JSON: verhindert, dass eine Seite den Upload als "einfache"
+        # Anfrage (text/plain, ohne Preflight) ausloest.
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            self._json(415, {"ok": False, "error": "Content-Type application/json erwartet"})
             return
         try:
             length = int(self.headers.get("Content-Length", 0))
@@ -532,6 +666,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(500, {"ok": False, "error": str(err)})
 
 
+APP_VERSION = app_version()
+
+
 def main():
     try:
         httpd = http.server.ThreadingHTTPServer((BIND_ADDRESS, PORT), Handler)
@@ -541,14 +678,15 @@ def main():
         return 1
 
     url = "http://%s:%s/" % (BIND_ADDRESS, PORT)
-    print("Lokaler Helfer laeuft auf %s" % url)
+    print("Zendure Multi-Configurator %s - lokaler Helfer laeuft auf %s" % (APP_VERSION, url))
     print("Oeffne den Configurator automatisch im Browser...")
     try:
         webbrowser.open(url)
     except Exception as err:
         print("Konnte den Browser nicht automatisch oeffnen (%s) - Adresse manuell aufrufen: %s"
               % (err, url))
-    print("Dieses Fenster offen lassen, solange hochgeladen wird. Beenden mit Strg+C.")
+    print("Dieses Fenster offen lassen, solange hochgeladen wird.")
+    print("Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

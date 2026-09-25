@@ -139,7 +139,13 @@
 // Sichtbares Build-Datum - bei jeder inhaltlichen Aenderung an dieser
 // Datei hier anpassen. Hilft zu erkennen, ob eine gebuendelte exe (siehe
 // zendure_local_helper.py) noch den alten Stand ausliefert.
-const BUILD_DATE = "2026-09-23";
+const BUILD_DATE = "2026-09-25";
+// Gemeinsame Version von Configurator und lokalem Helfer (der Helfer liest
+// sie beim Start aus dieser Datei). Bei jedem Release hochzaehlen und in
+// shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
+// Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
+const APP_TYPE = "zdmc-configurator";
+const APP_VERSION = "2.0";
 
 const I18N = {
 de: {
@@ -149,7 +155,7 @@ de: {
   build_label: "Build:",
   toastCopied: "In Zwischenablage kopiert",
 
-  step_products: "Start", step_devices: "Geräte", step_gridsource: "Netzquelle",
+  step_devices: "Geräte", step_gridsource: "Netzquelle",
   step_charging: "Laden vom Netz", step_signal: "Benachrichtigungen",
   step_ctrl_gridreverse: "Bei vollem Akku", step_ctrl_kvs: "KVS (Controller)", step_regel: "Regelparameter", step_result: "Ergebnis",
 
@@ -292,6 +298,46 @@ de: {
   upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
   upload_error: "Fehler: {msg}",
   upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen.",
+  version_label: "Version",
+  step_start: "Start",
+  step_products: "Funktionen",
+  start_shellys_h2: "Deine Shellys",
+  start_ctr_label: "Controller-Shelly",
+  start_dash_label: "Dashboard-Shelly",
+  start_open_ui: "Weboberfläche öffnen",
+  start_h2: "Was möchtest du tun?",
+  start_new_title: "Neu konfigurieren",
+  start_new_desc: "Funktionen auswählen und Schritt für Schritt einrichten. Eine vorhandene Config kannst du im nächsten Schritt wie bisher einfügen.",
+  start_update_title: "Updaten",
+  start_update_desc: "Installierte Versionen mit GitHub vergleichen und die Scripte mit deinen bisherigen Einstellungen aktualisieren.",
+  start_update_needs_helper: "Nur mit dem lokalen Helfer möglich: Helfer starten – er öffnet den Configurator automatisch.",
+  nav_err_mode: "Bitte zuerst auswählen, was du tun möchtest.",
+  upd_h2: "Update",
+  upd_ip_hint: "Trage die IP-Adressen deiner Shellys ein (mindestens eine).",
+  upd_check_btn: "Versionen prüfen",
+  upd_checking: "Prüfe Versionen…",
+  upd_col_script: "Script",
+  upd_col_installed: "Auf dem Shelly",
+  upd_col_available: "Auf GitHub",
+  upd_col_status: "Status",
+  upd_status_outdated: "Update verfügbar",
+  upd_status_current: "aktuell",
+  upd_status_newer: "neuer als GitHub",
+  upd_status_unknown: "GitHub-Version unbekannt",
+  upd_status_missing: "nicht installiert – bitte „Neu konfigurieren“",
+  upd_status_unclear: "kein eindeutiges Script – bitte „Neu konfigurieren“",
+  upd_status_unreachable: "Shelly nicht erreichbar",
+  upd_status_noip: "keine IP eingetragen",
+  upd_manifest_err: "Versionen auf GitHub nicht abrufbar ({msg}).",
+  upd_changes_details: "Alle Änderungen",
+  upd_app_new: "Neue Version {v} des Configurators/Helfers verfügbar (installiert: {cur}).",
+  upd_app_download: "Herunterladen",
+  upd_app_current: "Configurator/Helfer {cur} ist aktuell.",
+  upd_question: "Möchtest du jetzt updaten?",
+  upd_btn_now: "Jetzt updaten",
+  upd_none_selected: "Bitte mindestens ein Script auswählen.",
+  upd_err_cfg: "Config konnte nicht vom Shelly gelesen werden: {msg}",
+  result_update_hint: "Update vorbereitet: Deine bisherigen Einstellungen wurden vom Shelly übernommen. Mit „Direkt hochladen“ spielst du die neue Version ein.",
   upload_success_updated: "✓ Update auf {ip} eingespielt (Script-Nummer {id} beibehalten) und gestartet.",
   upload_not_running: "Hochgeladen auf {ip}, aber das Script läuft nicht. Bitte in der Shelly-Weboberfläche das Script-Log prüfen.",
   upload_incomplete: "Upload abgebrochen – das Script auf dem Shelly ist unvollständig. Bitte erneut hochladen. ({msg})",
@@ -382,7 +428,7 @@ en: {
   build_label: "Build:",
   toastCopied: "Copied to clipboard",
 
-  step_products: "Start", step_devices: "Devices", step_gridsource: "Grid source",
+  step_devices: "Devices", step_gridsource: "Grid source",
   step_charging: "Charge from grid", step_signal: "Notifications",
   step_ctrl_gridreverse: "Battery full", step_ctrl_kvs: "KVS (Controller)", step_regel: "Control parameters", step_result: "Result",
 
@@ -525,6 +571,46 @@ en: {
   upload_success: "✓ Successfully uploaded to {ip} and started.",
   upload_error: "Error: {msg}",
   upload_err_ip: "Please enter a valid IP address for the target device first.",
+  version_label: "Version",
+  step_start: "Start",
+  step_products: "Functions",
+  start_shellys_h2: "Your Shellys",
+  start_ctr_label: "Controller Shelly",
+  start_dash_label: "Dashboard Shelly",
+  start_open_ui: "Open web interface",
+  start_h2: "What would you like to do?",
+  start_new_title: "Configure from scratch",
+  start_new_desc: "Choose functions and set them up step by step. You can paste an existing config in the next step as before.",
+  start_update_title: "Update",
+  start_update_desc: "Compare installed versions with GitHub and update the scripts with your existing settings.",
+  start_update_needs_helper: "Only possible with the local helper: start the helper – it opens the configurator automatically.",
+  nav_err_mode: "Please choose what you would like to do first.",
+  upd_h2: "Update",
+  upd_ip_hint: "Enter the IP addresses of your Shellys (at least one).",
+  upd_check_btn: "Check versions",
+  upd_checking: "Checking versions…",
+  upd_col_script: "Script",
+  upd_col_installed: "On the Shelly",
+  upd_col_available: "On GitHub",
+  upd_col_status: "Status",
+  upd_status_outdated: "Update available",
+  upd_status_current: "up to date",
+  upd_status_newer: "newer than GitHub",
+  upd_status_unknown: "GitHub version unknown",
+  upd_status_missing: "not installed – please use “Configure from scratch”",
+  upd_status_unclear: "no unique script – please use “Configure from scratch”",
+  upd_status_unreachable: "Shelly not reachable",
+  upd_status_noip: "no IP entered",
+  upd_manifest_err: "Could not load versions from GitHub ({msg}).",
+  upd_changes_details: "All changes",
+  upd_app_new: "New version {v} of the configurator/helper available (installed: {cur}).",
+  upd_app_download: "Download",
+  upd_app_current: "Configurator/helper {cur} is up to date.",
+  upd_question: "Would you like to update now?",
+  upd_btn_now: "Update now",
+  upd_none_selected: "Please select at least one script.",
+  upd_err_cfg: "Could not read the config from the Shelly: {msg}",
+  result_update_hint: "Update prepared: your existing settings were taken over from the Shelly. Use “Upload directly” to install the new version.",
   upload_success_updated: "✓ Update installed on {ip} (script number {id} kept) and started.",
   upload_not_running: "Uploaded to {ip}, but the script is not running. Please check the script log in the Shelly web interface.",
   upload_incomplete: "Upload aborted – the script on the Shelly is incomplete. Please upload again. ({msg})",
@@ -612,10 +698,10 @@ fr: {
   pageTitle: "Zendure Multi-Device Suite – Assistant de configuration",
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
-  build_label: "Version :",
+  build_label: "Build :",
   toastCopied: "Copié dans le presse-papiers",
 
-  step_products: "Départ", step_devices: "Appareils", step_gridsource: "Source réseau",
+  step_devices: "Appareils", step_gridsource: "Source réseau",
   step_charging: "Charge depuis le réseau", step_signal: "Notifications",
   step_ctrl_gridreverse: "Batterie pleine", step_ctrl_kvs: "KVS (Controller)", step_regel: "Paramètres de régulation", step_result: "Résultat",
 
@@ -758,6 +844,46 @@ fr: {
   upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
   upload_error: "Erreur : {msg}",
   upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible.",
+  version_label: "Version",
+  step_start: "Départ",
+  step_products: "Fonctions",
+  start_shellys_h2: "Tes Shelly",
+  start_ctr_label: "Shelly Controller",
+  start_dash_label: "Shelly Dashboard",
+  start_open_ui: "Ouvrir l'interface web",
+  start_h2: "Que veux-tu faire ?",
+  start_new_title: "Nouvelle configuration",
+  start_new_desc: "Choisir les fonctions et les configurer étape par étape. Tu peux coller une config existante à l'étape suivante, comme avant.",
+  start_update_title: "Mettre à jour",
+  start_update_desc: "Comparer les versions installées avec GitHub et mettre à jour les scripts en gardant tes réglages.",
+  start_update_needs_helper: "Possible uniquement avec l'assistant local : lance l'assistant – il ouvre le configurateur automatiquement.",
+  nav_err_mode: "Choisis d'abord ce que tu veux faire.",
+  upd_h2: "Mise à jour",
+  upd_ip_hint: "Indique les adresses IP de tes Shelly (au moins une).",
+  upd_check_btn: "Vérifier les versions",
+  upd_checking: "Vérification des versions…",
+  upd_col_script: "Script",
+  upd_col_installed: "Sur le Shelly",
+  upd_col_available: "Sur GitHub",
+  upd_col_status: "État",
+  upd_status_outdated: "Mise à jour disponible",
+  upd_status_current: "à jour",
+  upd_status_newer: "plus récent que GitHub",
+  upd_status_unknown: "version GitHub inconnue",
+  upd_status_missing: "non installé – choisis « Nouvelle configuration »",
+  upd_status_unclear: "pas de script unique – choisis « Nouvelle configuration »",
+  upd_status_unreachable: "Shelly injoignable",
+  upd_status_noip: "aucune IP indiquée",
+  upd_manifest_err: "Impossible de charger les versions depuis GitHub ({msg}).",
+  upd_changes_details: "Toutes les modifications",
+  upd_app_new: "Nouvelle version {v} du configurateur/de l'assistant disponible (installée : {cur}).",
+  upd_app_download: "Télécharger",
+  upd_app_current: "Configurateur/assistant {cur} à jour.",
+  upd_question: "Veux-tu mettre à jour maintenant ?",
+  upd_btn_now: "Mettre à jour",
+  upd_none_selected: "Sélectionne au moins un script.",
+  upd_err_cfg: "Impossible de lire la config depuis le Shelly : {msg}",
+  result_update_hint: "Mise à jour préparée : tes réglages actuels ont été repris du Shelly. Avec « Charger directement », tu installes la nouvelle version.",
   upload_success_updated: "✓ Mise à jour installée sur {ip} (numéro de script {id} conservé) et démarrée.",
   upload_not_running: "Chargé sur {ip}, mais le script ne tourne pas. Vérifie le journal du script dans l'interface web du Shelly.",
   upload_incomplete: "Transfert interrompu – le script sur le Shelly est incomplet. Recharge-le. ({msg})",
@@ -902,6 +1028,11 @@ const state = {
   controllerAdvanced: {},
   zdwAdvanced: {},
 
+  // Startdialog: null (noch nicht gewaehlt) | 'new' | 'update'
+  mode: null,
+  upd: { checked: false, busy: false, error: '', rows: {}, selected: {}, app: null, showIpFields: false },
+  updateReady: false,
+
   navError: ""
 };
 state.lang = detectLang();
@@ -910,7 +1041,7 @@ let stepIndex = 0;
 
 function stepLabels(){
   return {
-    products: t('step_products'), devices: t('step_devices'), gridsource: t('step_gridsource'),
+    start: t('step_start'), products: t('step_products'), devices: t('step_devices'), gridsource: t('step_gridsource'),
     charging: t('step_charging'), signal: t('step_signal'),
     ctrl_gridreverse: t('step_ctrl_gridreverse'), ctrl_kvs: t('step_ctrl_kvs'), regel: t('step_regel'),
     result: t('step_result')
@@ -939,7 +1070,9 @@ function needsCtrIp(){ return state.products.controller || state.products.api; }
 function needsDashIp(){ return state.products.api || state.products.watchdog; }
 
 function computeStepList(){
-  const s = ['products', 'devices'];
+  if(state.mode === 'update') return state.updateReady ? ['start', 'result'] : ['start'];
+  if(state.mode !== 'new') return ['start'];
+  const s = ['start', 'products', 'devices'];
   if(needsGrid()) s.push('gridsource');
   if(needsFullDevice()) s.push('charging');
   if(needsSignal()) s.push('signal');
@@ -959,8 +1092,10 @@ function renderHeader(){
   document.title = t('pageTitle');
   document.getElementById('pageH1').textContent = t('h1');
   document.getElementById('pageSub').textContent = t('subtitle');
-  document.getElementById('introDocLink').textContent = t('intro_doc_link');
-  document.getElementById('buildDate').textContent = t('build_label') + ' ' + BUILD_DATE;
+  const introLink = document.getElementById('introDocLink');
+  introLink.textContent = t('intro_doc_link');
+  introLink.href = INTRO_DOC_URLS[state.lang] || INTRO_DOC_URLS.de;
+  document.getElementById('buildDate').textContent = t('version_label') + ' ' + APP_VERSION + ' · ' + t('build_label') + ' ' + BUILD_DATE;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
   document.getElementById('langSwitch').innerHTML = langs.map(function(l){
@@ -1192,41 +1327,37 @@ function applyImportedSignal(signal){
 
 const IMPORT_NAMES = { controller: 'Controller', zdw: 'zenDash-API + Watchdog' };
 
-function importConfig(){
-  const el = document.getElementById('importText');
-  const statusEl = document.getElementById('importStatus');
-  const raw = el.value;
-  if(!raw || !raw.trim()){
-    statusEl.textContent = t('import_err_empty');
-    statusEl.className = 'error';
-    return;
-  }
+// Gemeinsamer Kern fuer das Einfuegen per Hand und den Update-Weg
+// (Config direkt vom Shelly). Rueckgabe {ok, type} oder {ok:false, error}.
+function applyConfigText(raw){
+  if(!raw || !raw.trim()) return { ok: false, error: t('import_err_empty') };
   let obj;
   try{
     obj = parseConfigObject(raw);
   } catch(e){
-    statusEl.textContent = t('import_err_parse', {msg: e.message});
-    statusEl.className = 'error';
-    return;
+    return { ok: false, error: t('import_err_parse', {msg: e.message}) };
   }
   const type = detectProductType(obj);
-  if(type === 'legacy'){
-    statusEl.textContent = t('import_err_legacy');
-    statusEl.className = 'error';
-    return;
-  }
-  if(!type){
-    statusEl.textContent = t('import_err_unknown_type');
-    statusEl.className = 'error';
-    return;
-  }
+  if(type === 'legacy') return { ok: false, error: t('import_err_legacy') };
+  if(!type) return { ok: false, error: t('import_err_unknown_type') };
   // unvollständige/unbenutzte Platzhalter-Geräte (noch keine echte IP) vor
   // dem Merge entfernen, sonst blieben sie neben den importierten stehen
   state.devices = state.devices.filter(d => isValidIp(d.ip));
 
   if(type === 'controller') applyControllerImport(obj);
   else applyZdwImport(obj);
+  return { ok: true, type: type };
+}
 
+function importConfig(){
+  const statusEl = document.getElementById('importStatus');
+  const res = applyConfigText(document.getElementById('importText').value);
+  if(!res.ok){
+    statusEl.textContent = res.error;
+    statusEl.className = 'error';
+    return;
+  }
+  const type = res.type;
   state.navError = '';
   render();
   // render() baut den Schritt neu auf - Status danach setzen
@@ -1862,6 +1993,12 @@ const FULL_SCRIPT_FILENAMES = {
   zdw:  'zendash_watch_mini.js'
 };
 // Wiki- bzw. Readme-Links pro Script.
+// Systemueberblick im Wiki - je Sprache eine eigene Seite
+const INTRO_DOC_URLS = {
+  de: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)',
+  en: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_EN',
+  fr: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_FR'
+};
 const DOC_URLS = {
   ctrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md',
   zdw:  'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/readme.md'
@@ -2030,9 +2167,15 @@ function mergeConfigIntoScript(scriptText, newConfigText){
 // Original-Scripte werden je Sitzung nur einmal von GitHub geholt und fuer
 // Versionsanzeige, Datei-Download und Direkt-Upload gemeinsam genutzt.
 const SOURCE_CACHE = {};
+function sourceUrl(key){
+  // Update-Weg: genau die im Startdialog angezeigte Version (an den Commit
+  // gebundene URL aus dem Manifest), sonst wie bisher main.
+  const m = state.updateReady && manifestData && manifestData.scripts && manifestData.scripts[KEY_TYPES[key]];
+  return (m && m.url) ? m.url : SOURCE_URLS[key];
+}
 function fetchSource(key){
   if(!SOURCE_CACHE[key]){
-    SOURCE_CACHE[key] = fetch(SOURCE_URLS[key]).then(function(res){
+    SOURCE_CACHE[key] = fetch(sourceUrl(key)).then(function(res){
       if(!res.ok) throw new Error('HTTP ' + res.status);
       return res.text();
     });
@@ -2105,6 +2248,7 @@ const HELPER_URL = 'http://127.0.0.1:8787';
 let helperAvailable = false;
 
 async function detectHelper(){
+  const before = helperAvailable;
   try{
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 800);
@@ -2117,6 +2261,240 @@ async function detectHelper(){
   document.querySelectorAll('.helper-row').forEach(function(el){
     el.style.display = helperAvailable ? 'block' : 'none';
   });
+  // Startdialog: "Updaten" haengt am Helfer - bei Aenderung neu zeichnen
+  if(before !== helperAvailable && computeStepList()[stepIndex] === 'start') render();
+}
+
+// ---------- Startdialog: Neu konfigurieren oder Updaten ----------
+// Update-Weg (einfache Variante): Versionen aus dem Manifest (GitHub) und
+// vom Shelly (ueber den Helfer) gegenueberstellen. "Jetzt updaten" liest
+// die Config der gewaehlten Scripte vom Shelly, uebernimmt sie ueber den
+// normalen Import und springt direkt zum Ergebnis - dort wie gewohnt
+// "Direkt hochladen". Das Script kommt dabei aus der Manifest-URL (an den
+// Commit gebunden), also genau die angezeigte Version.
+const MANIFEST_URL = 'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/manifest/versions.json';
+const RELEASE_URL = 'https://github.com/surfer1264/Zendure-Stuff/releases/latest';
+const KEY_TYPES = { ctrl: 'zdmc-controller', zdw: 'zdmc-zendash-watch' };
+const KEY_ROLE = { ctrl: 'ctr_kvs', zdw: 'apidash_watch' };
+const KEY_NAMES = { ctrl: 'Controller', zdw: 'zenDash-API + Watchdog' };
+
+let helperSettings = {};          // von /api/settings (zendure_helper_config.json)
+let manifestPromise = null;
+let manifestData = null;
+
+function loadManifest(){
+  if(!manifestPromise){
+    manifestPromise = fetch(MANIFEST_URL, { cache: 'no-store' }).then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(m){ manifestData = m; return m; });
+    manifestPromise.catch(function(){ manifestPromise = null; });
+  }
+  return manifestPromise;
+}
+
+function compareVersions(a, b){
+  const pa = String(a || '').split(/[.\-]/), pb = String(b || '').split(/[.\-]/);
+  for(let i = 0; i < Math.max(pa.length, pb.length); i++){
+    const x = pa[i] === undefined ? 0 : pa[i], y = pb[i] === undefined ? 0 : pb[i];
+    const nx = parseInt(x, 10), ny = parseInt(y, 10);
+    if(!isNaN(nx) && !isNaN(ny)){ if(nx !== ny) return nx < ny ? -1 : 1; }
+    else if(String(x) !== String(y)) return String(x) < String(y) ? -1 : 1;
+  }
+  return 0;
+}
+
+async function helperGet(path){
+  const res = await fetch(HELPER_URL + path);
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+function setMode(mode){
+  if(mode === 'update' && !helperAvailable) return;
+  if(mode !== 'update') state.updateReady = false;
+  state.mode = mode;
+  state.navError = '';
+  render();
+  if(mode === 'update' && !state.upd.checked) checkUpdates();
+}
+
+function shellyLinks(){
+  const rows = [];
+  [['ctr_kvs', 'start_ctr_label'], ['apidash_watch', 'start_dash_label']].forEach(function(r){
+    const ip = helperSettings[r[0]];
+    if(!isValidIp(ip)) return;
+    rows.push(`<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:4px 0;">
+      <span style="min-width:170px;">${t(r[1])}</span><b>${escapeHtml(ip)}</b>
+      <a href="http://${escapeHtml(ip)}/" target="_blank" rel="noopener" style="font-size:.85rem; color:var(--accent-text);">${t('start_open_ui')} ↗</a>
+    </div>`);
+  });
+  if(!rows.length) return '';
+  return `<div class="panel"><h2>${t('start_shellys_h2')}</h2>${rows.join('')}</div>`;
+}
+
+function modeChoice(mode, titleKey, descKey, disabled, extra){
+  const on = state.mode === mode;
+  return `
+    <div class="choice ${on ? 'selected' : ''}" ${disabled ? 'style="opacity:.5; cursor:not-allowed;"' : `onclick="setMode('${mode}')"`}>
+      <input type="radio" name="startMode" ${on ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+      <div><div class="ct">${t(titleKey)}</div>
+      <div class="cd">${t(descKey)}</div>${extra || ''}</div>
+    </div>`;
+}
+
+function renderStart(){
+  const noHelper = !helperAvailable
+    ? `<div class="cd" style="margin-top:6px; color:var(--warn);">${t('start_update_needs_helper')}</div>` : '';
+  let html = shellyLinks() + `
+  <div class="panel">
+    <h2>${t('start_h2')}</h2>
+    ${modeChoice('new', 'start_new_title', 'start_new_desc', false)}
+    ${modeChoice('update', 'start_update_title', 'start_update_desc', !helperAvailable, noHelper)}
+  </div>`;
+  if(state.mode === 'update' && helperAvailable) html += renderUpdatePanel();
+  return html;
+}
+
+function renderUpdatePanel(){
+  const u = state.upd;
+  const missing = !isValidIp(state.runtime.ctr_kvs) && !isValidIp(state.runtime.apidash_watch);
+  let html = `<div class="panel"><h2>${t('upd_h2')}</h2>`;
+  if(missing || u.showIpFields){
+    u.showIpFields = true;
+    html += `<p class="hint">${t('upd_ip_hint')}</p>
+      <div class="row">
+        ${ipField('ctr_kvs', 'ip_ctr_field', true)}
+        ${ipField('apidash_watch', 'ip_dash_field', true)}
+      </div>`;
+  }
+  html += `<div class="copy-row" style="justify-content:flex-start; margin-top:10px;">
+      <button class="btn" onclick="checkUpdates()" ${u.busy ? 'disabled' : ''}>${t('upd_check_btn')}</button>
+      <span class="hint" style="margin:0;">${u.busy ? t('upd_checking') : ''}</span>
+    </div>`;
+  if(u.error) html += `<p class="error">${escapeHtml(u.error)}</p>`;
+  if(u.checked) html += renderUpdateTable();
+  html += '</div>';
+  return html;
+}
+
+function statusText(r){
+  return t('upd_status_' + r.status, {v: r.available || ''});
+}
+
+function renderUpdateTable(){
+  const u = state.upd;
+  const rows = ['ctrl', 'zdw'].map(function(key){
+    const r = u.rows[key];
+    if(!r) return '';
+    const box = r.selectable
+      ? `<input type="checkbox" ${u.selected[key] ? 'checked' : ''} onchange="state.upd.selected['${key}']=this.checked; render();">` : '';
+    let changes = '';
+    if(r.status === 'outdated' && r.changes && r.changes.length){
+      changes = `<ul style="margin:4px 0 0; padding-left:18px; font-size:.82rem; color:var(--muted);">` +
+        r.changes.map(function(c){ return '<li>' + escapeHtml(c) + '</li>'; }).join('') + '</ul>';
+    }
+    if(r.status === 'outdated' && r.changelogUrl){
+      changes += `<a href="${escapeHtml(r.changelogUrl)}" target="_blank" rel="noopener" style="font-size:.8rem; color:var(--accent-text);">${t('upd_changes_details')} ↗</a>`;
+    }
+    const color = r.status === 'outdated' ? 'var(--warn)' : (r.status === 'current' ? 'var(--accent-text)' : 'var(--muted)');
+    return `<tr>
+      <td style="padding:8px 6px; vertical-align:top;">${box}</td>
+      <td style="padding:8px 6px; vertical-align:top;"><b>${KEY_NAMES[key]}</b><div class="hint" style="margin:0;">${escapeHtml(r.ip || '—')}</div></td>
+      <td style="padding:8px 6px; vertical-align:top;">${escapeHtml(r.installed || '—')}</td>
+      <td style="padding:8px 6px; vertical-align:top;">${escapeHtml(r.available || '—')}${changes}</td>
+      <td style="padding:8px 6px; vertical-align:top; color:${color};">${escapeHtml(statusText(r))}</td>
+    </tr>`;
+  }).join('');
+  const app = u.app;
+  const appLine = app ? (compareVersions(APP_VERSION, app) < 0
+      ? `<p class="note" style="margin-top:12px;">${t('upd_app_new', {v: escapeHtml(app), cur: APP_VERSION})} <a href="${RELEASE_URL}" target="_blank" rel="noopener" style="color:var(--accent-text);">${t('upd_app_download')} ↗</a></p>`
+      : `<p class="hint" style="margin-top:12px;">${t('upd_app_current', {cur: APP_VERSION})}</p>`) : '';
+  const any = Object.keys(u.selected).some(function(k){ return u.selected[k] && u.rows[k] && u.rows[k].selectable; });
+  return `
+    <div style="overflow-x:auto; margin-top:14px;">
+      <table style="width:100%; border-collapse:collapse; font-size:.88rem;">
+        <thead><tr style="text-align:left; border-bottom:1px solid var(--border);">
+          <th></th><th style="padding:6px;">${t('upd_col_script')}</th><th style="padding:6px;">${t('upd_col_installed')}</th>
+          <th style="padding:6px;">${t('upd_col_available')}</th><th style="padding:6px;">${t('upd_col_status')}</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    ${appLine}
+    <h2 style="margin-top:20px;">${t('upd_question')}</h2>
+    <div class="copy-row" style="justify-content:flex-start;">
+      <button class="btn btn-primary" onclick="startUpdate()" ${any && !u.busy ? '' : 'disabled'}>${t('upd_btn_now')}</button>
+      <span class="hint" style="margin:0;">${any ? '' : t('upd_none_selected')}</span>
+    </div>`;
+}
+
+async function checkUpdates(){
+  const u = state.upd;
+  u.busy = true; u.error = ''; render();
+  let manifest = null;
+  try { manifest = await loadManifest(); }
+  catch(e){ u.error = t('upd_manifest_err', {msg: e.message}); }
+  const scripts = (manifest && manifest.scripts) || {};
+  const rows = {};
+  for(const key of ['ctrl', 'zdw']){
+    const ip = (state.runtime[KEY_ROLE[key]] || '').trim();
+    const m = scripts[KEY_TYPES[key]] || {};
+    const r = { ip: ip, available: m.version || null, changes: m.changes || [], changelogUrl: m.changelogUrl || null,
+                installed: null, status: 'noip', selectable: false };
+    if(isValidIp(ip)){
+      try{
+        const list = (await helperGet('/api/inspect?ip=' + encodeURIComponent(ip))).scripts || [];
+        if(list.length === 0) r.status = 'missing';
+        else if(list.length === 1 && list[0].type === KEY_TYPES[key]){
+          r.installed = list[0].version || '?';
+          if(!r.available) r.status = 'unknown';
+          else {
+            const c = compareVersions(r.installed, r.available);
+            r.status = c < 0 ? 'outdated' : (c === 0 ? 'current' : 'newer');
+          }
+          r.selectable = !!r.available;
+        } else r.status = 'unclear';
+      } catch(e){ r.status = 'unreachable'; }
+    }
+    rows[key] = r;
+    u.selected[key] = r.status === 'outdated';
+  }
+  u.rows = rows;
+  u.app = manifest && manifest.scripts && manifest.scripts['zdmc-configurator'] ? manifest.scripts['zdmc-configurator'].version : null;
+  u.checked = true; u.busy = false;
+  render();
+}
+
+async function startUpdate(){
+  const u = state.upd;
+  const keys = ['ctrl', 'zdw'].filter(function(k){ return u.selected[k] && u.rows[k] && u.rows[k].selectable; });
+  if(!keys.length) return;
+  u.busy = true; u.error = ''; render();
+  // Frischer Stand: nur die gewaehlten Scripte landen im Ergebnis
+  state.products = { controller: false, api: false, watchdog: false };
+  state.controllerAdvanced = {}; state.zdwAdvanced = {};
+  state.devices = [];
+  try{
+    // Controller zuerst: seine Config ist fuer die Geraetedetails fuehrend
+    for(const key of keys){
+      const data = await helperGet('/api/config?ip=' + encodeURIComponent(u.rows[key].ip) + '&key=' + key);
+      const res = applyConfigText(data.config);
+      if(!res.ok) throw new Error(KEY_NAMES[key] + ': ' + res.error);
+    }
+  } catch(e){
+    u.busy = false;
+    u.error = t('upd_err_cfg', {msg: e.message});
+    render();
+    return;
+  }
+  u.busy = false;
+  state.updateReady = true;
+  state.navError = '';
+  stepIndex = computeStepList().indexOf('result');
+  render();
+  window.scrollTo(0, 0);
 }
 
 // Vom lokalen Helfer gemerkte Shelly-IPs (zendure_helper_config.json,
@@ -2132,7 +2510,8 @@ async function loadHelperSettings(){
     clearTimeout(timer);
     if(!res.ok) return;
     const data = await res.json();
-    let changed = false;
+    helperSettings = data || {};
+    let changed = computeStepList()[stepIndex] === 'start';
     ['ctr_kvs', 'apidash_watch'].forEach(function(k){
       if(!state.runtime[k] && isValidIp(data[k])){
         state.runtime[k] = data[k].trim();
@@ -2276,7 +2655,8 @@ function renderResult(){
   const names = { controller: 'Controller', api: 'zenDash-API', watchdog: 'Watchdog' };
   const row = (label, value) => `<div><b>${label}</b> ${value}</div>`;
 
-  let html = `
+  let html = state.updateReady ? `<div class="panel"><p class="note" style="margin:0;">${t('result_update_hint')}</p></div>` : '';
+  html += `
   <div class="panel">
     <h2>${t('result_h2')}</h2>
     <div class="summary-list">`;
@@ -2337,6 +2717,7 @@ function renderStepDots(steps){
 
 function renderStepById(id){
   switch(id){
+    case 'start': return renderStart();
     case 'products': return renderProducts();
     case 'devices': return renderDevices();
     case 'gridsource': return renderGridSource();
@@ -2353,6 +2734,7 @@ function renderStepById(id){
 // der Fehlermeldung.
 function validateStepById(id){
   switch(id){
+    case 'start': return state.mode ? '' : 'nav_err_mode';
     case 'products': {
       if(!anyProduct()) return 'nav_err_products';
       const c = (state.runtime.ctr_kvs||'').trim(), d = (state.runtime.apidash_watch||'').trim();
@@ -2386,7 +2768,7 @@ function renderNav(steps){
   ${ state.navError ? `<div class="error" style="text-align:right; font-size:.85rem; margin-top:14px;">${t(state.navError)}</div>` : '' }
   <div class="nav">
     <button class="btn" onclick="back()" ${stepIndex===0?'style="visibility:hidden;"':''}>${t('navBack')}</button>
-    ${ isLast ? "" : `<button class="btn btn-primary" onclick="next()">${t('navNext')}</button>` }
+    ${ isLast || (steps[stepIndex] === 'start' && state.mode === 'update') ? "" : `<button class="btn btn-primary" onclick="next()">${t('navNext')}</button>` }
   </div>`;
 }
 
@@ -2414,7 +2796,7 @@ function render(){
   let html = renderStepById(steps[stepIndex]);
   html += renderNav(steps);
   document.getElementById('stepContainer').innerHTML = html;
-  if(steps[stepIndex] === 'result' || steps[stepIndex] === 'products') detectHelper();
+  if(['start', 'products', 'result'].indexOf(steps[stepIndex]) !== -1) detectHelper();
   if(steps[stepIndex] === 'result') loadVersions();
 }
 
