@@ -9,3 +9,6 @@ myconfig.js
 *.log
 script_status.csv
 controller-config.js
+zendure_helper_config.json
+zendure_proxy_config.json
+*.exe
