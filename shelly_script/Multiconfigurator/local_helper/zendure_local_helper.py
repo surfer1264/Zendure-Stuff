@@ -12,7 +12,13 @@ Loest drei Probleme, die ein reiner Browser nicht loesen kann:
      Browser-CORS-Regeln.
   2. Chunked Upload: Shellys RPC hat ein Groessenlimit pro Aufruf, der
      Code muss daher in mehreren Script.PutCode-Aufrufen uebertragen
-     werden (siehe upload_script()) - identisch zu upload_shelly.py.
+     werden (siehe upload_script()). Vorher wird der Bestand geprueft:
+     pro Shelly ist genau EIN Script erlaubt. Ein Update ueberschreibt
+     das vorhandene Script auf derselben ID; fremde, vertauschte oder
+     mehrere Scripte werden nur nach Bestaetigung im Browser entfernt.
+     Nach jedem erfolgreichen Upload merkt sich der Helfer die IP in
+     zendure_helper_config.json (siehe save_settings()); der Configurator
+     liest sie beim Start ueber GET /api/settings.
   3. Start-Komfort: der Helfer liefert die Configurator-Seite gleich
      selbst aus (genau wie zendure_proxy.py es heute fuers Dashboard
      macht) und oeffnet sie beim Start automatisch im Standardbrowser -
@@ -49,6 +55,7 @@ import json
 import os
 import re
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -62,6 +69,8 @@ PORT = 8787
 BIND_ADDRESS = "127.0.0.1"   # bewusst NUR dieser Rechner, nicht das ganze Netz
 CHUNK_SIZE = 1024            # Zeichen pro Script.PutCode-Aufruf
 HTML_FILENAME = "zendure-multi-configurator_multilang.html"
+HELPER_VERSION = "1.1"
+SETTINGS_FILENAME = "zendure_helper_config.json"
 
 
 def resource_path(filename):
@@ -70,6 +79,93 @@ def resource_path(filename):
     stattdessen im temporaeren Entpack-Ordner sys._MEIPASS."""
     base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base, filename)
+
+
+# ---------------------------------------------------------------
+# Gemerkte Shelly-IPs (zendure_helper_config.json)
+#
+# Vorbild: zendure_proxy_config.json des Dashboard-Proxys. Gespeichert
+# werden NUR die beiden IPs (runtime-Rollen ctr_kvs / apidash_watch),
+# keine Config, keine Zugangsdaten. Geschrieben wird nach jedem
+# erfolgreichen Upload fuer die Rolle des hochgeladenen Scripts.
+#
+# Ablageort: neben der exe bzw. diesem Script (app_dir) - NICHT in
+# sys._MEIPASS, das wird bei --onefile nach jedem Start geloescht. Ist
+# app_dir nicht beschreibbar (z.B. C:\Programme, schreibgeschuetzter
+# Ordner auf macOS), weicht der Helfer in den Benutzerordner aus. Beim
+# Lesen werden beide Orte geprueft.
+# ---------------------------------------------------------------
+RUNTIME_KEYS = ("ctr_kvs", "apidash_watch")
+KEY_TO_ROLE = {"ctrl": "ctr_kvs", "zdw": "apidash_watch"}
+TYPE_TO_ROLE = {"zdmc-controller": "ctr_kvs", "zdmc-zendash-watch": "apidash_watch"}
+RE_IP = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
+_settings_lock = threading.Lock()
+
+
+def app_dir():
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(os.path.abspath(sys.executable))
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def user_dir():
+    if sys.platform.startswith("win"):
+        base = os.environ.get("APPDATA") or os.path.expanduser("~")
+        return os.path.join(base, "ZendureHelper")
+    if sys.platform == "darwin":
+        return os.path.expanduser("~/Library/Application Support/ZendureHelper")
+    return os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),
+                        "zendure-helper")
+
+
+def settings_candidates():
+    return [os.path.join(app_dir(), SETTINGS_FILENAME),
+            os.path.join(user_dir(), SETTINGS_FILENAME)]
+
+
+def load_settings():
+    """Liefert (settings, pfad). settings enthaelt nur gueltige IPs."""
+    for path in settings_candidates():
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        clean = {k: data[k].strip() for k in RUNTIME_KEYS
+                 if isinstance(data.get(k), str) and RE_IP.match(data[k].strip())}
+        return clean, path
+    return {}, None
+
+
+def save_settings(updates):
+    """Uebernimmt gueltige IPs aus updates in die Datei (atomar ueber eine
+    Temp-Datei). Gibt den Pfad zurueck oder None, wenn nirgends
+    geschrieben werden konnte - das ist nie ein Fehler fuer den Upload."""
+    updates = {k: v.strip() for k, v in updates.items()
+               if k in RUNTIME_KEYS and isinstance(v, str) and RE_IP.match(v.strip())}
+    if not updates:
+        return None
+    with _settings_lock:
+        current, current_path = load_settings()
+        merged = dict(current, **updates)
+        if merged == current and current_path:
+            return current_path
+        targets = settings_candidates()
+        if current_path in targets:       # zuerst dort, wo die Datei schon liegt
+            targets.remove(current_path)
+            targets.insert(0, current_path)
+        for path in targets:
+            try:
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                tmp = path + ".tmp"
+                with open(tmp, "w", encoding="utf-8") as fh:
+                    json.dump(merged, fh, indent=2)
+                    fh.write("\n")
+                os.replace(tmp, path)
+                return path
+            except OSError:
+                continue
+    return None
 
 
 class RpcError(Exception):
@@ -108,49 +204,178 @@ def rpc(ip, method, params=None, timeout=15):
     return body.get("result", {})
 
 
-def find_script(ip, name):
+# ---------------------------------------------------------------
+# Script-Erkennung und Upload
+#
+# Regel: pro Shelly genau EIN Script (Speicher). Vor jedem Upload wird
+# der Bestand geprueft:
+#   - kein Script                      -> neu anlegen
+#   - genau eins, gleicher Script-Typ  -> auf derselben ID ueberschreiben
+#                                         (Update; Script-ID bleibt, z.B.
+#                                         fuer den Dashboard-Proxy)
+#   - sonst (fremdes Script, anderer   -> NICHTS veraendern, sondern
+#     Typ = vermutlich IP vertauscht,     needs_confirm an den Browser;
+#     mehrere Scripte)                    erst nach Bestaetigung (force +
+#                                         confirm_ids) werden alle
+#                                         Scripte entfernt und neu angelegt
+# ---------------------------------------------------------------
+KEY_TO_TYPE = {"ctrl": "zdmc-controller", "zdw": "zdmc-zendash-watch"}
+READ_CHUNK = 2048            # Zeichen pro Script.GetCode-Aufruf
+RE_SCRIPT_TYPE = re.compile(r"""\bSCRIPT_TYPE\s*=\s*["']([^"']+)["']""")
+RE_VERSION = re.compile(r"""\bVERSION\s*=\s*["']([^"']+)["']""")
+RE_LEGACY_VERSION = re.compile(r"""CONFIG\.version\s*=\s*["']([^"']+)["']""")
+
+
+class UploadIncomplete(RpcError):
+    """Upload nach dem ersten Block abgebrochen - auf dem Shelly liegt
+    jetzt ein unvollstaendiges Script."""
+
+
+def read_code(ip, sid, full=True):
+    """Liest den Code eines Scripts per Script.GetCode. full=False liest
+    nur den ersten Block (reicht fuer SCRIPT_TYPE, das in der Mini-
+    Version ganz vorne steht)."""
+    parts, offset = [], 0
+    while True:
+        res = rpc(ip, "Script.GetCode", {"id": sid, "offset": offset, "len": READ_CHUNK})
+        data = res.get("data") or ""
+        parts.append(data)
+        offset += len(data)
+        if not full or not data or not res.get("left"):
+            break
+    return "".join(parts)
+
+
+def detect_type(code):
+    """Ermittelt (script_type, version, legacy) aus dem Code.
+    legacy=True: Stand vor Einfuehrung von SCRIPT_TYPE, erkannt an
+    typischen Merkmalen."""
+    m = RE_SCRIPT_TYPE.search(code)
+    if m:
+        v = RE_VERSION.search(code)
+        return m.group(1), (v.group(1) if v else None), False
+    if "zdmc_" in code:
+        if "kvs_set_api" in code or "status_api" in code:
+            v = RE_VERSION.search(code)
+            return "zdmc-zendash-watch", (v.group(1) if v else None), True
+        if "zdmc_setpoint" in code:
+            v = RE_LEGACY_VERSION.search(code)
+            return "zdmc-controller", (v.group(1) if v else None), True
+    return None, None, False
+
+
+def inspect_scripts(ip):
+    """Bestand eines Shelly: Liste aller Scripte mit erkanntem Typ."""
+    result = []
     for s in rpc(ip, "Script.List").get("scripts", []):
-        if s.get("name") == name:
-            return s
-    return None
+        entry = {"id": s.get("id"), "name": s.get("name") or "",
+                 "running": bool(s.get("running")),
+                 "type": None, "version": None, "legacy": False}
+        try:
+            code = read_code(ip, s["id"], full=False)
+            stype, ver, legacy = detect_type(code)
+            if not stype:
+                # SCRIPT_TYPE steht in der Mini-Version vorne; fuer
+                # aeltere Staende den ganzen Code lesen.
+                code = read_code(ip, s["id"], full=True)
+                stype, ver, legacy = detect_type(code)
+            entry.update(type=stype, version=ver, legacy=legacy)
+        except RpcError:
+            pass  # Code nicht lesbar -> Typ bleibt unbekannt
+        result.append(entry)
+    return result
 
 
-def upload_script(ip, name, code):
-    """Ersetzt ein gleichnamiges Script komplett (stoppen, loeschen, neu
-    anlegen), laedt den Code in Bloecken hoch und startet es mit
-    Autostart. Wirft RpcError bei jedem Fehlschlag - der Aufrufer
-    (do_POST) faengt das ab und meldet es dem Browser."""
+def _put_code(ip, sid, code, first_append):
+    for n, i in enumerate(range(0, len(code), CHUNK_SIZE)):
+        chunk = code[i:i + CHUNK_SIZE]
+        for attempt in range(3):
+            try:
+                rpc(ip, "Script.PutCode",
+                    {"id": sid, "code": chunk, "append": first_append or n > 0})
+                break
+            except RpcError as err:
+                if attempt == 2:
+                    if n > 0:
+                        raise UploadIncomplete(str(err))
+                    raise
+                time.sleep(1)
+
+
+def _start(ip, sid, name):
+    rpc(ip, "Script.SetConfig", {"id": sid, "config": {"name": name, "enable": True}})
+    rpc(ip, "Script.Start", {"id": sid})
+    time.sleep(1.5)
+    return bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running", False))
+
+
+def upload_script(ip, name, code, key=None, force=False, confirm_ids=None):
+    """Laedt code auf den Shelly (siehe Regel oben). Rueckgabe:
+      {"action": "installed"|"updated"|"replaced", "id", "running"}
+    oder, wenn eine Bestaetigung noetig ist:
+      {"needs_confirm": True, "reason": "foreign"|"wrong_type"|"multiple",
+       "expected_type", "scripts": [...]}
+    Wirft RpcError / UploadIncomplete bei Fehlern."""
     if not re.match(r"^\d{1,3}(\.\d{1,3}){3}$", ip):
         raise RpcError("Ungueltige IP-Adresse: %r" % ip)
     name = name[:20]
 
-    old = find_script(ip, name)
-    if old:
-        if old.get("running"):
-            try:
-                rpc(ip, "Script.Stop", {"id": old["id"]})
-            except RpcError:
-                pass  # egal, wird gleich sowieso geloescht
-        rpc(ip, "Script.Delete", {"id": old["id"]})
+    stype, _, _ = detect_type(code)
+    expected = stype or KEY_TO_TYPE.get(key)
+    if not expected:
+        raise RpcError("Script-Typ des hochzuladenden Codes unbekannt")
 
+    scripts = inspect_scripts(ip)
+
+    # Fall 1: leer -> neu anlegen
+    if not scripts:
+        sid = rpc(ip, "Script.Create", {"name": name})["id"]
+        _put_code(ip, sid, code, first_append=False)
+        return {"action": "installed", "id": sid, "running": _start(ip, sid, name)}
+
+    # Fall 2: genau ein Script vom gleichen Typ -> auf derselben ID ueberschreiben
+    if len(scripts) == 1 and scripts[0]["type"] == expected:
+        sid = scripts[0]["id"]
+        was_running = scripts[0]["running"]
+        if was_running:
+            rpc(ip, "Script.Stop", {"id": sid})
+        try:
+            _put_code(ip, sid, code, first_append=False)
+        except UploadIncomplete:
+            raise
+        except RpcError:
+            # Schon der erste Block kam nicht an -> der alte Code ist noch
+            # vollstaendig; wieder starten, damit die Regelung weiterlaeuft.
+            if was_running:
+                try:
+                    rpc(ip, "Script.Start", {"id": sid})
+                except RpcError:
+                    pass
+            raise
+        return {"action": "updated", "id": sid, "running": _start(ip, sid, name)}
+
+    # Fall 3: alles andere -> nur nach ausdruecklicher Bestaetigung
+    current_ids = sorted(s["id"] for s in scripts)
+    if not force or sorted(confirm_ids or []) != current_ids:
+        if len(scripts) > 1:
+            reason = "multiple"
+        elif scripts[0]["type"]:
+            reason = "wrong_type"
+        else:
+            reason = "foreign"
+        return {"needs_confirm": True, "reason": reason,
+                "expected_type": expected, "scripts": scripts}
+
+    for s in scripts:
+        if s["running"]:
+            try:
+                rpc(ip, "Script.Stop", {"id": s["id"]})
+            except RpcError:
+                pass  # wird gleich sowieso geloescht
+        rpc(ip, "Script.Delete", {"id": s["id"]})
     sid = rpc(ip, "Script.Create", {"name": name})["id"]
-
-    for i in range(0, len(code), CHUNK_SIZE):
-        chunk = code[i:i + CHUNK_SIZE]
-        for attempt in range(3):
-            try:
-                rpc(ip, "Script.PutCode", {"id": sid, "code": chunk, "append": i > 0})
-                break
-            except RpcError:
-                if attempt == 2:
-                    raise
-                time.sleep(1)
-
-    rpc(ip, "Script.SetConfig", {"id": sid, "config": {"enable": True}})
-    rpc(ip, "Script.Start", {"id": sid})
-    time.sleep(1.5)
-    status = rpc(ip, "Script.GetStatus", {"id": sid})
-    return {"id": sid, "running": status.get("running", False)}
+    _put_code(ip, sid, code, first_append=False)
+    return {"action": "replaced", "id": sid, "running": _start(ip, sid, name)}
 
 
 def check_memory(ip):
@@ -223,9 +448,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlsplit(self.path)
         if parsed.path == "/api/health":
-            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": "1.0"})
+            self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": HELPER_VERSION})
         elif parsed.path == "/api/memcheck":
             self._handle_memcheck(parsed.query)
+        elif parsed.path == "/api/settings":
+            settings, path = load_settings()
+            self._json(200, dict({"ok": True, "path": path}, **settings))
         elif parsed.path in ("/", "/index.html"):
             self._serve_html()
         else:
@@ -271,11 +499,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
             ip = (data.get("ip") or "").strip()
             name = (data.get("name") or "script").strip()
             code = data.get("code") or ""
+            key = data.get("key")
+            force = bool(data.get("force"))
+            confirm_ids = data.get("confirm_ids") or []
             if not ip or not code:
                 raise RpcError("ip und code sind Pflichtfelder")
-            print("Upload: %d Zeichen -> %s (Name: %s)" % (len(code), ip, name))
-            result = upload_script(ip, name, code)
-            self._json(200, {"ok": True, "id": result["id"], "running": result["running"]})
+            print("Upload: %d Zeichen -> %s (Name: %s%s)"
+                  % (len(code), ip, name, ", bestaetigt" if force else ""))
+            result = upload_script(ip, name, code, key=key, force=force,
+                                   confirm_ids=confirm_ids)
+            if result.get("needs_confirm"):
+                print("  -> Bestaetigung noetig (%s), nichts veraendert" % result["reason"])
+                self._json(200, dict({"ok": False}, **result))
+            else:
+                print("  -> %s, Script-ID %s, laeuft: %s"
+                      % (result["action"], result["id"], result["running"]))
+                stype, _, _ = detect_type(code)
+                role = TYPE_TO_ROLE.get(stype) or KEY_TO_ROLE.get(key)
+                if role:
+                    saved = save_settings({role: ip})
+                    if saved:
+                        print("  -> IP gemerkt in %s" % saved)
+                self._json(200, dict({"ok": True}, **result))
+        except UploadIncomplete as err:
+            self._json(200, {"ok": False, "error_code": "incomplete", "error": str(err)})
         except RpcError as err:
             # Kein Serverfehler, sondern ein erwartbarer Fall (falsche IP,
             # Shelly nicht erreichbar etc.) - der Browser zeigt err als

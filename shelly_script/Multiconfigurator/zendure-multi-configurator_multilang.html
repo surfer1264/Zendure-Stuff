@@ -292,6 +292,22 @@ de: {
   upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
   upload_error: "Fehler: {msg}",
   upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen.",
+  upload_success_updated: "✓ Update auf {ip} eingespielt (Script-Nummer {id} beibehalten) und gestartet.",
+  upload_not_running: "Hochgeladen auf {ip}, aber das Script läuft nicht. Bitte in der Shelly-Weboberfläche das Script-Log prüfen.",
+  upload_incomplete: "Upload abgebrochen – das Script auf dem Shelly ist unvollständig. Bitte erneut hochladen. ({msg})",
+  upload_confirm_wrong: "Auf {ip} ist bereits das Script „{found}“ installiert – dieses Gerät ist hier aber für „{expected}“ eingetragen. Sind die IP-Adressen vertauscht?",
+  upload_confirm_multiple: "Auf {ip} sind {n} Scripte vorhanden.",
+  upload_confirm_foreign: "Auf {ip} ist ein anderes Script installiert.",
+  upload_confirm_list: "Gefunden:",
+  upload_confirm_rule: "Wegen des knappen Speichers ist pro Shelly nur ein Script erlaubt. Beim Fortfahren werden alle hier aufgeführten Scripte gelöscht.",
+  upload_script_running: "läuft",
+  upload_script_stopped: "gestoppt",
+  btn_upload_replace_all: "Alle entfernen und installieren",
+  btn_upload_cancel: "Abbrechen",
+  upload_cancelled: "Abgebrochen – auf dem Shelly wurde nichts verändert.",
+  type_ctrl: "Controller",
+  type_zdw: "zenDash-API + Watchdog",
+  type_unknown: "unbekanntes Script",
 
   memcheck_title: "Speicher prüfen",
   memcheck_hint: "Bevor du ein Script hochlädst: prüft, wie viel freier Skriptspeicher (mem_free) auf einem Shelly noch da ist. ≥ 25200 Bytes = voller Standard-Heap, alles gut.",
@@ -310,7 +326,7 @@ de: {
   prod_api_desc: "Liefert Live-Daten fürs Dashboard und schreibt Regler-Werte in die KVS des Controllers. Läuft auf dem Dashboard-Shelly.",
   prod_watchdog_desc: "Überwacht SoC, Temperatur, Zellspannung und Erreichbarkeit und meldet Störungen. Läuft zusammen mit der API auf dem Dashboard-Shelly.",
   ip_h3: "Deine beiden Shellys",
-  ip_hint: "Die IPs werden in beiden Configs im Block <code>runtime</code> gespeichert — beim nächsten Einlesen musst du sie nicht erneut eingeben.",
+  ip_hint: "Die IPs werden in beiden Configs im Block <code>runtime</code> gespeichert — beim nächsten Einlesen musst du sie nicht erneut eingeben. Mit dem lokalen Helfer werden sie außerdem nach jedem erfolgreichen Upload auf diesem Rechner gemerkt und beim nächsten Start automatisch eingetragen.",
   ip_ctr_field: "Controller-Shelly (Controller + KVS)",
   ip_dash_field: "Dashboard-Shelly (zenDash-API + Watchdog)",
   ip_not_needed: "für diese Auswahl nicht nötig",
@@ -509,6 +525,22 @@ en: {
   upload_success: "✓ Successfully uploaded to {ip} and started.",
   upload_error: "Error: {msg}",
   upload_err_ip: "Please enter a valid IP address for the target device first.",
+  upload_success_updated: "✓ Update installed on {ip} (script number {id} kept) and started.",
+  upload_not_running: "Uploaded to {ip}, but the script is not running. Please check the script log in the Shelly web interface.",
+  upload_incomplete: "Upload aborted – the script on the Shelly is incomplete. Please upload again. ({msg})",
+  upload_confirm_wrong: "The script “{found}” is already installed on {ip} – but this device is set up here for “{expected}”. Are the IP addresses swapped?",
+  upload_confirm_multiple: "There are {n} scripts on {ip}.",
+  upload_confirm_foreign: "A different script is installed on {ip}.",
+  upload_confirm_list: "Found:",
+  upload_confirm_rule: "Because memory is tight, only one script per Shelly is allowed. If you continue, all scripts listed here will be deleted.",
+  upload_script_running: "running",
+  upload_script_stopped: "stopped",
+  btn_upload_replace_all: "Remove all and install",
+  btn_upload_cancel: "Cancel",
+  upload_cancelled: "Cancelled – nothing was changed on the Shelly.",
+  type_ctrl: "Controller",
+  type_zdw: "zenDash API + Watchdog",
+  type_unknown: "unknown script",
 
   memcheck_title: "Check memory",
   memcheck_hint: "Before uploading a script: checks how much free script memory (mem_free) a Shelly still has. ≥ 25200 bytes = full standard heap, all good.",
@@ -527,7 +559,7 @@ en: {
   prod_api_desc: "Provides live data for the dashboard and writes control values to the Controller's KVS. Runs on the Dashboard Shelly.",
   prod_watchdog_desc: "Monitors SoC, temperature, cell voltage and reachability and reports problems. Runs together with the API on the Dashboard Shelly.",
   ip_h3: "Your two Shellys",
-  ip_hint: "The IPs are stored in both configs in the <code>runtime</code> block — you won't have to enter them again the next time you import.",
+  ip_hint: "The IPs are stored in both configs in the <code>runtime</code> block — you won't have to enter them again the next time you import. With the local helper, they are also remembered on this computer after every successful upload and filled in automatically next time.",
   ip_ctr_field: "Controller Shelly (Controller + KVS)",
   ip_dash_field: "Dashboard Shelly (zenDash-API + Watchdog)",
   ip_not_needed: "not needed for this selection",
@@ -726,6 +758,22 @@ fr: {
   upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
   upload_error: "Erreur : {msg}",
   upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible.",
+  upload_success_updated: "✓ Mise à jour installée sur {ip} (numéro de script {id} conservé) et démarrée.",
+  upload_not_running: "Chargé sur {ip}, mais le script ne tourne pas. Vérifie le journal du script dans l'interface web du Shelly.",
+  upload_incomplete: "Transfert interrompu – le script sur le Shelly est incomplet. Recharge-le. ({msg})",
+  upload_confirm_wrong: "Le script « {found} » est déjà installé sur {ip} – mais cet appareil est prévu ici pour « {expected} ». Les adresses IP sont-elles inversées ?",
+  upload_confirm_multiple: "Il y a {n} scripts sur {ip}.",
+  upload_confirm_foreign: "Un autre script est installé sur {ip}.",
+  upload_confirm_list: "Trouvé :",
+  upload_confirm_rule: "La mémoire étant limitée, un seul script par Shelly est autorisé. Si tu continues, tous les scripts listés ici seront supprimés.",
+  upload_script_running: "en marche",
+  upload_script_stopped: "arrêté",
+  btn_upload_replace_all: "Tout supprimer et installer",
+  btn_upload_cancel: "Annuler",
+  upload_cancelled: "Annulé – rien n'a été modifié sur le Shelly.",
+  type_ctrl: "Controller",
+  type_zdw: "API zenDash + Watchdog",
+  type_unknown: "script inconnu",
 
   memcheck_title: "Vérifier la mémoire",
   memcheck_hint: "Avant de charger un script : vérifie combien de mémoire de script libre (mem_free) il reste sur un Shelly. ≥ 25200 octets = heap standard complet, tout va bien.",
@@ -744,7 +792,7 @@ fr: {
   prod_api_desc: "Fournit les données en direct pour le tableau de bord et écrit les valeurs de régulation dans la KVS du Controller. Tourne sur le Shelly Dashboard.",
   prod_watchdog_desc: "Surveille le SoC, la température, la tension des cellules et la joignabilité, et signale les problèmes. Tourne avec l'API sur le Shelly Dashboard.",
   ip_h3: "Tes deux Shelly",
-  ip_hint: "Les IP sont enregistrées dans les deux configurations dans le bloc <code>runtime</code> — tu n'auras pas à les ressaisir lors du prochain import.",
+  ip_hint: "Les IP sont enregistrées dans les deux configurations dans le bloc <code>runtime</code> — tu n'auras pas à les ressaisir lors du prochain import. Avec l'assistant local, elles sont aussi mémorisées sur cet ordinateur après chaque transfert réussi et remplies automatiquement au prochain démarrage.",
   ip_ctr_field: "Shelly Controller (Controller + KVS)",
   ip_dash_field: "Shelly Dashboard (zenDash-API + Watchdog)",
   ip_not_needed: "non nécessaire pour cette sélection",
@@ -1848,9 +1896,10 @@ function resultBlock(title, key, cfg, hintKey){
       <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
       <p style="font-size:.88rem; margin:0;">${t('upload_target_fixed', {ip: escapeHtml(ip || '—')})}</p>
       <div class="copy-row" style="margin-top:10px;">
-        <button class="btn btn-primary" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
+        <button class="btn btn-primary" id="uploadBtn_${key}" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
         <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
       </div>
+      <div id="uploadConfirm_${key}"></div>
     </div>
   </div>`;
 }
@@ -2070,9 +2119,46 @@ async function detectHelper(){
   });
 }
 
-async function directUpload(key){
+// Vom lokalen Helfer gemerkte Shelly-IPs (zendure_helper_config.json,
+// geschrieben nach jedem erfolgreichen Upload). Fuellt beim Start nur
+// LEERE IP-Felder - Eingaben des Nutzers und eine spaeter eingelesene
+// Config (runtime-Block, applyRuntime) haben immer Vorrang. Laeuft der
+// Helfer nicht, passiert nichts.
+async function loadHelperSettings(){
+  try{
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 800);
+    const res = await fetch(HELPER_URL + '/api/settings', { signal: ctrl.signal });
+    clearTimeout(timer);
+    if(!res.ok) return;
+    const data = await res.json();
+    let changed = false;
+    ['ctr_kvs', 'apidash_watch'].forEach(function(k){
+      if(!state.runtime[k] && isValidIp(data[k])){
+        state.runtime[k] = data[k].trim();
+        changed = true;
+      }
+    });
+    if(changed) render();
+  } catch(e){ /* Helfer nicht erreichbar oder alte Version ohne /api/settings */ }
+}
+
+// Direkt-Upload ueber den lokalen Helfer. Regel: pro Shelly genau EIN
+// Script. Der Helfer prueft den Bestand selbst; ist der Shelly nicht leer
+// und liegt dort nicht genau ein Script vom gleichen Typ, veraendert er
+// nichts und meldet needs_confirm. Erst nach Klick auf "Alle entfernen
+// und installieren" geht derselbe Upload mit force + confirm_ids erneut
+// raus (confirm_ids = die angezeigten Scripte - hat sich der Bestand
+// inzwischen geaendert, fragt der Helfer erneut).
+const SCRIPT_TYPE_LABELS = { 'zdmc-controller': 'type_ctrl', 'zdmc-zendash-watch': 'type_zdw' };
+function scriptTypeLabel(type){ return type && SCRIPT_TYPE_LABELS[type] ? t(SCRIPT_TYPE_LABELS[type]) : t('type_unknown'); }
+
+async function directUpload(key, confirmIds){
   const ip = (targetIp(key) || '').trim();
   const statusEl = document.getElementById('uploadStatus_' + key);
+  const confirmEl = document.getElementById('uploadConfirm_' + key);
+  const btn = document.getElementById('uploadBtn_' + key);
+  confirmEl.innerHTML = '';
   if(!isValidIp(ip)){
     statusEl.textContent = t('upload_err_ip');
     statusEl.className = 'error';
@@ -2080,20 +2166,86 @@ async function directUpload(key){
   }
   statusEl.textContent = t('upload_loading', {ip: ip});
   statusEl.className = 'hint';
+  if(btn) btn.disabled = true;
   try{
     const merged = await fetchMergedScript(key);
+    const payload = { ip: ip, name: UPLOAD_NAMES[key], code: merged, key: key };
+    if(confirmIds){ payload.force = true; payload.confirm_ids = confirmIds; }
     const res = await fetch(HELPER_URL + '/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ip: ip, name: UPLOAD_NAMES[key], code: merged })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
+    if(data.needs_confirm){
+      statusEl.textContent = '';
+      showUploadConfirm(key, ip, data);
+      return;
+    }
+    if(data.error_code === 'incomplete'){
+      statusEl.textContent = t('upload_incomplete', {msg: data.error || ''});
+      statusEl.className = 'error';
+      return;
+    }
     if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
-    statusEl.textContent = t('upload_success', {ip: ip});
+    if(!data.running){
+      statusEl.textContent = t('upload_not_running', {ip: ip});
+      statusEl.className = 'error';
+      return;
+    }
+    statusEl.textContent = t(data.action === 'updated' ? 'upload_success_updated' : 'upload_success', {ip: ip, id: data.id});
   } catch(e){
     statusEl.textContent = t('upload_error', {msg: e.message});
     statusEl.className = 'error';
+  } finally {
+    if(btn) btn.disabled = false;
   }
+}
+
+function showUploadConfirm(key, ip, data){
+  const confirmEl = document.getElementById('uploadConfirm_' + key);
+  const scripts = data.scripts || [];
+  let intro;
+  if(data.reason === 'wrong_type'){
+    intro = t('upload_confirm_wrong', {ip: escapeHtml(ip), found: escapeHtml(scriptTypeLabel(scripts[0] && scripts[0].type)), expected: escapeHtml(scriptTypeLabel(data.expected_type))});
+  } else if(data.reason === 'multiple'){
+    intro = t('upload_confirm_multiple', {ip: escapeHtml(ip), n: scripts.length});
+  } else {
+    intro = t('upload_confirm_foreign', {ip: escapeHtml(ip)});
+  }
+  const rows = scripts.map(function(s){
+    const ver = s.version ? ' ' + escapeHtml(s.version) : '';
+    const state = s.running ? t('upload_script_running') : t('upload_script_stopped');
+    return '<li>#' + escapeHtml(String(s.id)) + ' „' + escapeHtml(s.name || '—') + '“ – ' +
+      escapeHtml(scriptTypeLabel(s.type)) + ver + ' (' + state + ')</li>';
+  }).join('');
+  pendingConfirm[key] = scripts.map(function(s){ return s.id; });
+  confirmEl.innerHTML =
+    '<div style="margin-top:12px; padding:12px 14px; border-radius:8px; background:var(--warn-bg); color:var(--warn); font-size:.88rem;">' +
+      '<p style="margin:0 0 6px; font-weight:600;">⚠ ' + intro + '</p>' +
+      '<p style="margin:0 0 4px;">' + t('upload_confirm_list') + '</p>' +
+      '<ul style="margin:0 0 8px; padding-left:20px;">' + rows + '</ul>' +
+      '<p style="margin:0 0 10px;">' + t('upload_confirm_rule') + '</p>' +
+      '<div class="copy-row" style="justify-content:flex-start; margin:0;">' +
+        '<button class="btn btn-primary" onclick="confirmUpload(\'' + key + '\')">' + t('btn_upload_replace_all') + '</button>' +
+        '<button class="btn" onclick="cancelUpload(\'' + key + '\')">' + t('btn_upload_cancel') + '</button>' +
+      '</div>' +
+    '</div>';
+}
+
+const pendingConfirm = {};
+function confirmUpload(key){
+  const ids = pendingConfirm[key];
+  delete pendingConfirm[key];
+  if(ids) directUpload(key, ids);
+}
+
+function cancelUpload(key){
+  delete pendingConfirm[key];
+  document.getElementById('uploadConfirm_' + key).innerHTML = '';
+  const statusEl = document.getElementById('uploadStatus_' + key);
+  statusEl.textContent = t('upload_cancelled');
+  statusEl.className = 'hint';
 }
 
 async function checkMemory(){
@@ -2267,6 +2419,7 @@ function render(){
 }
 
 render();
+loadHelperSettings();
 </script>
 </body>
 </html>
