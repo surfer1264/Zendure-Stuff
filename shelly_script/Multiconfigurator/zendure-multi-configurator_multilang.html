@@ -145,7 +145,7 @@ const BUILD_DATE = "2026-09-25";
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.0";
+const APP_VERSION = "2.0.1";
 
 const I18N = {
 de: {
@@ -327,6 +327,7 @@ de: {
   upd_status_missing: "nicht installiert – bitte „Neu konfigurieren“",
   upd_status_unclear: "kein eindeutiges Script – bitte „Neu konfigurieren“",
   upd_status_unreachable: "Shelly nicht erreichbar",
+  upd_extra_scripts: "weitere Scripte auf dem Shelly: {n} – beim Hochladen folgt die Rückfrage, sie zu entfernen (nur ein Script pro Shelly)",
   upd_status_noip: "keine IP eingetragen",
   upd_manifest_err: "Versionen auf GitHub nicht abrufbar ({msg}).",
   upd_changes_details: "Alle Änderungen",
@@ -600,6 +601,7 @@ en: {
   upd_status_missing: "not installed – please use “Configure from scratch”",
   upd_status_unclear: "no unique script – please use “Configure from scratch”",
   upd_status_unreachable: "Shelly not reachable",
+  upd_extra_scripts: "other scripts on the Shelly: {n} – when uploading you will be asked to remove them (only one script per Shelly)",
   upd_status_noip: "no IP entered",
   upd_manifest_err: "Could not load versions from GitHub ({msg}).",
   upd_changes_details: "All changes",
@@ -873,6 +875,7 @@ fr: {
   upd_status_missing: "non installé – choisis « Nouvelle configuration »",
   upd_status_unclear: "pas de script unique – choisis « Nouvelle configuration »",
   upd_status_unreachable: "Shelly injoignable",
+  upd_extra_scripts: "autres scripts sur le Shelly : {n} – lors du transfert, il te sera demandé de les supprimer (un seul script par Shelly)",
   upd_status_noip: "aucune IP indiquée",
   upd_manifest_err: "Impossible de charger les versions depuis GitHub ({msg}).",
   upd_changes_details: "Toutes les modifications",
@@ -2404,7 +2407,7 @@ function renderUpdateTable(){
       <td style="padding:8px 6px; vertical-align:top;"><b>${KEY_NAMES[key]}</b><div class="hint" style="margin:0;">${escapeHtml(r.ip || '—')}</div></td>
       <td style="padding:8px 6px; vertical-align:top;">${escapeHtml(r.installed || '—')}</td>
       <td style="padding:8px 6px; vertical-align:top;">${escapeHtml(r.available || '—')}${changes}</td>
-      <td style="padding:8px 6px; vertical-align:top; color:${color};">${escapeHtml(statusText(r))}</td>
+      <td style="padding:8px 6px; vertical-align:top; color:${color};">${escapeHtml(statusText(r))}${r.extra ? `<div class="cd" style="color:var(--warn); margin-top:4px;">${escapeHtml(t('upd_extra_scripts', {n: r.extra}))}</div>` : ''}</td>
     </tr>`;
   }).join('');
   const app = u.app;
@@ -2446,9 +2449,14 @@ async function checkUpdates(){
     if(isValidIp(ip)){
       try{
         const list = (await helperGet('/api/inspect?ip=' + encodeURIComponent(ip))).scripts || [];
+        const matching = list.filter(function(s){ return s.type === KEY_TYPES[key]; });
         if(list.length === 0) r.status = 'missing';
-        else if(list.length === 1 && list[0].type === KEY_TYPES[key]){
-          r.installed = list[0].version || '?';
+        else if(matching.length === 1){
+          // Weitere (fremde) Scripte blockieren das Update nicht - beim
+          // Hochladen kommt dafuer die Rueckfrage "Alle entfernen und
+          // installieren" (nur ein Script pro Shelly).
+          r.extra = list.length - 1;
+          r.installed = matching[0].version || '?';
           if(!r.available) r.status = 'unknown';
           else {
             const c = compareVersions(r.installed, r.available);

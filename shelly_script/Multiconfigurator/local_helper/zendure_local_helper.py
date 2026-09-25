@@ -199,7 +199,12 @@ class RpcError(Exception):
     pass
 
 
-def rpc(ip, method, params=None, timeout=15):
+def rpc(ip, method, params=None, timeout=15, lenient=False):
+    # lenient=True (nur Script.GetCode): Antwort mit "surrogateescape"
+    # dekodieren. Der Shelly teilt den Code nach BYTES in Bloecke - ein
+    # Umlaut oder Gedankenstrich (2-3 Byte) kann dabei mitten durchgeschnitten
+    # werden. So bleiben die Rohbytes erhalten und werden in read_code()
+    # wieder korrekt zusammengesetzt.
     # ensure_ascii=False, siehe upload_shelly.py: sonst kodiert json.dumps
     # Emojis als \uXXXX-Surrogatpaare, die der Shelly-JSON-Parser ablehnt.
     payload = json.dumps(
@@ -214,7 +219,7 @@ def rpc(ip, method, params=None, timeout=15):
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            body = json.loads(resp.read().decode("utf-8"))
+            body = json.loads(resp.read().decode("utf-8", "surrogateescape" if lenient else "strict"))
     except urllib.error.HTTPError as err:
         detail = err.read().decode("utf-8", "replace")[:200]
         if err.code == 401:
@@ -301,16 +306,29 @@ class UploadIncomplete(RpcError):
 def read_code(ip, sid, full=True):
     """Liest den Code eines Scripts per Script.GetCode. full=False liest
     nur den ersten Block (reicht fuer SCRIPT_TYPE, das in der Mini-
-    Version ganz vorne steht)."""
-    parts, offset = [], 0
+    Version ganz vorne steht).
+
+    Wichtig: offset und left zaehlt der Shelly in BYTES, nicht in
+    Zeichen. Enthaelt der Code Umlaute oder Sonderzeichen (z.B. "—" in
+    den Kommentaren der Config), liefen Zeichen- und Bytezaehlung
+    auseinander und Teile wurden doppelt gelesen. Deshalb: Rohbytes
+    sammeln, den naechsten offset aus der Gesamtlaenge (erste Antwort:
+    gelieferte Bytes + left) minus left berechnen und erst am Ende als
+    UTF-8 dekodieren."""
+    chunks, offset, total = [], 0, None
     while True:
-        res = rpc(ip, "Script.GetCode", {"id": sid, "offset": offset, "len": READ_CHUNK})
-        data = res.get("data") or ""
-        parts.append(data)
-        offset += len(data)
-        if not full or not data or not res.get("left"):
+        res = rpc(ip, "Script.GetCode", {"id": sid, "offset": offset, "len": READ_CHUNK},
+                  lenient=True)
+        raw = (res.get("data") or "").encode("utf-8", "surrogateescape")
+        left = res.get("left") or 0
+        chunks.append(raw)
+        if total is None:
+            total = offset + len(raw) + left
+        next_offset = total - left
+        if not full or not raw or left <= 0 or next_offset <= offset:
             break
-    return "".join(parts)
+        offset = next_offset
+    return b"".join(chunks).decode("utf-8", "replace")
 
 
 def detect_type(code):
@@ -358,19 +376,21 @@ def inspect_scripts(ip):
 def read_config(ip, key):
     """Liest den CONFIG-Block des installierten Scripts (fuer den
     Update-Weg im Configurator). Erwartet genau ein Script vom Typ zu key
-    auf dem Shelly - sonst Fehler (dann bitte 'Neu konfigurieren')."""
+    auf dem Shelly - sonst Fehler (dann bitte 'Neu konfigurieren').
+    Weitere, fremde Scripte stoeren hier nicht: sie fuehren erst beim
+    Hochladen zur Rueckfrage "Alle entfernen und installieren"."""
     expected = KEY_TO_TYPE.get(key)
     if not expected:
         raise RpcError("Unbekannter Script-Schluessel: %r" % key)
-    scripts = inspect_scripts(ip)
-    if len(scripts) != 1 or scripts[0]["type"] != expected:
+    matching = [s for s in inspect_scripts(ip) if s["type"] == expected]
+    if len(matching) != 1:
         raise RpcError("Auf %s liegt nicht genau ein passendes Script "
                        "- bitte 'Neu konfigurieren' waehlen." % ip)
-    code = read_code(ip, scripts[0]["id"], full=True)
+    code = read_code(ip, matching[0]["id"], full=True)
     rng = find_config_block(code.replace("\r\n", "\n"))
     if rng is None:
         raise RpcError("CONFIG-Block im Script auf %s nicht gefunden." % ip)
-    return dict(scripts[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]])
+    return dict(matching[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]])
 
 
 def _put_code(ip, sid, code, first_append):
