@@ -1451,7 +1451,7 @@
     const y = Math.floor(n / 10000), m = Math.floor(n / 100) % 100, day = n % 100;
     const now = new Date();
     const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-    return Math.max(0, Math.round((today - Date.UTC(y, m - 1, day)) / 86400000));
+    return Math.round((today - Date.UTC(y, m - 1, day)) / 86400000);
   }
 
   function renderFullLine(d){
@@ -1462,6 +1462,9 @@
     if (!(n > 19700101)) { el.textContent = '100 %: noch nicht erfasst'; return; }
 
     const age = fullAgeDays(n);
+    // Zukunftsdatum: falsche Uhr oder Tippfehler - wird bei der naechsten
+    // echten Vollladung vom Script ueberschrieben.
+    if (age < 0) { el.textContent = '100 %: Datum ungültig'; return; }
     el.classList.add(age < 7 ? 'fresh' : (age <= 20 ? 'aging' : 'stale'));
     if (d.showFullDate) {
       const dd = String(n % 100).padStart(2, '0');

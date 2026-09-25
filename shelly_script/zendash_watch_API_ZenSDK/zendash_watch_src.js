@@ -540,13 +540,25 @@ function kvsSetOne(key, value, callback) {
 
 let FULL_SOC = 100;          // nur echte 100 % zaehlen
 let NOT_FULL_DAYS = 20;      // Watchdog-Meldung ab so vielen Tagen
-let FULL_RETRY_MS = 600000;  // nach Schreibfehler fruehestens in 10 min erneut
+let FULL_RETRY_S = 600;      // nach Schreibfehler fruehestens in 10 min erneut
+let FULL_MAX_WRITES = 3;     // harte Obergrenze je Geraet und 24 h Laufzeit
+let FULL_WINDOW_S = 86400;
 
 let LASTFULL = [];
 for (let lfi = 0; lfi < CONFIG.devices.length; lfi++) {
-  // day     - zuletzt gespeichertes Datum (JJJJMMTT, 0 = unbekannt)
-  // pending - erkannt, aber noch nicht geschrieben (0 = nichts offen)
-  LASTFULL[lfi] = { day: 0, pending: 0, retryAt: 0 };
+  // day      - zuletzt gespeichertes Datum (JJJJMMTT, 0 = unbekannt)
+  // pending  - erkannt, aber noch nicht geschrieben (0 = nichts offen)
+  // retryAt  - fruehester naechster Versuch nach Fehler (Laufzeit in s)
+  // winStart/writes - Schreibversuche im aktuellen 24-h-Fenster
+  LASTFULL[lfi] = { day: 0, pending: 0, retryAt: 0, winStart: -1, writes: 0, capMsg: false };
+}
+
+// Geraete-Laufzeit in Sekunden. Laeuft immer vorwaerts - anders als
+// Date.now() springt sie nicht, wenn die Uhr (NTP) korrigiert wird.
+function upSec() {
+  let s = Shelly.getComponentStatus("sys");
+  if (s && isNum(s.uptime)) return s.uptime;
+  return Math.floor(Date.now() / 1000);
 }
 
 // Tage seit 1970-01-01 -> JJJJMMTT (reine Ganzzahl-Rechnung, ohne Date).
@@ -595,44 +607,63 @@ function localDateNum() {
   return daysToDateNum(Math.floor((s.unixtime + off * 60) / 86400));
 }
 
-// Wert aus der KVS uebernehmen (Start und config_api). Nur vorwaerts - ein
-// aelterer KVS-Wert ueberschreibt kein neueres Datum im Speicher.
+// Wert aus der KVS uebernehmen (Start und config_api). Die KVS ist die
+// Wahrheit - auch ein von Hand gesetzter aelterer Wert wird uebernommen.
+// Ein fehlender Key (v undefined) aendert nichts.
 function adoptLastFull(index, v) {
   let n = Number(v);
   if (!isNum(n) || n < 19700101 || n > 99991231) return;
-  if (n > LASTFULL[index].day) LASTFULL[index].day = n;
+  LASTFULL[index].day = n;
 }
 
 // Aus extractHub: SoC 100 % gesehen -> fuer heute vormerken, falls heute
-// noch nicht gespeichert.
+// noch nicht gespeichert. Ein gespeichertes Datum in der ZUKUNFT (falsche
+// Uhr, Tippfehler) gilt als ungueltig und darf ueberschrieben werden -
+// sonst wuerde es jede weitere Erfassung bis zu diesem Datum blockieren.
 function markFull(index) {
   let lf = LASTFULL[index];
   let today = localDateNum();
   if (!today) return;
-  if (today <= lf.day || lf.pending === today) return;
+  if (today === lf.day || lf.pending === today) return;
   lf.pending = today;
   if (DBG) logDebug(CONFIG.devices[index].label + ": 100 % erkannt - lastFull " + today + " vorgemerkt");
 }
 
 // Nach dem Poll: hoechstens EIN offener Eintrag je Durchlauf, nur bei
-// freiem Slot. Nach einem Fehler erst nach FULL_RETRY_MS erneut.
+// freiem Slot. Nach einem Fehler erst nach FULL_RETRY_S erneut.
+// Unabhaengig von Datum und Uhr gilt eine harte Obergrenze von
+// FULL_MAX_WRITES Versuchen je Geraet und 24 h Laufzeit - sie greift nur
+// in Fehlerfaellen (Antwort geht verloren, Uhr springt hin und her).
 function flushLastFull() {
   if (busyNow()) return;
-  let now = Date.now();
+  let up = upSec();
   for (let i = 0; i < LASTFULL.length; i++) {
     let lf = LASTFULL[i];
-    if (!lf.pending || now < lf.retryAt) continue;
+    if (!lf.pending || up < lf.retryAt) continue;
+    if (lf.winStart < 0 || up - lf.winStart >= FULL_WINDOW_S) {
+      lf.winStart = up;
+      lf.writes = 0;
+      lf.capMsg = false;
+    }
+    if (lf.writes >= FULL_MAX_WRITES) {
+      if (!lf.capMsg) {
+        lf.capMsg = true;
+        print(CONFIG.devices[i].label + ": lastFull - Obergrenze von " + FULL_MAX_WRITES + " Schreibversuchen in 24 h erreicht, pausiert.");
+      }
+      continue;
+    }
+    lf.writes++;
     let day = lf.pending;
     busyEnter();
     kvsSetOne("zdmc_dev" + i + "_lastFull", day, function (ok) {
       busyLeave();
       if (ok) {
-        if (day > lf.day) lf.day = day;
+        lf.day = day;
         if (lf.pending === day) lf.pending = 0;
         lf.retryAt = 0;
         print(CONFIG.devices[i].label + ": Vollladung (100 %) am " + day + " gespeichert.");
       } else {
-        lf.retryAt = Date.now() + FULL_RETRY_MS;
+        lf.retryAt = upSec() + FULL_RETRY_S;
         print(CONFIG.devices[i].label + ": lastFull konnte nicht gespeichert werden - neuer Versuch in 10 min.");
       }
     });
@@ -1157,6 +1188,7 @@ function checkNotFull(index) {
   let today = localDateNum();
   if (!today) return;
   let age = dateNumToDays(today) - dateNumToDays(lf);
+  // age < 0: Datum in der Zukunft - ungueltig, keine Meldung
   if (age >= NOT_FULL_DAYS) {
     if (!ws.notFullMsgSent) {
       ws.notFullMsgSent = true;
