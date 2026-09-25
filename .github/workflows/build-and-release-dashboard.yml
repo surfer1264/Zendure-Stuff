@@ -107,4 +107,4 @@ jobs:
           path: |
             ${{ matrix.asset_name }}
             ${{ matrix.asset_name }}.sha256
-          retention-days: 10
+          retention-days: 5
