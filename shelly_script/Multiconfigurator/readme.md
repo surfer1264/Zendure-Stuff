@@ -47,9 +47,9 @@ Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
 ## 2. Wo finde ich den Configurator?
 
-Es gibt zwei Wege. Empfohlen ist der **lokale Helfer**, denn nur damit funktionieren Direkt-Upload, Update und Speicherprüfung.
+Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update und Speicherprüfung.
 
-### Empfohlen: der lokale Helfer (Installer)
+### Empfohlen: der lokale Helfer (Exe-Installer)
 
 Ein kleines Programm für deinen Rechner. Es startet den Configurator automatisch im Browser und übernimmt die Verbindung zu deinen Shellys. Keine Installation, kein Python nötig – herunterladen, starten, fertig.
 
@@ -160,7 +160,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 4. Gewünschte Scripte anhaken → **„Jetzt updaten“**. Der Configurator liest deine aktuelle Konfiguration direkt vom Shelly und springt zum Ergebnis.
 5. Dort **„⚡ Direkt hochladen“** klicken. Das neue Script ersetzt das alte an derselben Stelle (die Script-Nummer bleibt gleich – wichtig z. B. für den Dashboard-Proxy) und wird wieder gestartet.
 
-<!-- Screenshot: Update-Tabelle -->
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/28f6d1bf-8f5f-4311-8cd9-2e441b986157" />
 
 ### Was beim Update mit deinen Einstellungen passiert
 
