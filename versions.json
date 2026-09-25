@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-25T09:36:36Z",
+  "generated": "2026-09-25T11:08:34Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -72,12 +72,12 @@
       "history": []
     },
     "zdmc-zendash-watch": {
-      "version": "3.1",
+      "version": "3.2",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/dc8597f521718b00b9645f1ba4025cf0eb73c2f9/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 34013,
-      "codeHash": "sha256:1bca94d940fe310edb08507d4881ef03589239eb5d82226a44e6cbf26b14003c",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/73e4bca4e59a04707ac4b55b874d942d378f72fc/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 33996,
+      "codeHash": "sha256:b52918575936394839c2f6d842ef63f39717d1acfecbbef7b937abcda474dc1d",
       "configKeys": [
         "api",
         "apiEvents",
@@ -124,12 +124,22 @@
         "webhookUrl"
       ],
       "changes": [
-        "Zusammenlegung von Watchdog und zenDash API"
+        "FullScreenMode"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
-      "history": []
+      "history": [
+        {
+          "version": "3.1",
+          "schema": 1,
+          "codeHash": "sha256:1bca94d940fe310edb08507d4881ef03589239eb5d82226a44e6cbf26b14003c",
+          "changes": [
+            "Zusammenlegung von Watchdog und zenDash API"
+          ],
+          "notice": null
+        }
+      ]
     },
     "zdmc-configurator": {
       "kind": "app",
