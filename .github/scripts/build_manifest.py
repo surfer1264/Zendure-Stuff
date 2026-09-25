@@ -53,12 +53,15 @@ HASH_ALGO = "sha256-noconfig-v1"
 HISTORY_MAX = 10
 CHANGES_MAX = 3
 SCRIPT_GLOB = "shelly_script/**/*_mini.js"
+APP_GLOB = "shelly_script/**/*.html"
 META_FILE = "shelly_script/manifest_meta.json"
 CONFIG_PLACEHOLDER = "let CONFIG = __CONFIG__;"
 
 RE_TYPE = re.compile(r"""\bSCRIPT_TYPE\s*=\s*["']([^"']+)["']""")
 RE_VERSION = re.compile(r"""\bVERSION\s*=\s*["']([^"']+)["']""")
 RE_SCHEMA = re.compile(r"""\bCONFIG_SCHEMA\s*=\s*(\d+)""")
+RE_APP_TYPE = re.compile(r"""\bAPP_TYPE\s*=\s*["']([^"']+)["']""")
+RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 RE_CONFIG_START = re.compile(r"^let CONFIG\s*=\s*\{", re.MULTILINE)
 RE_CHANGELOG_NAME = re.compile(r"chang\w*log", re.IGNORECASE)
 RE_CHANGELOG_HEAD = re.compile(r"^#{2,3}\s+(?:[^\d\s]\S*\s+)*v?(\d+(?:\.\d+)+)\b")
@@ -302,6 +305,52 @@ def build_entry(path, repo, sha, meta):
     return stype, entry
 
 
+def build_app_entry(path, repo, sha):
+    """Anwendungen (z.B. der Configurator, der zusammen mit dem Helfer
+    veroeffentlicht wird): HTML-Dateien mit APP_TYPE + APP_VERSION.
+    Kein Code-Hash und keine Schema-Pruefung - die Datei aendert sich oft,
+    ohne dass eine neue Version faellig ist."""
+    with open(path, encoding="utf-8") as fh:
+        text = fh.read()
+    m_type = RE_APP_TYPE.search(text)
+    if not m_type:
+        return None, None
+    m_ver = RE_APP_VERSION.search(text)
+    if not m_ver:
+        err("%s: APP_TYPE vorhanden, aber kein APP_VERSION." % path)
+        return m_type.group(1), None
+    changes, notice, cl_path = read_changelog(os.path.dirname(path), m_ver.group(1))
+    fpath = path.replace(os.sep, "/")
+    return m_type.group(1), {
+        "kind": "app",
+        "version": m_ver.group(1),
+        "file": fpath,
+        "url": raw_url(repo, sha, fpath),
+        "changes": changes,
+        "notice": notice,
+        "changelogUrl": ("https://github.com/%s/blob/main/%s" % (repo, urllib.parse.quote(cl_path))
+                         if cl_path else None),
+        "history": [],
+    }
+
+
+def merge_app_with_old(atype, new, old):
+    if not old:
+        return new
+    if old.get("version") == new["version"]:
+        kept = dict(old)
+        for k in ("changes", "notice", "changelogUrl", "file"):
+            kept[k] = new[k]
+        return kept
+    if version_tuple(new["version"]) < version_tuple(old["version"]):
+        err("%s: APP_VERSION %s ist kleiner als die bisherige %s."
+            % (atype, new["version"], old.get("version")))
+        return old
+    item = {k: old.get(k) for k in ("version", "changes", "notice")}
+    new["history"] = ([item] + list(old.get("history") or []))[:HISTORY_MAX]
+    return new
+
+
 def history_item(e):
     return {k: e.get(k) for k in ("version", "schema", "codeHash", "changes", "notice")}
 
@@ -380,6 +429,18 @@ def main():
         scripts[stype] = merge_with_old(stype, entry, old_scripts.get(stype))
         print("%-22s v%-8s schema %-4s %s" % (
             stype, scripts[stype]["version"], scripts[stype]["schema"], scripts[stype]["file"]))
+
+    for path in sorted(glob.glob(APP_GLOB, recursive=True)):
+        atype, entry = build_app_entry(path, repo, sha)
+        if atype is None:
+            continue
+        if atype in scripts:
+            err("APP_TYPE '%s' kommt mehrfach vor bzw. kollidiert (zuletzt in %s)." % (atype, path))
+            continue
+        if entry is None:
+            continue
+        scripts[atype] = merge_app_with_old(atype, entry, old_scripts.get(atype))
+        print("%-22s v%-8s (App)      %s" % (atype, scripts[atype]["version"], scripts[atype]["file"]))
 
     for stype in old_scripts:
         if stype not in scripts:

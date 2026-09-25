@@ -20,6 +20,7 @@ name: Versions-Manifest
     branches: [main]
     paths:
       - "shelly_script/**/*_mini.js"
+      - "shelly_script/**/*.html"
       - "shelly_script/**/*[Cc]hang*[Ll]og*.md"
       - "shelly_script/manifest_meta.json"
       - ".github/scripts/build_manifest.py"
