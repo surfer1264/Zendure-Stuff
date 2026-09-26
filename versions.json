@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-25T19:15:52Z",
+  "generated": "2026-09-26T09:11:12Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -165,17 +165,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.0.1",
+      "version": "2.0.2",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4103847a68ae677408afacdc56356fea06a6c2e7/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2432028f57698fb9c67f13615a70a3e2f817868c/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
-        "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr",
-        "Liegen weitere Scripte auf dem Shelly, entscheidest du vor dem Hochladen, ob sie gelöscht oder behalten werden"
+        "Neuer Einführungstext auf der Startseite (DE/EN/FR)",
+        "Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)",
+        "Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.0.1",
+          "changes": [
+            "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
+            "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr",
+            "Liegen weitere Scripte auf dem Shelly, entscheidest du vor dem Hochladen, ob sie gelöscht oder behalten werden"
+          ],
+          "notice": null
+        },
         {
           "version": "2.0",
           "changes": [
