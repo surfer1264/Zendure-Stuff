@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-26T09:11:12Z",
+  "generated": "2026-09-26T17:57:49Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -165,17 +165,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.0.2",
+      "version": "2.0.3",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2432028f57698fb9c67f13615a70a3e2f817868c/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/87f25421239495fb0efb41b89c290767d52ae566/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Neuer Einführungstext auf der Startseite (DE/EN/FR)",
-        "Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)",
-        "Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab"
+        "Bestehende Config einlesen: neuer Button „📂 Datei laden…“ – lädt eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) ins Textfeld, übernommen wird wie bisher mit „Einlesen & übernehmen“",
+        "Komplettes Script speichern: Dateiname enthält jetzt die Script-Version (z. B. `zerooutput_multi_kvs_mini_v5.0.8.js`)",
+        "Link zur Anleitung (README) auf der Startseite"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.0.2",
+          "changes": [
+            "Neuer Einführungstext auf der Startseite (DE/EN/FR)",
+            "Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)",
+            "Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab"
+          ],
+          "notice": null
+        },
         {
           "version": "2.0.1",
           "changes": [
