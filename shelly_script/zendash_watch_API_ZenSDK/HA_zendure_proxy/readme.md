@@ -1,20 +1,25 @@
-# Zendure Dashboard Proxy – Home Assistant Add-on
+# Zendure Dashboard Proxy – Home Assistant App
 
-Dokumentation zur Einrichtung des lokalen Zendure-Dashboard-Proxys als eigenes
-Add-on unter Home Assistant OS (Supervisor). Der Proxy löst das
-CORS/Origin-Problem der Shelly-Firmware: der Browser spricht nur noch mit
-diesem Add-on, das die Daten serverseitig vom Shelly abruft.
+Dokumentation zur Einrichtung des Zendure-Dashboard-Proxys als eigene App
+(früher „Add-on“) unter Home Assistant OS (Supervisor). Der Proxy löst das
+CORS/Origin-Problem der Shelly-Firmware: Der Browser spricht nur noch mit
+dieser App, die die Daten serverseitig vom Shelly abruft.
+
+Es ist derselbe `zendure_proxy.py` wie auf PC, Synology oder als EXE –
+unverändert. Shelly-IP und Script-ID werden **nicht** im Script eingetragen,
+sondern nach dem Start im Browser auf der Einrichtungsseite.
 
 ## Voraussetzungen
 
 - Home Assistant OS mit Supervisor
 - Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
-- Die beiden bestehenden Dateien `zendure_proxy.py` und
-  `zendure-dashboard.html`
-  - **Achtung** `zendure_proxy`muss natürlich sauber konfiguriert sein (IP-Adresse des Shelly, auf dem die API installiert ist)
+- die beiden Dateien `zendure_proxy.py` und `zendure-dashboard.html`
+- IP-Adresse des **Dashboard-Shelly** (auf dem das API-Script läuft) und die
+  **Script-ID** des API-Scripts – beides wird erst nach der Installation
+  gebraucht
 
-> **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons" im
-> Frontend **„Apps"** (Einstellungen → Apps → App Store).
+> **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons“ im
+> Frontend **„Apps“** (Einstellungen → Apps → App Store).
 
 ## Verzeichnisstruktur
 
@@ -86,6 +91,9 @@ RUN chmod a+x /etc/services.d/zendure_proxy/run
 Kein eigenes `CMD`/`ENTRYPOINT` – das Skript wird als s6-Service registriert,
 den `/init` (aus dem Base-Image) selbst startet.
 
+Proxy und HTML liegen im Container im selben Ordner (`/`), der Proxy findet
+die Seite dort automatisch.
+
 ### run.sh
 
 ```bash
@@ -93,6 +101,9 @@ den `/init` (aus dem Base-Image) selbst startet.
 cd /
 exec python3 zendure_proxy.py -q
 ```
+
+`-q` schaltet das Zugriffsprotokoll ab; die Startübersicht erscheint weiterhin
+im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
 
 **Wichtig:** Datei muss mit **LF**-Zeilenenden gespeichert sein, nicht CRLF
 (siehe Troubleshooting).
@@ -103,49 +114,87 @@ exec python3 zendure_proxy.py -q
    (per Samba-Freigabe oder SSH).
 2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
    drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
-   ebenfalls einen Rescan von `/addons/`). siehe Bild1
-3. Das Add-on **„Zendure Dashboard Proxy"** erscheint im lokalen Bereich →
+   ebenfalls einen Rescan von `/addons/`). Siehe Bild 1.
+3. Die App **„Zendure Dashboard Proxy“** erscheint im lokalen Bereich →
    auswählen → **Install** (baut das Docker-Image).
-4. Starten. In der Add-on-Konfiguration **„Beim Booten starten"** und
-   **„Watchdog"** aktivieren, damit der Proxy nach einem HA-Neustart
+4. Starten. In der App-Konfiguration **„Beim Booten starten“** und
+   **„Watchdog“** aktivieren, damit der Proxy nach einem HA-Neustart
    automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
-   startet. siehe Bild2
-5. Dashboard aufrufen: `http://<ha-ip>:8000/`
+   startet. Siehe Bild 2.
+5. Im Browser `http://<ha-ip>:8000/` aufrufen. Beim ersten Mal erscheint die
+   **Einrichtungsseite**.
+6. **Shelly-IP** (Dashboard-Shelly, nicht Controller-Shelly) und
+   **Script-ID** eintragen → **„Speichern & testen“**. Der Proxy prüft
+   sofort, ob unter dieser Adresse das API-Script antwortet, und leitet bei
+   Erfolg zum Dashboard weiter.
+
+Ab jetzt ist das Dashboard unter `http://<ha-ip>:8000/` von jedem Gerät im
+Heimnetz erreichbar.
 
 ----
 
-**Bild1: Vor Installation**
+**Bild 1: Vor Installation**
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/1f669708-a57e-4e73-a7d0-69d4192b50d7" />
 
-**Bild2: Nach Installation**
+**Bild 2: Nach Installation**
 
 <img width="400" alt="image" src="https://github.com/user-attachments/assets/cb24431a-f998-4aee-ac1b-1aa81445240d" />
 
 ---
 
-**Bei Änderungen an den Add-on-Dateien** (`config.yaml`, `Dockerfile`,
-`run.sh` `zendure-dashboard` etc.): Add-on **deinstallieren** und **neu installieren** – ein
-bloßer Restart liest die geänderten Dateien nicht neu ein, es muss neu
-gebaut werden.
+## Einstellungen ändern
 
-Nochmal ganz deutlich: ändert sich `zendure-dashboard` muss die App in HA deinstalliert und neu gebaut werden, nach obigem Muster! Nur der Austausch der Datei im addon-Verzeichnis bewirkt gar nichts.
+Ändert sich die IP des Shelly oder die Script-ID (z. B. nach einem erneuten
+Hochladen des API-Scripts), einfach
+
+```
+http://<ha-ip>:8000/setup
+```
+
+aufrufen und die neuen Werte eintragen. Die App muss dafür weder neu gebaut
+noch neu gestartet werden.
+
+Die Einstellungen liegen in der Datei `zendure_proxy_config.json` **im
+Container** der App. Sie überstehen einen Neustart der App und von Home
+Assistant, gehen aber verloren, wenn die App deinstalliert wird. Nach einer
+Neuinstallation erscheint deshalb wieder die Einrichtungsseite – einfach
+Schritt 6 wiederholen.
+
+## Änderungen an den App-Dateien
+
+**Bei Änderungen an den App-Dateien** (`config.yaml`, `Dockerfile`,
+`run.sh`, `zendure_proxy.py`, `zendure-dashboard.html` usw.): App
+**deinstallieren** und **neu installieren** – ein bloßer Restart liest die
+geänderten Dateien nicht neu ein, es muss neu gebaut werden.
+
+Nochmal ganz deutlich: Ändert sich `zendure-dashboard.html`, muss die App in
+HA deinstalliert und neu gebaut werden, nach obigem Muster! Nur der Austausch
+der Datei im Ordner `/addons/zendure_proxy/` bewirkt gar nichts – der
+Container enthält eine eigene Kopie.
+
+Danach die Einrichtung wie in Installationsschritt 5 und 6 wiederholen.
 
 ## Troubleshooting-Log (aufgetretene Probleme & Lösungen)
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| Lokales Add-on taucht im App Store nicht auf | Store-Daten im Browser gecacht | Hard-Refresh (Strg+Shift+R) bzw. Inkognito-Fenster; Supervisor-Log zeigt bei erfolgreichem Scan `Loading apps from store: ... 1 new` |
-| `s6-overlay-suexec: fatal: can only run as pid 1` | Supervisor wrapt den Container standardmäßig zusätzlich mit Docker-Init, kollidiert mit s6-Overlay als PID 1 | `init: false` in `config.yaml` setzen **und Add-on neu bauen** (nicht nur neu starten) |
+| Lokale App taucht im App Store nicht auf | Store-Daten im Browser gecacht | Hard-Refresh (Strg+Shift+R) bzw. Inkognito-Fenster; Supervisor-Log zeigt bei erfolgreichem Scan `Loading apps from store: ... 1 new` |
+| `s6-overlay-suexec: fatal: can only run as pid 1` | Supervisor wrapt den Container standardmäßig zusätzlich mit Docker-Init, kollidiert mit s6-Overlay als PID 1 | `init: false` in `config.yaml` setzen **und App neu bauen** (nicht nur neu starten) |
 | `exec: fatal: unable to exec bashio` | `run.sh` nutzte `#!/usr/bin/with-contenv bashio`, obwohl das Skript keine bashio-Funktionen braucht | Shebang auf `#!/usr/bin/env bash` ändern |
-| `env: can't execute 'bash\n'` | `run.sh` mit Windows-Zeilenenden (CRLF) statt Unix (LF) gespeichert | Datei mit LF-Zeilenenden neu speichern (z. B. in VS Code unten rechts CRLF → LF umstellen) |
+| `env: can't execute 'bash\r'` | `run.sh` mit Windows-Zeilenenden (CRLF) statt Unix (LF) gespeichert | Datei mit LF-Zeilenenden neu speichern (z. B. in VS Code unten rechts CRLF → LF umstellen) |
+| Statt des Dashboards erscheint die Einrichtungsseite | App wurde neu installiert, die Einstellungen im Container sind dabei verloren gegangen | Normal – IP und Script-ID erneut eintragen |
+| „Speichern & testen“ meldet „Shelly nicht erreichbar“ | falsche IP, oder der Container erreicht das Netz des Shelly nicht | IP prüfen (Test im Browser: `http://<shelly-ip>/script/<id>/status_api`); bei getrennten Netzsegmenten siehe unten |
+| „Speichern & testen“ meldet eine falsche Antwort bzw. Status 404 | falsche Script-ID | Script-ID in der Shelly-Weboberfläche unter **Scripts** nachsehen |
 
-## Konfiguration anpassen
-
-`SHELLY_IP` in `zendure_proxy.py` ggf. an das Netzwerk der HA-Instanz
-anpassen, falls sich die IP des Shelly-Geräts ändert oder der Proxy auf
-einer anderen Instanz betrieben wird.
+## Netzwerk
 
 Falls der Shelly aus dem Container heraus nicht erreichbar ist (z. B. bei
-getrennten Netzwerksegmenten): in der Add-on-Netzwerkkonfiguration im
+getrennten Netzwerksegmenten): in der App-Netzwerkkonfiguration im
 Supervisor von Bridge- auf **Host-Netzwerk** umstellen.
+
+## Sicherheit
+
+Das Dashboard und die Einrichtungsseite `/setup` haben keinen Passwortschutz.
+Jeder im Heimnetz, der die Adresse kennt, kann Einstellungen ändern. Port 8000
+deshalb **nie** per Portweiterleitung ins Internet freigeben.

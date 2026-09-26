@@ -236,27 +236,41 @@ notify: {
 Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Der Browser darf die Daten aber nicht direkt beim Shelly abfragen – die Shelly-Firmware lehnt solche Zugriffe aus einer fremden Webseite ab. Deshalb läuft auf einem Rechner im Heimnetz ein kleiner **Python-Proxy**: Er liefert die Dashboard-Seite aus und fragt den Shelly stellvertretend ab.
 
 ```
-Browser  ──►  Python-Proxy (PC/NAS/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
+Browser  ──►  Python-Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
 ```
 
+### Welche Variante passt zu dir?
+
+Es gibt **einen** Proxy (`zendure_proxy.py`), der überall gleich funktioniert. Nur die Art, wie du ihn startest, unterscheidet sich:
+
+| Variante | Geeignet für | Start | Browser öffnet sich von selbst |
+|---|---|---|---|
+| **Python-Script** | PC, Laptop, Raspberry Pi | `python3 zendure_proxy.py` | ja (nur mit Bildschirm) |
+| **EXE** | Windows ohne Python-Installation | Doppelklick | ja |
+| **Synology** | Dauerbetrieb auf dem NAS | Aufgabenplaner | nein |
+| **Home Assistant** | wer ohnehin Home Assistant OS betreibt | als eigene App | nein |
+
+Die Einrichtung ist in allen Fällen gleich: Proxy starten, im Browser aufrufen, auf der Einrichtungsseite IP und Script-ID des Dashboard-Shelly eintragen. Ein Texteditor ist dafür nicht nötig.
 
 ### Was du dafür brauchst
 
 - **`api.enabled: true`** in diesem Script (siehe [Konfiguration](#konfiguration))
-- einen **Rechner, der dauerhaft läuft** – PC, NAS (z. B. Synology), Raspberry Pi, Mini-PC
-- **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden.
-- die zwei Dateien aus dem [Dashboard-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK), beide **im selben Ordner** abgelegt:
+- einen **Rechner, der dauerhaft läuft** – PC, NAS (z. B. Synology), Home Assistant, Raspberry Pi, Mini-PC
+- **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden. Entfällt bei der EXE und bei Home Assistant.
+- die zwei Dateien aus dem [Dashboard-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK):
   - `zendure_proxy.py` – der Proxy
   - `zendure-dashboard.html` – die Dashboard-Seite
 
+  Die HTML-Datei darf **im selben Ordner** wie der Proxy liegen oder **eine Ebene höher**. Liegt an beiden Stellen eine, gewinnt die im selben Ordner.
+
 Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles Laden …), muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
 
-### In 5 Schritten zum Dashboard
+### In 4 Schritten zum Dashboard
 
 **1. Script-ID nachsehen**
 
-Der `zendure_proxy.py` braucht Kenntnisse von der IP Adresse des Dashboard-Shelly und der Scriptnummer.
- 
+Der Proxy muss wissen, unter welcher IP-Adresse der Dashboard-Shelly erreichbar ist und welche Nummer das Script dort hat.
+
 In der Weboberfläche des Dashboard-Shelly unter **Scripts** steht die Nummer des Scripts (z. B. `id: 1`). Über den Configurator hochgeladen, heißt das Script `zd`.
 
 **2. Kurz testen, ob das Script antwortet**
@@ -267,63 +281,106 @@ Im Browser direkt aufrufen (IP und Nummer einsetzen):
 http://<IP-des-Dashboard-Shelly>/script/<Script-ID>/status_api
 ```
 
-Es sollte eine Zeile mit Daten (JSON) erscheinen. Kommt ein Fehler, läuft das Script nicht oder die Nummer stimmt nicht.
+Es sollte eine Zeile mit Daten (JSON) erscheinen. Kommt ein Fehler, läuft das Script nicht oder die Nummer stimmt nicht. Funktioniert es, hast du die richtige IP-Adresse und Script-Nummer.
 
-Wenn das funktioniert habt Ihr die richtige IP-Adresse und Script-Nummer.
+**3. Proxy starten**
 
-**3. Proxy einstellen**
-
-`zendure_proxy.py` mit einem Texteditor öffnen und oben drei Werte anpassen:
-
-```python
-SHELLY_IP = "192.168.178.149"   # IP des Dashboard-Shelly (NICHT der Controller-Shelly!)
-SHELLY_SCRIPT_ID = 1            # Script-ID aus Schritt 1
-PORT = 8000                     # Port, unter dem das Dashboard erreichbar ist
-```
-
-**4. Proxy starten**
-
-Im Ordner mit den beiden Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
+Im Ordner mit den Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
 
 ```bash
 python3 zendure_proxy.py
 ```
 
-Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fenster muss offen bleiben, solange das Dashboard genutzt wird; beenden mit `Strg+C`. Mit `-q` am Ende startet der Proxy ohne Protokollzeile je Aufruf – praktisch im Dauerbetrieb.
+Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fenster muss offen bleiben, solange das Dashboard genutzt wird; beenden mit `Strg+C`.
 
-**5. Dashboard öffnen**
+Beim Start zeigt der Proxy eine kurze Übersicht:
 
 ```
-http://localhost:8000/
+Zendure Dashboard Proxy
+  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
+  HTML:     /home/pi/zendure/zendure-dashboard.html
+  Konfig:   /home/pi/zendure/zendure_proxy_config.json
+  Lokal:    http://localhost:8000/
+  Im Netz:  http://192.168.178.21:8000/  (von jedem Rechner im selben Netzwerk)
+(Strg+C zum Beenden)
 ```
 
-Das Dashboard ist auch von jedem anderen Rechner, ipad, Telefon erreichbar. Dazu muss man die IP-Adresse des Rechners kennen auf dem der Proxy gestartet wurde. Der Proxy zeigt die beim Start an!!
+- **HTML** zeigt, welche Dashboard-Datei gefunden wurde.
+- **Konfig** zeigt, wo die Einstellungen gespeichert werden.
+- **Im Netz** ist die Adresse für Handy, Tablet und andere Rechner.
 
-Von einem anderen Gerät (Handy, Tablet) die Adresse nehmen, die der Proxy beim Start unter **„Im Netz“** anzeigt, z. B. `http://192.168.178.21:8000/`.
+Auf einem Rechner mit Bildschirm öffnet sich der Browser automatisch.
+
+**4. Einrichten**
+
+Beim ersten Aufruf von `http://localhost:8000/` erscheint statt des Dashboards die **Einrichtungsseite**. Dort trägst du ein:
+
+- **Shelly-IP** – die IP des **Dashboard-Shelly** (nicht die des Controller-Shelly!)
+- **Script-ID** – die Nummer aus Schritt 1
+
+Ein Klick auf **„Speichern & testen“** prüft sofort, ob unter dieser Adresse wirklich das API-Script antwortet. Bei einem Tippfehler erscheint eine Fehlermeldung, und nichts wird gespeichert. Klappt der Test, leitet die Seite direkt zum Dashboard weiter.
+
+Die Einstellungen landen in der Datei `zendure_proxy_config.json` neben dem Proxy (bzw. neben der EXE). Beim nächsten Start sind sie wieder da – die Einrichtung ist also nur einmal nötig. Ändern kannst du sie jederzeit unter:
+
+```
+http://<Proxy-Adresse>:8000/setup
+```
+
+Danach ist das Dashboard auch von jedem anderen Gerät im Heimnetz erreichbar – mit der Adresse aus der Zeile **„Im Netz“**, z. B. `http://192.168.178.21:8000/`.
 
 - immer `http://`, nicht `https://`
 - die Seite startet **gesperrt** – das Schloss oben rechts gibt die Bedienung frei
 - fragt Windows beim ersten Start nach der Firewall: **„Zugriff zulassen“** (privates Netzwerk)
 
+### Startoptionen
+
+| Option | Wirkung |
+|---|---|
+| *(keine)* | normal, mit einer Protokollzeile je Aufruf |
+| `-q` | leise: Startübersicht ja, Protokoll nein – praktisch im Dauerbetrieb, die Seite fragt alle 4 Sekunden an |
+| `-s` | still: gar keine Ausgabe (Fehler erscheinen trotzdem) |
+| `--browser` | Browser beim Start immer öffnen |
+| `--no-browser` | Browser beim Start nie öffnen |
+| `-h` | Hilfe anzeigen |
+
+Ohne `--browser`/`--no-browser` entscheidet der Proxy selbst: Unter Windows, macOS und auf einem Linux-Desktop öffnet er den Browser, auf einer Synology, in Home Assistant oder in einer SSH-Sitzung nicht.
+
+Port (`PORT`, Standard 8000) und Netzwerk-Schnittstelle (`BIND_ADDRESS`) stehen bei Bedarf oben im Script.
+
 ### Gut zu wissen
 
-- **Dauerbetrieb:** Der Proxy muss laufen, solange du das Dashboard nutzen willst. Ein Laptop, der zugeklappt wird, eignet sich dafür schlecht. Wie der Proxy auf einer Synology automatisch beim Hochfahren startet, seht ihr im Folgekapitel.
-- **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
-- **Nach einem Script-Update:** Wird das Script neu angelegt (z. B. beim Hochladen über den Configurator), kann sich die **Script-ID ändern**. Geht das Dashboard danach nicht mehr, die Nummer in `zendure_proxy.py` anpassen und den Proxy neu starten.
-
+- **Dauerbetrieb:** Der Proxy muss laufen, solange du das Dashboard nutzen willst. Ein Laptop, der zugeklappt wird, eignet sich dafür schlecht – besser eine Synology oder Home Assistant (siehe unten).
+- **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup`. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
+- **Nach einem Script-Update:** Wird das Script neu angelegt (z. B. beim Hochladen über den Configurator), kann sich die **Script-ID ändern**. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
+- **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Bei der EXE ist die Seite eingebaut, dort kommt sie mit einer neuen EXE. In Home Assistant muss die App neu gebaut werden.
 
 ### Wenn es nicht klappt
 
 | Symptom | Lösung |
 |---|---|
 | Seite leer, „Failed to fetch“ | Die HTML-Datei wurde per Doppelklick geöffnet. Immer über `http://localhost:8000/` öffnen. |
-| Roter Hinweis „Fehler beim Laden der Konfiguration“ | `SHELLY_IP` oder `SHELLY_SCRIPT_ID` im Proxy falsch – mit dem Test aus Schritt 2 prüfen. |
-| 404 unter `http://localhost:8000/` | `zendure-dashboard.html` liegt nicht im selben Ordner wie `zendure_proxy.py`. |
+| Statt des Dashboards erscheint die Einrichtungsseite | Der Proxy ist noch nicht eingerichtet, oder `zendure_proxy_config.json` fehlt bzw. ist beschädigt. Einfach neu einrichten. |
+| „Speichern & testen“ meldet einen Fehler | IP oder Script-ID stimmen nicht – mit dem Test aus Schritt 2 prüfen. Die IP muss die des **Dashboard-Shelly** sein. |
+| Roter Hinweis „Fehler beim Laden der Konfiguration“ | Der Shelly ist nicht (mehr) erreichbar oder die Script-ID hat sich geändert – unter `/setup` prüfen. |
+| 404 unter `http://localhost:8000/` | `zendure-dashboard.html` liegt weder neben dem Proxy noch eine Ebene höher. Beim Start listet der Proxy alle Orte auf, an denen er gesucht hat. |
+| Einrichtung lässt sich nicht speichern | Der Proxy darf in seinem Ordner nicht schreiben (z. B. EXE unter `C:\Programme`). Ordner mit Schreibrecht wählen. |
 | Einstellungen wirken nicht | Im Controller `kvsEnabled: true` setzen. |
 | Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
-| Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Windows-Firewall-Freigabe prüfen. |
+| Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Firewall-Freigabe prüfen. |
 | Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss oben rechts antippen. |
+| „Konnte Port 8000 nicht oeffnen“ | Der Proxy läuft schon (z. B. in einem zweiten Fenster), oder ein anderes Programm belegt den Port. |
 
+### Als EXE unter Windows
+
+Für Windows-Rechner ohne Python gibt es den Proxy als fertige EXE. Die Dashboard-Seite ist darin bereits eingebaut – du brauchst also nur diese eine Datei.
+
+1. Die EXE in einen **eigenen Ordner** legen, in dem du Schreibrecht hast, z. B. `C:\Users\<name>\zendure\`. Nicht unter `C:\Programme`, dort kann der Proxy seine Einstellungen nicht speichern.
+2. Per **Doppelklick** starten. Ein Konsolenfenster öffnet sich (offen lassen), dazu der Browser mit der Einrichtungsseite.
+3. Warnt Windows SmartScreen vor einer unbekannten App: **„Weitere Informationen“ → „Trotzdem ausführen“**.
+4. Fragt die Windows-Firewall nach: **„Zugriff zulassen“** (privates Netzwerk), sonst ist das Dashboard vom Handy aus nicht erreichbar.
+5. Einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard) beschrieben. Die Datei `zendure_proxy_config.json` entsteht neben der EXE.
+
+Beenden: Konsolenfenster schließen oder `Strg+C`.
 
 ### Dauerbetrieb auf einer Synology
 
@@ -333,18 +390,29 @@ Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology g
    ```bash
    which python3 && python3 --version
    ```
-   Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
-2. **Dateien ablegen.** `zendure_proxy.py` und `zendure-dashboard.html` in denselben Ordner, z. B. `/volume1/homes/<benutzer>/zendure`. Nicht in den `web`-Ordner — der gehört der Web Station.
+   Ab 3.7 reicht es – der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+2. **Dateien ablegen.** `zendure_proxy.py` in einen eigenen Ordner, z. B. `/volume1/homes/<benutzer>/zendure`, und `zendure-dashboard.html` daneben oder eine Ebene höher. Nicht in den `web`-Ordner – der gehört der Web Station.
 3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
    ```bash
    /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
    ```
 4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
 5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
+6. **Einrichten.** Von einem PC oder Handy aus `http://<IP-der-Synology>:8000/` aufrufen und wie in [Schritt 4](#in-4-schritten-zum-dashboard) IP und Script-ID eintragen. Einen Browser auf der Synology selbst braucht es nicht, der Proxy versucht dort auch keinen zu öffnen.
 
 Die Aufgabe bleibt dauerhaft als „läuft“ stehen, weil der Proxy nicht endet. Das ist richtig so.
 
-Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn der Prozess abstürzt**. Wer das möchte, nimmt statt der Aufgabe einen Container im Container Manager (`python:3-slim`, Ordner als Volume, Port 8000, Neustartrichtlinie „immer“).
+Weil die Aufgabe als `root` läuft, gehört die entstehende `zendure_proxy_config.json` ebenfalls `root`. Das ist für den Betrieb egal; nur wer die Datei später von Hand löschen oder ändern will, braucht dafür Administratorrechte.
+
+Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn der Prozess abstürzt**. Wer das möchte, nimmt statt der Aufgabe einen Container im Container Manager (`python:3-slim`, Ordner als Volume, Port 8000, Neustartrichtlinie „immer“). Die Einstellungen landen dann im eingebundenen Ordner und überstehen auch ein Neuanlegen des Containers.
+
+### Als App in Home Assistant
+
+Wer Home Assistant OS betreibt, kann den Proxy dort als eigene App laufen lassen. Er startet dann mit Home Assistant und wird bei einem Absturz automatisch neu gestartet. Die Anleitung dazu steht in der eigenen Readme im Ordner der Home-Assistant-App.
+
+Kurz gesagt: App aus dem lokalen Ordner installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard).
+
+> **Achtung:** Die Einstellungen liegen in Home Assistant im Container der App. Wird die App deinstalliert und neu installiert (z. B. für eine neue Dashboard-Version), ist die Einrichtung einmal zu wiederholen.
 
 ---
 
