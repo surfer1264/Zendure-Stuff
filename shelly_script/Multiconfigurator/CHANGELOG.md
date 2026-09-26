@@ -1,5 +1,10 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.0.3
+- Bestehende Config einlesen: neuer Button „📂 Datei laden…“ – lädt eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) ins Textfeld, übernommen wird wie bisher mit „Einlesen & übernehmen“
+- Komplettes Script speichern: Dateiname enthält jetzt die Script-Version (z. B. `zerooutput_multi_kvs_mini_v5.0.8.js`)
+- Link zur Anleitung (README) auf der Startseite
+
 ## 2.0.2
 - Neuer Einführungstext auf der Startseite (DE/EN/FR)
 - Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)

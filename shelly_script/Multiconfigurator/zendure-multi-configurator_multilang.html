@@ -126,6 +126,7 @@
   <p class="sub" id="pageSub"></p>
   <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
   <a id="compatLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-%E2%80%90-Zendure-%E2%80%90-MultiController#3-voraussetzungen" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
+  <a id="readmeLink" href="https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme.md" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
   <div id="buildDate" style="font-size:.72rem; color:var(--muted); margin-bottom:16px;"></div>
 
   <div class="steps" id="steps"></div>
@@ -146,7 +147,7 @@ const BUILD_DATE = "2026-09-26";
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.0.2";
+const APP_VERSION = "2.0.3";
 
 const I18N = {
 de: {
@@ -154,6 +155,7 @@ de: {
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Systemüberblick im Wiki ↗",
   compat_link: "Kompatible Shelly-Geräte (Voraussetzungen) ↗",
+  readme_link: "Anleitung zum Configurator ↗",
   btn_test_url: "🔗 Testen",
   grid_url_test_hint: "„Testen“ öffnet die URL in einem neuen Tab. Dort sollten JSON-Daten mit dem unten angegebenen Feldnamen erscheinen.",
   grid_url_test_empty: "Bitte zuerst eine URL eingeben",
@@ -172,6 +174,10 @@ de: {
   doc_link: "Zur Doku ↗",
   prod_import_summary: "Bestehende Config einlesen, um sie zu aktualisieren",
   prod_import_button: "Einlesen &amp; übernehmen",
+  prod_import_file_button: "📂 Datei laden…",
+  import_file_loaded: "Datei „{name}“ geladen – zum Übernehmen auf „Einlesen & übernehmen“ klicken.",
+  import_file_err_read: "Die Datei konnte nicht gelesen werden.",
+  import_file_err_size: "Die Datei ist zu groß – bitte eine Config-Datei oder ein Script vom Configurator wählen.",
 
   import_err_empty: "Bitte zuerst einen CONFIG-Block einfügen.",
   import_err_parse: "Konnte den Text nicht lesen: {msg}",
@@ -388,7 +394,7 @@ de: {
   ip_ctr_field: "Controller-Shelly (Controller + KVS)",
   ip_dash_field: "Dashboard-Shelly (zenDash-API + Watchdog)",
   ip_not_needed: "für diese Auswahl nicht nötig",
-  prod_import_hint: "Füge einen kompletten <code>let CONFIG = { ... };</code>-Block ein — Controller oder zenDash-API + Watchdog, wird automatisch erkannt. Am besten beide nacheinander einlesen. Die Shelly-IPs werden aus dem Block <code>runtime</code> übernommen.",
+  prod_import_hint: "Füge einen kompletten <code>let CONFIG = { ... };</code>-Block ein oder lade eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) — Controller oder zenDash-API + Watchdog, wird automatisch erkannt. Am besten beide nacheinander einlesen. Die Shelly-IPs werden aus dem Block <code>runtime</code> übernommen.",
   import_err_legacy: "Das ist eine Config im alten Format (zenDash-API 2.x oder Watchdog 1.x) — diese wird nicht mehr unterstützt. Lies die Controller-Config ein und ergänze die übrigen Angaben im Assistenten.",
   grid_hint: "Bestimmt, woher Controller und zenDash-API den aktuellen Netzbezug/-export bekommen.",
   grid_local_title: "Der Controller läuft direkt auf einem Shelly Pro 3EM",
@@ -438,6 +444,7 @@ en: {
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "System overview in the wiki ↗",
   compat_link: "Compatible Shelly devices (requirements) ↗",
+  readme_link: "Configurator guide (German) ↗",
   btn_test_url: "🔗 Test",
   grid_url_test_hint: "“Test” opens the URL in a new tab. It should show JSON data containing the field name entered below.",
   grid_url_test_empty: "Please enter a URL first",
@@ -456,6 +463,10 @@ en: {
   doc_link: "Docs ↗",
   prod_import_summary: "Import an existing config to update it",
   prod_import_button: "Import &amp; apply",
+  prod_import_file_button: "📂 Load file…",
+  import_file_loaded: "File “{name}” loaded – click “Import & apply” to apply it.",
+  import_file_err_read: "The file could not be read.",
+  import_file_err_size: "The file is too large – please choose a config file or a script saved by the configurator.",
 
   import_err_empty: "Please paste a CONFIG block first.",
   import_err_parse: "Couldn't read the text: {msg}",
@@ -672,7 +683,7 @@ en: {
   ip_ctr_field: "Controller Shelly (Controller + KVS)",
   ip_dash_field: "Dashboard Shelly (zenDash-API + Watchdog)",
   ip_not_needed: "not needed for this selection",
-  prod_import_hint: "Paste a complete <code>let CONFIG = { ... };</code> block — Controller or zenDash-API + Watchdog, detected automatically. Ideally import both, one after the other. The Shelly IPs are taken from the <code>runtime</code> block.",
+  prod_import_hint: "Paste a complete <code>let CONFIG = { ... };</code> block or load a saved file (CONFIG block only or complete script) — Controller or zenDash-API + Watchdog, detected automatically. Ideally import both, one after the other. The Shelly IPs are taken from the <code>runtime</code> block.",
   import_err_legacy: "This is a config in the old format (zenDash-API 2.x or Watchdog 1.x), which is no longer supported. Import the Controller config and complete the remaining details in the wizard.",
   grid_hint: "Determines where Controller and zenDash-API get the current grid import/export from.",
   grid_local_title: "The Controller runs directly on a Shelly Pro 3EM",
@@ -722,6 +733,7 @@ fr: {
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
   compat_link: "Appareils Shelly compatibles (prérequis) ↗",
+  readme_link: "Guide du configurateur (en allemand) ↗",
   btn_test_url: "🔗 Tester",
   grid_url_test_hint: "« Tester » ouvre l'URL dans un nouvel onglet. Des données JSON contenant le nom de champ indiqué ci-dessous devraient s'afficher.",
   grid_url_test_empty: "Veuillez d'abord saisir une URL",
@@ -740,6 +752,10 @@ fr: {
   doc_link: "Voir la doc ↗",
   prod_import_summary: "Importer une configuration existante pour la mettre à jour",
   prod_import_button: "Importer &amp; appliquer",
+  prod_import_file_button: "📂 Charger un fichier…",
+  import_file_loaded: "Fichier « {name} » chargé – clique sur « Importer & appliquer » pour l'appliquer.",
+  import_file_err_read: "Le fichier n'a pas pu être lu.",
+  import_file_err_size: "Le fichier est trop volumineux – choisis un fichier de config ou un script enregistré par le configurateur.",
 
   import_err_empty: "Merci de coller d'abord un bloc CONFIG.",
   import_err_parse: "Impossible de lire le texte : {msg}",
@@ -956,7 +972,7 @@ fr: {
   ip_ctr_field: "Shelly Controller (Controller + KVS)",
   ip_dash_field: "Shelly Dashboard (zenDash-API + Watchdog)",
   ip_not_needed: "non nécessaire pour cette sélection",
-  prod_import_hint: "Colle un bloc <code>let CONFIG = { ... };</code> complet — Controller ou zenDash-API + Watchdog, détecté automatiquement. Idéalement, importe les deux l'un après l'autre. Les IP des Shelly sont reprises du bloc <code>runtime</code>.",
+  prod_import_hint: "Colle un bloc <code>let CONFIG = { ... };</code> complet ou charge un fichier enregistré (bloc CONFIG seul ou script complet) — Controller ou zenDash-API + Watchdog, détecté automatiquement. Idéalement, importe les deux l'un après l'autre. Les IP des Shelly sont reprises du bloc <code>runtime</code>.",
   import_err_legacy: "Il s'agit d'une configuration dans l'ancien format (zenDash-API 2.x ou Watchdog 1.x), qui n'est plus prise en charge. Importe la configuration du Controller et complète le reste dans l'assistant.",
   grid_hint: "Détermine d'où le Controller et zenDash-API obtiennent l'import/export réseau actuel.",
   grid_local_title: "Le Controller tourne directement sur un Shelly Pro 3EM",
@@ -1130,6 +1146,7 @@ function renderHeader(){
   introLink.textContent = t('intro_doc_link');
   introLink.href = INTRO_DOC_URLS[state.lang] || INTRO_DOC_URLS.de;
   document.getElementById('compatLink').textContent = t('compat_link');
+  document.getElementById('readmeLink').textContent = t('readme_link');
   document.getElementById('buildDate').textContent = t('version_label') + ' ' + APP_VERSION + ' · ' + t('build_label') + ' ' + BUILD_DATE;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
@@ -1402,6 +1419,32 @@ function importConfig(){
   if(det) det.open = true;
 }
 
+// Gespeicherte Datei (Config oder komplettes Script) ins Textfeld laden.
+// Uebernommen wird wie bisher erst per "Einlesen & uebernehmen".
+const IMPORT_FILE_MAX_BYTES = 200 * 1024;
+function loadImportFile(input){
+  const file = input.files && input.files[0];
+  input.value = '';   // gleiche Datei erneut waehlbar
+  if(!file) return;
+  const statusEl = document.getElementById('importStatus');
+  if(file.size > IMPORT_FILE_MAX_BYTES){
+    statusEl.textContent = t('import_file_err_size');
+    statusEl.className = 'error';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(){
+    document.getElementById('importText').value = String(reader.result || '');
+    statusEl.textContent = t('import_file_loaded', {name: file.name});
+    statusEl.className = 'hint';
+  };
+  reader.onerror = function(){
+    statusEl.textContent = t('import_file_err_read');
+    statusEl.className = 'error';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
 // ---------- Step: Produkte ----------
 function toggleProduct(key){
   state.products[key] = !state.products[key];
@@ -1453,6 +1496,8 @@ function renderProducts(){
         <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
         <div style="margin-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <button class="btn" onclick="importConfig()">${t('prod_import_button')}</button>
+          <button class="btn" onclick="document.getElementById('importFile').click()">${t('prod_import_file_button')}</button>
+          <input type="file" id="importFile" accept=".js,.txt,text/javascript,text/plain" style="display:none;" onchange="loadImportFile(this)">
           <span id="importStatus" class="hint" style="margin:0;"></span>
         </div>
       </div>
@@ -2277,14 +2322,25 @@ async function fetchMergedScript(key){
   return mergeConfigIntoScript(original, CONFIG_BUILDERS[key]());
 }
 
+// Dateiname mit Version, z. B. zerooutput_multi_kvs_mini_v5.0.8.js -
+// so lassen sich gespeicherte Staende einfach auseinanderhalten.
+function fullScriptFilename(key, scriptText){
+  const base = FULL_SCRIPT_FILENAMES[key];
+  const v = parseScriptVersion(key, scriptText);
+  if(!v) return base;
+  const safe = String(v).replace(/[^0-9A-Za-z._-]/g, '_');
+  return base.replace(/\.js$/, '_v' + safe + '.js');
+}
+
 async function downloadFullScript(key){
   const statusEl = document.getElementById('scriptStatus_' + key);
   statusEl.textContent = t('fs_loading');
   statusEl.className = 'hint';
   try{
     const merged = await fetchMergedScript(key);
-    triggerFileDownload(merged, FULL_SCRIPT_FILENAMES[key]);
-    statusEl.textContent = t('fs_success', {filename: FULL_SCRIPT_FILENAMES[key]});
+    const filename = fullScriptFilename(key, merged);
+    triggerFileDownload(merged, filename);
+    statusEl.textContent = t('fs_success', {filename: filename});
   } catch(e){
     statusEl.textContent = t('fs_error', {msg: e.message});
     statusEl.className = 'error';

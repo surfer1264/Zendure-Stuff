@@ -122,6 +122,8 @@ Nach dem ersten erfolgreichen Upload merkt sich der Helfer die IPs und trägt si
 
 Lädt das aktuelle Original-Script von GitHub, trägt deine Konfiguration ein und bietet dir das fertige Script als Datei an. Das musst du dann nur noch [von Hand hochladen](#script-von-hand-hochladen). Braucht kurz eine Internetverbindung.
 
+Der Dateiname enthält die Script-Version, z. B. `zerooutput_multi_kvs_mini_v5.0.8.js` oder `zendash_watch_mini_v3.3.1.js`. So kannst du deine Stände einfach nebeneinander aufbewahren und jederzeit wieder [einlesen](#bestehende-konfiguration-einlesen).
+
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
 **📋 Kopieren / 💾 Nur CONFIG-Block speichern**
@@ -255,7 +257,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 
 ### Bestehende Konfiguration einlesen
 
-Im Schritt „Funktionen“ unter **„Bestehende Config einlesen“** einen kompletten Block `let CONFIG = { ... };` einfügen und „Einlesen & übernehmen“ klicken. Der Configurator erkennt selbst, ob es der Controller oder zenDash-API + Watchdog ist. Am besten beide nacheinander einlesen – die Reihenfolge ist egal. Die Shelly-IPs werden dabei gleich mit übernommen.
+Im Schritt „Funktionen“ unter **„Bestehende Config einlesen“** einen kompletten Block `let CONFIG = { ... };` einfügen **oder** mit **„📂 Datei laden…“** eine gespeicherte Datei auswählen und dann „Einlesen & übernehmen“ klicken. Laden kannst du sowohl die Datei aus „💾 Nur CONFIG-Block speichern“ als auch ein komplettes Script aus „🔗 Komplettes Script von GitHub speichern“ – die Datei landet zuerst im Textfeld, übernommen wird erst mit dem Klick. Der Configurator erkennt selbst, ob es der Controller oder zenDash-API + Watchdog ist. Am besten beide nacheinander einlesen – die Reihenfolge ist egal. Die Shelly-IPs werden dabei gleich mit übernommen.
 
 ### Script von Hand hochladen
 
@@ -277,7 +279,7 @@ Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im
 
 ### Konfiguration sichern
 
-Nach jeder Änderung im Ergebnis-Schritt „💾 Nur CONFIG-Block speichern“ klicken und die Datei aufbewahren. Damit bist du bei einem Shelly-Defekt oder -Wechsel in wenigen Minuten wieder startklar.
+Nach jeder Änderung im Ergebnis-Schritt „💾 Nur CONFIG-Block speichern“ oder „🔗 Komplettes Script von GitHub speichern“ klicken und die Datei aufbewahren. Das komplette Script trägt die Version im Dateinamen – praktisch, wenn du mehrere Stände behalten willst. Beide Dateien kannst du später per „📂 Datei laden…“ wieder [einlesen](#bestehende-konfiguration-einlesen). Damit bist du bei einem Shelly-Defekt oder -Wechsel in wenigen Minuten wieder startklar.
 
 ### Gemerkte IPs zurücksetzen
 
