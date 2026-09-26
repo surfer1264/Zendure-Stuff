@@ -18,16 +18,23 @@ name: Build & Release Dashboard-Proxy
 #
 # Ausloeser: ein Release wird auf GitHub veroeffentlicht (Tag reicht
 # nicht - "Publish release" bzw. "gh release create" ohne --draft) - ODER
-# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch), z.B. zum
-# Testen des Builds ohne gleich ein Release zu veroeffentlichen. Bei einem
-# manuellen Lauf gibt es kein Release, an das etwas angehaengt werden
+# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch).
+# Manuell MIT Tag: baut den Stand des gewaehlten Branches neu und ersetzt
+# die Assets im bestehenden Release (gleiche Dateinamen, --clobber) - es
+# entsteht kein neues Release.
+# Manuell OHNE Tag: Testlauf. Dann gibt es kein Release, an das etwas angehaengt werden
 # koennte - die gebaute Datei landet dann stattdessen als Workflow-Artifact
-# (im Lauf selbst herunterladbar, 90 Tage aufbewahrt).
+# (im Lauf selbst herunterladbar, 5 Tage aufbewahrt).
 
 "on":
   release:
     types: [published]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag eines BESTEHENDEN Releases, dessen Assets ersetzt werden sollen (leer lassen = Testlauf, nur Workflow-Artifact)"
+        required: false
+        default: ""
 
 permissions:
   contents: write   # noetig, um Assets am Release hochzuladen
@@ -50,6 +57,10 @@ jobs:
             built_path: dist/zendure_proxy
             asset_name: zendure_proxy-macos
     runs-on: ${{ matrix.os }}
+    env:
+      # Bei neuem Release: dessen Tag. Bei manuellem Lauf: der eingegebene Tag
+      # (oder leer -> Testlauf ohne Release).
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
       - name: Repo auschecken
         uses: actions/checkout@v7
@@ -93,14 +104,14 @@ jobs:
           cat "${{ matrix.asset_name }}.sha256"
 
       - name: An Release anhaengen
-        if: github.event_name == 'release'
+        if: env.RELEASE_TAG != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
-        run: gh release upload "${{ github.event.release.tag_name }}" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
+        run: gh release upload "$RELEASE_TAG" "${{ matrix.asset_name }}" "${{ matrix.asset_name }}.sha256" --clobber
 
       - name: Als Workflow-Artifact bereitstellen (Testlauf ohne Release)
-        if: github.event_name != 'release'
+        if: env.RELEASE_TAG == ''
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.asset_name }}
