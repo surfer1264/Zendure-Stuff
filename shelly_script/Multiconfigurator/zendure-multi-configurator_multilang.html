@@ -125,6 +125,7 @@
   <h1 id="pageH1"></h1>
   <p class="sub" id="pageSub"></p>
   <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
+  <a id="compatLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-%E2%80%90-Zendure-%E2%80%90-MultiController#3-voraussetzungen" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
   <div id="buildDate" style="font-size:.72rem; color:var(--muted); margin-bottom:16px;"></div>
 
   <div class="steps" id="steps"></div>
@@ -139,19 +140,23 @@
 // Sichtbares Build-Datum - bei jeder inhaltlichen Aenderung an dieser
 // Datei hier anpassen. Hilft zu erkennen, ob eine gebuendelte exe (siehe
 // zendure_local_helper.py) noch den alten Stand ausliefert.
-const BUILD_DATE = "2026-09-25";
+const BUILD_DATE = "2026-09-26";
 // Gemeinsame Version von Configurator und lokalem Helfer (der Helfer liest
 // sie beim Start aus dieser Datei). Bei jedem Release hochzaehlen und in
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.0.1";
+const APP_VERSION = "2.0.2";
 
 const I18N = {
 de: {
   pageTitle: "Zendure Multi-Device Suite – Konfigurations-Assistent",
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Systemüberblick im Wiki ↗",
+  compat_link: "Kompatible Shelly-Geräte (Voraussetzungen) ↗",
+  btn_test_url: "🔗 Testen",
+  grid_url_test_hint: "„Testen“ öffnet die URL in einem neuen Tab. Dort sollten JSON-Daten mit dem unten angegebenen Feldnamen erscheinen.",
+  grid_url_test_empty: "Bitte zuerst eine URL eingeben",
   build_label: "Build:",
   toastCopied: "In Zwischenablage kopiert",
 
@@ -371,7 +376,7 @@ de: {
   memcheck_error: "Fehler: {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
-  subtitle: "Ein Assistent für Controller, zenDash-API und Watchdog auf zwei Shellys — gemeinsame Angaben (Geräte, Netzquelle, Benachrichtigungen) werden nur einmal erfragt und konsistent in beide Configs übernommen.",
+  subtitle: "Dieser Assistent unterstützt Euch bei der Einrichtung einer lokalen Regelung für Eure SolarFlow-Flotte. Unterstützt werden nur Zendure-SolarFlow-Geräte mit der zenSDK-Schnittstelle. Für den Betrieb werden zwei Shelly-Devices benötigt. Der Konfigurator fragt alle notwendigen Angaben ab (Geräte, Netzquelle, Benachrichtigungen) und unterstützt auch den Aktualisierungsprozess bei SW-Updates.",
   prod_h2: "Welche Funktionen möchtest du konfigurieren?",
   prod_hint: "Mehrfachauswahl möglich. Das System nutzt immer zwei Shellys: den <b>Controller-Shelly</b> (Controller + KVS) und den <b>Dashboard-Shelly</b> (zenDash-API und Watchdog in einem gemeinsamen Script).",
   prod_hardware_note: "⚠️ Controller-Shelly und Dashboard-Shelly sind immer zwei verschiedene Geräte. zenDash-API und Watchdog laufen zusammen in einem Script auf dem Dashboard-Shelly und sind darin einzeln ein- und ausschaltbar.",
@@ -432,6 +437,10 @@ en: {
   pageTitle: "Zendure Multi-Device Suite – Configuration Wizard",
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "System overview in the wiki ↗",
+  compat_link: "Compatible Shelly devices (requirements) ↗",
+  btn_test_url: "🔗 Test",
+  grid_url_test_hint: "“Test” opens the URL in a new tab. It should show JSON data containing the field name entered below.",
+  grid_url_test_empty: "Please enter a URL first",
   build_label: "Build:",
   toastCopied: "Copied to clipboard",
 
@@ -651,7 +660,7 @@ en: {
   memcheck_error: "Error: {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
-  subtitle: "One wizard for Controller, zenDash-API and Watchdog on two Shellys — shared details (devices, grid source, notifications) are asked once and applied consistently to both configs.",
+  subtitle: "This wizard helps you set up local control for your SolarFlow fleet. Only Zendure SolarFlow devices with the zenSDK interface are supported. Two Shelly devices are required for operation. The configurator asks for all required details (devices, grid source, notifications) and also supports the update process for software updates.",
   prod_h2: "Which functions do you want to configure?",
   prod_hint: "Multiple selection possible. The system always uses two Shellys: the <b>Controller Shelly</b> (Controller + KVS) and the <b>Dashboard Shelly</b> (zenDash-API and Watchdog in one shared script).",
   prod_hardware_note: "⚠️ Controller Shelly and Dashboard Shelly are always two different devices. zenDash-API and Watchdog run together in one script on the Dashboard Shelly and can be switched on and off individually.",
@@ -712,6 +721,10 @@ fr: {
   pageTitle: "Zendure Multi-Device Suite – Assistant de configuration",
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
+  compat_link: "Appareils Shelly compatibles (prérequis) ↗",
+  btn_test_url: "🔗 Tester",
+  grid_url_test_hint: "« Tester » ouvre l'URL dans un nouvel onglet. Des données JSON contenant le nom de champ indiqué ci-dessous devraient s'afficher.",
+  grid_url_test_empty: "Veuillez d'abord saisir une URL",
   build_label: "Build :",
   toastCopied: "Copié dans le presse-papiers",
 
@@ -931,7 +944,7 @@ fr: {
   memcheck_error: "Erreur : {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
-  subtitle: "Un assistant unique pour Controller, zenDash-API et Watchdog sur deux Shelly — les informations communes (appareils, source réseau, notifications) ne sont demandées qu'une fois et reportées dans les deux configurations.",
+  subtitle: "Cet assistant vous accompagne dans la mise en place d'une régulation locale pour votre flotte SolarFlow. Seuls les appareils Zendure SolarFlow dotés de l'interface zenSDK sont pris en charge. Deux appareils Shelly sont nécessaires au fonctionnement. Le configurateur demande toutes les informations nécessaires (appareils, source réseau, notifications) et accompagne également le processus de mise à jour lors des mises à jour logicielles.",
   prod_h2: "Quelles fonctions veux-tu configurer ?",
   prod_hint: "Sélection multiple possible. Le système utilise toujours deux Shelly : le <b>Shelly Controller</b> (Controller + KVS) et le <b>Shelly Dashboard</b> (zenDash-API et Watchdog dans un script commun).",
   prod_hardware_note: "⚠️ Le Shelly Controller et le Shelly Dashboard sont toujours deux appareils différents. zenDash-API et Watchdog tournent ensemble dans un script sur le Shelly Dashboard et peuvent y être activés ou désactivés séparément.",
@@ -1116,6 +1129,7 @@ function renderHeader(){
   const introLink = document.getElementById('introDocLink');
   introLink.textContent = t('intro_doc_link');
   introLink.href = INTRO_DOC_URLS[state.lang] || INTRO_DOC_URLS.de;
+  document.getElementById('compatLink').textContent = t('compat_link');
   document.getElementById('buildDate').textContent = t('version_label') + ' ' + APP_VERSION + ' · ' + t('build_label') + ' ' + BUILD_DATE;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
@@ -1502,7 +1516,11 @@ function renderGridSource(){
     </div>` : `
     <div class="conditional">
       <label class="first">${t('grid_url_field')}</label>
-      <input type="text" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="gridUrlInput" style="flex:1; min-width:0;" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
+        <button type="button" class="btn" style="white-space:nowrap; flex:none;" onclick="testGridUrl()">${t('btn_test_url')}</button>
+      </div>
+      <p class="hint" style="margin-top:4px; margin-bottom:0;">${t('grid_url_test_hint')}</p>
       <label>${t('grid_field_field')}</label>
       <input type="text" value="${escapeHtml(state.gridSourceField)}" placeholder="total_power" oninput="state.gridSourceField=this.value">
       <label style="margin-top:12px; display:flex; align-items:center; gap:8px; font-weight:600;">
@@ -1511,6 +1529,20 @@ function renderGridSource(){
       </label>
     </div>` }
   </div>`;
+}
+// Oeffnet die eingegebene Smartmeter-URL in einem neuen Tab, damit der
+// Nutzer pruefen kann, ob dort JSON mit dem erwarteten Feld ankommt.
+function testGridUrl(){
+  const el = document.getElementById('gridUrlInput');
+  let url = ((el ? el.value : state.gridSourceUrl) || '').trim();
+  if(!url){ showTestHint(t('grid_url_test_empty')); return; }
+  if(!/^https?:\/\//i.test(url)) url = 'http://' + url;
+  window.open(url, '_blank', 'noopener');
+}
+function showTestHint(msg){
+  const toast = document.getElementById('toast');
+  toast.textContent = msg; toast.classList.add('show');
+  setTimeout(function(){ toast.classList.remove('show'); toast.textContent = t('toastCopied'); }, 2000);
 }
 function gridSourceSummary(){
   if(state.gridSource==='local') return t('gridsum_local', {ip: state.runtime.ctr_kvs||'—', em: state.gridSourceEmId});

@@ -1,5 +1,10 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.0.2
+- Neuer Einführungstext auf der Startseite (DE/EN/FR)
+- Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)
+- Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab
+
 ## 2.0.1
 - Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen
 - Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr
