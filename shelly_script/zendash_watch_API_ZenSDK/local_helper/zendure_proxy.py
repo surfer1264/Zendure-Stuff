@@ -20,8 +20,10 @@ noetig). Loest zwei Probleme, die ein reiner Browser nicht loesen kann:
 
 Als exe gebaut (PyInstaller, --onefile) ist die Dashboard-HTML mit
 eingebettet (siehe --add-data im build-and-release.yml-Workflow) -
-resource_path() findet sie dann im temporaeren Entpack-Ordner
-sys._MEIPASS, im normalen Skriptbetrieb daneben im selben Verzeichnis.
+find_html() findet sie dann im temporaeren Entpack-Ordner
+sys._MEIPASS. Im normalen Skriptbetrieb sucht der Proxy die HTML erst im
+selben Ordner wie das Script, danach im uebergeordneten Ordner (z.B.
+Script in "proxy/", Dashboard eine Ebene hoeher im Repo).
 Die Konfigurationsdatei liegt dagegen bewusst NICHT dort, sondern in
 app_dir() (siehe unten) - sys._MEIPASS wird bei --onefile bei jedem Start
 neu angelegt und danach wieder geloescht, eine dort abgelegte config.json
@@ -36,9 +38,13 @@ Das Zugriffsprotokoll ist im Normalbetrieb recht gespraechig - die Seite
 fragt alle 4 Sekunden an. Zum Einrichten ist es hilfreich, im Dauerbetrieb
 eher nicht.
 
-Oeffnet beim Start automatisch http://localhost:8000/ im Standardbrowser.
-Klappt der Auto-Open nicht (z.B. auf einem Rechner ohne registrierten
-Standardbrowser), die Adresse manuell eintragen.
+Browser beim Start: auf einem Rechner mit Bildschirm (Windows, macOS,
+Linux-Desktop, exe) oeffnet der Proxy http://localhost:8000/ automatisch.
+Ohne Bildschirm (Synology-Aufgabe, Docker/Home Assistant, SSH) laesst er
+das bleiben - dort wuerde es nichts bringen oder im schlechtesten Fall
+einen Konsolenbrowser starten. Erzwingen bzw. abschalten:
+    python3 zendure_proxy.py --browser      immer oeffnen
+    python3 zendure_proxy.py --no-browser   nie oeffnen
 
 Beenden: Strg+C im Terminal.
 
@@ -75,6 +81,10 @@ BIND_ADDRESS = "0.0.0.0"
 QUIET = False
 SILENT = False
 
+# Browser beim Start oeffnen: None = automatisch (nur mit Bildschirm),
+# True = immer (--browser), False = nie (--no-browser).
+OPEN_BROWSER = None
+
 HTML_FILENAME = "zendure-dashboard.html"
 CONFIG_FILENAME = "zendure_proxy_config.json"
 
@@ -106,16 +116,43 @@ ICON_PATHS = (
 
 # ---------------------------------------------------------------
 # Pfade - zwei bewusst getrennte Vorstellungen von "hier":
-#   resource_path() = mitgelieferte, GEBUENDELTE Datei (Dashboard-HTML).
+#   find_html()     = mitgelieferte, GEBUENDELTE Datei (Dashboard-HTML).
 #                      Bei --onefile im temporaeren sys._MEIPASS, sonst
-#                      neben diesem Script. Nur zum LESEN.
+#                      neben diesem Script oder eine Ebene hoeher. Nur
+#                      zum LESEN.
 #   app_dir()       = Ordner der exe bzw. des Scripts selbst. Hier landet
 #                      die Konfiguration - muss exe-Neustarts ueberleben,
 #                      sys._MEIPASS tut das nicht.
 # ---------------------------------------------------------------
-def resource_path(filename):
-    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base, filename)
+def html_candidates():
+    """Alle Orte, an denen die Dashboard-HTML gesucht wird - in dieser
+    Reihenfolge, die erste vorhandene gewinnt."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dirs = []
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        dirs.append(meipass)                       # in die exe eingebettet
+    if getattr(sys, "frozen", False):
+        dirs.append(app_dir())                     # neben der exe
+    dirs.append(script_dir)                        # neben dem Script
+    dirs.append(os.path.dirname(script_dir))       # eine Ebene hoeher
+    seen, result = set(), []
+    for d in dirs:
+        path = os.path.normpath(os.path.join(d, HTML_FILENAME))
+        if path not in seen:
+            seen.add(path)
+            result.append(path)
+    return result
+
+
+def find_html():
+    """Pfad der ersten gefundenen Dashboard-HTML, sonst None. Wird bei jedem
+    Seitenaufruf neu ermittelt - eine nachtraeglich abgelegte oder
+    verschobene HTML wirkt also ohne Neustart."""
+    for path in html_candidates():
+        if os.path.isfile(path):
+            return path
+    return None
 
 
 def app_dir():
@@ -375,11 +412,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def serve_html(self):
+        path = find_html()
+        if path is None:
+            self.send_error(404, "Dashboard-HTML nicht gefunden. Gesucht in: " + " | ".join(html_candidates()))
+            return
         try:
-            with open(resource_path(HTML_FILENAME), "rb") as f:
+            with open(path, "rb") as f:
                 body = f.read()
         except OSError as e:
-            msg = "Dashboard-HTML nicht lesbar ({}): {}".format(resource_path(HTML_FILENAME), e)
+            msg = "Dashboard-HTML nicht lesbar ({}): {}".format(path, e)
             self.send_error(500, msg)
             return
 
@@ -446,18 +487,32 @@ def get_lan_ip():
 
 
 def parse_args():
-    global QUIET, SILENT
+    global QUIET, SILENT, OPEN_BROWSER
     for arg in sys.argv[1:]:
         if arg in ("-q", "--quiet"):
             QUIET = True
         elif arg in ("-s", "--silent"):
             SILENT = True
+        elif arg == "--browser":
+            OPEN_BROWSER = True
+        elif arg == "--no-browser":
+            OPEN_BROWSER = False
         elif arg in ("-h", "--help"):
             print(__doc__)
             sys.exit(0)
         else:
             sys.stderr.write("Unbekannte Option: {}  (-h fuer Hilfe)\n".format(arg))
             sys.exit(1)
+
+
+def has_display():
+    """Grobe Schaetzung, ob hier jemand vor einem Bildschirm sitzt.
+    Windows/macOS: ja (auch die exe). Linux: nur mit X11/Wayland - eine
+    Synology-Aufgabe, ein Docker-Container (Home Assistant) oder eine
+    SSH-Sitzung haben beides nicht."""
+    if sys.platform.startswith("win") or sys.platform == "darwin":
+        return True
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"))
 
 
 def say(msg):
@@ -469,11 +524,14 @@ def main():
     parse_args()
     load_config()
 
-    if not os.path.isfile(resource_path(HTML_FILENAME)):
+    html = find_html()
+    if html is None:
         # Warnung auch im stillen Betrieb - ohne die Datei liefert der Proxy
         # nur 404 aus, und die Ursache waere sonst nirgends zu sehen.
-        sys.stderr.write("WARNUNG: HTML-Datei nicht gefunden unter: " + resource_path(HTML_FILENAME) + "\n")
-        sys.stderr.write("Lege zendure-dashboard.html in denselben Ordner wie dieses Script,\n")
+        sys.stderr.write("WARNUNG: " + HTML_FILENAME + " nicht gefunden. Gesucht in:\n")
+        for path in html_candidates():
+            sys.stderr.write("  " + path + "\n")
+        sys.stderr.write("Lege die Datei in den Ordner dieses Scripts oder eine Ebene hoeher,\n")
         sys.stderr.write("oder pruefe --add-data beim exe-Build.\n\n")
 
     say("Zendure Dashboard Proxy")
@@ -481,6 +539,7 @@ def main():
         say("  Shelly:   " + shelly_base())
     else:
         say("  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch")
+    say("  HTML:     " + (html or "NICHT GEFUNDEN"))
     say("  Konfig:   " + config_path())
     url = "http://localhost:{}/".format(PORT)
     say("  Lokal:    " + url)
@@ -501,10 +560,12 @@ def main():
         sys.stderr.write("Laeuft eventuell schon ein anderer Prozess auf diesem Port?\n")
         sys.exit(1)
 
-    try:
-        webbrowser.open(url)
-    except Exception as e:
-        say("Konnte den Browser nicht automatisch oeffnen ({}) - Adresse manuell aufrufen: {}".format(e, url))
+    open_browser = OPEN_BROWSER if OPEN_BROWSER is not None else has_display()
+    if open_browser:
+        try:
+            webbrowser.open(url)
+        except Exception as e:
+            say("Konnte den Browser nicht automatisch oeffnen ({}) - Adresse manuell aufrufen: {}".format(e, url))
 
     try:
         server.serve_forever()

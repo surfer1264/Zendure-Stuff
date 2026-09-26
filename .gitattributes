@@ -5,3 +5,5 @@ Battery_Card export-ignore
 simplemon export-ignore
 yaml export-ignore
 zendure_ha export-ignore
+*.sh text eol=lf
+*.py text eol=lf

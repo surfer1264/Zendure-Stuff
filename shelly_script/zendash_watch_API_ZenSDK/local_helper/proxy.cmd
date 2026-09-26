@@ -1,1 +1,1 @@
-python3 zendure_proxy.py
+python3 zendure_proxy.py --no-browser
