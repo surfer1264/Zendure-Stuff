@@ -3,7 +3,6 @@
 ## Changelog 5.1.1
 
 - Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben
-- Changelog-Kommentar im Script entfernt (Changelog nur noch in dieser Datei)
 
 ## Changelog 5.1.0
 
