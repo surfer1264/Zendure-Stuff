@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-26T17:57:49Z",
+  "generated": "2026-09-27T06:22:36Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -171,7 +171,7 @@
       "changes": [
         "Bestehende Config einlesen: neuer Button „📂 Datei laden…“ – lädt eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) ins Textfeld, übernommen wird wie bisher mit „Einlesen & übernehmen“",
         "Komplettes Script speichern: Dateiname enthält jetzt die Script-Version (z. B. `zerooutput_multi_kvs_mini_v5.0.8.js`)",
-        "Link zur Anleitung (README) auf der Startseite"
+        "Link zur Anleitung (README) auf der Startseite, je nach Sprache auf die deutsche, englische oder französische Fassung"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
