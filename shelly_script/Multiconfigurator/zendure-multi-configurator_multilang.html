@@ -444,7 +444,7 @@ en: {
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "System overview in the wiki ↗",
   compat_link: "Compatible Shelly devices (requirements) ↗",
-  readme_link: "Configurator guide (German) ↗",
+  readme_link: "Configurator guide ↗",
   btn_test_url: "🔗 Test",
   grid_url_test_hint: "“Test” opens the URL in a new tab. It should show JSON data containing the field name entered below.",
   grid_url_test_empty: "Please enter a URL first",
@@ -733,7 +733,7 @@ fr: {
   h1: "Zendure Multi-Device Suite",
   intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
   compat_link: "Appareils Shelly compatibles (prérequis) ↗",
-  readme_link: "Guide du configurateur (en allemand) ↗",
+  readme_link: "Guide du configurateur ↗",
   btn_test_url: "🔗 Tester",
   grid_url_test_hint: "« Tester » ouvre l'URL dans un nouvel onglet. Des données JSON contenant le nom de champ indiqué ci-dessous devraient s'afficher.",
   grid_url_test_empty: "Veuillez d'abord saisir une URL",
@@ -1146,7 +1146,9 @@ function renderHeader(){
   introLink.textContent = t('intro_doc_link');
   introLink.href = INTRO_DOC_URLS[state.lang] || INTRO_DOC_URLS.de;
   document.getElementById('compatLink').textContent = t('compat_link');
-  document.getElementById('readmeLink').textContent = t('readme_link');
+  const readmeLink = document.getElementById('readmeLink');
+  readmeLink.textContent = t('readme_link');
+  readmeLink.href = README_URLS[state.lang] || README_URLS.de;
   document.getElementById('buildDate').textContent = t('version_label') + ' ' + APP_VERSION + ' · ' + t('build_label') + ' ' + BUILD_DATE;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
@@ -2096,6 +2098,12 @@ const INTRO_DOC_URLS = {
   de: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)',
   en: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_EN',
   fr: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_FR'
+};
+// Anleitung zum Configurator - je Sprache eine eigene README
+const README_URLS = {
+  de: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme.md',
+  en: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme_EN.md',
+  fr: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme_FR.md'
 };
 const DOC_URLS = {
   ctrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md',

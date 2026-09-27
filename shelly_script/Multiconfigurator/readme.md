@@ -1,3 +1,5 @@
+[:de: Deutsch](readme.md) · [:gb: English](readme_EN.md) · [:fr: Français](readme_FR.md)
+
 # Der Configurator
 
 <a href="https://ko-fi.com/surfer1264">
@@ -10,11 +12,28 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
 
 1. [Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
 2. [Wo finde ich den Configurator?](#2-wo-finde-ich-den-configurator)
+   * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
+   * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
 3. [Ersteinrichtung](#3-ersteinrichtung)
+   * [Der Ablauf](#der-ablauf)
+   * [Die Funktionen im Ergebnis-Schritt](#die-funktionen-im-ergebnis-schritt)
 4. [Update](#4-update)
+   * [So geht's](#so-gehts)
+   * [Was beim Update mit deinen Einstellungen passiert](#was-beim-update-mit-deinen-einstellungen-passiert)
+   * [Update ohne Helfer](#update-ohne-helfer)
+   * [Umstieg von den alten Einzelscripten](#umstieg-von-den-alten-einzelscripten)
 5. [Wechsel eines Shelly](#5-wechsel-eines-shelly)
 6. [Fehlermeldungen und Problemsituationen](#6-fehlermeldungen-und-problemsituationen)
+   * [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly)
+   * [Meldungen im Überblick](#meldungen-im-überblick)
+   * [Probleme mit dem Helfer](#probleme-mit-dem-helfer)
 7. [How-Tos](#7-how-tos)
+   * [Bestehende Konfiguration einlesen](#bestehende-konfiguration-einlesen)
+   * [Script von Hand hochladen](#script-von-hand-hochladen)
+   * [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
+   * [Konfiguration sichern](#konfiguration-sichern)
+   * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
+   * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
 
 Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
@@ -142,7 +161,7 @@ Zeigt, wie viel Script-Speicher auf einem Shelly noch frei ist – siehe [Speich
 
 ## 4. Update
 
-Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Klicks auf den neuesten Stand – **deine Einstellungen bleiben dabei erhalten**. Das Update funktioniert nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer-installer).
+Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Klicks auf den neuesten Stand – **deine Einstellungen bleiben dabei erhalten**. Das Update funktioniert nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer-exe-installer).
 
 ### So geht's
 
@@ -224,7 +243,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 
 | Meldung | Was bedeutet das? | Was tun? |
 |---|---|---|
-| „Updaten“ ist ausgegraut: *Nur mit dem lokalen Helfer möglich* | Der Helfer läuft nicht. | [Helfer](#empfohlen-der-lokale-helfer-installer) starten – er öffnet den Configurator selbst. |
+| „Updaten“ ist ausgegraut: *Nur mit dem lokalen Helfer möglich* | Der Helfer läuft nicht. | [Helfer](#empfohlen-der-lokale-helfer-exe-installer) starten – er öffnet den Configurator selbst. |
 | *Dein lokaler Helfer ist älter als diese Seite …* | Es läuft noch eine alte Version des Helfers. | Helfer schließen, aktuelle Version herunterladen und neu starten. |
 | *Shelly nicht erreichbar* / *Shelly … nicht erreichbar* | Der Shelly antwortet nicht. | IP prüfen (in der Shelly-App oder im Router), Shelly eingeschaltet? Rechner im selben Netz (nicht im Gast-WLAN)? |
 | *Der Shelly … verlangt ein Passwort* | Der Passwortschutz des Shelly ist aktiv. | Passwortschutz vorübergehend ausschalten, hochladen, danach wieder einschalten. |
@@ -248,7 +267,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 |---|---|
 | Das Fenster des Helfers geht sofort wieder zu bzw. meldet *konnte nicht auf 127.0.0.1:8787 lauschen* | Der Helfer läuft schon (anderes Fenster, evtl. minimiert) – diesen verwenden oder schließen und neu starten. |
 | Der Browser öffnet sich nicht | Im Browser `http://127.0.0.1:8787` aufrufen. |
-| Windows/macOS blockiert den Start | siehe [Wo finde ich den Configurator?](#empfohlen-der-lokale-helfer-installer) |
+| Windows/macOS blockiert den Start | siehe [Wo finde ich den Configurator?](#empfohlen-der-lokale-helfer-exe-installer) |
 | Der Configurator schlägt falsche Shelly-IPs vor | IP einfach im Feld überschreiben – oder die gemerkten IPs [zurücksetzen](#gemerkte-ips-zurücksetzen). |
 
 ---
