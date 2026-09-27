@@ -1,5 +1,9 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.4.0
+
+- Speicheroptimierung
+
 ## Changelog 3.3.1
 
 - Letzte Vollladung jetzt ereignisgesteuert: Im Poll wird bei SoC 100 % nur ein Merker gesetzt; Datum lesen und `zdmc_dev{i}_lastFull` schreiben passiert einmal nach dem Poll, danach ruht die Funktion je Geraet bis Mitternacht

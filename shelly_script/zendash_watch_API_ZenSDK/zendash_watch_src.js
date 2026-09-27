@@ -28,6 +28,15 @@
 //                               gridReverse,pv,minVol,online}] }
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
+// config_api liest die KVS hoechstens alle CONFIG_CACHE_MS (30 s).
+// Dazwischen kommt die zuletzt gebaute Antwort aus dem Cache. Bewusst
+// etwas KUERZER als der Abgleich im Dashboard (32 s), damit dessen
+// regulaere Abfrage immer frisch liest. config_api?fresh=1 (Neuladen der
+// Seite) umgeht den Cache immer. Jeder
+// KVS-Schreibvorgang dieses Scripts (kvs_set_api, Auto-Stop, lastFull)
+// verwirft den Cache sofort. Aenderungen von aussen (z.B. Home Assistant)
+// sieht das Dashboard deshalb erst nach bis zu CONFIG_CACHE_MS.
+//
 // AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
 // reverse=0, inputLimit>0) und meldet der Hub socLimit=1, wird der manuelle
 // Modus automatisch beendet. Laeuft auch ohne offenes Dashboard. Der
@@ -42,7 +51,20 @@
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.3.1";
+// ---------------------------------------------------------------------
+// CHANGELOG
+// 3.4.0  Speicheroptimierung:
+//        - Einmal-Code der Startphase nach dem Start freigegeben
+//        - je nach CONFIG ungenutzte Helfer freigegeben (ENCODE_MAP/
+//          simpleEncode bei WEBHOOK, kvsItemsToMap bei entfernter KVS,
+//          readFieldPath ohne http_json)
+//        - config_api liest die KVS hoechstens alle 30 s, dazwischen
+//          Antwort aus dem Cache; ?fresh=1 (Seiten-Neuladen) umgeht ihn
+//        - Dashboard 3.4.0 fragt config_api nur noch alle 32 s ab
+//        - Heap-Ausgabe (memLog) an den wichtigsten Stellen, nur bei debug
+// 3.3.1  (Stand vor diesem Changelog)
+// ---------------------------------------------------------------------
+let VERSION = "3.4.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -503,6 +525,19 @@ function kvsSafeNumber(value) {
   return str;
 }
 
+// config_api-Cache (siehe Kopfkommentar). configGen zaehlt jeden eigenen
+// KVS-Schreibvorgang: Eine Antwort, deren KVS-Lesevorgang von einem
+// Schreibvorgang ueberholt wurde, wird nicht gecacht.
+let CONFIG_CACHE_MS = 30000;
+let configCache = null;
+let configCacheAt = 0;
+let configGen = 0;
+
+function configCacheDrop() {
+  configGen++;
+  configCache = null;
+}
+
 function kvsSetOne(key, value, callback) {
   let str = kvsSafeNumber(value);
   if (str === null) {
@@ -510,6 +545,9 @@ function kvsSetOne(key, value, callback) {
     callback(false);
     return;
   }
+  configCacheDrop();
+  let cbw = callback;
+  callback = function (ok) { configCacheDrop(); cbw(ok); };
   if (DBG) {
     let cb0 = callback;
     callback = function (ok) {
@@ -1343,6 +1381,8 @@ function tick() {
     logDebug(fast ? ("Schneller Takt AN (" + (anyManualActive() ? "manuelles Laden" : "Dashboard aktiv") + ")") : "Schneller Takt AUS - Leerlauf");
   }
   lastFast = fast;
+  // Dashboard geschlossen: gecachte config_api-Antwort nicht weiter halten
+  if (!fast) configCache = null;
 
   if (!fast && !due) { notifyPump(); return; }
   if (bgRunning || busyNow()) return;
@@ -1436,6 +1476,11 @@ function answerConfigWaiters(body) {
 }
 
 function serveConfig(res, attempt) {
+  if (attempt === 0 && configCache !== null && (Date.now() - configCacheAt) < CONFIG_CACHE_MS) {
+    if (DBG) logDebug("config_api: aus Cache (" + Math.round((Date.now() - configCacheAt) / 1000) + " s alt)");
+    sendJson(res, 200, configCache);
+    return;
+  }
   if (attempt === 0) {
     if (configPending) { configWaiters[configWaiters.length] = res; return; }
     configPending = true;
@@ -1446,6 +1491,11 @@ function serveConfig(res, attempt) {
   }
   if (DBG) logDebug("config_api: lese KVS" + (attempt > 0 ? " (nach " + (attempt * CONFIG_WAIT_MS) + " ms Wartezeit" +
     (busyNow() ? ", Slot weiter belegt - trotzdem" : "") + ")" : ""));
+
+  // Alten Cache vor dem Lesen freigeben - sonst laege er waehrend des
+  // Aufbaus der neuen Antwort zusaetzlich im Speicher.
+  configCache = null;
+  let myGen = configGen;
 
   busyEnter();
   let devices = buildDeviceDefaults();
@@ -1485,6 +1535,11 @@ function serveConfig(res, attempt) {
       devices: devices
     });
     if (DBG) memLog("config_api nach stringify (" + body.length + " B)");
+
+    if (kvsOk && myGen === configGen) {
+      configCache = body;
+      configCacheAt = Date.now();
+    }
 
     busyLeave();
     configPending = false;
@@ -1616,6 +1671,8 @@ function registerEndpoints() {
   HTTPServer.registerEndpoint("config_api", function (req, res) {
     if (handlePreflight(req, res)) return;
     lastRequestAt = Date.now();
+    // Neuladen der Seite: Cache umgehen, damit sie den aktuellen KVS-Stand zeigt
+    if (req.query && req.query.indexOf("fresh=1") >= 0) configCache = null;
     try { serveConfig(res, 0); } catch (e) {
       print("config_api: " + e);
       configPending = false;
