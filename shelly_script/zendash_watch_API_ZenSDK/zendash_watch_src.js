@@ -1453,6 +1453,7 @@ function serveConfig(res, attempt) {
   let dischargeFixed = 0;
 
   kvsGetAll(function (store) {
+    if (DBG) memLog("config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")));
     let v = kvsValue(store, "zdmc_setpoint");
     if (v !== undefined) setpoint = Number(v);
     let df = kvsValue(store, "zdmc_dischargeFixed");
@@ -1471,6 +1472,7 @@ function serveConfig(res, attempt) {
       if (lfv !== undefined) adoptLastFull(i, lfv);
       devices[i].lastFull = LASTFULL[i].day;
     }
+    if (DBG) memLog("config_api nach Auswertung");
     let kvsOk = (store !== null);
     store = null;
 
@@ -1662,7 +1664,29 @@ function startTicking() {
   Timer.set(CONFIG.api.pollIntervalSec * 1000, true, tick);
   Timer.set(1000, false, tick);
   if (API_ON) print("Endpunkte: config_api / status_api / kvs_set_api auf DIESEM Geraet");
-  if (DBG) memLog("nach Start");
+
+  // Einmal-Code der Startphase und nicht benoetigte Helfer freigeben.
+  // Verzoegert per Timer.set(0), damit keine dieser Funktionen mehr auf dem
+  // Aufruf-Stack liegt. sendAstroStatus bleibt (Aufruf per Script.Eval).
+  Timer.set(0, false, function () {
+    try {
+      printBanner = null;
+      setupAstroSchedules = null;
+      isOwnSchedule = null;
+      initDeviceState = null;
+      startWatchdogPart = null;
+      registerEndpoints = null;
+      startTicking = null;
+      // Nur Funktionen/Daten, deren einzige Nutzung durch die jeweilige
+      // (zur Laufzeit unveraenderliche) Einstellung nie erreicht wird.
+      if (!N.enabled || N.typ === "WEBHOOK") { simpleEncode = null; ENCODE_MAP = null; }
+      if (kvsIsRemote()) kvsItemsToMap = null;
+      if (CONFIG.api.gridSource !== "http_json") readFieldPath = null;
+    } catch (e) {
+      // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
+    }
+    if (DBG) memLog("nach Start");
+  });
 }
 
 function startWatchdogPart() {
