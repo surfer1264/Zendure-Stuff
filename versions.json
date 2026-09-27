@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-27T08:32:38Z",
+  "generated": "2026-09-27T11:17:29Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -171,7 +171,7 @@
       "changes": [
         "Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert",
         "Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start",
-        "Helfer: neuer Endpunkt /api/logcapture (läuft als Hintergrund-Job, der Configurator fragt den Stand ab), weiterhin ohne Zusatzmodule (eigener WebSocket-Client); das Debug-Log des Shelly wird bei Bedarf nur für die Aufzeichnung eingeschaltet"
+        "Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
