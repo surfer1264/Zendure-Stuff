@@ -228,6 +228,12 @@ function logDebug(msg) {
   print("[DEBUG] " + msg);
 }
 
+// Nur im Debug-Modus aufgerufen ("if (DBG) memLog(...)"): Heap-Stand ausgeben
+function memLog(tag) {
+  let st = Shelly.getComponentStatus("script:" + Shelly.getCurrentScriptId());
+  if (st) logDebug("MEM " + tag + ": used " + st.mem_used + " peak " + st.mem_peak + " free " + st.mem_free);
+}
+
 function isNum(v) {
   return typeof v === "number" && !isNaN(v) && isFinite(v);
 }
@@ -1118,8 +1124,10 @@ function pollHub(index, watchNow, logPacks, callback) {
     }
     let body = res.body;
     res = null;
+    if (DBG) memLog("Poll " + cfg.label + " Body " + (body ? body.length : 0) + " B");
     let ok = false;
     try { ok = !!body && extractHub(index, body, watchNow, logPacks); } catch (e) { ok = false; }
+    if (DBG) memLog("nach extract " + cfg.label);
     body = null;
     if (!ok) {
       setHubOffline(index);
@@ -1360,6 +1368,7 @@ function tick() {
     // den naechsten Durchlauf.
     try { handleFullEvents(); } catch (e) { print("lastFull-Fehler: " + e); }
     notifyPump();
+    if (DBG) memLog("Pollende" + (fast ? " (schnell)" : " (Watchdog)"));
   };
 
   if (fast) {
@@ -1473,6 +1482,7 @@ function serveConfig(res, attempt) {
       dischargeStartupPower: CONFIG.api.dischargeStartupPower,
       devices: devices
     });
+    if (DBG) memLog("config_api nach stringify (" + body.length + " B)");
 
     busyLeave();
     configPending = false;
@@ -1652,6 +1662,7 @@ function startTicking() {
   Timer.set(CONFIG.api.pollIntervalSec * 1000, true, tick);
   Timer.set(1000, false, tick);
   if (API_ON) print("Endpunkte: config_api / status_api / kvs_set_api auf DIESEM Geraet");
+  if (DBG) memLog("nach Start");
 }
 
 function startWatchdogPart() {
