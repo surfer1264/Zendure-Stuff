@@ -311,6 +311,8 @@ Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdi
 4. Die Dauer wählen: **140 Sekunden** oder **600 Sekunden** (10 Minuten).
 5. **„Aufzeichnung starten“** klicken.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
+
 Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
 
 * **Gefiltert (Standard):** Häkchen bei „Nur Ausgaben des gewählten Scripts aufzeichnen“ – im Log steht nur, was das Script selbst ausgibt.
