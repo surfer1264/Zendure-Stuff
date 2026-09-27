@@ -1,5 +1,10 @@
 # Changelog Controller
 
+## Changelog 5.1.1
+
+- Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben
+- Changelog-Kommentar im Script entfernt (Changelog nur noch in dieser Datei)
+
 ## Changelog 5.1.0
 
 Speicheroptimierung (mem_peak im Regelbetrieb 19 880 -> 19 026 Bytes)

@@ -2,10 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-// v5.1.0: Speicheroptimierung - geparstes Report-Objekt in readDevice vor
-//         callback() freigeben, ungenutzte Funktionen je nach CONFIG nach dem
-//         Start freigeben, Heap-Ausgabe (memLog) im Debug-Modus
-let VERSION = "5.1.0";
+let VERSION = "5.1.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -355,7 +352,7 @@ function reportError(errors, notified, type, label, message) {
     notified[type] = true;
 
     sendSignalMessage(
-      label + " Fehler (" + type + "): " + message + "\n" +
+      "❌ " + label + " Fehler (" + type + "): " + message + "\n" +
       errors[type] + " Versuche in Folge fehlgeschlagen."
     );
   }
@@ -365,7 +362,7 @@ function reportSuccess(errors, notified, type, label) {
   if (errors[type] > 0 || notified[type]) {
     if (notified[type]) {
       sendSignalMessage(
-        label + ": Fehler (" + type + ") behoben, laeuft wieder normal."
+        "✅ " + label + ": Fehler (" + type + ") behoben, laeuft wieder normal."
       );
     }
 
@@ -2228,7 +2225,7 @@ function printBannerLine(onDone) {
 printBannerLine(function () {
 
   if (CONFIG.signal.enabled) {
-    sendSignalMessage("Multi-Device-Controller gestartet (" +
+    sendSignalMessage("✅ Multi-Device-Controller gestartet (" +
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
