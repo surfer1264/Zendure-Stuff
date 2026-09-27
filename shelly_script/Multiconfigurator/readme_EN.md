@@ -320,6 +320,8 @@ The helper stops the script, restarts it and records for the chosen duration. Th
 
 About size: for the Controller, 600 seconds are around 150 control cycles. Filtered, the log is roughly 100–300 KB depending on the number of batteries, unfiltered correspondingly more – no problem for a text editor.
 
+**Masking:** webhook IDs, tokens, API keys, passwords and phone numbers are replaced by `***` during recording; only the last 4 characters of serial numbers remain. IP addresses are kept because they are needed for troubleshooting. This makes it easier to share the log in an issue or forum – still, skim it briefly first.
+
 ⚠️ For the Controller, control pauses for a few seconds during the restart. Keep the page and the helper open until the end. If the debug log is switched off on the Shelly, the helper switches it on only for the recording and off again afterwards.
 
 For recordings over several hours, use the [WebSocket log grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (German).

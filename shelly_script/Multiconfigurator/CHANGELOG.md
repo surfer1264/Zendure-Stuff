@@ -3,6 +3,7 @@
 ## 2.1.0
 - Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert
 - Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start
+- Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)
 - Helfer: neuer Endpunkt /api/logcapture (läuft als Hintergrund-Job, der Configurator fragt den Stand ab), weiterhin ohne Zusatzmodule (eigener WebSocket-Client); das Debug-Log des Shelly wird bei Bedarf nur für die Aufzeichnung eingeschaltet
 
 ## 2.0.3

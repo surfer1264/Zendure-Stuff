@@ -713,6 +713,37 @@ class WsLogStream:
             pass
 
 
+# Maskierung: Logs werden gern in Issues/Foren geteilt. Geheimnisse und
+# Kennungen kommen deshalb gar nicht erst in die Datei. IP-Adressen bleiben
+# stehen (fuer die Fehlersuche noetig, im Heimnetz unkritisch).
+# Der Shelly schreibt JSON teils mehrfach escaped (\"sn\\\":\\\"...),
+# deshalb erlauben die Muster Backslashes vor den Anfuehrungszeichen.
+_Q = r'\\*"'                   # optional escaptes Anfuehrungszeichen
+_SECRET_NAMES = r'(?:api_?key|apikey|token|access_token|auth|authorization|password|passwd|pwd|pass|secret|phone|chat_?id)'
+LOG_MASKS = [
+    # Home-Assistant-Webhook-ID
+    (re.compile(r'(/api/webhook/)[^\s"\\/?&]+'), r'\1***'),
+    # ntfy-Topic, Telegram-Bot-Token
+    (re.compile(r'(ntfy\.sh/)[^\s"\\/?&]+'), r'\1***'),
+    (re.compile(r'(/bot)\d+:[A-Za-z0-9_-]+'), r'\1***'),
+    # Zugangsdaten in URLs: http://user:pass@host
+    (re.compile(r'(\w+://)[^/\s:@"\\]+:[^/\s@"\\]+@'), r'\1***:***@'),
+    # URL-/Formular-Parameter: apikey=..., token=..., phone=...
+    (re.compile(r'(\b' + _SECRET_NAMES + r'=)[^&\s"\\]+', re.IGNORECASE), r'\1***'),
+    # JSON-Felder: "apikey":"...", "password":"..."
+    (re.compile(r'(' + _Q + _SECRET_NAMES + _Q + r'\s*:\s*' + _Q + r')[^"\\]+', re.IGNORECASE), r'\1***'),
+]
+# Seriennummern: nur die letzten 4 Zeichen stehen lassen
+RE_MASK_SN = re.compile(r'(' + _Q + r'(?:sn|serial|serialNumber|deviceSn)' + _Q + r'\s*:\s*' + _Q + r')([A-Za-z0-9]+)',
+                        re.IGNORECASE)
+
+
+def mask_secrets(text):
+    for pattern, repl in LOG_MASKS:
+        text = pattern.sub(repl, text)
+    return RE_MASK_SN.sub(lambda m: m.group(1) + "***" + m.group(2)[-4:], text)
+
+
 def _log_line(message, sid, only_script):
     """Wandelt eine Log-Nachricht in Textzeilen um (oder [] wenn gefiltert)."""
     try:
@@ -734,7 +765,7 @@ def _log_line(message, sid, only_script):
     prefix = "[%s] " % stamp.strftime("%H:%M:%S.%f")[:-3]
     if script_id is not None and not only_script:
         prefix += "[Script %d] " % script_id
-    return [prefix + part for part in (text.split("\n") if text else [""])]
+    return [prefix + mask_secrets(part) for part in (text.split("\n") if text else [""])]
 
 
 def capture_log(ip, sid, seconds=LOG_DEFAULT_SECONDS, only_script=True, progress=None):
@@ -765,6 +796,8 @@ def capture_log(ip, sid, seconds=LOG_DEFAULT_SECONDS, only_script=True, progress
              "# Shelly %s, Script %s \"%s\", %d s, %s" % (
                  ip, sid, name, seconds,
                  "nur Script-Ausgaben" if only_script else "alle Meldungen (ungefiltert)"),
+             "# Sensible Daten (Webhook-IDs, Tokens, API-Keys, Passwoerter, Telefonnummern) sind "
+             "maskiert, Seriennummern bis auf die letzten 4 Zeichen",
              "# Beginn %s" % started.strftime("%Y-%m-%d %H:%M:%S"), ""]
     ws = None
     running_after = None

@@ -320,6 +320,8 @@ L'assistant local arrête le script, le redémarre et enregistre pendant la dur�
 
 À propos de la taille : pour le Controller, 600 secondes représentent environ 150 cycles de régulation. Filtré, le journal fait environ 100 à 300 Ko selon le nombre de batteries, sans filtre davantage – aucun problème pour un éditeur de texte.
 
+**Masquage :** les ID de webhook, jetons, clés d'API, mots de passe et numéros de téléphone sont remplacés par `***` lors de l'enregistrement ; seuls les 4 derniers caractères des numéros de série restent visibles. Les adresses IP sont conservées, car elles sont utiles au diagnostic. Tu peux ainsi partager plus facilement le journal dans un ticket ou un forum – parcours-le tout de même rapidement avant.
+
 ⚠️ Pour le Controller, la régulation s'interrompt quelques secondes pendant le redémarrage. Laisse la page et l'assistant local ouverts jusqu'à la fin. Si le journal de débogage est désactivé sur le Shelly, l'assistant local ne l'active que pour l'enregistrement et le désactive ensuite.
 
 Pour des enregistrements sur plusieurs heures, utilise le [WebSocket Log Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (en allemand).

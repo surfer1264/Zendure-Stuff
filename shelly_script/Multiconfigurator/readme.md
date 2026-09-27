@@ -318,6 +318,8 @@ Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dau
 
 Zur Größe: 600 Sekunden sind beim Controller rund 150 Regelzyklen. Gefiltert wird das Log je nach Anzahl der Speicher etwa 100–300 KB groß, ungefiltert entsprechend mehr – für einen Texteditor kein Problem.
 
+**Maskierung:** Webhook-IDs, Tokens, API-Keys, Passwörter und Telefonnummern werden beim Aufzeichnen durch `***` ersetzt, von Seriennummern bleiben nur die letzten 4 Zeichen. IP-Adressen bleiben stehen, weil sie für die Fehlersuche gebraucht werden. So kannst du das Log leichter in einem Issue oder Forum teilen – schau es vorher trotzdem kurz durch.
+
 ⚠️ Beim Controller pausiert die Regelung während des Neustarts für einige Sekunden. Seite und Helfer bis zum Ende offen lassen. Ist das Debug-Log auf dem Shelly ausgeschaltet, schaltet der Helfer es nur für die Aufzeichnung ein und danach wieder aus.
 
 Für Aufzeichnungen über Stunden gibt es den [Websocket-Log-Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller).
