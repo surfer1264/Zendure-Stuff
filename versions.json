@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-27T18:15:35Z",
+  "generated": "2026-09-27T19:14:23Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -61,7 +61,11 @@
         "typ",
         "webhookUrl"
       ],
-      "changes": [],
+      "changes": [
+        "geparstes Report-Objekt in readDevice vor callback() freigeben",
+        "ungenutzte Funktionen je nach CONFIG nach dem Start freigeben",
+        "Heap-Ausgabe (memLog) im Debug-Modus"
+      ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
@@ -80,12 +84,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.4.0",
+      "version": "3.4.1",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/8724e4aa4c59aa2bb39bca8d9624d81964172394/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39160,
-      "codeHash": "sha256:a41a25f1026f6dda0fe420bd516efaba51e121c62f048d06421851a03925ef92",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/0a7656c54cc1abd406b42e154ebc89874ca2f70d/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38531,
+      "codeHash": "sha256:895a36d798b27d049cc4a1760d7f0f42d13937f66e56ccbdc3c95c982886b2e6",
       "configKeys": [
         "api",
         "apiEvents",
@@ -132,12 +136,22 @@
         "webhookUrl"
       ],
       "changes": [
-        "Speicheroptimierung"
+        "config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch",
+        "Dashboard: nur Versionsnummer angehoben (Script und Dashboard muessen gleich sein)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.4.0",
+          "schema": 1,
+          "codeHash": "sha256:a41a25f1026f6dda0fe420bd516efaba51e121c62f048d06421851a03925ef92",
+          "changes": [
+            "Speicheroptimierung"
+          ],
+          "notice": null
+        },
         {
           "version": "3.3.1",
           "schema": 1,
