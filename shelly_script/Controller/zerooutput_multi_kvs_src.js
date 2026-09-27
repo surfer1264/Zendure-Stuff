@@ -2,7 +2,10 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.0.8";
+// v5.1.0: Speicheroptimierung - geparstes Report-Objekt in readDevice vor
+//         callback() freigeben, ungenutzte Funktionen je nach CONFIG nach dem
+//         Start freigeben, Heap-Ausgabe (memLog) im Debug-Modus
+let VERSION = "5.1.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
