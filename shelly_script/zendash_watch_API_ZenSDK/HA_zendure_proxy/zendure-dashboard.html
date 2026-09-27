@@ -510,7 +510,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.3.1";
+  const VERSION = "3.4.0";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -1193,13 +1193,15 @@
      Netzzaehler und Hubs, und die Seite bekaeme veraltete Werte.
 
      status_api ist billig (fertig gepufferter Wert). config_api macht dagegen
-     bei jedem Aufruf ein KVS.GetMany auf dem Shelly - das wird deshalb nur
-     jeden CONFIG_EVERY-ten Durchlauf abgefragt (4 s * 3 = alle 12 s). Wer
+     ein KVS.GetMany auf dem Shelly - das wird deshalb nur alle CONFIG_SEC
+     abgefragt (32 s = 8 * 4 s, zeitbasiert, damit der erste Abgleich nach dem
+     Laden nicht direkt hinter loadConfig() folgt). Das Neuladen der Seite
+     fragt mit ?fresh=1 und umgeht damit den Cache im API-Script. Wer
      Regler oder Schalter in dieser Seite bedient, sieht seine Aenderung
      sofort; nur eine Aenderung von aussen erscheint entsprechend spaeter. */
   const POLL_SEC = 4;
-  const CONFIG_EVERY = 3;
-  let pollCount = 0;
+  const CONFIG_SEC = 32;
+  let lastConfigAt = 0;
   // Nach einer Aktion einmalig sofort die Konfiguration nachziehen,
   // statt bis zum naechsten regulaeren Abgleich zu warten.
   let forceConfigNext = false;
@@ -1573,7 +1575,8 @@
   }
 
   async function loadConfig(){
-    const cfg = await fetchJ('config_api');
+    const cfg = await fetchJ('config_api?fresh=1');
+    lastConfigAt = Date.now();
 
     setpointSlider.value = cfg.setpoint || 0;
     showSetpoint(Number(cfg.setpoint || 0));
@@ -1665,9 +1668,12 @@
     try {
       const status = await fetchJ('status_api');
 
-      if (forceConfigNext || pollCount % CONFIG_EVERY === 0) {
+      // 1 s Toleranz fuer Timer-Jitter, damit der Abgleich im 32-s-Durchlauf
+      // kommt und nicht erst einen Durchlauf spaeter.
+      if (forceConfigNext || (Date.now() - lastConfigAt) >= CONFIG_SEC * 1000 - 1000) {
         forceConfigNext = false;
         const cfg = await fetchJ('config_api');
+        lastConfigAt = Date.now();
 
         liveSetpoint = Number(cfg.setpoint || 0);
         liveHysteresis = Number(cfg.hysteresis || liveHysteresis);
@@ -1700,7 +1706,6 @@
           if (c.lastFull !== undefined) d.lastFull = Number(c.lastFull || 0);
         });
       }
-      pollCount++;
 
       gridOnline = !!(status.grid && status.grid.online);
       gridPower = status.grid ? status.grid.power : 0;
@@ -1929,7 +1934,7 @@
      Startsprache kommt aus detectLang() (gespeicherte Wahl, sonst Browser).
      Der Knopf schaltet reihum DE -> EN -> FR und merkt sich die Wahl.
      Beim Wechsel wird alles neu beschriftet, was sonst erst beim naechsten
-     Abgleich (bis zu 12 s) nachgezogen wuerde. */
+     Abgleich (bis zu 32 s) nachgezogen wuerde. */
   const langToggle = document.getElementById('langToggle');
 
   /* ---------------- Hilfetexte ----------------
