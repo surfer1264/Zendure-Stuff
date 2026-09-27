@@ -378,12 +378,6 @@ function debugStale(where, myCycle) {
   }
 }
 
-// Nur im Debug-Modus aufgerufen: Heap-Stand des Skripts ausgeben
-function memLog(tag) {
-  let s = Shelly.getComponentStatus("script:" + Script.id);
-  if (s) print("DEBUG MEM " + tag + ": used " + s.mem_used + " peak " + s.mem_peak + " free " + s.mem_free);
-}
-
 function lock() {
   state.busy = true;
   state.cycleId = state.cycleId + 1;
@@ -421,7 +415,6 @@ function unlock(myCycle) {
   if (CONFIG.debug) {
     print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " +
       (Date.now() - state.cycleStartedAt) + " ms");
-    memLog("Zyklusende");
   }
 
   reportSuccess(state.errors, state.notified, "watchdog", "System");
@@ -845,11 +838,6 @@ function readDevice(index, myCycle, callback) {
 
       reportSuccess(ds.errors, ds.notified, "connect", cfg.label);
 
-      if (CONFIG.debug) {
-        print("DEBUG " + cfg.label + ": report " + res.body.length + " Bytes");
-        memLog("vor parse " + cfg.label);
-      }
-
       let data;
 
       try {
@@ -866,7 +854,6 @@ function readDevice(index, myCycle, callback) {
       // Roh-Antwort sofort freigeben: der JSON-String (mehrere kB)
       // muss nicht parallel zum geparsten Objekt im Heap liegen.
       res = null;
-      if (CONFIG.debug) memLog("nach parse " + cfg.label);
       reportSuccess(ds.errors, ds.notified, "json", cfg.label);
 
       if (data.sn) {
@@ -875,7 +862,6 @@ function readDevice(index, myCycle, callback) {
 
       if (!ds.serial) {
         reportError(ds.errors, ds.notified, "serial", cfg.label, "Keine Seriennummer gefunden");
-        data = null;
         callback();
         return;
       }
@@ -921,7 +907,6 @@ function readDevice(index, myCycle, callback) {
       }
 
       ds.available = true;
-      data = null; // geparstes Objekt freigeben, BEVOR callback() synchron das naechste Geraet anstoesst
       callback();
     }
   );
@@ -2247,27 +2232,9 @@ printBannerLine(function () {
           seedKvsDefaults = null;
           seedKvsDefaultsStep = null;
           checkBand = null;
-
-          // Nur Funktionen, deren einzige Aufrufstellen durch die jeweilige
-          // (nicht KVS-aenderbare) CONFIG-Einstellung nie erreicht werden.
-          if (!CONFIG.kvsEnabled) {
-            readKvsOverrides = null;
-            kvsItemsToMap = null;
-            applyKvsValue = null;
-            syncMinSocDevice = null;
-            syncInputLimitDevice = null;
-          }
-          if (!CONFIG.signal.enabled || CONFIG.signal.typ != "WEBHOOK") sendWebhookMessage = null;
-          if (!CONFIG.signal.enabled || CONFIG.signal.typ == "WEBHOOK") simpleEncode = null;
-          if (CONFIG.gridSource === "local") handleGenericGridResponse = null;
-          if (CONFIG.gridReverseMode !== "dynamic") {
-            setGridReverseAll = null;
-            setGridReverseDevice = null;
-          }
         } catch (e) {
           // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
         }
-        if (CONFIG.debug) memLog("nach Freigabe Startcode");
       });
 
       print("Starte Regelbetrieb.");
