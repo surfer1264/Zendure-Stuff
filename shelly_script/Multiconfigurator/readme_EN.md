@@ -34,6 +34,7 @@ A few clicks to local control of your Zendure fleet – set up, update, done.
    * [Uploading a script manually](#uploading-a-script-manually)
    * [Checking a Shelly's memory](#checking-a-shellys-memory)
    * [Backing up your configuration](#backing-up-your-configuration)
+   * [Recording a log](#recording-a-log)
    * [Resetting remembered IPs](#resetting-remembered-ips)
    * [Verifying the download](#verifying-the-download)
 
@@ -68,7 +69,7 @@ The configurator is available in **German, English and French**.
 
 ## 2. Where do I find the configurator?
 
-There are two ways. The **local helper** (EXE file) is recommended, because direct upload, update and memory check only work with it.
+There are two ways. The **local helper** (EXE file) is recommended, because direct upload, update, memory check and log recording only work with it.
 
 ### Recommended: the local helper (EXE installer)
 
@@ -301,6 +302,27 @@ For reference: the zenDash-API + Watchdog script uses around 13.5 kB in operatio
 ### Backing up your configuration
 
 After every change, click "💾 Save CONFIG block only" or "🔗 Save complete script from GitHub" in the result step and keep the file. The complete script carries the version in its file name – handy if you want to keep several versions. You can [import](#importing-an-existing-configuration) both files again later with "📂 Load file…". This way you're back up and running within minutes if a Shelly fails or is replaced.
+
+### Recording a log
+
+For troubleshooting – for example when a script doesn't start or behaves oddly – the configurator records a Shelly's messages. This only works with the [local helper](#recommended-the-local-helper-exe-installer).
+
+1. In the start dialog, choose **"Record log"**.
+2. Enter the Shelly's IP (or click Controller Shelly / Dashboard Shelly) and click **"Show scripts"**.
+3. Select the script you want.
+4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
+5. Click **"Start recording"**.
+
+The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
+
+* **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
+* **Unfiltered:** remove the tick – then all messages from the Shelly are added, including system messages. You need this if the script does not start, because the Shelly reports start errors or low memory as system messages. Lines from the script are then marked with `[Script 8]`.
+
+About size: for the Controller, 600 seconds are around 150 control cycles. Filtered, the log is roughly 100–300 KB depending on the number of batteries, unfiltered correspondingly more – no problem for a text editor.
+
+⚠️ For the Controller, control pauses for a few seconds during the restart. Keep the page and the helper open until the end. If the debug log is switched off on the Shelly, the helper switches it on only for the recording and off again afterwards.
+
+For recordings over several hours, use the [WebSocket log grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (German).
 
 ### Resetting remembered IPs
 

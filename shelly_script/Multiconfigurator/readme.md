@@ -32,6 +32,7 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
    * [Script von Hand hochladen](#script-von-hand-hochladen)
    * [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
    * [Konfiguration sichern](#konfiguration-sichern)
+   * [Log aufzeichnen](#log-aufzeichnen)
    * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
    * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
 
@@ -66,7 +67,7 @@ Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
 ## 2. Wo finde ich den Configurator?
 
-Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update und Speicherprüfung.
+Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update, Speicherprüfung und Log-Aufzeichnung.
 
 ### Empfohlen: der lokale Helfer (Exe-Installer)
 
@@ -299,6 +300,27 @@ Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im
 ### Konfiguration sichern
 
 Nach jeder Änderung im Ergebnis-Schritt „💾 Nur CONFIG-Block speichern“ oder „🔗 Komplettes Script von GitHub speichern“ klicken und die Datei aufbewahren. Das komplette Script trägt die Version im Dateinamen – praktisch, wenn du mehrere Stände behalten willst. Beide Dateien kannst du später per „📂 Datei laden…“ wieder [einlesen](#bestehende-konfiguration-einlesen). Damit bist du bei einem Shelly-Defekt oder -Wechsel in wenigen Minuten wieder startklar.
+
+### Log aufzeichnen
+
+Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdig verhält – zeichnet der Configurator die Meldungen eines Shelly auf. Das geht nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer-exe-installer).
+
+1. Im Startdialog **„Log aufzeichnen“** wählen.
+2. Die IP des Shelly eintragen (oder auf Controller-Shelly bzw. Dashboard-Shelly klicken) und **„Scripte anzeigen“**.
+3. Das gewünschte Script auswählen.
+4. Die Dauer wählen: **140 Sekunden** oder **600 Sekunden** (10 Minuten).
+5. **„Aufzeichnung starten“** klicken.
+
+Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
+
+* **Gefiltert (Standard):** Häkchen bei „Nur Ausgaben des gewählten Scripts aufzeichnen“ – im Log steht nur, was das Script selbst ausgibt.
+* **Ungefiltert:** Häkchen entfernen – dann kommen alle Meldungen des Shelly dazu, auch Systemmeldungen. Das brauchst du, wenn das Script nicht startet, denn Fehler beim Start oder zu wenig Speicher meldet der Shelly als Systemmeldung. Zeilen des Scripts sind dann mit `[Script 8]` markiert.
+
+Zur Größe: 600 Sekunden sind beim Controller rund 150 Regelzyklen. Gefiltert wird das Log je nach Anzahl der Speicher etwa 100–300 KB groß, ungefiltert entsprechend mehr – für einen Texteditor kein Problem.
+
+⚠️ Beim Controller pausiert die Regelung während des Neustarts für einige Sekunden. Seite und Helfer bis zum Ende offen lassen. Ist das Debug-Log auf dem Shelly ausgeschaltet, schaltet der Helfer es nur für die Aufzeichnung ein und danach wieder aus.
+
+Für Aufzeichnungen über Stunden gibt es den [Websocket-Log-Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller).
 
 ### Gemerkte IPs zurücksetzen
 

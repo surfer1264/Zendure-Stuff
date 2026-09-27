@@ -28,6 +28,11 @@ Loest drei Probleme, die ein reiner Browser nicht loesen kann:
      Punkt 1 betrifft nur noch den Sonderfall "Configurator woanders
      geoeffnet" (z.B. die ueber GitHub Pages gehostete Version).
 
+  4. Log-Aufzeichnung (POST /api/logcapture startet einen Hintergrund-Job,
+     GET /api/logcapture?job=... liefert Stand und Ergebnis): stoppt ein Script, liest den
+     Debug-Log-Stream des Shelly per WebSocket, startet das Script wieder
+     und liefert das Log an den Browser (siehe capture_log()).
+
 Kein "pip install" noetig, nur Python-Standardbibliothek.
 
 Start:
@@ -51,10 +56,13 @@ siehe --add-data im build-and-release.yml-Workflow.
 Beenden: Strg+C im Terminal.
 """
 
+import base64
+import datetime
 import http.server
 import json
 import os
 import re
+import socket
 import sys
 import threading
 import time
@@ -78,7 +86,7 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Start: laeuft noch ein alter Helfer-Prozess (oder eine alte exe mit dem
 # Configurator per githack), kennt er neue Optionen nicht. Der Configurator
 # bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
-HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings"]
+HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -584,6 +592,279 @@ def check_memory(ip):
             pass  # Aufraeumen ist nicht kritisch fuers eigentliche Ergebnis
 
 
+# ---------------------------------------------------------------
+# Log-Aufzeichnung (POST /api/logcapture)
+#
+# Stoppt ein Script, liest den Debug-Log-Stream des Shelly per WebSocket
+# (ws://<IP>/debug/log, wie Script_poller/shelly_log_grabber.py), startet
+# das Script wieder und zeichnet eine feste Zeit lang auf. So ist der
+# komplette Script-Start im Log - inklusive Fehlermeldungen, die als
+# Systemmeldung kommen (z.B. "Uncaught ..." oder zu wenig Speicher).
+#
+# Eigener kleiner WebSocket-Client, damit der Helfer weiterhin ohne
+# "pip install" auskommt (nur Standardbibliothek).
+# ---------------------------------------------------------------
+LOG_DEFAULT_SECONDS = 140
+LOG_MIN_SECONDS = 10
+LOG_MAX_SECONDS = 600
+LOG_MAX_LINES = 50000
+SCRIPT_FD_BASE = 100         # fd = 100 + Script-ID, siehe shelly_log_grabber.py
+
+
+class WsLogStream:
+    """Minimaler WebSocket-Client (RFC 6455), nur Lesen von Textframes."""
+
+    def __init__(self, ip, timeout=5):
+        self.sock = socket.create_connection((ip, 80), timeout=timeout)
+        key = base64.b64encode(os.urandom(16)).decode("ascii")
+        req = ("GET /debug/log HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\n"
+               "Connection: Upgrade\r\nSec-WebSocket-Key: %s\r\n"
+               "Sec-WebSocket-Version: 13\r\n\r\n" % (ip, key))
+        self.sock.sendall(req.encode("ascii"))
+        head = b""
+        while b"\r\n\r\n" not in head:
+            chunk = self.sock.recv(1024)
+            if not chunk:
+                break
+            head += chunk
+            if len(head) > 16384:
+                break
+        status = head.split(b"\r\n", 1)[0]
+        if b" 101" not in status:
+            self.close()
+            raise RpcError("Log-Stream von %s nicht verfuegbar (%s)"
+                           % (ip, status.decode("latin-1", "replace") or "keine Antwort"))
+        self.buf = head.split(b"\r\n\r\n", 1)[1]
+        self.frag = b""
+
+    def _need(self, n, deadline):
+        while len(self.buf) < n:
+            left = deadline - time.time()
+            if left <= 0:
+                return False
+            self.sock.settimeout(min(left, 1.0))
+            try:
+                chunk = self.sock.recv(4096)
+            except socket.timeout:
+                continue
+            if not chunk:
+                raise RpcError("Log-Stream wurde vom Shelly beendet")
+            self.buf += chunk
+        return True
+
+    def _take(self, n):
+        out, self.buf = self.buf[:n], self.buf[n:]
+        return out
+
+    def _send(self, opcode, payload=b""):
+        mask = os.urandom(4)
+        header = bytes([0x80 | opcode, 0x80 | len(payload)]) + mask
+        body = bytes(b ^ mask[i % 4] for i, b in enumerate(payload))
+        try:
+            self.sock.sendall(header + body)
+        except OSError:
+            pass
+
+    def read_message(self, deadline):
+        """Naechste Textnachricht oder None, wenn die Zeit abgelaufen ist."""
+        while True:
+            if not self._need(2, deadline):
+                return None
+            b0, b1 = self.buf[0], self.buf[1]
+            length = b1 & 0x7F
+            hdr = 2
+            if length == 126:
+                if not self._need(4, deadline):
+                    return None
+                length = int.from_bytes(self.buf[2:4], "big")
+                hdr = 4
+            elif length == 127:
+                if not self._need(10, deadline):
+                    return None
+                length = int.from_bytes(self.buf[2:10], "big")
+                hdr = 10
+            masked = bool(b1 & 0x80)
+            total = hdr + (4 if masked else 0) + length
+            if not self._need(total, deadline):
+                return None
+            frame = self._take(total)
+            payload = frame[hdr + (4 if masked else 0):]
+            if masked:
+                m = frame[hdr:hdr + 4]
+                payload = bytes(b ^ m[i % 4] for i, b in enumerate(payload))
+            opcode, fin = b0 & 0x0F, bool(b0 & 0x80)
+            if opcode == 0x9:                       # Ping -> Pong
+                self._send(0xA, payload[:125])
+                continue
+            if opcode == 0x8:                       # Close
+                raise RpcError("Log-Stream wurde vom Shelly beendet")
+            if opcode in (0x1, 0x0):
+                self.frag += payload
+                if fin:
+                    text, self.frag = self.frag.decode("utf-8", "replace"), b""
+                    return text
+            # Binaer-/Pong-Frames ignorieren
+
+    def close(self):
+        try:
+            self._send(0x8)
+            self.sock.close()
+        except (OSError, AttributeError):
+            pass
+
+
+def _log_line(message, sid, only_script):
+    """Wandelt eine Log-Nachricht in Textzeilen um (oder [] wenn gefiltert)."""
+    try:
+        data = json.loads(message)
+    except ValueError:
+        data = {"data": message}
+    if not isinstance(data, dict):
+        data = {"data": str(data)}
+    text = str(data.get("data") or data.get("msg") or data.get("text") or "").rstrip("\r\n")
+    fd = data.get("fd")
+    script_id = fd - SCRIPT_FD_BASE if isinstance(fd, int) and fd >= SCRIPT_FD_BASE else None
+    if only_script and script_id != sid:
+        return []
+    ts = data.get("ts")
+    if isinstance(ts, (int, float)) and ts > 1e9:
+        stamp = datetime.datetime.fromtimestamp(ts)
+    else:
+        stamp = datetime.datetime.now()
+    prefix = "[%s] " % stamp.strftime("%H:%M:%S.%f")[:-3]
+    if script_id is not None and not only_script:
+        prefix += "[Script %d] " % script_id
+    return [prefix + part for part in (text.split("\n") if text else [""])]
+
+
+def capture_log(ip, sid, seconds=LOG_DEFAULT_SECONDS, only_script=True, progress=None):
+    """Script stoppen, Log-Stream oeffnen, Script starten, aufzeichnen.
+    Das Script wird in jedem Fall wieder gestartet (finally)."""
+    seconds = max(LOG_MIN_SECONDS, min(LOG_MAX_SECONDS, int(seconds)))
+    scripts = {s.get("id"): s for s in rpc(ip, "Script.List").get("scripts", [])}
+    if sid not in scripts:
+        raise RpcError("Script %s gibt es auf %s nicht" % (sid, ip))
+    name = scripts[sid].get("name") or ""
+    was_running = bool(scripts[sid].get("running"))
+
+    # Debug-Log per WebSocket muss eingeschaltet sein; nur fuer die
+    # Aufzeichnung einschalten und danach den alten Zustand wiederherstellen.
+    debug_ws = ((rpc(ip, "Sys.GetConfig").get("debug") or {}).get("websocket") or {})
+    switched_on = False
+    if not debug_ws.get("enable"):
+        res = rpc(ip, "Sys.SetConfig", {"config": {"debug": {"websocket": {"enable": True}}}})
+        if res.get("restart_required"):
+            raise RpcError("Auf %s wurde das Debug-Log eingeschaltet, dafuer ist ein Neustart "
+                           "des Shelly noetig. Bitte den Shelly einmal neu starten und die "
+                           "Aufzeichnung erneut starten." % ip)
+        switched_on = True
+        time.sleep(0.5)
+
+    started = datetime.datetime.now()
+    lines = ["# Log-Aufzeichnung Zendure Multi-Configurator %s" % APP_VERSION,
+             "# Shelly %s, Script %s \"%s\", %d s, %s" % (
+                 ip, sid, name, seconds,
+                 "nur Script-Ausgaben" if only_script else "alle Meldungen (ungefiltert)"),
+             "# Beginn %s" % started.strftime("%Y-%m-%d %H:%M:%S"), ""]
+    ws = None
+    running_after = None
+    try:
+        ws = WsLogStream(ip)
+        lines.append("# --- Script %s wird gestoppt ---" % sid)
+        if was_running:
+            rpc(ip, "Script.Stop", {"id": sid})
+        time.sleep(1.0)
+        lines.append("# --- Script %s wird gestartet ---" % sid)
+        rpc(ip, "Script.Start", {"id": sid})
+        deadline = time.time() + seconds
+        if progress:
+            progress(len(lines), deadline)
+        while len(lines) < LOG_MAX_LINES:
+            msg = ws.read_message(deadline)
+            if msg is None:
+                break
+            lines.extend(_log_line(msg, sid, only_script))
+            if progress:
+                progress(len(lines))
+        lines.append("")
+        lines.append("# Ende %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    finally:
+        if ws:
+            ws.close()
+        try:
+            running_after = bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running"))
+            if not running_after:
+                rpc(ip, "Script.Start", {"id": sid})
+                time.sleep(1.5)
+                running_after = bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running"))
+        except RpcError:
+            pass
+        if switched_on:
+            try:
+                rpc(ip, "Sys.SetConfig", {"config": {"debug": {"websocket": {"enable": False}}}})
+            except RpcError:
+                pass
+    lines.append("# Script laeuft nach der Aufzeichnung: %s"
+                 % ("ja" if running_after else ("NEIN" if running_after is False else "unbekannt")))
+    return {"log": "\n".join(lines) + "\n", "lines": len(lines), "name": name,
+            "running": running_after, "seconds": seconds}
+
+
+# Aufzeichnungen laufen als Hintergrund-Job: bis zu 10 Minuten sind zu
+# lang fuer einen einzelnen HTTP-Aufruf (Firefox bricht nach 300 s ab).
+# Der Browser startet den Job per POST und fragt den Stand per GET ab.
+LOG_JOBS = {}
+LOG_JOBS_LOCK = threading.Lock()
+LOG_JOB_KEEP = 3600          # fertige Jobs nach 1 Stunde verwerfen
+
+
+def start_log_job(ip, sid, seconds, only_script):
+    now = time.time()
+    with LOG_JOBS_LOCK:
+        for jid in [j for j, v in LOG_JOBS.items()
+                    if v["state"] != "running" and now - v["created"] > LOG_JOB_KEEP]:
+            del LOG_JOBS[jid]
+        if any(v["state"] == "running" and v["ip"] == ip for v in LOG_JOBS.values()):
+            raise RpcError("Auf %s laeuft bereits eine Log-Aufzeichnung" % ip)
+        jid = base64.urlsafe_b64encode(os.urandom(9)).decode("ascii")
+        job = {"ip": ip, "sid": sid, "state": "running", "created": now,
+               "lines": 0, "deadline": None, "result": None, "error": None}
+        LOG_JOBS[jid] = job
+
+    def progress(n, deadline=None):
+        job["lines"] = n
+        if deadline:
+            job["deadline"] = deadline
+
+    def run():
+        try:
+            job["result"] = capture_log(ip, sid, seconds, only_script, progress)
+            job["state"] = "done"
+            print("Log-Aufzeichnung %s Script %s fertig: %d Zeilen, Script laeuft: %s"
+                  % (ip, sid, job["result"]["lines"], job["result"]["running"]))
+        except Exception as err:   # alles an den Browser melden
+            job["error"] = str(err)
+            job["state"] = "error"
+            print("Log-Aufzeichnung %s Script %s fehlgeschlagen: %s" % (ip, sid, err))
+
+    threading.Thread(target=run, daemon=True).start()
+    return jid
+
+
+def log_job_status(jid):
+    job = LOG_JOBS.get(jid)
+    if not job:
+        raise RpcError("Aufzeichnung nicht gefunden (Helfer neu gestartet?)")
+    out = {"state": job["state"], "lines": job["lines"]}
+    if job["deadline"]:
+        out["remaining"] = max(0, int(round(job["deadline"] - time.time())))
+    if job["state"] == "done":
+        out.update(job["result"])
+    elif job["state"] == "error":
+        out["error"] = job["error"]
+    return out
+
+
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("%s - %s\n" % (self.address_string(), fmt % args))
@@ -640,6 +921,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if parsed.path == "/api/health":
             self._json(200, {"ok": True, "helper": "zendure-local-helper", "version": APP_VERSION,
                              "features": HELPER_FEATURES})
+        elif parsed.path == "/api/logcapture":
+            params = urllib.parse.parse_qs(parsed.query)
+            try:
+                st = log_job_status((params.get("job") or [""])[0])
+                if st["state"] == "error":
+                    self._json(200, dict(st, ok=False))
+                else:
+                    self._json(200, dict({"ok": True}, **st))
+            except RpcError as err:
+                self._json(200, {"ok": False, "error": str(err)})
         elif parsed.path == "/api/inspect":
             self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
         elif parsed.path == "/api/config":
@@ -700,6 +991,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if not self._origin_ok():
             self._reject()
             return
+        if self.path == "/api/logcapture":
+            self._handle_logcapture()
+            return
         if self.path != "/api/upload":
             self._json(404, {"ok": False, "error": "not found"})
             return
@@ -747,6 +1041,33 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # Shelly nicht erreichbar etc.) - der Browser zeigt err als
             # normale Fehlermeldung an, kein HTTP-500 noetig.
             self._json(200, {"ok": False, "error": str(err)})
+        except Exception as err:
+            self._json(500, {"ok": False, "error": str(err)})
+
+
+    def _handle_logcapture(self):
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            self._json(415, {"ok": False, "error": "Content-Type application/json erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            ip = (data.get("ip") or "").strip()
+            if not RE_IP.match(ip):
+                raise RpcError("ungueltige oder fehlende IP")
+            sid = data.get("id")
+            if not isinstance(sid, int):
+                raise RpcError("Script-ID fehlt")
+            seconds = data.get("seconds") or LOG_DEFAULT_SECONDS
+            only_script = data.get("only_script", True) is not False   # Standard: gefiltert
+            print("Log-Aufzeichnung: %s Script %s, %s s%s"
+                  % (ip, sid, seconds, ", nur Script-Ausgaben" if only_script else ", ungefiltert"))
+            self._json(200, {"ok": True, "job": start_log_job(ip, sid, seconds, only_script)})
+        except RpcError as err:
+            self._json(200, {"ok": False, "error": str(err)})
+        except (OSError, ValueError) as err:
+            self._json(200, {"ok": False, "error": "Log-Aufzeichnung fehlgeschlagen: %s" % err})
         except Exception as err:
             self._json(500, {"ok": False, "error": str(err)})
 

@@ -147,7 +147,7 @@ const BUILD_DATE = "2026-09-26";
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.0.3";
+const APP_VERSION = "2.1.0";
 
 const I18N = {
 de: {
@@ -320,6 +320,30 @@ de: {
   start_new_title: "Neu konfigurieren",
   start_new_desc: "Funktionen auswählen und Schritt für Schritt einrichten. Eine vorhandene Config kannst du im nächsten Schritt wie bisher einfügen.",
   start_update_title: "Updaten",
+  start_log_title: "Log aufzeichnen",
+  start_log_desc: "Ein Script neu starten und seine Meldungen für die Fehlersuche als Datei speichern.",
+  log_h2: "Log aufzeichnen",
+  log_hint: "Das gewählte Script wird gestoppt und neu gestartet, dabei werden seine Meldungen mitgeschrieben – inklusive Script-Start. Am Ende wird das Log als Datei gespeichert.",
+  log_ip_label: "IP-Adresse des Shelly",
+  log_list_btn: "Scripte anzeigen",
+  log_listing: "Scripte werden gelesen…",
+  log_no_scripts: "Auf diesem Shelly ist kein Script installiert.",
+  log_script_label: "Welches Script?",
+  log_filter_label: "Nur Ausgaben des gewählten Scripts aufzeichnen (gefiltert)",
+  log_filter_hint: "Standard. Ohne Häkchen werden alle Meldungen des Shelly aufgezeichnet, auch Systemmeldungen – sinnvoll, wenn das Script nicht startet (z. B. Fehler beim Start oder zu wenig Speicher).",
+  log_duration_label: "Dauer der Aufzeichnung",
+  log_duration_140: "140 Sekunden",
+  log_duration_600: "600 Sekunden (10 Minuten)",
+  log_warn: "⚠️ Das Script wird kurz gestoppt – beim Controller pausiert die Regelung für einige Sekunden. Die Aufzeichnung dauert {s} Sekunden, bitte Seite und Helfer so lange offen lassen.",
+  log_start_btn: "Aufzeichnung starten ({s} s)",
+  log_running: "Aufzeichnung läuft … noch ca. {s} s · {n} Zeilen",
+  log_done_h2: "Aufzeichnung fertig",
+  log_done: "{n} Zeilen aufgezeichnet, die Datei wurde gespeichert.",
+  log_not_running: "Achtung: Das Script läuft nach der Aufzeichnung nicht. Die Ursache steht meist im Log.",
+  log_save_btn: "💾 Log erneut speichern",
+  log_preview: "Letzte Zeilen",
+  log_err_ip: "Bitte eine gültige IP-Adresse eintragen.",
+  log_err: "Aufzeichnung fehlgeschlagen: {msg}",
   start_update_desc: "Installierte Versionen mit GitHub vergleichen und die Scripte mit deinen bisherigen Einstellungen aktualisieren.",
   start_update_needs_helper: "Nur mit dem lokalen Helfer möglich: Helfer starten – er öffnet den Configurator automatisch.",
   nav_err_mode: "Bitte zuerst auswählen, was du tun möchtest.",
@@ -609,6 +633,30 @@ en: {
   start_new_title: "Configure from scratch",
   start_new_desc: "Choose functions and set them up step by step. You can paste an existing config in the next step as before.",
   start_update_title: "Update",
+  start_log_title: "Record log",
+  start_log_desc: "Restart a script and save its messages to a file for troubleshooting.",
+  log_h2: "Record log",
+  log_hint: "The selected script is stopped and restarted, and its messages are recorded – including the script start. At the end, the log is saved as a file.",
+  log_ip_label: "IP address of the Shelly",
+  log_list_btn: "Show scripts",
+  log_listing: "Reading scripts…",
+  log_no_scripts: "No script is installed on this Shelly.",
+  log_script_label: "Which script?",
+  log_filter_label: "Record only output of the selected script (filtered)",
+  log_filter_hint: "Default. Without the tick, all messages from the Shelly are recorded, including system messages – useful if the script does not start (e.g. errors during start or low memory).",
+  log_duration_label: "Recording duration",
+  log_duration_140: "140 seconds",
+  log_duration_600: "600 seconds (10 minutes)",
+  log_warn: "⚠️ The script is stopped briefly – for the Controller, control pauses for a few seconds. Recording takes {s} seconds; please keep the page and the helper open until then.",
+  log_start_btn: "Start recording ({s} s)",
+  log_running: "Recording … approx. {s} s left · {n} lines",
+  log_done_h2: "Recording finished",
+  log_done: "{n} lines recorded, the file has been saved.",
+  log_not_running: "Attention: the script is not running after the recording. The cause is usually in the log.",
+  log_save_btn: "💾 Save log again",
+  log_preview: "Last lines",
+  log_err_ip: "Please enter a valid IP address.",
+  log_err: "Recording failed: {msg}",
   start_update_desc: "Compare installed versions with GitHub and update the scripts with your existing settings.",
   start_update_needs_helper: "Only possible with the local helper: start the helper – it opens the configurator automatically.",
   nav_err_mode: "Please choose what you would like to do first.",
@@ -898,6 +946,30 @@ fr: {
   start_new_title: "Nouvelle configuration",
   start_new_desc: "Choisir les fonctions et les configurer étape par étape. Tu peux coller une config existante à l'étape suivante, comme avant.",
   start_update_title: "Mettre à jour",
+  start_log_title: "Enregistrer le journal",
+  start_log_desc: "Redémarrer un script et enregistrer ses messages dans un fichier pour le diagnostic.",
+  log_h2: "Enregistrer le journal",
+  log_hint: "Le script choisi est arrêté puis redémarré, et ses messages sont enregistrés – démarrage du script compris. À la fin, le journal est enregistré dans un fichier.",
+  log_ip_label: "Adresse IP du Shelly",
+  log_list_btn: "Afficher les scripts",
+  log_listing: "Lecture des scripts…",
+  log_no_scripts: "Aucun script n'est installé sur ce Shelly.",
+  log_script_label: "Quel script ?",
+  log_filter_label: "Enregistrer uniquement les sorties du script choisi (filtré)",
+  log_filter_hint: "Par défaut. Sans la coche, tous les messages du Shelly sont enregistrés, messages système compris – utile si le script ne démarre pas (par ex. erreur au démarrage ou manque de mémoire).",
+  log_duration_label: "Durée de l'enregistrement",
+  log_duration_140: "140 secondes",
+  log_duration_600: "600 secondes (10 minutes)",
+  log_warn: "⚠️ Le script est brièvement arrêté – pour le Controller, la régulation s'interrompt quelques secondes. L'enregistrement dure {s} secondes ; laisse la page et l'assistant local ouverts jusque-là.",
+  log_start_btn: "Démarrer l'enregistrement ({s} s)",
+  log_running: "Enregistrement en cours … encore env. {s} s · {n} lignes",
+  log_done_h2: "Enregistrement terminé",
+  log_done: "{n} lignes enregistrées, le fichier a été sauvegardé.",
+  log_not_running: "Attention : le script ne tourne pas après l'enregistrement. La cause figure généralement dans le journal.",
+  log_save_btn: "💾 Enregistrer à nouveau le journal",
+  log_preview: "Dernières lignes",
+  log_err_ip: "Saisis une adresse IP valide.",
+  log_err: "Échec de l'enregistrement : {msg}",
   start_update_desc: "Comparer les versions installées avec GitHub et mettre à jour les scripts en gardant tes réglages.",
   start_update_needs_helper: "Possible uniquement avec l'assistant local : lance l'assistant – il ouvre le configurateur automatiquement.",
   nav_err_mode: "Choisis d'abord ce que tu veux faire.",
@@ -1078,8 +1150,10 @@ const state = {
   controllerAdvanced: {},
   zdwAdvanced: {},
 
-  // Startdialog: null (noch nicht gewaehlt) | 'new' | 'update'
+  // Startdialog: null (noch nicht gewaehlt) | 'new' | 'update' | 'log'
   mode: null,
+  log: { ip: '', scripts: null, sid: null, onlyScript: true, seconds: 140, busy: false, listing: false,
+         error: '', result: null, endsAt: 0, lines: 0 },
   upd: { checked: false, busy: false, error: '', rows: {}, selected: {}, app: null, showIpFields: false },
   updateReady: false,
 
@@ -1121,6 +1195,7 @@ function needsDashIp(){ return state.products.api || state.products.watchdog; }
 
 function computeStepList(){
   if(state.mode === 'update') return state.updateReady ? ['start', 'result'] : ['start'];
+  if(state.mode === 'log') return ['start'];
   if(state.mode !== 'new') return ['start'];
   const s = ['start', 'products', 'devices'];
   if(needsGrid()) s.push('gridsource');
@@ -2437,6 +2512,8 @@ async function helperGet(path){
 
 function setMode(mode){
   if(mode === 'update' && !(helperAvailable && helperHas('read_config'))) return;
+  if(mode === 'log' && !(helperAvailable && helperHas('log_capture'))) return;
+  if(state.log.busy) return;   // laufende Aufzeichnung nicht verlassen
   if(mode !== 'update') state.updateReady = false;
   state.mode = mode;
   state.navError = '';
@@ -2470,6 +2547,10 @@ function modeChoice(mode, titleKey, descKey, disabled, extra){
 
 function renderStart(){
   const canUpdate = helperAvailable && helperHas('read_config');
+  const canLog = helperAvailable && helperHas('log_capture');
+  const noHelperLog = !helperAvailable
+    ? `<div class="cd" style="margin-top:6px; color:var(--warn);">${t('start_update_needs_helper')}</div>`
+    : (!canLog ? `<div class="cd" style="margin-top:6px; color:var(--warn);">${t('helper_outdated')}</div>` : '');
   const noHelper = !helperAvailable
     ? `<div class="cd" style="margin-top:6px; color:var(--warn);">${t('start_update_needs_helper')}</div>`
     : (!canUpdate ? `<div class="cd" style="margin-top:6px; color:var(--warn);">${t('helper_outdated')}</div>` : '');
@@ -2478,9 +2559,185 @@ function renderStart(){
     <h2>${t('start_h2')}</h2>
     ${modeChoice('new', 'start_new_title', 'start_new_desc', false)}
     ${modeChoice('update', 'start_update_title', 'start_update_desc', !canUpdate, noHelper)}
+    ${modeChoice('log', 'start_log_title', 'start_log_desc', !canLog, noHelperLog)}
   </div>`;
   if(state.mode === 'update' && canUpdate) html += renderUpdatePanel();
+  if(state.mode === 'log' && canLog) html += renderLogPanel();
   return html;
+}
+
+// ---------- Startdialog: Log aufzeichnen (nur mit Helfer) ----------
+// Der Helfer stoppt das gewaehlte Script, oeffnet den Debug-Log-Stream des
+// Shelly, startet das Script wieder und zeichnet LOG_SECONDS lang auf.
+// Standard: nur die Ausgaben des gewaehlten Scripts, optional ungefiltert
+// (dann auch System-Fehlermeldungen zum Script-Start).
+// Die Aufzeichnung laeuft im Helfer als Hintergrund-Job, der Browser fragt
+// den Stand alle 2 s ab (bis zu 10 Minuten sind zu lang fuer einen Aufruf).
+const LOG_DURATIONS = [140, 600];
+let logTimer = null;
+
+function renderLogPanel(){
+  const L = state.log;
+  const quick = [['ctr_kvs', 'start_ctr_label'], ['apidash_watch', 'start_dash_label']]
+    .filter(function(r){ return isValidIp(state.runtime[r[0]]); })
+    .map(function(r){
+      return `<button class="btn" onclick="logSetIp('${escapeHtml(state.runtime[r[0]])}')" ${L.busy ? 'disabled' : ''}>${t(r[1])} ${escapeHtml(state.runtime[r[0]])}</button>`;
+    }).join('');
+  let html = `<div class="panel"><h2>${t('log_h2')}</h2>
+    <p class="hint">${t('log_hint')}</p>
+    <label class="first">${t('log_ip_label')}</label>
+    <div class="copy-row" style="justify-content:flex-start; flex-wrap:wrap;">
+      <input type="text" id="logIp" value="${escapeHtml(L.ip)}" placeholder="192.168.178." style="max-width:200px;"
+        oninput="state.log.ip=this.value.trim()" ${L.busy ? 'disabled' : ''}>
+      ${quick}
+      <button class="btn" onclick="logListScripts()" ${L.busy || L.listing ? 'disabled' : ''}>${t('log_list_btn')}</button>
+      <span class="hint" style="margin:0;">${L.listing ? t('log_listing') : ''}</span>
+    </div>`;
+  if(L.scripts){
+    if(!L.scripts.length){
+      html += `<p class="hint">${t('log_no_scripts')}</p>`;
+    } else {
+      html += `<label>${t('log_script_label')}</label>` + L.scripts.map(function(sc){
+        const on = L.sid === sc.id;
+        const kind = sc.type ? ((KEY_NAMES[Object.keys(KEY_TYPES).find(function(k){ return KEY_TYPES[k] === sc.type; })] || sc.type)
+          + (sc.version ? ' ' + sc.version : '')) : '';
+        return `<div class="choice ${on ? 'selected' : ''}" ${L.busy ? '' : `onclick="state.log.sid=${sc.id}; state.log.result=null; render();"`}>
+          <input type="radio" name="logScript" ${on ? 'checked' : ''} ${L.busy ? 'disabled' : ''}>
+          <div><div class="ct">#${sc.id} ${escapeHtml(sc.name || '—')}</div>
+          <div class="cd">${escapeHtml(kind)}${kind ? ' · ' : ''}${t(sc.running ? 'upload_script_running' : 'upload_script_stopped')}</div></div>
+        </div>`;
+      }).join('');
+      html += `<label style="display:flex; gap:8px; align-items:flex-start; margin-top:12px; font-weight:normal;">
+          <input type="checkbox" ${L.onlyScript ? 'checked' : ''} ${L.busy ? 'disabled' : ''} onchange="state.log.onlyScript=this.checked">
+          <span>${t('log_filter_label')}<span class="hint" style="display:block; margin:2px 0 0;">${t('log_filter_hint')}</span></span>
+        </label>
+        <label>${t('log_duration_label')}</label>
+        <div class="copy-row" style="justify-content:flex-start; flex-wrap:wrap;">` +
+        LOG_DURATIONS.map(function(sec){
+          const on = L.seconds === sec;
+          return `<button class="btn ${on ? 'btn-primary' : ''}" ${L.busy ? 'disabled' : ''}
+            onclick="state.log.seconds=${sec}; render();">${t('log_duration_' + sec)}</button>`;
+        }).join('') + `</div>
+        <p class="note" style="margin-top:12px;">${t('log_warn', {s: L.seconds})}</p>
+        <div class="copy-row" style="justify-content:flex-start;">
+          <button class="btn btn-primary" onclick="logStart()" ${L.sid === null || L.busy ? 'disabled' : ''}>${t('log_start_btn', {s: L.seconds})}</button>
+          <span class="hint" id="logCountdown" style="margin:0;">${L.busy ? logProgressText() : ''}</span>
+        </div>`;
+    }
+  }
+  if(L.error) html += `<p class="error">${escapeHtml(L.error)}</p>`;
+  if(L.result){
+    const r = L.result;
+    html += `<h2 style="margin-top:20px;">${t('log_done_h2')}</h2>
+      <p class="hint">${t('log_done', {n: r.lines})}</p>
+      ${r.running === false ? `<p class="error">${t('log_not_running')}</p>` : ''}
+      <div class="copy-row" style="justify-content:flex-start;">
+        <button class="btn btn-primary" onclick="logSave()">${t('log_save_btn')}</button>
+        <span class="hint" style="margin:0;">${escapeHtml(r.filename)}</span>
+      </div>
+      <label>${t('log_preview')}</label>
+      <pre style="max-height:260px; overflow:auto; font-size:.75rem; white-space:pre; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:8px;">${escapeHtml(r.log.split('\n').slice(-40).join('\n'))}</pre>`;
+  }
+  return html + '</div>';
+}
+
+function logSetIp(ip){
+  state.log.ip = ip;
+  logListScripts();
+}
+
+function logRemaining(){
+  return Math.max(0, Math.ceil((state.log.endsAt - Date.now()) / 1000));
+}
+
+function logProgressText(){
+  return t('log_running', {s: logRemaining(), n: state.log.lines});
+}
+
+function logSleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+async function logListScripts(){
+  const L = state.log;
+  L.error = ''; L.result = null;
+  if(!isValidIp(L.ip)){ L.error = t('log_err_ip'); render(); return; }
+  L.listing = true; L.scripts = null; L.sid = null; render();
+  try{
+    const data = await helperGet('/api/inspect?ip=' + encodeURIComponent(L.ip));
+    L.scripts = data.scripts || [];
+    if(L.scripts.length === 1) L.sid = L.scripts[0].id;
+  } catch(e){
+    L.error = e.message;
+  }
+  L.listing = false;
+  render();
+}
+
+function logFilename(sc){
+  const d = new Date(), p = function(n){ return String(n).padStart(2, '0'); };
+  const stamp = String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
+  const base = String((sc && sc.name) || ('script' + (sc ? sc.id : ''))).replace(/[^0-9A-Za-z._-]/g, '_');
+  const ver = sc && sc.version ? '_v' + String(sc.version).replace(/[^0-9A-Za-z._-]/g, '_') : '';
+  return base + ver + '_' + stamp + '.log';
+}
+
+async function logStart(){
+  const L = state.log;
+  if(L.busy || L.sid === null) return;
+  const sc = (L.scripts || []).find(function(x){ return x.id === L.sid; });
+  L.error = ''; L.result = null; L.busy = true; L.lines = 0;
+  L.endsAt = Date.now() + (L.seconds + 3) * 1000;
+  const filename = logFilename(sc);
+  render();
+  logTimer = setInterval(function(){
+    const el = document.getElementById('logCountdown');
+    if(el) el.textContent = logProgressText();
+  }, 1000);
+  try{
+    const res = await fetch(HELPER_URL + '/api/logcapture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: L.ip, id: L.sid, seconds: L.seconds, only_script: !!L.onlyScript })
+    });
+    const started = await res.json();
+    if(!started.ok) throw new Error(started.error || ('HTTP ' + res.status));
+    let data = null, misses = 0;
+    while(true){
+      await logSleep(2000);
+      try{
+        data = await helperGet('/api/logcapture?job=' + encodeURIComponent(started.job));
+        misses = 0;
+      } catch(e){
+        // Fehler des Jobs selbst -> abbrechen; kurze Verbindungsaussetzer tolerieren
+        if(!/fetch|network|Failed/i.test(e.message) || ++misses > 5) throw e;
+        continue;
+      }
+      L.lines = data.lines || 0;
+      if(typeof data.remaining === 'number') L.endsAt = Date.now() + data.remaining * 1000;
+      if(data.state === 'done') break;
+    }
+    L.result = { log: data.log, lines: data.lines, running: data.running, filename: filename };
+    logSave();
+  } catch(e){
+    L.error = t('log_err', {msg: e.message});
+  } finally {
+    clearInterval(logTimer); logTimer = null;
+    L.busy = false;
+    render();
+  }
+}
+
+function logSave(){
+  const r = state.log.result;
+  if(!r) return;
+  const blob = new Blob([r.log], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = r.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 function renderUpdatePanel(){
@@ -2909,7 +3166,7 @@ function renderNav(steps){
   ${ state.navError ? `<div class="error" style="text-align:right; font-size:.85rem; margin-top:14px;">${t(state.navError)}</div>` : '' }
   <div class="nav">
     <button class="btn" onclick="back()" ${stepIndex===0?'style="visibility:hidden;"':''}>${t('navBack')}</button>
-    ${ isLast || (steps[stepIndex] === 'start' && state.mode === 'update') ? "" : `<button class="btn btn-primary" onclick="next()">${t('navNext')}</button>` }
+    ${ isLast || (steps[stepIndex] === 'start' && (state.mode === 'update' || state.mode === 'log')) ? "" : `<button class="btn btn-primary" onclick="next()">${t('navNext')}</button>` }
   </div>`;
 }
 

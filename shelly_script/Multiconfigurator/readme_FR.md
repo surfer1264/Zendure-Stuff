@@ -34,6 +34,7 @@ Quelques clics pour piloter localement ta flotte Zendure – configurer, mettre 
    * [Charger un script manuellement](#charger-un-script-manuellement)
    * [Vérifier la mémoire d'un Shelly](#vérifier-la-mémoire-dun-shelly)
    * [Sauvegarder la configuration](#sauvegarder-la-configuration)
+   * [Enregistrer le journal](#enregistrer-le-journal)
    * [Réinitialiser les IP mémorisées](#réinitialiser-les-ip-mémorisées)
    * [Vérifier l'intégrité du téléchargement](#vérifier-lintégrité-du-téléchargement)
 
@@ -68,7 +69,7 @@ Le configurateur est disponible en **allemand, anglais et français**.
 
 ## 2. Où trouver le configurateur
 
-Il existe deux possibilités. L'**assistant local** (fichier EXE) est recommandé, car le chargement direct, la mise à jour et la vérification de la mémoire ne fonctionnent qu'avec lui.
+Il existe deux possibilités. L'**assistant local** (fichier EXE) est recommandé, car le chargement direct, la mise à jour, la vérification de la mémoire et l'enregistrement du journal ne fonctionnent qu'avec lui.
 
 ### Recommandé : l'assistant local (installateur EXE)
 
@@ -301,6 +302,27 @@ Pour information : le script zenDash-API + Watchdog occupe, avec deux batteries,
 ### Sauvegarder la configuration
 
 Après chaque modification, clique à l'étape Résultat sur « 💾 Enregistrer seulement le bloc CONFIG » ou « 🔗 Enregistrer le script complet depuis GitHub » et conserve le fichier. Le script complet porte la version dans son nom de fichier – pratique si tu veux garder plusieurs versions. Tu peux [réimporter](#importer-une-configuration-existante) les deux fichiers plus tard avec « 📂 Charger un fichier… ». Ainsi, en cas de panne ou de remplacement d'un Shelly, tu es de nouveau opérationnel en quelques minutes.
+
+### Enregistrer le journal
+
+Pour le diagnostic – par exemple quand un script ne démarre pas ou se comporte bizarrement – le configurateur enregistre les messages d'un Shelly. Cela ne fonctionne qu'avec l'[assistant local](#recommandé--lassistant-local-installateur-exe).
+
+1. Dans la boîte de dialogue de démarrage, choisis **« Enregistrer le journal »**.
+2. Saisis l'IP du Shelly (ou clique sur Shelly Controller / Shelly Dashboard) puis sur **« Afficher les scripts »**.
+3. Sélectionne le script souhaité.
+4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
+5. Clique sur **« Démarrer l'enregistrement »**.
+
+L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
+
+* **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
+* **Sans filtre :** décoche la case – tous les messages du Shelly sont alors ajoutés, messages système compris. C'est nécessaire si le script ne démarre pas, car le Shelly signale les erreurs de démarrage ou le manque de mémoire sous forme de messages système. Les lignes du script sont alors marquées `[Script 8]`.
+
+À propos de la taille : pour le Controller, 600 secondes représentent environ 150 cycles de régulation. Filtré, le journal fait environ 100 à 300 Ko selon le nombre de batteries, sans filtre davantage – aucun problème pour un éditeur de texte.
+
+⚠️ Pour le Controller, la régulation s'interrompt quelques secondes pendant le redémarrage. Laisse la page et l'assistant local ouverts jusqu'à la fin. Si le journal de débogage est désactivé sur le Shelly, l'assistant local ne l'active que pour l'enregistrement et le désactive ensuite.
+
+Pour des enregistrements sur plusieurs heures, utilise le [WebSocket Log Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (en allemand).
 
 ### Réinitialiser les IP mémorisées
 
