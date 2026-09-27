@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-27T11:17:29Z",
+  "generated": "2026-09-27T16:42:07Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.0.8",
+      "version": "5.1.0",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/dc8597f521718b00b9645f1ba4025cf0eb73c2f9/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 45008,
-      "codeHash": "sha256:58fb945baae900d9945f8f8f8c5a7bdd9631d1ff363825708881ca9f3954f863",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/69d61cafd4959bd0e6f60c0a477fe3e05c0c2318/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 45857,
+      "codeHash": "sha256:461920469e4ca18adf4f58f692c95679922f7155d5444328ad57878d7763252c",
       "configKeys": [
         "apiKey",
         "charge",
@@ -61,15 +61,23 @@
         "typ",
         "webhookUrl"
       ],
-      "changes": [
-        "only für Verhalten bei `standbySmartModeZero: false` (aktueller Stand) unverändert zu vorher",
-        "aber wenn `standbySmartModeZero: true`",
-        "wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird"
-      ],
+      "changes": [],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
-      "history": []
+      "history": [
+        {
+          "version": "5.0.8",
+          "schema": 1,
+          "codeHash": "sha256:58fb945baae900d9945f8f8f8c5a7bdd9631d1ff363825708881ca9f3954f863",
+          "changes": [
+            "only für Verhalten bei `standbySmartModeZero: false` (aktueller Stand) unverändert zu vorher",
+            "aber wenn `standbySmartModeZero: true`",
+            "wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird"
+          ],
+          "notice": null
+        }
+      ]
     },
     "zdmc-zendash-watch": {
       "version": "3.3.1",
