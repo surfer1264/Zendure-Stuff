@@ -313,6 +313,8 @@ Pour le diagnostic – par exemple quand un script ne démarre pas ou se comport
 4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
 5. Clique sur **« Démarrer l'enregistrement »**.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
+
 L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
 
 * **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
