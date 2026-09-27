@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-27T19:14:23Z",
+  "generated": "2026-09-27T20:34:06Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.1.0",
+      "version": "5.1.1",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/69d61cafd4959bd0e6f60c0a477fe3e05c0c2318/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 45857,
-      "codeHash": "sha256:461920469e4ca18adf4f58f692c95679922f7155d5444328ad57878d7763252c",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/86c1c7469ebf945e784d813cfb8e890c1c8e9a3a/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 45875,
+      "codeHash": "sha256:f1438e831c010f9cd0b2013f480ac3bfcdc94dd6229711c3004b03d1acedc364",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,23 @@
         "webhookUrl"
       ],
       "changes": [
-        "geparstes Report-Objekt in readDevice vor callback() freigeben",
-        "ungenutzte Funktionen je nach CONFIG nach dem Start freigeben",
-        "Heap-Ausgabe (memLog) im Debug-Modus"
+        "Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.1.0",
+          "schema": 1,
+          "codeHash": "sha256:461920469e4ca18adf4f58f692c95679922f7155d5444328ad57878d7763252c",
+          "changes": [
+            "geparstes Report-Objekt in readDevice vor callback() freigeben",
+            "ungenutzte Funktionen je nach CONFIG nach dem Start freigeben",
+            "Heap-Ausgabe (memLog) im Debug-Modus"
+          ],
+          "notice": null
+        },
         {
           "version": "5.0.8",
           "schema": 1,
