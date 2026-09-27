@@ -1,8 +1,16 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.4.1
+
+- config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch
+- Dashboard: nur Versionsnummer angehoben (Script und Dashboard muessen gleich sein)
+
 ## Changelog 3.4.0
 
-- Speicheroptimierung
+- Speicheroptimierung: Einmal-Code der Startphase nach dem Start freigegeben; je nach CONFIG ungenutzte Helfer freigegeben (`ENCODE_MAP`/`simpleEncode` bei WEBHOOK, `kvsItemsToMap` bei entfernter KVS, `readFieldPath` ohne http_json) - Grundlast ca. 900 B niedriger
+- Dashboard fragt config_api nur noch alle 32 s ab (vorher 12 s) und beim Laden der Seite nur einmal (vorher doppelt)
+- Heap-Ausgabe (memLog) an den wichtigsten Stellen, nur bei debug
+- config_api-Antwort bis zu 30 s gecacht (in 3.4.1 wieder entfernt)
 
 ## Changelog 3.3.1
 

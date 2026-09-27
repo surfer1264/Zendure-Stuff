@@ -1,8 +1,11 @@
 # Changelog Controller
 
-## Changelog 5.1
+## Changelog 5.1.0
 
-- Speicheroptimierung - geparstes Report-Objekt in readDevice vor callback() freigeben, ungenutzte Funktionen je nach CONFIG nach dem Start freigeben, 
+Speicheroptimierung (mem_peak im Regelbetrieb 19 880 -> 19 026 Bytes)
+
+- geparstes Report-Objekt in readDevice vor callback() freigeben
+- ungenutzte Funktionen je nach CONFIG nach dem Start freigeben
 - Heap-Ausgabe (memLog) im Debug-Modus
 
 ## Changelog 5.0.8

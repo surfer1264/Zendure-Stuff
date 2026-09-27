@@ -44,19 +44,22 @@
 let SCRIPT_TYPE = "zdmc-zendash-watch";
 // ---------------------------------------------------------------------
 // CHANGELOG
+// 3.4.1  config_api-Cache wieder entfernt: kostete ~770 B Heap bei offenem
+//        Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie.
+//        Jede config_api-Abfrage liest die KVS frisch. Dashboard 3.4.1
+//        unveraendert bis auf die Versionsnummer.
 // 3.4.0  Speicheroptimierung:
 //        - Einmal-Code der Startphase nach dem Start freigegeben
 //        - je nach CONFIG ungenutzte Helfer freigegeben (ENCODE_MAP/
 //          simpleEncode bei WEBHOOK, kvsItemsToMap bei entfernter KVS,
 //          readFieldPath ohne http_json)
-//        - Dashboard 3.4.0 fragt config_api nur noch alle 32 s ab und
-//          beim Laden nur einmal (vorher doppelt); jede Abfrage liest die
-//          KVS frisch (kein Cache im Script - kostete ~770 B Heap bei
-//          offenem Dashboard und traf bei einem Dashboard nie)
+//        - config_api-Antwort bis zu 30 s gecacht (in 3.4.1 entfernt)
+//        - Dashboard fragt config_api nur noch alle 32 s ab und beim
+//          Laden nur einmal (vorher doppelt)
 //        - Heap-Ausgabe (memLog) an den wichtigsten Stellen, nur bei debug
 // 3.3.1  (Stand vor diesem Changelog)
 // ---------------------------------------------------------------------
-let VERSION = "3.4.0";
+let VERSION = "3.4.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
