@@ -313,6 +313,8 @@ For troubleshooting – for example when a script doesn't start or behaves oddly
 4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
 5. Click **"Start recording"**.
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
+
 The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
 
 * **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
