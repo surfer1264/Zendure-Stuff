@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-28T14:20:15Z",
+  "generated": "2026-09-28T19:41:13Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -144,7 +144,11 @@
         "watchdog",
         "webhookUrl"
       ],
-      "changes": [],
+      "changes": [
+        "status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
+        "Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)",
+        "Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier"
+      ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
