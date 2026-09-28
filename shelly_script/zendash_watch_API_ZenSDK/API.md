@@ -48,7 +48,11 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
       "gridReverse": 1,
       "pv": 240,
       "minVol": 325,
-      "online": true
+      "online": true,
+      "home": 351,
+      "gridIn": 0,
+      "packIn": 111,
+      "packOut": 0
     }
   ]
 }
@@ -67,6 +71,15 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
 | `pv` | PV-Gesamteingang in W (`solarInputPower`). **`null`** = Gerät hat keinen PV-Eingang, z. B. reine AC-Lader. Nicht mit `0` verwechseln |
 | `minVol` | Niedrigste Zellspannung über alle Packs, Rohwert. Faktor 0,01 V, also `325` → 3,25 V. `null`, wenn kein `packData` geliefert wird |
 | `online` | Hub erreichbar. Bei `false` sind alle Messwerte `null` bzw. `0` |
+| `home` | Abgabe ans Haus in W (`outputHomePower`). Seit 3.5.0 |
+| `gridIn` | Aufnahme aus dem Netz über den AC-Eingang in W (`gridInputPower`). Seit 3.5.0 |
+| `packIn` | Leistung aus dem Akku, also Entladen, in W (`packInputPower`). Seit 3.5.0 |
+| `packOut` | Leistung in den Akku, also Laden, in W (`outputPackPower`). Seit 3.5.0 |
+
+`home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
+ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
+einem Hub, der offline ist. `power` bleibt unverändert: Es ist bei `acMode` 2
+`home`, bei `acMode` 1 `gridIn` mit negativem Vorzeichen, sonst `0`.
 
 `socLimit` ist auch die Grundlage für den automatischen Stopp des manuellen Ladens
 (siehe [„Manuelles Laden“](#manuelles-laden) weiter unten): Meldet ein Gerät im
@@ -310,6 +323,8 @@ Ergänzend zur [Bedienung](dashboard.md#bedienung) – wie die Seite mit der Sch
 
 **Abfragetakt.** Die Seite holt `status_api` fest alle 4 s (`POLL_SEC`) und `config_api` beim Laden einmal, danach alle 32 s sowie sofort nach einer eigenen Eingabe. Der 4-s-Takt muss unter `IDLE_MS` (15 s) im Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen. Das Script selbst fragt Netzzähler und Hubs nur alle `pollIntervalSec` (Standard 8 s) ab – die Anzeige ist also bis zu 8 s alt.
 
+**Verdeckter Tab.** Ist der Tab verdeckt oder das Fenster minimiert, pausiert die Seite alle Abfragen (Page Visibility API). Das Script schläft dann nach `IDLE_MS` ein, statt für eine Seite zu pollen, die niemand ansieht. Wird die Seite wieder sichtbar, fragt sie sofort `status_api` und `config_api` ab. Die erste Anzeige danach kann noch einen Takt lang den alten Stand zeigen, bis das Script aufgewacht ist. Ein Fenster, das nur hinter anderen liegt, gilt je nach Browser weiter als sichtbar. Seit 3.5.0.
+
 **Manuelles Laden.** Start und Beenden sind jeweils **ein** kombinierter `kvs_set_api`-Aufruf (siehe [Manuelles Laden](#manuelles-laden)). Die Reihenfolge der Schreibvorgänge und eine Pause von 500 ms dazwischen (`KVS_STEP_PAUSE_MS`) übernimmt das Script. Die Seite setzt während des Vorgangs ihre eigene Abfrage aus und wartet danach noch 1,5 s (`SETTLE_MS`), damit der Controller seinen Zyklus abschließen kann. Ob manuell geladen wird, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`); den Vorzustand hält das Script, deshalb übersteht ein Reload der Seite einen laufenden Ladevorgang.
 
 **Sperren.** Nach einer Eingabe ist das Bedienelement 4 s gesperrt (`LOCK_MS`), damit der frisch gesetzte Wert nicht vom nächsten `config_api`-Abgleich überschrieben wird. Schlägt das Schreiben fehl, wird sofort wieder freigegeben. Die ganze Seite sperrt sich nach 60 s ohne Eingabe (`RELOCK_MS`); der Zustand wird nicht gespeichert.
@@ -319,3 +334,12 @@ Ergänzend zur [Bedienung](dashboard.md#bedienung) – wie die Seite mit der Sch
 **Verlauf.** Die Kurven werden in der Seite geführt (`MAX_POINTS`, 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im Script würde einen Reload überleben, sprengte aber den Speicher des Shelly.
 
 **Anzeigewerte.** Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs (Faktor 0,01 V); Packs, die 0 melden, werden übersprungen. Fehlt `solarInputPower` (z. B. bei reinen AC-Ladern), entfällt die PV-Angabe, statt „0 W“ zu zeigen. Geräteliste, Sollwert und Reglerstände kommen ausschließlich aus `config_api` – in der HTML-Datei steht keine Geräte-Konfiguration.
+
+---
+
+## ThingSpeak-Upload
+
+`zendure_proxy.py` kann die Messwerte aus `status_api` jede Minute an ThingSpeak
+senden. Solange ein Dashboard offen ist, liest er dabei nur mit; ohne Dashboard
+fragt er selbst ab. Ist der Upload aus, stellt er keine einzige Anfrage an die API.
+Einrichtung und Verhalten: [ThingSpeak-Upload](thingspeak.md).

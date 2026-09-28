@@ -63,6 +63,13 @@ import urllib.request
 import webbrowser
 import re
 
+# ThingSpeak-Upload ist optional: fehlt ts_bridge.py, laeuft der Proxy
+# ganz normal weiter, nur ohne /thingspeak und ohne Mitlesen.
+try:
+    import ts_bridge
+except ImportError:
+    ts_bridge = None
+
 # ---------------------------------------------------------------
 # Konfiguration - hier anpassen
 # ---------------------------------------------------------------
@@ -123,6 +130,9 @@ ICON_PATHS = (
 #   app_dir()       = Ordner der exe bzw. des Scripts selbst. Hier landet
 #                      die Konfiguration - muss exe-Neustarts ueberleben,
 #                      sys._MEIPASS tut das nicht.
+#   data_dir()      = app_dir(), ausser ZENDURE_DATA_DIR ist gesetzt
+#                      (Home-Assistant-App: /data). Ablage fuer Shelly-
+#                      Config und ThingSpeak-Keys.
 # ---------------------------------------------------------------
 def html_candidates():
     """Alle Orte, an denen die Dashboard-HTML gesucht wird - in dieser
@@ -161,8 +171,20 @@ def app_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 
+def data_dir():
+    """Ablage fuer die Konfigurationsdateien (Shelly-IP, ThingSpeak-Keys).
+    Normal der Ordner neben exe bzw. Script. Die Home-Assistant-App setzt
+    ZENDURE_DATA_DIR=/data, weil nur /data Updates der App uebersteht.
+    Kein automatisches Erkennen von /data: auf einem NAS oder Raspberry Pi
+    kann es zufaellig einen solchen Ordner geben."""
+    d = os.environ.get("ZENDURE_DATA_DIR")
+    if d and os.path.isdir(d):
+        return d
+    return app_dir()
+
+
 def config_path():
-    return os.path.join(app_dir(), CONFIG_FILENAME)
+    return os.path.join(data_dir(), CONFIG_FILENAME)
 
 
 # ---------------------------------------------------------------
@@ -324,6 +346,14 @@ document.getElementById('f').addEventListener('submit', async function(e){{
 
 class Handler(http.server.BaseHTTPRequestHandler):
 
+    def handle(self):
+        # Browser hat die Verbindung waehrend der Antwort geschlossen (Tab zu,
+        # Reload, Seitenwechsel). Harmlos - kein Traceback ins Log.
+        try:
+            super().handle()
+        except ConnectionError:
+            pass
+
     def log_message(self, fmt, *args):
         if QUIET or SILENT:
             return
@@ -345,6 +375,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_setup()
             return
 
+        if path == "/thingspeak":
+            if ts_bridge is None:
+                self.send_error(404, "ThingSpeak nicht verfuegbar: ts_bridge.py fehlt neben dem Proxy")
+                return
+            self._html(ts_bridge.page_html())
+            return
+
         if path == "/" or path == "":
             if is_configured():
                 self.serve_html()
@@ -359,6 +396,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_error(404, "Nicht gefunden: " + path)
 
     def do_POST(self):
+        if self.path == "/thingspeak":
+            self.post_thingspeak()
+            return
         if self.path != "/setup":
             self.send_error(404, "Nicht gefunden: " + self.path)
             return
@@ -385,6 +425,33 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(200, {"ok": True})
         except Exception as e:
             self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
+
+    def post_thingspeak(self):
+        if ts_bridge is None:
+            self._json(404, {"ok": False, "error": "ts_bridge.py fehlt neben dem Proxy"})
+            return
+        # Nur echtes JSON annehmen: erzwingt beim Browser einen CORS-Preflight,
+        # den dieser Proxy nicht beantwortet - fremde Seiten koennen so keine
+        # Keys unterschieben.
+        if not self.headers.get("Content-Type", "").startswith("application/json"):
+            self._json(415, {"ok": False, "error": "JSON erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            ok, error = ts_bridge.handle_post(data)
+            self._json(200, {"ok": ok, "error": error})
+        except Exception as e:
+            self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
+
+    def _html(self, text):
+        body = text.encode("utf-8")
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store, must-revalidate")
+        self.end_headers()
+        self.wfile.write(body)
 
     def _json(self, status, obj):
         body = json.dumps(obj).encode("utf-8")
@@ -451,6 +518,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 body = resp.read()
                 status = resp.status
                 content_type = resp.headers.get("Content-Type", "application/json")
+            if ts_bridge is not None and endpoint == "status_api" and status == 200:
+                ts_bridge.feed(body)   # mitlesen; tut nichts, wenn ThingSpeak inaktiv
         except urllib.error.HTTPError as e:
             # Shelly hat selbst einen Fehlerstatus geliefert (z.B. 400/500) -
             # 1:1 durchreichen, damit die Seite die echte Fehlermeldung sieht.
@@ -467,6 +536,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+
+def fetch_status_for_bridge():
+    """Wird von ts_bridge nur aufgerufen, wenn ThingSpeak aktiv ist."""
+    if not is_configured():
+        raise RuntimeError("Proxy noch nicht eingerichtet")
+    with urllib.request.urlopen(shelly_base() + "status_api", timeout=TIMEOUT) as resp:
+        return resp.read()
 
 
 def get_lan_ip():
@@ -547,7 +624,15 @@ def main():
         say("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
     if QUIET:
         say("  Protokoll: aus (-q)")
+    if ts_bridge is not None:
+        say("  ThingSpeak: http://localhost:{}/thingspeak".format(PORT))
+    else:
+        say("  ThingSpeak: nicht verfuegbar (ts_bridge.py fehlt)")
     say("(Strg+C zum Beenden)\n")
+
+    if ts_bridge is not None:
+        ts_bridge.LOG = not (QUIET or SILENT)
+        ts_bridge.start(data_dir(), fetch_status_for_bridge)
 
     try:
         # Mehrere gleichzeitige Anfragen: waehrend der Proxy auf den Shelly

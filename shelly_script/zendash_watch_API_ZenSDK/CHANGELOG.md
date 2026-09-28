@@ -1,5 +1,15 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.0
+
+- status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage
+- Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)
+- Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier
+- Dashboard: pausiert alle Abfragen, solange der Tab verdeckt oder das Fenster minimiert ist, und fragt beim Zurueckkehren sofort `status_api` und `config_api` ab. Ein vergessener Hintergrund-Tab haelt die Hintergrundabfrage des Scripts damit nicht mehr dauerhaft wach
+- Dashboard: Versionsnummer 3.5.0
+- Proxy: optionaler ThingSpeak-Upload ueber `ts_bridge.py` mit Einrichtungsseite `/thingspeak`, siehe [ThingSpeak-Upload](thingspeak.md). Fehlt `ts_bridge.py`, laeuft der Proxy unveraendert ohne ThingSpeak
+- Proxy: vom Browser abgebrochene Verbindungen (Tab geschlossen, Reload) erzeugen keinen Traceback mehr im Log
+
 ## Changelog 3.4.1
 
 - config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch

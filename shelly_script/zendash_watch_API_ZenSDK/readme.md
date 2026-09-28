@@ -243,6 +243,12 @@ Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Du öffn
 
 Die Schnittstelle für eigene Anbindungen (z. B. Home Assistant, Node-RED) ist in der [API-Beschreibung](API.md) dokumentiert.
 
+### Verlauf in ThingSpeak
+
+Der Proxy kann die Messwerte deiner Speicher zusätzlich jede Minute an ThingSpeak senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen. Der Upload ist optional und braucht nur eine zusätzliche Datei neben dem Proxy. Solange ein Dashboard offen ist, liest der Proxy dessen Abfragen nur mit. Ist der Upload ausgeschaltet, stellt er keine einzige Anfrage an das Script.
+
+👉 **[ThingSpeak-Upload einrichten](thingspeak.md)**
+
 ---
 
 ## Nachrichten

@@ -510,7 +510,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.4.1";
+  const VERSION = "3.5.0";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -1206,6 +1206,7 @@
   // statt bis zum naechsten regulaeren Abgleich zu warten.
   let forceConfigNext = false;
   let pollTimer = null;
+  let pollWanted = false;   // Abfrage gewuenscht (unabhaengig von Sichtbarkeit)
 
   /* ---------------- Chart ---------------- */
   // Zeitreihe der Hub-Summenleistung: [{ t: Zeitstempel(ms), p: Watt }, ...].
@@ -1747,16 +1748,42 @@
     render();
   }
 
-  function stopPolling(){
+  function haltTimer(){
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = null;
   }
 
-  function startPolling(){
-    if (pollTimer) clearInterval(pollTimer);
+  // Timer nur bei sichtbarer Seite. Verdeckt startet er erst mit dem
+  // naechsten visibilitychange.
+  function runTimer(){
+    haltTimer();
+    if (document.hidden) return;
     pollTimer = setInterval(pollAll, POLL_SEC * 1000);
     pollAll();
   }
+
+  function stopPolling(){
+    pollWanted = false;
+    haltTimer();
+  }
+
+  function startPolling(){
+    pollWanted = true;
+    runTimer();
+  }
+
+  // Tab verdeckt oder Fenster minimiert: Abfragen pausieren. Das API-Script
+  // schlaeft dann nach IDLE_MS (15 s) ein, statt fuer eine Seite zu pollen,
+  // die niemand ansieht. Wieder sichtbar: sofort weiter, config_api inklusive.
+  // Laeuft gerade ein manueller Lade-Vorgang (pollWanted = false), startet
+  // der Vorgang die Abfrage danach selbst.
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) { haltTimer(); return; }
+    if (pollWanted && !pollTimer) {
+      forceConfigNext = true;
+      runTimer();
+    }
+  });
 
   // Rohstatus des Hubs, wie ihn auch das Regel-Script auswertet:
   //   acMode      1 = lädt über den AC-Eingang, 2 = speist ins Haus, sonst Standby
