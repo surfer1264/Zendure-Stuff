@@ -116,9 +116,10 @@ Starte den Helfer. Im Startdialog wählst du **„Neu konfigurieren“**.
 4. **Netzquelle** – woher die Netzleistung kommt: Controller läuft direkt auf einem Shelly Pro 3EM, ein anderer Pro 3EM im Netzwerk oder ein Messgerät mit JSON-Schnittstelle (z. B. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM ohne Pro)
 5. **Laden vom Netz** – welche Geräte Überschuss aus anderen Anlagen aufnehmen dürfen
 6. **Benachrichtigungen** – Webhook, Signal oder WhatsApp; gilt für Controller und Watchdog gemeinsam
-7. **Bei vollem Akku / KVS** – wie mit Netzexport umgegangen wird, wenn die Akkus voll sind, und ob du Einstellungen später live (z. B. aus dem Dashboard oder Home Assistant) ändern möchtest
-8. **Regelparameter** – Sollwert, Hysterese und die Schwellen fürs Verteilen der Leistung, bereits sinnvoll vorausgefüllt
-9. **Ergebnis** – Zusammenfassung deiner Angaben mit den Versionsnummern und die fertigen Scripte
+7. **Watchdog-Schwellen** – nur mit Watchdog: ab wann „Akku voll“, zu niedrige Zellspannung und zu hohe Temperatur gemeldet werden und ab welchem Wert die Meldung wieder scharf ist. Vorbelegt mit deiner eingelesenen Config bzw. den Standardwerten (99/90 %, 2,9/3,1 V, 45/30 °C).
+8. **Bei vollem Akku / KVS** – wie mit Netzexport umgegangen wird, wenn die Akkus voll sind, und ob du Einstellungen später live (z. B. aus dem Dashboard oder Home Assistant) ändern möchtest
+9. **Regelparameter** – Sollwert, Hysterese und die Schwellen fürs Verteilen der Leistung, bereits sinnvoll vorausgefüllt
+10. **Ergebnis** – Zusammenfassung deiner Angaben mit den Versionsnummern und die fertigen Scripte
 
 Schritte, die für deine Auswahl nicht nötig sind, werden übersprungen.
 
@@ -151,6 +152,10 @@ Der Dateiname enthält die Script-Version, z. B. `zerooutput_multi_kvs_mini_v5.0
 Nur die Konfiguration – für alle, die ihr Script selbst angepasst haben oder lieber von Hand arbeiten. Damit ersetzt du den Block `let CONFIG = { ... };` in deinem Script. Außerdem ist das deine **Sicherungskopie**: Speichere sie ab, dann kannst du sie jederzeit wieder einlesen.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/1ccd9b90-9d83-42b8-892b-932ad12df4db" />
+
+**🐞 Debug-Ausgaben**
+
+Über jedem CONFIG-Block kannst du per Häkchen die ausführlichen Debug-Ausgaben des Scripts ein- oder ausschalten – vor dem Hochladen oder Speichern. Das geht auch über [Update](#4-update): Update wählen, Häkchen setzen, direkt hochladen. Debug ist nur für die Fehlersuche gedacht (z. B. zusammen mit [Log aufzeichnen](#log-aufzeichnen)) und sollte danach wieder aus.
 
 **🔍 Speicher prüfen** *(nur mit Helfer)*
 
@@ -311,8 +316,6 @@ Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdi
 4. Die Dauer wählen: **140 Sekunden** oder **600 Sekunden** (10 Minuten).
 5. **„Aufzeichnung starten“** klicken.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
-
 Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
 
 * **Gefiltert (Standard):** Häkchen bei „Nur Ausgaben des gewählten Scripts aufzeichnen“ – im Log steht nur, was das Script selbst ausgibt.
@@ -323,6 +326,8 @@ Zur Größe: 600 Sekunden sind beim Controller rund 150 Regelzyklen. Gefiltert w
 **Maskierung:** Webhook-IDs, Tokens, API-Keys, Passwörter und Telefonnummern werden beim Aufzeichnen durch `***` ersetzt, von Seriennummern bleiben nur die letzten 4 Zeichen. IP-Adressen bleiben stehen, weil sie für die Fehlersuche gebraucht werden. So kannst du das Log leichter in einem Issue oder Forum teilen – schau es vorher trotzdem kurz durch.
 
 ⚠️ Beim Controller pausiert die Regelung während des Neustarts für einige Sekunden. Seite und Helfer bis zum Ende offen lassen. Ist das Debug-Log auf dem Shelly ausgeschaltet, schaltet der Helfer es nur für die Aufzeichnung ein und danach wieder aus.
+
+Tipp: Für mehr Details vorher die [Debug-Ausgaben](#die-funktionen-im-ergebnis-schritt) des Scripts einschalten.
 
 Für Aufzeichnungen über Stunden gibt es den [Websocket-Log-Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller).
 

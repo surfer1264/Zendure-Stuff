@@ -118,9 +118,10 @@ Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« 
 4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM sans Pro)
 5. **Charge depuis le réseau** – quels appareils peuvent absorber le surplus d'autres installations
 6. **Notifications** – webhook, Signal ou WhatsApp ; commun au Controller et au Watchdog
-7. **Batterie pleine / KVS** – comment l'export réseau est géré quand les batteries sont pleines, et si tu veux modifier les réglages en direct plus tard (par ex. depuis le tableau de bord ou Home Assistant)
-8. **Paramètres de régulation** – consigne, hystérésis et seuils de répartition de la puissance, déjà préremplis avec des valeurs pertinentes
-9. **Résultat** – récapitulatif de tes saisies avec les numéros de version et les scripts terminés
+7. **Seuils du Watchdog** – uniquement avec le Watchdog : à partir de quand « batterie pleine », une tension de cellule trop basse et une température trop élevée sont signalées, et à partir de quelle valeur l'alerte est réarmée. Prérempli avec ta configuration importée ou les valeurs par défaut (99/90 %, 2,9/3,1 V, 45/30 °C).
+8. **Batterie pleine / KVS** – comment l'export réseau est géré quand les batteries sont pleines, et si tu veux modifier les réglages en direct plus tard (par ex. depuis le tableau de bord ou Home Assistant)
+9. **Paramètres de régulation** – consigne, hystérésis et seuils de répartition de la puissance, déjà préremplis avec des valeurs pertinentes
+10. **Résultat** – récapitulatif de tes saisies avec les numéros de version et les scripts terminés
 
 Les étapes inutiles pour ta sélection sont sautées.
 
@@ -153,6 +154,10 @@ Le nom du fichier contient la version du script, par ex. `zerooutput_multi_kvs_m
 Uniquement la configuration – pour ceux qui ont adapté leur script eux-mêmes ou préfèrent travailler à la main. Tu remplaces ainsi le bloc `let CONFIG = { ... };` dans ton script. C'est aussi ta **copie de sauvegarde** : enregistre-la et tu pourras la réimporter à tout moment.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/1ccd9b90-9d83-42b8-892b-932ad12df4db" />
+
+**🐞 Sorties de débogage**
+
+Au-dessus de chaque bloc CONFIG, une case à cocher active ou désactive les sorties de débogage détaillées du script – avant le chargement ou l'enregistrement. Cela fonctionne aussi via la [mise à jour](#4-mise-à-jour) : choisir « Mettre à jour », cocher la case, charger directement. Le débogage ne sert qu'au diagnostic (par ex. avec [Enregistrer le journal](#enregistrer-le-journal)) et doit être désactivé ensuite.
 
 **🔍 Vérifier la mémoire** *(uniquement avec l'assistant local)*
 
@@ -313,8 +318,6 @@ Pour le diagnostic – par exemple quand un script ne démarre pas ou se comport
 4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
 5. Clique sur **« Démarrer l'enregistrement »**.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
-
 L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
 
 * **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
@@ -325,6 +328,8 @@ L'assistant local arrête le script, le redémarre et enregistre pendant la dur�
 **Masquage :** les ID de webhook, jetons, clés d'API, mots de passe et numéros de téléphone sont remplacés par `***` lors de l'enregistrement ; seuls les 4 derniers caractères des numéros de série restent visibles. Les adresses IP sont conservées, car elles sont utiles au diagnostic. Tu peux ainsi partager plus facilement le journal dans un ticket ou un forum – parcours-le tout de même rapidement avant.
 
 ⚠️ Pour le Controller, la régulation s'interrompt quelques secondes pendant le redémarrage. Laisse la page et l'assistant local ouverts jusqu'à la fin. Si le journal de débogage est désactivé sur le Shelly, l'assistant local ne l'active que pour l'enregistrement et le désactive ensuite.
+
+Astuce : pour plus de détails, active auparavant les [sorties de débogage](#les-fonctions-de-létape-résultat) du script.
 
 Pour des enregistrements sur plusieurs heures, utilise le [WebSocket Log Grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (en allemand).
 

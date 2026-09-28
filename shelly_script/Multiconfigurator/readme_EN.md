@@ -118,9 +118,10 @@ Start the helper. In the start dialog, choose **"Configure from scratch"**.
 4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM without Pro)
 5. **Charge from grid** – which devices may absorb surplus from other systems
 6. **Notifications** – webhook, Signal or WhatsApp; shared by Controller and Watchdog
-7. **Battery full / KVS** – how grid export is handled when the batteries are full, and whether you want to change settings live later (e.g. from the dashboard or Home Assistant)
-8. **Control parameters** – setpoint, hysteresis and the thresholds for distributing power, already prefilled with sensible values
-9. **Result** – a summary of your input with the version numbers and the finished scripts
+7. **Watchdog thresholds** – Watchdog only: from when "battery full", low cell voltage and high temperature are reported, and from which value the message is armed again. Prefilled from your imported config or the defaults (99/90 %, 2.9/3.1 V, 45/30 °C).
+8. **Battery full / KVS** – how grid export is handled when the batteries are full, and whether you want to change settings live later (e.g. from the dashboard or Home Assistant)
+9. **Control parameters** – setpoint, hysteresis and the thresholds for distributing power, already prefilled with sensible values
+10. **Result** – a summary of your input with the version numbers and the finished scripts
 
 Steps that are not needed for your selection are skipped.
 
@@ -153,6 +154,10 @@ The file name contains the script version, e.g. `zerooutput_multi_kvs_mini_v5.0.
 Only the configuration – for anyone who has customised their script or prefers to work by hand. Use it to replace the `let CONFIG = { ... };` block in your script. It is also your **backup copy**: save it, and you can import it again at any time.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/1ccd9b90-9d83-42b8-892b-932ad12df4db" />
+
+**🐞 Debug output**
+
+Above each CONFIG block, a checkbox switches the script's verbose debug output on or off – before uploading or saving. This also works via [Update](#4-update): choose Update, tick the box, upload directly. Debug is meant for troubleshooting only (e.g. together with [Recording a log](#recording-a-log)) and should be switched off again afterwards.
 
 **🔍 Check memory** *(helper only)*
 
@@ -313,8 +318,6 @@ For troubleshooting – for example when a script doesn't start or behaves oddly
 4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
 5. Click **"Start recording"**.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4f98e50-705a-46f4-b717-a5c782144935" />
-
 The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
 
 * **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
@@ -325,6 +328,8 @@ About size: for the Controller, 600 seconds are around 150 control cycles. Filte
 **Masking:** webhook IDs, tokens, API keys, passwords and phone numbers are replaced by `***` during recording; only the last 4 characters of serial numbers remain. IP addresses are kept because they are needed for troubleshooting. This makes it easier to share the log in an issue or forum – still, skim it briefly first.
 
 ⚠️ For the Controller, control pauses for a few seconds during the restart. Keep the page and the helper open until the end. If the debug log is switched off on the Shelly, the helper switches it on only for the recording and off again afterwards.
+
+Tip: for more detail, switch on the script's [debug output](#functions-in-the-result-step) beforehand.
 
 For recordings over several hours, use the [WebSocket log grabber](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) (German).
 

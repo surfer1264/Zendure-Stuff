@@ -1,5 +1,11 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.2.0
+- Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung
+- Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)
+- Controller: errorThreshold-Standard auf 10
+- Update: „Jetzt updaten“ zeigt den Fortschritt – Button mit Ladeanzeige, Hinweis daneben und Schrittliste (Einstellungen je Shelly lesen, übernehmen)
+
 ## 2.1.0
 - Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert
 - Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start

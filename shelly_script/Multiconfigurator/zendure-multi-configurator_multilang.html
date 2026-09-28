@@ -48,6 +48,10 @@
     padding:24px; box-shadow:var(--shadow); margin-bottom:20px;
   }
   .panel h2{margin-top:0; font-size:1.1rem;}
+  .spinner{display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px;
+    border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation-duration:2.4s;} }
   .hint{color:var(--muted); font-size:.88rem; margin-top:-6px; margin-bottom:16px;}
   label{display:block; font-size:.85rem; font-weight:600; margin-bottom:5px; margin-top:14px;}
   label.first{margin-top:0;}
@@ -147,7 +151,7 @@ const BUILD_DATE = "2026-09-26";
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.1.0";
+const APP_VERSION = "2.2.0";
 
 const I18N = {
 de: {
@@ -373,6 +377,12 @@ de: {
   upd_question: "Möchtest du jetzt updaten?",
   upd_btn_now: "Jetzt updaten",
   upd_none_selected: "Bitte mindestens ein Script auswählen.",
+  upd_btn_running: "Update läuft …",
+  upd_step_read: "Einstellungen von {name} lesen ({ip})",
+  upd_step_apply: "Einstellungen übernehmen und Ergebnis vorbereiten",
+  upd_progress_start: "⏳ Update wird vorbereitet …",
+  upd_progress_read: "⏳ Lese Einstellungen von {name} ({ip}) … {i}/{n}",
+  upd_progress_done: "✓ Einstellungen übernommen – weiter zum Hochladen …",
   upd_err_cfg: "Config konnte nicht vom Shelly gelesen werden: {msg}",
   result_update_hint: "Update vorbereitet: Deine bisherigen Einstellungen wurden vom Shelly übernommen. Mit „Direkt hochladen“ spielst du die neue Version ein.",
   upload_success_updated: "✓ Update auf {ip} eingespielt (Script-Nummer {id} beibehalten) und gestartet.",
@@ -459,6 +469,28 @@ de: {
   nav_err_ip_ctr: "Bitte eine gültige IP für den Controller-Shelly eintragen.",
   nav_err_ip_dash: "Bitte eine gültige IP für den Dashboard-Shelly eintragen.",
   nav_err_ip_same: "Controller-Shelly und Dashboard-Shelly müssen zwei verschiedene Geräte sein.",
+  step_wd_thresholds: "Watchdog-Schwellen",
+  wd_h2: "Schwellwerte des Watchdogs",
+  wd_hint: "Ab wann der Watchdog meldet und wann er wieder „scharf“ ist. Vorbelegt mit den Werten aus deiner eingelesenen Config bzw. den Standardwerten. Jede Meldung kommt einmal – erst nach dem Reset-Wert kann sie erneut ausgelöst werden.",
+  wd_g_full: "Akku voll",
+  wd_g_full_hint: "Meldung, wenn ein Speicher voll ist. Der Reset-Wert muss kleiner sein.",
+  wd_g_volt: "Zellspannung",
+  wd_g_volt_hint: "Warnung bei zu niedriger Zellspannung. Der Reset-Wert muss größer sein.",
+  wd_g_temp: "Temperatur",
+  wd_g_temp_hint: "Warnung bei zu hoher Temperatur. Der Reset-Wert muss kleiner sein.",
+  wd_vollSchwelle: "Meldung ab SoC (%)",
+  wd_entladeReset: "Wieder scharf unter SoC (%)",
+  wd_minVoltWarn: "Warnung unter (V)",
+  wd_minVoltReset: "Entwarnung ab (V)",
+  wd_tempWarn: "Warnung ab (°C)",
+  wd_tempReset: "Entwarnung unter (°C)",
+  wd_range: "{min} – {max}, Standard {def}",
+  wd_defaults_btn: "Standardwerte übernehmen",
+  nav_err_wd: "Bitte die Watchdog-Schwellen prüfen: alle Werte im erlaubten Bereich; Reset bei „Akku voll“ und Temperatur kleiner, bei der Zellspannung größer als der Meldewert.",
+  result_wd: "Watchdog-Schwellen:",
+  result_wd_value: "Akku voll {vs} % (Reset {er} %) · Zelle {vw} V (Reset {vr} V) · Temperatur {tw} °C (Reset {tr} °C)",
+  debug_label: "Debug-Ausgaben (ausführlich)",
+  debug_hint: "Nur zur Fehlersuche, z. B. zusammen mit „Log aufzeichnen“ – erzeugt mehr Last und deutlich mehr Log-Zeilen. Danach wieder ausschalten und erneut hochladen.",
   nav_err_regel: "Bitte die Regelparameter prüfen: Hysterese und Leistungen ≥ 0, concentrateBelow kleiner als spreadAbove.",
   nav_err_generic: "Bitte fehlende oder ungültige Angaben ergänzen."
 },
@@ -686,6 +718,12 @@ en: {
   upd_question: "Would you like to update now?",
   upd_btn_now: "Update now",
   upd_none_selected: "Please select at least one script.",
+  upd_btn_running: "Updating …",
+  upd_step_read: "Read settings from {name} ({ip})",
+  upd_step_apply: "Apply settings and prepare the result",
+  upd_progress_start: "⏳ Preparing update …",
+  upd_progress_read: "⏳ Reading settings from {name} ({ip}) … {i}/{n}",
+  upd_progress_done: "✓ Settings loaded – on to uploading …",
   upd_err_cfg: "Could not read the config from the Shelly: {msg}",
   result_update_hint: "Update prepared: your existing settings were taken over from the Shelly. Use “Upload directly” to install the new version.",
   upload_success_updated: "✓ Update installed on {ip} (script number {id} kept) and started.",
@@ -772,6 +810,28 @@ en: {
   nav_err_ip_ctr: "Please enter a valid IP for the Controller Shelly.",
   nav_err_ip_dash: "Please enter a valid IP for the Dashboard Shelly.",
   nav_err_ip_same: "Controller Shelly and Dashboard Shelly must be two different devices.",
+  step_wd_thresholds: "Watchdog thresholds",
+  wd_h2: "Watchdog thresholds",
+  wd_hint: "When the Watchdog reports and when it is “armed” again. Prefilled with the values from your imported config or the defaults. Each message is sent once – it can only be triggered again after the reset value.",
+  wd_g_full: "Battery full",
+  wd_g_full_hint: "Message when a battery is full. The reset value must be lower.",
+  wd_g_volt: "Cell voltage",
+  wd_g_volt_hint: "Warning when the cell voltage is too low. The reset value must be higher.",
+  wd_g_temp: "Temperature",
+  wd_g_temp_hint: "Warning when the temperature is too high. The reset value must be lower.",
+  wd_vollSchwelle: "Message from SoC (%)",
+  wd_entladeReset: "Re-armed below SoC (%)",
+  wd_minVoltWarn: "Warning below (V)",
+  wd_minVoltReset: "All clear from (V)",
+  wd_tempWarn: "Warning from (°C)",
+  wd_tempReset: "All clear below (°C)",
+  wd_range: "{min} – {max}, default {def}",
+  wd_defaults_btn: "Apply default values",
+  nav_err_wd: "Please check the Watchdog thresholds: all values within the allowed range; reset for “battery full” and temperature lower, for cell voltage higher than the warning value.",
+  result_wd: "Watchdog thresholds:",
+  result_wd_value: "Battery full {vs} % (reset {er} %) · Cell {vw} V (reset {vr} V) · Temperature {tw} °C (reset {tr} °C)",
+  debug_label: "Debug output (verbose)",
+  debug_hint: "For troubleshooting only, e.g. together with “Record log” – causes more load and many more log lines. Switch it off again afterwards and re-upload.",
   nav_err_regel: "Please check the control parameters: hysteresis and power values ≥ 0, concentrateBelow smaller than spreadAbove.",
   nav_err_generic: "Please complete missing or invalid entries."
 },
@@ -999,6 +1059,12 @@ fr: {
   upd_question: "Veux-tu mettre à jour maintenant ?",
   upd_btn_now: "Mettre à jour",
   upd_none_selected: "Sélectionne au moins un script.",
+  upd_btn_running: "Mise à jour en cours …",
+  upd_step_read: "Lire les réglages de {name} ({ip})",
+  upd_step_apply: "Appliquer les réglages et préparer le résultat",
+  upd_progress_start: "⏳ Préparation de la mise à jour …",
+  upd_progress_read: "⏳ Lecture des réglages de {name} ({ip}) … {i}/{n}",
+  upd_progress_done: "✓ Réglages repris – passage au chargement …",
   upd_err_cfg: "Impossible de lire la config depuis le Shelly : {msg}",
   result_update_hint: "Mise à jour préparée : tes réglages actuels ont été repris du Shelly. Avec « Charger directement », tu installes la nouvelle version.",
   upload_success_updated: "✓ Mise à jour installée sur {ip} (numéro de script {id} conservé) et démarrée.",
@@ -1085,6 +1151,28 @@ fr: {
   nav_err_ip_ctr: "Merci d'indiquer une IP valide pour le Shelly Controller.",
   nav_err_ip_dash: "Merci d'indiquer une IP valide pour le Shelly Dashboard.",
   nav_err_ip_same: "Le Shelly Controller et le Shelly Dashboard doivent être deux appareils différents.",
+  step_wd_thresholds: "Seuils du Watchdog",
+  wd_h2: "Seuils du Watchdog",
+  wd_hint: "À partir de quand le Watchdog signale et quand il est de nouveau « armé ». Prérempli avec les valeurs de ta configuration importée ou les valeurs par défaut. Chaque message n'est envoyé qu'une fois – il ne peut être redéclenché qu'après la valeur de réarmement.",
+  wd_g_full: "Batterie pleine",
+  wd_g_full_hint: "Message quand une batterie est pleine. La valeur de réarmement doit être inférieure.",
+  wd_g_volt: "Tension des cellules",
+  wd_g_volt_hint: "Alerte si la tension des cellules est trop basse. La valeur de réarmement doit être supérieure.",
+  wd_g_temp: "Température",
+  wd_g_temp_hint: "Alerte si la température est trop élevée. La valeur de réarmement doit être inférieure.",
+  wd_vollSchwelle: "Message à partir du SoC (%)",
+  wd_entladeReset: "Réarmé sous le SoC (%)",
+  wd_minVoltWarn: "Alerte sous (V)",
+  wd_minVoltReset: "Fin d’alerte à partir de (V)",
+  wd_tempWarn: "Alerte à partir de (°C)",
+  wd_tempReset: "Fin d’alerte sous (°C)",
+  wd_range: "{min} – {max}, par défaut {def}",
+  wd_defaults_btn: "Appliquer les valeurs par défaut",
+  nav_err_wd: "Merci de vérifier les seuils du Watchdog : toutes les valeurs dans la plage autorisée ; réarmement inférieur pour « batterie pleine » et la température, supérieur pour la tension des cellules.",
+  result_wd: "Seuils du Watchdog :",
+  result_wd_value: "Batterie pleine {vs} % (réarmement {er} %) · Cellule {vw} V (réarmement {vr} V) · Température {tw} °C (réarmement {tr} °C)",
+  debug_label: "Sorties de débogage (détaillées)",
+  debug_hint: "Uniquement pour le diagnostic, par ex. avec « Enregistrer le journal » – génère plus de charge et beaucoup plus de lignes de journal. Désactive-le ensuite et recharge le script.",
   nav_err_regel: "Merci de vérifier les paramètres de régulation : hystérésis et puissances ≥ 0, concentrateBelow inférieur à spreadAbove.",
   nav_err_generic: "Merci de compléter les informations manquantes ou invalides."
 }
@@ -1154,7 +1242,7 @@ const state = {
   mode: null,
   log: { ip: '', scripts: null, sid: null, onlyScript: true, seconds: 140, busy: false, listing: false,
          error: '', result: null, endsAt: 0, lines: 0 },
-  upd: { checked: false, busy: false, error: '', rows: {}, selected: {}, app: null, showIpFields: false },
+  upd: { checked: false, busy: false, checking: false, updating: false, steps: [], error: '', rows: {}, selected: {}, app: null, showIpFields: false },
   updateReady: false,
 
   navError: ""
@@ -1166,7 +1254,7 @@ let stepIndex = 0;
 function stepLabels(){
   return {
     start: t('step_start'), products: t('step_products'), devices: t('step_devices'), gridsource: t('step_gridsource'),
-    charging: t('step_charging'), signal: t('step_signal'),
+    charging: t('step_charging'), signal: t('step_signal'), wd_thresholds: t('step_wd_thresholds'),
     ctrl_gridreverse: t('step_ctrl_gridreverse'), ctrl_kvs: t('step_ctrl_kvs'), regel: t('step_regel'),
     result: t('step_result')
   };
@@ -1201,6 +1289,7 @@ function computeStepList(){
   if(needsGrid()) s.push('gridsource');
   if(needsFullDevice()) s.push('charging');
   if(needsSignal()) s.push('signal');
+  if(state.products.watchdog) s.push('wd_thresholds');
   if(state.products.controller){ s.push('ctrl_gridreverse', 'ctrl_kvs', 'regel'); }
   s.push('result');
   return s;
@@ -1919,6 +2008,80 @@ function regelValid(){
   return true;
 }
 
+// ---------- Step: Watchdog-Schwellen ----------
+// Werte liegen in state.zdwAdvanced.watchdog (wie beim Einlesen), damit
+// buildZdwConfig() unveraendert bleibt. Nicht angeboten (bleiben wie
+// eingelesen bzw. Standard): intervalSec, offlineAlarmMin, sunrise/sunsetOffset.
+const WD_DEFAULTS = { vollSchwelle: 99, entladeReset: 90, minVoltWarn: 2.9, minVoltReset: 3.1, tempWarn: 45, tempReset: 30 };
+const WD_LIMITS = {
+  vollSchwelle: [80, 100, 1], entladeReset: [50, 99, 1],
+  minVoltWarn: [2.8, 3.4, 0.05], minVoltReset: [2.8, 3.4, 0.05],
+  tempWarn: [30, 60, 1], tempReset: [20, 60, 1]
+};
+function wdVal(k){
+  const w = (state.zdwAdvanced && state.zdwAdvanced.watchdog) || {};
+  return (typeof w[k] === 'number' && isFinite(w[k])) ? w[k] : WD_DEFAULTS[k];
+}
+function wdSet(k, v){
+  if(!state.zdwAdvanced) state.zdwAdvanced = {};
+  if(!state.zdwAdvanced.watchdog) state.zdwAdvanced.watchdog = {};
+  const n = parseFloat(String(v).replace(',', '.'));
+  state.zdwAdvanced.watchdog[k] = isNaN(n) ? NaN : n;
+}
+function wdResetDefaults(){
+  Object.keys(WD_DEFAULTS).forEach(function(k){ wdSet(k, WD_DEFAULTS[k]); });
+  state.navError = '';
+  render();
+}
+function wdField(k){
+  const lim = WD_LIMITS[k];
+  return `
+      <div>
+        <label>${t('wd_' + k)}</label>
+        <input type="number" min="${lim[0]}" max="${lim[1]}" step="${lim[2]}" value="${wdVal(k)}" oninput="wdSet('${k}', this.value)">
+        <div class="cd" style="color:var(--muted); font-size:.78rem; margin-top:3px;">${t('wd_range', {min: lim[0], max: lim[1], def: WD_DEFAULTS[k]})}</div>
+      </div>`;
+}
+function wdThresholdsValid(){
+  const v = {};
+  for(const k of Object.keys(WD_DEFAULTS)){
+    v[k] = wdVal(k);
+    const w = (state.zdwAdvanced && state.zdwAdvanced.watchdog) || {};
+    if(k in w && !(typeof w[k] === 'number' && isFinite(w[k]))) return false;   // Feld leer/ungueltig
+    if(v[k] < WD_LIMITS[k][0] || v[k] > WD_LIMITS[k][1]) return false;
+  }
+  return v.entladeReset < v.vollSchwelle && v.minVoltReset > v.minVoltWarn && v.tempReset < v.tempWarn;
+}
+function renderWdThresholds(){
+  const group = (titleKey, hintKey, a, b) => `
+    <div style="font-weight:700; font-size:.9rem; margin-top:22px;">${t(titleKey)}</div>
+    <p class="hint" style="margin-top:2px; margin-bottom:6px;">${t(hintKey)}</p>
+    <div class="row">${wdField(a)}${wdField(b)}</div>`;
+  return `
+  <div class="panel">
+    <h2>${t('wd_h2')} <span class="badge">Watchdog</span></h2>
+    <p class="hint">${t('wd_hint')}</p>
+    ${group('wd_g_full', 'wd_g_full_hint', 'vollSchwelle', 'entladeReset')}
+    ${group('wd_g_volt', 'wd_g_volt_hint', 'minVoltWarn', 'minVoltReset')}
+    ${group('wd_g_temp', 'wd_g_temp_hint', 'tempWarn', 'tempReset')}
+    <div class="copy-row" style="justify-content:flex-start; margin-top:18px;">
+      <button class="btn" onclick="wdResetDefaults()">${t('wd_defaults_btn')}</button>
+    </div>
+  </div>`;
+}
+
+// ---------- Debug-Schalter im Ergebnis ----------
+function debugAdvanced(key){
+  if(key === 'ctrl'){ if(!state.controllerAdvanced) state.controllerAdvanced = {}; return state.controllerAdvanced; }
+  if(!state.zdwAdvanced) state.zdwAdvanced = {};
+  return state.zdwAdvanced;
+}
+function setDebug(key, on){
+  debugAdvanced(key).debug = !!on;
+  const pre = document.getElementById('configOut_' + key);
+  if(pre) pre.textContent = CONFIG_BUILDERS[key]();
+}
+
 // ---------- Config generation (bleibt unabhängig von der UI-Sprache) ----------
 function q(s){ return String(s == null ? '' : s).replace(/"/g,''); }
 
@@ -2023,7 +2186,7 @@ ${gridBlock}
 
   // ------------------------------------------------------------------
   interval: ${ca.interval ?? 4000},
-  errorThreshold: ${ca.errorThreshold ?? 5},
+  errorThreshold: ${ca.errorThreshold ?? 10},
   directionChangeHoldCycles: ${ca.directionChangeHoldCycles ?? 4},
   standbySmartModeZero: ${ca.standbySmartModeZero ?? false},
   kvsEnabled: ${state.kvsEnabled === true},
@@ -2200,6 +2363,10 @@ function resultBlock(title, key, cfg, hintKey){
       <button class="btn" onclick="copyConfig('${key}')">${t('btn_copy')}</button>
       <button class="btn" onclick="downloadConfig('${key}')">${t('btn_savefile')}</button>
     </div>
+    <label style="display:flex; gap:8px; align-items:flex-start; margin-top:14px; font-weight:normal;">
+      <input type="checkbox" ${debugAdvanced(key).debug === true ? 'checked' : ''} onchange="setDebug('${key}', this.checked)">
+      <span>${t('debug_label')}<span class="hint" style="display:block; margin:2px 0 0;">${t('debug_hint')}</span></span>
+    </label>
     <pre id="configOut_${key}">${escapeHtml(cfg)}</pre>
 
     <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
@@ -2754,7 +2921,7 @@ function renderUpdatePanel(){
   }
   html += `<div class="copy-row" style="justify-content:flex-start; margin-top:10px;">
       <button class="btn" onclick="checkUpdates()" ${u.busy ? 'disabled' : ''}>${t('upd_check_btn')}</button>
-      <span class="hint" style="margin:0;">${u.busy ? t('upd_checking') : ''}</span>
+      <span class="hint" style="margin:0;">${u.checking ? t('upd_checking') : ''}</span>
     </div>`;
   if(u.error) html += `<p class="error">${escapeHtml(u.error)}</p>`;
   if(u.checked) html += renderUpdateTable();
@@ -2808,14 +2975,15 @@ function renderUpdateTable(){
     ${appLine}
     <h2 style="margin-top:20px;">${t('upd_question')}</h2>
     <div class="copy-row" style="justify-content:flex-start;">
-      <button class="btn btn-primary" onclick="startUpdate()" ${any && !u.busy ? '' : 'disabled'}>${t('upd_btn_now')}</button>
-      <span class="hint" style="margin:0;">${any ? '' : t('upd_none_selected')}</span>
-    </div>`;
+      <button class="btn btn-primary" onclick="startUpdate()" ${any && !u.busy ? '' : 'disabled'}>${u.updating ? '<span class="spinner"></span>' + t('upd_btn_running') : t('upd_btn_now')}</button>
+      <span class="hint" id="updProgress" style="margin:0;">${u.updating && u.progress ? escapeHtml(u.progress) : (any ? '' : t('upd_none_selected'))}</span>
+    </div>
+    <div id="updSteps">${renderUpdSteps()}</div>`;
 }
 
 async function checkUpdates(){
   const u = state.upd;
-  u.busy = true; u.error = ''; render();
+  u.busy = true; u.checking = true; u.error = ''; render();
   let manifest = null;
   try { manifest = await loadManifest(); }
   catch(e){ u.error = t('upd_manifest_err', {msg: e.message}); }
@@ -2851,33 +3019,77 @@ async function checkUpdates(){
   }
   u.rows = rows;
   u.app = manifest && manifest.scripts && manifest.scripts['zdmc-configurator'] ? manifest.scripts['zdmc-configurator'].version : null;
-  u.checked = true; u.busy = false;
+  u.checked = true; u.busy = false; u.checking = false;
   render();
+}
+
+// Fortschritt beim Update: je Script eine Zeile (warten / laeuft / fertig /
+// Fehler) plus Abschluss. Wird ohne komplettes render() aktualisiert.
+function renderUpdSteps(){
+  const u = state.upd;
+  if(!u.steps || !u.steps.length) return '';
+  const icon = { wait: '<span style="opacity:.45;">○</span>', run: '<span class="spinner"></span>',
+                 ok: '<span style="color:var(--accent-text);">✓</span>', err: '<span style="color:var(--danger);">✗</span>' };
+  return `<ul style="list-style:none; padding:0; margin:12px 0 0; font-size:.88rem;">` +
+    u.steps.map(function(st){
+      return `<li style="display:flex; gap:8px; align-items:center; padding:3px 0; ${st.state === 'wait' ? 'color:var(--muted);' : ''}">
+        <span style="width:18px; display:inline-flex; justify-content:center;">${icon[st.state]}</span>${escapeHtml(st.label)}</li>`;
+    }).join('') + '</ul>';
+}
+function setUpdStep(i, st){
+  const u = state.upd;
+  if(u.steps[i]) u.steps[i].state = st;
+  const el = document.getElementById('updSteps');
+  if(el) el.innerHTML = renderUpdSteps();
 }
 
 async function startUpdate(){
   const u = state.upd;
   const keys = ['ctrl', 'zdw'].filter(function(k){ return u.selected[k] && u.rows[k] && u.rows[k].selectable; });
   if(!keys.length) return;
-  u.busy = true; u.error = ''; render();
+  u.steps = keys.map(function(key){
+    return { state: 'wait', label: t('upd_step_read', {name: KEY_NAMES[key], ip: u.rows[key].ip}) };
+  });
+  u.steps.push({ state: 'wait', label: t('upd_step_apply') });
+  u.busy = true; u.updating = true; u.error = ''; u.progress = t('upd_progress_start'); render();
+  const setProgress = function(text){
+    u.progress = text;
+    const el = document.getElementById('updProgress');
+    if(el) el.textContent = text;
+  };
+  const pause = function(ms){ return new Promise(function(r){ setTimeout(r, ms); }); };
   // Frischer Stand: nur die gewaehlten Scripte landen im Ergebnis
   state.products = { controller: false, api: false, watchdog: false };
   state.controllerAdvanced = {}; state.zdwAdvanced = {};
   state.devices = [];
+  let current = 0;
   try{
     // Controller zuerst: seine Config ist fuer die Geraetedetails fuehrend
-    for(const key of keys){
+    for(let i = 0; i < keys.length; i++){
+      const key = keys[i];
+      current = i;
+      setUpdStep(i, 'run');
+      setProgress(t('upd_progress_read', {name: KEY_NAMES[key], ip: u.rows[key].ip, i: i + 1, n: keys.length}));
       const data = await helperGet('/api/config?ip=' + encodeURIComponent(u.rows[key].ip) + '&key=' + key);
       const res = applyConfigText(data.config);
       if(!res.ok) throw new Error(KEY_NAMES[key] + ': ' + res.error);
+      setUpdStep(i, 'ok');
+      await pause(300);   // damit jeder Schritt sichtbar ist
     }
+    current = keys.length;
+    setUpdStep(current, 'run');
+    setProgress(t('upd_progress_done'));
+    await pause(700);
+    setUpdStep(current, 'ok');
+    await pause(300);
   } catch(e){
-    u.busy = false;
+    setUpdStep(current, 'err');
+    u.busy = false; u.updating = false; u.progress = '';
     u.error = t('upd_err_cfg', {msg: e.message});
     render();
     return;
   }
-  u.busy = false;
+  u.busy = false; u.updating = false; u.progress = ''; u.steps = [];
   state.updateReady = true;
   state.navError = '';
   stepIndex = computeStepList().indexOf('result');
@@ -3066,6 +3278,8 @@ function renderResult(){
   if(p.watchdog) html += row(t('result_ver_wd'), `<span id="ver_wd">${t('ver_loading')}</span>`);
   html += row(t('result_devices'), `${state.devices.length} — ${escapeHtml(state.devices.map(d=>d.label||'?').join(', '))}`);
   if(p.watchdog) html += row(t('result_watch'), escapeHtml(state.devices.filter(d=>d.wdEnabled!==false).map(d=>d.label||'?').join(', ') || '—'));
+  if(p.watchdog) html += row(t('result_wd'), t('result_wd_value', {vs: wdVal('vollSchwelle'), er: wdVal('entladeReset'),
+    vw: wdVal('minVoltWarn'), vr: wdVal('minVoltReset'), tw: wdVal('tempWarn'), tr: wdVal('tempReset')}));
 
   if(needsGrid()) html += row(t('result_gridsource'), escapeHtml(gridSourceSummary()));
   if(needsFullDevice()){
@@ -3124,6 +3338,7 @@ function renderStepById(id){
     case 'ctrl_gridreverse': return renderCtrlGridReverse();
     case 'ctrl_kvs': return renderCtrlKvs();
     case 'regel': return renderRegel();
+    case 'wd_thresholds': return renderWdThresholds();
     default: return renderResult();
   }
 }
@@ -3156,6 +3371,7 @@ function validateStepById(id){
     case 'ctrl_gridreverse': return state.gridReverseMode ? '' : 'nav_err_generic';
     case 'ctrl_kvs': return state.kvsEnabled !== null ? '' : 'nav_err_generic';
     case 'regel': return regelValid() ? '' : 'nav_err_regel';
+    case 'wd_thresholds': return wdThresholdsValid() ? '' : 'nav_err_wd';
     default: return '';
   }
 }
