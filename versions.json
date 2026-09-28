@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-27T20:34:06Z",
+  "generated": "2026-09-28T08:23:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -205,17 +205,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/95222a5223a85137739b4d6a321431b9a25ab2f9/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/40e968b9c3832178c82459a3250df54d9c65fe1b/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert",
-        "Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start",
-        "Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)"
+        "Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung",
+        "Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)",
+        "Controller: errorThreshold-Standard auf 10"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.1.0",
+          "changes": [
+            "Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert",
+            "Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start",
+            "Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)"
+          ],
+          "notice": null
+        },
         {
           "version": "2.0.3",
           "changes": [
