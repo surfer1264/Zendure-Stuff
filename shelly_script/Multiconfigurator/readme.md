@@ -12,7 +12,7 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
 
 1. [Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
 2. [Wo finde ich den Configurator?](#2-wo-finde-ich-den-configurator)
-   * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
+   * [Empfohlen: der lokale Helfer](#empfohlen-der-lokale-helfer)
    * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
 3. [Ersteinrichtung](#3-ersteinrichtung)
    * [Der Ablauf](#der-ablauf)
@@ -54,7 +54,7 @@ Dein System besteht immer aus **zwei Shellys**:
 Darauf laufen drei Funktionen:
 
 * **Controller** – regelt deinen Netzbezug bzw. -export über deine Zendure-Speicher
-* **zenDash-API** – liefert die Daten für das Dashboard mit Live-Überblick; darüber kannst du auch das Verhalten des Controllers ändern
+* **zenDash-API** – liefert die Daten für das Dashboard mit Live-Überblick; darüber kannst du auch das Verhalten des Controllers ändern. Das Dashboard selbst öffnest du über einen kleinen Proxy auf PC, NAS oder Home Assistant – siehe [Dashboard einrichten](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md).
 * **Watchdog** – meldet sich bei Ausnahmesituationen (Akku voll, Temperatur, Zellspannung, Gerät nicht erreichbar) und schickt morgens und abends eine Übersicht
 
 Die Funktionen sind frei kombinierbar – zenDash-API und Watchdog lassen sich zum Beispiel auch nachträglich einrichten, wenn der Controller schon läuft. Angaben, die mehrere Funktionen brauchen (Geräteliste, Netzquelle, Benachrichtigungen), fragt der Configurator nur **einmal** ab und trägt sie passend in beide Scripte ein.
@@ -67,9 +67,9 @@ Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
 ## 2. Wo finde ich den Configurator?
 
-Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update, Speicherprüfung und Log-Aufzeichnung.
+Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (ein kleines Programm für Windows und macOS), denn nur damit funktionieren Direkt-Upload, Update, Speicherprüfung und Log-Aufzeichnung.
 
-### Empfohlen: der lokale Helfer (Exe-Installer)
+### Empfohlen: der lokale Helfer
 
 Ein kleines Programm für deinen Rechner. Es startet den Configurator automatisch im Browser und übernimmt die Verbindung zu deinen Shellys. Keine Installation, kein Python nötig – herunterladen, starten, fertig.
 
@@ -79,12 +79,12 @@ Direkt-Downloads:
 
 * [Windows (64 Bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)
 * [Windows (32 Bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)
-* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)
+* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – nur Macs mit Apple Silicon (M1 oder neuer)
 
 Beim ersten Start warnt dein Betriebssystem, weil die Datei nicht signiert ist:
 
 * **Windows:** Bei „Windows hat den Computer geschützt“ (SmartScreen) auf „Weitere Informationen“ → „Trotzdem ausführen“ klicken.
-* **macOS:** Rechtsklick auf die Datei → „Öffnen“ → im Dialog erneut „Öffnen“ bestätigen.
+* **macOS:** Rechtsklick auf die Datei → „Öffnen“ → im Dialog erneut „Öffnen“ bestätigen. Klappt das nicht (ab macOS Sequoia häufig), die Datei einmal öffnen und dann unter **Systemeinstellungen → Datenschutz & Sicherheit** ganz unten auf **„Dennoch öffnen“** klicken. Startet sie trotzdem nicht, hilft die [ausführliche macOS-Anleitung](local_helper/mcos_helper.md).
 
 Wer sichergehen will, dass die Datei unverändert ist, kann sie [prüfen](#integrität-des-downloads-prüfen).
 
@@ -137,13 +137,15 @@ Der bequemste Weg: ein Klick, fertig. Das Script geht automatisch auf den richti
 
 Nach dem ersten erfolgreichen Upload merkt sich der Helfer die IPs und trägt sie beim nächsten Start automatisch ein.
 
+Wird das Script dabei **neu angelegt** (erste Installation oder nach „andere löschen“), bekommt es eine neue Script-Nummer. Nutzt du das Dashboard, trag die neue Nummer im Proxy unter `/setup` ein ([Dashboard einrichten](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md)). Beim [Update](#4-update) bleibt die Nummer gleich.
+
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5082cdf4-1a6c-43a1-825c-8fc51bf18173" />
 
 **🔗 Komplettes Script von GitHub speichern**
 
 Lädt das aktuelle Original-Script von GitHub, trägt deine Konfiguration ein und bietet dir das fertige Script als Datei an. Das musst du dann nur noch [von Hand hochladen](#script-von-hand-hochladen). Braucht kurz eine Internetverbindung.
 
-Der Dateiname enthält die Script-Version, z. B. `zerooutput_multi_kvs_mini_v5.0.8.js` oder `zendash_watch_mini_v3.3.1.js`. So kannst du deine Stände einfach nebeneinander aufbewahren und jederzeit wieder [einlesen](#bestehende-konfiguration-einlesen).
+Der Dateiname enthält die Script-Version, z. B. `zerooutput_multi_kvs_mini_v5.1.1.js` oder `zendash_watch_mini_v3.4.1.js`. So kannst du deine Stände einfach nebeneinander aufbewahren und jederzeit wieder [einlesen](#bestehende-konfiguration-einlesen).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
@@ -167,7 +169,7 @@ Zeigt, wie viel Script-Speicher auf einem Shelly noch frei ist – siehe [Speich
 
 ## 4. Update
 
-Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Klicks auf den neuesten Stand – **deine Einstellungen bleiben dabei erhalten**. Das Update funktioniert nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer-exe-installer).
+Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Klicks auf den neuesten Stand – **deine Einstellungen bleiben dabei erhalten**. Das Update funktioniert nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer).
 
 ### So geht's
 
@@ -249,7 +251,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 
 | Meldung | Was bedeutet das? | Was tun? |
 |---|---|---|
-| „Updaten“ ist ausgegraut: *Nur mit dem lokalen Helfer möglich* | Der Helfer läuft nicht. | [Helfer](#empfohlen-der-lokale-helfer-exe-installer) starten – er öffnet den Configurator selbst. |
+| „Updaten“ ist ausgegraut: *Nur mit dem lokalen Helfer möglich* | Der Helfer läuft nicht. | [Helfer](#empfohlen-der-lokale-helfer) starten – er öffnet den Configurator selbst. |
 | *Dein lokaler Helfer ist älter als diese Seite …* | Es läuft noch eine alte Version des Helfers. | Helfer schließen, aktuelle Version herunterladen und neu starten. |
 | *Shelly nicht erreichbar* / *Shelly … nicht erreichbar* | Der Shelly antwortet nicht. | IP prüfen (in der Shelly-App oder im Router), Shelly eingeschaltet? Rechner im selben Netz (nicht im Gast-WLAN)? |
 | *Der Shelly … verlangt ein Passwort* | Der Passwortschutz des Shelly ist aktiv. | Passwortschutz vorübergehend ausschalten, hochladen, danach wieder einschalten. |
@@ -273,7 +275,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 |---|---|
 | Das Fenster des Helfers geht sofort wieder zu bzw. meldet *konnte nicht auf 127.0.0.1:8787 lauschen* | Der Helfer läuft schon (anderes Fenster, evtl. minimiert) – diesen verwenden oder schließen und neu starten. |
 | Der Browser öffnet sich nicht | Im Browser `http://127.0.0.1:8787` aufrufen. |
-| Windows/macOS blockiert den Start | siehe [Wo finde ich den Configurator?](#empfohlen-der-lokale-helfer-exe-installer) |
+| Windows/macOS blockiert den Start | siehe [Wo finde ich den Configurator?](#empfohlen-der-lokale-helfer) |
 | Der Configurator schlägt falsche Shelly-IPs vor | IP einfach im Feld überschreiben – oder die gemerkten IPs [zurücksetzen](#gemerkte-ips-zurücksetzen). |
 
 ---
@@ -291,16 +293,16 @@ Ohne Helfer (die Anleitung gibt es auch aufklappbar im Configurator):
 1. Im Ergebnis-Schritt „🔗 Komplettes Script von GitHub speichern“ klicken.
 2. Die IP des Shelly im Browser öffnen (z. B. `http://192.168.178.151`) und zu „Scripts“ wechseln.
 3. Ein altes Script gleichen Namens stoppen und löschen. **Andere Scripte ebenfalls entfernen** (siehe [Mehrere Scripte](#mehrere-scripte-auf-einem-shelly)).
-4. „Add script“, Namen vergeben, speichern.
+4. Neues Script anlegen („Create script“, bei älterer Firmware „Add script“), Namen vergeben (z. B. `ctrl` bzw. `zd`, wie beim Direkt-Upload), speichern.
 5. Die heruntergeladene Datei mit einem Texteditor öffnen, alles kopieren und in den Code-Editor einfügen.
-6. „Save“, dann „Start“ und **„Enable on boot“** aktivieren.
+6. „Save“, dann „Start“ und **„Run on startup“** aktivieren, damit das Script nach einem Stromausfall wieder startet.
 7. Im Log prüfen, ob das Script fehlerfrei läuft.
 
 ### Speicher eines Shelly prüfen
 
-Mit laufendem Helfer im Ergebnis-Schritt die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. Ab **25 200 Bytes** freiem Speicher ist alles gut. Das funktioniert auch bei einem neuen Shelly ohne Script.
+Mit laufendem Helfer im Ergebnis-Schritt die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. **25 200 Bytes** bedeuten: Der volle Script-Speicher ist frei – so sieht es auf einem Shelly aus, auf dem kein anderes Script läuft. Deutlich weniger heißt, dass dort noch ein anderes Script läuft. Das funktioniert auch bei einem neuen Shelly ohne Script.
 
-Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im Betrieb rund 13,5 kB, in der Spitze rund 17,8 kB.
+Zur Orientierung, gemessen mit zwei Speichern: Der Controller braucht in der Spitze rund 19 kB (gemessen mit 5.1.0), zenDash-API + Watchdog rund 18 kB (gemessen mit 3.1, neuere Versionen brauchen etwas weniger). Beides passt also gut – aber nur, wenn das Script allein auf dem Shelly läuft.
 
 ### Konfiguration sichern
 
@@ -308,7 +310,7 @@ Nach jeder Änderung im Ergebnis-Schritt „💾 Nur CONFIG-Block speichern“ o
 
 ### Log aufzeichnen
 
-Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdig verhält – zeichnet der Configurator die Meldungen eines Shelly auf. Das geht nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer-exe-installer).
+Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdig verhält – zeichnet der Configurator die Meldungen eines Shelly auf. Das geht nur mit dem [lokalen Helfer](#empfohlen-der-lokale-helfer).
 
 1. Im Startdialog **„Log aufzeichnen“** wählen.
 2. Die IP des Shelly eintragen (oder auf Controller-Shelly bzw. Dashboard-Shelly klicken) und **„Scripte anzeigen“**.
@@ -316,7 +318,7 @@ Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdi
 4. Die Dauer wählen: **140 Sekunden** oder **600 Sekunden** (10 Minuten).
 5. **„Aufzeichnung starten“** klicken.
 
-Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
+Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.1.1_260927-1432.log` (Version, Datum JJMMTT, Uhrzeit). Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
 
 * **Gefiltert (Standard):** Häkchen bei „Nur Ausgaben des gewählten Scripts aufzeichnen“ – im Log steht nur, was das Script selbst ausgibt.
 * **Ungefiltert:** Häkchen entfernen – dann kommen alle Meldungen des Shelly dazu, auch Systemmeldungen. Das brauchst du, wenn das Script nicht startet, denn Fehler beim Start oder zu wenig Speicher meldet der Shelly als Systemmeldung. Zeilen des Scripts sind dann mit `[Script 8]` markiert.

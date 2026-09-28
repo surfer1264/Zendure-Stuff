@@ -2,6 +2,8 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
+> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md). Neu einrichten am einfachsten mit dem [Configurator](../Multiconfigurator/readme.md). Diese Seite bleibt nur zum Nachschlagen.
+
 # AkkuVolt Watchdog — Multi-Device (zenSDK) — Schnellstart
 
 > ⚠️ Beobachtet nur, greift nicht aktiv ein. Auf eigene Verantwortung nutzen, ordentlich testen.

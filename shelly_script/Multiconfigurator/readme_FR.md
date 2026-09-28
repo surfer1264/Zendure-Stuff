@@ -14,7 +14,7 @@ Quelques clics pour piloter localement ta flotte Zendure – configurer, mettre 
 
 1. [Ce que le configurateur met en place](#1-ce-que-le-configurateur-met-en-place)
 2. [Où trouver le configurateur](#2-où-trouver-le-configurateur)
-   * [Recommandé : l'assistant local (installateur EXE)](#recommandé--lassistant-local-installateur-exe)
+   * [Recommandé : l'assistant local](#recommandé--lassistant-local)
    * [Alternative : le configurateur web seul](#alternative--le-configurateur-web-seul)
 3. [Première configuration](#3-première-configuration)
    * [Déroulement](#déroulement)
@@ -56,7 +56,7 @@ Ton système se compose toujours de **deux Shelly** :
 Trois fonctions y tournent :
 
 * **Controller** – régule ton import/export réseau via tes batteries Zendure
-* **zenDash-API** – fournit les données du tableau de bord avec une vue d'ensemble en direct ; il permet aussi de modifier le comportement du Controller
+* **zenDash-API** – fournit les données du tableau de bord avec une vue d'ensemble en direct ; il permet aussi de modifier le comportement du Controller. Le tableau de bord lui-même s'ouvre via un petit proxy sur un PC, un NAS ou Home Assistant – voir [Installer le tableau de bord](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md) (en allemand).
 * **Watchdog** – signale les situations exceptionnelles (batterie pleine, température, tension des cellules, appareil injoignable) et envoie un récapitulatif matin et soir
 
 Les fonctions se combinent librement – zenDash-API et Watchdog peuvent par exemple être ajoutés plus tard, quand le Controller tourne déjà. Les informations nécessaires à plusieurs fonctions (liste des appareils, source réseau, notifications) ne sont demandées **qu'une seule fois** et reportées correctement dans les deux scripts.
@@ -69,9 +69,9 @@ Le configurateur est disponible en **allemand, anglais et français**.
 
 ## 2. Où trouver le configurateur
 
-Il existe deux possibilités. L'**assistant local** (fichier EXE) est recommandé, car le chargement direct, la mise à jour, la vérification de la mémoire et l'enregistrement du journal ne fonctionnent qu'avec lui.
+Il existe deux possibilités. L'**assistant local** (un petit programme pour Windows et macOS) est recommandé, car le chargement direct, la mise à jour, la vérification de la mémoire et l'enregistrement du journal ne fonctionnent qu'avec lui.
 
-### Recommandé : l'assistant local (installateur EXE)
+### Recommandé : l'assistant local
 
 Un petit programme pour ton ordinateur. Il ouvre automatiquement le configurateur dans le navigateur et se charge de la connexion à tes Shelly. Pas d'installation, pas besoin de Python – télécharger, lancer, terminé.
 
@@ -81,12 +81,12 @@ Téléchargements directs :
 
 * [Windows (64 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)
 * [Windows (32 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)
-* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)
+* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – uniquement Mac avec Apple Silicon (M1 ou plus récent)
 
 Au premier lancement, ton système d'exploitation affiche un avertissement, car le fichier n'est pas signé :
 
 * **Windows :** à « Windows a protégé votre ordinateur » (SmartScreen), clique sur « Informations complémentaires » → « Exécuter quand même ».
-* **macOS :** clic droit sur le fichier → « Ouvrir » → confirme à nouveau « Ouvrir » dans la boîte de dialogue.
+* **macOS :** clic droit sur le fichier → « Ouvrir » → confirme à nouveau « Ouvrir » dans la boîte de dialogue. Si cela ne fonctionne pas (fréquent à partir de macOS Sequoia), essaie d'ouvrir le fichier une fois, puis va dans **Réglages Système → Confidentialité et sécurité** et clique tout en bas sur **« Ouvrir quand même »**. S'il ne démarre toujours pas, voir les [instructions macOS détaillées](local_helper/mcos_helper.md) (en allemand).
 
 Si tu veux t'assurer que le fichier n'a pas été modifié, tu peux le [vérifier](#vérifier-lintégrité-du-téléchargement).
 
@@ -139,13 +139,15 @@ Le moyen le plus pratique : un clic, terminé. Le script va automatiquement sur 
 
 Après le premier chargement réussi, l'assistant local mémorise les IP et les saisit automatiquement la fois suivante.
 
+Si le script est **créé à neuf** à cette occasion (première installation ou après « supprimer les autres »), il reçoit un nouveau numéro de script. Si tu utilises le tableau de bord, saisis le nouveau numéro dans le proxy sous `/setup` ([Installer le tableau de bord](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md)). Lors d'une [mise à jour](#4-mise-à-jour), le numéro reste identique.
+
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5082cdf4-1a6c-43a1-825c-8fc51bf18173" />
 
 **🔗 Enregistrer le script complet depuis GitHub**
 
 Charge le script original actuel depuis GitHub, y insère ta configuration et te propose le script terminé sous forme de fichier. Il ne te reste plus qu'à le [charger manuellement](#charger-un-script-manuellement). Nécessite brièvement une connexion internet.
 
-Le nom du fichier contient la version du script, par ex. `zerooutput_multi_kvs_mini_v5.0.8.js` ou `zendash_watch_mini_v3.3.1.js`. Tu peux ainsi conserver plusieurs versions côte à côte et les [réimporter](#importer-une-configuration-existante) à tout moment.
+Le nom du fichier contient la version du script, par ex. `zerooutput_multi_kvs_mini_v5.1.1.js` ou `zendash_watch_mini_v3.4.1.js`. Tu peux ainsi conserver plusieurs versions côte à côte et les [réimporter](#importer-une-configuration-existante) à tout moment.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
@@ -169,7 +171,7 @@ Indique combien de mémoire de script est encore libre sur un Shelly – voir [V
 
 ## 4. Mise à jour
 
-Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jour en quelques clics – **tes réglages sont conservés**. La mise à jour ne fonctionne qu'avec l'[assistant local](#recommandé--lassistant-local-installateur-exe).
+Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jour en quelques clics – **tes réglages sont conservés**. La mise à jour ne fonctionne qu'avec l'[assistant local](#recommandé--lassistant-local).
 
 ### Comment faire
 
@@ -251,7 +253,7 @@ Pour la même raison, le Controller et zenDash-API + Watchdog ne tournent **jama
 
 | Message | Qu'est-ce que cela signifie ? | Que faire ? |
 |---|---|---|
-| « Mettre à jour » est grisé : *Possible uniquement avec l'assistant local* | L'assistant local ne tourne pas. | Lance l'[assistant local](#recommandé--lassistant-local-installateur-exe) – il ouvre lui-même le configurateur. |
+| « Mettre à jour » est grisé : *Possible uniquement avec l'assistant local* | L'assistant local ne tourne pas. | Lance l'[assistant local](#recommandé--lassistant-local) – il ouvre lui-même le configurateur. |
 | *Ton assistant local est plus ancien que cette page …* | Une ancienne version de l'assistant local tourne encore. | Ferme l'assistant local, télécharge la version actuelle et relance-le. |
 | *Shelly injoignable* | Le Shelly ne répond pas. | Vérifie l'IP (dans l'appli Shelly ou le routeur). Le Shelly est-il allumé ? L'ordinateur est-il sur le même réseau (pas le Wi-Fi invité) ? |
 | Le Shelly demande un mot de passe | La protection par mot de passe du Shelly est active. | Désactive temporairement la protection par mot de passe, charge le script, puis réactive-la. |
@@ -275,7 +277,7 @@ Pour la même raison, le Controller et zenDash-API + Watchdog ne tournent **jama
 |---|---|
 | La fenêtre de l'assistant local se ferme aussitôt ou indique qu'elle n'a pas pu écouter sur 127.0.0.1:8787 | L'assistant local tourne déjà (autre fenêtre, peut-être réduite) – utilise-la, ou ferme-la et relance. |
 | Le navigateur ne s'ouvre pas | Ouvre `http://127.0.0.1:8787` dans ton navigateur. |
-| Windows/macOS bloque le lancement | voir [Où trouver le configurateur](#recommandé--lassistant-local-installateur-exe) |
+| Windows/macOS bloque le lancement | voir [Où trouver le configurateur](#recommandé--lassistant-local) |
 | Le configurateur propose de mauvaises IP de Shelly | Écrase simplement l'IP dans le champ – ou [réinitialise](#réinitialiser-les-ip-mémorisées) les IP mémorisées. |
 
 ---
@@ -293,16 +295,16 @@ Sans l'assistant local (les instructions sont aussi disponibles en section dépl
 1. À l'étape Résultat, clique sur « 🔗 Enregistrer le script complet depuis GitHub ».
 2. Ouvre l'IP du Shelly dans le navigateur (par ex. `http://192.168.178.151`) et va dans « Scripts ».
 3. Arrête et supprime un ancien script du même nom. **Supprime aussi les autres scripts** (voir [Plusieurs scripts](#plusieurs-scripts-sur-un-shelly)).
-4. « Add script », donne un nom, enregistre.
+4. Crée un nouveau script (« Create script », sur les anciens firmwares « Add script »), donne un nom (par ex. `ctrl` ou `zd`, comme pour le chargement direct), enregistre.
 5. Ouvre le fichier téléchargé dans un éditeur de texte, copie tout et colle-le dans l'éditeur de code.
-6. « Save », puis « Start », et active **« Enable on boot »**.
+6. « Save », puis « Start », et active **« Run on startup »** pour que le script redémarre après une coupure de courant.
 7. Vérifie dans le journal que le script tourne sans erreur.
 
 ### Vérifier la mémoire d'un Shelly
 
-Avec l'assistant local en marche, saisis à l'étape Résultat l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. À partir de **25 200 octets** de mémoire libre, tout va bien. Cela fonctionne aussi sur un Shelly neuf sans script.
+Avec l'assistant local en marche, saisis à l'étape Résultat l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. **25 200 octets** signifie que toute la mémoire de script est libre – c'est ce qu'affiche un Shelly sur lequel aucun autre script ne tourne. Nettement moins signifie qu'un autre script y tourne encore. Cela fonctionne aussi sur un Shelly neuf sans script.
 
-Pour information : le script zenDash-API + Watchdog occupe, avec deux batteries, environ 13,5 ko en fonctionnement et environ 17,8 ko en pointe.
+Pour information, mesuré avec deux batteries : le Controller a besoin d'environ 19 ko en pointe (mesuré avec 5.1.0), zenDash-API + Watchdog d'environ 18 ko (mesuré avec 3.1, les versions plus récentes un peu moins). Les deux tiennent largement – mais seulement si le script tourne seul sur le Shelly.
 
 ### Sauvegarder la configuration
 
@@ -310,7 +312,7 @@ Après chaque modification, clique à l'étape Résultat sur « 💾 Enregistrer
 
 ### Enregistrer le journal
 
-Pour le diagnostic – par exemple quand un script ne démarre pas ou se comporte bizarrement – le configurateur enregistre les messages d'un Shelly. Cela ne fonctionne qu'avec l'[assistant local](#recommandé--lassistant-local-installateur-exe).
+Pour le diagnostic – par exemple quand un script ne démarre pas ou se comporte bizarrement – le configurateur enregistre les messages d'un Shelly. Cela ne fonctionne qu'avec l'[assistant local](#recommandé--lassistant-local).
 
 1. Dans la boîte de dialogue de démarrage, choisis **« Enregistrer le journal »**.
 2. Saisis l'IP du Shelly (ou clique sur Shelly Controller / Shelly Dashboard) puis sur **« Afficher les scripts »**.
@@ -318,7 +320,7 @@ Pour le diagnostic – par exemple quand un script ne démarre pas ou se comport
 4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
 5. Clique sur **« Démarrer l'enregistrement »**.
 
-L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
+L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.1.1_260927-1432.log` (version, date AAMMJJ, heure). Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
 
 * **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
 * **Sans filtre :** décoche la case – tous les messages du Shelly sont alors ajoutés, messages système compris. C'est nécessaire si le script ne démarre pas, car le Shelly signale les erreurs de démarrage ou le manque de mémoire sous forme de messages système. Les lignes du script sont alors marquées `[Script 8]`.

@@ -1,8 +1,14 @@
-# ZenDash API
+# zenDash-API – Schnittstelle und Technik
 
-Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.7). Sie liefern
+[← zurück zu zenDash-API + Watchdog](readme.md) · [Dashboard einrichten](dashboard.md)
+
+Diese Seite richtet sich an alle, die eigene Anbindungen bauen (Home Assistant, Node-RED …) oder verstehen wollen, wie Script und Dashboard zusammenarbeiten. Für Einrichtung und Bedienung reicht die [Dashboard-Anleitung](dashboard.md).
+
+Beschrieben sind die drei JSON-Endpunkte des Scripts `zendash_watch` (API-Modul). Sie liefern
 Messwerte und Einstellungen für das Dashboard und schreiben Sollwerte in die
-Shelly-KVS, aus der das Regel-Script `zerooutput_multi_kvs.js` seine Vorgaben liest.
+Shelly-KVS des Controller-Shelly, aus der der Controller (`zerooutput_multi_kvs`) seine Vorgaben liest.
+
+Seit Version 3.2 gibt es keine eigene API-Versionsnummer mehr: Die Schnittstelle trägt die Versionsnummer des Scripts, und die Dashboard-Seite muss dieselbe Nummer haben. Was sich geändert hat, steht im [Changelog](CHANGELOG.md).
 
 ## Basisadresse
 
@@ -79,12 +85,12 @@ es derzeit nicht.
 
 ## `config_api`
 
-Einstellungen und Stammdaten. Wird vom Dashboard alle 12 s geholt, nach einer
+Einstellungen und Stammdaten. Wird vom Dashboard beim Laden der Seite und danach alle 32 s geholt, nach einer
 eigenen Eingabe zusätzlich sofort.
 
 ```json
 {
-  "version": "2.7",
+  "version": "3.4.1",
   "setpoint": -20,
   "hysteresis": 12,
   "dischargeFixed": 0,
@@ -100,7 +106,8 @@ eigenen Eingabe zusätzlich sofort.
       "maxInputPower": 1000,
       "inputLimit": 0,
       "dischargeAllowed": true,
-      "reverse": true
+      "reverse": true,
+      "lastFull": 20260926
     }
   ]
 }
@@ -108,13 +115,14 @@ eigenen Eingabe zusätzlich sofort.
 
 | Feld | Herkunft |
 |---|---|
-| `version` | Versionsstand des API-Scripts. Das Dashboard vergleicht ihn mit seinem eigenen |
+| `version` | Version des Scripts. Das Dashboard vergleicht sie mit seiner eigenen und färbt den Hinweis in der Fußzeile gelb, wenn sie abweichen |
 | `setpoint` | KVS, Zielwert für den Netzsaldo in W |
 | `hysteresis` | `CONFIG`, **nicht** über die KVS änderbar. Nur zur Anzeige — muss mit dem Wert im Regel-Script übereinstimmen |
 | `dischargeFixed` | KVS, globaler Fix-Sollwert für die Entladeleistung in W. `0` = aus |
 | `dischargeStartupPower` | `CONFIG`, **nicht** über die KVS änderbar. Untere Grenze für `dischargeFixed` — muss mit dem Wert im Regel-Script übereinstimmen |
 | `ip`, `label`, `maxSoc`, `maxOutput`, `maxInputPower` | `CONFIG`, zur Laufzeit unveränderlich |
 | `minSoc`, `inputLimit`, `dischargeAllowed`, `reverse` | KVS, mit den Vorgaben aus `CONFIG` als Rückfallwert |
+| `lastFull` | KVS (`zdmc_dev{id}_lastFull`), Datum der letzten echten 100 % als JJJJMMTT (lokales Datum des Shelly). `0` = noch nie erfasst. Seit 3.3 |
 
 Ist die KVS nicht erreichbar, antwortet der Endpunkt trotzdem — dann mit den
 Vorgabewerten aus `CONFIG`, statt die Anfrage hängen zu lassen.
@@ -170,6 +178,8 @@ die Regelung ignoriert sie.
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
 | `zdmc_dev{id}_minSoc` | 10 … 99 | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
 | `zdmc_dev{id}_inputLimit` | 0 … `maxInputPower` | Manuelle Ladeleistung in W |
+
+Zusätzlich schreibt das Script selbst `zdmc_dev{id}_lastFull` (Datum der letzten Vollladung, JJJJMMTT) – höchstens einmal je Gerät und Tag. Der Controller wertet diesen Schlüssel nicht aus.
 
 **`minSoc` muss unter `maxSoc` bleiben.** Das Regel-Script gleicht beide Werte nur
 beim Start gegeneinander ab, nicht beim Live-Override. Rutscht `minSoc` darüber, darf
@@ -286,8 +296,26 @@ Variablen belegt. Ändert Zendure die Feldnamen, fällt das erst im Betrieb auf 
 Extraktion liefert dann `null`, und ein fehlendes `electricLevel` gilt als „Hub nicht
 auswertbar".
 
-**KVS lokal oder entfernt.** Steht `CONFIG.kvsHost` auf `"local"`, greift das Script
-direkt per `Shelly.call` zu. Sonst über die native RPC des angegebenen Geräts
-(`/rpc/KVS.GetMany`, `/rpc/KVS.Set`). Die entfernte Variante wird empfohlen, weil die
-Anfragen dort von der Firmware bedient werden und den Variablenpool des Regel-Scripts
-nicht belasten.
+**KVS entfernt (Normalfall).** `CONFIG.api.kvsHost` enthält die IP des Controller-Shelly. Das Script
+greift über dessen native RPC zu (`/rpc/KVS.GetMany`, `/rpc/KVS.Set`). Die Anfragen werden
+dort von der Firmware bedient und belasten den Variablenpool des Controllers nicht. Den Wert
+`"local"` (Zugriff per `Shelly.call` auf dem eigenen Gerät) gibt es technisch noch; er ist
+nicht vorgesehen, weil Controller und dieses Script nie auf demselben Shelly laufen.
+
+---
+
+## Die Dashboard-Seite
+
+Ergänzend zur [Bedienung](dashboard.md#bedienung) – wie die Seite mit der Schnittstelle umgeht.
+
+**Abfragetakt.** Die Seite holt `status_api` fest alle 4 s (`POLL_SEC`) und `config_api` beim Laden einmal, danach alle 32 s sowie sofort nach einer eigenen Eingabe. Der 4-s-Takt muss unter `IDLE_MS` (15 s) im Script bleiben, sonst pausiert dort die Hintergrundabfrage zwischen zwei Seitenaufrufen. Das Script selbst fragt Netzzähler und Hubs nur alle `pollIntervalSec` (Standard 8 s) ab – die Anzeige ist also bis zu 8 s alt.
+
+**Manuelles Laden.** Start und Beenden sind jeweils **ein** kombinierter `kvs_set_api`-Aufruf (siehe [Manuelles Laden](#manuelles-laden)). Die Reihenfolge der Schreibvorgänge und eine Pause von 500 ms dazwischen (`KVS_STEP_PAUSE_MS`) übernimmt das Script. Die Seite setzt während des Vorgangs ihre eigene Abfrage aus und wartet danach noch 1,5 s (`SETTLE_MS`), damit der Controller seinen Zyklus abschließen kann. Ob manuell geladen wird, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`); den Vorzustand hält das Script, deshalb übersteht ein Reload der Seite einen laufenden Ladevorgang.
+
+**Sperren.** Nach einer Eingabe ist das Bedienelement 4 s gesperrt (`LOCK_MS`), damit der frisch gesetzte Wert nicht vom nächsten `config_api`-Abgleich überschrieben wird. Schlägt das Schreiben fehl, wird sofort wieder freigegeben. Die ganze Seite sperrt sich nach 60 s ohne Eingabe (`RELOCK_MS`); der Zustand wird nicht gespeichert.
+
+**Reserve-Obergrenze.** Die Seite begrenzt `minSoc` auf `maxSoc − 1`, weil der Controller beide Werte nur beim Start gegeneinander abgleicht (siehe [Schlüssel und Wertebereiche](#schlüssel-und-wertebereiche)). Wer direkt in die KVS schreibt, umgeht diesen Schutz.
+
+**Verlauf.** Die Kurven werden in der Seite geführt (`MAX_POINTS`, 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im Script würde einen Reload überleben, sprengte aber den Speicher des Shelly.
+
+**Anzeigewerte.** Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs (Faktor 0,01 V); Packs, die 0 melden, werden übersprungen. Fehlt `solarInputPower` (z. B. bei reinen AC-Ladern), entfällt die PV-Angabe, statt „0 W“ zu zeigen. Geräteliste, Sollwert und Reglerstände kommen ausschließlich aus `config_api` – in der HTML-Datei steht keine Geräte-Konfiguration.

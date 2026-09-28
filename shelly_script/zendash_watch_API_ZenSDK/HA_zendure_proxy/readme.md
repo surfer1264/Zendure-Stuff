@@ -1,5 +1,7 @@
 # Zendure Dashboard Proxy – Home Assistant App
 
+[← zurück zu Dashboard einrichten](../dashboard.md)
+
 Dokumentation zur Einrichtung des Zendure-Dashboard-Proxys als eigene App
 (früher „Add-on“) unter Home Assistant OS (Supervisor). Der Proxy löst das
 CORS/Origin-Problem der Shelly-Firmware: Der Browser spricht nur noch mit
@@ -13,9 +15,9 @@ sondern nach dem Start im Browser auf der Einrichtungsseite.
 
 - Home Assistant OS mit Supervisor
 - Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
-- die beiden Dateien `zendure_proxy.py` und `zendure-dashboard.html`
-- IP-Adresse des **Dashboard-Shelly** (auf dem das API-Script läuft) und die
-  **Script-ID** des API-Scripts – beides wird erst nach der Installation
+- alle sechs Dateien aus [diesem Ordner](.) (`config.yaml`, `build.yaml`, `Dockerfile`, `run.sh`, `zendure_proxy.py`, `zendure-dashboard.html`)
+- IP-Adresse des **Dashboard-Shelly** (auf dem zenDash-API + Watchdog läuft) und die
+  **Script-Nummer** dieses Scripts (über den Configurator hochgeladen heißt es `zd`) – beides wird erst nach der Installation
   gebraucht
 
 > **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons“ im
@@ -145,8 +147,8 @@ Heimnetz erreichbar.
 
 ## Einstellungen ändern
 
-Ändert sich die IP des Shelly oder die Script-ID (z. B. nach einem erneuten
-Hochladen des API-Scripts), einfach
+Ändert sich die IP des Shelly oder die Script-Nummer (z. B. wenn das Script neu
+angelegt wurde – beim Update über den Configurator bleibt sie gleich), einfach
 
 ```
 http://<ha-ip>:8000/setup
@@ -169,7 +171,8 @@ Schritt 6 wiederholen.
 geänderten Dateien nicht neu ein, es muss neu gebaut werden.
 
 Nochmal ganz deutlich: Ändert sich `zendure-dashboard.html`, muss die App in
-HA deinstalliert und neu gebaut werden, nach obigem Muster! Nur der Austausch
+HA deinstalliert und neu gebaut werden, nach obigem Muster! Das ist nach jedem
+Script-Update nötig, denn Dashboard-Seite und Script müssen dieselbe Versionsnummer haben. Nur der Austausch
 der Datei im Ordner `/addons/zendure_proxy/` bewirkt gar nichts – der
 Container enthält eine eigene Kopie.
 

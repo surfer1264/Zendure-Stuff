@@ -14,53 +14,53 @@ Speicheroptimierung (mem_peak im Regelbetrieb 19 880 -> 19 026 Bytes)
 
 ## Changelog 5.0.8
 
-only für Verhalten bei `standbySmartModeZero: false` (aktueller Stand) unverändert zu vorher
+Bei `standbySmartModeZero: false` (Standard) ist das Verhalten unverändert.
 
-aber wenn `standbySmartModeZero: true`
+Mit `standbySmartModeZero: true`
 wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird 
 
-`standbySmartModeZero: true` ist grundsätzlich nicht empfohlen
+`standbySmartModeZero: true` ist grundsätzlich nicht empfohlen.
 Es gibt Geräte, die nicht sauber in den (echten) Standby wechseln und latent z.B: 20W einspeisen oder laden
 
-Obige ANpassung sorgt dafpr, dass ein Pendeln um den Nullpunkt nicht zu einem latenten Flash-Schreiben führt, sondern erst nach einer Wartezeit (15 Takte = 1 Minute) zu einem Standby führt. 
+Diese Anpassung sorgt dafür, dass ein Pendeln um den Nullpunkt nicht zu einem latenten Flash-Schreiben führt, sondern erst nach einer Wartezeit (15 Takte = 1 Minute) zu einem Standby führt. 
 
 ## Changelog 5.0.7
 
-Manuelle Kalibrierung wird über `socStatus`gemeldet
-`socStatus: 1`Kalibrierung aktiv
+Manuelle Kalibrierung wird über `socStatus` gemeldet
+`socStatus: 1` Kalibrierung aktiv
 
-Gerät wird aus der Verteilung heraraus genommen.
+Gerät wird aus der Verteilung herausgenommen.
 
 * https://github.com/surfer1264/Zendure-Stuff/issues/107
 
-## Changlog 5.0.6
+## Changelog 5.0.6
 
 NEUER Parameter hinter dem CONFIG-Block (da Default:0)
 `CONFIG.dischargeFixed`
 
 Erweiterung: Regelung wird mit einem festen Regeltarget (Fixer Wert) überschrieben
-Die Regelugn wird damit deaktiviert und nur der fixe Wert geliefert
+Die Regelung wird damit deaktiviert und nur der fixe Wert geliefert
 
 `CONFIG.dischargeFixed=0` : Regelung aktiv
-`CONFIG.dischargeFixed>0 und >dischargeStartupPower` : Regelung deaktiv, System gibt `dischargeFixed` aus
+`CONFIG.dischargeFixed ≥ dischargeStartupPower` : Regelung deaktiviert, System gibt `dischargeFixed` aus
 nur als KVS-Wert verfügbar wenn kvsEnabled: true
 
 * https://github.com/surfer1264/Zendure-Stuff/issues/103
 
-## Changlog 5.0.4
+## Changelog 5.0.4
 
 Bug: manuelles Laden startet nur sporadisch
 
 * https://github.com/surfer1264/Zendure-Stuff/issues/104
 
-## Changlog 5.0.2
+## Changelog 5.0.2
 
 Entprellung Concentrate => Above 
 
 Beispiel:
 ein kurzer Lastimpuls (Kühlschrank-Kompressor: 1500 W) soll nicht zu einer Zuschaltung von weiteren Geräten führen...
 1 Takt sorgt dafür , dass solche kurzen Impulse Entprellt werden
-Parameter SPREAD_TRIGGER_CYCLES ist NICHT Teil des CONfig-Blockes und steht per Default auf 1
+Parameter SPREAD_TRIGGER_CYCLES ist NICHT Teil des CONFIG-Blocks und steht per Default auf 1
 
 ## Changelog 4.5.2/5.0.0
 
@@ -72,12 +72,12 @@ doppelte Verifikation gelöscht
 
 ## Changelog 4.2.3 / 4.3.0
 
-only interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%) 
+Nur interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%) 
 
 ## Changelog 4.2.2
 
 adressiert das Verhalten von mehr als zwei Solarflows im selektiven Bypass-Fall
-**Geräte im Bypass sind nicht mehr steuerbar** sie leien einfach weiter.
+**Geräte im Bypass sind nicht mehr steuerbar** sie laufen einfach weiter.
 
 Hier geht es um die korrekte Berücksichtigung Ihres Anteils unter Berücksichtigung verschiedener Fallgruppen.
 
@@ -106,8 +106,7 @@ Neuer Konfigurator verfügbar
 
 ab hier beginnt eigene Releasestrecke für den Controller
 
-1. [bis Version 3.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs.js)
-2. [ab Version 4.x.x Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) Minifyer eingesetzt
+Ab 4.0.0 wird das Script mit einem Minifier verkleinert: [aktuelles Script herunterladen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js). Die alte, nicht verkleinerte Fassung bis 3.x liegt nicht mehr im Repo.
 
 Eine Weiterentwicklung kann nur erfolgen unter Nutzung von **Minify**, da die Script-Engine nur js-Scripte bis 50kB zulässt.
 Mit einem **Terser** werden alle unnötigen Leerzeichen, Zeilenumbrüche und Kommentare aus dem Code entfernt. Dies kann auch ein Python-Script erledigen.

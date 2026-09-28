@@ -4,6 +4,8 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
+> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch den [Configurator](../Multiconfigurator/readme.md) mit Helfer (Direkt-Upload und Update). Für eigene Deploy-Pipelines gibt es die Werkzeuge jetzt in den Ordnern [Controller/Deploy](../Controller/Deploy) und [zendash_watch_API_ZenSDK/Deploy](../zendash_watch_API_ZenSDK/Deploy). Diese Seite bleibt nur zum Nachschlagen.
+
 
 Das `deploy Script` ersetzt die generische Konfig mit deiner konkreten Config `myconfig.js`, lädt den Controller auf den Shelly und startet den Controller. Update erfolgt nach gleichem Muster.
 
