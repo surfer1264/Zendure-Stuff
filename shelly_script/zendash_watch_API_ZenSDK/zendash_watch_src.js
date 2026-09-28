@@ -25,7 +25,8 @@
 //                        dischargeStartupPower, devices:[{..., lastFull}] }
 //   GET status_api  -> { grid:{power,online},
 //                        hubs:[{id,soc,power,acMode,socLimit,
-//                               gridReverse,pv,minVol,online}] }
+//                               gridReverse,pv,minVol,online,
+//                               home,gridIn,packIn,packOut}] }
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
 // AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
@@ -42,24 +43,7 @@
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-// ---------------------------------------------------------------------
-// CHANGELOG
-// 3.4.1  config_api-Cache wieder entfernt: kostete ~770 B Heap bei offenem
-//        Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie.
-//        Jede config_api-Abfrage liest die KVS frisch. Dashboard 3.4.1
-//        unveraendert bis auf die Versionsnummer.
-// 3.4.0  Speicheroptimierung:
-//        - Einmal-Code der Startphase nach dem Start freigegeben
-//        - je nach CONFIG ungenutzte Helfer freigegeben (ENCODE_MAP/
-//          simpleEncode bei WEBHOOK, kvsItemsToMap bei entfernter KVS,
-//          readFieldPath ohne http_json)
-//        - config_api-Antwort bis zu 30 s gecacht (in 3.4.1 entfernt)
-//        - Dashboard fragt config_api nur noch alle 32 s ab und beim
-//          Laden nur einmal (vorher doppelt)
-//        - Heap-Ausgabe (memLog) an den wichtigsten Stellen, nur bei debug
-// 3.3.1  (Stand vor diesem Changelog)
-// ---------------------------------------------------------------------
-let VERSION = "3.4.1";
+let VERSION = "3.5.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -549,7 +533,7 @@ function kvsSetOne(key, value, callback) {
 }
 
 // =====================================================
-// Letzte Vollladung (echte 100 %) - ereignisgesteuert (seit 3.3.1)
+// Letzte Vollladung (echte 100 %) - ereignisgesteuert
 //
 // Ablauf je Geraet:
 //   1. Im bestehenden Poll: SoC == 100 und nextCheckAt erreicht?
@@ -984,6 +968,9 @@ function updateGridPowerStatus(callback) {
 //
 // HUBS[i]  - genau die Felder, die status_api ausliefert (Dashboard-
 //            Schnittstelle unveraendert). minVol als Rohwert (331 = 3,31 V).
+//            home/gridIn/packIn/packOut: Leistungen in W aus dem Report
+//            (outputHomePower, gridInputPower, packInputPower,
+//            outputPackPower), null = Feld fehlt.
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -994,7 +981,8 @@ let WSTATE = [];
 for (let hi = 0; hi < CONFIG.devices.length; hi++) {
   HUBS[hi] = {
     id: hi, soc: null, power: 0, acMode: null, socLimit: null,
-    gridReverse: null, pv: null, minVol: null, online: false
+    gridReverse: null, pv: null, minVol: null, online: false,
+    home: null, gridIn: null, packIn: null, packOut: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1021,6 +1009,7 @@ function setHubOffline(index) {
   let h = HUBS[index];
   h.soc = null; h.power = 0; h.acMode = null; h.socLimit = null;
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
+  h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1111,6 +1100,10 @@ function extractHub(index, body, watchNow, logPacks) {
   hub.socLimit = jsonNum(body, "socLimit");
   hub.gridReverse = jsonNum(body, "gridReverse");
   hub.pv = jsonNum(body, "solarInputPower");
+  hub.home = jsonNum(body, "outputHomePower");
+  hub.gridIn = jsonNum(body, "gridInputPower");
+  hub.packIn = jsonNum(body, "packInputPower");
+  hub.packOut = jsonNum(body, "outputPackPower");
   hub.online = true;
   // Letzte Vollladung: nur Merker setzen, alles Weitere nach dem Poll
   if (soc === FULL_SOC && Date.now() >= LASTFULL[index].nextCheckAt) LASTFULL[index].seen = true;
@@ -1247,7 +1240,7 @@ function sendDigest(headerText) {
   for (let i = 0; i < CONFIG.devices.length; i++) {
     let cfg = CONFIG.devices[i];
     if (!cfg.watch) continue;
-    let lbl = cfg.label ? cfg.label.substr(0, 6) : "??????";
+    let lbl = cfg.label ? cfg.label.substr(0, 10) : "??????";
     text += "\n" + lbl + ": " + deviceValues(i);
   }
   notify(text);
