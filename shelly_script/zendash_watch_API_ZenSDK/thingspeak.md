@@ -6,7 +6,7 @@ Der Dashboard-Proxy `zendure_proxy.py` kann die Messwerte deiner Speicher jede M
 
 Der Upload ist optional und steckt in einer eigenen Datei, `ts_bridge.py`. Ohne diese Datei läuft der Proxy ganz normal, nur ohne ThingSpeak.
 
-> **Hinweis zum Datenschutz:** Mit dem Upload verlassen die Messwerte dein Heimnetz und liegen bei ThingSpeak (MathWorks). Deine Zendure-Geräte und der Shelly brauchen dafür keinen Internetzugang, nur der Rechner, auf dem der Proxy läuft.
+> **Hinweis zum Datenschutz:** Mit dem Upload verlassen die Messwerte dein Heimnetz. Deine Zendure-Geräte und der Shelly brauchen dafür keinen Internetzugang, nur der Rechner, auf dem der Proxy läuft. Mehr dazu unter [Betreiber und Datenschutz](#betreiber-und-datenschutz).
 
 ## Inhalt
 
@@ -16,6 +16,7 @@ Der Upload ist optional und steckt in einer eigenen Datei, `ts_bridge.py`. Ohne 
 - [So arbeitet der Upload](#so-arbeitet-der-upload)
 - [Feldbelegung](#feldbelegung)
 - [Kontingent im Free-Tarif](#kontingent-im-free-tarif)
+- [Betreiber und Datenschutz](#betreiber-und-datenschutz)
 - [Meldungen im Log](#meldungen-im-log)
 - [Fehlersuche](#fehlersuche)
 
@@ -112,6 +113,20 @@ Der kostenlose ThingSpeak-Tarif erlaubt rund 3 Millionen Meldungen pro Jahr, als
 | 4 | 5.760 |
 
 Die Grenze setzt hier nicht das Kontingent, sondern die Zahl der Channels: Der Free-Tarif erlaubt höchstens 4. Ab dem 5. Hub brauchst du einen kostenpflichtigen Tarif oder einen zweiten Account.
+
+## Betreiber und Datenschutz
+
+**Betreiber:** ThingSpeak ist ein Dienst von MathWorks, dem Hersteller von MATLAB, mit Sitz in Natick, Massachusetts (USA).
+
+**Speicherort:** Eine eigene Angabe zum Speicherort der ThingSpeak-Channel-Daten macht MathWorks nicht. Allgemein speichert MathWorks strukturierte Kundendaten in den USA und in Irland und nutzt externe IT-Infrastruktur-Anbieter. Geh also davon aus, dass deine Messwerte in den USA liegen können.
+
+**Rechtlicher Rahmen:** MathWorks ist unter dem EU-US Data Privacy Framework (DPF) zertifiziert und nutzt für Übermittlungen ins Ausland u. a. die EU-Standardvertragsklauseln. Daten werden laut MathWorks nicht verkauft oder vermietet. Auskunft und Löschung kannst du über privacy@mathworks.com beantragen. Details stehen in der [MathWorks Data Privacy FAQ](https://www.mathworks.com/company/trust-center/privacy-faq.html) und der [Privacy Policy](https://www.mathworks.com/company/trust-center/privacy-policy.html).
+
+**Was übertragen wird:** Nur Leistungswerte, Ladestände und Zeitstempel, keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Ganz belanglos sind solche Verläufe trotzdem nicht: Am Hausverbrauch über den Tag lässt sich zum Beispiel ablesen, wann jemand zu Hause ist.
+
+**Empfehlung:** Lass deine Channels auf **privat**, das ist die Voreinstellung. Öffentliche Channels kann jeder ohne Key einsehen. Wer seine Daten nicht außer Haus geben möchte, lässt den Upload einfach aus – der Proxy läuft auch ganz ohne `ts_bridge.py`, und ohne aktiven Upload geht nichts nach draußen.
+
+Stand dieser Angaben: September 2026. Maßgeblich sind die aktuellen Seiten von MathWorks.
 
 ## Meldungen im Log
 
