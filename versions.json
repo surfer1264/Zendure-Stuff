@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-28T08:23:14Z",
+  "generated": "2026-09-28T14:20:15Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -93,12 +93,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.4.1",
+      "version": "3.5.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/0a7656c54cc1abd406b42e154ebc89874ca2f70d/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38531,
-      "codeHash": "sha256:895a36d798b27d049cc4a1760d7f0f42d13937f66e56ccbdc3c95c982886b2e6",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/be0655351f82632fbed5323aaa29430a9056ea57/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38803,
+      "codeHash": "sha256:c066f66ee49869a0ce88386eec5f6372ea64f53e671d746a629cda0e54cef19f",
       "configKeys": [
         "api",
         "apiEvents",
@@ -144,14 +144,21 @@
         "watchdog",
         "webhookUrl"
       ],
-      "changes": [
-        "config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch",
-        "Dashboard: nur Versionsnummer angehoben (Script und Dashboard muessen gleich sein)"
-      ],
+      "changes": [],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.4.1",
+          "schema": 1,
+          "codeHash": "sha256:895a36d798b27d049cc4a1760d7f0f42d13937f66e56ccbdc3c95c982886b2e6",
+          "changes": [
+            "config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch",
+            "Dashboard: nur Versionsnummer angehoben (Script und Dashboard muessen gleich sein)"
+          ],
+          "notice": null
+        },
         {
           "version": "3.4.0",
           "schema": 1,
