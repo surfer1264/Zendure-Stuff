@@ -35,7 +35,7 @@ Der Upload ist optional und steckt in einer eigenen Datei, `ts_bridge.py`. Ohne 
 Du brauchst **einen Channel pro Hub**.
 
 1. In ThingSpeak unter *Channels → My Channels → New Channel* einen Channel anlegen, z. B. mit dem Namen des Geräts.
-2. **Field 1 bis 7** aktivieren und benennen, siehe [Feldbelegung](#feldbelegung). Field 8 bleibt frei.
+2. **Field 1 bis 8** aktivieren und benennen, siehe [Feldbelegung](#feldbelegung).
 3. Speichern und im Tab *API Keys* den **Write API Key** kopieren (16 Zeichen).
 4. Für jeden weiteren Hub wiederholen.
 
@@ -80,6 +80,7 @@ Die Keys landen in `zendure_thingspeak_config.json` neben dem Proxy. Beim Umzug 
 |---|---|
 | Hub online | Alle vorhandenen Felder |
 | Gerät ohne PV-Eingang | Field 2 bleibt leer |
+| Keine Pack-Daten (`minVol` null oder 0) | Field 8 bleibt leer |
 | Netzzähler offline | Field 7 bleibt leer |
 | Hub offline | Nur Status `offline`, alle Felder leer |
 | Shelly nicht erreichbar | Nur Status `keine Daten`, alle Felder leer |
@@ -97,7 +98,7 @@ Lehnt ThingSpeak eine Meldung ab oder ist das Internet weg, versucht der Proxy e
 | Field 5 | Entladen aus dem Akku in W | `packIn` | `packInputPower` |
 | Field 6 | Laden in den Akku in W | `packOut` | `outputPackPower` |
 | Field 7 | Netzsaldo in W (positiv = Bezug) | `grid.power` | – |
-| Field 8 | frei | – | – |
+| Field 8 | Niedrigste Zellspannung in V | `minVol` ÷ 100 | `packData[].minVol` |
 
 Field 7 ist in allen Channels gleich, weil es nur einen Netzzähler gibt.
 

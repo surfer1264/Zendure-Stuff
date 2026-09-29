@@ -24,7 +24,7 @@ Feldbelegung je Channel (ein Channel pro Hub):
   field5 packInputPower  (status_api: packIn)
   field6 outputPackPower (status_api: packOut)
   field7 Netzsaldo       (status_api: grid.power)
-  field8 frei
+  field8 minVol          (status_api: minVol, umgerechnet in V, z. B. 3.25)
 home/gridIn/packIn/packOut liefert status_api erst ab der erweiterten
 zendash_watch-Version. Fehlen sie, bleiben die Felder einfach leer.
 Hub offline oder keine Daten: Eintrag nur mit Status, ohne Feldwerte.
@@ -134,6 +134,9 @@ def _take():
             out[hid] = {"status": "offline"}
             continue
         f = {"field1": h.get("soc"), "field7": grid}   # soc = electricLevel
+        mv = h.get("minVol")                           # Rohwert, 325 = 3,25 V
+        if isinstance(mv, (int, float)) and mv > 0:    # null/0 = kein packData
+            f["field8"] = round(mv / 100, 2)
         for fld, k in VALUE_FIELDS:
             f[fld] = h.get(k)
         out[hid] = {k: v for k, v in f.items() if isinstance(v, (int, float))}
