@@ -1,10 +1,10 @@
 # ThingSpeak-Upload
 
-[← zurück zu zenDash-API + Watchdog](readme.md) · [Dashboard einrichten](dashboard.md) · [API-Beschreibung](API.md)
+[← zurück zu zenDash-API + Watchdog](readme.md) · [Dashboard einrichten](dashboard.md) · [API-Beschreibung](API.md) · [ThingsBoard-Upload](thingsboard.md)
 
 Der Dashboard-Proxy `zendure_proxy.py` kann die Messwerte deiner Speicher jede Minute an [ThingSpeak](https://thingspeak.mathworks.com) senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen, ohne selbst eine Datenbank betreiben zu müssen.
 
-Der Upload ist optional und steckt in einer eigenen Datei, `ts_bridge.py`. Ohne diese Datei läuft der Proxy ganz normal, nur ohne ThingSpeak.
+Der Upload ist optional und steckt in einer eigenen Datei, `ts_bridge.py`. Ohne diese Datei läuft der Proxy ganz normal, nur ohne ThingSpeak. Unabhängig davon kann der Proxy die Werte zusätzlich an [ThingsBoard](thingsboard.md) senden.
 
 > **Hinweis zum Datenschutz:** Mit dem Upload verlassen die Messwerte dein Heimnetz. Deine Zendure-Geräte und der Shelly brauchen dafür keinen Internetzugang, nur der Rechner, auf dem der Proxy läuft. Mehr dazu unter [Betreiber und Datenschutz](#betreiber-und-datenschutz).
 
@@ -45,9 +45,9 @@ Wichtig: Gebraucht wird der **Write API Key des Channels**. Der User API Key dei
 
 1. `ts_bridge.py` neben `zendure_proxy.py` legen und den Proxy starten. In der Startmeldung steht dann:
    ```
-   ThingSpeak: http://localhost:8000/thingspeak
+   ThingSpeak:  http://localhost:8000/thingspeak
    ```
-   Steht dort `nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
+   Steht dort `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
 2. `http://<proxy-host>:8000/thingspeak` im Browser öffnen.
 3. Auf **„Geräte vom Shelly laden“** tippen. Für jeden Hub erscheint ein Eingabefeld.
 4. Die Write API Keys eintragen, **„Upload aktiv“** anhaken und **„Speichern & Keys testen“**.
@@ -72,7 +72,7 @@ Die Keys landen in `zendure_thingspeak_config.json` neben dem Proxy. Beim Umzug 
 
 **Veraltete Antworten werden erkannt.** Eine Antwort gilt nur als frisch, wenn die vorige Anfrage weniger als 14 s zurückliegt, das Script also wach war. Fragt z. B. ein vom Browser gedrosselter alter Tab nur einmal pro Minute, verwirft der Proxy diese Antworten und holt sich selbst einen frischen Stand.
 
-**Upload aus heißt keine Anfragen.** Ist der Upload ausgeschaltet oder kein Key hinterlegt, stellt der Proxy **keine einzige** Anfrage an die zendash-API. Er liest dann auch nicht beim Dashboard mit.
+**Upload aus heißt keine Anfragen.** Ist der Upload ausgeschaltet oder kein Key hinterlegt, stellt der Proxy **keine einzige** Anfrage an die zendash-API. Er liest dann auch nicht beim Dashboard mit. Ausnahme: Ist der [ThingsBoard-Upload](thingsboard.md) aktiv, fragt der Proxy für diesen weiter ab – die Abfragen teilen sich beide Ziele.
 
 **Fehlende Werte bleiben leer.** Liefert `status_api` einen Wert nicht, sendet der Proxy das Feld nicht mit, statt eine 0 einzutragen. In ThingSpeak entsteht an der Stelle eine Lücke.
 
@@ -123,7 +123,7 @@ Die Grenze setzt hier nicht das Kontingent, sondern die Zahl der Channels: Der F
 
 **Rechtlicher Rahmen:** MathWorks ist unter dem EU-US Data Privacy Framework (DPF) zertifiziert und nutzt für Übermittlungen ins Ausland u. a. die EU-Standardvertragsklauseln. Daten werden laut MathWorks nicht verkauft oder vermietet. Auskunft und Löschung kannst du über privacy@mathworks.com beantragen. Details stehen in der [MathWorks Data Privacy FAQ](https://www.mathworks.com/company/trust-center/privacy-faq.html) und der [Privacy Policy](https://www.mathworks.com/company/trust-center/privacy-policy.html).
 
-**Was übertragen wird:** Nur Leistungswerte, Ladestände und Zeitstempel, keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Ganz belanglos sind solche Verläufe ggf. trotzdem nicht.
+**Was übertragen wird:** Nur Leistungswerte, Ladestände und Zeitstempel, keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Ganz belanglos sind solche Verläufe trotzdem nicht: Am Hausverbrauch über den Tag lässt sich zum Beispiel ablesen, wann jemand zu Hause ist.
 
 **Empfehlung:** Lass deine Channels auf **privat**, das ist die Voreinstellung. Öffentliche Channels kann jeder ohne Key einsehen. Wer seine Daten nicht außer Haus geben möchte, lässt den Upload einfach aus – der Proxy läuft auch ganz ohne `ts_bridge.py`, und ohne aktiven Upload geht nichts nach draußen.
 
@@ -137,18 +137,18 @@ Im Normalbetrieb schreibt der Proxy pro Minute und Hub eine Zeile:
 [thingspeak] Hub 0 2026-09-28T15:14:00Z gesendet (Eintrag 64)
 ```
 
-Ohne offenes Dashboard kommen davor zwei Zeilen dazu:
+Ohne offenes Dashboard kommen davor zwei Zeilen dazu. Sie gelten für ThingSpeak und ThingsBoard gemeinsam:
 
 ```
-[thingspeak] kein Dashboard offen - eigene Abfrage status_api (wecken)
-[thingspeak] eigene Abfrage status_api (frischer Stand)
+[bridge] kein Dashboard offen - eigene Abfrage status_api (wecken)
+[bridge] eigene Abfrage status_api (frischer Stand)
 ```
 
 Mit `-q` oder `-s` fallen diese Zeilen weg. Fehler erscheinen immer:
 
 ```
 [thingspeak] Hub 0 2026-09-28T15:14:00Z: verworfen (...)
-[thingspeak] Shelly nicht erreichbar: ...
+[bridge] Shelly nicht erreichbar: ...
 ```
 
 ## Fehlersuche

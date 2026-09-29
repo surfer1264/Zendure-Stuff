@@ -64,7 +64,7 @@ import webbrowser
 import re
 
 # ThingSpeak-Upload ist optional: fehlt ts_bridge.py, laeuft der Proxy
-# ganz normal weiter, nur ohne /thingspeak und ohne Mitlesen.
+# ganz normal weiter, nur ohne /thingspeak, /thingsboard und ohne Mitlesen.
 try:
     import ts_bridge
 except ImportError:
@@ -375,11 +375,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_setup()
             return
 
-        if path == "/thingspeak":
+        if path in ("/thingspeak", "/thingsboard"):
             if ts_bridge is None:
-                self.send_error(404, "ThingSpeak nicht verfuegbar: ts_bridge.py fehlt neben dem Proxy")
+                self.send_error(404, "Cloud-Upload nicht verfuegbar: ts_bridge.py fehlt neben dem Proxy")
                 return
-            self._html(ts_bridge.page_html())
+            if path == "/thingspeak":
+                self._html(ts_bridge.page_html())
+            else:
+                self._html(ts_bridge.page_html_tb())
             return
 
         if path == "/" or path == "":
@@ -396,8 +399,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_error(404, "Nicht gefunden: " + path)
 
     def do_POST(self):
-        if self.path == "/thingspeak":
-            self.post_thingspeak()
+        if self.path in ("/thingspeak", "/thingsboard"):
+            self.post_cloud(self.path)
             return
         if self.path != "/setup":
             self.send_error(404, "Nicht gefunden: " + self.path)
@@ -426,7 +429,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
 
-    def post_thingspeak(self):
+    def post_cloud(self, path):
         if ts_bridge is None:
             self._json(404, {"ok": False, "error": "ts_bridge.py fehlt neben dem Proxy"})
             return
@@ -439,7 +442,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", 0))
             data = json.loads(self.rfile.read(length).decode("utf-8"))
-            ok, error = ts_bridge.handle_post(data)
+            if path == "/thingspeak":
+                ok, error = ts_bridge.handle_post(data)
+            else:
+                ok, error = ts_bridge.handle_post_tb(data)
             self._json(200, {"ok": ok, "error": error})
         except Exception as e:
             self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
@@ -625,9 +631,10 @@ def main():
     if QUIET:
         say("  Protokoll: aus (-q)")
     if ts_bridge is not None:
-        say("  ThingSpeak: http://localhost:{}/thingspeak".format(PORT))
+        say("  ThingSpeak:  http://localhost:{}/thingspeak".format(PORT))
+        say("  ThingsBoard: http://localhost:{}/thingsboard".format(PORT))
     else:
-        say("  ThingSpeak: nicht verfuegbar (ts_bridge.py fehlt)")
+        say("  Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)")
     say("(Strg+C zum Beenden)\n")
 
     if ts_bridge is not None:
