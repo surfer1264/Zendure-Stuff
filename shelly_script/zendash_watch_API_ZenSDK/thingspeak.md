@@ -123,7 +123,7 @@ Die Grenze setzt hier nicht das Kontingent, sondern die Zahl der Channels: Der F
 
 **Rechtlicher Rahmen:** MathWorks ist unter dem EU-US Data Privacy Framework (DPF) zertifiziert und nutzt für Übermittlungen ins Ausland u. a. die EU-Standardvertragsklauseln. Daten werden laut MathWorks nicht verkauft oder vermietet. Auskunft und Löschung kannst du über privacy@mathworks.com beantragen. Details stehen in der [MathWorks Data Privacy FAQ](https://www.mathworks.com/company/trust-center/privacy-faq.html) und der [Privacy Policy](https://www.mathworks.com/company/trust-center/privacy-policy.html).
 
-**Was übertragen wird:** Nur Leistungswerte, Ladestände und Zeitstempel, keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Ganz belanglos sind solche Verläufe trotzdem nicht: Am Hausverbrauch über den Tag lässt sich zum Beispiel ablesen, wann jemand zu Hause ist.
+**Was übertragen wird:** Nur Leistungswerte, Ladestände und Zeitstempel, keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Ganz belanglos sind solche Verläufe ggf. trotzdem nicht.
 
 **Empfehlung:** Lass deine Channels auf **privat**, das ist die Voreinstellung. Öffentliche Channels kann jeder ohne Key einsehen. Wer seine Daten nicht außer Haus geben möchte, lässt den Upload einfach aus – der Proxy läuft auch ganz ohne `ts_bridge.py`, und ohne aktiven Upload geht nichts nach draußen.
 
