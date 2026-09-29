@@ -7,7 +7,7 @@
 - Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier
 - Dashboard: pausiert alle Abfragen, solange der Tab verdeckt oder das Fenster minimiert ist, und fragt beim Zurueckkehren sofort `status_api` und `config_api` ab. Ein vergessener Hintergrund-Tab haelt die Hintergrundabfrage des Scripts damit nicht mehr dauerhaft wach
 - Dashboard: Versionsnummer 3.5.0
-- Proxy: optionaler ThingSpeak-Upload ueber `ts_bridge.py` mit Einrichtungsseite `/thingspeak`, siehe [ThingSpeak-Upload](thingspeak.md). Fehlt `ts_bridge.py`, laeuft der Proxy unveraendert ohne ThingSpeak
+- Proxy: optionaler ThingSpeak-Upload / ThingsBoard-Upload ueber `ts_bridge.py` mit Einrichtungsseite `/thingspeak` oder `thingsboard`, siehe [ThingSpeak-Upload](thingspeak.md) / [ThingsBoard-Upload](thingsboard.md). Fehlt `ts_bridge.py`, laeuft der Proxy unveraendert ohne ThingSpeak / Thingsboard
 - Proxy: vom Browser abgebrochene Verbindungen (Tab geschlossen, Reload) erzeugen keinen Traceback mehr im Log
 
 ## Changelog 3.4.1
