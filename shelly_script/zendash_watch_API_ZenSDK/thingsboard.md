@@ -16,6 +16,7 @@ Der Upload ist optional und läuft **unabhängig vom [ThingSpeak-Upload](thingsp
 - [So arbeitet der Upload](#so-arbeitet-der-upload)
 - [Geräte und Werte](#geräte-und-werte)
 - [Kontingent im Free-Tarif](#kontingent-im-free-tarif)
+- [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-im-free-plan-zu-bleiben)
 - [Eigener ThingsBoard-Server](#eigener-thingsboard-server)
 - [Betreiber und Datenschutz](#betreiber-und-datenschutz)
 - [Meldungen im Log](#meldungen-im-log)
@@ -28,7 +29,7 @@ Der Upload ist optional und läuft **unabhängig vom [ThingSpeak-Upload](thingsp
 - **zendash_watch ab 3.5.0** auf dem Dashboard-Shelly. Ältere Versionen funktionieren auch, liefern aber nur Ladestand, PV, Zellspannung und Netzsaldo. Die übrigen Leistungswerte fehlen dann.
 - **Den Proxy** `zendure_proxy.py`, eingerichtet wie in der [Dashboard-Anleitung](dashboard.md) beschrieben.
 - **`ts_bridge.py`** im selben Ordner wie der Proxy.
-- **Einen ThingsBoard-Zugang:** entweder ein Konto bei der ThingsBoard Cloud (für Europa `https://eu.thingsboard.cloud`) – der kostenlose Tarif reicht für bis zu 3 Speicher, siehe [Kontingent](#kontingent-im-free-tarif) – oder einen [eigenen Server](#eigener-thingsboard-server).
+- **Einen ThingsBoard-Zugang:** entweder ein Konto bei der ThingsBoard Cloud (für Europa `https://eu.thingsboard.cloud`) – der kostenlose Tarif reicht für bis zu 3 Speicher, **bewahrt die Daten aber nur 30 Tage auf**, siehe [Kontingent](#kontingent-im-free-tarif) – oder einen [eigenen Server](#eigener-thingsboard-server).
 - Der Proxy muss dauerhaft laufen, z. B. auf dem NAS oder als Home Assistant App. Läuft er nicht, wird nichts gesendet.
 
 ## ThingsBoard vorbereiten
@@ -117,24 +118,114 @@ ThingsBoard speichert keine Einheiten. Die trägst du im jeweiligen Dashboard-Wi
 
 ## Kontingent im Free-Tarif
 
-Der kostenlose Tarif der ThingsBoard Cloud erlaubt **5 Geräte** und pro Monat **1 Million Datenpunkte** sowie 0,5 Millionen Nachrichten. Ein Datenpunkt ist ein einzelner Wert, eine Nachricht ein Eintrag pro Gerät und Minute.
+Der kostenlose Tarif der ThingsBoard Cloud erlaubt **5 Geräte** und pro Monat **1 Million Datenpunkte** sowie **30 Millionen Datenpunkt-Speichertage**. Ein Datenpunkt ist ein einzelner Wert. Speichertage sind Datenpunkte mal Aufbewahrungsdauer: Jeder Datenpunkt wird im Free-Tarif 30 Tage gespeichert und zählt deshalb sofort mit 30 Speichertagen. Die 30 Millionen entsprechen also genau 1 Million Datenpunkten im Monat – beide Grenzen sind gleich eng.
 
 Ein Speicher liefert bis zu 7 Datenpunkte pro Minute, das Netz-Gerät einen:
 
-| Speicher | Geräte | Datenpunkte pro Minute | pro Monat (31 Tage) |
+| Speicher | Geräte | Datenpunkte pro Minute | pro Tag | pro Monat (31 Tage) | Speichertage pro Monat |
+|---|---|---|---|---|---|
+| 1 | 2 | 8 | 11.520 | ca. 357.000 | ca. 10,7 Mio. |
+| 2 | 3 | 15 | 21.600 | ca. 670.000 | ca. 20,1 Mio. |
+| 3 | 4 | 22 | 31.680 | ca. 982.000 | ca. 29,5 Mio. – praktisch am Limit |
+| 4 | 5 | 29 | 41.760 | ca. 1.295.000 | ca. 38,8 Mio. – zu viel |
+
+**Bis 2 Speicher passt es sicher in den Free-Tarif.** Bei 3 Speichern bleibt kein Spielraum: Schon ein paar zusätzliche Werte, etwa aus eigenen Regeln oder Tests, reichen, um das Limit zu reißen.
+
+Wie viele Datenpunkte die Bridge tatsächlich gesendet hat, steht in jeder Log-Zeile (siehe [Meldungen im Log](#meldungen-im-log)). Den Verbrauch aus Sicht von ThingsBoard zeigt das **API-Usage-Dashboard**. Liegt dort deutlich mehr als im Log, kommen Daten aus einer anderen Quelle, siehe [Fehlersuche](#fehlersuche).
+
+### Aufbewahrung: nur 30 Tage
+
+Im Free-Tarif speichert ThingsBoard die Messwerte **30 Tage** lang, danach werden sie automatisch gelöscht. Die bezahlten Stufen bewahren 60 bis 365 Tage auf. In der kostenlosen Cloud siehst du also immer nur den letzten Monat – Monats- oder Jahresvergleiche sind dort nicht möglich.
+
+Für langfristige Statistik eignen sich:
+
+- **ThingSpeak parallel:** Die beiden Uploads laufen unabhängig voneinander. ThingsBoard für die aktuelle Sicht, Dashboards und die Handy-App, [ThingSpeak](thingspeak.md) für die Verläufe über Monate.
+- **Eigener Server:** Mit der [Community Edition](#eigener-thingsboard-server) bestimmst du die Aufbewahrung selbst.
+- **Export:** Daten lassen sich aus Tabellen-Widgets als CSV herunterladen, z. B. einmal im Monat.
+
+### Laufzeit
+
+Der Free-Tarif hat keine feste Laufzeit, kostet nichts und braucht keine Kreditkarte. ThingsBoard versteht ihn aber als Einstieg zum Ausprobieren, und die Tarife können sich ändern – der aktuelle Free-Tarif gilt für Konten ab dem 20. Januar 2026, ältere Konten laufen in den bisherigen Tarifen mit anderen Grenzen. **Kündigen löscht das Konto mit allen Geräten, Dashboards und Daten endgültig.**
+
+Die Angaben in diesem Abschnitt entsprechen dem Stand September 2026. Deine tatsächlichen Grenzen zeigt ThingsBoard unter *Plan and billing*, maßgeblich ist die [Tarifübersicht von ThingsBoard](https://thingsboard.io/docs/paas/reference/subscriptions/).
+
+## Wie stelle ich sicher, im Free-Plan zu bleiben?
+
+Die Bridge allein bleibt mit 2 Speichern sicher im Free-Plan. Knapp wird es erst durch das, was du in ThingsBoard **selbst dazubaust** – Regelketten, berechnete Felder, Aggregationen. Ein einziges falsch eingestelltes Feld kann das Monatskontingent in wenigen Stunden aufbrauchen. Dieses Kapitel fasst zusammen, worauf es ankommt.
+
+### Das Prinzip: Speichertage
+
+Die engste Grenze sind die **Datenpunkt-Speichertage** (Free: 30 Mio. pro Monat):
+
+```
+Speichertage = gespeicherte Datenpunkte × Aufbewahrungsdauer (TTL) in Tagen
+```
+
+Drei Folgen daraus:
+
+- **Gezählt wird beim Speichern.** Jeder Wert wird im Moment des Schreibens sofort mit seiner vollen TTL verbucht. Daten nachträglich zu löschen, senkt den Zähler **nicht**.
+- **Die TTL ist der Hebel.** Derselbe Wert kostet mit 2 Tagen TTL 15-mal weniger als mit 30 Tagen und 180-mal weniger als mit 365 Tagen.
+- **Transport und Speicher werden getrennt gezählt.** Was ThingsBoard selbst berechnet (berechnete Felder, Aggregationen), taucht bei den Transport-Datenpunkten gar nicht auf – nur bei den Speichertagen. Ein unauffälliger Transport-Zähler heißt also nicht, dass alles in Ordnung ist.
+
+### Was passiert, wenn das Limit erreicht ist
+
+- ThingsBoard **deaktiviert das Speichern** von Zeitreihen für den Rest des Abrechnungszeitraums (bis zu einem Monat).
+- Die Bridge sendet weiter, ThingsBoard **nimmt die Werte an, speichert sie aber nicht** – die Diagramme enden, die Transport-Zähler laufen weiter.
+- Im Free-Plan gibt es **keine Warn-E-Mail** (E-Mails sind dort deaktiviert). Du merkst es erst an leeren Diagrammen.
+- Einen Storage Pack zum Nachkaufen gibt es im Free-Plan nicht. Es bleibt nur Warten oder vorübergehend ein bezahlter Plan (siehe unten).
+
+### Checkliste: diese Einstellungen prüfen
+
+**1. Rohdaten der Bridge – Regelkette**
+*Rule chains → Root Rule Chain* → Knoten **Save Time Series** → *Advanced settings* → **Default TTL** = `2592000` (30 Tage, in Sekunden).
+
+**2. Jedes berechnete Feld mit Zeitreihen-Ausgabe**
+Im Bereich *Output* **Custom TTL** bewusst setzen. `ttl: 0` (keine eigene TTL) nicht verwenden – das hat in der Praxis zu einer Verbuchung mit rund 2.500 Tagen pro Datenpunkt geführt. Faustregel:
+
+| Art des Werts | Beispiel | TTL | Sekunden |
 |---|---|---|---|
-| 1 | 2 | 8 | ca. 357.000 |
-| 2 | 3 | 15 | ca. 670.000 |
-| 3 | 4 | 22 | ca. 982.000 |
-| 4 | 5 | 29 | ca. 1.295.000 – zu viel |
+| Hilfswert, den nur eine Auswertung liest | Regelgüte-Bins | 2 Tage | `172800` |
+| Minutenwert, der nur kurz interessiert | Batterieleistung | 2 Tage | `172800` |
+| Rohdaten | Leistungen, Ladestand | 30 Tage | `2592000` |
+| Stunden- und Tageswerte | Energie pro Stunde, Tagesgüte | 365 Tage | `31536000` |
 
-Bis 3 Speicher passt es in den Free-Tarif, bei 3 Speichern allerdings knapp. Die Nachrichten sind mit höchstens rund 180.000 im Monat kein Engpass.
+Stunden- und Tageswerte kosten auch mit 365 Tagen wenig, weil es nur 24 bzw. 1 Wert pro Tag sind. Teuer sind lange TTLs nur bei Werten, die **jede Minute** entstehen.
 
-Wie lange ThingsBoard die Daten aufbewahrt, hängt vom Tarif ab (Aufbewahrungsdauer bzw. „Data point storage days“). Den aktuellen Stand siehst du in ThingsBoard unter *Plan and billing*. Die Angaben oben entsprechen dem Stand September 2026 – maßgeblich ist die [Tarifübersicht von ThingsBoard](https://thingsboard.io/docs/paas/eu/reference/subscriptions/).
+**3. Aggregationen (Entity Aggregation)**
+**`produceIntermediateResult` ausschalten.** Sonst schreibt ThingsBoard bei jedem neuen Eingangswert ein Zwischenergebnis mit allen Kennzahlen – mit der langen TTL der Statistik. Das war im Test der größte Kostentreiber. Den laufenden Wert (z. B. „Regelgüte heute“) zeigst du stattdessen mit einem Widget an, das beim Anzeigen selbst aggregiert (eigenes Zeitfenster + Aggregation). Das kostet keine Speichertage.
+
+**4. Nur speichern, was du als Verlauf brauchst**
+Werte, die nur als aktuelle Kachel erscheinen, mit `saveTimeSeries: false` und `saveLatest: true` anlegen. Und: keine Werte doppelt ablegen, die sich aus anderen ergeben (z. B. eine „Regelabweichung“, die identisch mit `gridPower` ist).
+
+**5. Bedenke die Auslöser**
+Ein berechnetes Feld rechnet neu, sobald **irgendeines** seiner Argumente einen neuen Wert bekommt. Liest ein Feld Werte von drei Geräten (z. B. Netz und zwei Speicher), läuft es **dreimal pro Minute** – und jeder Lauf wird gespeichert. Bei solchen Feldern ist eine kurze TTL besonders wichtig.
+
+### Richtwerte zum Vergleichen
+
+Im **API-Usage-Dashboard** zeigt das Diagramm „Speichertage stündliche Aktivität“ den Verbrauch pro Stunde. Mit 2 Speichern, Netz-Gerät und den oben genannten Einstellungen:
+
+| Quelle | Speichertage pro Stunde |
+|---|---|
+| Rohdaten der Bridge (900 Datenpunkte × 30 Tage) | 27.000 |
+| Batterieleistung, 2 Felder (2 Tage) | 240 |
+| Regelgüte-Bins (bis 3 Läufe pro Minute, 2 Tage) | bis 2.500 |
+| Stündliche Energiewerte, 2 × 5 Kennzahlen (365 Tage) | 3.650 |
+| **Gesamt** | **ca. 32.000 – 33.500** |
+
+Das ergibt rund **24 Mio. pro Monat** – etwa 20 % Reserve zum Free-Limit. Die Obergrenze pro Stunde, um im Free-Plan zu bleiben: **30 Mio. ÷ 744 Stunden ≈ 40.000**.
+
+**Nach jeder Änderung** an Regelketten, berechneten Feldern oder Aggregationen eine volle Stunde abwarten und diesen Wert prüfen. Liegt er deutlich über 40.000, sofort nachsehen – nicht erst am Monatsende.
+
+### Wenn es doch passiert ist
+
+1. **Ursache beheben**, solange ohnehin nichts gespeichert wird (TTL, Zwischenergebnisse, doppelte Werte – siehe Checkliste).
+2. **Entweder warten** bis zum nächsten Abrechnungszeitraum (siehe *Plan and billing*) und die Werte bis dahin in [ThingSpeak](thingspeak.md) sammeln,
+3. **oder einen Monat eine bezahlte Stufe** (Prototype) buchen: Die Sperre ist sofort aufgehoben, und du kannst die Korrektur direkt am Stundenwert prüfen. Danach über **„Update plan“ → Free** zurückwechseln – **nicht** über „Cancel subscription“, das löscht das Konto mit allen Daten. Eine Erstattung für den angebrochenen Monat gibt es nicht.
+4. **Lücke nachholen:** Die Werte der gesperrten Zeit liegen in ThingSpeak und lassen sich mit Originalzeitstempel an ThingsBoard nachsenden. Dabei jede Minute **einzeln** senden – Listen mit mehreren Minuten in einer Anfrage hat ThingsBoard im Test mit HTTP 500 abgelehnt. Berechnete Felder reagieren auch auf nachgeholte Werte und stempeln ihre Ergebnisse mit der aktuellen Uhrzeit; die Stundenwerte der laufenden Stunde werden dadurch verfälscht.
 
 ## Eigener ThingsBoard-Server
 
-ThingsBoard gibt es als **Community Edition** kostenlos und quelloffen zum Selbstbetrieb, ohne Grenzen bei Geräten und Datenpunkten. Läuft sie z. B. als Docker-Container auf deinem NAS, bleiben alle Daten in deinem Heimnetz.
+ThingsBoard gibt es als **Community Edition** kostenlos und quelloffen zum Selbstbetrieb, ohne Grenzen bei Geräten und Datenpunkten und mit einer Aufbewahrungsdauer, die du selbst festlegst. Läuft sie z. B. als Docker-Container auf deinem NAS, bleiben alle Daten in deinem Heimnetz – und die Verläufe so lange, wie dein Speicherplatz reicht.
 
 Im Proxy trägst du dann nur die Adresse deines Servers ein, z. B. `http://nas:8080`. Alles andere ist gleich: Geräte anlegen, Tokens kopieren, eintragen.
 
@@ -161,9 +252,11 @@ Stand dieser Angaben: September 2026. Maßgeblich sind die aktuellen Seiten von 
 Im Normalbetrieb schreibt der Proxy pro Minute und Gerät eine Zeile:
 
 ```
-[thingsboard] Hub 0 2026-09-29T16:13:00Z gesendet (7 Werte)
-[thingsboard] Netz 2026-09-29T16:13:00Z gesendet (1 Wert)
+[thingsboard] Hub 0 2026-09-29T16:13:00Z gesendet (7 Werte; heute 20.160 Datenpunkte in 2.880 Nachrichten)
+[thingsboard] Netz 2026-09-29T16:13:00Z gesendet (1 Wert; heute 20.161 Datenpunkte in 2.881 Nachrichten)
 ```
+
+Der Tageszähler zählt alle erfolgreich an ThingsBoard gesendeten Datenpunkte seit Mitternacht (Ortszeit des Proxys). Er beginnt nach einem Neustart des Proxys bei null.
 
 Ohne offenes Dashboard kommen davor zwei Zeilen dazu. Sie gelten für ThingSpeak und ThingsBoard gemeinsam:
 
@@ -201,6 +294,9 @@ Das Monatskontingent oder eine Ratenbegrenzung ist erreicht. Unter *Plan and bil
 
 **`outputHomePower`, `gridInputPower`, `packInputPower` und `outputPackPower` fehlen.**
 Auf dem Dashboard-Shelly läuft noch zendash_watch vor 3.5.0. Das Script aktualisieren, zum Beispiel mit dem [Configurator](../Multiconfigurator/readme.md).
+
+**ThingsBoard meldet, ein Limit sei erreicht, oder die Diagramme enden plötzlich.**
+Siehe [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-im-free-plan-zu-bleiben). Im API-Usage-Dashboard nachsehen, welches Limit betroffen ist und wie hoch der Verbrauch ist, und mit dem Tageszähler im Log vergleichen. Liegt ThingsBoard deutlich darüber, schreibt noch etwas anderes in dein Konto, z. B. ein zweiter Proxy mit denselben Tokens (PC und NAS gleichzeitig), eine Home-Assistant-Integration oder eigene Regeln bzw. berechnete Felder, die zusätzliche Zeitreihen speichern. Die Bridge selbst schreibt nur an zwei Stellen: einmal pro Minute die Telemetrie jedes Geräts und beim Speichern auf `/thingsboard` ein Test-Attribut pro geändertem Token.
 
 **ThingSpeak ist aus, trotzdem fragt der Proxy den Shelly ab.**
 Das ist richtig, solange ThingsBoard aktiv ist. Beide Ziele nutzen dieselben Abfragen. Erst wenn beide aus sind, fragt der Proxy nichts mehr ab.
