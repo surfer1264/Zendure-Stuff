@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-09-28T19:41:13Z",
+  "generated": "2026-10-01T09:13:18Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -216,17 +216,25 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/40e968b9c3832178c82459a3250df54d9c65fe1b/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ea403b7ecf3496394eed3e6094733e9adfe06c36/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung",
-        "Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)",
-        "Controller: errorThreshold-Standard auf 10"
+        "Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers",
+        "Update: abgebrochene Passwortabfrage wird in der Tabelle als „passwortgeschützt“ angezeigt statt „nicht erreichbar“"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.2.0",
+          "changes": [
+            "Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung",
+            "Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)",
+            "Controller: errorThreshold-Standard auf 10"
+          ],
+          "notice": null
+        },
         {
           "version": "2.1.0",
           "changes": [
