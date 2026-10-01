@@ -419,11 +419,17 @@ de: {
   type_unknown: "unbekanntes Script",
 
   memcheck_title: "Speicher prüfen",
-  memcheck_hint: "Bevor du ein Script hochlädst: prüft, wie viel freier Skriptspeicher (mem_free) auf einem Shelly noch da ist. ≥ 25200 Bytes = voller Standard-Heap, alles gut.",
+  memcheck_hint: "Bevor du ein Script hochlädst: prüft den Skriptspeicher eines Shelly. Läuft schon ein Script, wird der Gesamtspeicher aus frei + belegt berechnet. ≥ 25.000 Bytes gesamt = voller Standard-Heap, alles gut.",
   btn_memcheck: "🔍 Speicher prüfen",
   memcheck_loading: "Prüfe {ip}...",
   memcheck_ok: "✓ {mem_free} Bytes frei auf {ip} — passt.",
   memcheck_low: "⚠️ Nur {mem_free} Bytes frei auf {ip} — evtl. knapp für ein weiteres Script.",
+  dev_test_title: "Öffnet den Report des Speichers (/properties/report) in einem neuen Tab",
+  dev_test_invalid: "Bitte zuerst eine gültige IP eingeben",
+  memcheck_total_ok: "✓ {total} Bytes Gesamtspeicher auf {ip} — passt.",
+  memcheck_total_low: "⚠️ Nur {total} Bytes Gesamtspeicher auf {ip} — weniger als der Standard-Heap.",
+  memcheck_used: "Davon belegt: {used} durch {scripts} · frei: {free}.",
+  memcheck_peak: "Spitze",
   memcheck_error: "Fehler: {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
@@ -769,11 +775,17 @@ en: {
   type_unknown: "unknown script",
 
   memcheck_title: "Check memory",
-  memcheck_hint: "Before uploading a script: checks how much free script memory (mem_free) a Shelly still has. ≥ 25200 bytes = full standard heap, all good.",
+  memcheck_hint: "Before uploading a script: checks a Shelly’s script memory. If a script is already running, the total is calculated as free + used. ≥ 25,000 bytes total = full standard heap, all good.",
   btn_memcheck: "🔍 Check memory",
   memcheck_loading: "Checking {ip}...",
   memcheck_ok: "✓ {mem_free} bytes free on {ip} — looks fine.",
   memcheck_low: "⚠️ Only {mem_free} bytes free on {ip} — might be tight for another script.",
+  dev_test_title: "Opens the battery’s report (/properties/report) in a new tab",
+  dev_test_invalid: "Please enter a valid IP first",
+  memcheck_total_ok: "✓ {total} bytes total memory on {ip} — fine.",
+  memcheck_total_low: "⚠️ Only {total} bytes total memory on {ip} — less than the standard heap.",
+  memcheck_used: "Used: {used} by {scripts} · free: {free}.",
+  memcheck_peak: "peak",
   memcheck_error: "Error: {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
@@ -1119,11 +1131,17 @@ fr: {
   type_unknown: "script inconnu",
 
   memcheck_title: "Vérifier la mémoire",
-  memcheck_hint: "Avant de charger un script : vérifie combien de mémoire de script libre (mem_free) il reste sur un Shelly. ≥ 25200 octets = heap standard complet, tout va bien.",
+  memcheck_hint: "Avant de charger un script : vérifie la mémoire de script d'un Shelly. Si un script tourne déjà, le total est calculé comme libre + occupé. ≥ 25 000 octets au total = tas standard complet, tout va bien.",
   btn_memcheck: "🔍 Vérifier la mémoire",
   memcheck_loading: "Vérification de {ip}...",
   memcheck_ok: "✓ {mem_free} octets libres sur {ip} — c'est bon.",
   memcheck_low: "⚠️ Seulement {mem_free} octets libres sur {ip} — pourrait être juste pour un script de plus.",
+  dev_test_title: "Ouvre le rapport de la batterie (/properties/report) dans un nouvel onglet",
+  dev_test_invalid: "Saisis d'abord une adresse IP valide",
+  memcheck_total_ok: "✓ {total} octets de mémoire totale sur {ip} — c’est bon.",
+  memcheck_total_low: "⚠️ Seulement {total} octets de mémoire totale sur {ip} — moins que le tas standard.",
+  memcheck_used: "Occupé : {used} par {scripts} · libre : {free}.",
+  memcheck_peak: "pic",
   memcheck_error: "Erreur : {msg}",
 
   // ---- Stand v3 (zwei Shellys, zenDash-API + Watchdog) ----
@@ -1364,7 +1382,10 @@ function deviceCard(d, idx){
       </div>
       <div>
         <label class="first">${t('dev_ip_field')}</label>
-        <input type="text" value="${d.ip}" placeholder="192.168.178.143" oninput="updateDevice(${idx},'ip',this.value)">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="text" value="${d.ip}" placeholder="192.168.178.143" style="flex:1; min-width:0;" oninput="updateDevice(${idx},'ip',this.value)">
+          <button type="button" class="btn" style="white-space:nowrap; flex:none;" title="${t('dev_test_title')}" onclick="testDeviceIp(${idx})">${t('btn_test_url')}</button>
+        </div>
       </div>
     </div>
     ${ full ? `
@@ -1778,6 +1799,13 @@ function testGridUrl(){
   if(!url){ showTestHint(t('grid_url_test_empty')); return; }
   if(!/^https?:\/\//i.test(url)) url = 'http://' + url;
   window.open(url, '_blank', 'noopener');
+}
+// Oeffnet den Report des Speichers (lokale Zendure-API) in einem neuen Tab -
+// so sieht der Nutzer sofort, ob hinter der IP der richtige Solarflow steckt.
+function testDeviceIp(idx){
+  const ip = String((state.devices[idx] || {}).ip || '').trim();
+  if(!isValidIp(ip)){ showTestHint(t('dev_test_invalid')); return; }
+  window.open('http://' + ip + '/properties/report', '_blank', 'noopener');
 }
 function showTestHint(msg){
   const toast = document.getElementById('toast');
@@ -3337,6 +3365,7 @@ function cancelUpload(key){
   statusEl.className = 'hint';
 }
 
+const MEM_TOTAL_OK = 25000;   // Gesamtspeicher (frei + belegt) ab dem alles passt
 async function checkMemory(){
   const ip = (document.getElementById('memCheckIp').value || '').trim();
   const statusEl = document.getElementById('memCheckStatus');
@@ -3350,9 +3379,27 @@ async function checkMemory(){
   try{
     const { res, data } = await helperFetch('/api/memcheck?ip=' + encodeURIComponent(ip));
     if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
-    const key = (data.mem_free >= 25200) ? 'memcheck_ok' : 'memcheck_low';
-    statusEl.textContent = t(key, {ip: ip, mem_free: data.mem_free});
-    statusEl.className = (data.mem_free >= 25200) ? 'hint' : 'error';
+    const fmt = function(n){ return Number(n || 0).toLocaleString(state.lang === 'en' ? 'en-US' : 'de-DE'); };
+    if(typeof data.mem_total === 'number'){
+      // Neuer Helfer: Gesamtspeicher = frei + von laufenden Scripten belegt
+      const ok = data.mem_total >= MEM_TOTAL_OK;
+      let text = t(ok ? 'memcheck_total_ok' : 'memcheck_total_low', {ip: ip, total: fmt(data.mem_total)});
+      if(data.running && data.running.length){
+        text += ' ' + t('memcheck_used', {
+          used: fmt(data.mem_used), free: fmt(data.mem_free),
+          scripts: data.running.map(function(r){
+            return '„' + (r.name || ('#' + r.id)) + '“' + (data.running.length > 1 ? ' ' + fmt(r.mem_used) : '') +
+              (typeof r.mem_peak === 'number' ? ' (' + t('memcheck_peak') + ' ' + fmt(r.mem_peak) + ')' : '');
+          }).join(', ')
+        });
+      }
+      statusEl.textContent = text;
+      statusEl.className = ok ? 'hint' : 'error';
+    } else {
+      const key = (data.mem_free >= 25200) ? 'memcheck_ok' : 'memcheck_low';
+      statusEl.textContent = t(key, {ip: ip, mem_free: data.mem_free});
+      statusEl.className = (data.mem_free >= 25200) ? 'hint' : 'error';
+    }
   } catch(e){
     statusEl.textContent = t('memcheck_error', {msg: e.message});
     statusEl.className = 'error';

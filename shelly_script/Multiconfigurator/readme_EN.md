@@ -114,7 +114,7 @@ Start the helper. In the start dialog, choose **"Configure from scratch"**.
 
 1. **Start** – choose "Configure from scratch"
 2. **Functions** – select Controller, zenDash-API and/or Watchdog and enter the **IP addresses of your two Shellys**. If you already have a configuration, you can [import](#importing-an-existing-configuration) it here instead of entering everything again.
-3. **Devices** – your Zendure batteries with IP, maximum power and minSoc/maxSoc; for each device, whether the Watchdog should monitor it
+3. **Devices** – your Zendure batteries with IP, maximum power and minSoc/maxSoc; for each device, whether the Watchdog should monitor it. **"Test"** next to the IP opens the battery's report (`/properties/report`) in a new tab – so you can see right away whether the IP is correct
 4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM without Pro)
 5. **Charge from grid** – which devices may absorb surplus from other systems
 6. **Notifications** – webhook, Signal or WhatsApp; shared by Controller and Watchdog
@@ -301,7 +301,7 @@ Without the helper (the instructions are also available as an expandable section
 
 ### Checking a Shelly's memory
 
-With the helper running, enter the IP of any Shelly in the result step and click **"🔍 Check memory"**. With **25,200 bytes** of free memory or more, everything is fine. This also works on a new Shelly without a script.
+With the helper running, enter the IP of any Shelly in the result step and click **"🔍 Check memory"**. With **25,000 bytes of total memory** or more, everything is fine. If a script is already running, the free memory is naturally lower – so the configurator then calculates the total as free + used and also shows how much the script uses (and its peak). This also works on a new Shelly without a script.
 
 For reference: the zenDash-API + Watchdog script uses around 13.5 kB in operation with two batteries, and around 17.8 kB at peak.
 

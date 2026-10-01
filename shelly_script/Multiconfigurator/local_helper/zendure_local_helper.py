@@ -652,22 +652,40 @@ def check_memory(ip):
         raise RpcError("Ungueltige IP-Adresse: %r" % ip)
 
     scripts = rpc(ip, "Script.List").get("scripts", [])
-    if scripts:
-        status = rpc(ip, "Script.GetStatus", {"id": scripts[0]["id"]})
+    # Alle Scripte teilen sich einen Speicherbereich: mem_free ist fuer alle
+    # gleich, mem_used gilt je Script. Gesamtspeicher = frei + Summe belegt.
+    running = []
+    mem_free = None
+    for sc in scripts:
+        if not sc.get("running"):
+            continue
+        st = rpc(ip, "Script.GetStatus", {"id": sc["id"]})
+        if st.get("mem_free") is not None:
+            mem_free = st["mem_free"]
+        running.append({"id": sc["id"], "name": sc.get("name") or "",
+                        "mem_used": st.get("mem_used") or 0, "mem_peak": st.get("mem_peak")})
+    if running and mem_free is not None:
+        used = sum(r["mem_used"] for r in running)
         return {
-            "mem_free": status.get("mem_free"),
-            "mem_used": status.get("mem_used"),
+            "mem_free": mem_free,
+            "mem_used": used,
+            "mem_total": mem_free + used,
+            "running": running,
             "script_count": len(scripts),
             "created_temp": False,
         }
 
+    # Kein Script laeuft: mit einem leeren Hilfs-Script messen (danach geloescht)
     sid = rpc(ip, "Script.Create", {"name": "memcheck-tmp"})["id"]
     try:
         status = rpc(ip, "Script.GetStatus", {"id": sid})
+        free = status.get("mem_free") or 0
         return {
-            "mem_free": status.get("mem_free"),
-            "mem_used": status.get("mem_used"),
-            "script_count": 0,
+            "mem_free": free,
+            "mem_used": 0,
+            "mem_total": free,
+            "running": [],
+            "script_count": len(scripts),
             "created_temp": True,
         }
     finally:

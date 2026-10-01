@@ -114,7 +114,7 @@ Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« 
 
 1. **Démarrage** – choisir « Nouvelle configuration »
 2. **Fonctions** – sélectionner Controller, zenDash-API et/ou Watchdog et saisir les **adresses IP de tes deux Shelly**. Si tu as déjà une configuration, tu peux l'[importer](#importer-une-configuration-existante) ici au lieu de tout ressaisir.
-3. **Appareils** – tes batteries Zendure avec IP, puissance maximale et minSoc/maxSoc ; pour chaque appareil, si le Watchdog doit le surveiller
+3. **Appareils** – tes batteries Zendure avec IP, puissance maximale et minSoc/maxSoc ; pour chaque appareil, si le Watchdog doit le surveiller. **« Tester »** à côté de l'IP ouvre le rapport de la batterie (`/properties/report`) dans un nouvel onglet – tu vois ainsi tout de suite si l'IP est correcte
 4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM sans Pro)
 5. **Charge depuis le réseau** – quels appareils peuvent absorber le surplus d'autres installations
 6. **Notifications** – webhook, Signal ou WhatsApp ; commun au Controller et au Watchdog
@@ -301,7 +301,7 @@ Sans l'assistant local (les instructions sont aussi disponibles en section dépl
 
 ### Vérifier la mémoire d'un Shelly
 
-Avec l'assistant local en marche, saisis à l'étape Résultat l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. À partir de **25 200 octets** de mémoire libre, tout va bien. Cela fonctionne aussi sur un Shelly neuf sans script.
+Avec l'assistant local en marche, saisis à l'étape Résultat l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. À partir de **25 000 octets de mémoire totale**, tout va bien. Si un script tourne déjà, la mémoire libre est forcément plus faible – le configurateur calcule alors le total comme libre + occupé et indique aussi combien le script occupe (et son pic). Cela fonctionne aussi sur un Shelly neuf sans script.
 
 Pour information : le script zenDash-API + Watchdog occupe, avec deux batteries, environ 13,5 ko en fonctionnement et environ 17,8 ko en pointe.
 

@@ -2,6 +2,8 @@
 
 ## 2.3.0
 - Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers
+- Geräte: Button „Testen“ neben jeder Speicher-IP öffnet den Report (/properties/report) in einem neuen Tab
+- Speicher prüfen: Läuft schon ein Script, wird der Gesamtspeicher (frei + belegt) berechnet und bewertet (✓ ab 25.000 Bytes); belegter Speicher und Spitze je Script werden angezeigt
 - Update: abgebrochene Passwortabfrage wird in der Tabelle als „passwortgeschützt“ angezeigt statt „nicht erreichbar“
 
 ## 2.2.0

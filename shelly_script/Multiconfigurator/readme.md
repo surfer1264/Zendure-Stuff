@@ -112,7 +112,7 @@ Starte den Helfer. Im Startdialog wählst du **„Neu konfigurieren“**.
 
 1. **Start** – „Neu konfigurieren“ wählen
 2. **Funktionen** – Controller, zenDash-API und/oder Watchdog auswählen und die **IP-Adressen deiner beiden Shellys** eintragen. Hast du schon eine Konfiguration, kannst du sie hier [einlesen](#bestehende-konfiguration-einlesen), statt alles neu einzugeben.
-3. **Geräte** – deine Zendure-Speicher mit IP, maximaler Leistung und minSoc/maxSoc; je Gerät, ob der Watchdog es überwachen soll
+3. **Geräte** – deine Zendure-Speicher mit IP, maximaler Leistung und minSoc/maxSoc; je Gerät, ob der Watchdog es überwachen soll. **„Testen“** neben der IP öffnet den Report des Speichers (`/properties/report`) in einem neuen Tab – so siehst du sofort, ob die IP stimmt
 4. **Netzquelle** – woher die Netzleistung kommt: Controller läuft direkt auf einem Shelly Pro 3EM, ein anderer Pro 3EM im Netzwerk oder ein Messgerät mit JSON-Schnittstelle (z. B. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM ohne Pro)
 5. **Laden vom Netz** – welche Geräte Überschuss aus anderen Anlagen aufnehmen dürfen
 6. **Benachrichtigungen** – Webhook, Signal oder WhatsApp; gilt für Controller und Watchdog gemeinsam
@@ -299,7 +299,7 @@ Ohne Helfer (die Anleitung gibt es auch aufklappbar im Configurator):
 
 ### Speicher eines Shelly prüfen
 
-Mit laufendem Helfer im Ergebnis-Schritt die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. Ab **25 200 Bytes** freiem Speicher ist alles gut. Das funktioniert auch bei einem neuen Shelly ohne Script.
+Mit laufendem Helfer im Ergebnis-Schritt die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. Ab **25 000 Bytes Gesamtspeicher** ist alles gut. Läuft schon ein Script, ist der freie Speicher natürlich kleiner – deshalb rechnet der Configurator dann den Gesamtspeicher aus frei + belegt und zeigt auch, wie viel das Script belegt (und seine Spitze). Das funktioniert auch bei einem neuen Shelly ohne Script.
 
 Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im Betrieb rund 13,5 kB, in der Spitze rund 17,8 kB.
 
