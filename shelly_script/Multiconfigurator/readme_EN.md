@@ -14,7 +14,7 @@ A few clicks to local control of your Zendure fleet – set up, update, done.
 
 1. [What does the configurator set up?](#1-what-does-the-configurator-set-up)
 2. [Where do I find the configurator?](#2-where-do-i-find-the-configurator)
-   * [Recommended: the local helper](#recommended-the-local-helper)
+   * [Recommended: the local helper (EXE installer)](#recommended-the-local-helper-exe-installer)
    * [Alternative: web configurator only](#alternative-web-configurator-only)
 3. [Initial setup](#3-initial-setup)
    * [The process](#the-process)
@@ -56,7 +56,7 @@ Your system always consists of **two Shellys**:
 Three functions run on them:
 
 * **Controller** – regulates your grid import/export via your Zendure batteries
-* **zenDash-API** – provides the data for the dashboard with a live overview; you can also change the Controller's behaviour through it. You open the dashboard itself via a small proxy on a PC, NAS or Home Assistant – see [Setting up the dashboard](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md) (German).
+* **zenDash-API** – provides the data for the dashboard with a live overview; you can also change the Controller's behaviour through it
 * **Watchdog** – reports exceptional situations (battery full, temperature, cell voltage, device unreachable) and sends a summary every morning and evening
 
 The functions can be combined freely – for example, zenDash-API and Watchdog can be added later when the Controller is already running. Information needed by several functions (device list, grid source, notifications) is asked **only once** and written into both scripts accordingly.
@@ -69,9 +69,9 @@ The configurator is available in **German, English and French**.
 
 ## 2. Where do I find the configurator?
 
-There are two ways. The **local helper** (a small program for Windows and macOS) is recommended, because direct upload, update, memory check and log recording only work with it.
+There are two ways. The **local helper** (EXE file) is recommended, because direct upload, update, memory check and log recording only work with it.
 
-### Recommended: the local helper
+### Recommended: the local helper (EXE installer)
 
 A small program for your computer. It opens the configurator in your browser automatically and handles the connection to your Shellys. No installation, no Python required – download, start, done.
 
@@ -81,18 +81,18 @@ Direct downloads:
 
 * [Windows (64-bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)
 * [Windows (32-bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)
-* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – Apple Silicon Macs only (M1 or newer)
+* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)
 
 On first start, your operating system shows a warning because the file is not signed:
 
 * **Windows:** At "Windows protected your PC" (SmartScreen), click "More info" → "Run anyway".
-* **macOS:** Right-click the file → "Open" → confirm "Open" again in the dialog. If that doesn't work (common from macOS Sequoia on), try to open the file once, then go to **System Settings → Privacy & Security** and click **"Open Anyway"** at the bottom. If it still won't start, see the [detailed macOS instructions](local_helper/mcos_helper.md) (German).
+* **macOS:** Right-click the file → "Open" → confirm "Open" again in the dialog.
 
 If you want to make sure the file is unmodified, you can [verify it](#verifying-the-download).
 
 **Important:** The helper window must stay open while you set up or update. Afterwards you can close it (or press `Ctrl+C`).
 
-**What the helper does – and what it doesn't:** It runs only on your own computer (`http://127.0.0.1:8787`) and cannot be reached from your network. After a successful upload it only remembers the **IP addresses** of your two Shellys – no configuration, no passwords.
+**What the helper does – and what it doesn't:** It runs only on your own computer (`http://127.0.0.1:8787`) and cannot be reached from your network. After a successful upload it only remembers the **IP addresses** of your two Shellys – no configuration, no passwords. If a Shelly is password-protected, the configurator asks for the password; the helper keeps it only in memory until you close it.
 
 ### Alternative: web configurator only
 
@@ -139,15 +139,13 @@ The most convenient way: one click, done. The script automatically goes to the r
 
 After the first successful upload, the helper remembers the IPs and fills them in automatically next time.
 
-If the script is **created anew** in the process (first installation or after "delete others"), it gets a new script number. If you use the dashboard, enter the new number in the proxy under `/setup` ([Setting up the dashboard](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md)). With an [update](#4-update), the number stays the same.
-
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/5082cdf4-1a6c-43a1-825c-8fc51bf18173" />
 
 **🔗 Save complete script from GitHub**
 
 Loads the current original script from GitHub, inserts your configuration and offers you the finished script as a file. You then only need to [upload it manually](#uploading-a-script-manually). Requires a brief internet connection.
 
-The file name contains the script version, e.g. `zerooutput_multi_kvs_mini_v5.1.1.js` or `zendash_watch_mini_v3.4.1.js`. This lets you keep several versions side by side and [import](#importing-an-existing-configuration) them again at any time.
+The file name contains the script version, e.g. `zerooutput_multi_kvs_mini_v5.0.8.js` or `zendash_watch_mini_v3.3.1.js`. This lets you keep several versions side by side and [import](#importing-an-existing-configuration) them again at any time.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
@@ -171,7 +169,7 @@ Shows how much script memory is still free on a Shelly – see [Checking a Shell
 
 ## 4. Update
 
-When a new version of a script is available, you can bring your Shellys up to date in a few clicks – **your settings are kept**. Updating only works with the [local helper](#recommended-the-local-helper).
+When a new version of a script is available, you can bring your Shellys up to date in a few clicks – **your settings are kept**. Updating only works with the [local helper](#recommended-the-local-helper-exe-installer).
 
 ### How it works
 
@@ -253,10 +251,11 @@ For the same reason, Controller and zenDash-API + Watchdog **never** run togethe
 
 | Message | What does it mean? | What to do? |
 |---|---|---|
-| "Update" is greyed out: *Only possible with the local helper* | The helper isn't running. | Start the [helper](#recommended-the-local-helper) – it opens the configurator itself. |
+| "Update" is greyed out: *Only possible with the local helper* | The helper isn't running. | Start the [helper](#recommended-the-local-helper-exe-installer) – it opens the configurator itself. |
 | *Your local helper is older than this page …* | An old version of the helper is still running. | Close the helper, download the current version and start it again. |
 | *Shelly not reachable* | The Shelly doesn't respond. | Check the IP (in the Shelly app or router). Is the Shelly switched on? Is your computer on the same network (not the guest Wi-Fi)? |
-| The Shelly requires a password | The Shelly's password protection is active. | Temporarily switch off password protection, upload, then switch it back on. |
+| Window *Password for Shelly …* | The Shelly's password protection is active. | Enter the password (the user is always `admin`). The helper keeps it only in memory until you close it. Without the helper: temporarily switch off password protection, upload manually, switch it back on. |
+| *Wrong password* | The password entered does not match. | Enter it again – it is the password from the Shelly app or web interface. |
 | *not installed – please use "Configure from scratch"* | There's no matching script on the Shelly. | Set it up via ["Configure from scratch"](#3-initial-setup). |
 | *no unique script – please use "Configure from scratch"* | There are several scripts of the same type on the Shelly. | "Configure from scratch" – let the other scripts be deleted when uploading. |
 | *Could not read the config from the Shelly* | The configuration can't be found in the script (e.g. edited by hand). | "Configure from scratch" and import the configuration from your backup. |
@@ -277,7 +276,7 @@ For the same reason, Controller and zenDash-API + Watchdog **never** run togethe
 |---|---|
 | The helper window closes immediately or reports that it could not listen on 127.0.0.1:8787 | The helper is already running (another window, possibly minimised) – use that one, or close it and restart. |
 | The browser doesn't open | Open `http://127.0.0.1:8787` in your browser. |
-| Windows/macOS blocks the start | see [Where do I find the configurator?](#recommended-the-local-helper) |
+| Windows/macOS blocks the start | see [Where do I find the configurator?](#recommended-the-local-helper-exe-installer) |
 | The configurator suggests wrong Shelly IPs | Simply overwrite the IP in the field – or [reset](#resetting-remembered-ips) the remembered IPs. |
 
 ---
@@ -295,16 +294,16 @@ Without the helper (the instructions are also available as an expandable section
 1. In the result step, click "🔗 Save complete script from GitHub".
 2. Open the Shelly's IP in your browser (e.g. `http://192.168.178.151`) and go to "Scripts".
 3. Stop and delete an old script of the same name. **Remove other scripts as well** (see [Several scripts](#several-scripts-on-one-shelly)).
-4. Create a new script ("Create script", on older firmware "Add script"), give it a name (e.g. `ctrl` or `zd`, as with direct upload), save.
+4. "Add script", give it a name, save.
 5. Open the downloaded file in a text editor, copy everything and paste it into the code editor.
-6. "Save", then "Start", and enable **"Run on startup"** so the script starts again after a power cut.
+6. "Save", then "Start", and enable **"Enable on boot"**.
 7. Check in the log that the script runs without errors.
 
 ### Checking a Shelly's memory
 
-With the helper running, enter the IP of any Shelly in the result step and click **"🔍 Check memory"**. **25,200 bytes** means the full script memory is free – that's what a Shelly with no other script running looks like. Noticeably less means another script is still running there. This also works on a new Shelly without a script.
+With the helper running, enter the IP of any Shelly in the result step and click **"🔍 Check memory"**. With **25,200 bytes** of free memory or more, everything is fine. This also works on a new Shelly without a script.
 
-For reference, measured with two batteries: the Controller needs around 19 kB at peak (measured with 5.1.0), zenDash-API + Watchdog around 18 kB (measured with 3.1, newer versions need a little less). Both fit comfortably – but only if the script runs alone on the Shelly.
+For reference: the zenDash-API + Watchdog script uses around 13.5 kB in operation with two batteries, and around 17.8 kB at peak.
 
 ### Backing up your configuration
 
@@ -312,7 +311,7 @@ After every change, click "💾 Save CONFIG block only" or "🔗 Save complete s
 
 ### Recording a log
 
-For troubleshooting – for example when a script doesn't start or behaves oddly – the configurator records a Shelly's messages. This only works with the [local helper](#recommended-the-local-helper).
+For troubleshooting – for example when a script doesn't start or behaves oddly – the configurator records a Shelly's messages. This only works with the [local helper](#recommended-the-local-helper-exe-installer).
 
 1. In the start dialog, choose **"Record log"**.
 2. Enter the Shelly's IP (or click Controller Shelly / Dashboard Shelly) and click **"Show scripts"**.
@@ -320,7 +319,7 @@ For troubleshooting – for example when a script doesn't start or behaves oddly
 4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
 5. Click **"Start recording"**.
 
-The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.1.1_260927-1432.log` (version, date YYMMDD, time). You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
+The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
 
 * **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
 * **Unfiltered:** remove the tick – then all messages from the Shelly are added, including system messages. You need this if the script does not start, because the Shelly reports start errors or low memory as system messages. Lines from the script are then marked with `[Script 8]`.

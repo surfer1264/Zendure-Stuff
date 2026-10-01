@@ -58,6 +58,7 @@ Beenden: Strg+C im Terminal.
 
 import base64
 import datetime
+import hashlib
 import http.server
 import json
 import os
@@ -86,7 +87,7 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Start: laeuft noch ein alter Helfer-Prozess (oder eine alte exe mit dem
 # Configurator per githack), kennt er neue Optionen nicht. Der Configurator
 # bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
-HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture"]
+HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture", "shelly_auth"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -225,6 +226,78 @@ class RpcError(Exception):
     pass
 
 
+class AuthRequired(RpcError):
+    """Shelly verlangt ein Passwort (HTTP 401). wrong=True: das gemerkte
+    Passwort wurde abgelehnt."""
+
+    def __init__(self, ip, wrong=False):
+        self.ip = ip
+        self.wrong = wrong
+        RpcError.__init__(self, (
+            "Das Passwort fuer den Shelly %s ist falsch." if wrong else
+            "Der Shelly %s ist passwortgeschuetzt - bitte Passwort eingeben.") % ip)
+
+
+# ---------------------------------------------------------------
+# Passwortgeschuetzte Shellys (Gen2+/Gen3): HTTP-Digest mit SHA-256,
+# Benutzer immer "admin". Passwoerter liegen NUR im Arbeitsspeicher des
+# Helfers (je IP), nie in einer Datei - nach dem Beenden sind sie weg.
+# ---------------------------------------------------------------
+SHELLY_USER = "admin"
+SHELLY_PASSWORDS = {}      # ip -> Passwort
+_DIGEST = {}               # ip -> {"realm", "nonce", "algorithm", "nc"}
+_DIGEST_LOCK = threading.Lock()
+
+
+def set_shelly_password(ip, password):
+    with _DIGEST_LOCK:
+        _DIGEST.pop(ip, None)
+        if password:
+            SHELLY_PASSWORDS[ip] = password
+        else:
+            SHELLY_PASSWORDS.pop(ip, None)
+
+
+def _parse_challenge(header):
+    if not header or not header.lower().startswith("digest"):
+        return None
+    fields = dict((k.lower(), v1 or v2) for k, v1, v2 in
+                  re.findall(r'(\w+)\s*=\s*(?:"([^"]*)"|([^\s,]+))', header[6:]))
+    if "nonce" not in fields:
+        return None
+    return {"realm": fields.get("realm", ""), "nonce": fields["nonce"],
+            "algorithm": (fields.get("algorithm") or "SHA-256").upper(), "nc": 0}
+
+
+def _remember_challenge(ip, header):
+    ch = _parse_challenge(header)
+    if ch:
+        with _DIGEST_LOCK:
+            _DIGEST[ip] = ch
+    return ch
+
+
+def _digest_header(ip, method, uri):
+    """Authorization-Header aus der zuletzt gesehenen Challenge, oder None."""
+    with _DIGEST_LOCK:
+        pw = SHELLY_PASSWORDS.get(ip)
+        ch = _DIGEST.get(ip)
+        if not pw or not ch:
+            return None
+        ch["nc"] += 1
+        nc = "%08x" % ch["nc"]
+        realm, nonce, algo = ch["realm"], ch["nonce"], ch["algorithm"]
+    h = (lambda x: hashlib.md5(x.encode("utf-8")).hexdigest()) if algo == "MD5" else \
+        (lambda x: hashlib.sha256(x.encode("utf-8")).hexdigest())
+    cnonce = base64.b16encode(os.urandom(8)).decode("ascii").lower()
+    ha1 = h("%s:%s:%s" % (SHELLY_USER, realm, pw))
+    ha2 = h("%s:%s" % (method, uri))
+    response = h("%s:%s:%s:%s:auth:%s" % (ha1, nonce, nc, cnonce, ha2))
+    return ('Digest username="%s", realm="%s", nonce="%s", uri="%s", algorithm=%s, '
+            'response="%s", qop=auth, nc=%s, cnonce="%s"'
+            % (SHELLY_USER, realm, nonce, uri, algo, response, nc, cnonce))
+
+
 def rpc(ip, method, params=None, timeout=15, lenient=False):
     # lenient=True (nur Script.GetCode): Antwort mit "surrogateescape"
     # dekodieren. Der Shelly teilt den Code nach BYTES in Bloecke - ein
@@ -237,25 +310,37 @@ def rpc(ip, method, params=None, timeout=15, lenient=False):
         {"id": 1, "method": method, "params": params or {}},
         ensure_ascii=False,
     ).encode("utf-8")
-    req = urllib.request.Request(
-        "http://%s/rpc" % ip,
-        data=payload,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            body = json.loads(resp.read().decode("utf-8", "surrogateescape" if lenient else "strict"))
-    except urllib.error.HTTPError as err:
-        detail = err.read().decode("utf-8", "replace")[:200]
-        if err.code == 401:
-            raise RpcError(
-                "Der Shelly %s verlangt ein Passwort - Passwortschutz "
-                "voruebergehend deaktivieren." % ip
-            )
-        raise RpcError("%s: HTTP %s %s" % (method, err.code, detail))
-    except urllib.error.URLError as err:
-        raise RpcError("%s: Shelly %s nicht erreichbar (%s)" % (method, ip, err.reason))
+    body = None
+    for attempt in range(3):
+        headers = {"Content-Type": "application/json"}
+        auth = _digest_header(ip, "POST", "/rpc")
+        if auth:
+            headers["Authorization"] = auth
+        req = urllib.request.Request("http://%s/rpc" % ip, data=payload, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                body = json.loads(resp.read().decode("utf-8", "surrogateescape" if lenient else "strict"))
+            break
+        except urllib.error.HTTPError as err:
+            detail = err.read().decode("utf-8", "replace")[:200]
+            if err.code == 401:
+                ch = _remember_challenge(ip, err.headers.get("WWW-Authenticate"))
+                if ip not in SHELLY_PASSWORDS or not ch:
+                    raise AuthRequired(ip)
+                # 1. Versuch ohne/mit veralteter Nonce -> mit neuer Nonce
+                # wiederholen; wird auch das abgelehnt, ist das Passwort falsch.
+                if attempt == 0 and not auth:
+                    continue
+                if attempt < 2 and 'stale=true' in (err.headers.get("WWW-Authenticate") or "").lower():
+                    continue
+                if attempt == 0:
+                    continue
+                raise AuthRequired(ip, wrong=True)
+            raise RpcError("%s: HTTP %s %s" % (method, err.code, detail))
+        except urllib.error.URLError as err:
+            raise RpcError("%s: Shelly %s nicht erreichbar (%s)" % (method, ip, err.reason))
+    if body is None:
+        raise AuthRequired(ip, wrong=True)
 
     if "error" in body:
         raise RpcError("%s: %s" % (method, body["error"]))
@@ -615,11 +700,32 @@ class WsLogStream:
     """Minimaler WebSocket-Client (RFC 6455), nur Lesen von Textframes."""
 
     def __init__(self, ip, timeout=5):
+        self.buf = b""
+        self.frag = b""
+        for attempt in range(2):
+            head = self._handshake(ip, timeout)
+            status = head.split(b"\r\n", 1)[0]
+            if b" 101" in status:
+                self.buf = head.split(b"\r\n\r\n", 1)[1]
+                return
+            self.close()
+            if b" 401" in status:
+                m = re.search(rb"(?im)^www-authenticate:\s*(.+?)\r?$", head)
+                ch = _remember_challenge(ip, m.group(1).decode("latin-1") if m else "")
+                if ip in SHELLY_PASSWORDS and ch and attempt == 0:
+                    continue
+                raise AuthRequired(ip, wrong=ip in SHELLY_PASSWORDS)
+            raise RpcError("Log-Stream von %s nicht verfuegbar (%s)"
+                           % (ip, status.decode("latin-1", "replace") or "keine Antwort"))
+
+    def _handshake(self, ip, timeout):
         self.sock = socket.create_connection((ip, 80), timeout=timeout)
         key = base64.b64encode(os.urandom(16)).decode("ascii")
+        auth = _digest_header(ip, "GET", "/debug/log")
         req = ("GET /debug/log HTTP/1.1\r\nHost: %s\r\nUpgrade: websocket\r\n"
                "Connection: Upgrade\r\nSec-WebSocket-Key: %s\r\n"
-               "Sec-WebSocket-Version: 13\r\n\r\n" % (ip, key))
+               "Sec-WebSocket-Version: 13\r\n%s\r\n"
+               % (ip, key, ("Authorization: %s\r\n" % auth) if auth else ""))
         self.sock.sendall(req.encode("ascii"))
         head = b""
         while b"\r\n\r\n" not in head:
@@ -629,13 +735,7 @@ class WsLogStream:
             head += chunk
             if len(head) > 16384:
                 break
-        status = head.split(b"\r\n", 1)[0]
-        if b" 101" not in status:
-            self.close()
-            raise RpcError("Log-Stream von %s nicht verfuegbar (%s)"
-                           % (ip, status.decode("latin-1", "replace") or "keine Antwort"))
-        self.buf = head.split(b"\r\n\r\n", 1)[1]
-        self.frag = b""
+        return head
 
     def _need(self, n, deadline):
         while len(self.buf) < n:
@@ -877,6 +977,7 @@ def start_log_job(ip, sid, seconds, only_script):
                   % (ip, sid, job["result"]["lines"], job["result"]["running"]))
         except Exception as err:   # alles an den Browser melden
             job["error"] = str(err)
+            job["auth_required"] = isinstance(err, AuthRequired)
             job["state"] = "error"
             print("Log-Aufzeichnung %s Script %s fehlgeschlagen: %s" % (ip, sid, err))
 
@@ -895,6 +996,8 @@ def log_job_status(jid):
         out.update(job["result"])
     elif job["state"] == "error":
         out["error"] = job["error"]
+        if job.get("auth_required"):
+            out.update(auth_required=True, ip=job["ip"])
     return out
 
 
@@ -937,6 +1040,38 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._cors()
         self.end_headers()
 
+    def _err(self, err):
+        out = {"ok": False, "error": str(err)}
+        if isinstance(err, AuthRequired):
+            out.update(auth_required=True, ip=err.ip, wrong_password=err.wrong)
+        self._json(200, out)
+
+    def _handle_auth(self):
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            self._json(415, {"ok": False, "error": "Content-Type application/json erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            ip = (data.get("ip") or "").strip()
+            if not RE_IP.match(ip):
+                raise RpcError("ungueltige oder fehlende IP")
+            password = data.get("password") or ""
+            set_shelly_password(ip, password)
+            if password:
+                try:
+                    rpc(ip, "Script.List")        # Passwort sofort pruefen
+                except AuthRequired:
+                    set_shelly_password(ip, "")
+                    raise AuthRequired(ip, wrong=True)
+                print("Passwort fuer %s gesetzt (nur im Arbeitsspeicher)" % ip)
+            self._json(200, {"ok": True})
+        except RpcError as err:
+            self._err(err)
+        except Exception as err:
+            self._json(500, {"ok": False, "error": str(err)})
+
     def _json(self, status, obj):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(status)
@@ -963,7 +1098,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 else:
                     self._json(200, dict({"ok": True}, **st))
             except RpcError as err:
-                self._json(200, {"ok": False, "error": str(err)})
+                self._err(err)
         elif parsed.path == "/api/inspect":
             self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
         elif parsed.path == "/api/config":
@@ -986,7 +1121,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 raise RpcError("ungueltige oder fehlende IP")
             self._json(200, dict({"ok": True}, **func(ip, params)))
         except RpcError as err:
-            self._json(200, {"ok": False, "error": str(err)})
+            self._err(err)
         except Exception as err:
             self._json(500, {"ok": False, "error": str(err)})
 
@@ -999,7 +1134,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             result = check_memory(ip)
             self._json(200, dict({"ok": True}, **result))
         except RpcError as err:
-            self._json(200, {"ok": False, "error": str(err)})
+            self._err(err)
         except Exception as err:
             self._json(500, {"ok": False, "error": str(err)})
 
@@ -1026,6 +1161,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         if self.path == "/api/logcapture":
             self._handle_logcapture()
+            return
+        if self.path == "/api/auth":
+            self._handle_auth()
             return
         if self.path != "/api/upload":
             self._json(404, {"ok": False, "error": "not found"})
@@ -1073,7 +1211,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # Kein Serverfehler, sondern ein erwartbarer Fall (falsche IP,
             # Shelly nicht erreichbar etc.) - der Browser zeigt err als
             # normale Fehlermeldung an, kein HTTP-500 noetig.
-            self._json(200, {"ok": False, "error": str(err)})
+            self._err(err)
         except Exception as err:
             self._json(500, {"ok": False, "error": str(err)})
 
@@ -1096,9 +1234,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             only_script = data.get("only_script", True) is not False   # Standard: gefiltert
             print("Log-Aufzeichnung: %s Script %s, %s s%s"
                   % (ip, sid, seconds, ", nur Script-Ausgaben" if only_script else ", ungefiltert"))
+            rpc(ip, "Script.List")   # Erreichbarkeit/Passwort vorab pruefen
             self._json(200, {"ok": True, "job": start_log_job(ip, sid, seconds, only_script)})
         except RpcError as err:
-            self._json(200, {"ok": False, "error": str(err)})
+            self._err(err)
         except (OSError, ValueError) as err:
             self._json(200, {"ok": False, "error": "Log-Aufzeichnung fehlgeschlagen: %s" % err})
         except Exception as err:

@@ -1,5 +1,9 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.3.0
+- Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers
+- Update: abgebrochene Passwortabfrage wird in der Tabelle als „passwortgeschützt“ angezeigt statt „nicht erreichbar“
+
 ## 2.2.0
 - Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung
 - Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)

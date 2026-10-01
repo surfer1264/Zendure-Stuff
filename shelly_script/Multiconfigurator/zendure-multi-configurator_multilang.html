@@ -48,6 +48,8 @@
     padding:24px; box-shadow:var(--shadow); margin-bottom:20px;
   }
   .panel h2{margin-top:0; font-size:1.1rem;}
+  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px;}
+  .modal{max-width:420px; width:100%; margin:0; box-shadow:0 10px 40px rgba(0,0,0,.3);}
   .spinner{display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px;
     border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .8s linear infinite;}
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -151,7 +153,7 @@ const BUILD_DATE = "2026-09-26";
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.2.0";
+const APP_VERSION = "2.3.0";
 
 const I18N = {
 de: {
@@ -365,6 +367,15 @@ de: {
   upd_status_unknown: "GitHub-Version unbekannt",
   upd_status_missing: "nicht installiert – bitte „Neu konfigurieren“",
   upd_status_unclear: "kein eindeutiges Script – bitte „Neu konfigurieren“",
+  auth_title: "Passwort für Shelly {ip}",
+  auth_hint: "Dieser Shelly ist passwortgeschützt. Benutzer ist immer „admin“. Das Passwort bleibt nur im Arbeitsspeicher des Helfers, bis du ihn beendest – es wird nirgends gespeichert.",
+  auth_label: "Passwort",
+  auth_ok: "Anmelden",
+  auth_cancel: "Abbrechen",
+  auth_wrong: "Passwort falsch – bitte erneut eingeben.",
+  auth_cancelled: "Der Shelly {ip} ist passwortgeschützt – ohne Passwort geht es hier nicht weiter.",
+  auth_failed: "Anmeldung am Shelly fehlgeschlagen.",
+  upd_status_auth: "passwortgeschützt – „Versionen prüfen“ und Passwort eingeben",
   upd_status_unreachable: "Shelly nicht erreichbar",
   helper_outdated: "Dein lokaler Helfer ist älter als diese Seite und kennt diese Funktion noch nicht. Bitte den Helfer schließen und neu starten bzw. die aktuelle Version herunterladen.",
   upd_extra_scripts: "weitere Scripte auf dem Shelly: {n} – beim Hochladen fragen wir, ob sie gelöscht werden sollen",
@@ -706,6 +717,15 @@ en: {
   upd_status_unknown: "GitHub version unknown",
   upd_status_missing: "not installed – please use “Configure from scratch”",
   upd_status_unclear: "no unique script – please use “Configure from scratch”",
+  auth_title: "Password for Shelly {ip}",
+  auth_hint: "This Shelly is password-protected. The user is always “admin”. The password is kept only in the helper’s memory until you close it – it is never saved.",
+  auth_label: "Password",
+  auth_ok: "Log in",
+  auth_cancel: "Cancel",
+  auth_wrong: "Wrong password – please try again.",
+  auth_cancelled: "The Shelly {ip} is password-protected – this cannot continue without the password.",
+  auth_failed: "Login to the Shelly failed.",
+  upd_status_auth: "password-protected – “Check versions” and enter the password",
   upd_status_unreachable: "Shelly not reachable",
   helper_outdated: "Your local helper is older than this page and does not support this function yet. Please close and restart the helper or download the current version.",
   upd_extra_scripts: "other scripts on the Shelly: {n} – when uploading we will ask whether they should be deleted",
@@ -1047,6 +1067,15 @@ fr: {
   upd_status_unknown: "version GitHub inconnue",
   upd_status_missing: "non installé – choisis « Nouvelle configuration »",
   upd_status_unclear: "pas de script unique – choisis « Nouvelle configuration »",
+  auth_title: "Mot de passe du Shelly {ip}",
+  auth_hint: "Ce Shelly est protégé par mot de passe. L'utilisateur est toujours « admin ». Le mot de passe reste uniquement dans la mémoire de l'assistant local jusqu'à sa fermeture – il n'est jamais enregistré.",
+  auth_label: "Mot de passe",
+  auth_ok: "Se connecter",
+  auth_cancel: "Annuler",
+  auth_wrong: "Mot de passe incorrect – réessaie.",
+  auth_cancelled: "Le Shelly {ip} est protégé par mot de passe – impossible de continuer sans le mot de passe.",
+  auth_failed: "La connexion au Shelly a échoué.",
+  upd_status_auth: "protégé par mot de passe – « Vérifier les versions » et saisir le mot de passe",
   upd_status_unreachable: "Shelly injoignable",
   helper_outdated: "Ton assistant local est plus ancien que cette page et ne connaît pas encore cette fonction. Ferme-le et relance-le, ou télécharge la version actuelle.",
   upd_extra_scripts: "autres scripts sur le Shelly : {n} – lors du transfert, nous te demanderons s'il faut les supprimer",
@@ -2670,11 +2699,82 @@ function compareVersions(a, b){
   return 0;
 }
 
+// Alle Helfer-Aufrufe, die einen Shelly ansprechen, laufen hierueber:
+// Meldet der Helfer "auth_required" (Shelly passwortgeschuetzt), fragt der
+// Configurator nach dem Passwort, uebergibt es an den Helfer (/api/auth,
+// nur im Arbeitsspeicher des Helfers) und wiederholt den Aufruf.
+async function helperFetch(path, opts){
+  for(let round = 0; round < 5; round++){
+    const res = await fetch(HELPER_URL + path, opts);
+    const data = await res.json();
+    if(!(data && data.auth_required && data.ip)) return { res: res, data: data };
+    await ensureShellyPassword(data.ip, !!data.wrong_password);
+  }
+  throw new Error(t('auth_failed'));
+}
+
 async function helperGet(path){
-  const res = await fetch(HELPER_URL + path);
-  const data = await res.json();
-  if(!data.ok) throw new Error(data.error || ('HTTP ' + res.status));
-  return data;
+  const r = await helperFetch(path);
+  if(!r.data.ok) throw new Error(r.data.error || ('HTTP ' + r.res.status));
+  return r.data;
+}
+
+// Ein Dialog pro IP, auch wenn mehrere Aufrufe gleichzeitig fragen
+const pendingAuth = {};
+function ensureShellyPassword(ip, wrong){
+  if(pendingAuth[ip]) return pendingAuth[ip];
+  pendingAuth[ip] = (async function(){
+    let isWrong = wrong;
+    try{
+      while(true){
+        const pw = await askShellyPassword(ip, isWrong);
+        if(pw === null){
+          const e = new Error(t('auth_cancelled', {ip: ip}));
+          e.authCancelled = true;
+          throw e;
+        }
+        const res = await fetch(HELPER_URL + '/api/auth', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ip: ip, password: pw })
+        });
+        const d = await res.json();
+        if(d.ok) return;
+        if(!d.auth_required) throw new Error(d.error || ('HTTP ' + res.status));
+        isWrong = true;
+      }
+    } finally {
+      delete pendingAuth[ip];
+    }
+  })();
+  return pendingAuth[ip];
+}
+
+function askShellyPassword(ip, wrong){
+  return new Promise(function(resolve){
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-backdrop';
+    wrap.innerHTML = `<div class="panel modal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+        <h2 id="authTitle" style="margin-top:0;">🔒 ${t('auth_title', {ip: escapeHtml(ip)})}</h2>
+        <p class="hint">${t('auth_hint')}</p>
+        ${wrong ? `<p class="error" style="margin-top:-6px;">${t('auth_wrong')}</p>` : ''}
+        <label class="first">${t('auth_label')}</label>
+        <input type="password" id="authPw" autocomplete="current-password">
+        <div class="copy-row" style="justify-content:flex-end; margin-top:14px;">
+          <button class="btn" id="authCancel">${t('auth_cancel')}</button>
+          <button class="btn btn-primary" id="authOk">${t('auth_ok')}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const input = wrap.querySelector('#authPw');
+    const done = function(val){ wrap.remove(); resolve(val); };
+    wrap.querySelector('#authOk').onclick = function(){ if(input.value) done(input.value); else input.focus(); };
+    wrap.querySelector('#authCancel').onclick = function(){ done(null); };
+    wrap.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && input.value) done(input.value);
+      if(e.key === 'Escape') done(null);
+    });
+    setTimeout(function(){ input.focus(); }, 0);
+  });
 }
 
 function setMode(mode){
@@ -2860,18 +2960,19 @@ async function logStart(){
     if(el) el.textContent = logProgressText();
   }, 1000);
   try{
-    const res = await fetch(HELPER_URL + '/api/logcapture', {
+    const { res, data: started } = await helperFetch('/api/logcapture', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ip: L.ip, id: L.sid, seconds: L.seconds, only_script: !!L.onlyScript })
     });
-    const started = await res.json();
     if(!started.ok) throw new Error(started.error || ('HTTP ' + res.status));
     let data = null, misses = 0;
     while(true){
       await logSleep(2000);
       try{
-        data = await helperGet('/api/logcapture?job=' + encodeURIComponent(started.job));
+        const pr = await fetch(HELPER_URL + '/api/logcapture?job=' + encodeURIComponent(started.job));
+        data = await pr.json();
+        if(!data.ok) throw new Error(data.error || ('HTTP ' + pr.status));
         misses = 0;
       } catch(e){
         // Fehler des Jobs selbst -> abbrechen; kurze Verbindungsaussetzer tolerieren
@@ -3012,7 +3113,7 @@ async function checkUpdates(){
           }
           r.selectable = !!r.available;
         } else r.status = 'unclear';
-      } catch(e){ r.status = 'unreachable'; }
+      } catch(e){ r.status = e.authCancelled ? 'auth' : 'unreachable'; }
     }
     rows[key] = r;
     u.selected[key] = r.status === 'outdated';
@@ -3153,12 +3254,11 @@ async function directUpload(key, confirmIds, deleteOthers){
     if(confirmIds && deleteOthers === false && !helperHas('keep_others')) throw new Error(t('helper_outdated'));
     const payload = { ip: ip, name: UPLOAD_NAMES[key], code: merged, key: key };
     if(confirmIds){ payload.force = true; payload.confirm_ids = confirmIds; payload.delete_others = deleteOthers !== false; }
-    const res = await fetch(HELPER_URL + '/api/upload', {
+    const { res, data } = await helperFetch('/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
     if(data.needs_confirm){
       statusEl.textContent = '';
       showUploadConfirm(key, ip, data);
@@ -3248,8 +3348,7 @@ async function checkMemory(){
   statusEl.textContent = t('memcheck_loading', {ip: ip});
   statusEl.className = 'hint';
   try{
-    const res = await fetch(HELPER_URL + '/api/memcheck?ip=' + encodeURIComponent(ip));
-    const data = await res.json();
+    const { res, data } = await helperFetch('/api/memcheck?ip=' + encodeURIComponent(ip));
     if(!res.ok || !data.ok) throw new Error(data.error || ('HTTP ' + res.status));
     const key = (data.mem_free >= 25200) ? 'memcheck_ok' : 'memcheck_low';
     statusEl.textContent = t(key, {ip: ip, mem_free: data.mem_free});
