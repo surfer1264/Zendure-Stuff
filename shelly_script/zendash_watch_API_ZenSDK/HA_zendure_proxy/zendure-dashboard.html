@@ -510,7 +510,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.5.0";
+  const VERSION = "3.5.1";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -533,6 +533,7 @@
       helpGrid: '+ = Bezug aus dem Netz, − = Einspeisung. Die Kurve zeigt etwa die letzten 2 Minuten, Nulllinie in der Mitte, eigene Skala.',
       helpBatt: 'Summe aller Speicher. + = Speicher geben ab, − = Speicher laden. Die Kurve hat eine eigene Skala und ist nicht direkt mit der Netzkurve vergleichbar.',
       helpAcMode: 'Betriebsart des Geräts: 1 = Laden bzw. Bereitschaft, 2 = Einspeisen ins Hausnetz. Wird vom Regel-Script gesetzt.',
+      helpSocSet: 'Obere Ladegrenze, die gerade am Gerät eingestellt ist (socSet). Das Regel-Script setzt sie nur beim Start auf maxSoc aus der Konfiguration. Weicht sie ab, wurde sie danach von außen geändert (z. B. App oder Home Assistant) – das Gerät lädt dann nur bis zu diesem Wert. Abhilfe: Regel-Script neu starten oder maxSoc in der Konfiguration anpassen.',
       helpSocLimit: 'Ladegrenze des Geräts: 0 = frei, 1 = voll (Laden gesperrt), 2 = untere Grenze erreicht (Entladen gesperrt).',
       helpGridReverse: '2 - Überschuss exportieren verboten für das Gerät; 1 - Export erlaubt. Im gridReverseMode „dynamic“ entscheidet der Controller selbstständig über die Einstellung.',
       helpInputLimit: 'Wählt nur die Leistung. Wirksam erst mit „Manuelles Laden starten“.',
@@ -604,6 +605,7 @@
       pollFail: 'Abfrage fehlgeschlagen: {err}. IP/SCRIPT_ID oben im Code prüfen, oder ob der Shelly erreichbar ist.',
       unreachable: 'nicht erreichbar',
       flagFeeding: 'speist ein', flagCharging: 'lädt/Stby', flagStandby: 'Standby',
+      flagSocSetDiff: 'abweichend, Konfiguration {max} %',
       flagFull: 'voll, Laden gesperrt', flagEmpty: 'leer, Entladen gesperrt', flagFree: 'frei',
       flagExportBlocked: 'Export verboten', flagExportAllowed: 'Export erlaubt',
       target: '(Ziel {v} W)',
@@ -621,6 +623,7 @@
       helpGrid: '+ = import from the grid, − = export. The curve shows roughly the last 2 minutes, zero line in the middle, own scale.',
       helpBatt: 'Sum of all batteries. + = batteries delivering, − = batteries charging. The curve has its own scale and cannot be compared directly with the grid curve.',
       helpAcMode: 'Operating mode of the device: 1 = charging or standby, 2 = feeding into the house grid. Set by the control script.',
+      helpSocSet: 'Upper charge limit currently set on the device (socSet). The control script sets it to maxSoc from the configuration only at startup. If it differs, it was changed externally afterwards (e.g. app or Home Assistant) – the device then only charges up to this value. Fix: restart the control script or adjust maxSoc in the configuration.',
       helpSocLimit: 'Charge limit of the device: 0 = free, 1 = full (charging blocked), 2 = lower limit reached (discharge blocked).',
       helpGridReverse: '2 - exporting surplus is blocked for this device; 1 - export allowed. In gridReverseMode "dynamic" the controller decides on this setting by itself.',
       helpInputLimit: 'Only selects the power. Takes effect with “Start manual charging”.',
@@ -692,6 +695,7 @@
       pollFail: 'Query failed: {err}. Check IP/SCRIPT_ID at the top of the code, or whether the Shelly is reachable.',
       unreachable: 'unreachable',
       flagFeeding: 'feeding in', flagCharging: 'charging/stby', flagStandby: 'standby',
+      flagSocSetDiff: 'differs, configuration {max} %',
       flagFull: 'full, charging blocked', flagEmpty: 'empty, discharge blocked', flagFree: 'free',
       flagExportBlocked: 'export blocked', flagExportAllowed: 'export allowed',
       target: '(target {v} W)',
@@ -709,6 +713,7 @@
       helpGrid: '+ = soutirage du réseau, − = injection. La courbe couvre environ les 2 dernières minutes, ligne zéro au milieu, échelle propre.',
       helpBatt: 'Somme de toutes les batteries. + = les batteries fournissent, − = les batteries chargent. La courbe a sa propre échelle et ne se compare pas directement à celle du réseau.',
       helpAcMode: 'Mode de fonctionnement de l’appareil\u00a0: 1 = charge ou veille, 2 = injection dans le réseau domestique. Défini par le script de régulation.',
+      helpSocSet: 'Limite de charge supérieure actuellement réglée sur l’appareil (socSet). Le script de régulation la règle sur maxSoc de la configuration uniquement au démarrage. Si elle diffère, elle a été modifiée de l’extérieur ensuite (p.\u00a0ex. application ou Home Assistant) – l’appareil ne charge alors que jusqu’à cette valeur. Solution\u00a0: redémarrer le script de régulation ou adapter maxSoc dans la configuration.',
       helpSocLimit: 'Limite de charge de l’appareil\u00a0: 0 = libre, 1 = pleine (charge bloquée), 2 = limite basse atteinte (décharge bloquée).',
       helpGridReverse: '2 - exportation du surplus interdite pour l’appareil\u00a0; 1 - exportation autorisée. En gridReverseMode «\u00a0dynamic\u00a0», le contrôleur décide lui-même de ce réglage.',
       helpInputLimit: 'Choisit seulement la puissance. Effective avec «\u00a0Démarrer la charge manuelle\u00a0».',
@@ -780,6 +785,7 @@
       pollFail: 'Échec de la requête\u00a0: {err}. Vérifiez IP/SCRIPT_ID en haut du code, ou que le Shelly est joignable.',
       unreachable: 'injoignable',
       flagFeeding: 'injecte', flagCharging: 'charge/veille', flagStandby: 'veille',
+      flagSocSetDiff: 'différent, configuration {max} %',
       flagFull: 'pleine, charge bloquée', flagEmpty: 'vide, décharge bloquée', flagFree: 'libre',
       flagExportBlocked: 'export interdit', flagExportAllowed: 'export autorisé',
       target: '(cible {v} W)',
@@ -1602,7 +1608,7 @@
         dischargeAllowed: !!d.dischargeAllowed, reverse: !!d.reverse,
         soc: null, power: 0, online: false,
         acMode: null, socLimit: null, gridReverse: null,
-        pv: null, minVol: null,
+        pv: null, minVol: null, socSet: null,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
     });
@@ -1720,6 +1726,8 @@
           d.acMode = h.acMode; d.socLimit = h.socLimit; d.gridReverse = h.gridReverse;
           d.pv = (h.pv === undefined) ? null : h.pv;
           d.minVol = (h.minVol === undefined) ? null : h.minVol;
+          // ab Script 3.5.1; aeltere Scripte liefern das Feld nicht
+          d.socSet = (h.socSet === undefined) ? null : h.socSet;
         } else {
           d.online = false;
         }
@@ -1808,6 +1816,14 @@
     if (d.socLimit === 1)      flags.push(['warn',  'socLimit 1 · ' + t('flagFull'), 'helpSocLimit']);
     else if (d.socLimit === 2) flags.push(['warn',  'socLimit 2 · ' + t('flagEmpty'), 'helpSocLimit']);
     else if (d.socLimit === 0) flags.push(['',      'socLimit 0 · ' + t('flagFree'), 'helpSocLimit']);
+
+    // Obere Ladegrenze am Geraet (socSet) weicht von maxSoc aus der
+    // Konfiguration ab - nur dann anzeigen. Das Regel-Script gleicht sie
+    // nur beim Start ab; eine Aenderung von aussen bliebe sonst unbemerkt.
+    if (d.socSet !== null && d.socSet !== undefined && d.maxSoc !== undefined &&
+        Math.round(Number(d.socSet)) !== Math.round(Number(d.maxSoc))) {
+      flags.push(['warn', 'socSet ' + d.socSet + ' % · ' + t('flagSocSetDiff', {max: d.maxSoc}), 'helpSocSet']);
+    }
 
     if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · ' + t('flagExportBlocked'), 'helpGridReverse']);
     else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · ' + t('flagExportAllowed'), 'helpGridReverse']);
@@ -2062,4 +2078,4 @@
 })();
 </script>
 </body>
-</html>
+</html>

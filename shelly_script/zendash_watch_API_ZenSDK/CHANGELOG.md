@@ -1,5 +1,11 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.1
+
+- status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage
+- Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis
+- Dashboard: Versionsnummer 3.5.1
+
 ## Changelog 3.5.0
 
 - status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage

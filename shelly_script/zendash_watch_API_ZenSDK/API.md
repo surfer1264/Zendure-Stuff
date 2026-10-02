@@ -52,7 +52,8 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
       "home": 351,
       "gridIn": 0,
       "packIn": 111,
-      "packOut": 0
+      "packOut": 0,
+      "socSet": 100
     }
   ]
 }
@@ -75,11 +76,17 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
 | `gridIn` | Aufnahme aus dem Netz über den AC-Eingang in W (`gridInputPower`). Seit 3.5.0 |
 | `packIn` | Leistung aus dem Akku, also Entladen, in W (`packInputPower`). Seit 3.5.0 |
 | `packOut` | Leistung in den Akku, also Laden, in W (`outputPackPower`). Seit 3.5.0 |
+| `socSet` | Am Gerät eingestellte obere Ladegrenze in % (Report `socSet` / 10, also `950` → 95). `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.1 |
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
 einem Hub, der offline ist. `power` bleibt unverändert: Es ist bei `acMode` 2
 `home`, bei `acMode` 1 `gridIn` mit negativem Vorzeichen, sonst `0`.
+
+`socSet` ist der **tatsächliche** Wert am Gerät. Das Regel-Script schreibt ihn nur
+beim Start (aus `maxSoc` der Konfiguration); wird er danach von außen geändert
+(App, Home Assistant …), weicht er von `maxSoc` in `config_api` ab. Das Dashboard
+zeigt die Abweichung als Hinweis an der Gerätekarte.
 
 `socLimit` ist auch die Grundlage für den automatischen Stopp des manuellen Ladens
 (siehe [„Manuelles Laden“](#manuelles-laden) weiter unten): Meldet ein Gerät im
