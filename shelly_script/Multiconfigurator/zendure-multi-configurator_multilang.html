@@ -181,6 +181,12 @@ de: {
   prod_import_summary: "Bestehende Config einlesen, um sie zu aktualisieren",
   prod_import_button: "Einlesen &amp; übernehmen",
   prod_import_file_button: "📂 Datei laden…",
+  prod_import_shelly_ctrl: "📡 Vom Controller-Shelly lesen",
+  prod_import_shelly_zdw: "📡 Vom Dashboard-Shelly lesen",
+  import_shelly_loading: "Lese Config von {name} ({ip}) …",
+  import_shelly_loaded: "Config von {name} ({ip}) geladen – zum Übernehmen auf „Einlesen & übernehmen“ klicken.",
+  import_shelly_err_ip: "Bitte oben die IP für {name} eintragen.",
+  import_shelly_err: "Config konnte nicht von {ip} gelesen werden: {msg}",
   import_file_loaded: "Datei „{name}“ geladen – zum Übernehmen auf „Einlesen & übernehmen“ klicken.",
   import_file_err_read: "Die Datei konnte nicht gelesen werden.",
   import_file_err_size: "Die Datei ist zu groß – bitte eine Config-Datei oder ein Script vom Configurator wählen.",
@@ -537,6 +543,12 @@ en: {
   prod_import_summary: "Import an existing config to update it",
   prod_import_button: "Import &amp; apply",
   prod_import_file_button: "📂 Load file…",
+  prod_import_shelly_ctrl: "📡 Read from Controller Shelly",
+  prod_import_shelly_zdw: "📡 Read from Dashboard Shelly",
+  import_shelly_loading: "Reading config from {name} ({ip}) …",
+  import_shelly_loaded: "Config from {name} ({ip}) loaded – click “Import & apply” to apply it.",
+  import_shelly_err_ip: "Please enter the IP for {name} above.",
+  import_shelly_err: "Could not read the config from {ip}: {msg}",
   import_file_loaded: "File “{name}” loaded – click “Import & apply” to apply it.",
   import_file_err_read: "The file could not be read.",
   import_file_err_size: "The file is too large – please choose a config file or a script saved by the configurator.",
@@ -893,6 +905,12 @@ fr: {
   prod_import_summary: "Importer une configuration existante pour la mettre à jour",
   prod_import_button: "Importer &amp; appliquer",
   prod_import_file_button: "📂 Charger un fichier…",
+  prod_import_shelly_ctrl: "📡 Lire depuis le Shelly Controller",
+  prod_import_shelly_zdw: "📡 Lire depuis le Shelly Dashboard",
+  import_shelly_loading: "Lecture de la config de {name} ({ip}) …",
+  import_shelly_loaded: "Config de {name} ({ip}) chargée – clique sur « Importer & appliquer » pour l’appliquer.",
+  import_shelly_err_ip: "Saisis ci-dessus l’IP pour {name}.",
+  import_shelly_err: "Impossible de lire la config depuis {ip} : {msg}",
   import_file_loaded: "Fichier « {name} » chargé – clique sur « Importer & appliquer » pour l'appliquer.",
   import_file_err_read: "Le fichier n'a pas pu être lu.",
   import_file_err_size: "Le fichier est trop volumineux – choisis un fichier de config ou un script enregistré par le configurateur.",
@@ -1635,6 +1653,8 @@ function importConfig(){
   if(det) det.open = true;
 }
 
+const KEY_TO_RUNTIME = { ctrl: 'ctr_kvs', zdw: 'apidash_watch' };
+
 // Gespeicherte Datei (Config oder komplettes Script) ins Textfeld laden.
 // Uebernommen wird wie bisher erst per "Einlesen & uebernehmen".
 const IMPORT_FILE_MAX_BYTES = 200 * 1024;
@@ -1659,6 +1679,29 @@ function loadImportFile(input){
     statusEl.className = 'error';
   };
   reader.readAsText(file, 'utf-8');
+}
+
+// Config direkt vom Shelly lesen (nur mit Helfer) und ins Textfeld legen.
+// Uebernommen wird wie beim Datei-Laden erst per "Einlesen & uebernehmen".
+async function loadImportFromShelly(key){
+  const statusEl = document.getElementById('importStatus');
+  const ip = String(state.runtime[KEY_TO_RUNTIME[key]] || '').trim();
+  if(!isValidIp(ip)){
+    statusEl.textContent = t('import_shelly_err_ip', {name: KEY_NAMES[key]});
+    statusEl.className = 'error';
+    return;
+  }
+  statusEl.textContent = t('import_shelly_loading', {name: KEY_NAMES[key], ip: ip});
+  statusEl.className = 'hint';
+  try{
+    const data = await helperGet('/api/config?ip=' + encodeURIComponent(ip) + '&key=' + key);
+    document.getElementById('importText').value = String(data.config || '');
+    statusEl.textContent = t('import_shelly_loaded', {name: KEY_NAMES[key], ip: ip});
+    statusEl.className = 'hint';
+  } catch(e){
+    statusEl.textContent = t('import_shelly_err', {ip: ip, msg: e.message});
+    statusEl.className = 'error';
+  }
 }
 
 // ---------- Step: Produkte ----------
@@ -1714,6 +1757,9 @@ function renderProducts(){
           <button class="btn" onclick="importConfig()">${t('prod_import_button')}</button>
           <button class="btn" onclick="document.getElementById('importFile').click()">${t('prod_import_file_button')}</button>
           <input type="file" id="importFile" accept=".js,.txt,text/javascript,text/plain" style="display:none;" onchange="loadImportFile(this)">
+          ${ helperAvailable && helperHas('read_config') ? `
+          <button class="btn" onclick="loadImportFromShelly('ctrl')">${t('prod_import_shelly_ctrl')}</button>
+          <button class="btn" onclick="loadImportFromShelly('zdw')">${t('prod_import_shelly_zdw')}</button>` : '' }
           <span id="importStatus" class="hint" style="margin:0;"></span>
         </div>
       </div>

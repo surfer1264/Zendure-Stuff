@@ -283,7 +283,7 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 
 ### Bestehende Konfiguration einlesen
 
-Im Schritt „Funktionen“ unter **„Bestehende Config einlesen“** einen kompletten Block `let CONFIG = { ... };` einfügen **oder** mit **„📂 Datei laden…“** eine gespeicherte Datei auswählen und dann „Einlesen & übernehmen“ klicken. Laden kannst du sowohl die Datei aus „💾 Nur CONFIG-Block speichern“ als auch ein komplettes Script aus „🔗 Komplettes Script von GitHub speichern“ – die Datei landet zuerst im Textfeld, übernommen wird erst mit dem Klick. Der Configurator erkennt selbst, ob es der Controller oder zenDash-API + Watchdog ist. Am besten beide nacheinander einlesen – die Reihenfolge ist egal. Die Shelly-IPs werden dabei gleich mit übernommen.
+Im Schritt „Funktionen“ unter **„Bestehende Config einlesen“** einen kompletten Block `let CONFIG = { ... };` einfügen **oder** mit **„📂 Datei laden…“** eine gespeicherte Datei auswählen und dann „Einlesen & übernehmen“ klicken. Laden kannst du sowohl die Datei aus „💾 Nur CONFIG-Block speichern“ als auch ein komplettes Script aus „🔗 Komplettes Script von GitHub speichern“ – die Datei landet zuerst im Textfeld, übernommen wird erst mit dem Klick. Mit laufendem Helfer geht es auch direkt vom Shelly: **„📡 Vom Controller-Shelly lesen“** bzw. **„📡 Vom Dashboard-Shelly lesen“** holt die Config von der oben eingetragenen IP ins Textfeld. Der Configurator erkennt selbst, ob es der Controller oder zenDash-API + Watchdog ist. Am besten beide nacheinander einlesen – die Reihenfolge ist egal. Die Shelly-IPs werden dabei gleich mit übernommen.
 
 ### Script von Hand hochladen
 

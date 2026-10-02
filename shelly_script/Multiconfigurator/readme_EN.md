@@ -285,7 +285,7 @@ For the same reason, Controller and zenDash-API + Watchdog **never** run togethe
 
 ### Importing an existing configuration
 
-In the "Functions" step, under **"Import an existing config to update it"**, paste a complete `let CONFIG = { ... };` block **or** select a saved file with **"📂 Load file…"**, then click "Import & apply". You can load either the file from "💾 Save CONFIG block only" or a complete script from "🔗 Save complete script from GitHub" – the file first lands in the text field and is only applied when you click. The configurator detects by itself whether it's the Controller or zenDash-API + Watchdog. Ideally import both one after the other – the order doesn't matter. The Shelly IPs are taken over at the same time.
+In the "Functions" step, under **"Import an existing config to update it"**, paste a complete `let CONFIG = { ... };` block **or** select a saved file with **"📂 Load file…"**, then click "Import & apply". You can load either the file from "💾 Save CONFIG block only" or a complete script from "🔗 Save complete script from GitHub" – the file first lands in the text field and is only applied when you click. With the helper running, you can also read directly from the Shelly: **"📡 Read from Controller Shelly"** or **"📡 Read from Dashboard Shelly"** fetches the config from the IP entered above into the text field. The configurator detects by itself whether it's the Controller or zenDash-API + Watchdog. Ideally import both one after the other – the order doesn't matter. The Shelly IPs are taken over at the same time.
 
 ### Uploading a script manually
 
