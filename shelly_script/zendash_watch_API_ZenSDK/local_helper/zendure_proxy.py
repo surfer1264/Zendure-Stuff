@@ -53,6 +53,7 @@ SHELLY_SCRIPT_ID nicht mehr hier eintragen - das erledigt die
 Einrichtungsseite unter /setup.
 """
 
+import base64
 import http.server
 import json
 import os
@@ -111,13 +112,26 @@ FAVICON_SVG = b"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <path d="M34 6 L14 34 H28 L24 58 L50 26 H36 Z" fill="#4FD1C5"/>
 </svg>"""
 
+# iOS kann fuer das Home-Bildschirm-Symbol KEIN SVG verwenden und zeigt
+# sonst ein graues Ersatzsymbol mit Buchstaben. Deshalb fuer die Apple-Pfade
+# dasselbe Motiv als echtes PNG (180 x 180, volle Flaeche - die runden Ecken
+# setzt iOS selbst), hier als Base64 eingebettet, damit keine Zusatzdatei
+# noetig ist.
+APPLE_TOUCH_ICON_PNG = base64.b64decode(
+    "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"
+)
+
 ICON_PATHS = (
     "favicon.ico",
     "favicon.svg",
+)
+APPLE_ICON_PATHS = (
     "apple-touch-icon.png",
     "apple-touch-icon-precomposed.png",
     "apple-touch-icon-120x120.png",
     "apple-touch-icon-120x120-precomposed.png",
+    "apple-touch-icon-180x180.png",
+    "apple-touch-icon-180x180-precomposed.png",
 )
 
 
@@ -371,6 +385,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_favicon()
             return
 
+        if endpoint in APPLE_ICON_PATHS:
+            self.serve_apple_icon()
+            return
+
         if path == "/setup":
             self.serve_setup()
             return
@@ -474,6 +492,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "public, max-age=86400")
         self.end_headers()
         self.wfile.write(FAVICON_SVG)
+
+    def serve_apple_icon(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "image/png")
+        self.send_header("Content-Length", str(len(APPLE_TOUCH_ICON_PNG)))
+        self.send_header("Cache-Control", "public, max-age=86400")
+        self.end_headers()
+        self.wfile.write(APPLE_TOUCH_ICON_PNG)
 
     def serve_setup(self):
         body = setup_html().encode("utf-8")
