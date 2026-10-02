@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-02T09:42:14Z",
+  "generated": "2026-10-02T18:52:46Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -93,12 +93,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.0",
+      "version": "3.5.1",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/be0655351f82632fbed5323aaa29430a9056ea57/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38803,
-      "codeHash": "sha256:c066f66ee49869a0ce88386eec5f6372ea64f53e671d746a629cda0e54cef19f",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/aaa0926daac4f34857557812343b2f04ad4da9d5/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38891,
+      "codeHash": "sha256:58015603f5a853b15095a59b592f49cff3a2871982035bf1f518f03d65f8d9ca",
       "configKeys": [
         "api",
         "apiEvents",
@@ -145,14 +145,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
-        "Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)",
-        "Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier"
+        "status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
+        "Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis",
+        "Dashboard: Versionsnummer 3.5.1"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.0",
+          "schema": 1,
+          "codeHash": "sha256:c066f66ee49869a0ce88386eec5f6372ea64f53e671d746a629cda0e54cef19f",
+          "changes": [
+            "status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
+            "Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)",
+            "Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier"
+          ],
+          "notice": null
+        },
         {
           "version": "3.4.1",
           "schema": 1,
