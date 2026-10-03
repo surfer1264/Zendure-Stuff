@@ -1,5 +1,11 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.3
+
+- config_api liefert zusaetzlich `watchdog: {enabled, minVoltWarn, minVoltReset}` und je Geraet `watch` - nur zur Anzeige im Dashboard
+- Dashboard: bei ueberwachten Geraeten steht hinter der schwaechsten Zelle die Sperrschwelle, z. B. "min 3,31 V (Sperre < 2,90 V)"; Farben nach den Watchdog-Schwellen (gelb unter minVoltReset, rot unter minVoltWarn). Antippen der Schwelle erklaert, was beim Unterschreiten passiert. Bei watch: false, abgeschaltetem Watchdog oder aelterem Script bleibt die Anzeige wie bisher
+- Dashboard: Versionsnummer 3.5.3
+
 ## Changelog 3.5.2
 
 - Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet "Entladen gesperrt wegen Unterschreitung minVol". Freigabe nur von Hand ueber den Dashboard-Schalter

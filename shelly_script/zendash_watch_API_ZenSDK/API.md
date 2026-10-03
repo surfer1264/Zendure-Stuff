@@ -115,6 +115,7 @@ eigenen Eingabe zusätzlich sofort.
   "hysteresis": 12,
   "dischargeFixed": 0,
   "dischargeStartupPower": 35,
+  "watchdog": { "enabled": true, "minVoltWarn": 2.9, "minVoltReset": 3.1 },
   "devices": [
     {
       "id": 0,
@@ -127,6 +128,7 @@ eigenen Eingabe zusätzlich sofort.
       "inputLimit": 0,
       "dischargeAllowed": true,
       "reverse": true,
+      "watch": true,
       "lastFull": 20260926
     }
   ]
@@ -142,6 +144,8 @@ eigenen Eingabe zusätzlich sofort.
 | `dischargeStartupPower` | `CONFIG`, **nicht** über die KVS änderbar. Untere Grenze für `dischargeFixed` — muss mit dem Wert im Regel-Script übereinstimmen |
 | `ip`, `label`, `maxSoc`, `maxOutput`, `maxInputPower` | `CONFIG`, zur Laufzeit unveränderlich |
 | `minSoc`, `inputLimit`, `dischargeAllowed`, `reverse` | KVS, mit den Vorgaben aus `CONFIG` als Rückfallwert |
+| `watch` | `CONFIG`, ob der Watchdog dieses Gerät überwacht. Seit 3.5.3 |
+| `watchdog` | `CONFIG` (`watchdog.enabled`, `watchdog.minVoltWarn`, `watchdog.minVoltReset`), nur zur Anzeige. `minVoltWarn` ist die Sperrschwelle: fällt die schwächste Zelle eines überwachten Geräts darunter, meldet der Watchdog und setzt `dischargeAllowed` auf `0`. Seit 3.5.3 |
 | `lastFull` | KVS (`zdmc_dev{id}_lastFull`), Datum der letzten echten 100 % als JJJJMMTT (lokales Datum des Shelly). `0` = noch nie erfasst. Seit 3.3 |
 
 Ist die KVS nicht erreichbar, antwortet der Endpunkt trotzdem — dann mit den

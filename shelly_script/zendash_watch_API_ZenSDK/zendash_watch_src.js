@@ -43,7 +43,7 @@
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.2";
+let VERSION = "3.5.3";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1443,7 +1443,8 @@ function buildDeviceDefaults() {
       maxOutput: d.maxOutput, maxInputPower: d.maxInputPower,
       inputLimit: d.inputLimit,
       dischargeAllowed: d.dischargeAllowed !== false,
-      reverse: !!d.reverse
+      reverse: !!d.reverse,
+      watch: !!d.watch
     };
   }
   return arr;
@@ -1529,6 +1530,9 @@ function serveConfig(res, attempt) {
       hysteresis: CONFIG.api.hysteresis,
       dischargeFixed: dischargeFixed,
       dischargeStartupPower: CONFIG.api.dischargeStartupPower,
+      // Schwellen der Zellspannungs-Ueberwachung - nur zur Anzeige im
+      // Dashboard; sie gelten nur fuer Geraete mit watch: true
+      watchdog: { enabled: WD_ON, minVoltWarn: W.minVoltWarn, minVoltReset: W.minVoltReset },
       devices: devices
     });
     if (DBG) memLog("config_api nach stringify (" + body.length + " B)");

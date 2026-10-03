@@ -511,7 +511,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.5.2";
+  const VERSION = "3.5.3";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -539,6 +539,8 @@
       helpGridReverse: '2 - Überschuss exportieren verboten für das Gerät; 1 - Export erlaubt. Im gridReverseMode „dynamic“ entscheidet der Controller selbstständig über die Einstellung.',
       helpInputLimit: 'Wählt nur die Leistung. Wirksam erst mit „Manuelles Laden starten“.',
       helpManual: 'Endet von selbst, sobald das Gerät voll meldet (Auto-Stop), auch bei geschlossenem Dashboard.',
+      cellLock: 'Sperre < {v} V',
+      helpCellLock: 'Sperrschwelle des Watchdogs (minVoltWarn). Fällt die schwächste Zelle dieses Geräts unter {warn} V, sendet der Watchdog eine Meldung und schaltet das Entladen ab – der Schalter „Entladen erlaubt“ geht auf aus. Wieder einschalten nur von Hand. Erneut sperren kann der Watchdog erst, wenn die Spannung zwischendurch über {reset} V (minVoltReset) gestiegen ist. Gelb: unter {reset} V, rot: unter {warn} V.',
       helpPack: 'PV = gesamter Solareingang des Geräts. min = schwächste Zelle aller Akkupacks, nur unter Last aussagekräftig. Gelb unter 3,0 V, rot unter 2,8 V.',
       fsAria: 'Vollbild umschalten', fsEnter: 'Vollbild', fsExit: 'Vollbild beenden',
       scriptMismatch: 'Script v{v} (abweichend!)',
@@ -629,6 +631,8 @@
       helpGridReverse: '2 - exporting surplus is blocked for this device; 1 - export allowed. In gridReverseMode "dynamic" the controller decides on this setting by itself.',
       helpInputLimit: 'Only selects the power. Takes effect with “Start manual charging”.',
       helpManual: 'Stops by itself as soon as the device reports full (auto-stop), even with the dashboard closed.',
+      cellLock: 'lock < {v} V',
+      helpCellLock: 'Watchdog lock threshold (minVoltWarn). If the weakest cell of this device drops below {warn} V, the watchdog sends a notification and disables discharging – the “Discharge allowed” switch turns off. Re-enable only manually. The watchdog can lock again only after the voltage has risen above {reset} V (minVoltReset) in between. Amber: below {reset} V, red: below {warn} V.',
       helpPack: 'PV = total solar input of the device. min = weakest cell across all battery packs, only meaningful under load. Amber below 3.0 V, red below 2.8 V.',
       fsAria: 'Toggle full screen', fsEnter: 'Full screen', fsExit: 'Exit full screen',
       scriptMismatch: 'script v{v} (mismatch!)',
@@ -719,6 +723,8 @@
       helpGridReverse: '2 - exportation du surplus interdite pour l’appareil\u00a0; 1 - exportation autorisée. En gridReverseMode «\u00a0dynamic\u00a0», le contrôleur décide lui-même de ce réglage.',
       helpInputLimit: 'Choisit seulement la puissance. Effective avec «\u00a0Démarrer la charge manuelle\u00a0».',
       helpManual: 'S’arrête d’elle-même dès que l’appareil signale qu’il est plein (arrêt automatique), même tableau de bord fermé.',
+      cellLock: 'blocage < {v}\u00a0V',
+      helpCellLock: 'Seuil de blocage du watchdog (minVoltWarn). Si la cellule la plus faible de cet appareil passe sous {warn}\u00a0V, le watchdog envoie une notification et désactive la décharge – l’interrupteur «\u00a0Décharge autorisée\u00a0» passe sur arrêt. Réactivation uniquement à la main. Le watchdog ne peut bloquer à nouveau qu’après une remontée de la tension au-dessus de {reset}\u00a0V (minVoltReset). Orange\u00a0: sous {reset}\u00a0V, rouge\u00a0: sous {warn}\u00a0V.',
       helpPack: 'PV = entrée solaire totale de l’appareil. min = cellule la plus faible de tous les packs, significative seulement en charge. Orange sous 3,0\u00a0V, rouge sous 2,8\u00a0V.',
       fsAria: 'Basculer en plein écran', fsEnter: 'Plein écran', fsExit: 'Quitter le plein écran',
       scriptMismatch: 'script v{v} (différent\u00a0!)',
@@ -1597,9 +1603,22 @@
     el.style.color = (apiVersion === VERSION) ? '' : 'var(--amber-text)';
   }
 
+  // Schwellen der Zellspannungs-Ueberwachung aus config_api (ab Script
+  // 3.5.3). null = Watchdog aus oder aelteres Script -> Anzeige wie bisher.
+  let wdVolt = null;
+  function readWdVolt(cfg){
+    const w = cfg && cfg.watchdog;
+    wdVolt = (w && w.enabled && Number(w.minVoltWarn) > 0 && Number(w.minVoltReset) > 0)
+      ? { warn: Number(w.minVoltWarn), reset: Number(w.minVoltReset) } : null;
+  }
+  function fmtVolt(v){
+    return v.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
   async function loadConfig(){
     const cfg = await fetchJ('config_api?fresh=1');
     lastConfigAt = Date.now();
+    readWdVolt(cfg);
 
     setpointSlider.value = cfg.setpoint || 0;
     showSetpoint(Number(cfg.setpoint || 0));
@@ -1625,6 +1644,7 @@
         soc: null, power: 0, online: false,
         acMode: null, socLimit: null, gridReverse: null,
         pv: null, minVol: null, socSet: null,
+        watch: d.watch === true,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
     });
@@ -1698,6 +1718,7 @@
       if (forceConfigNext || (Date.now() - lastConfigAt) >= CONFIG_SEC * 1000 - 1000) {
         forceConfigNext = false;
         const cfg = await fetchJ('config_api');
+        readWdVolt(cfg);
         lastConfigAt = Date.now();
 
         liveSetpoint = Number(cfg.setpoint || 0);
@@ -1729,6 +1750,7 @@
           d.dischargeAllowed = !!c.dischargeAllowed;
           d.reverse = !!c.reverse;
           if (c.lastFull !== undefined) d.lastFull = Number(c.lastFull || 0);
+          d.watch = c.watch === true;
         });
       }
 
@@ -1870,9 +1892,17 @@
       const volt = d.minVol / 100;
       // Im Ruhezustand liegen alle Zellen dicht beieinander - aussagekraeftig
       // wird der Wert erst unter Last.
-      const cls = volt < 2.8 ? 'crit' : (volt < 3.0 ? 'low' : '');
-      const txt = 'min ' + volt.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' V';
-      parts.push(cls ? '<span class="' + cls + '">' + txt + '</span>' : txt);
+      // Ueberwachtes Geraet mit bekannten Watchdog-Schwellen: Farben nach
+      // diesen Schwellen und Sperrschwelle in Klammern (Hilfe per Antippen).
+      // Sonst wie bisher feste Richtwerte 3,0 / 2,8 V.
+      const thr = (wdVolt && d.watch) ? wdVolt : null;
+      const cls = thr
+        ? (volt < thr.warn ? 'crit' : (volt < thr.reset ? 'low' : ''))
+        : (volt < 2.8 ? 'crit' : (volt < 3.0 ? 'low' : ''));
+      const txt = 'min ' + fmtVolt(volt) + ' V';
+      let part = cls ? '<span class="' + cls + '">' + txt + '</span>' : txt;
+      if (thr) part += ' <span class="help-mark" data-help="helpCellLock">(' + t('cellLock', { v: fmtVolt(thr.warn) }) + ')</span>';
+      parts.push(part);
     }
 
     el.innerHTML = parts.join(' · ');
@@ -2011,7 +2041,10 @@
   const helpTip = document.getElementById('helpTip');
   let helpOwner = null, helpTimer = null, lastPointerType = 'mouse';
 
-  function helpText(key){ return t(key, { p: dischargeStartupPower }); }
+  function helpText(key){
+    return t(key, { p: dischargeStartupPower,
+      warn: wdVolt ? fmtVolt(wdVolt.warn) : '?', reset: wdVolt ? fmtVolt(wdVolt.reset) : '?' });
+  }
 
   function hideHelp(){
     helpTip.classList.remove('show');
