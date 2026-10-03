@@ -1319,9 +1319,24 @@
     return 'SoC · ' + d.minSoc + '–' + (max > 0 ? max : 100) + ' %';
   }
 
+  // Obergrenze = kleinere der beiden oberen Ladegrenzen MINUS 1:
+  // maxSoc aus der Konfiguration und - ab Script 3.5.1 - socSet, die am
+  // Geraet tatsaechlich eingestellte Grenze. Wurde socSet von aussen
+  // gesenkt, darf die Reserve trotzdem nie die echte Ladegrenze erreichen.
+  // Ohne socSet (aelteres Script, Hub offline) gilt allein maxSoc.
   function minSocCeiling(d){
-    const max = Number(d.maxSoc);
-    return Math.max(10, Math.min(99, (max > 0 ? max : 100) - 1));
+    const cfgMax = Number(d.maxSoc) > 0 ? Number(d.maxSoc) : 100;
+    const devMax = (d.socSet !== null && d.socSet !== undefined && Number(d.socSet) > 0) ? Number(d.socSet) : 100;
+    return Math.max(10, Math.min(99, Math.min(cfgMax, devMax) - 1));
+  }
+
+  // Regler-Obergrenze und Beschriftung "max X %" nachfuehren - nach jedem
+  // Status-Abruf, weil sich socSet jederzeit aendern kann.
+  function applyMinSocCeiling(d){
+    const ms = document.getElementById('minSoc-' + d.id);
+    if (ms && !isBusy(ms)) ms.max = minSocCeiling(d);
+    const mx = document.getElementById('minSocMax-' + d.id);
+    if (mx) mx.textContent = 'zdmc_dev' + d.id + '_minSoc \u00b7 max ' + minSocCeiling(d) + ' %';
   }
 
   // Reiner Text-Ersatz fuer die ausgeblendeten Schalter im gesperrten
@@ -1368,7 +1383,7 @@
         '</div>' +
         '<div class="ctrl-row">' +
           '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span></div>' +
-          '<span class="key mono">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
+          '<span class="key mono" id="minSocMax-' + d.id + '">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
           '<input type="range" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
         '</div>' +
         '<div class="ctrl-row">' +
@@ -1634,8 +1649,10 @@
       const msVal = document.getElementById('minSocValue-' + d.id);
       if (ms && !isBusy(ms) && d.minSoc !== undefined) {
         // Obergrenze mitfuehren - maxSoc kommt aus der Konfiguration und
-        // kann sich nach einem Neustart des API-Scripts geaendert haben.
-        ms.max = minSocCeiling(d);
+        // kann sich nach einem Neustart des API-Scripts geaendert haben;
+        // socSet steht nur im Live-Zustand der Gerätekarte (hubs).
+        const hd = hubs.find(function(h){ return h.id === d.id; });
+        ms.max = minSocCeiling({ maxSoc: d.maxSoc !== undefined ? d.maxSoc : (hd && hd.maxSoc), socSet: hd ? hd.socSet : null });
         ms.value = d.minSoc;
         if (msVal) msVal.textContent = d.minSoc + ' %';
       }
@@ -1729,6 +1746,7 @@
           d.minVol = (h.minVol === undefined) ? null : h.minVol;
           // ab Script 3.5.1; aeltere Scripte liefern das Feld nicht
           d.socSet = (h.socSet === undefined) ? null : h.socSet;
+          applyMinSocCeiling(d);
         } else {
           d.online = false;
         }

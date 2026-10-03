@@ -700,6 +700,33 @@ for (let dsi = 0; dsi < CONFIG.devices.length; dsi++) {
 }
 let preManual = [];
 
+// Entladesperre bei Unterschreitung von minVoltWarn: im Poll nur vormerken
+// (Spannung), nach dem Poll zdmc_dev{i}_dischargeAllowed = 0 in die KVS
+// schreiben. Freigabe NUR von Hand (Dashboard-Schalter).
+let lockPending = [];
+
+function handleDischargeLocks() {
+  for (let i = 0; i < lockPending.length; i++) {
+    if (lockPending[i] === undefined) continue;
+    if (busyNow()) return;                   // naechster Durchlauf
+    let volt = lockPending[i];
+    let lbl = CONFIG.devices[i].label;
+    // Laeuft manuelles Laden, ist Entladen schon aus - beim Beenden aber
+    // gesperrt bleiben statt den Vorzustand wiederherzustellen.
+    if (preManual[i]) preManual[i].dischargeAllowed = false;
+    if (!deviceState[i].dischargeAllowed) { lockPending[i] = undefined; continue; }
+    busyEnter();
+    kvsSetOne("zdmc_dev" + i + "_dischargeAllowed", 0, function (ok) {
+      busyLeave();
+      if (!ok) { print(lbl + ": Entladesperre konnte nicht geschrieben werden - neuer Versuch nach dem naechsten Poll."); return; }
+      lockPending[i] = undefined;
+      deviceState[i].dischargeAllowed = false;
+      notify("⛔ " + lbl + ": Entladen gesperrt wegen Unterschreitung minVol (" + volt + "V)");
+    });
+    return;                                  // ein Schreibvorgang je Durchlauf
+  }
+}
+
 // Pause zwischen einzelnen KVS-Schreibvorgaengen in einem Request - sonst
 // treffen mehrere KVS.Set, der Poll UND die Reaktion des Regel-Scripts
 // innerhalb weniger hundert Millisekunden zusammen.
@@ -1070,6 +1097,8 @@ function scanPacks(index, body, checkVolt, logPacks) {
           if (!ws.lowVoltMsgSent[sn]) {
             ws.lowVoltMsgSent[sn] = true;
             notify("⚠️ " + lbl + " Zelle " + sn + " nur " + volt + "V");
+            // zusaetzlich Entladen sperren - geschrieben wird erst nach dem Poll
+            lockPending[index] = volt;
           }
         } else if (volt > W.minVoltReset) {
           ws.lowVoltMsgSent[sn] = false;
@@ -1384,6 +1413,7 @@ function tick() {
     // Nach dem Auto-Stop: belegt der gerade den Slot, wartet lastFull auf
     // den naechsten Durchlauf.
     try { handleFullEvents(); } catch (e) { print("lastFull-Fehler: " + e); }
+    try { handleDischargeLocks(); } catch (e) { print("Entladesperre-Fehler: " + e); }
     notifyPump();
     if (DBG) memLog("Pollende" + (fast ? " (schnell)" : " (Watchdog)"));
   };
