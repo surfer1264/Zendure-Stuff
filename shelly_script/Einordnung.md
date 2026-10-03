@@ -3,7 +3,7 @@
 ## Technik und Funktionen
 
 | Aspekt | ioBroker-Adapter (nograx) | Z-HA (fireson) | SMDC (surfer1264) |
-|---|---|---|---|
+|:---|:---|:---|:---|
 | Rolle | Schnittstelle | Integration mit Regler | Regler + Live-Dashboard + Nachrichtenmodul |
 | Läuft auf | ioBroker-Server | HA-Server | Controller-Shelly (Gen2+), Dashboard-Shelly (Gen2+) |
 | Regelung eingebaut | nein | ja (Zendure Manager) | ja |
