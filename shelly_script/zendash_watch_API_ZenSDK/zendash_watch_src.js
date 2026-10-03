@@ -43,7 +43,7 @@
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.1";
+let VERSION = "3.5.2";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
