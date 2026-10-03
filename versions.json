@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-03T14:39:37Z",
+  "generated": "2026-10-03T16:18:43Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -93,12 +93,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.2",
+      "version": "3.5.3",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/db0325c0c54667143b7dbeecbf3aa7a3aefa899f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39666,
-      "codeHash": "sha256:7253a7baf5cf7ce3e964959a838315c29fe17346a052d489d959c0fee46bd8ba",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ceafd2111700c58af65a27dea1418fe232c30f4b/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 39761,
+      "codeHash": "sha256:29ed1ccb6c799d22167b3d1d7eb78a92dec84ad573245843ff964f85796dc176",
       "configKeys": [
         "api",
         "apiEvents",
@@ -145,14 +145,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet \"Entladen gesperrt wegen Unterschreitung minVol\". Freigabe nur von Hand ueber den Dashboard-Schalter",
-        "Dashboard: Obergrenze des Reserve-Reglers (minSoc) = kleinere von maxSoc (Konfiguration) und socSet (am Geraet) minus 1 - die Reserve bleibt immer mindestens 1 % unter der tatsaechlichen Ladegrenze",
-        "Dashboard: Versionsnummer 3.5.2"
+        "config_api liefert zusaetzlich `watchdog: {enabled, minVoltWarn, minVoltReset}` und je Geraet `watch` - nur zur Anzeige im Dashboard",
+        "Dashboard: bei ueberwachten Geraeten steht hinter der schwaechsten Zelle die Sperrschwelle, z. B. \"min 3,31 V (Sperre < 2,90 V)\"; Farben nach den Watchdog-Schwellen (gelb unter minVoltReset, rot unter minVoltWarn). Antippen der Schwelle erklaert, was beim Unterschreiten passiert. Bei watch: false, abgeschaltetem Watchdog oder aelterem Script bleibt die Anzeige wie bisher",
+        "Dashboard: Versionsnummer 3.5.3"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.2",
+          "schema": 1,
+          "codeHash": "sha256:7253a7baf5cf7ce3e964959a838315c29fe17346a052d489d959c0fee46bd8ba",
+          "changes": [
+            "Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet \"Entladen gesperrt wegen Unterschreitung minVol\". Freigabe nur von Hand ueber den Dashboard-Schalter",
+            "Dashboard: Obergrenze des Reserve-Reglers (minSoc) = kleinere von maxSoc (Konfiguration) und socSet (am Geraet) minus 1 - die Reserve bleibt immer mindestens 1 % unter der tatsaechlichen Ladegrenze",
+            "Dashboard: Versionsnummer 3.5.2"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.1",
           "schema": 1,
