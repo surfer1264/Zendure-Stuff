@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-02T18:52:46Z",
+  "generated": "2026-10-03T14:36:27Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -93,12 +93,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.1",
+      "version": "3.5.2",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/aaa0926daac4f34857557812343b2f04ad4da9d5/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38891,
-      "codeHash": "sha256:58015603f5a853b15095a59b592f49cff3a2871982035bf1f518f03d65f8d9ca",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/db0325c0c54667143b7dbeecbf3aa7a3aefa899f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 39666,
+      "codeHash": "sha256:7253a7baf5cf7ce3e964959a838315c29fe17346a052d489d959c0fee46bd8ba",
       "configKeys": [
         "api",
         "apiEvents",
@@ -144,15 +144,22 @@
         "watchdog",
         "webhookUrl"
       ],
-      "changes": [
-        "status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
-        "Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis",
-        "Dashboard: Versionsnummer 3.5.1"
-      ],
+      "changes": [],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.1",
+          "schema": 1,
+          "codeHash": "sha256:58015603f5a853b15095a59b592f49cff3a2871982035bf1f518f03d65f8d9ca",
+          "changes": [
+            "status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
+            "Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis",
+            "Dashboard: Versionsnummer 3.5.1"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.0",
           "schema": 1,
