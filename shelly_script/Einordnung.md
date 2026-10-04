@@ -1,6 +1,6 @@
 # Vergleich: ioBroker-Adapter (Nograx) – Z-HA (ex Fireson) – SMDC (surfer1264(2nd)) – EMS SolarFlow (basecubedev)
 
-- Vier Multi-Device-Systeme für die Zendure-Flotte im Vergleich
+- Vier **Multi-Device-Systeme** für die Zendure-Flotte im Vergleich
 - Vier Plattformen
 - Vier Lösungen
 
