@@ -54,4 +54,5 @@ Ces dossiers sont conservés uniquement pour consultation et ne sont plus dével
 | **Assistant** | petit programme pour votre ordinateur qui lance le Configurator et téléverse les scripts sur les Shelly |
 | **KVS** | stockage clé-valeur dans le Shelly pour les réglages modifiables en cours de fonctionnement (p. ex. depuis le tableau de bord) |
 
-Plus d'informations dans le [Wiki](https://github.com/surfer1264/Zendure-Stuff/wiki) (allemand).
+Plus d'informations dans le [Wiki](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_FR).
+
