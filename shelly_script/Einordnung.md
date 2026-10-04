@@ -10,7 +10,7 @@
 
 | Aspekt | ioBroker-Adapter (nograx) | Z-HA (fireson) | SMDC (surfer1264) | EMS SolarFlow (basecubedev) |
 |:---|:---|:---|:---|:---|
-| GitHub | [nograx/ioBroker.zendure-solarflow](https://github.com/nograx/ioBroker.zendure-solarflow) | [Zendure/Zendure-HA](https://github.com/Zendure/Zendure-HA) | [surfer1264/Zendure-Stuff](https://github.com/surfer1264/Zendure-Stuff) | [basecubedev/ems-solarflow-api-control](https://github.com/basecubedev/ems-solarflow-api-control) |
+| GitHub | [nograx/ioBroker.zendure-solarflow](https://github.com/nograx/ioBroker.zendure-solarflow) | [Zendure/Zendure-HA](https://github.com/Zendure/Zendure-HA) | [surfer1264/Zendure-Stuff]([https://github.com/surfer1264/Zendure-Stuff](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S))) | [basecubedev/ems-solarflow-api-control](https://github.com/basecubedev/ems-solarflow-api-control) |
 | Rolle | Schnittstelle, ab 6.0.0-alpha zusätzlich eingebauter Regler (Sep 2026) | Integration mit Regler (Mai 2025)| Regler + Live-Dashboard + Nachrichtenmodul (Aug 2026) | eigenständiges EMS: Regler + Dashboard + Statistik + Verwaltungsoberfläche (Mai 2026) |
 | Läuft auf | ioBroker-Server | HA-Server | Controller-Shelly (Gen2+), Dashboard-Shelly (Gen2+) | eigener Host: Docker (NAS, Server, PC, Pi) oder Raspberry-Pi-Appliance-Image |
 | Regelung eingebaut | bisher: nein, ganz neu ab 6.0.0-alpha ja (PI-Regler für Nulleinspeisung, optional) | ja (Zendure Manager; Modi Manuell, Smart, Nur Entladen, Nur Laden, Solar speichern) | ja | ja, Regelschleife standardmäßig alle 5 s |
