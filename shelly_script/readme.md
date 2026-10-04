@@ -22,7 +22,7 @@ Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen)
 |---|---|---|
 | **Controller-Shelly** | [Controller](Controller/readme.md) | regelt Laden und Entladen deiner Speicher |
 | **Dashboard-Shelly** | [zenDash-API + Watchdog](zendash_watch_API_ZenSDK/readme.md) | liefert die Daten fürs Dashboard und meldet Akku voll, Übertemperatur, Unterspannung oder Ausfälle |
-| **Multi-Configurator** | [Configurator](Multiconfigurator/reame.md) | Erstkonfiguration, Update, Logfile Generierung |
+| **Multi-Configurator** | [Configurator](Multiconfigurator/readme.md) | Erstkonfiguration, Update, Logfile Generierung |
 
 Auf jedem Shelly läuft **genau ein Script**. Shellys haben wenig Script-Speicher – zwei Scripte auf einem Gerät können sich gegenseitig zum Absturz bringen.
 
