@@ -4,6 +4,8 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
+🌐 **Deutsch** · [English](readme_EN.md) · [Français](readme_FR.md)
+
 Ein Shelly-Script für deinen **Dashboard-Shelly**, das zwei Aufgaben rund um deine Zendure-Speicher übernimmt:
 
 - **API für das Dashboard** – Das [Dashboard](dashboard.md) zeigt darüber Netzbezug, Ladestand und Leistung deiner Speicher an. Außerdem kannst du Einstellungen des Controllers ändern und manuelles Laden starten.
