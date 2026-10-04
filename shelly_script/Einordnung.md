@@ -5,6 +5,8 @@
 
 - ganz **heißer Kandidat**, um zHA den Thron im Home Assistent Umfeld streitig zu machen, ist [BSFAI](https://github.com/PalmManiac/battery-smartflow-ai), bietet aber noch keinen Multi-Device-Support an, ansonsten bereits ein Projekt absolut auf Augenhöhe, gut dokumentiert, installierbar über HACS.
 
+**Achtung**: Analyse erfolgte nach bestem Wissen und Gewissen auf Basis der verfügbare Doku oder eigenen Erfahrungen mit der SW.
+
 ## Technik und Funktionen
 
 | Aspekt | ioBroker-Adapter (nograx) | Z-HA (fireson) | SMDC (surfer1264) | EMS SolarFlow (basecubedev) | Omnibattery (ffunes) | zendure-automation (Felliglanz) |
