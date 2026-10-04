@@ -3,7 +3,8 @@
 - Vier Multi-Device-Systeme für die Zendure-Flotte im Vergleich
 - Vier Plattformen
 - Vier Lösungen
-- 
+
+- ganz heißer Kandidat um zHA den Thron im Home Assistent Umfeld streitig zu machen ist [BSFAI](https://github.com/PalmManiac/battery-smartflow-ai), bietet aber noch keinen Multi-Device-Support an, ansonsten bereits ein Projekt absolut auf Augenhöhe, gut dokumentiert, installierbar über HACS.
 
 ## Technik und Funktionen
 
