@@ -55,4 +55,4 @@ Diese Ordner bleiben nur zum Nachschlagen erhalten und werden nicht mehr weitere
 | **Helfer** | kleines Programm für deinen Rechner, das den Configurator startet und die Scripte auf die Shellys lädt |
 | **KVS** | Ablage im Shelly für Einstellungen, die du im laufenden Betrieb ändern kannst (z. B. aus dem Dashboard) |
 
-Mehr Hintergrund steht im [Wiki](https://github.com/surfer1264/Zendure-Stuff/wiki).
+Mehr Hintergrund steht im [Wiki](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S‐Z‐S‐C‐S)).
