@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.4";
+let VERSION = "5.1.5";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -2250,7 +2250,7 @@ function printBannerLine(onDone) {
 printBannerLine(function () {
 
   if (CONFIG.signal.enabled) {
-    sendSignalMessage("✅ Multi-Device-Controller " + VERSION + "gestartet (" +
+    sendSignalMessage("✅ Multi-Device-Controller " + VERSION + " gestartet (" +
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
