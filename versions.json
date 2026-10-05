@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-03T16:18:43Z",
+  "generated": "2026-10-05T16:15:55Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.1.1",
+      "version": "5.1.3",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/86c1c7469ebf945e784d813cfb8e890c1c8e9a3a/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 45875,
-      "codeHash": "sha256:f1438e831c010f9cd0b2013f480ac3bfcdc94dd6229711c3004b03d1acedc364",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fb1b255feb747f9e583fb6bab3a8055ef0fe41f8/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 46045,
+      "codeHash": "sha256:56dff32e5cf08d6248516f9ffed2af165ecf1e9034cb0228b08914ae1d08f3dd",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,12 +62,23 @@
         "webhookUrl"
       ],
       "changes": [
-        "Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben"
+        "**Neue Logzeile: übersprungener Takt**",
+        "Braucht ein Regelzyklus länger als das eingestellte `interval` (z. B. weil",
+        "ein Gerät langsam antwortet), wird der nächste Takt ausgelassen. Das passierte"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.1.1",
+          "schema": 1,
+          "codeHash": "sha256:f1438e831c010f9cd0b2013f480ac3bfcdc94dd6229711c3004b03d1acedc364",
+          "changes": [
+            "Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben"
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.0",
           "schema": 1,
