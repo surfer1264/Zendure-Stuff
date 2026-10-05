@@ -75,12 +75,16 @@ function makeDevice(sn, capacityKWh, startSoc, pvFn) {
     gridReverse: 1,
     lastPv: 0,
     lastAcPower: 0,          // signiert: + Export, - Laden vom Netz (tatsaechlich geliefert)
+    lastPassThrough: 0,      // Bypass: PV-Ueberschuss, der zusaetzlich AC-seitig ins Haus/Netz ging
   };
 }
 
 const START_SOC = Number(process.env.START_SOC || 50);
-const dev0 = makeDevice("MOCKSN-SF800", 2.0, START_SOC, pv800);
-const dev1 = makeDevice("MOCKSN-SF2400", 4.0, START_SOC, pv2400);
+// Optional getrennte Start-SOCs, z.B. ein Geraet voll (Bypass), eines halb leer
+const START_SOC_SF800 = Number(process.env.START_SOC_SF800 || START_SOC);
+const START_SOC_SF2400 = Number(process.env.START_SOC_SF2400 || START_SOC);
+const dev0 = makeDevice("MOCKSN-SF800", 2.0, START_SOC_SF800, pv800);
+const dev1 = makeDevice("MOCKSN-SF2400", 4.0, START_SOC_SF2400, pv2400);
 
 function socLimitOf(dev) {
   const maxSoc = dev.socSetX10 / 10;
@@ -120,9 +124,17 @@ function advanceDevice(dev, elapsedMin) {
 
   let delivered = 0;
   if (acPower > 0) {
+    // Hybrid-Wechselrichter: ein vorhandener PV-Ueberschuss (Akku voll)
+    // deckt das Export-Kommando zuerst, nur der Rest kommt aus dem Akku.
+    // Was an PV-Ueberschuss danach noch uebrig ist, geht als Bypass
+    // zusaetzlich raus (siehe Grid-Handler) - das Geraet ist im Bypass
+    // nicht steuerbar, es liefert mindestens seinen PV-Ueberschuss.
+    const fromPv = Math.min(acPower, pvSurplus);
+    pvSurplus -= fromPv;
     const maxDeliverableW = Math.max(0, (dev.soc - minSoc) / 100) * dev.capacityKWh * 1000 / dtH;
-    delivered = Math.min(acPower, maxDeliverableW);
-    dev.soc -= (delivered * dtH / 1000 / dev.capacityKWh) * 100;
+    const fromBat = Math.min(acPower - fromPv, maxDeliverableW);
+    dev.soc -= (fromBat * dtH / 1000 / dev.capacityKWh) * 100;
+    delivered = fromPv + fromBat;
   } else if (acPower < 0) {
     const maxAcceptableW = Math.max(0, (maxSoc - dev.soc) / 100) * dev.capacityKWh * 1000 / dtH;
     const chg = Math.min(-acPower, maxAcceptableW);
@@ -138,7 +150,11 @@ function advanceDevice(dev, elapsedMin) {
 let lastGridPollAt = null;
 
 function reportJson(dev) {
-  const acMode = dev.acMode;
+  // Im Bypass (PV-Ueberschuss wird AC-seitig durchgereicht) steht der
+  // Solarflow real im AC-Ausgangsmodus und meldet die gesamte
+  // Ausgangsleistung in outputHomePower - unabhaengig vom geschriebenen acMode.
+  const bypass = dev.lastPassThrough > 0;
+  const acMode = bypass ? 2 : dev.acMode;
   const props = {
     electricLevel: Math.round(dev.soc),
     socLimit: socLimitOf(dev),
@@ -151,7 +167,7 @@ function reportJson(dev) {
     socSet: dev.socSetX10,
   };
   if (acMode === 2) {
-    props.outputHomePower = Math.max(0, Math.round(dev.lastAcPower));
+    props.outputHomePower = Math.max(0, Math.round(dev.lastAcPower + dev.lastPassThrough));
     props.gridInputPower = 0;
   } else {
     props.outputHomePower = 0;
@@ -160,10 +176,10 @@ function reportJson(dev) {
   return JSON.stringify({ sn: dev.sn, properties: props });
 }
 
+// Tatsaechlich gelieferte AC-Leistung (nicht das Kommando): erreicht ein
+// Geraet minSoc/maxSoc, sieht der Zaehler nur noch, was wirklich floss.
 function currentAcContribution(dev) {
-  if (dev.acMode === 2) return dev.outputLimit;
-  if (dev.acMode === 1 && dev.inputLimit > 0) return -dev.inputLimit;
-  return 0;
+  return dev.lastAcPower;
 }
 
 // ---------------------------------------------------------------
@@ -219,6 +235,10 @@ const server = http.createServer((req, res) => {
       if (dev1.gridReverse === 1) exportAllowed += leftover1; else verworfen1 = leftover1;
     }
 
+    // Bypass-Anteil je Geraet (Selbstverbrauch + erlaubter Export) fuer den Report merken
+    dev0.lastPassThrough = Math.max(0, surplus0 - verworfen0);
+    dev1.lastPassThrough = Math.max(0, surplus1 - verworfen1);
+
     const usableSurplus = selfConsumed + exportAllowed;
     const grid = load - acSum - usableSurplus;
 
@@ -230,6 +250,7 @@ const server = http.createServer((req, res) => {
       pv_sf800: Math.round(dev0.lastPv), pv_sf2400: Math.round(dev1.lastPv),
       ueberschuss_sf800: Math.round(surplus0), ueberschuss_sf2400: Math.round(surplus1),
       verworfen_sf800: Math.round(verworfen0), verworfen_sf2400: Math.round(verworfen1),
+      bypass_sf800: Math.round(dev0.lastPassThrough), bypass_sf2400: Math.round(dev1.lastPassThrough),
       acMode_sf800: dev0.acMode, out_sf800: dev0.outputLimit, in_sf800: dev0.inputLimit,
       acMode_sf2400: dev1.acMode, out_sf2400: dev1.outputLimit, in_sf2400: dev1.inputLimit,
       socLimit_sf800: socLimitOf(dev0), socLimit_sf2400: socLimitOf(dev1),
