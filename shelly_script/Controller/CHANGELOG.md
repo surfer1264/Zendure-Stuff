@@ -1,5 +1,62 @@
 # Changelog Controller
 
+## Changelog 5.1.3
+
+**Neue Logzeile: übersprungener Takt**
+
+Braucht ein Regelzyklus länger als das eingestellte `interval` (z. B. weil
+ein Gerät langsam antwortet), wird der nächste Takt ausgelassen. Das passierte
+bisher unsichtbar. Jetzt steht im Log:
+
+`Takt uebersprungen - Zyklus 1234 laeuft noch seit 4100 ms`
+
+Vereinzelt ist das harmlos. Taucht die Zeile häufig auf, ist `interval` für
+die Anzahl der Geräte zu knapp gewählt und sollte erhöht werden.
+
+Keine Änderung am CONFIG-Block nötig.
+
+## Changelog 5.1.2
+
+**Fehlerbehebung: Ungewolltes Laden bei Bypass-Überschuss**
+
+*Worum geht es?*
+Ist ein Gerät voll (`socLimit: 1`), läuft die PV-Leistung im Bypass einfach
+durch das Gerät ins Haus. Liefert es dabei mehr, als das Haus gerade braucht,
+regelt der Controller die übrigen Geräte entsprechend herunter. Bisher konnte
+er sie dabei aber nicht nur auf 0 W herunterregeln, sondern ihnen sogar einen
+**Ladebefehl** geben. Das hatte drei Schwächen:
+
+- Es betraf auch Geräte mit `reverse: false` – also Geräte, die laut
+  Konfiguration gar nicht laden dürfen.
+- Grenzen wie `maxInputPower` und `maxSoc` wurden dabei nicht beachtet.
+- Das vollere Gerät bekam den größeren Ladeanteil statt das leerere.
+
+*Was ist neu?*
+
+- Die Bypass-Korrektur regelt die übrigen Geräte nur noch **herunter,
+  höchstens bis 0 W** – nie mehr ins Laden.
+- Bleibt danach noch Überschuss übrig, übernimmt ab dem nächsten Takt die
+  normale Ladesteuerung – mit allen Einstellungen (`reverse`, `maxSoc`,
+  `maxInputPower`, Start-/Stop-Schwellen).
+- Gibt es kein Gerät, das laden darf, wird der Überschuss eingespeist
+  (sofern `gridReverse` den Export erlaubt).
+
+*Was merke ich davon?*
+
+- Geräte mit `reverse: false` laden nie mehr ungewollt.
+- Geräte mit `reverse: true` laden den Bypass-Überschuss wie bisher – das
+  Laden beginnt nur etwa einen Takt (rund 4 s) später.
+- Ohne Bypass-Situation ändert sich nichts.
+
+Keine Änderung am CONFIG-Block nötig.
+
+**Dokumentation**
+
+Die Gesamtdokumentation wurde komplett mit dem Code abgeglichen (u. a.
+Plausibilitätsprüfungen, Entprellung beim Zuschalten weiterer Geräte,
+Wartezeit vor `smartMode: 0`, manuelles Laden, SOC-Kalibrierung,
+Ablaufdiagramm).
+
 ## Changelog 5.1.1
 
 - Webhook-/Signal-Meldungen mit Icon wie in zenDash: ✅ Start, ❌ Fehler, ✅ Fehler behoben

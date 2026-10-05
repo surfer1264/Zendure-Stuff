@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.1";
+let VERSION = "5.1.3";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -1551,6 +1551,11 @@ function distributeCharge(target) {
 // liefern als ihnen zugeteilt wurde, und legt den Ueberschuss auf die
 // uebrigen, nicht gesperrten Geraete um. Kein Zustand, kein Timer - reine
 // Funktion der aktuellen Ist-/Soll-Werte dieses einen Zyklus.
+// v5.1.2: Ergebnis wird nie negativ (Untergrenze 0 bzw. dischargeStopPower).
+// Frueher konnte ein negativer Anteil als Ladebefehl wirken - auch bei
+// reverse:false und vorbei an allen Laderegeln. Ein Restueberschuss fuehrt
+// jetzt zu Export und wird im Folgezyklus vom regulaeren Ladepfad
+// uebernommen (rawCharge negativ, da sumZenReverse socLimit=1 ausschliesst).
 function applyBypassExcessCorrection(dischargeOutput) {
   let n = CONFIG.devices.length;
   let excess = 0;
@@ -1589,7 +1594,10 @@ function applyBypassExcessCorrection(dischargeOutput) {
 
     let share = corrected[i] / poolTotal;
     let cut = Math.round(excess * share);
-    corrected[i] -= cut; // darf negativ werden -> wirkt dann als Ladebefehl
+    corrected[i] -= cut;
+    // Nie negativ: Restueberschuss uebernimmt im Folgezyklus der Ladepfad
+    // (reverse, maxSoc, maxInputPower, Start/Stop-Schwellen gelten dort)
+    if (corrected[i] < CONFIG.dischargeStopPower) corrected[i] = 0;
   }
 
   print("Bypass-Korrektur: " + excess +
@@ -1848,7 +1856,10 @@ function writeAllDevices(indices, plans, myCycle, pos, callback) {
 function update() {
 
   if (state.busy) {
-    // ...
+    // Vorheriger Zyklus laeuft noch (z.B. langsames Geraet) - Takt verwerfen.
+    // Haengt der Zyklus dauerhaft, loest spaeter der Watchdog aus.
+    print("Takt uebersprungen - Zyklus " + state.cycleId + " laeuft noch seit " +
+      (Date.now() - state.cycleStartedAt) + " ms");
     return;
   }
 
