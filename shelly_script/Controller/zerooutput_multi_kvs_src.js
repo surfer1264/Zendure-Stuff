@@ -1268,7 +1268,7 @@ function allDevicesAtChargeLimit() {
   let anyAvailable = false;
   for (let i = 0; i < CONFIG.devices.length; i++) {
     let ds = state.devices[i];
-    if (!ds.available) continue;
+    if (!ds.available) return false;
     anyAvailable = true;
     if (ds.socLimit !== 1) return false;
   }
@@ -2250,7 +2250,7 @@ function printBannerLine(onDone) {
 printBannerLine(function () {
 
   if (CONFIG.signal.enabled) {
-    sendSignalMessage("✅ Multi-Device-Controller gestartet (" +
+    sendSignalMessage("✅ Multi-Device-Controller " + VERSION + "gestartet (" +
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
