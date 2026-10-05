@@ -97,6 +97,10 @@
     min-height:100vh;
     background-image:var(--bg-glow);
     padding: 20px 20px 60px;
+    /* Als Home-Bildschirm-App (viewport-fit=cover, Statusleiste
+       black-translucent) liegt die Seite unter der Statusleiste von
+       iPad/iPhone. env() liefert deren Hoehe, ueberall sonst 0. */
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-feature-settings:'ss04' 1; }
   .shell{ max-width:1180px; margin:0 auto; }
@@ -582,7 +586,8 @@
       setpointState: 'Toleranz ±{h} W · einstellbar −40 bis +40 W',
       dischargeFixedState: '0 = aus · sonst ≥ {p} W',
       invalidDischarge: 'Ungültig: 0 W oder ≥ {p} W',
-      socWindow: 'Arbeitsfenster: Reserve bis Ladeziel',
+      socWindow: 'Arbeitsfenster des Geräts: entlädt nicht unter die Reserve (min. SoC) und lädt nicht über das Ladeziel. Das Ladeziel kommt aus der Konfiguration.',
+      helpPower: 'Leistung am Wechselstrom-Anschluss des Geräts: + = gibt ins Hausnetz ab (Akku und PV zusammen), − = nimmt zum Laden aus dem Hausnetz auf. 0 = Bereitschaft.',
       lockStatus: 'Entladen: {a} · Netzladen: {b}',
       allowedF: 'erlaubt', blockedF: 'gesperrt',
       dischargeAllowed: 'Entladen erlaubt',
@@ -674,7 +679,8 @@
       setpointState: 'Tolerance ±{h} W · adjustable −40 to +40 W',
       dischargeFixedState: '0 = off · otherwise ≥ {p} W',
       invalidDischarge: 'Invalid: 0 W or ≥ {p} W',
-      socWindow: 'Operating window: reserve to charge target',
+      socWindow: 'Operating window of the device: does not discharge below the reserve (min. SoC) and does not charge above the charge target. The charge target comes from the configuration.',
+      helpPower: 'Power at the device’s AC connection: + = delivering to the house grid (battery and PV combined), − = drawing from the house grid to charge. 0 = standby.',
       lockStatus: 'Discharge: {a} · Grid charging: {b}',
       allowedF: 'allowed', blockedF: 'blocked',
       dischargeAllowed: 'Discharge allowed',
@@ -766,7 +772,8 @@
       setpointState: 'Tolérance ±{h} W · réglable de −40 à +40 W',
       dischargeFixedState: '0 = arrêt · sinon ≥ {p} W',
       invalidDischarge: 'Invalide\u00a0: 0 W ou ≥ {p} W',
-      socWindow: 'Plage de travail\u00a0: de la réserve à l’objectif de charge',
+      socWindow: 'Plage de travail de l’appareil\u00a0: ne se décharge pas sous la réserve (SoC min.) et ne charge pas au-delà de l’objectif de charge. L’objectif de charge provient de la configuration.',
+      helpPower: 'Puissance au raccordement AC de l’appareil\u00a0: + = fournit au réseau domestique (batterie et PV ensemble), − = prélève sur le réseau domestique pour charger. 0 = veille.',
       lockStatus: 'Décharge\u00a0: {a} · Charge réseau\u00a0: {b}',
       allowedF: 'autorisée', blockedF: 'bloquée',
       dischargeAllowed: 'Décharge autorisée',
@@ -1370,8 +1377,8 @@
           '<div class="battery"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
           '<div class="hub-metrics">' +
             '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
-            '<div class="soc-sub" id="socSub-' + d.id + '" data-i18n-title="socWindow" title="' + t('socWindow') + '">' + socSubText(d) + '</div>' +
-            '<div class="power-value" id="powerValue-' + d.id + '">-- W</div>' +
+            '<div class="soc-sub" id="socSub-' + d.id + '"><span class="help-mark" data-help="socWindow">' + socSubText(d) + '</span></div>' +
+            '<div class="power-value" id="powerValue-' + d.id + '" data-help="helpPower">-- W</div>' +
             '<div class="pack-line" id="packLine-' + d.id + '" data-help="helpPack"></div>' +
             '<div class="full-line" id="fullLine-' + d.id + '" role="button" tabindex="0" data-i18n-title="fullTitle" title="' + t('fullTitle') + '"></div>' +
           '</div>' +
@@ -1995,7 +2002,7 @@
 
       const socEl = document.getElementById('socValue-' + d.id);
       const socSubEl = document.getElementById('socSub-' + d.id);
-      if (socSubEl) socSubEl.textContent = socSubText(d);
+      if (socSubEl) socSubEl.firstChild.textContent = socSubText(d);
       const fill = document.getElementById('battFill-' + d.id);
       const powerEl = document.getElementById('powerValue-' + d.id);
       const hubEl = document.getElementById('hub-' + d.id);
