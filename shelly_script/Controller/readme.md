@@ -8,7 +8,6 @@ Der Controller (`zerooutput_multi_kvs`) ist das Regel-Script auf deinem **Contro
 
 Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steht in der [Benutzerdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-SMDC-‐-Benutzerdokumentation) und der [Gesamtdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController) im Wiki. Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
-https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController
 
 ---
 
