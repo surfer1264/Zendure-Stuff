@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mock: PV-Erzeugung und Hauslast</title>
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --panel: #ffffff;
+    --ink: #1d2733;
+    --muted: #5b6878;
+    --grid: #e1e6ec;
+    --pv800: #d98e04;
+    --pv2400: #2f8f5b;
+    --pvsum: #b9c2cc;
+    --load: #2b5fa8;
+    --surplus: rgba(47, 143, 91, 0.10);
+    --deficit: rgba(43, 95, 168, 0.08);
+    --cross: #8794a3;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12171d; --panel: #1a2129; --ink: #e6ebf0; --muted: #9aa6b3;
+      --grid: #2a333d; --pv800: #f0b33a; --pv2400: #4fbf82; --pvsum: #46515d;
+      --load: #6f9fe6; --surplus: rgba(79, 191, 130, 0.10); --deficit: rgba(111, 159, 230, 0.10);
+      --cross: #6b7684;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12171d; --panel: #1a2129; --ink: #e6ebf0; --muted: #9aa6b3;
+    --grid: #2a333d; --pv800: #f0b33a; --pv2400: #4fbf82; --pvsum: #46515d;
+    --load: #6f9fe6; --surplus: rgba(79, 191, 130, 0.10); --deficit: rgba(111, 159, 230, 0.10);
+    --cross: #6b7684;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px; line-height: 1.5;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 20px 40px; }
+  h1 { font-size: 1.45rem; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 20px; max-width: 75ch; }
+  .chart {
+    background: var(--panel); border: 1px solid var(--grid); border-radius: 10px;
+    padding: 12px 8px 4px; position: relative;
+  }
+  svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; }
+  .axis text { fill: var(--muted); font-size: 12px; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 4px 12px 10px; }
+  .legend button {
+    display: inline-flex; align-items: center; gap: 8px; border: 0; background: none;
+    color: var(--ink); font: inherit; font-size: 0.9rem; cursor: pointer; padding: 4px 2px;
+  }
+  .legend button[aria-pressed="false"] { opacity: 0.4; }
+  .legend button:focus-visible { outline: 2px solid var(--load); outline-offset: 2px; border-radius: 4px; }
+  .swatch { width: 18px; height: 3px; border-radius: 2px; }
+  .swatch.dash { background: repeating-linear-gradient(90deg, var(--pvsum) 0 5px, transparent 5px 8px) !important; height: 2px; }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--panel); color: var(--ink);
+    border: 1px solid var(--grid); border-radius: 8px; padding: 8px 10px; font-size: 0.85rem;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12); min-width: 190px; display: none;
+  }
+  .tip .time { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+  .tip table { border-collapse: collapse; width: 100%; }
+  .tip td { padding: 1px 0; }
+  .tip td.v { text-align: right; font-variant-numeric: tabular-nums; padding-left: 14px; }
+  .tip tr.sep td { border-top: 1px solid var(--grid); padding-top: 4px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 20px; }
+  .fact { background: var(--panel); border: 1px solid var(--grid); border-radius: 10px; padding: 12px 14px; }
+  .fact .k { color: var(--muted); font-size: 0.85rem; }
+  .fact .val { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .fact .val small { font-size: 0.85rem; font-weight: 400; color: var(--muted); }
+  .params { margin-top: 20px; color: var(--muted); font-size: 0.85rem; overflow-x: auto; }
+  .params code { font-family: Consolas, "SFMono-Regular", Menlo, monospace; font-size: 0.82rem; color: var(--ink); }
+  .params p { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>PV-Erzeugung und Hauslast im Mock, 06:00–20:00 Uhr</h1>
+  <p class="sub">Berechnet mit denselben Funktionen wie <code>mock_server.js</code> (<code>pvCurve()</code>, <code>householdLoad()</code>) in Minutenauflösung. Mit der Maus über das Diagramm fahren, um die Werte zu einer Uhrzeit zu sehen; die Legende blendet Kurven ein und aus.</p>
+
+  <div class="chart" id="chart">
+    <div class="legend" id="legend"></div>
+    <svg id="svg" viewBox="0 0 1000 460" role="img" aria-label="Liniendiagramm PV-Erzeugung beider Geräte und Hauslast zwischen 6 und 20 Uhr"></svg>
+    <div class="tip" id="tip"></div>
+  </div>
+
+  <div class="facts" id="facts"></div>
+
+  <div class="params">
+    <p>Parameter dieses Profils:</p>
+    <p><code>pv800(m)  = pvCurve(m, 07:00, 18:00, Peak 10:00, 1500 W)</code></p>
+    <p><code>pv2400(m) = pvCurve(m, 08:00, 19:00, Peak 15:00, 1000 W)</code></p>
+    <p><code>LOAD_SCALE = 0.5</code></p>
+  </div>
+</main>
+
+<script>
+(function () {
+  // ---- Modell, identisch zu mock_server.js ----
+  function gauss(h, mu, sig, amp) { return amp * Math.exp(-0.5 * Math.pow((h - mu) / sig, 2)); }
+  function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+  var LOAD_SCALE = 0.5;
+  function householdLoad(minuteOfDay) {
+    var hour = (((minuteOfDay % 1440) + 1440) % 1440) / 60;
+    var dayW = sigmoid((hour - 6) * 4) * sigmoid((22 - hour) * 4);
+    var lower = 150 + dayW * (300 - 150);
+    var upper = 300 + dayW * (3000 - 300);
+    var base = lower + 0.30 * (upper - lower);
+    var peaks = (gauss(hour, 7.2, 0.8, 700) + gauss(hour, 12.5, 1.0, 550) + gauss(hour, 19.0, 1.3, 1900)) * dayW;
+    var v = (base + peaks) * LOAD_SCALE;
+    v = Math.max(lower * Math.min(1, LOAD_SCALE), Math.min(upper, v));
+    return v;
+  }
+  function pvCurve(minuteOfDay, start, end, peak, maxPower) {
+    var m = ((minuteOfDay % 1440) + 1440) % 1440;
+    if (m < start || m > end) return 0;
+    var v;
+    if (m <= peak) { v = maxPower * Math.sin((m - start) / (peak - start) * Math.PI / 2); }
+    else { v = maxPower * Math.cos((m - peak) / (end - peak) * Math.PI / 2); }
+    return Math.max(0, v);
+  }
+  var WIN_START = 8 * 60, WIN_END = 18 * 60;
+  function pv800(m) { return pvCurve(m, WIN_START - 60, WIN_END, 10 * 60, 1500); }
+  function pv2400(m) { return pvCurve(m, WIN_START, WIN_END + 60, 15 * 60, 1000); }
+
+  // ---- Daten ----
+  var T0 = 360, T1 = 1200;
+  var data = [];
+  for (var m = T0; m <= T1; m++) {
+    var a = pv800(m), b = pv2400(m), l = householdLoad(m);
+    data.push({ m: m, pv800: a, pv2400: b, sum: a + b, load: l });
+  }
+
+  var series = [
+    { key: "sum", name: "PV gesamt", color: "var(--pvsum)", dash: "6 4", width: 1.6, on: true },
+    { key: "pv800", name: "PV SF800Pro", color: "var(--pv800)", width: 2.4, on: true },
+    { key: "pv2400", name: "PV Fatamorgana", color: "var(--pv2400)", width: 2.4, on: true },
+    { key: "load", name: "Hauslast", color: "var(--load)", width: 2.6, on: true }
+  ];
+
+  // ---- Geometrie ----
+  var W = 1000, H = 460, ML = 58, MR = 16, MT = 14, MB = 40;
+  var PW = W - ML - MR, PH = H - MT - MB;
+  var YMAX = 2600;
+  function x(m) { return ML + (m - T0) / (T1 - T0) * PW; }
+  function y(v) { return MT + PH - v / YMAX * PH; }
+  function hhmm(m) { var h = Math.floor(m / 60), mi = m % 60; return (h < 10 ? "0" : "") + h + ":" + (mi < 10 ? "0" : "") + mi; }
+  function fmt(v) { return Math.round(v).toLocaleString("de-DE") + " W"; }
+
+  var NS = "http://www.w3.org/2000/svg";
+  var svg = document.getElementById("svg");
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    (parent || svg).appendChild(e);
+    return e;
+  }
+
+  // Ueberschuss/Defizit-Flaechen zwischen PV gesamt und Last
+  var areaG = el("g", {});
+  function bandPath(cond) {
+    var d = "", open = false, top = [], bot = [];
+    function flush() {
+      if (top.length > 1) {
+        d += "M" + top.map(function (p) { return p.join(","); }).join("L") +
+             "L" + bot.reverse().map(function (p) { return p.join(","); }).join("L") + "Z";
+      }
+      top = []; bot = [];
+    }
+    data.forEach(function (p) {
+      if (cond(p)) { top.push([x(p.m).toFixed(1), y(Math.max(p.sum, p.load)).toFixed(1)]);
+                     bot.push([x(p.m).toFixed(1), y(Math.min(p.sum, p.load)).toFixed(1)]); }
+      else flush();
+    });
+    flush();
+    return d;
+  }
+  el("path", { d: bandPath(function (p) { return p.sum > p.load; }), fill: "var(--surplus)" }, areaG);
+  el("path", { d: bandPath(function (p) { return p.sum <= p.load; }), fill: "var(--deficit)" }, areaG);
+
+  // Raster und Achsen
+  var axis = el("g", { "class": "axis" });
+  for (var v = 0; v <= YMAX; v += 500) {
+    el("line", { x1: ML, x2: W - MR, y1: y(v), y2: y(v), "class": "gridline" }, axis);
+    var t = el("text", { x: ML - 8, y: y(v) + 4, "text-anchor": "end" }, axis);
+    t.textContent = v.toLocaleString("de-DE");
+  }
+  for (var hm = T0; hm <= T1; hm += 60) {
+    el("line", { x1: x(hm), x2: x(hm), y1: MT, y2: MT + PH, "class": "gridline" }, axis);
+    var tx = el("text", { x: x(hm), y: H - MB + 20, "text-anchor": "middle" }, axis);
+    tx.textContent = hhmm(hm);
+  }
+  var yl = el("text", { x: 14, y: MT + PH / 2, "text-anchor": "middle", transform: "rotate(-90 14 " + (MT + PH / 2) + ")" }, axis);
+  yl.textContent = "Leistung (W)";
+
+  // Linien
+  var lines = {};
+  series.forEach(function (s) {
+    var d = data.map(function (p, i) { return (i ? "L" : "M") + x(p.m).toFixed(1) + "," + y(p[s.key]).toFixed(1); }).join("");
+    var attrs = { d: d, fill: "none", stroke: s.color, "stroke-width": s.width, "stroke-linejoin": "round" };
+    if (s.dash) attrs["stroke-dasharray"] = s.dash;
+    lines[s.key] = el("path", attrs);
+  });
+
+  // Fadenkreuz
+  var cross = el("line", { y1: MT, y2: MT + PH, stroke: "var(--cross)", "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden" });
+  var dots = {};
+  series.forEach(function (s) {
+    dots[s.key] = el("circle", { r: 4.5, fill: s.color, stroke: "var(--panel)", "stroke-width": 2, visibility: "hidden" });
+  });
+  var hit = el("rect", { x: ML, y: MT, width: PW, height: PH, fill: "transparent", style: "cursor:crosshair" });
+
+  // Legende
+  var legend = document.getElementById("legend");
+  series.forEach(function (s) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-pressed", "true");
+    b.innerHTML = '<span class="swatch' + (s.dash ? ' dash' : '') + '" style="background:' + s.color + '"></span>' + s.name;
+    b.addEventListener("click", function () {
+      s.on = !s.on;
+      b.setAttribute("aria-pressed", s.on ? "true" : "false");
+      lines[s.key].style.display = s.on ? "" : "none";
+      if (!s.on) dots[s.key].setAttribute("visibility", "hidden");
+    });
+    legend.appendChild(b);
+  });
+
+  // Tooltip
+  var tip = document.getElementById("tip");
+  var chart = document.getElementById("chart");
+  function show(evt) {
+    var pt = svg.createSVGPoint();
+    var src = evt.touches ? evt.touches[0] : evt;
+    pt.x = src.clientX; pt.y = src.clientY;
+    var loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+    var m = Math.round(T0 + (loc.x - ML) / PW * (T1 - T0));
+    m = Math.max(T0, Math.min(T1, m));
+    var p = data[m - T0];
+    var cx = x(m);
+    cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("visibility", "visible");
+    series.forEach(function (s) {
+      var d = dots[s.key];
+      if (!s.on) return;
+      d.setAttribute("cx", cx); d.setAttribute("cy", y(p[s.key])); d.setAttribute("visibility", "visible");
+    });
+    var bal = p.sum - p.load;
+    tip.innerHTML =
+      '<div class="time">' + hhmm(m) + ' Uhr</div><table>' +
+      '<tr><td><span class="dot" style="background:var(--pv800)"></span>PV SF800Pro</td><td class="v">' + fmt(p.pv800) + '</td></tr>' +
+      '<tr><td><span class="dot" style="background:var(--pv2400)"></span>PV Fatamorgana</td><td class="v">' + fmt(p.pv2400) + '</td></tr>' +
+      '<tr><td><span class="dot" style="background:var(--pvsum)"></span>PV gesamt</td><td class="v">' + fmt(p.sum) + '</td></tr>' +
+      '<tr><td><span class="dot" style="background:var(--load)"></span>Hauslast</td><td class="v">' + fmt(p.load) + '</td></tr>' +
+      '<tr class="sep"><td>' + (bal >= 0 ? 'PV-Überschuss' : 'Defizit (Akku/Netz)') + '</td><td class="v">' + fmt(Math.abs(bal)) + '</td></tr>' +
+      '</table>';
+    tip.style.display = "block";
+    var rect = chart.getBoundingClientRect();
+    var px = src.clientX - rect.left, py = src.clientY - rect.top;
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    var left = px + 16; if (left + tw > rect.width - 4) left = px - tw - 16;
+    var top = py - th / 2; top = Math.max(4, Math.min(rect.height - th - 4, top));
+    tip.style.left = left + "px"; tip.style.top = top + "px";
+  }
+  function hide() {
+    tip.style.display = "none";
+    cross.setAttribute("visibility", "hidden");
+    series.forEach(function (s) { dots[s.key].setAttribute("visibility", "hidden"); });
+  }
+  hit.addEventListener("mousemove", show);
+  hit.addEventListener("mouseleave", hide);
+  hit.addEventListener("touchstart", function (e) { e.preventDefault(); show(e); }, { passive: false });
+  hit.addEventListener("touchmove", function (e) { e.preventDefault(); show(e); }, { passive: false });
+  hit.addEventListener("touchend", hide);
+
+  // Kennzahlen
+  var e800 = 0, e2400 = 0, eL = 0, eSur = 0, eDef = 0, maxL = 0, maxLm = 0;
+  for (var i = 0; i < data.length - 1; i++) {
+    var q = data[i];
+    e800 += q.pv800 / 60; e2400 += q.pv2400 / 60; eL += q.load / 60;
+    var bl = q.sum - q.load; if (bl > 0) eSur += bl / 60; else eDef -= bl / 60;
+    if (q.load > maxL) { maxL = q.load; maxLm = q.m; }
+  }
+  function kwh(wh) { return (wh / 1000).toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  var facts = [
+    ["PV SF800Pro", kwh(e800) + " kWh", "Spitze 1.500 W um 10:00"],
+    ["PV Fatamorgana", kwh(e2400) + " kWh", "Spitze 1.000 W um 15:00"],
+    ["Hauslast", kwh(eL) + " kWh", "Spitze " + Math.round(maxL).toLocaleString("de-DE") + " W um " + hhmm(maxLm)],
+    ["PV-Überschuss / Defizit", kwh(eSur) + " / " + kwh(eDef) + " kWh", "grün bzw. blau hinterlegt"]
+  ];
+  var fBox = document.getElementById("facts");
+  facts.forEach(function (f) {
+    var d = document.createElement("div");
+    d.className = "fact";
+    d.innerHTML = '<div class="k">' + f[0] + '</div><div class="val">' + f[1] + '</div><div class="k">' + f[2] + '</div>';
+    fBox.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
