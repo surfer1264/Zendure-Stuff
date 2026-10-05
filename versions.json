@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-05T18:10:09Z",
+  "generated": "2026-10-05T20:38:22Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.1.4",
+      "version": "5.1.5",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c502affde1b8452c9d3764600d08472e1e76fac4/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 46318,
-      "codeHash": "sha256:6554b22c431fcb75e4d4438e4a83598d101ae4e52ae965c9c36d40d840a236bc",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/9f70ef791d11b65461d46f1953e06174f19a39a8/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 46334,
+      "codeHash": "sha256:fb34ff4c4db4cfa901ca60809fcfbd335a8d13cd409c15217948a06741e64bb4",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,13 +62,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf",
-        "In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst"
+        "https://github.com/surfer1264/Zendure-Stuff/issues/125",
+        "Startmeldung ergänzt",
+        "gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.1.4",
+          "schema": 1,
+          "codeHash": "sha256:6554b22c431fcb75e4d4438e4a83598d101ae4e52ae965c9c36d40d840a236bc",
+          "changes": [
+            "Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf",
+            "In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst"
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.3",
           "schema": 1,
