@@ -53,8 +53,8 @@ function pvCurve(minuteOfDay, start, end, peak, maxPower) {
 }
 
 const WIN_START = 8 * 60, WIN_END = 18 * 60;
-function pv800(m) { return pvCurve(m, WIN_START-60, WIN_END, 10 * 60, 2000); }
-function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 1500); }
+function pv800(m) { return pvCurve(m, WIN_START-60, WIN_END, 10 * 60, 1500); }
+function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 1000); }
 
 // ---------------------------------------------------------------
 // Geraete-Zustand
@@ -83,7 +83,7 @@ const START_SOC = Number(process.env.START_SOC || 50);
 // Optional getrennte Start-SOCs, z.B. ein Geraet voll (Bypass), eines halb leer
 const START_SOC_SF800 = Number(process.env.START_SOC_SF800 || START_SOC);
 const START_SOC_SF2400 = Number(process.env.START_SOC_SF2400 || START_SOC);
-const dev0 = makeDevice("MOCKSN-SF800", 2.0, START_SOC_SF800, pv800);
+const dev0 = makeDevice("MOCKSN-SF800", 4.0, START_SOC_SF800, pv800);
 const dev1 = makeDevice("MOCKSN-SF2400", 4.0, START_SOC_SF2400, pv2400);
 
 function socLimitOf(dev) {

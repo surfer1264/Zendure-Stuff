@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.3";
+let VERSION = "5.1.4";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -156,6 +156,13 @@ if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.discharg
 // Ladepfad (chargeTarget) bleibt unberuehrt.
 CONFIG.dischargeFixed=0;
 
+// Entlade-Hysterese (Prozentpunkte ueber minSoc). Ein Geraet, das bis minSoc
+// entladen hat, darf erst ab minSoc + dischargeResetMargin wieder entladen -
+// unabhaengig davon, dass die Firmware socLimit=2 bereits bei minSoc+1 aufhebt.
+// Verhindert Flattern an der minSoc-Grenze (PV laedt nach -> sofort wieder
+// Entladen -> minSoc -> Standby ...). Mindestens 1 (= Firmware-Verhalten).
+CONFIG.dischargeResetMargin = Math.max(1, CONFIG.dischargeResetMargin || 3);
+
 // Mindestanzahl aufeinanderfolgender Standby-Zyklen (acMode 1, output=0,
 // input=0 - egal ob natuerlich in der Totzone oder durch
 // directionChangeHoldCycles erzwungen), bevor smartMode wirklich auf 0
@@ -220,6 +227,7 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     smartMode: null,
 
     realDirection: null, reversalHoldCount: 0, standbyHoldCount: 0,
+    dischargeLocked: false, // Entlade-Hysterese, siehe CONFIG.dischargeResetMargin
 
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
@@ -1232,8 +1240,14 @@ function computeDischargeWeights(exclude) {
     let ds = state.devices[i];
     let cfg = CONFIG.devices[i];
 
+    // Entlade-Hysterese pflegen: Sperre ab minSoc, Freigabe erst ab minSoc + Margin
+    if (ds.available) {
+      if (ds.socLimit === 2 || ds.soc <= cfg.minSoc) ds.dischargeLocked = true;
+      else if (ds.soc >= cfg.minSoc + CONFIG.dischargeResetMargin) ds.dischargeLocked = false;
+    }
+
     if (!ds.available || cfg.dischargeAllowed === false || ds.socLimit === 2 ||
-        ds.socStatus === 1 || (exclude && exclude[i])) {
+        ds.dischargeLocked || ds.socStatus === 1 || (exclude && exclude[i])) {
       weight[i] = 0;
       active[i] = false;
       continue;

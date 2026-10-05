@@ -1,5 +1,34 @@
 # Changelog Controller
 
+## Changelog 5.1.4
+
+**Kein Hin- und Herschalten mehr an der unteren Akkugrenze**
+
+*Worum geht es?*
+Hat ein Gerät bis `minSoc` entladen, sperrt die Firmware das Entladen
+(`socLimit: 2`). Sie hebt die Sperre aber schon 1 % später wieder auf. Lädt
+morgens die PV ein leeres Gerät gerade so weit nach, hat der Controller es
+sofort wieder entladen – wenige Sekunden später war es wieder leer. Das Gerät
+schaltete dadurch im Sekundentakt zwischen Entladen und Standby hin und her.
+
+*Was ist neu?*
+Ein leer gelaufenes Gerät darf erst wieder entladen, wenn es **3 % über
+`minSoc`** liegt (bei `minSoc` 15 % also ab 18 %). Bis dahin lädt die PV in
+Ruhe nach. Der Akku wird weiterhin bis `minSoc` genutzt – nur das
+Wiedereinschalten wartet etwas länger.
+
+*Was merke ich davon?*
+
+- Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf
+  (06–09 Uhr) sank die Zahl der Moduswechsel von rund 480 auf unter 10 pro
+  Gerät, die Schreibbefehle an die Geräte von rund 1430 auf 116.
+- In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst
+  nachladen darf, bevor es wieder liefert.
+
+Keine Änderung am CONFIG-Block nötig. Wer einen anderen Abstand möchte, kann
+`dischargeResetMargin: <Wert>` zusätzlich in den CONFIG-Block schreiben
+(mindestens 1).
+
 ## Changelog 5.1.3
 
 **Neue Logzeile: übersprungener Takt**

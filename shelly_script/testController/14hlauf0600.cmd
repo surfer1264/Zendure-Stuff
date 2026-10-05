@@ -1,5 +1,5 @@
 set LOGFILE=14tageslauf.log
-set RELEASE=321
+set RELEASE=513
 
 del %LOGFILE%
 del closed_loop_result.csv
@@ -12,7 +12,7 @@ set SPEED_FACTOR=150
 set STEP_MIN=0.05
 set INTERVAL_MS=3000
 set START_SOC=30
-set LOAD_SCALE=1
+set LOAD_SCALE=0.5
 
 for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format 'yyMMdd-HHmmss'"') do set TS=%%i
 set OUTDIR=Test14h-%RELEASE%-%TS%
