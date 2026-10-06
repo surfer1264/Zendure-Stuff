@@ -18,15 +18,14 @@ morgens die PV ein leeres Gerät gerade so weit nach, hat der Controller es
 sofort wieder entladen – wenige Sekunden später war es wieder leer. Das Gerät
 schaltete dadurch im Sekundentakt zwischen Entladen und Standby hin und her.
 
-*Was ist neu?*
+- *Was ist neu?*
 Ein leer gelaufenes Gerät darf erst wieder entladen, wenn es **3 % über
 `minSoc`** liegt (bei `minSoc` 15 % also ab 18 %). Bis dahin lädt die PV in
 Ruhe nach. Der Akku wird weiterhin bis `minSoc` genutzt – nur das
 Wiedereinschalten wartet etwas länger.
 
-*Was merke ich davon?*
-
-- Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf
+- *Was merke ich davon?*
+Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf
   (06–09 Uhr) sank die Zahl der Moduswechsel von rund 480 auf unter 10 pro
   Gerät, die Schreibbefehle an die Geräte von rund 1430 auf 116.
 - In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst
