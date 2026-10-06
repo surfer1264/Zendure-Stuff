@@ -1,5 +1,14 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.4.0
+- Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API
+- Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)
+- Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden
+- Aufklappbare Hilfe „So findest du den Feldnamen“ mit Beispielen
+- Startdialog: „Neu konfigurieren“ heißt jetzt „Neu konfigurieren oder manuell updaten“ (Beschreibung nennt Einlesen per Einfügen, Datei oder vom Shelly)
+- Link „Kompatible Shelly-Geräte“ auf die neue Wiki-Adresse angepasst
+- Build-Datum unter der Überschrift entfernt – maßgeblich ist die Versionsnummer
+
 ## 2.3.0
 - Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers
 - Bestehende Config einlesen: zusätzlich direkt vom Shelly (Controller- bzw. Dashboard-Shelly, nur mit Helfer) – landet wie beim Datei-Laden zuerst im Textfeld

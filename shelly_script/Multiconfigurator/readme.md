@@ -106,14 +106,14 @@ Damit kannst du alles konfigurieren und das fertige Script herunterladen – **h
 
 ## 3. Ersteinrichtung
 
-Starte den Helfer. Im Startdialog wählst du **„Neu konfigurieren“**.
+Starte den Helfer. Im Startdialog wählst du **„Neu konfigurieren oder manuell updaten“**.
 
 ### Der Ablauf
 
-1. **Start** – „Neu konfigurieren“ wählen
+1. **Start** – „Neu konfigurieren oder manuell updaten“ wählen
 2. **Funktionen** – Controller, zenDash-API und/oder Watchdog auswählen und die **IP-Adressen deiner beiden Shellys** eintragen. Hast du schon eine Konfiguration, kannst du sie hier [einlesen](#bestehende-konfiguration-einlesen), statt alles neu einzugeben.
 3. **Geräte** – deine Zendure-Speicher mit IP, maximaler Leistung und minSoc/maxSoc; je Gerät, ob der Watchdog es überwachen soll. **„Testen“** neben der IP öffnet den Report des Speichers (`/properties/report`) in einem neuen Tab – so siehst du sofort, ob die IP stimmt
-4. **Netzquelle** – woher die Netzleistung kommt: Controller läuft direkt auf einem Shelly Pro 3EM, ein anderer Pro 3EM im Netzwerk oder ein Messgerät mit JSON-Schnittstelle (z. B. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM ohne Pro)
+4. **Netzquelle** – woher die Netzleistung kommt: Controller läuft direkt auf einem Shelly Pro 3EM, ein anderer Pro 3EM im Netzwerk oder ein Messgerät mit JSON-Schnittstelle (z. B. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM ohne Pro) Für ein JSON-Messgerät gibt es Vorlagen (Zendure 3CT, Shelly 3EM ohne Pro, Tasmota); danach nur `<IP>` – bei Tasmota auch `<Gerät>` – ersetzen. Verschachtelte Felder trägst du mit Punkten ein, z. B. `StatusSNS.DVS7420.power`. „Testen“ öffnet die URL; die aufklappbare Hilfe „So findest du den Feldnamen“ erklärt, wonach du in der Antwort suchst.
 5. **Laden vom Netz** – welche Geräte Überschuss aus anderen Anlagen aufnehmen dürfen
 6. **Benachrichtigungen** – Webhook, Signal oder WhatsApp; gilt für Controller und Watchdog gemeinsam
 7. **Watchdog-Schwellen** – nur mit Watchdog: ab wann „Akku voll“, zu niedrige Zellspannung und zu hohe Temperatur gemeldet werden und ab welchem Wert die Meldung wieder scharf ist. Vorbelegt mit deiner eingelesenen Config bzw. den Standardwerten (99/90 %, 2,9/3,1 V, 45/30 °C).
@@ -180,7 +180,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
    | **Update verfügbar** | Es gibt eine neuere Version – die Änderungen werden direkt darunter aufgelistet. Ist automatisch angehakt. |
    | **aktuell** | Nichts zu tun. |
    | **neuer als GitHub** | Du hast eine Test- oder Vorabversion – nichts zu tun. |
-   | **nicht installiert** / **kein eindeutiges Script** | Update nicht möglich, bitte [„Neu konfigurieren“](#3-ersteinrichtung). |
+   | **nicht installiert** / **kein eindeutiges Script** | Update nicht möglich, bitte [„Neu konfigurieren oder manuell updaten“](#3-ersteinrichtung). |
    | **Shelly nicht erreichbar** | siehe [Fehlermeldungen](#6-fehlermeldungen-und-problemsituationen) |
 
    Darunter steht außerdem, ob es eine neue Version des Configurators/Helfers selbst gibt – mit Download-Link.
@@ -195,7 +195,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 
 ### Update ohne Helfer
 
-Ohne Helfer gehst du über **„Neu konfigurieren“**: Konfiguration [einlesen](#bestehende-konfiguration-einlesen), durchklicken, neues Script speichern und [von Hand hochladen](#script-von-hand-hochladen).
+Ohne Helfer gehst du über **„Neu konfigurieren oder manuell updaten“**: Konfiguration [einlesen](#bestehende-konfiguration-einlesen), durchklicken, neues Script speichern und [von Hand hochladen](#script-von-hand-hochladen).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/e23c3b85-03a4-4502-9868-81c742d8e7c5" />
 
@@ -203,7 +203,7 @@ Ohne Helfer gehst du über **„Neu konfigurieren“**: Konfiguration [einlesen]
 
 zenDash-API und Watchdog sind inzwischen **ein** Script (`zendash_watch`). Konfigurationen der alten Einzelscripte (zenDash-API 2.x, Watchdog 1.x) lassen sich **nicht** einlesen. So steigst du um:
 
-1. „Neu konfigurieren“ wählen und die **Controller-Konfiguration** einlesen – sie liefert Geräte, Netzquelle und Benachrichtigungen. Den Rest ergänzt du im Assistenten.
+1. „Neu konfigurieren oder manuell updaten“ wählen und die **Controller-Konfiguration** einlesen – sie liefert Geräte, Netzquelle und Benachrichtigungen. Den Rest ergänzt du im Assistenten.
 2. Beim Direkt-Upload auf den Dashboard-Shelly erkennt der Configurator die alten Scripte und fragt, ob sie gelöscht werden sollen → **„Ja, andere löschen und installieren“**.
 3. Liegen alte Scripte auf einem anderen Shelly (oder lädst du von Hand hoch): dort **stoppen und den Autostart ausschalten** – sonst laufen sie parallel weiter und Meldungen kommen doppelt.
 
@@ -214,7 +214,7 @@ zenDash-API und Watchdog sind inzwischen **ein** Script (`zendash_watch`). Konfi
 Du tauschst einen Shelly aus (defekt, neues Modell) oder er hat eine neue IP-Adresse bekommen? So nimmst du deine Konfiguration mit:
 
 1. **Konfiguration sichern.** Hast du den CONFIG-Block schon gespeichert, nimm den. Sonst in der Weboberfläche des alten Shelly unter „Scripts“ das Script öffnen und den kompletten Block `let CONFIG = { ... };` kopieren.
-2. Helfer starten und **„Neu konfigurieren“** wählen (das Update funktioniert hier nicht, weil auf dem neuen Shelly noch nichts installiert ist).
+2. Helfer starten und **„Neu konfigurieren oder manuell updaten“** wählen (das Update funktioniert hier nicht, weil auf dem neuen Shelly noch nichts installiert ist).
 3. Im Schritt „Funktionen“ die Konfiguration **einlesen** – am besten Controller und zenDash-API + Watchdog nacheinander.
 4. **Erst danach** die IP-Adresse des neuen Shelly eintragen. Beim Einlesen werden die IPs aus der alten Konfiguration übernommen und würden eine vorher eingegebene IP überschreiben.
 5. Durch den Assistenten klicken und auf den neuen Shelly **direkt hochladen**. Der Helfer merkt sich ab jetzt die neue IP.
@@ -224,7 +224,7 @@ Worauf du achten solltest:
 
 * **Controller-Shelly ist gleichzeitig dein Pro 3EM?** Dann wandert mit dem Wechsel auch die Netzmessung mit. Im Schritt „Netzquelle“ prüfen, ob die Einstellung noch stimmt.
 * **Neue IP des Controller-Shelly:** Die zenDash-API liest ihre Werte vom Controller-Shelly. Deshalb auch das Script auf dem Dashboard-Shelly neu hochladen, damit es die neue Adresse kennt.
-* **Neue IP eines Zendure-Speichers:** Das ist kein Shelly-Wechsel, aber genauso schnell erledigt – „Neu konfigurieren“, Konfiguration einlesen, im Schritt „Geräte“ die IP ändern, beide Scripte neu hochladen.
+* **Neue IP eines Zendure-Speichers:** Das ist kein Shelly-Wechsel, aber genauso schnell erledigt – „Neu konfigurieren oder manuell updaten“, Konfiguration einlesen, im Schritt „Geräte“ die IP ändern, beide Scripte neu hochladen.
 * Tipp: Gib deinen Shellys und Speichern im Router eine **feste IP-Adresse**, dann passiert das gar nicht erst.
 
 ---
@@ -254,9 +254,9 @@ Controller und zenDash-API + Watchdog laufen aus demselben Grund **nie** gemeins
 | *Shelly nicht erreichbar* / *Shelly … nicht erreichbar* | Der Shelly antwortet nicht. | IP prüfen (in der Shelly-App oder im Router), Shelly eingeschaltet? Rechner im selben Netz (nicht im Gast-WLAN)? |
 | Fenster *Passwort für Shelly …* | Der Passwortschutz des Shelly ist aktiv. | Das Passwort eingeben (Benutzer ist immer `admin`). Der Helfer behält es nur im Arbeitsspeicher, bis du ihn beendest. Ohne Helfer: Passwortschutz vorübergehend ausschalten, von Hand hochladen, wieder einschalten. |
 | *Passwort falsch* | Das eingegebene Passwort passt nicht. | Erneut eingeben – es ist das Passwort aus der Shelly-App bzw. Weboberfläche. |
-| *nicht installiert – bitte „Neu konfigurieren“* | Auf dem Shelly liegt kein passendes Script. | Über [„Neu konfigurieren“](#3-ersteinrichtung) einrichten. |
-| *kein eindeutiges Script – bitte „Neu konfigurieren“* | Auf dem Shelly liegen mehrere Scripte desselben Typs. | „Neu konfigurieren“ – beim Hochladen die anderen Scripte löschen lassen. |
-| *Config konnte nicht vom Shelly gelesen werden* | Die Konfiguration im Script ist nicht auffindbar (z. B. von Hand verändert). | „Neu konfigurieren“ und die Konfiguration aus deiner Sicherung einlesen. |
+| *nicht installiert – bitte „Neu konfigurieren oder manuell updaten“* | Auf dem Shelly liegt kein passendes Script. | Über [„Neu konfigurieren oder manuell updaten“](#3-ersteinrichtung) einrichten. |
+| *kein eindeutiges Script – bitte „Neu konfigurieren oder manuell updaten“* | Auf dem Shelly liegen mehrere Scripte desselben Typs. | „Neu konfigurieren oder manuell updaten“ – beim Hochladen die anderen Scripte löschen lassen. |
+| *Config konnte nicht vom Shelly gelesen werden* | Die Konfiguration im Script ist nicht auffindbar (z. B. von Hand verändert). | „Neu konfigurieren oder manuell updaten“ und die Konfiguration aus deiner Sicherung einlesen. |
 | *Versionen auf GitHub nicht abrufbar* / *GitHub-Version unbekannt* | Keine Verbindung zu GitHub. | Internetverbindung prüfen, später erneut „Versionen prüfen“. |
 | *Auf … ist bereits das Script „…“ installiert – dieses Gerät ist hier aber für „…“ eingetragen. Sind die IP-Adressen vertauscht?* | Controller- und Dashboard-IP sind wahrscheinlich vertauscht. | **Abbrechen** und die IPs prüfen. Nur löschen, wenn du den Shelly wirklich umwidmen willst. |
 | *Auf … sind n Scripte vorhanden* / *ein anderes Script installiert* | Weitere Scripte auf dem Shelly. | siehe [Mehrere Scripte](#mehrere-scripte-auf-einem-shelly) |

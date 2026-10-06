@@ -108,14 +108,14 @@ Il te permet de tout configurer et de télécharger le script terminé – **mai
 
 ## 3. Première configuration
 
-Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« Nouvelle configuration »**.
+Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« Nouvelle configuration ou mise à jour manuelle »**.
 
 ### Déroulement
 
-1. **Démarrage** – choisir « Nouvelle configuration »
+1. **Démarrage** – choisir « Nouvelle configuration ou mise à jour manuelle »
 2. **Fonctions** – sélectionner Controller, zenDash-API et/ou Watchdog et saisir les **adresses IP de tes deux Shelly**. Si tu as déjà une configuration, tu peux l'[importer](#importer-une-configuration-existante) ici au lieu de tout ressaisir.
 3. **Appareils** – tes batteries Zendure avec IP, puissance maximale et minSoc/maxSoc ; pour chaque appareil, si le Watchdog doit le surveiller. **« Tester »** à côté de l'IP ouvre le rapport de la batterie (`/properties/report`) dans un nouvel onglet – tu vois ainsi tout de suite si l'IP est correcte
-4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM sans Pro)
+4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM sans Pro) Pour un compteur JSON, des modèles sont proposés (Zendure 3CT, Shelly 3EM sans Pro, Tasmota) ; il suffit ensuite de remplacer `<IP>` – pour Tasmota aussi `<Gerät>`. Les champs imbriqués se saisissent avec des points, par ex. `StatusSNS.DVS7420.power`. « Tester » ouvre l'URL ; l'aide dépliable « Comment trouver le nom du champ » explique quoi chercher dans la réponse.
 5. **Charge depuis le réseau** – quels appareils peuvent absorber le surplus d'autres installations
 6. **Notifications** – webhook, Signal ou WhatsApp ; commun au Controller et au Watchdog
 7. **Seuils du Watchdog** – uniquement avec le Watchdog : à partir de quand « batterie pleine », une tension de cellule trop basse et une température trop élevée sont signalées, et à partir de quelle valeur l'alerte est réarmée. Prérempli avec ta configuration importée ou les valeurs par défaut (99/90 %, 2,9/3,1 V, 45/30 °C).
@@ -182,7 +182,7 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
    | **Mise à jour disponible** | Une version plus récente existe – les modifications sont listées juste en dessous. Cochée automatiquement. |
    | **à jour** | Rien à faire. |
    | **plus récent que GitHub** | Tu as une version de test ou préliminaire – rien à faire. |
-   | **non installé** / **pas de script unique** | Mise à jour impossible, choisis [« Nouvelle configuration »](#3-première-configuration). |
+   | **non installé** / **pas de script unique** | Mise à jour impossible, choisis [« Nouvelle configuration ou mise à jour manuelle »](#3-première-configuration). |
    | **Shelly injoignable** | voir [Messages d'erreur](#6-messages-derreur-et-situations-problématiques) |
 
    En dessous, tu vois aussi s'il existe une nouvelle version du configurateur/de l'assistant local lui-même – avec un lien de téléchargement.
@@ -197,7 +197,7 @@ Tout est repris – y compris les valeurs que l'assistant ne demande pas (par ex
 
 ### Mise à jour sans l'assistant local
 
-Sans l'assistant local, passe par **« Nouvelle configuration »** : [importe](#importer-une-configuration-existante) ta configuration, clique jusqu'au bout, enregistre le nouveau script et [charge-le manuellement](#charger-un-script-manuellement).
+Sans l'assistant local, passe par **« Nouvelle configuration ou mise à jour manuelle »** : [importe](#importer-une-configuration-existante) ta configuration, clique jusqu'au bout, enregistre le nouveau script et [charge-le manuellement](#charger-un-script-manuellement).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/e23c3b85-03a4-4502-9868-81c742d8e7c5" />
 
@@ -205,7 +205,7 @@ Sans l'assistant local, passe par **« Nouvelle configuration »** : [importe](#
 
 zenDash-API et Watchdog forment désormais **un seul** script (`zendash_watch`). Les configurations des anciens scripts séparés (zenDash-API 2.x, Watchdog 1.x) **ne peuvent pas** être importées. Voici comment faire la transition :
 
-1. Choisis « Nouvelle configuration » et importe la **configuration du Controller** – elle fournit les appareils, la source réseau et les notifications. Tu complètes le reste dans l'assistant.
+1. Choisis « Nouvelle configuration ou mise à jour manuelle » et importe la **configuration du Controller** – elle fournit les appareils, la source réseau et les notifications. Tu complètes le reste dans l'assistant.
 2. Lors du chargement direct sur le Shelly Dashboard, le configurateur détecte les anciens scripts et demande s'il faut les supprimer → **« Oui, supprimer les autres et installer »**.
 3. Si d'anciens scripts se trouvent sur un autre Shelly (ou si tu charges manuellement) : **arrête-les là-bas et désactive le démarrage automatique** – sinon ils continuent de tourner en parallèle et les messages arrivent en double.
 
@@ -216,7 +216,7 @@ zenDash-API et Watchdog forment désormais **un seul** script (`zendash_watch`).
 Tu remplaces un Shelly (défectueux, nouveau modèle) ou il a reçu une nouvelle adresse IP ? Voici comment emporter ta configuration :
 
 1. **Sauvegarder la configuration.** Si tu as déjà enregistré le bloc CONFIG, utilise-le. Sinon, ouvre le script dans l'interface web de l'ancien Shelly, sous « Scripts », et copie le bloc complet `let CONFIG = { ... };`.
-2. Lance l'assistant local et choisis **« Nouvelle configuration »** (la mise à jour ne fonctionne pas ici, car rien n'est encore installé sur le nouveau Shelly).
+2. Lance l'assistant local et choisis **« Nouvelle configuration ou mise à jour manuelle »** (la mise à jour ne fonctionne pas ici, car rien n'est encore installé sur le nouveau Shelly).
 3. À l'étape « Fonctions », **importe** la configuration – idéalement Controller puis zenDash-API + Watchdog, l'un après l'autre.
 4. **Seulement ensuite**, saisis l'adresse IP du nouveau Shelly. L'import reprend les IP de l'ancienne configuration et écraserait une IP saisie auparavant.
 5. Parcours l'assistant et **charge directement** sur le nouveau Shelly. L'assistant local mémorise désormais la nouvelle IP.
@@ -226,7 +226,7 @@ Points d'attention :
 
 * **Ton Shelly Controller est aussi ton Pro 3EM ?** Alors la mesure réseau change également d'appareil. Vérifie à l'étape « Source réseau » que le réglage est toujours correct.
 * **Nouvelle IP du Shelly Controller :** la zenDash-API lit ses valeurs sur le Shelly Controller. Recharge donc aussi le script sur le Shelly Dashboard pour qu'il connaisse la nouvelle adresse.
-* **Nouvelle IP d'une batterie Zendure :** ce n'est pas un remplacement de Shelly, mais c'est tout aussi rapide – « Nouvelle configuration », importer la configuration, modifier l'IP à l'étape « Appareils », recharger les deux scripts.
+* **Nouvelle IP d'une batterie Zendure :** ce n'est pas un remplacement de Shelly, mais c'est tout aussi rapide – « Nouvelle configuration ou mise à jour manuelle », importer la configuration, modifier l'IP à l'étape « Appareils », recharger les deux scripts.
 * Astuce : attribue à tes Shelly et à tes batteries une **adresse IP fixe** dans ton routeur, et cela n'arrivera plus.
 
 ---
@@ -256,9 +256,9 @@ Pour la même raison, le Controller et zenDash-API + Watchdog ne tournent **jama
 | *Shelly injoignable* | Le Shelly ne répond pas. | Vérifie l'IP (dans l'appli Shelly ou le routeur). Le Shelly est-il allumé ? L'ordinateur est-il sur le même réseau (pas le Wi-Fi invité) ? |
 | Fenêtre *Mot de passe du Shelly …* | La protection par mot de passe du Shelly est active. | Saisis le mot de passe (l'utilisateur est toujours `admin`). L'assistant local le garde uniquement en mémoire jusqu'à sa fermeture. Sans l'assistant local : désactive temporairement la protection, charge le script manuellement, puis réactive-la. |
 | *Mot de passe incorrect* | Le mot de passe saisi ne correspond pas. | Saisis-le à nouveau – c'est le mot de passe de l'appli Shelly ou de l'interface web. |
-| *non installé – choisis « Nouvelle configuration »* | Aucun script correspondant sur le Shelly. | Configure via [« Nouvelle configuration »](#3-première-configuration). |
-| *pas de script unique – choisis « Nouvelle configuration »* | Plusieurs scripts du même type sur le Shelly. | « Nouvelle configuration » – laisse supprimer les autres scripts lors du chargement. |
-| *Impossible de lire la config depuis le Shelly* | La configuration est introuvable dans le script (par ex. modifié à la main). | « Nouvelle configuration » et importe la configuration depuis ta sauvegarde. |
+| *non installé – choisis « Nouvelle configuration ou mise à jour manuelle »* | Aucun script correspondant sur le Shelly. | Configure via [« Nouvelle configuration ou mise à jour manuelle »](#3-première-configuration). |
+| *pas de script unique – choisis « Nouvelle configuration ou mise à jour manuelle »* | Plusieurs scripts du même type sur le Shelly. | « Nouvelle configuration ou mise à jour manuelle » – laisse supprimer les autres scripts lors du chargement. |
+| *Impossible de lire la config depuis le Shelly* | La configuration est introuvable dans le script (par ex. modifié à la main). | « Nouvelle configuration ou mise à jour manuelle » et importe la configuration depuis ta sauvegarde. |
 | *Impossible de charger les versions depuis GitHub* / *version GitHub inconnue* | Pas de connexion à GitHub. | Vérifie ta connexion internet, puis relance « Vérifier les versions » plus tard. |
 | *Le script « … » est déjà installé sur … – mais cet appareil est prévu ici pour « … ». Les adresses IP sont-elles inversées ?* | Les IP Controller et Dashboard sont probablement inversées. | **Annule** et vérifie les IP. Ne supprime que si tu veux vraiment réaffecter le Shelly. |
 | *Il y a n scripts sur …* / *Un autre script est installé sur …* | D'autres scripts sur le Shelly. | voir [Plusieurs scripts](#plusieurs-scripts-sur-un-shelly) |

@@ -108,14 +108,14 @@ With it you can configure everything and download the finished script – **but 
 
 ## 3. Initial setup
 
-Start the helper. In the start dialog, choose **"Configure from scratch"**.
+Start the helper. In the start dialog, choose **"Configure from scratch or update manually"**.
 
 ### The process
 
-1. **Start** – choose "Configure from scratch"
+1. **Start** – choose "Configure from scratch or update manually"
 2. **Functions** – select Controller, zenDash-API and/or Watchdog and enter the **IP addresses of your two Shellys**. If you already have a configuration, you can [import](#importing-an-existing-configuration) it here instead of entering everything again.
 3. **Devices** – your Zendure batteries with IP, maximum power and minSoc/maxSoc; for each device, whether the Watchdog should monitor it. **"Test"** next to the IP opens the battery's report (`/properties/report`) in a new tab – so you can see right away whether the IP is correct
-4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM without Pro)
+4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT, Tasmota, Shelly 3EM without Pro) For a JSON meter there are templates (Zendure 3CT, Shelly 3EM non-Pro, Tasmota); then just replace `<IP>` – for Tasmota also `<Gerät>`. Enter nested fields with dots, e.g. `StatusSNS.DVS7420.power`. "Test" opens the URL; the expandable help "How to find the field name" explains what to look for in the response.
 5. **Charge from grid** – which devices may absorb surplus from other systems
 6. **Notifications** – webhook, Signal or WhatsApp; shared by Controller and Watchdog
 7. **Watchdog thresholds** – Watchdog only: from when "battery full", low cell voltage and high temperature are reported, and from which value the message is armed again. Prefilled from your imported config or the defaults (99/90 %, 2.9/3.1 V, 45/30 °C).
@@ -182,7 +182,7 @@ When a new version of a script is available, you can bring your Shellys up to da
    | **Update available** | A newer version exists – the changes are listed directly below. Ticked automatically. |
    | **up to date** | Nothing to do. |
    | **newer than GitHub** | You have a test or pre-release version – nothing to do. |
-   | **not installed** / **no unique script** | Update not possible, please use ["Configure from scratch"](#3-initial-setup). |
+   | **not installed** / **no unique script** | Update not possible, please use ["Configure from scratch or update manually"](#3-initial-setup). |
    | **Shelly not reachable** | see [Error messages](#6-error-messages-and-problem-situations) |
 
    Below the table you can also see whether there is a new version of the configurator/helper itself – with a download link.
@@ -197,7 +197,7 @@ Everything is carried over – including values the wizard doesn't ask for (e.g.
 
 ### Update without the helper
 
-Without the helper, use **"Configure from scratch"**: [import](#importing-an-existing-configuration) your configuration, click through, save the new script and [upload it manually](#uploading-a-script-manually).
+Without the helper, use **"Configure from scratch or update manually"**: [import](#importing-an-existing-configuration) your configuration, click through, save the new script and [upload it manually](#uploading-a-script-manually).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/e23c3b85-03a4-4502-9868-81c742d8e7c5" />
 
@@ -205,7 +205,7 @@ Without the helper, use **"Configure from scratch"**: [import](#importing-an-exi
 
 zenDash-API and Watchdog are now **one** script (`zendash_watch`). Configurations of the old separate scripts (zenDash-API 2.x, Watchdog 1.x) **cannot** be imported. Here's how to switch:
 
-1. Choose "Configure from scratch" and import the **Controller configuration** – it provides devices, grid source and notifications. You add the rest in the wizard.
+1. Choose "Configure from scratch or update manually" and import the **Controller configuration** – it provides devices, grid source and notifications. You add the rest in the wizard.
 2. When uploading directly to the Dashboard Shelly, the configurator detects the old scripts and asks whether they should be deleted → **"Yes, delete others and install"**.
 3. If old scripts are on a different Shelly (or you upload manually): **stop them there and switch off autostart** – otherwise they keep running in parallel and messages arrive twice.
 
@@ -216,7 +216,7 @@ zenDash-API and Watchdog are now **one** script (`zendash_watch`). Configuration
 You're replacing a Shelly (defective, new model) or it has a new IP address? Here's how to take your configuration with you:
 
 1. **Back up your configuration.** If you have already saved the CONFIG block, use that. Otherwise, open the script in the old Shelly's web interface under "Scripts" and copy the complete `let CONFIG = { ... };` block.
-2. Start the helper and choose **"Configure from scratch"** (update doesn't work here, because nothing is installed on the new Shelly yet).
+2. Start the helper and choose **"Configure from scratch or update manually"** (update doesn't work here, because nothing is installed on the new Shelly yet).
 3. In the "Functions" step, **import** the configuration – ideally Controller and zenDash-API + Watchdog one after the other.
 4. **Only then** enter the IP address of the new Shelly. Importing takes over the IPs from the old configuration and would overwrite an IP entered beforehand.
 5. Click through the wizard and **upload directly** to the new Shelly. From now on the helper remembers the new IP.
@@ -226,7 +226,7 @@ Things to watch out for:
 
 * **Your Controller Shelly is also your Pro 3EM?** Then the grid measurement moves with it. Check in the "Grid source" step whether the setting is still correct.
 * **New IP of the Controller Shelly:** The zenDash-API reads its values from the Controller Shelly. So re-upload the script on the Dashboard Shelly as well, so that it knows the new address.
-* **New IP of a Zendure battery:** Not a Shelly replacement, but just as quick – "Configure from scratch", import the configuration, change the IP in the "Devices" step, re-upload both scripts.
+* **New IP of a Zendure battery:** Not a Shelly replacement, but just as quick – "Configure from scratch or update manually", import the configuration, change the IP in the "Devices" step, re-upload both scripts.
 * Tip: Give your Shellys and batteries a **fixed IP address** in your router, and this won't happen in the first place.
 
 ---
@@ -256,9 +256,9 @@ For the same reason, Controller and zenDash-API + Watchdog **never** run togethe
 | *Shelly not reachable* | The Shelly doesn't respond. | Check the IP (in the Shelly app or router). Is the Shelly switched on? Is your computer on the same network (not the guest Wi-Fi)? |
 | Window *Password for Shelly …* | The Shelly's password protection is active. | Enter the password (the user is always `admin`). The helper keeps it only in memory until you close it. Without the helper: temporarily switch off password protection, upload manually, switch it back on. |
 | *Wrong password* | The password entered does not match. | Enter it again – it is the password from the Shelly app or web interface. |
-| *not installed – please use "Configure from scratch"* | There's no matching script on the Shelly. | Set it up via ["Configure from scratch"](#3-initial-setup). |
-| *no unique script – please use "Configure from scratch"* | There are several scripts of the same type on the Shelly. | "Configure from scratch" – let the other scripts be deleted when uploading. |
-| *Could not read the config from the Shelly* | The configuration can't be found in the script (e.g. edited by hand). | "Configure from scratch" and import the configuration from your backup. |
+| *not installed – please use "Configure from scratch or update manually"* | There's no matching script on the Shelly. | Set it up via ["Configure from scratch or update manually"](#3-initial-setup). |
+| *no unique script – please use "Configure from scratch or update manually"* | There are several scripts of the same type on the Shelly. | "Configure from scratch or update manually" – let the other scripts be deleted when uploading. |
+| *Could not read the config from the Shelly* | The configuration can't be found in the script (e.g. edited by hand). | "Configure from scratch or update manually" and import the configuration from your backup. |
 | *Could not load versions from GitHub* / *GitHub version unknown* | No connection to GitHub. | Check your internet connection, "Check versions" again later. |
 | *The script "…" is already installed on … – but this device is set up here for "…". Are the IP addresses swapped?* | Controller and Dashboard IPs are probably swapped. | **Cancel** and check the IPs. Only delete if you really want to repurpose the Shelly. |
 | *There are n scripts on …* / *A different script is installed on …* | Other scripts on the Shelly. | see [Several scripts](#several-scripts-on-one-shelly) |
