@@ -9,7 +9,7 @@
 
 ## Changelog 5.1.4
 
-**Kein Hin- und Herschalten mehr an der unteren Akkugrenze**
+- **Kein Hin- und Herschalten mehr an der unteren Akkugrenze**
 
 - *Worum geht es?*
 Hat ein Gerät bis `minSoc` entladen, sperrt die Firmware das Entladen
