@@ -8,7 +8,7 @@
 
 ## Changelog 3.5.2
 
-- Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet "Entladen gesperrt wegen Unterschreitung minVol". Freigabe nur von Hand ueber den Dashboard-Schalter
+- Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet "Entladen gesperrt wegen Unterschreitung minVol". Freigabe nur von Hand ueber den Dashboard-Schalter, API und Watch müssen. aktiviert sein 
 - Dashboard: Obergrenze des Reserve-Reglers (minSoc) = kleinere von maxSoc (Konfiguration) und socSet (am Geraet) minus 1 - die Reserve bleibt immer mindestens 1 % unter der tatsaechlichen Ladegrenze
 - Dashboard: Versionsnummer 3.5.2
 
