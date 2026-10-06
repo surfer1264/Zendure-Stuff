@@ -11,7 +11,7 @@
 
 **Kein Hin- und Herschalten mehr an der unteren Akkugrenze**
 
-*Worum geht es?*
+- *Worum geht es?*
 Hat ein Gerät bis `minSoc` entladen, sperrt die Firmware das Entladen
 (`socLimit: 2`). Sie hebt die Sperre aber schon 1 % später wieder auf. Lädt
 morgens die PV ein leeres Gerät gerade so weit nach, hat der Controller es
