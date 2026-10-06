@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-05T20:38:22Z",
+  "generated": "2026-10-06T20:05:51Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -281,17 +281,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ea403b7ecf3496394eed3e6094733e9adfe06c36/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2659f5ad07744f5fa1b626186d5f1a7cb68bf707/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers",
-        "Bestehende Config einlesen: zusätzlich direkt vom Shelly (Controller- bzw. Dashboard-Shelly, nur mit Helfer) – landet wie beim Datei-Laden zuerst im Textfeld",
-        "Geräte: Button „Testen“ neben jeder Speicher-IP öffnet den Report (/properties/report) in einem neuen Tab"
+        "Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API",
+        "Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)",
+        "Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.3.0",
+          "changes": [
+            "Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers",
+            "Bestehende Config einlesen: zusätzlich direkt vom Shelly (Controller- bzw. Dashboard-Shelly, nur mit Helfer) – landet wie beim Datei-Laden zuerst im Textfeld",
+            "Geräte: Button „Testen“ neben jeder Speicher-IP öffnet den Report (/properties/report) in einem neuen Tab"
+          ],
+          "notice": null
+        },
         {
           "version": "2.2.0",
           "changes": [
