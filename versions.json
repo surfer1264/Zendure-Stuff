@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-06T20:05:51Z",
+  "generated": "2026-10-07T19:09:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -281,17 +281,24 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.4.0",
+      "version": "2.5.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2659f5ad07744f5fa1b626186d5f1a7cb68bf707/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/86768cb7a598ec19dfa121b68b64d91e1d0a073a/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API",
-        "Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)",
-        "Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden"
+        "Verbesserte Benutzerführung"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.4.0",
+          "changes": [
+            "Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API",
+            "Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)",
+            "Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden"
+          ],
+          "notice": null
+        },
         {
           "version": "2.3.0",
           "changes": [
