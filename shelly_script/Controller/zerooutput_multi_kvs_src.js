@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.5";
+let VERSION = "5.1.6";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -484,18 +484,20 @@ function applyKvsValue(key, raw, currentValue, validate, apply) {
   apply(n);
 }
 
-function readKvsOverrides(myCycle, callback) {
+// v5.1.6: KEIN cycleId-Stale-Check mehr. Der KVS-Read laeuft event-getrieben
+// (kvs_rev) und ist nicht Teil des Regelzyklus. Vorher wurde die GetMany-
+// Antwort still verworfen, sobald zwischen Aufruf und Antwort ein neuer
+// Regeltakt (lock()) gestartet war - die Aenderung ging dann ohne Retry
+// verloren (kein Apply, kein minSoc-/inputLimit-Sync) bis zum Neustart.
+// KVS-Werte gelten zyklusunabhaengig und werden ohnehin erst im naechsten
+// calculate() gelesen - Uebernahme zu jedem Zeitpunkt ist daher sicher.
+function readKvsOverrides(callback) {
   if (!CONFIG.kvsEnabled) {
     callback();
     return;
   }
 
   safeCall("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
-    if (myCycle !== state.cycleId) {
-      debugStale("readKvsOverrides", myCycle);
-      return;
-    }
-
     if (err_code !== 0 || !res || !res.items) {
       reportError(state.errors, state.notified, "kvs", "KVS",
         "GetMany fehlgeschlagen (" + err_msg + ") - CONFIG unveraendert");
@@ -2316,13 +2318,13 @@ printBannerLine(function () {
         print("KVS-Seed abgeschlossen.");
         print("Lade initiale KVS-Overrides...");
 
-        readKvsOverrides(0, function () {
+        readKvsOverrides(function () {
 
           // StatusHandler nur registrieren, wenn KVS aktiv ist
           Shelly.addStatusHandler(function (e) {
             if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
               print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ") - Lade Overrides...");
-              readKvsOverrides(state.cycleId, function () {
+              readKvsOverrides(function () {
                 print("KVS-Overrides aktualisiert.");
               });
             }

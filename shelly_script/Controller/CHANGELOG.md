@@ -1,10 +1,15 @@
 # Changelog Controller
 
+## Changelog 5.1.6
+
+- kvs-lesen im Controleller robuster gestalten
+- https://github.com/surfer1264/Zendure-Stuff/issues/128
+
 ## Changelog 5.1.5
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/125
-* Startmeldung ergänzt
-* gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird.
+- https://github.com/surfer1264/Zendure-Stuff/issues/125
+- Startmeldung ergänzt
+- gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird.
 
 
 ## Changelog 5.1.4
