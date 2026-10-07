@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-07T19:09:14Z",
+  "generated": "2026-10-07T20:21:56Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.1.5",
+      "version": "5.1.6",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/9f70ef791d11b65461d46f1953e06174f19a39a8/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 46334,
-      "codeHash": "sha256:fb34ff4c4db4cfa901ca60809fcfbd335a8d13cd409c15217948a06741e64bb4",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4a74cb5d8c05e28e970f41a2e7170d6299e423df/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 46236,
+      "codeHash": "sha256:4719c1510d1e90c5492dde9d36e84a31318234abb0ce2c56f7a46de386a0b0e7",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "https://github.com/surfer1264/Zendure-Stuff/issues/125",
-        "Startmeldung ergänzt",
-        "gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird."
+        "kvs-lesen im Controleller robuster gestalten",
+        "https://github.com/surfer1264/Zendure-Stuff/issues/128"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.1.5",
+          "schema": 1,
+          "codeHash": "sha256:fb34ff4c4db4cfa901ca60809fcfbd335a8d13cd409c15217948a06741e64bb4",
+          "changes": [
+            "https://github.com/surfer1264/Zendure-Stuff/issues/125",
+            "Startmeldung ergänzt",
+            "gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird."
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.4",
           "schema": 1,
