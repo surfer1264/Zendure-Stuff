@@ -1,5 +1,8 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.5.0
+- Verbesserte Benutzerführung
+
 ## 2.4.0
 - Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API
 - Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)

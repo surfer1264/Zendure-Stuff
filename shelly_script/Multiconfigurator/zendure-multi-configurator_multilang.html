@@ -149,7 +149,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.5.0";
 
 const I18N = {
 de: {
@@ -174,6 +174,10 @@ de: {
   prod_watchdog_title: "Watchdog",
   doc_link: "Zur Doku ↗",
   prod_import_summary: "Bestehende Config einlesen, um sie zu aktualisieren",
+  import_h2: "Bestehende Config einlesen (manuelles Update)",
+  import_lead: "Du hast schon eine Config? Lies sie hier ein – Geräte, Funktionen und Einstellungen werden übernommen. In den folgenden Schritten kannst du alles prüfen und ändern.",
+  import_needs_helper: "„Vom Shelly lesen“ ist nur mit dem lokalen Helfer möglich: Helfer starten – er öffnet den Configurator automatisch.",
+  prod_new_h2: "Funktionen auswählen (Neukonfiguration)",
   prod_import_button: "Einlesen &amp; übernehmen",
   prod_import_file_button: "📂 Datei laden…",
   prod_import_shelly_ctrl: "📡 Vom Controller-Shelly lesen",
@@ -543,6 +547,10 @@ en: {
   prod_watchdog_title: "Watchdog",
   doc_link: "Docs ↗",
   prod_import_summary: "Import an existing config to update it",
+  import_h2: "Import existing config (manual update)",
+  import_lead: "Already have a config? Import it here – devices, functions and settings are taken over. You can check and change everything in the following steps.",
+  import_needs_helper: "“Read from Shelly” is only possible with the local helper: start the helper – it opens the configurator automatically.",
+  prod_new_h2: "Choose functions (new configuration)",
   prod_import_button: "Import &amp; apply",
   prod_import_file_button: "📂 Load file…",
   prod_import_shelly_ctrl: "📡 Read from Controller Shelly",
@@ -912,6 +920,10 @@ fr: {
   prod_watchdog_title: "Watchdog",
   doc_link: "Voir la doc ↗",
   prod_import_summary: "Importer une configuration existante pour la mettre à jour",
+  import_h2: "Importer une configuration existante (mise à jour manuelle)",
+  import_lead: "Tu as déjà une configuration ? Importe-la ici – appareils, fonctions et réglages sont repris. Tu pourras tout vérifier et modifier dans les étapes suivantes.",
+  import_needs_helper: "« Lire depuis le Shelly » n'est possible qu'avec l'assistant local : lance l'assistant – il ouvre le configurateur automatiquement.",
+  prod_new_h2: "Choisir les fonctions (nouvelle configuration)",
   prod_import_button: "Importer &amp; appliquer",
   prod_import_file_button: "📂 Charger un fichier…",
   prod_import_shelly_ctrl: "📡 Lire depuis le Shelly Controller",
@@ -1746,41 +1758,47 @@ function ipField(key, labelKey, needed){
       </div>`;
 }
 function renderProducts(){
+  // Hinweis, wenn "Vom Shelly lesen" fehlt - wie im Startdialog
+  const canReadShelly = helperAvailable && helperHas('read_config');
+  const noHelperRead = !helperAvailable
+    ? `<p class="cd" style="margin:10px 0 0; color:var(--warn);">${t('import_needs_helper')}</p>`
+    : (!canReadShelly ? `<p class="cd" style="margin:10px 0 0; color:var(--warn);">${t('helper_outdated')}</p>` : '');
   return `
   <div class="panel">
-    <h2>${t('prod_h2')}</h2>
-    <p class="hint">${t('prod_hint')}</p>
-    <p class="note">${t('prod_hardware_note')}</p>
-  </div>
-  ${memCheckBlock()}
-  <div class="panel">
-    ${productChoice('controller', 'prod_controller_title', 'prod_controller_desc', DOC_URLS.ctrl)}
-    ${productChoice('api', 'prod_api_title', 'prod_api_desc', DOC_URLS.zdw)}
-    ${productChoice('watchdog', 'prod_watchdog_title', 'prod_watchdog_desc', DOC_URLS.zdw)}
-
-    <h2 style="margin-top:22px;">${t('ip_h3')}</h2>
+    <h2>${t('ip_h3')}</h2>
     <p class="hint">${t('ip_hint')}</p>
     <div class="row">
       ${ipField('ctr_kvs', 'ip_ctr_field', needsCtrIp())}
       ${ipField('apidash_watch', 'ip_dash_field', needsDashIp())}
     </div>
+    <p class="note">${t('prod_hardware_note')}</p>
+  </div>
 
-    <details id="importDetails" style="margin-top:20px;">
-      <summary style="cursor:pointer; font-weight:700; font-size:.85rem; color:var(--muted);">${t('prod_import_summary')}</summary>
-      <div style="margin-top:12px;">
-        <p class="hint" style="margin-top:0;">${t('prod_import_hint')}</p>
-        <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
-        <div style="margin-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-          <button class="btn" onclick="importConfig()">${t('prod_import_button')}</button>
-          <button class="btn" onclick="document.getElementById('importFile').click()">${t('prod_import_file_button')}</button>
-          <input type="file" id="importFile" accept=".js,.txt,text/javascript,text/plain" style="display:none;" onchange="loadImportFile(this)">
-          ${ helperAvailable && helperHas('read_config') ? `
-          <button class="btn" onclick="loadImportFromShelly('ctrl')">${t('prod_import_shelly_ctrl')}</button>
-          <button class="btn" onclick="loadImportFromShelly('zdw')">${t('prod_import_shelly_zdw')}</button>` : '' }
-          <span id="importStatus" class="hint" style="margin:0;"></span>
-        </div>
-      </div>
-    </details>
+  <div class="panel" id="importPanel">
+    <h2>${t('import_h2')}</h2>
+    <p class="hint">${t('import_lead')}</p>
+    <p class="hint" style="margin-top:0;">${t('prod_import_hint')}</p>
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+      ${ canReadShelly ? `
+      <button class="btn" onclick="loadImportFromShelly('ctrl')">${t('prod_import_shelly_ctrl')}</button>
+      <button class="btn" onclick="loadImportFromShelly('zdw')">${t('prod_import_shelly_zdw')}</button>` : '' }
+      <button class="btn" onclick="document.getElementById('importFile').click()">${t('prod_import_file_button')}</button>
+      <input type="file" id="importFile" accept=".js,.txt,text/javascript,text/plain" style="display:none;" onchange="loadImportFile(this)">
+    </div>
+    <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
+    <div style="margin-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="importConfig()">${t('prod_import_button')}</button>
+      <span id="importStatus" class="hint" style="margin:0;"></span>
+    </div>
+    ${noHelperRead}
+  </div>
+
+  <div class="panel">
+    <h2>${t('prod_new_h2')}</h2>
+    <p class="hint">${t('prod_hint')}</p>
+    ${productChoice('controller', 'prod_controller_title', 'prod_controller_desc', DOC_URLS.ctrl)}
+    ${productChoice('api', 'prod_api_title', 'prod_api_desc', DOC_URLS.zdw)}
+    ${productChoice('watchdog', 'prod_watchdog_title', 'prod_watchdog_desc', DOC_URLS.zdw)}
   </div>`;
 }
 
@@ -2970,6 +2988,7 @@ function renderStart(){
     ${modeChoice('update', 'start_update_title', 'start_update_desc', !canUpdate, noHelper)}
     ${modeChoice('log', 'start_log_title', 'start_log_desc', !canLog, noHelperLog)}
   </div>`;
+  html += memCheckBlock();
   if(state.mode === 'update' && canUpdate) html += renderUpdatePanel();
   if(state.mode === 'log' && canLog) html += renderLogPanel();
   return html;
