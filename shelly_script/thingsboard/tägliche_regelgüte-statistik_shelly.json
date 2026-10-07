@@ -1,0 +1,147 @@
+{
+  "type": "ENTITY_AGGREGATION",
+  "name": "Tägliche Regelgüte-Statistik Shelly",
+  "debugSettings": null,
+  "configurationVersion": 0,
+  "configuration": {
+    "type": "ENTITY_AGGREGATION",
+    "arguments": {
+      "binInTolerance": {
+        "refEntityKey": {
+          "key": "binInTolerance",
+          "type": "TS_LATEST"
+        }
+      },
+      "binLargeExport": {
+        "refEntityKey": {
+          "key": "binLargeExport",
+          "type": "TS_LATEST"
+        }
+      },
+      "binLargeImport": {
+        "refEntityKey": {
+          "key": "binLargeImport",
+          "type": "TS_LATEST"
+        }
+      },
+      "binSaturated": {
+        "refEntityKey": {
+          "key": "binSaturated",
+          "type": "TS_LATEST"
+        },
+        "defaultValue": ""
+      },
+      "binSmallExport": {
+        "refEntityKey": {
+          "key": "binSmallExport",
+          "type": "TS_LATEST"
+        }
+      },
+      "binSmallImport": {
+        "refEntityKey": {
+          "key": "binSmallImport",
+          "type": "TS_LATEST"
+        }
+      },
+      "binUnregulated": {
+        "refEntityKey": {
+          "key": "binUnregulated",
+          "type": "TS_LATEST"
+        }
+      },
+      "qualityScore": {
+        "refEntityKey": {
+          "key": "qualityScore",
+          "type": "TS_LATEST"
+        }
+      }
+    },
+    "metrics": {
+      "countInTolerance": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binInTolerance"
+        },
+        "defaultValue": 0
+      },
+      "countLargeExport": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binLargeExport"
+        },
+        "defaultValue": 0
+      },
+      "countLargeImport": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binLargeImport"
+        },
+        "defaultValue": 0
+      },
+      "countSaturated": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binSaturated"
+        },
+        "defaultValue": 0
+      },
+      "countSmallExport": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binSmallExport"
+        },
+        "defaultValue": 0
+      },
+      "countSmallImport": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binSmallImport"
+        },
+        "defaultValue": 0
+      },
+      "countUnregulated": {
+        "function": "SUM",
+        "input": {
+          "type": "key",
+          "key": "binUnregulated"
+        },
+        "defaultValue": 0
+      },
+      "dailyQualityPercent": {
+        "function": "AVG",
+        "input": {
+          "type": "key",
+          "key": "qualityScore"
+        }
+      }
+    },
+    "interval": {
+      "type": "DAY",
+      "tz": "Europe/Berlin"
+    },
+    "watermark": null,
+    "produceIntermediateResult": false,
+    "output": {
+      "type": "TIME_SERIES",
+      "decimalsByDefault": 1,
+      "strategy": {
+        "type": "IMMEDIATE",
+        "ttl": 31536000,
+        "saveTimeSeries": true,
+        "saveLatest": true,
+        "sendWsUpdate": true,
+        "processCfs": true
+      }
+    }
+  },
+  "additionalInfo": {
+    "aiGenerated": true,
+    "aiGeneratedBy": "AI Assistant"
+  }
+}
