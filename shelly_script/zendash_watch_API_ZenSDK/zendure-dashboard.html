@@ -259,6 +259,25 @@
   #app.hide-hub-controls .hub .ctrl-row,
   #app.hide-hub-controls .hub .manual-row{ display:none; }
 
+  /* Reglersperre fuer die Reserve (Stufe 2, nur Touch): Der Regler ist auch
+     bei entsperrter Seite zunaechst gesperrt und wird ueber das kleine
+     Schloss neben dem Wert einzeln freigegeben. Am PC (feiner Zeiger) ist
+     das Schloss unsichtbar und der Regler wie bisher direkt bedienbar. */
+  .ctrl-end{ display:inline-flex; align-items:center; gap:8px; }
+  .soc-lock{
+    display:none; align-items:center; justify-content:center;
+    width:30px; height:30px; border-radius:50%; padding:0;
+    background:var(--surface-2); border:1px solid var(--amber-deep);
+    color:var(--amber-text); font-size:.9rem; line-height:1; cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  @media (pointer: coarse){ .soc-lock{ display:inline-flex; } }
+  .soc-lock.open{ border-color:var(--teal-text); color:var(--teal-text); }
+  .ctrl-row.soc-open{
+    outline:2px solid var(--teal-text); outline-offset:4px;
+    border-radius:var(--radius-sm);
+  }
+
   /* Ersatz-Anzeige fuer die ausgeblendeten Schalter: reiner Text, nur im
      gesperrten Zustand sichtbar (genau umgekehrt zu switch-row/ctrl-row
      oben), damit Entladen/Netzladen-Status auch gesperrt ablesbar bleibt. */
@@ -555,6 +574,7 @@
       sub: 'Über lokalen Proxy',
       connecting: 'Verbinde…',
       lockAria: 'Bedienung sperren/entsperren',
+      socLockAria: 'Reserve-Regler entsperren/sperren',
       fontAria: 'Schriftgröße umschalten',
       themeAria: 'Tag/Nacht umschalten',
       langAria: 'Sprache wechseln',
@@ -648,6 +668,7 @@
       sub: 'Via local proxy',
       connecting: 'Connecting…',
       lockAria: 'Lock/unlock controls',
+      socLockAria: 'Unlock/lock reserve slider',
       fontAria: 'Change font size',
       themeAria: 'Toggle day/night',
       langAria: 'Change language',
@@ -741,6 +762,7 @@
       sub: 'Via le proxy local',
       connecting: 'Connexion…',
       lockAria: 'Verrouiller/déverrouiller les commandes',
+      socLockAria: 'Déverrouiller/verrouiller le curseur de réserve',
       fontAria: 'Changer la taille du texte',
       themeAria: 'Basculer jour/nuit',
       langAria: 'Changer de langue',
@@ -1053,6 +1075,87 @@
     return document.querySelectorAll('.setpoint-card input, .hub input, .hub button');
   }
 
+  /* ---------------- Reglersperre Reserve (Stufe 2, nur Touch) ----------------
+     Unter dem globalen Schloss: Bei entsperrter Seite ist der Reserve-Regler
+     (zdmc_devN_minSoc) am Touchgeraet trotzdem gesperrt. Das Schloss neben
+     dem Wert gibt genau EINEN Regler frei. Wieder gesperrt wird er
+       - SOC_OPEN_MS nach der letzten Beruehrung,
+       - direkt nach dem Speichern,
+       - wenn ein anderer Reserve-Regler freigegeben wird,
+       - beim Scrollen,
+       - mit dem globalen Schloss,
+       - wenn die Seite in den Hintergrund geht.
+     Zusaetzlich verstellt im freigegebenen Zustand nur das Ziehen am Punkt
+     den Wert - Tippen oder Wischen auf der Leiste wird zurueckgenommen.
+     Mit Maus (feiner Zeiger) gilt nichts davon, dort bleibt alles wie bisher. */
+  const SOC_OPEN_MS = 5000;
+  const SOC_THUMB_PX = 22;   // Breite des Reglerpunkts (siehe CSS)
+  const SOC_TOL_PX = 22;     // Fangbereich links/rechts der Punktmitte
+  const coarseQuery = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+  let socOpenId = null;      // id des freigegebenen Geraets (String) oder null
+  let socTimer = null;
+  let socDragging = false;
+
+  function socGateActive(){ return !!(coarseQuery && coarseQuery.matches); }
+
+  // true = dieser Reserve-Regler ist durch Stufe 2 gesperrt
+  function isSocGated(el){
+    return !!el && el.classList.contains('soc-range') && socGateActive() &&
+      socOpenId !== el.getAttribute('data-dev');
+  }
+
+  function armSocTimer(){
+    clearTimeout(socTimer);
+    socTimer = setTimeout(function(){
+      if (socDragging) { armSocTimer(); return; }
+      closeSocGate();
+    }, SOC_OPEN_MS);
+  }
+
+  function openSocGate(id){
+    socOpenId = String(id);
+    socDragging = false;
+    touchLockTimer();
+    armSocTimer();
+    applyLockState();
+  }
+
+  function closeSocGate(){
+    clearTimeout(socTimer);
+    socDragging = false;
+    if (socOpenId === null) return;
+    socOpenId = null;
+    applyLockState();
+  }
+
+  // Liegt der Beruehrungspunkt ausserhalb des Reglerpunkts?
+  function offThumb(el, clientX){
+    const r = el.getBoundingClientRect();
+    const min = Number(el.min), max = Number(el.max), v = Number(el.value);
+    const frac = max > min ? (v - min) / (max - min) : 0;
+    const cx = r.left + SOC_THUMB_PX / 2 + frac * (r.width - SOC_THUMB_PX);
+    return Math.abs(clientX - cx) > SOC_TOL_PX;
+  }
+
+  // Schloss-Knoepfe und Rahmen dem Zustand anpassen. Ueber das DOM statt
+  // ueber hubs, weil applyLockState() schon vor dem Aufbau der Karten laeuft.
+  function applySocGateVisuals(){
+    const btns = document.querySelectorAll('.soc-lock');
+    for (let i = 0; i < btns.length; i++) {
+      const b = btns[i];
+      const open = socGateActive() && socOpenId === b.getAttribute('data-dev');
+      b.classList.toggle('open', open);
+      b.textContent = open ? '\u26BD' : '\u26BF';
+      b.setAttribute('aria-pressed', open ? 'true' : 'false');
+      const row = b.closest('.ctrl-row');
+      if (row) row.classList.toggle('soc-open', open);
+    }
+  }
+
+  window.addEventListener('scroll', function(){
+    if (socOpenId !== null && !socDragging) closeSocGate();
+  }, { passive: true });
+
   function applyLockState(){
     const els = controlElements();
     for (let i = 0; i < els.length; i++) {
@@ -1062,9 +1165,11 @@
       } else if (!isTempLocked(el)) {
         // Nicht pauschal freigeben: ein Element, das gerade seinen Wert
         // schreibt, bleibt bis zum Ablauf seiner eigenen Sperre gesperrt.
-        el.disabled = false;
+        // Reserve-Regler am Touchgeraet zusaetzlich nur, wenn freigegeben.
+        el.disabled = isSocGated(el);
       }
     }
+    applySocGateVisuals();
     // Nur die Geraete-Schalter/-Slider ein-/ausblenden (siehe CSS), nicht
     // Sollwert oder Fix-Entladung - die bleiben immer sichtbar.
     appEl.classList.toggle('hide-hub-controls', uiLocked);
@@ -1076,6 +1181,7 @@
 
   function setLocked(next){
     uiLocked = next;
+    if (uiLocked) { clearTimeout(socTimer); socDragging = false; socOpenId = null; }
     clearTimeout(relockTimer);
     if (!uiLocked) relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
     applyLockState();
@@ -1116,7 +1222,7 @@
       if (Date.now() >= (lockedUntil[el.id] || 0)) {
         delete lockedUntil[el.id];
         // Nicht blind freigeben - die globale Sperre hat Vorrang.
-        el.disabled = uiLocked;
+        el.disabled = uiLocked || isSocGated(el);
       }
     }, LOCK_MS);
   }
@@ -1126,7 +1232,7 @@
   function unlockControl(el){
     if (!el) return;
     delete lockedUntil[el.id];
-    el.disabled = uiLocked;
+    el.disabled = uiLocked || isSocGated(el);
   }
 
   // "In Bearbeitung": entweder gerade gesperrt oder gerade im Fokus.
@@ -1395,9 +1501,9 @@
           '<label class="switch teal"><input type="checkbox" id="reverse-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
         '</div>' +
         '<div class="ctrl-row">' +
-          '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span></div>' +
+          '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false">\u26BF</button></span></div>' +
           '<span class="key mono" id="minSocMax-' + d.id + '">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
-          '<input type="range" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
+          '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
         '</div>' +
         '<div class="ctrl-row">' +
           '<div class="ctrl-head"><span class="lbl help-mark" data-i18n="inputLimitLbl" data-help="helpInputLimit">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : t('off')) + '</span></div>' +
@@ -1437,14 +1543,52 @@
 
       const minSocEl = document.getElementById('minSoc-' + d.id);
       const minSocValEl = document.getElementById('minSocValue-' + d.id);
+      // Stufe 2: Schloss neben dem Wert gibt nur diesen Regler frei.
+      document.getElementById('minSocLock-' + d.id).addEventListener('click', function(){
+        if (uiLocked) return;
+        if (socOpenId === String(d.id)) closeSocGate(); else openSocGate(d.id);
+      });
+
+      // Nur Ziehen am Punkt: Beginnt eine Touch-Beruehrung neben dem Punkt
+      // (Tippen/Wischen auf der Leiste), wird jede Wertaenderung dieser
+      // Beruehrung zurueckgenommen und nichts geschrieben. Maus: unveraendert.
+      let socStartVal = null;   // Wert beim Aufsetzen des Fingers
+      let socReject = false;    // diese Beruehrung darf nichts aendern
+      function socRestore(){
+        minSocEl.value = socStartVal;
+        minSocValEl.textContent = socStartVal + ' %';
+      }
+      minSocEl.addEventListener('pointerdown', function(e){
+        socReject = false;
+        if (e.pointerType === 'mouse' || !socGateActive()) return;
+        socStartVal = minSocEl.value;
+        socReject = offThumb(minSocEl, e.clientX);
+        socDragging = true;
+        armSocTimer();
+      });
+      const socRelease = function(e){
+        if (e.pointerType === 'mouse' || !socGateActive()) return;
+        socDragging = false;
+        // Abgebrochene Beruehrung (z. B. Seite scrollt los): nichts uebernehmen.
+        if (e.type === 'pointercancel' && socStartVal !== null) { socReject = true; socRestore(); }
+        armSocTimer();
+      };
+      minSocEl.addEventListener('pointerup', socRelease);
+      minSocEl.addEventListener('pointercancel', socRelease);
+      minSocEl.addEventListener('keydown', function(){ socReject = false; });
+
       minSocEl.addEventListener('input', function(e){
+        if (socReject) { socRestore(); return; }
         minSocValEl.textContent = e.target.value + ' %';
       });
       minSocEl.addEventListener('change', function(e){
+        if (socReject) { socReject = false; socRestore(); return; }
         lockControl(e.target);
         kvsSet('zdmc_dev' + d.id + '_minSoc', Number(e.target.value)).then(function(ok){
           if (!ok) unlockControl(e.target);
         });
+        // Direkt nach dem Speichern wieder sperren.
+        if (socGateActive()) closeSocGate();
       });
 
       const inputLimitEl = document.getElementById('inputLimit-' + d.id);
@@ -1834,7 +1978,7 @@
   // Laeuft gerade ein manueller Lade-Vorgang (pollWanted = false), startet
   // der Vorgang die Abfrage danach selbst.
   document.addEventListener('visibilitychange', function(){
-    if (document.hidden) { haltTimer(); return; }
+    if (document.hidden) { closeSocGate(); haltTimer(); return; }
     if (pollWanted && !pollTimer) {
       forceConfigNext = true;
       runTimer();
