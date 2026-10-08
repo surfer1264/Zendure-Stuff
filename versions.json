@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-08T06:31:08Z",
+  "generated": "2026-10-08T16:14:37Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -302,15 +302,22 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.5.0",
+      "version": "2.6.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/86768cb7a598ec19dfa121b68b64d91e1d0a073a/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4683660b3f8dcb8d06b7b9a103c5be77c6410954/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Verbesserte Benutzerführung"
+        "Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt. Der"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.5.0",
+          "changes": [
+            "Verbesserte Benutzerführung"
+          ],
+          "notice": null
+        },
         {
           "version": "2.4.0",
           "changes": [
