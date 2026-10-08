@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.6";
+let VERSION = "5.1.7";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -291,9 +291,17 @@ function safeCall(method, params, callback) {
   }
 }
 
+// v5.1.7: gemeinsamer Ergebnis-Callback fuer Webhook/Signal/WhatsApp (nur print)
+function msgResult(tag) {
+  return function (result, error_code, error_msg) {
+    if (error_code === 0) print(tag + " gesendet");
+    else if (error_code === -104) print(tag + " Timeout (-104), evtl. zugestellt");
+    else print(tag + " Fehler: " + error_msg);
+  };
+}
+
 // Einfacher Webhook-Versand: fester JSON-Body {"message": "..."}
 function sendWebhookMessage(text) {
-  print("Sende Webhook-Benachrichtigung...");
 
   safeCall(
     "HTTP.Request",
@@ -304,14 +312,7 @@ function sendWebhookMessage(text) {
       body: JSON.stringify({ message: text }),
       timeout: 8
     },
-    function (result, error_code, error_msg) {
-      if (error_code === 0)
-        print("Webhook-Benachrichtigung erfolgreich gesendet.");
-      else if (error_code === -104)
-        print("Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.");
-      else
-        print("Fehler beim Senden der Webhook-Benachrichtigung: " + error_msg);
-    }
+    msgResult(CONFIG.signal.typ)
   );
 }
 
@@ -332,19 +333,10 @@ function sendSignalMessage(text) {
   else
 	url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
 		
-  print("Sende Signal-Nachricht...");
-
   safeCall(
     "HTTP.GET",
     { url: url, timeout: 8 },
-    function (result, error_code, error_msg) {
-      if (error_code === 0)
-        print("Signal-Nachricht erfolgreich gesendet.");
-      else if (error_code === -104)
-        print("Signal-Timeout (-104), Nachricht kam vermutlich trotzdem an.");
-      else
-        print("Fehler beim Senden der Signal-Nachricht: " + error_msg);
-    }
+    msgResult(CONFIG.signal.typ)
   );
 }
 
@@ -896,24 +888,16 @@ function readDevice(index, myCycle, callback) {
 
       let newSocLimit = data.properties.socLimit;
       if (ds.socLimit !== null && newSocLimit !== ds.socLimit) {
-        if (newSocLimit === 1) {
-          print(cfg.label + ": socLimit=1 vom Geraet gemeldet - Laden vom Netz gesperrt (Entladen weiterhin moeglich)");
-        } else if (newSocLimit === 2) {
-          print(cfg.label + ": socLimit=2 vom Geraet gemeldet - Entladen gesperrt (Laden weiterhin moeglich)");
-        } else {
-          print(cfg.label + ": socLimit wieder 0 - Laden und Entladen uneingeschraenkt moeglich");
-        }
+        print(cfg.label + ": socLimit " + ds.socLimit + "->" + newSocLimit +
+          (newSocLimit === 1 ? " (Ladesperre)" : newSocLimit === 2 ? " (Entladesperre)" : " (normal)"));
       }
       ds.socLimit = newSocLimit;
 
       let newSocStatus = (data.properties.socStatus !== undefined) ?
         data.properties.socStatus : null;
       if (ds.socStatus !== null && newSocStatus !== ds.socStatus) {
-        if (newSocStatus === 1) {
-          print(cfg.label + ": socStatus=1 - SOC-Kalibrierung gestartet, Geraet wird aus Verteilung ausgenommen (Firmware verwaltet Kalibrierung selbst)");
-        } else if (newSocStatus === 0) {
-          print(cfg.label + ": socStatus=0 - SOC-Kalibrierung beendet, Geraet wieder normal verfuegbar");
-        }
+        print(cfg.label + ": socStatus " + newSocStatus +
+          (newSocStatus === 1 ? " (Kalibrierung, aus Verteilung)" : " (Kalibrierung beendet)"));
       }
       ds.socStatus = newSocStatus;
 
@@ -1123,8 +1107,7 @@ function calculate(myCycle) {
       // nicht gestartet werden, sonst reiht sich der Skip mit veralteten Daten
       // nahtlos aneinander und maxSkipSeconds waere wirkungslos.
       if (!withinBand) {
-        print("Sparmodus beendet: Output verlaesst die Hysterese (" +
-          CONFIG.hysteresis + " W) oder Richtungswechsel");
+        print("Sparmodus aus (Hysterese/Richtung)");
         state.idleSkipRemaining = 0;
         state.idleUnchangedCount = 0;
       }
@@ -1138,10 +1121,7 @@ function calculate(myCycle) {
           state.idleSkipRemaining = IDLE_SKIP_CYCLES;
           state.idleUnchangedCount = 0;
 
-          print("Sparmodus: Output seit " + CONFIG.idleSkip.cyclesUnchanged +
-            " Zyklen in Hysterese (" + CONFIG.hysteresis +
-            " W) - setze Polling fuer " + IDLE_SKIP_CYCLES +
-            " Zyklen aus");
+          print("Sparmodus an: " + IDLE_SKIP_CYCLES + " Zyklen ohne Geraete-Poll");
         }
       } else {
         state.idleUnchangedCount = 0;
@@ -1223,9 +1203,7 @@ function pickStickyDevice(weight, active, selector) {
   let advantage = weight[bestIdx] - weight[selector.active];
 
   if (advantage >= CONFIG.rebalance.socMargin) {
-    print("Ausgleich: bevorzugtes Geraet wechselt zu " +
-      CONFIG.devices[bestIdx].label + " (Vorsprung " +
-      Math.round(advantage) + " Prozentpunkte)");
+    print("Ausgleich -> " + CONFIG.devices[bestIdx].label + " (+" + Math.round(advantage) + "%)");
 
     selector.active = bestIdx;
   }
@@ -1316,13 +1294,11 @@ function evaluateChargeCapacity() {
 
     if (w === 0) {
       if (!ds.maxSocLogged) {
-        print(cfg.label + ": SOC-Obergrenze erreicht (" + ds.soc +
-          "% >= " + cfg.maxSoc + "%) - Laden vom Netz gesperrt");
+        print(cfg.label + ": maxSoc erreicht (" + ds.soc + "/" + cfg.maxSoc + "%)");
         ds.maxSocLogged = true;
       }
     } else if (ds.maxSocLogged) {
-      print(cfg.label + ": SOC wieder unter Obergrenze (" + ds.soc +
-        "% < " + cfg.maxSoc + "%) - Laden bei Bedarf wieder moeglich");
+      print(cfg.label + ": unter maxSoc (" + ds.soc + "/" + cfg.maxSoc + "%)");
       ds.maxSocLogged = false;
     }
   }
@@ -1616,8 +1592,7 @@ function applyBypassExcessCorrection(dischargeOutput) {
     if (corrected[i] < CONFIG.dischargeStopPower) corrected[i] = 0;
   }
 
-  print("Bypass-Korrektur: " + excess +
-    " W Ueberschuss von gesperrten Geraeten auf uebrige Geraete umgelegt");
+  print("Bypass-Korrektur: " + excess + " W umverteilt");
 
   return corrected;
 }
@@ -2284,6 +2259,7 @@ printBannerLine(function () {
             syncMinSocDevice = null;
             syncInputLimitDevice = null;
           }
+          if (!CONFIG.signal.enabled) msgResult = null;
           if (!CONFIG.signal.enabled || CONFIG.signal.typ != "WEBHOOK") sendWebhookMessage = null;
           if (!CONFIG.signal.enabled || CONFIG.signal.typ == "WEBHOOK") simpleEncode = null;
           if (CONFIG.gridSource === "local") handleGenericGridResponse = null;

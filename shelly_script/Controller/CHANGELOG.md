@@ -1,5 +1,24 @@
 # Changelog Controller
 
+## v5.1.7
+
+Nur Konsolenausgaben gekürzt. Keine Änderung an Regelung, Verteilung,
+Schreibvorgängen, Fehlerbehandlung oder Benachrichtigungsinhalten.
+
+- socLimit-Wechsel: drei Meldungen zu einer zusammengefasst,
+  Format "<Label>: socLimit 0->1 (Ladesperre|Entladesperre|normal)"
+- socStatus-Wechsel: eine Meldung,
+  "<Label>: socStatus 1 (Kalibrierung, aus Verteilung)" / "socStatus 0 (Kalibrierung beendet)"
+- maxSoc: "maxSoc erreicht (soc/maxSoc%)" bzw. "unter maxSoc (soc/maxSoc%)"
+- Sparmodus: "Sparmodus an: N Zyklen ohne Geraete-Poll" /
+  "Sparmodus aus (Hysterese/Richtung)" (Hysterese/cyclesUnchanged nur noch im Banner)
+- Bypass-Korrektur: "Bypass-Korrektur: X W umverteilt"
+- Ausgleich: "Ausgleich -> <Label> (+N%)"
+- Benachrichtigungen: neuer gemeinsamer Ergebnis-Callback msgResult(typ) für
+  WEBHOOK/SIGNAL/WHATSAPP; "Sende ..."-Zeilen entfernt; Ausgabe nennt jetzt
+  den tatsächlichen Kanal (vorher bei WhatsApp fälschlich "Signal-Nachricht")
+- msgResult wird bei signal.enabled:false nach dem Start freigegeben
+
 ## Changelog 5.1.6
 
 - kvs-lesen im Controleller robuster gestalten
