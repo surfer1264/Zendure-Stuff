@@ -193,8 +193,16 @@
                 {
                   "name": "countSaturated",
                   "type": "timeseries",
-                  "label": "Gesättigt",
+                  "label": "Außerhalb Regelbereich",
                   "color": "#273AB0",
+                  "settings": {},
+                  "decimals": 0
+                },
+                {
+                  "name": "countUnregulated",
+                  "type": "timeseries",
+                  "label": "Nicht geregelt",
+                  "color": "#9E9E9E",
                   "settings": {},
                   "decimals": 0
                 }
@@ -997,6 +1005,15 @@
                   "usePostProcessing": null,
                   "postFuncBody": null,
                   "comparisonEnabled": null
+                },
+                {
+                  "name": "binUnregulated",
+                  "type": "timeseries",
+                  "label": "Nicht geregelt",
+                  "color": "#9E9E9E",
+                  "settings": {},
+                  "decimals": 0,
+                  "aggregationType": "SUM"
                 }
               ]
             }
