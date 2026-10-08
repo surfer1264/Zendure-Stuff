@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-07T20:21:56Z",
+  "generated": "2026-10-08T06:31:08Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -135,12 +135,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.3",
+      "version": "3.5.4",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ceafd2111700c58af65a27dea1418fe232c30f4b/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39761,
-      "codeHash": "sha256:29ed1ccb6c799d22167b3d1d7eb78a92dec84ad573245843ff964f85796dc176",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b05ad8718a830b568e65528fbf228491761881f3/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 39855,
+      "codeHash": "sha256:ab59014cbac37f140ed7e3caf89cf15cd1eae035827c2b89d45e07c4ec54b7fa",
       "configKeys": [
         "api",
         "apiEvents",
@@ -187,14 +187,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "config_api liefert zusaetzlich `watchdog: {enabled, minVoltWarn, minVoltReset}` und je Geraet `watch` - nur zur Anzeige im Dashboard",
-        "Dashboard: bei ueberwachten Geraeten steht hinter der schwaechsten Zelle die Sperrschwelle, z. B. \"min 3,31 V (Sperre < 2,90 V)\"; Farben nach den Watchdog-Schwellen (gelb unter minVoltReset, rot unter minVoltWarn). Antippen der Schwelle erklaert, was beim Unterschreiten passiert. Bei watch: false, abgeschaltetem Watchdog oder aelterem Script bleibt die Anzeige wie bisher",
-        "Dashboard: Versionsnummer 3.5.3"
+        "Schloss-Icons",
+        "Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden",
+        "Dashboard: Hinweis an der Geraetekarte, wenn `minSoc` am Geraet von Konfiguration des Dashboard (KVS-Wert) abweicht (durch Änderung von \"außen\", oder wenn KVS Wert nicht auf das Gerät geschrieben wurde - Fehlerfall)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.3",
+          "schema": 1,
+          "codeHash": "sha256:29ed1ccb6c799d22167b3d1d7eb78a92dec84ad573245843ff964f85796dc176",
+          "changes": [
+            "config_api liefert zusaetzlich `watchdog: {enabled, minVoltWarn, minVoltReset}` und je Geraet `watch` - nur zur Anzeige im Dashboard",
+            "Dashboard: bei ueberwachten Geraeten steht hinter der schwaechsten Zelle die Sperrschwelle, z. B. \"min 3,31 V (Sperre < 2,90 V)\"; Farben nach den Watchdog-Schwellen (gelb unter minVoltReset, rot unter minVoltWarn). Antippen der Schwelle erklaert, was beim Unterschreiten passiert. Bei watch: false, abgeschaltetem Watchdog oder aelterem Script bleibt die Anzeige wie bisher",
+            "Dashboard: Versionsnummer 3.5.3"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.2",
           "schema": 1,
