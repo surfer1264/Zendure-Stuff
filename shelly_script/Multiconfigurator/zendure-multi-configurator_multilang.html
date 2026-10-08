@@ -149,7 +149,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.5.0";
+const APP_VERSION = "2.6.0";
 
 const I18N = {
 de: {
@@ -268,7 +268,7 @@ de: {
   grm_always1_desc: "Der Schalter wird einmal beim Start auf \"erlaubt\" gesetzt und danach nie wieder verändert — auch nicht bei vollen Akkus.",
   grm_always2_title: "Immer sperren",
   grm_always2_desc: "Der Schalter wird einmal beim Start auf \"gesperrt\" gesetzt und danach nie wieder verändert.",
-  grm_note_margin: "Der zugehörige Toleranzwert <code>chargeResetMargin</code> (nur bei \"Automatisch\" relevant) bleibt auf dem Standardwert 5 Prozentpunkte.",
+  grm_note_margin: "Der zugehörige Toleranzwert <code>chargeResetMargin</code> (nur bei \"Automatisch\" relevant) bleibt auf dem Standardwert 10 Prozentpunkte.",
 
   kvs_h2: "Willst du Regelparameter später live ändern können — ohne das Script neu hochzuladen?",
   kvs_hint: "Über den eingebauten Key-Value-Store (KVS) des Shelly lassen sich Sollwert, Lade-/Entladefreigabe und minSoc pro Gerät jederzeit von außen setzen — z. B. per Home-Assistant-Schalter oder curl-Befehl.",
@@ -522,6 +522,9 @@ de: {
   debug_label: "Debug-Ausgaben (ausführlich)",
   debug_hint: "Nur zur Fehlersuche, z. B. zusammen mit „Log aufzeichnen“ – erzeugt mehr Last und deutlich mehr Log-Zeilen. Danach wieder ausschalten und erneut hochladen.",
   nav_err_regel: "Bitte die Regelparameter prüfen: Hysterese und Leistungen ≥ 0, concentrateBelow kleiner als spreadAbove.",
+  cfg_extra_note: "ℹ️ Vom Configurator nicht verwaltete Einträge aus der eingelesenen Config – werden unverändert übernommen: {list}",
+  cfg_type_note: "⚠️ Ungültige Werte in der eingelesenen Config – durch den Standardwert ersetzt: {list}",
+  import_extra_suffix: " {n} zusätzliche(r) Eintrag/Einträge werden unverändert übernommen: {list}",
   nav_err_generic: "Bitte fehlende oder ungültige Angaben ergänzen."
 },
 
@@ -641,7 +644,7 @@ en: {
   grm_always1_desc: "The switch is set to \"allowed\" once at startup and never changed again — even when batteries are full.",
   grm_always2_title: "Always block",
   grm_always2_desc: "The switch is set to \"blocked\" once at startup and never changed again.",
-  grm_note_margin: "The related tolerance value <code>chargeResetMargin</code> (only relevant for \"Automatic\") stays at the default of 5 percentage points.",
+  grm_note_margin: "The related tolerance value <code>chargeResetMargin</code> (only relevant for \"Automatic\") stays at the default of 10 percentage points.",
 
   kvs_h2: "Do you want to be able to change control parameters live later — without re-uploading the script?",
   kvs_hint: "The Shelly's built-in key-value store (KVS) lets you set setpoint, charge/discharge permission and minSoc per device from the outside at any time — e.g. via a Home Assistant switch or a curl command.",
@@ -895,6 +898,9 @@ en: {
   debug_label: "Debug output (verbose)",
   debug_hint: "For troubleshooting only, e.g. together with “Record log” – causes more load and many more log lines. Switch it off again afterwards and re-upload.",
   nav_err_regel: "Please check the control parameters: hysteresis and power values ≥ 0, concentrateBelow smaller than spreadAbove.",
+  cfg_extra_note: "ℹ️ Entries from the imported config that the configurator does not manage – kept unchanged: {list}",
+  cfg_type_note: "⚠️ Invalid values in the imported config – replaced with the default: {list}",
+  import_extra_suffix: " {n} additional entr(y/ies) will be kept unchanged: {list}",
   nav_err_generic: "Please complete missing or invalid entries."
 },
 
@@ -1014,7 +1020,7 @@ fr: {
   grm_always1_desc: "Le commutateur est réglé une fois sur « autorisé » au démarrage et n'est plus jamais modifié — même batteries pleines.",
   grm_always2_title: "Toujours bloquer",
   grm_always2_desc: "Le commutateur est réglé une fois sur « bloqué » au démarrage et n'est plus jamais modifié.",
-  grm_note_margin: "La marge de tolérance associée <code>chargeResetMargin</code> (pertinente seulement en mode « Automatique ») reste à sa valeur par défaut de 5 points de pourcentage.",
+  grm_note_margin: "La marge de tolérance associée <code>chargeResetMargin</code> (pertinente seulement en mode « Automatique ») reste à sa valeur par défaut de 10 points de pourcentage.",
 
   kvs_h2: "Veux-tu pouvoir modifier les paramètres de régulation en direct plus tard — sans réimporter le script ?",
   kvs_hint: "Le magasin clé-valeur (KVS) intégré du Shelly permet de définir la consigne, l'autorisation de charge/décharge et le minSoc par appareil à tout moment depuis l'extérieur — par ex. via un interrupteur Home Assistant ou une commande curl.",
@@ -1268,6 +1274,9 @@ fr: {
   debug_label: "Sorties de débogage (détaillées)",
   debug_hint: "Uniquement pour le diagnostic, par ex. avec « Enregistrer le journal » – génère plus de charge et beaucoup plus de lignes de journal. Désactive-le ensuite et recharge le script.",
   nav_err_regel: "Merci de vérifier les paramètres de régulation : hystérésis et puissances ≥ 0, concentrateBelow inférieur à spreadAbove.",
+  cfg_extra_note: "ℹ️ Entrées de la configuration importée non gérées par le configurateur – reprises telles quelles : {list}",
+  cfg_type_note: "⚠️ Valeurs invalides dans la configuration importée – remplacées par la valeur par défaut : {list}",
+  import_extra_suffix: " {n} entrée(s) supplémentaire(s) reprise(s) telle(s) quelle(s) : {list}",
   nav_err_generic: "Merci de compléter les informations manquantes ou invalides."
 }
 };
@@ -1661,7 +1670,7 @@ function applyConfigText(raw){
 
   if(type === 'controller') applyControllerImport(obj);
   else applyZdwImport(obj);
-  return { ok: true, type: type };
+  return { ok: true, type: type, extras: listExtras(CFG_TYPE_OF[type], obj) };
 }
 
 function importConfig(){
@@ -1677,7 +1686,11 @@ function importConfig(){
   render();
   // render() baut den Schritt neu auf - Status danach setzen
   const st = document.getElementById('importStatus');
-  if(st){ st.textContent = t('import_success', {name: IMPORT_NAMES[type]}); st.className = 'hint'; }
+  if(st){
+    st.textContent = t('import_success', {name: IMPORT_NAMES[type]}) +
+      (res.extras && res.extras.length ? t('import_extra_suffix', {n: res.extras.length, list: res.extras.join(', ')}) : '');
+    st.className = 'hint';
+  }
   const det = document.getElementById('importDetails');
   if(det) det.open = true;
 }
@@ -2133,14 +2146,14 @@ function defaultRegel(){
   const dSpread = outputs.length ? Math.min(...outputs) : 800;
   const inputs = state.chargingEnabled ? state.devices.filter(d=>d.reverse).map(d=>num(d.maxInputPower, d.maxOutput)).filter(v=>v>0) : [];
   const cSpread = inputs.length ? Math.min(...inputs) : dSpread;
-  const dS = ca.discharge?.spreadAbove ?? dSpread;
-  const cS = ca.charge?.spreadAbove ?? cSpread;
+  const dS = coerceNum(ca.discharge?.spreadAbove) ?? dSpread;
+  const cS = coerceNum(ca.charge?.spreadAbove) ?? cSpread;
   return {
-    setpoint: ca.setpoint ?? 0,
-    hysteresis: ca.hysteresis ?? 12,
-    dConc: ca.discharge?.concentrateBelow ?? Math.round(dS*0.6),
+    setpoint: coerceNum(ca.setpoint) ?? 0,
+    hysteresis: coerceNum(ca.hysteresis) ?? 12,
+    dConc: coerceNum(ca.discharge?.concentrateBelow) ?? Math.round(dS*0.6),
     dSpread: dS,
-    cConc: ca.charge?.concentrateBelow ?? Math.round(cS*0.6),
+    cConc: coerceNum(ca.charge?.concentrateBelow) ?? Math.round(cS*0.6),
     cSpread: cS
   };
 }
@@ -2209,7 +2222,8 @@ const WD_LIMITS = {
 };
 function wdVal(k){
   const w = (state.zdwAdvanced && state.zdwAdvanced.watchdog) || {};
-  return (typeof w[k] === 'number' && isFinite(w[k])) ? w[k] : WD_DEFAULTS[k];
+  const n = coerceNum(w[k]);
+  return n === undefined ? WD_DEFAULTS[k] : n;
 }
 function wdSet(k, v){
   if(!state.zdwAdvanced) state.zdwAdvanced = {};
@@ -2236,7 +2250,7 @@ function wdThresholdsValid(){
   for(const k of Object.keys(WD_DEFAULTS)){
     v[k] = wdVal(k);
     const w = (state.zdwAdvanced && state.zdwAdvanced.watchdog) || {};
-    if(k in w && !(typeof w[k] === 'number' && isFinite(w[k]))) return false;   // Feld leer/ungueltig
+    if(k in w && typeof w[k] === 'number' && !isFinite(w[k])) return false;   // Feld leer/ungueltig (Eingabe)
     if(v[k] < WD_LIMITS[k][0] || v[k] > WD_LIMITS[k][1]) return false;
   }
   return v.entladeReset < v.vollSchwelle && v.minVoltReset > v.minVoltWarn && v.tempReset < v.tempWarn;
@@ -2269,10 +2283,156 @@ function setDebug(key, on){
   debugAdvanced(key).debug = !!on;
   const pre = document.getElementById('configOut_' + key);
   if(pre) pre.textContent = CONFIG_BUILDERS[key]();
+  const rep = document.getElementById('cfgReport_' + key);
+  if(rep) rep.innerHTML = cfgReportHtml(key);
 }
 
 // ---------- Config generation (bleibt unabhängig von der UI-Sprache) ----------
 function q(s){ return String(s == null ? '' : s).replace(/"/g,''); }
+
+// ---------- Eingelesene Configs: unbekannte Eintraege + Typpruefung ----------
+// Alles, was der Configurator selbst schreibt, steht hier. Was beim Einlesen
+// zusaetzlich im CONFIG-Block stand (z. B. "dischargeResetMargin" ab
+// Controller 5.1.4), wird beim Erzeugen unveraendert wieder ausgegeben -
+// so ueberleben eigene Ergaenzungen auch den Update-Weg.
+// Bei neuen Template-Keys: hier mit eintragen, sonst erscheinen sie doppelt.
+const CFG_KNOWN = {
+  ctrl: {
+    '': ['devices', 'gridSource', 'gridSourceIp', 'gridSourceEmId', 'gridSourceUrl', 'gridSourceField', 'gridSourceInvert',
+         'setpoint', 'hysteresis', 'dampingFactor', 'discharge', 'charge', 'concentrateHoldMinutes', 'rebalance',
+         'reverseStartupPower', 'reverseStopPower', 'gridReverseMode', 'chargeResetMargin',
+         'dischargeStartupPower', 'dischargeStopPower', 'interval', 'errorThreshold', 'directionChangeHoldCycles',
+         'standbySmartModeZero', 'kvsEnabled', 'kvsForceReseed', 'debug', 'idleSkip', 'signal', 'runtime'],
+    devices: ['ip', 'label', 'minSoc', 'maxSoc', 'dischargeAllowed', 'reverse', 'maxInputPower', 'maxOutput', 'dryRun'],
+    discharge: ['concentrateBelow', 'spreadAbove'],
+    charge: ['concentrateBelow', 'spreadAbove'],
+    rebalance: ['socMargin'],
+    idleSkip: ['enabled', 'cyclesUnchanged', 'maxSkipSeconds'],
+    signal: ['enabled', 'typ', 'phone', 'apiKey', 'webhookUrl']
+  },
+  zdw: {
+    '': ['devices', 'api', 'watchdog', 'notify', 'httpTimeout', 'debug', 'runtime'],
+    devices: ['ip', 'label', 'minSoc', 'maxSoc', 'dischargeAllowed', 'reverse', 'maxInputPower', 'maxOutput', 'inputLimit', 'watch'],
+    api: ['enabled', 'kvsHost', 'hysteresis', 'dischargeStartupPower', 'gridSource', 'gridSourceIp', 'gridSourceEmId',
+          'gridSourceUrl', 'gridSourceField', 'gridSourceInvert', 'pollIntervalSec'],
+    watchdog: ['enabled', 'intervalSec', 'vollSchwelle', 'entladeReset', 'minVoltWarn', 'minVoltReset', 'tempWarn', 'tempReset',
+               'offlineAlarmMin', 'sunriseOffset', 'sunsetOffset'],
+    notify: ['enabled', 'typ', 'phone', 'apiKey', 'webhookUrl', 'maxMessageLength', 'apiEvents']
+  }
+};
+// Alt-Keys, die bewusst NICHT durchgereicht werden (aeltere Controller
+// hatten "version" in der Config - die Version steht heute im Script).
+const CFG_NEVER_PASS = ['version'];
+const CFG_TYPE_OF = { controller: 'ctrl', zdw: 'zdw' };
+
+// Bericht des letzten Builds je Script: durchgereichte Keys und ersetzte Werte
+const CFG_EXTRAS = { ctrl: [], zdw: [] };
+const CFG_ISSUES = { ctrl: [], zdw: [] };
+function resetCfgReport(key){ CFG_EXTRAS[key] = []; CFG_ISSUES[key] = []; }
+
+function devPath(d){ return 'devices[' + (d.label || d.ip || '?') + ']'; }
+
+function extraKeys(obj, known, isTop){
+  if(!obj || typeof obj !== 'object' || Array.isArray(obj)) return [];
+  return Object.keys(obj).filter(function(k){
+    return known.indexOf(k) < 0 && !(isTop && CFG_NEVER_PASS.indexOf(k) >= 0) &&
+      obj[k] !== undefined && typeof obj[k] !== 'function';
+  });
+}
+
+// Liste aller unbekannten Eintraege einer eingelesenen Config (fuer den
+// Hinweis direkt nach dem Einlesen) - ohne Seiteneffekte.
+function listExtras(key, obj){
+  const K = CFG_KNOWN[key], out = [];
+  extraKeys(obj, K[''], true).forEach(function(k){ out.push(k); });
+  Object.keys(K).forEach(function(sec){
+    if(sec === '') return;
+    if(sec === 'devices'){
+      (obj.devices || []).forEach(function(d){
+        extraKeys(d, K.devices, false).forEach(function(k){ out.push(devPath(d) + '.' + k); });
+      });
+    } else {
+      extraKeys(obj[sec], K[sec], false).forEach(function(k){ out.push(sec + '.' + k); });
+    }
+  });
+  return out;
+}
+
+function jsKey(k){ return /^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k); }
+function jsLit(v, indent){
+  if(v === null) return 'null';
+  if(typeof v === 'number') return isFinite(v) ? String(v) : 'null';
+  if(typeof v === 'boolean') return String(v);
+  if(typeof v === 'string') return JSON.stringify(v);
+  if(Array.isArray(v)) return '[' + v.filter(function(x){ return x !== undefined && typeof x !== 'function'; })
+    .map(function(x){ return jsLit(x, indent); }).join(', ') + ']';
+  if(typeof v === 'object'){
+    const ks = Object.keys(v).filter(function(k){ return v[k] !== undefined && typeof v[k] !== 'function'; });
+    if(!ks.length) return '{}';
+    const inner = indent + '  ';
+    return '{\n' + ks.map(function(k){ return inner + jsKey(k) + ': ' + jsLit(v[k], inner); }).join(',\n') + '\n' + indent + '}';
+  }
+  return 'null';
+}
+
+// Unbekannte Eintraege eines Unterblocks - wird direkt hinter dessen letztes
+// Feld gesetzt (fuehrendes Komma, kein abschliessendes).
+function extraTail(key, path, obj, known, indent){
+  const ks = extraKeys(obj, known, false);
+  if(!ks.length) return '';
+  ks.forEach(function(k){ CFG_EXTRAS[key].push(path + '.' + k); });
+  return ',\n' + indent + '// vom Configurator nicht verwaltet - unveraendert uebernommen\n' +
+    ks.map(function(k){ return indent + jsKey(k) + ': ' + jsLit(obj[k], indent); }).join(',\n');
+}
+// Unbekannte Eintraege der obersten Ebene - eigener Abschnitt vor "runtime".
+function extraTop(key, obj){
+  const ks = extraKeys(obj, CFG_KNOWN[key][''], true);
+  if(!ks.length) return '';
+  ks.forEach(function(k){ CFG_EXTRAS[key].push(k); });
+  return '  // ------------------------------------------------------------------\n' +
+    '  // ZUSAETZLICHE EINTRAEGE — vom Configurator nicht verwaltet,\n' +
+    '  // unveraendert aus der eingelesenen Config uebernommen\n' +
+    ks.map(function(k){ return '  ' + jsKey(k) + ': ' + jsLit(obj[k], '  ') + ','; }).join('\n') + '\n\n';
+}
+
+// Zahl aus Zahl oder Zahl-String, sonst undefined
+function coerceNum(v){
+  if(typeof v === 'number') return isFinite(v) ? v : undefined;
+  if(typeof v === 'string' && v.trim() !== '' && isFinite(Number(v))) return Number(v);
+  return undefined;
+}
+// Durchgereichter, bekannter Wert: Typ wie der Standardwert, sonst Standard
+// (und Eintrag im Bericht). Zahl-Strings und "true"/"false" werden umgewandelt.
+function pv(key, path, v, def){
+  if(v === undefined || v === null) return def;
+  if(typeof def === 'number'){
+    const n = coerceNum(v);
+    if(n !== undefined) return n;
+  } else if(typeof def === 'boolean'){
+    if(typeof v === 'boolean') return v;
+    if(v === 'true') return true;
+    if(v === 'false') return false;
+  } else if(typeof v === typeof def){
+    return v;
+  }
+  CFG_ISSUES[key].push({ path: path, value: v, def: def });
+  return def;
+}
+
+function cfgReportHtml(key){
+  let h = '';
+  if(CFG_EXTRAS[key].length){
+    h += `<p class="note">${t('cfg_extra_note', {list: escapeHtml(CFG_EXTRAS[key].join(', '))})}</p>`;
+  }
+  if(CFG_ISSUES[key].length){
+    const list = CFG_ISSUES[key].map(function(i){
+      let val; try{ val = JSON.stringify(i.value); } catch(e){ val = String(i.value); }
+      return i.path + ' (' + val + ' → ' + i.def + ')';
+    }).join(', ');
+    h += `<p class="note" style="background:var(--danger-bg); color:var(--danger);">${t('cfg_type_note', {list: escapeHtml(list)})}</p>`;
+  }
+  return h;
+}
 
 function runtimeBlock(){
   return `  // ------------------------------------------------------------------
@@ -2297,6 +2457,7 @@ ${indent}webhookUrl: "${wh ? q(state.signalWebhookUrl||'http://<IP-ADRESSE>:8123
 }
 
 function buildControllerConfig(){
+  resetCfgReport('ctrl');
   const ca = state.controllerAdvanced || {};
   const r = regel();
 
@@ -2311,12 +2472,12 @@ function buildControllerConfig(){
 
       minSoc: ${num(d.minSoc,15)},
       maxSoc: ${num(d.maxSoc,100)},
-      dischargeAllowed: ${old.dischargeAllowed ?? true},
+      dischargeAllowed: ${pv('ctrl', devPath(d) + '.dischargeAllowed', old.dischargeAllowed, true)},
       reverse: ${reverse},
       maxInputPower: ${maxInputPower},
       maxOutput: ${num(d.maxOutput,800)},
 
-      dryRun: ${old.dryRun ?? false}
+      dryRun: ${pv('ctrl', devPath(d) + '.dryRun', old.dryRun, false)}${extraTail('ctrl', devPath(d), old, CFG_KNOWN.ctrl.devices, '      ')}
     }`;
   }).join(",\n");
 
@@ -2342,60 +2503,60 @@ ${gridBlock}
   // "Regelparameter" festgelegt, siehe Doku Kapitel 4
   setpoint: ${r.setpoint},
   hysteresis: ${r.hysteresis},
-  dampingFactor: ${ca.dampingFactor ?? 0.65},
+  dampingFactor: ${pv('ctrl', 'dampingFactor', ca.dampingFactor, 0.65)},
 
   // ------------------------------------------------------------------
   // Konzentrieren/Verteilen — im Schritt "Regelparameter" festgelegt
   // (Doku Kapitel 7b)
   discharge: {
     concentrateBelow: ${r.dConc},
-    spreadAbove: ${r.dSpread}
+    spreadAbove: ${r.dSpread}${extraTail('ctrl', 'discharge', ca.discharge, CFG_KNOWN.ctrl.discharge, '    ')}
   },
 
   charge: {
     concentrateBelow: ${r.cConc},
-    spreadAbove: ${r.cSpread}
+    spreadAbove: ${r.cSpread}${extraTail('ctrl', 'charge', ca.charge, CFG_KNOWN.ctrl.charge, '    ')}
   },
-  concentrateHoldMinutes: ${ca.concentrateHoldMinutes ?? 2},
+  concentrateHoldMinutes: ${pv('ctrl', 'concentrateHoldMinutes', ca.concentrateHoldMinutes, 2)},
 
   // ------------------------------------------------------------------
   rebalance: {
-    socMargin: ${ca.rebalance?.socMargin ?? 5}
+    socMargin: ${pv('ctrl', 'rebalance.socMargin', ca.rebalance?.socMargin, 5)}${extraTail('ctrl', 'rebalance', ca.rebalance, CFG_KNOWN.ctrl.rebalance, '    ')}
   },
 
   // ------------------------------------------------------------------
-  reverseStartupPower: ${ca.reverseStartupPower ?? 35},
-  reverseStopPower: ${ca.reverseStopPower ?? 15},
+  reverseStartupPower: ${pv('ctrl', 'reverseStartupPower', ca.reverseStartupPower, 35)},
+  reverseStopPower: ${pv('ctrl', 'reverseStopPower', ca.reverseStopPower, 15)},
   gridReverseMode: "${grm}",
-  chargeResetMargin: ${ca.chargeResetMargin ?? 10},
+  chargeResetMargin: ${pv('ctrl', 'chargeResetMargin', ca.chargeResetMargin, 10)},
 
   // ------------------------------------------------------------------
-  dischargeStartupPower: ${ca.dischargeStartupPower ?? 35},
-  dischargeStopPower: ${ca.dischargeStopPower ?? 15},
+  dischargeStartupPower: ${pv('ctrl', 'dischargeStartupPower', ca.dischargeStartupPower, 35)},
+  dischargeStopPower: ${pv('ctrl', 'dischargeStopPower', ca.dischargeStopPower, 15)},
 
   // ------------------------------------------------------------------
-  interval: ${ca.interval ?? 4000},
-  errorThreshold: ${ca.errorThreshold ?? 10},
-  directionChangeHoldCycles: ${ca.directionChangeHoldCycles ?? 4},
-  standbySmartModeZero: ${ca.standbySmartModeZero ?? false},
+  interval: ${pv('ctrl', 'interval', ca.interval, 4000)},
+  errorThreshold: ${pv('ctrl', 'errorThreshold', ca.errorThreshold, 10)},
+  directionChangeHoldCycles: ${pv('ctrl', 'directionChangeHoldCycles', ca.directionChangeHoldCycles, 4)},
+  standbySmartModeZero: ${pv('ctrl', 'standbySmartModeZero', ca.standbySmartModeZero, false)},
   kvsEnabled: ${state.kvsEnabled === true},
-  kvsForceReseed: ${ca.kvsForceReseed ?? false},
-  debug: ${ca.debug ?? false},
+  kvsForceReseed: ${pv('ctrl', 'kvsForceReseed', ca.kvsForceReseed, false)},
+  debug: ${pv('ctrl', 'debug', ca.debug, false)},
 
   // ------------------------------------------------------------------
   // Sparmodus — Standard, siehe Doku Kapitel 6
   idleSkip: {
-    enabled: ${ca.idleSkip?.enabled ?? true},
-    cyclesUnchanged: ${ca.idleSkip?.cyclesUnchanged ?? 4},
-    maxSkipSeconds: ${ca.idleSkip?.maxSkipSeconds ?? 44}
+    enabled: ${pv('ctrl', 'idleSkip.enabled', ca.idleSkip?.enabled, true)},
+    cyclesUnchanged: ${pv('ctrl', 'idleSkip.cyclesUnchanged', ca.idleSkip?.cyclesUnchanged, 4)},
+    maxSkipSeconds: ${pv('ctrl', 'idleSkip.maxSkipSeconds', ca.idleSkip?.maxSkipSeconds, 44)}${extraTail('ctrl', 'idleSkip', ca.idleSkip, CFG_KNOWN.ctrl.idleSkip, '    ')}
   },
 
   // ------------------------------------------------------------------
   signal: {
-${notifyFields('    ')}
+${notifyFields('    ')}${extraTail('ctrl', 'signal', ca.signal, CFG_KNOWN.ctrl.signal, '    ')}
   },
 
-${runtimeBlock()}
+${extraTop('ctrl', ca)}${runtimeBlock()}
 };`;
 }
 
@@ -2403,6 +2564,7 @@ ${runtimeBlock()}
 // Dashboard-Shelly. Nicht abgefragte Werte: aus der eingelesenen
 // zendash_watch-Config, sonst Standard (Loesung A).
 function buildZdwConfig(){
+  resetCfgReport('zdw');
   const za = state.zdwAdvanced || {};
   const zapi = za.api || {}, zwd = za.watchdog || {}, zno = za.notify || {};
   const ca = state.controllerAdvanced || {};
@@ -2413,7 +2575,7 @@ function buildZdwConfig(){
     const reverse = !!(state.chargingEnabled && d.reverse);
     const maxInputPower = reverse ? num(d.maxInputPower, d.maxOutput) : (d.maxOutput||0);
     const old = zaDev(d.ip);
-    const da = caDev(d.ip).dischargeAllowed ?? old.dischargeAllowed ?? true;
+    const da = pv('zdw', devPath(d) + '.dischargeAllowed', caDev(d.ip).dischargeAllowed ?? old.dischargeAllowed, true);
     return `    {
       ip: "${q(d.ip || '192.168.X.X')}",
       label: "${q(d.label)}",
@@ -2423,8 +2585,8 @@ function buildZdwConfig(){
       reverse: ${reverse},
       maxInputPower: ${maxInputPower},
       maxOutput: ${num(d.maxOutput,800)},
-      inputLimit: ${old.inputLimit ?? 0},
-      watch: ${d.wdEnabled !== false}
+      inputLimit: ${pv('zdw', devPath(d) + '.inputLimit', old.inputLimit, 0)},
+      watch: ${d.wdEnabled !== false}${extraTail('zdw', devPath(d), old, CFG_KNOWN.zdw.devices, '      ')}
     }`;
   }).join(",\n");
 
@@ -2443,8 +2605,8 @@ function buildZdwConfig(){
 
   // Hysterese nur zur Anzeige - mit Controller in dieser Sitzung gilt immer
   // dessen Wert, damit Dashboard und Regler nie auseinanderlaufen.
-  const hysteresis = state.products.controller ? regel().hysteresis : (zapi.hysteresis ?? 12);
-  const dsp = ca.dischargeStartupPower ?? zapi.dischargeStartupPower ?? 35;
+  const hysteresis = state.products.controller ? regel().hysteresis : pv('zdw', 'api.hysteresis', zapi.hysteresis, 12);
+  const dsp = pv('zdw', 'api.dischargeStartupPower', ca.dischargeStartupPower ?? zapi.dischargeStartupPower, 35);
 
   return `let CONFIG = {
   // ------------------------------------------------------------------
@@ -2469,7 +2631,7 @@ ${devicesJs}
     gridSourceUrl: "${grid.url}",
     gridSourceField: ${grid.field},
     gridSourceInvert: ${grid.inv},
-    pollIntervalSec: ${zapi.pollIntervalSec ?? 8}
+    pollIntervalSec: ${pv('zdw', 'api.pollIntervalSec', zapi.pollIntervalSec, 8)}${extraTail('zdw', 'api', zapi, CFG_KNOWN.zdw.api, '    ')}
   },
 
   // ------------------------------------------------------------------
@@ -2477,16 +2639,16 @@ ${devicesJs}
   // ------------------------------------------------------------------
   watchdog: {
     enabled: ${state.products.watchdog === true},
-    intervalSec: ${zwd.intervalSec ?? 120},
-    vollSchwelle: ${zwd.vollSchwelle ?? 99},
-    entladeReset: ${zwd.entladeReset ?? 90},
-    minVoltWarn: ${zwd.minVoltWarn ?? 2.9},
-    minVoltReset: ${zwd.minVoltReset ?? 3.1},
-    tempWarn: ${zwd.tempWarn ?? 45},
-    tempReset: ${zwd.tempReset ?? 30},
-    offlineAlarmMin: ${zwd.offlineAlarmMin ?? 10},
-    sunriseOffset: ${zwd.sunriseOffset ?? 0},
-    sunsetOffset: ${zwd.sunsetOffset ?? 0}
+    intervalSec: ${pv('zdw', 'watchdog.intervalSec', zwd.intervalSec, 120)},
+    vollSchwelle: ${pv('zdw', 'watchdog.vollSchwelle', zwd.vollSchwelle, 99)},
+    entladeReset: ${pv('zdw', 'watchdog.entladeReset', zwd.entladeReset, 90)},
+    minVoltWarn: ${pv('zdw', 'watchdog.minVoltWarn', zwd.minVoltWarn, 2.9)},
+    minVoltReset: ${pv('zdw', 'watchdog.minVoltReset', zwd.minVoltReset, 3.1)},
+    tempWarn: ${pv('zdw', 'watchdog.tempWarn', zwd.tempWarn, 45)},
+    tempReset: ${pv('zdw', 'watchdog.tempReset', zwd.tempReset, 30)},
+    offlineAlarmMin: ${pv('zdw', 'watchdog.offlineAlarmMin', zwd.offlineAlarmMin, 10)},
+    sunriseOffset: ${pv('zdw', 'watchdog.sunriseOffset', zwd.sunriseOffset, 0)},
+    sunsetOffset: ${pv('zdw', 'watchdog.sunsetOffset', zwd.sunsetOffset, 0)}${extraTail('zdw', 'watchdog', zwd, CFG_KNOWN.zdw.watchdog, '    ')}
   },
 
   // ------------------------------------------------------------------
@@ -2494,14 +2656,14 @@ ${devicesJs}
   // ------------------------------------------------------------------
   notify: {
 ${notifyFields('    ')},
-    maxMessageLength: ${zno.maxMessageLength ?? 900},
-    apiEvents: ${zno.apiEvents ?? true}
+    maxMessageLength: ${pv('zdw', 'notify.maxMessageLength', zno.maxMessageLength, 900)},
+    apiEvents: ${pv('zdw', 'notify.apiEvents', zno.apiEvents, true)}${extraTail('zdw', 'notify', zno, CFG_KNOWN.zdw.notify, '    ')}
   },
 
-  httpTimeout: ${za.httpTimeout ?? 5},
-  debug: ${za.debug ?? false},
+  httpTimeout: ${pv('zdw', 'httpTimeout', za.httpTimeout, 5)},
+  debug: ${pv('zdw', 'debug', za.debug, false)},
 
-${runtimeBlock()}
+${extraTop('zdw', za)}${runtimeBlock()}
 };`;
 }
 
@@ -2548,6 +2710,7 @@ function resultBlock(title, key, cfg, hintKey){
   <div class="panel">
     <h2>${title}-CONFIG <span class="badge">→ ${escapeHtml(ip || '?')}</span></h2>
     <p class="hint">${t(hintKey, {ip: escapeHtml(ip || '—')})}</p>
+    <div id="cfgReport_${key}">${cfgReportHtml(key)}</div>
     <div class="copy-row">
       <button class="btn" onclick="copyConfig('${key}')">${t('btn_copy')}</button>
       <button class="btn" onclick="downloadConfig('${key}')">${t('btn_savefile')}</button>
@@ -2604,17 +2767,27 @@ function uploadGuideBlock(){
 // /api/memcheck). Sichtbar wie der Direct-Upload nur, wenn der lokale
 // Helfer laeuft (gleiche .helper-row-Klasse, von detectHelper() ein-
 // bzw. ausgeblendet).
-function memCheckBlock(){
-  return `
-  <div class="panel helper-row" id="memCheckBlock" style="display:none;">
-    <h2>${t('memcheck_title')}</h2>
+let memCheckOpen = false;   // Auf-/Zu-Zustand der eingeklappten Variante ueber render() hinweg
+function memCheckBlock(collapsed){
+  const body = `
     <p class="hint">${t('memcheck_hint')}</p>
     <label class="first">${t('upload_target_label')}</label>
     <input type="text" id="memCheckIp" placeholder="192.168.178.151">
     <div class="copy-row" style="margin-top:10px;">
       <button class="btn btn-primary" onclick="checkMemory()">${t('btn_memcheck')}</button>
       <span id="memCheckStatus" class="hint" style="margin:0;"></span>
-    </div>
+    </div>`;
+  // Startseite: eingeklappt, damit die Auswahl "Was moechtest du tun?" im Vordergrund steht
+  if(collapsed) return `
+  <div class="panel helper-row" id="memCheckBlock" style="display:none;">
+    <details ${memCheckOpen ? 'open' : ''} ontoggle="memCheckOpen=this.open">
+      <summary style="cursor:pointer; font-weight:700; font-size:1.1rem;">${t('memcheck_title')}</summary>
+      <div style="margin-top:14px;">${body}</div>
+    </details>
+  </div>`;
+  return `
+  <div class="panel helper-row" id="memCheckBlock" style="display:none;">
+    <h2>${t('memcheck_title')}</h2>${body}
   </div>`;
 }
 
@@ -2988,7 +3161,7 @@ function renderStart(){
     ${modeChoice('update', 'start_update_title', 'start_update_desc', !canUpdate, noHelper)}
     ${modeChoice('log', 'start_log_title', 'start_log_desc', !canLog, noHelperLog)}
   </div>`;
-  html += memCheckBlock();
+  html += memCheckBlock(true);
   if(state.mode === 'update' && canUpdate) html += renderUpdatePanel();
   if(state.mode === 'log' && canLog) html += renderLogPanel();
   return html;

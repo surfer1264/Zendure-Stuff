@@ -1,5 +1,8 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.6.0
+Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt. Der 
+
 ## 2.5.0
 - Verbesserte Benutzerführung
 
