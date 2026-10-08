@@ -170,6 +170,9 @@
   }
   .theme-toggle:active{ transform:scale(.92); }
   .lock-toggle.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
+  /* Schloss-Icons (SVG, Farbe ueber currentColor) */
+  .lock-icon{ width:22px; height:22px; display:block; overflow:visible; }
+  .soc-lock .lock-icon{ width:18px; height:18px; }
   .font-toggle{ font-weight:700; position:relative; }
   .lang-toggle{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
@@ -452,6 +455,21 @@
 </style>
 </head>
 <body>
+<!-- Schloss-Symbole: geschlossen / offen (Buegel nach links oben aufgeklappt).
+     Genutzt vom globalen Schloss in der Kopfzeile und vom Reserve-Reglerschloss. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="lk-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4.5" y="10.5" width="15" height="10.5" rx="2.2"/>
+    <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/>
+    <circle cx="12" cy="15.7" r="1.2" fill="currentColor" stroke="none"/>
+  </symbol>
+  <symbol id="lk-open" viewBox="0 0 24 24" overflow="visible" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4.5" y="10.5" width="15" height="10.5" rx="2.2"/>
+    <path d="M8 10.5V9"/>
+    <g transform="rotate(-32 8 9)"><path d="M8 9V6.2a4 4 0 0 1 8 0v3.3"/></g>
+    <circle cx="12" cy="15.7" r="1.2" fill="currentColor" stroke="none"/>
+  </symbol>
+</svg>
 <div class="app" id="app">
   <div class="shell">
 
@@ -466,7 +484,7 @@
           <div class="time mono" id="clockTime">--:--:--</div>
           <div class="date" id="clockDate">–</div>
         </div>
-        <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren">⚿</button>
+        <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button>
         <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" data-i18n-aria="fontAria" title="Schriftgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button>
         <button class="theme-toggle fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button>
@@ -534,7 +552,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.5.3";
+  const VERSION = "3.5.4";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -558,6 +576,7 @@
       helpBatt: 'Summe aller Speicher. + = Speicher geben ab, − = Speicher laden. Die Kurve hat eine eigene Skala und ist nicht direkt mit der Netzkurve vergleichbar.',
       helpAcMode: 'Betriebsart des Geräts: 1 = Laden bzw. Bereitschaft, 2 = Einspeisen ins Hausnetz. Wird vom Regel-Script gesetzt.',
       helpSocSet: 'Obere Ladegrenze, die gerade am Gerät eingestellt ist (socSet). Das Regel-Script setzt sie nur beim Start auf maxSoc aus der Konfiguration. Weicht sie ab, wurde sie danach von außen geändert (z. B. App oder Home Assistant) – das Gerät lädt dann nur bis zu diesem Wert. Abhilfe: Regel-Script neu starten oder maxSoc in der Konfiguration anpassen.',
+      helpMinSoc: 'Untere Entladegrenze, die gerade am Gerät eingestellt ist (minSoc), verglichen mit der Reserve aus der KVS (zdmc_devN_minSoc). Das Regel-Script übernimmt jede Änderung aus der KVS auf das Gerät. Bleibt eine Abweichung länger als etwa eine Minute bestehen, wurde der Wert von außen geändert (z. B. App oder Home Assistant) oder das Regel-Script hat ihn nicht übernommen. Abhilfe: Reserve im Dashboard neu setzen bzw. Regel-Script prüfen.',
       helpSocLimit: 'Ladegrenze des Geräts: 0 = frei, 1 = voll (Laden gesperrt), 2 = untere Grenze erreicht (Entladen gesperrt).',
       helpGridReverse: '2 - Überschuss exportieren verboten für das Gerät; 1 - Export erlaubt. Im gridReverseMode „dynamic“ entscheidet der Controller selbstständig über die Einstellung.',
       helpInputLimit: 'Wählt nur die Leistung. Wirksam erst mit „Manuelles Laden starten“.',
@@ -634,6 +653,7 @@
       unreachable: 'nicht erreichbar',
       flagFeeding: 'speist ein', flagCharging: 'lädt/Stby', flagStandby: 'Standby',
       flagSocSetDiff: 'abweichend, Konfiguration {max} %',
+      flagMinSocDiff: 'abweichend, KVS {kvs} %',
       flagFull: 'voll, Laden gesperrt', flagEmpty: 'leer, Entladen gesperrt', flagFree: 'frei',
       flagExportBlocked: 'Export verboten', flagExportAllowed: 'Export erlaubt',
       target: '(Ziel {v} W)',
@@ -652,6 +672,7 @@
       helpBatt: 'Sum of all batteries. + = batteries delivering, − = batteries charging. The curve has its own scale and cannot be compared directly with the grid curve.',
       helpAcMode: 'Operating mode of the device: 1 = charging or standby, 2 = feeding into the house grid. Set by the control script.',
       helpSocSet: 'Upper charge limit currently set on the device (socSet). The control script sets it to maxSoc from the configuration only at startup. If it differs, it was changed externally afterwards (e.g. app or Home Assistant) – the device then only charges up to this value. Fix: restart the control script or adjust maxSoc in the configuration.',
+      helpMinSoc: 'Lower discharge limit currently set on the device (minSoc), compared with the reserve from the KVS (zdmc_devN_minSoc). The control script applies every KVS change to the device. If a difference persists for more than about a minute, the value was changed externally (e.g. app or Home Assistant) or the control script did not apply it. Remedy: set the reserve again in the dashboard or check the control script.',
       helpSocLimit: 'Charge limit of the device: 0 = free, 1 = full (charging blocked), 2 = lower limit reached (discharge blocked).',
       helpGridReverse: '2 - exporting surplus is blocked for this device; 1 - export allowed. In gridReverseMode "dynamic" the controller decides on this setting by itself.',
       helpInputLimit: 'Only selects the power. Takes effect with “Start manual charging”.',
@@ -728,6 +749,7 @@
       unreachable: 'unreachable',
       flagFeeding: 'feeding in', flagCharging: 'charging/stby', flagStandby: 'standby',
       flagSocSetDiff: 'differs, configuration {max} %',
+      flagMinSocDiff: 'differs, KVS {kvs} %',
       flagFull: 'full, charging blocked', flagEmpty: 'empty, discharge blocked', flagFree: 'free',
       flagExportBlocked: 'export blocked', flagExportAllowed: 'export allowed',
       target: '(target {v} W)',
@@ -746,6 +768,7 @@
       helpBatt: 'Somme de toutes les batteries. + = les batteries fournissent, − = les batteries chargent. La courbe a sa propre échelle et ne se compare pas directement à celle du réseau.',
       helpAcMode: 'Mode de fonctionnement de l’appareil\u00a0: 1 = charge ou veille, 2 = injection dans le réseau domestique. Défini par le script de régulation.',
       helpSocSet: 'Limite de charge supérieure actuellement réglée sur l’appareil (socSet). Le script de régulation la règle sur maxSoc de la configuration uniquement au démarrage. Si elle diffère, elle a été modifiée de l’extérieur ensuite (p.\u00a0ex. application ou Home Assistant) – l’appareil ne charge alors que jusqu’à cette valeur. Solution\u00a0: redémarrer le script de régulation ou adapter maxSoc dans la configuration.',
+      helpMinSoc: 'Limite de décharge inférieure actuellement réglée sur l’appareil (minSoc), comparée à la réserve de la KVS (zdmc_devN_minSoc). Le script de régulation applique chaque modification de la KVS à l’appareil. Si un écart persiste plus d’une minute environ, la valeur a été modifiée de l’extérieur (p.\u00a0ex. application ou Home Assistant) ou le script de régulation ne l’a pas appliquée. Remède\u00a0: régler à nouveau la réserve dans le tableau de bord ou vérifier le script de régulation.',
       helpSocLimit: 'Limite de charge de l’appareil\u00a0: 0 = libre, 1 = pleine (charge bloquée), 2 = limite basse atteinte (décharge bloquée).',
       helpGridReverse: '2 - exportation du surplus interdite pour l’appareil\u00a0; 1 - exportation autorisée. En gridReverseMode «\u00a0dynamic\u00a0», le contrôleur décide lui-même de ce réglage.',
       helpInputLimit: 'Choisit seulement la puissance. Effective avec «\u00a0Démarrer la charge manuelle\u00a0».',
@@ -822,6 +845,7 @@
       unreachable: 'injoignable',
       flagFeeding: 'injecte', flagCharging: 'charge/veille', flagStandby: 'veille',
       flagSocSetDiff: 'différent, configuration {max} %',
+      flagMinSocDiff: 'différent, KVS {kvs}\u00a0%',
       flagFull: 'pleine, charge bloquée', flagEmpty: 'vide, décharge bloquée', flagFree: 'libre',
       flagExportBlocked: 'export interdit', flagExportAllowed: 'export autorisé',
       target: '(cible {v} W)',
@@ -1145,7 +1169,7 @@
       const b = btns[i];
       const open = socGateActive() && socOpenId === b.getAttribute('data-dev');
       b.classList.toggle('open', open);
-      b.textContent = open ? '\u26BD' : '\u26BF';
+      setLockIcon(b, open);
       b.setAttribute('aria-pressed', open ? 'true' : 'false');
       const row = b.closest('.ctrl-row');
       if (row) row.classList.toggle('soc-open', open);
@@ -1155,6 +1179,12 @@
   window.addEventListener('scroll', function(){
     if (socOpenId !== null && !socDragging) closeSocGate();
   }, { passive: true });
+
+  // Schloss-Symbol setzen: open=true -> aufgeklappter Buegel
+  function setLockIcon(el, open){
+    el.innerHTML = '<svg class="lock-icon" aria-hidden="true"><use href="#' +
+      (open ? 'lk-open' : 'lk-closed') + '"/></svg>';
+  }
 
   function applyLockState(){
     const els = controlElements();
@@ -1174,7 +1204,7 @@
     // Sollwert oder Fix-Entladung - die bleiben immer sichtbar.
     appEl.classList.toggle('hide-hub-controls', uiLocked);
 
-    lockToggle.textContent = uiLocked ? '⚿' : '⚽';
+    setLockIcon(lockToggle, !uiLocked);
     lockToggle.classList.toggle('locked', uiLocked);
     lockToggle.title = t(uiLocked ? 'unlock' : 'lock');
   }
@@ -1501,7 +1531,7 @@
           '<label class="switch teal"><input type="checkbox" id="reverse-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
         '</div>' +
         '<div class="ctrl-row">' +
-          '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false">\u26BF</button></span></div>' +
+          '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button></span></div>' +
           '<span class="key mono" id="minSocMax-' + d.id + '">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
           '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
         '</div>' +
@@ -1795,6 +1825,7 @@
         soc: null, power: 0, online: false,
         acMode: null, socLimit: null, gridReverse: null,
         pv: null, minVol: null, socSet: null,
+        minSocHw: null, minSocDiffKey: '', minSocDiffSince: 0,
         watch: d.watch === true,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
@@ -1919,6 +1950,8 @@
           d.minVol = (h.minVol === undefined) ? null : h.minVol;
           // ab Script 3.5.1; aeltere Scripte liefern das Feld nicht
           d.socSet = (h.socSet === undefined) ? null : h.socSet;
+          // ab Script 3.5.4: untere Entladegrenze am Geraet
+          d.minSocHw = (h.minSocHw === undefined) ? null : h.minSocHw;
           applyMinSocCeiling(d);
         } else {
           d.online = false;
@@ -1990,6 +2023,27 @@
   //   socLimit    1 = Laden vom Netz gesperrt (voll), 2 = Entladen gesperrt (leer)
   //   gridReverse 1 = Export (Ueberschuss ins Netz) erlaubt, 2 = verboten;
   //               bei gridReverseMode "dynamic" setzt das Regel-Script den Wert
+  // Mindestdauer einer minSoc-Abweichung bis zur Anzeige: mehr als zwei
+  // config_api-Abgleiche (2 * 32 s), damit eine Aenderung von aussen samt
+  // Uebernahme durch das Regel-Script sicher durch ist.
+  const MINSOC_DIFF_MS = 75000;
+
+  // true = KVS-Reserve und minSoc am Geraet weichen seit mindestens
+  // MINSOC_DIFF_MS ab. Aendert sich einer der beiden Werte, beginnt die
+  // Wartezeit neu. Ohne Hardware-Wert (Hub offline, Script < 3.5.4) nie.
+  function minSocDiffPersists(d){
+    if (d.minSocHw === null || d.minSocHw === undefined || d.minSoc === undefined) {
+      d.minSocDiffKey = ''; d.minSocDiffSince = 0;
+      return false;
+    }
+    const kvs = Math.round(Number(d.minSoc));
+    const hw = Math.round(Number(d.minSocHw));
+    if (kvs === hw) { d.minSocDiffKey = ''; d.minSocDiffSince = 0; return false; }
+    const key = kvs + '|' + hw;
+    if (d.minSocDiffKey !== key) { d.minSocDiffKey = key; d.minSocDiffSince = Date.now(); }
+    return (Date.now() - d.minSocDiffSince) >= MINSOC_DIFF_MS;
+  }
+
   function renderFlags(d){
     const box = document.getElementById('flags-' + d.id);
     if (!box) return;
@@ -2015,6 +2069,16 @@
     if (d.socSet !== null && d.socSet !== undefined && d.maxSoc !== undefined &&
         Math.round(Number(d.socSet)) !== Math.round(Number(d.maxSoc))) {
       flags.push(['warn', 'socSet ' + d.socSet + ' % · ' + t('flagSocSetDiff', {max: d.maxSoc}), 'helpSocSet']);
+    }
+
+    // Untere Entladegrenze am Geraet (minSoc) weicht von der Reserve in der
+    // KVS ab. Referenz ist hier die KVS, nicht die Konfiguration: Das
+    // Regel-Script uebernimmt jede KVS-Aenderung auf das Geraet. Kurz nach
+    // einer Aenderung ist eine Abweichung normal (Regel-Script hat noch nicht
+    // geschrieben, config_api nur alle CONFIG_SEC) - gemeldet wird erst, wenn
+    // dasselbe Wertepaar laenger als MINSOC_DIFF_MS besteht.
+    if (minSocDiffPersists(d)) {
+      flags.push(['warn', 'minSoc ' + d.minSocHw + ' % · ' + t('flagMinSocDiff', {kvs: d.minSoc}), 'helpMinSoc']);
     }
 
     if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · ' + t('flagExportBlocked'), 'helpGridReverse']);

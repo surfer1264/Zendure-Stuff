@@ -1,5 +1,10 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.4
+- Schloss-Icons
+- Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden
+- Dashboard: Hinweis an der Geraetekarte, wenn `minSoc` am Geraet von Konfiguration des Dashboard (KVS-Wert) abweicht (durch Änderung von "außen", oder wenn KVS Wert nicht auf das Gerät geschrieben wurde - Fehlerfall)
+
 ## Changelog 3.5.3
 
 - config_api liefert zusaetzlich `watchdog: {enabled, minVoltWarn, minVoltReset}` und je Geraet `watch` - nur zur Anzeige im Dashboard

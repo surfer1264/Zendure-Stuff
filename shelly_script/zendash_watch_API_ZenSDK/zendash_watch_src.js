@@ -26,7 +26,8 @@
 //   GET status_api  -> { grid:{power,online},
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
-//                               home,gridIn,packIn,packOut,socSet}] }
+//                               home,gridIn,packIn,packOut,socSet,
+//                               minSocHw}] }
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
 // AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
@@ -43,7 +44,7 @@
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.3";
+let VERSION = "3.5.4";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1002,6 +1003,11 @@ function updateGridPowerStatus(callback) {
 //            socSet / 10), null = Feld fehlt. Das Regel-Script setzt sie nur
 //            beim Start auf maxSoc - eine spaetere Aenderung von aussen
 //            (App, Home Assistant ...) wird erst hierueber sichtbar.
+//            minSocHw: am Geraet eingestellte untere Entladegrenze in %
+//            (Report minSoc / 10), null = Feld fehlt. Das Regel-Script
+//            uebernimmt jede Aenderung von zdmc_devN_minSoc aus der KVS auf
+//            die Hardware - das Dashboard vergleicht beide Werte und meldet
+//            eine anhaltende Abweichung (seit 3.5.4).
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -1013,7 +1019,8 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
   HUBS[hi] = {
     id: hi, soc: null, power: 0, acMode: null, socLimit: null,
     gridReverse: null, pv: null, minVol: null, online: false,
-    home: null, gridIn: null, packIn: null, packOut: null, socSet: null
+    home: null, gridIn: null, packIn: null, packOut: null, socSet: null,
+    minSocHw: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1041,7 +1048,7 @@ function setHubOffline(index) {
   h.soc = null; h.power = 0; h.acMode = null; h.socLimit = null;
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
   h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
-  h.socSet = null;
+  h.socSet = null; h.minSocHw = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1140,6 +1147,8 @@ function extractHub(index, body, watchNow, logPacks) {
   hub.packOut = jsonNum(body, "outputPackPower");
   let ss = jsonNum(body, "socSet");
   hub.socSet = (ss !== null) ? ss / 10 : null;
+  let ms = jsonNum(body, "minSoc");
+  hub.minSocHw = (ms !== null) ? ms / 10 : null;
   hub.online = true;
   // Letzte Vollladung: nur Merker setzen, alles Weitere nach dem Poll
   if (soc === FULL_SOC && Date.now() >= LASTFULL[index].nextCheckAt) LASTFULL[index].seen = true;
