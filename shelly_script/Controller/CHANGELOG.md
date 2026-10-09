@@ -18,6 +18,7 @@ Schreibvorgängen, Fehlerbehandlung oder Benachrichtigungsinhalten.
   WEBHOOK/SIGNAL/WHATSAPP; "Sende ..."-Zeilen entfernt; Ausgabe nennt jetzt
   den tatsächlichen Kanal (vorher bei WhatsApp fälschlich "Signal-Nachricht")
 - msgResult wird bei signal.enabled:false nach dem Start freigegeben
+- Wirkung: weniger Scriptspeicher
 
 ## Changelog 5.1.6
 
