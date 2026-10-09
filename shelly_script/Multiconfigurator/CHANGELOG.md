@@ -6,7 +6,8 @@
 - Die gewählte Vorlage bleibt im Auswahlfeld sichtbar
 
 ## 2.6.0
-Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt.
+- Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen.
+- Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt.
 
 ## 2.5.0
 - Verbesserte Benutzerführung
