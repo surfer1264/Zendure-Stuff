@@ -149,7 +149,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.6.0";
+const APP_VERSION = "2.7.0";
 
 const I18N = {
 de: {
@@ -212,7 +212,7 @@ de: {
   grid_remote_title: "Läuft auf einem anderen Shelly, liest einen Pro 3EM übers Netzwerk",
   grid_remote_desc: "Der Pro 3EM bleibt unangetastet mit Standard-Firmware.",
   grid_httpjson_title: "Ich habe ein anderes Smartmeter mit JSON-über-HTTP-Schnittstelle",
-  grid_httpjson_desc: "Z. B. Zendure Smart Meter 3CT oder ein Tasmota-Gerät. Auch mit einem Shelly 3EM (ohne Pro) möglich.",
+  grid_httpjson_desc: "Z. B. Zendure Smart Meter 3CT oder D0, everHome EcoTracker oder ein Tasmota-Gerät. Auch mit einem Shelly 3EM (ohne Pro) möglich.",
   grid_emid_field: "EM-Kanal-ID (in der Regel 0)",
   grid_ip_field_remote: "IP-Adresse des Shelly Pro 3EM (Netzmessung)",
   grid_remote_hint: "Nur die Adresse des Smartmeters — im Remote-Modus läuft der Controller NICHT auf dem 3EM selbst.",
@@ -221,7 +221,9 @@ de: {
   grid_preset_nopro: "ohne Pro",
   grid_preset_reader: "Lesekopf",
   grid_preset_hint: "Füllt URL und Feldname aus. Danach <code>&lt;IP&gt;</code> (und bei Tasmota <code>&lt;Gerät&gt;</code>) durch deine Werte ersetzen.",
-  grid_field_help_summary: "So findest du den Feldnamen",
+  grid_preset_note_zendured0: "Zendure Smart Meter D0: Die lokale Schnittstelle ist ab Werk aus. Einmalig in der Zendure-App HEMS hinzufügen und wieder verlassen – danach antwortet der D0 unter <code>/properties/report</code>. Feste IP im Router vergeben. Das Vorzeichen bei Einspeisung mit „Testen“ prüfen.",
+  grid_preset_note_ecotracker: "everHome EcoTracker: In der everHome-App „Lokaler HTTP-Server“ einschalten und im Router eine feste IP vergeben. Das Feld <code>power</code> ist die aktuelle Gesamtleistung in W (<code>powerAvg</code> ist für die Regelung zu träge). Das Vorzeichen bei Einspeisung mit „Testen“ prüfen.",
+    grid_field_help_summary: "So findest du den Feldnamen",
   grid_field_help: "Die URL mit „Testen“ öffnen und in der Antwort das Feld mit der <b>gesamten Netzleistung in Watt</b> suchen.<br><br><b>Flache Antwort</b> (z. B. Zendure 3CT): <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → Feldname <code>total_power</code><br><br><b>Verschachtelte Antwort</b> (z. B. Tasmota): <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → die Namen vor den geschweiften Klammern mit Punkten verbinden: <code>StatusSNS.DVS7420.power</code>. Der mittlere Name hängt von deinem Zähler ab.<br><br>Das Vorzeichen prüfst du später: Bei Netzbezug muss der Wert positiv sein, sonst „Vorzeichen umkehren“ setzen.",
   nav_err_httpjson: "Bitte URL und Feldname eintragen – Platzhalter wie &lt;IP&gt; oder &lt;Gerät&gt; durch deine Werte ersetzen, keine leeren Teile zwischen den Punkten.",
   grid_url_field: "URL des Smartmeters",
@@ -588,7 +590,7 @@ en: {
   grid_remote_title: "Runs on a different Shelly, reads a Pro 3EM over the network",
   grid_remote_desc: "The Pro 3EM stays untouched with stock firmware.",
   grid_httpjson_title: "I have a different smart meter with a JSON-over-HTTP interface",
-  grid_httpjson_desc: "E.g. Zendure Smart Meter 3CT or a Tasmota device. Also works with a Shelly 3EM (non-Pro).",
+  grid_httpjson_desc: "E.g. Zendure Smart Meter 3CT or D0, everHome EcoTracker or a Tasmota device. Also works with a Shelly 3EM (non-Pro).",
   grid_emid_field: "EM channel ID (usually 0)",
   grid_ip_field_remote: "IP address of the Shelly Pro 3EM (grid measurement)",
   grid_remote_hint: "Just the smart meter's address — in remote mode the Controller does NOT run on the 3EM itself.",
@@ -597,7 +599,9 @@ en: {
   grid_preset_nopro: "non-Pro",
   grid_preset_reader: "IR reader",
   grid_preset_hint: "Fills in URL and field name. Then replace <code>&lt;IP&gt;</code> (and for Tasmota <code>&lt;Gerät&gt;</code>) with your values.",
-  grid_field_help_summary: "How to find the field name",
+  grid_preset_note_zendured0: "Zendure Smart Meter D0: the local interface is off by default. Add HEMS once in the Zendure app and leave it again – after that the D0 answers at <code>/properties/report</code>. Give it a fixed IP in your router. Check the sign while feeding in using “Test”.",
+  grid_preset_note_ecotracker: "everHome EcoTracker: switch on “Local HTTP server” in the everHome app and give it a fixed IP in your router. The field <code>power</code> is the current total power in W (<code>powerAvg</code> is too slow for control). Check the sign while feeding in using “Test”.",
+    grid_field_help_summary: "How to find the field name",
   grid_field_help: "Open the URL with “Test” and look for the field holding the <b>total grid power in watts</b>.<br><br><b>Flat response</b> (e.g. Zendure 3CT): <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → field name <code>total_power</code><br><br><b>Nested response</b> (e.g. Tasmota): <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → join the names in front of the curly braces with dots: <code>StatusSNS.DVS7420.power</code>. The middle name depends on your meter.<br><br>Check the sign later: when drawing from the grid, the value must be positive – otherwise tick “Invert sign”.",
   nav_err_httpjson: "Please enter URL and field name – replace placeholders like &lt;IP&gt; or &lt;Gerät&gt; with your values, no empty parts between the dots.",
   grid_url_field: "Smart meter URL",
@@ -964,7 +968,7 @@ fr: {
   grid_remote_title: "Fonctionne sur un autre Shelly, lit un Pro 3EM via le réseau",
   grid_remote_desc: "Le Pro 3EM reste intact avec son firmware d'origine.",
   grid_httpjson_title: "J'ai un autre compteur intelligent avec une interface JSON via HTTP",
-  grid_httpjson_desc: "Par ex. Zendure Smart Meter 3CT ou un appareil Tasmota. Fonctionne aussi avec un Shelly 3EM (sans Pro).",
+  grid_httpjson_desc: "Par ex. Zendure Smart Meter 3CT ou D0, everHome EcoTracker ou un appareil Tasmota. Fonctionne aussi avec un Shelly 3EM (sans Pro).",
   grid_emid_field: "ID du canal EM (généralement 0)",
   grid_ip_field_remote: "Adresse IP du Shelly Pro 3EM (mesure réseau)",
   grid_remote_hint: "Uniquement l'adresse du compteur intelligent — en mode distant, le Controller ne fonctionne PAS sur le 3EM lui-même.",
@@ -973,7 +977,9 @@ fr: {
   grid_preset_nopro: "sans Pro",
   grid_preset_reader: "tête de lecture",
   grid_preset_hint: "Remplit l’URL et le nom du champ. Remplace ensuite <code>&lt;IP&gt;</code> (et pour Tasmota <code>&lt;Gerät&gt;</code>) par tes valeurs.",
-  grid_field_help_summary: "Comment trouver le nom du champ",
+  grid_preset_note_zendured0: "Zendure Smart Meter D0 : l’interface locale est désactivée d’usine. Ajoute une fois HEMS dans l’app Zendure puis quitte-le – ensuite le D0 répond sous <code>/properties/report</code>. Attribue-lui une IP fixe dans ton routeur. Vérifie le signe en injection avec « Tester ».",
+  grid_preset_note_ecotracker: "everHome EcoTracker : active « Serveur HTTP local » dans l’app everHome et attribue-lui une IP fixe dans ton routeur. Le champ <code>power</code> est la puissance totale actuelle en W (<code>powerAvg</code> est trop lent pour la régulation). Vérifie le signe en injection avec « Tester ».",
+    grid_field_help_summary: "Comment trouver le nom du champ",
   grid_field_help: "Ouvre l’URL avec « Tester » et cherche dans la réponse le champ contenant la <b>puissance réseau totale en watts</b>.<br><br><b>Réponse plate</b> (par ex. Zendure 3CT) : <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → nom du champ <code>total_power</code><br><br><b>Réponse imbriquée</b> (par ex. Tasmota) : <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → relie par des points les noms placés avant les accolades : <code>StatusSNS.DVS7420.power</code>. Le nom du milieu dépend de ton compteur.<br><br>Vérifie le signe ensuite : en cas de soutirage réseau, la valeur doit être positive – sinon coche « Inverser le signe ».",
   nav_err_httpjson: "Saisis l’URL et le nom du champ – remplace les espaces réservés comme &lt;IP&gt; ou &lt;Gerät&gt; par tes valeurs, sans partie vide entre les points.",
   grid_url_field: "URL du compteur intelligent",
@@ -1319,6 +1325,7 @@ const state = {
   gridSourceUrl: "",
   gridSourceField: "total_power",
   gridSourceInvert: false,
+  gridPreset: "",               // nur UI: zuletzt gewaehlte Vorlage (fuer Hinweis)
 
   chargingEnabled: null,          // zentrale Frage (Controller + zenDash-API)
 
@@ -1873,11 +1880,14 @@ function renderGridSource(){
       <label class="first">${t('grid_preset_label')}</label>
       <select onchange="applyGridPreset(this.value)">
         <option value="">${t('grid_preset_choose')}</option>
-        <option value="zendure3ct">Zendure Smart Meter 3CT</option>
-        <option value="shelly3em">Shelly 3EM (${t('grid_preset_nopro')})</option>
-        <option value="tasmota">Tasmota (${t('grid_preset_reader')})</option>
+        ${gridPresetOption('zendure3ct', 'Zendure Smart Meter 3CT')}
+        ${gridPresetOption('zendured0', 'Zendure Smart Meter D0')}
+        ${gridPresetOption('ecotracker', 'everHome EcoTracker')}
+        ${gridPresetOption('shelly3em', 'Shelly 3EM (' + t('grid_preset_nopro') + ')')}
+        ${gridPresetOption('tasmota', 'Tasmota (' + t('grid_preset_reader') + ')')}
       </select>
       <p class="hint" style="margin-top:4px; margin-bottom:0;">${t('grid_preset_hint')}</p>
+      ${ GRID_PRESETS[state.gridPreset] && GRID_PRESETS[state.gridPreset].note ? `<p class="note" style="margin-top:8px;">${t(GRID_PRESETS[state.gridPreset].note)}</p>` : '' }
       <label>${t('grid_url_field')}</label>
       <div style="display:flex; gap:8px; align-items:center;">
         <input type="text" id="gridUrlInput" style="flex:1; min-width:0;" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
@@ -1922,18 +1932,28 @@ function gridFieldValid(text){
 
 // Vorlagen fuer bekannte Smartmeter: setzen URL und Feld, eine bereits
 // eingetragene IP bleibt erhalten. "<IP>"/"<Gerät>" muss der Nutzer ersetzen.
+// "note" = optionaler i18n-Schluessel fuer einen Einrichtungshinweis.
 const GRID_PRESETS = {
   zendure3ct: { path: '/properties/report', field: 'total_power' },
+  // D0 antwortet wie der 3CT flach (a/b/c_aprt_power, total_power)
+  zendured0:  { path: '/properties/report', field: 'total_power', note: 'grid_preset_note_zendured0' },
+  // everHome EcoTracker (IR): lokaler HTTP-Server, flaches JSON
+  // (power, powerAvg, powerPhase1-3, energyCounterIn/Out)
+  ecotracker: { path: '/v1/json', field: 'power', note: 'grid_preset_note_ecotracker' },
   shelly3em:  { path: '/status', field: 'total_power' },
   tasmota:    { path: '/cm?cmnd=STATUS%2010', field: 'StatusSNS.<Gerät>.power' }
 };
+function gridPresetOption(key, label){
+  return '<option value="' + key + '"' + (state.gridPreset === key ? ' selected' : '') + '>' + escapeHtml(label) + '</option>';
+}
 function applyGridPreset(key){
   const p = GRID_PRESETS[key];
-  if(!p) return;
+  if(!p){ state.gridPreset = ''; render(); return; }
   const m = String(state.gridSourceUrl || '').match(/^\s*(?:https?:\/\/)?([^\/\s?#]+)/i);
   const host = (m && m[1] && m[1].indexOf('<') < 0) ? m[1] : '<IP>';
   state.gridSourceUrl = 'http://' + host + p.path;
   state.gridSourceField = p.field;
+  state.gridPreset = key;
   state.navError = '';
   render();
 }

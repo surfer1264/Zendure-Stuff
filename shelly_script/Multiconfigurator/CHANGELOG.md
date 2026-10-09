@@ -1,7 +1,12 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.7.0
+- Netzquelle http_json: neue Vorlagen „Zendure Smart Meter D0“ (`/properties/report`, Feld `total_power`) und „everHome EcoTracker“ (`/v1/json`, Feld `power`)
+- Vorlagen mit Einrichtungshinweis: D0 – lokale Schnittstelle einmalig über HEMS in der Zendure-App freischalten; EcoTracker – „Lokaler HTTP-Server“ in der everHome-App einschalten; jeweils feste IP und Vorzeichen per „Testen“ prüfen
+- Die gewählte Vorlage bleibt im Auswahlfeld sichtbar
+
 ## 2.6.0
-Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt. Der 
+Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt.
 
 ## 2.5.0
 - Verbesserte Benutzerführung
