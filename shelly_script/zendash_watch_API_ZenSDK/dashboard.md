@@ -244,9 +244,9 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 |---|---|---|
 | **Sollwert** | Zielwert für den Netzbezug. Negativ = etwas einspeisen, positiv = etwas beziehen. | −40 bis +40 W |
 | **Fix-Entladung** | Feste Entladeleistung statt Regelung, für alle Speicher zusammen. `0` = aus, normale Regelung. | 0 oder ab `dischargeStartupPower` |
-| **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? | an/aus |
+| **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
 | **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
-| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. | 10 % bis 1 % unter dem Ladeziel |
+| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Auf Touch-Geräten hat der Regler ein eigenes kleines Schloss neben dem Wert und reagiert nur auf Ziehen am Punkt, damit er nicht versehentlich verstellt wird. | 10 % bis 1 % unter der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
 | **Manuelles Laden** | Lädt diesen Speicher mit der gewählten Leistung aus dem Netz, bis du es beendest oder der Akku voll ist. | 0 bis `maxInputPower` |
 
 **Manuelles Laden** besteht aus zwei Teilen: Der Regler wählt nur die Leistung, der Knopf darunter startet bzw. beendet das Laden. Beim Start schaltet das Dashboard für diesen Speicher „Entladen erlaubt“ und „Laden vom Netz erlaubt“ aus, beim Beenden stellt es den vorherigen Zustand wieder her. Ist der Akku voll, beendet das Script das Laden selbst ([Auto-Stop](readme.md#manuelles-laden-und-auto-stop)). Bricht der Vorgang mittendrin ab (Shelly nicht erreichbar), erscheint ein Warnhinweis – dann die Karte des Speichers prüfen.
@@ -261,7 +261,8 @@ Nicht im Dashboard änderbar sind die **Hysterese** (wird nur neben dem Sollwert
 - **Neben dem Sollwert** steht die Hysterese: So weit darf der Netzbezug abweichen, bevor der Controller nachregelt.
 - **Je Speicher eine Karte** mit:
   - Ladestand und darunter dem Arbeitsfenster, z. B. `SoC · 15–100 %` (Reserve bis Ladeziel)
-  - Leistung, PV-Eingang und schwächster Zellspannung. Die Zellspannung wird unter 3,0 V gelb, unter 2,8 V rot – aussagekräftig ist sie nur unter Last.
+  - Leistung, PV-Eingang und schwächster Zellspannung – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „min 3,31 V (Sperre < 2,90 V)“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
+  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration: `socSet` (obere Ladegrenze am Gerät) weicht von `maxSoc` ab, oder `minSoc` am Gerät weicht von der Reserve in der KVS ab. Meist wurde der Wert von außen geändert (App, Home Assistant). Antippen erklärt die Abhilfe.
   - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war ([mehr dazu](readme.md#letzte-vollladung))
   - Rohstatus `acMode`, `socLimit`, `gridReverse`. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Einspeisen gesperrt.
 - **Fußzeile:** Versionen von Seite und Script. Gelb, wenn sie nicht zusammenpassen.

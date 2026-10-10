@@ -13,8 +13,8 @@ sondern nach dem Start im Browser auf der Einrichtungsseite. Einziger
 Unterschied: `run.sh` legt die Einstellungen im dauerhaften App-Speicher
 `/data` ab, damit sie Updates der App überstehen.
 
-Optional sendet die App die Messwerte jede Minute an ThingSpeak, siehe
-[ThingSpeak-Upload](#thingspeak-upload).
+Optional sendet die App die Messwerte jede Minute an ThingSpeak und/oder
+ThingsBoard, siehe [ThingSpeak- und ThingsBoard-Upload](#thingspeak--und-thingsboard-upload).
 
 ## Voraussetzungen
 
@@ -44,9 +44,9 @@ Alle Dateien liegen in einem Ordner unter `/addons/`:
     └── zendure-dashboard.html
 ```
 
-`ts_bridge.py` ist nur für den [ThingSpeak-Upload](#thingspeak-upload) nötig.
-Fehlt die Datei, läuft der Proxy ganz normal, nur ohne ThingSpeak. Die
-`COPY`-Zeile im `Dockerfile` braucht sie aber – ohne ThingSpeak diese Zeile
+`ts_bridge.py` ist nur für den [ThingSpeak- bzw. ThingsBoard-Upload](#thingspeak--und-thingsboard-upload) nötig.
+Fehlt die Datei, läuft der Proxy ganz normal, nur ohne ThingSpeak und ThingsBoard. Die
+`COPY`-Zeile im `Dockerfile` braucht sie aber – ohne Upload diese Zeile
 dort entfernen, sonst bricht der Bau ab.
 
 ## Dateien
@@ -55,7 +55,7 @@ dort entfernen, sonst bricht der Bau ab.
 
 ```yaml
 name: "Zendure Dashboard Proxy"
-version: "1.1.0"
+version: "3.5.3"
 slug: "zendure_proxy"
 description: "Lokaler Proxy für das Zendure-Dashboard (löst CORS-Problem der Shelly-Firmware)"
 arch:
@@ -73,7 +73,7 @@ ports_description:
 
 `init: false` ist entscheidend (siehe Troubleshooting weiter unten).
 
-`version` bei jeder Änderung an den App-Dateien anheben – dann bietet Home
+Die `version` folgt der Versionsnummer des Dashboards. Sie bei jeder Änderung an den App-Dateien anheben – dann bietet Home
 Assistant ein Update an, und die Einstellungen bleiben erhalten (siehe
 [Änderungen an den App-Dateien](#änderungen-an-den-app-dateien)).
 
@@ -206,32 +206,36 @@ müssen dieselbe Versionsnummer haben.
 So geht es, ohne die Einstellungen zu verlieren:
 
 1. Geänderte Dateien in `/addons/zendure_proxy/` ablegen.
-2. In `config.yaml` die `version` anheben (z. B. `1.1.0` → `1.1.1`).
+2. In `config.yaml` die `version` anheben (z. B. `3.5.3` → `3.5.4`, passend zur neuen Dashboard-Version).
 3. **Repositories** im App Store neu laden (wie Installationsschritt 2).
 4. Auf der Seite der App erscheint **Aktualisieren** → ausführen. Home
    Assistant baut die App neu, `/data` bleibt erhalten.
 
-**Nicht** deinstallieren – das löscht `/data` und damit Shelly-IP und
-ThingSpeak-Keys.
+**Nicht** deinstallieren – das löscht `/data` und damit Shelly-IP sowie
+ThingSpeak- und ThingsBoard-Zugangsdaten.
 
 **Einmalig beim Umstieg von Version 1.0.x:** Dort lagen die Einstellungen
 noch im Container. Nach dem ersten Update auf 1.1.0 erscheint deshalb einmal
 die Einrichtungsseite – Schritt 6 wiederholen. Ab dann bleiben die
 Einstellungen erhalten.
 
-## ThingSpeak-Upload
+## ThingSpeak- und ThingsBoard-Upload
 
-Die App kann die Messwerte der Speicher jede Minute an ThingSpeak senden.
-Einrichtung und Verhalten stehen ausführlich unter
-[ThingSpeak-Upload](../thingspeak.md). Für die App gilt zusätzlich:
+Die App kann die Messwerte der Speicher jede Minute an ThingSpeak und/oder
+ThingsBoard senden. Einrichtung und Verhalten stehen ausführlich unter
+[ThingSpeak-Upload](../thingspeak.md) und [ThingsBoard-Upload](../thingsboard.md).
+Für die App gilt zusätzlich:
 
 - `ts_bridge.py` muss im App-Ordner liegen und im `Dockerfile` kopiert werden.
-- Die Einrichtungsseite ist `http://<ha-ip>:8000/thingspeak`.
-- Die Keys liegen in `/data/zendure_thingspeak_config.json` und überstehen
-  Updates wie die übrigen Einstellungen.
+- Die Einrichtungsseiten sind `http://<ha-ip>:8000/thingspeak` und
+  `http://<ha-ip>:8000/thingsboard`.
+- Die Zugangsdaten liegen in `/data/zendure_thingspeak_config.json` bzw.
+  `/data/zendure_thingsboard_config.json` und überstehen Updates wie die
+  übrigen Einstellungen.
 - Wegen `-q` erscheinen im Log der App keine Erfolgsmeldungen, nur Fehler.
-  Ob Werte ankommen, siehst du direkt im ThingSpeak-Channel.
-- Home Assistant braucht Internetzugang zu `api.thingspeak.com`. Der Shelly
+  Ob Werte ankommen, siehst du direkt im ThingSpeak-Channel bzw. in ThingsBoard.
+- Home Assistant braucht Internetzugang zu `api.thingspeak.com` bzw. zum
+  ThingsBoard-Server (bei eigenem Server im Heimnetz entfällt das). Der Shelly
   und die Zendure-Geräte nicht.
 
 ## Troubleshooting-Log (aufgetretene Probleme & Lösungen)

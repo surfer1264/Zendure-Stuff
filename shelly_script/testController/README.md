@@ -46,6 +46,25 @@ geschlossener Regelkreis, echte Logik, keine Annahmen mehr über
   unten)
 - `tageslauf.cmd` – Beispiel-Startskript (Windows), setzt alle Env-Vars für
   einen kalibrierten vollen Tag und räumt alte Ergebnisdateien vorher auf
+- `2hlauf0800.cmd`, `14hlauf0600.cmd` – weitere Startskripte nach demselben
+  Muster: 2 Stunden ab 08:00 bzw. 14 Stunden ab 06:00 simulierter Zeit. Wie
+  `tageslauf.cmd` erzeugen sie danach den Report und legen Log, CSV und
+  Report in einem eigenen Ordner mit Zeitstempel ab
+- `generate_charts.js` – erzeugt aus `closed_loop_result.csv` einen
+  HTML-Report (`report.html`) mit drei SVG-Diagrammen: Regelgüte
+  (Netzsaldo), Leistungskurven der Solarflows und SoC-Verlauf. Aufruf:
+  `node generate_charts.js [closed_loop_result.csv] [report.html]`
+- `patch.cmd` – Abkürzung für `patch_for_mock.js` (Windows): erwartet die
+  aktuelle Controller-Quelle als `zerooutput_multi_kvs.js` im Ordner,
+  erzeugt daraus `zdmc_test.js` und löscht die Kopie danach
+- `pv_curves.html`, `hauslast_curves.html`, `mock_pv_last_kurven.html` –
+  Ansicht der im Mock-Server hinterlegten PV- und Hauslast-Kurven, zum
+  Nachvollziehen der Testbedingungen
+
+> **Dateiname:** Im Repository heißt der Controller
+> [`zerooutput_multi_kvs_src.js`](../Controller/zerooutput_multi_kvs_src.js).
+> Wo hier `zerooutput_multi_kvs.js` steht, ist eine Kopie dieser Quellfassung
+> (nicht die `_mini`-Fassung) unter diesem Namen gemeint.
 
 ## Ausführen
 

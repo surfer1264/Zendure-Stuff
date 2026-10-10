@@ -1,5 +1,5 @@
 name: "Zendure Dashboard Proxy"
-version: "3.5.3"
+version: "3.5.4"
 slug: "zendure_proxy"
 description: "Lokaler Proxy für das Zendure-Dashboard (löst CORS-Problem der Shelly-Firmware)"
 arch:

@@ -26,6 +26,7 @@ La version actuelle et toutes les modifications figurent dans le [changelog](CHA
 - [Tableau de bord](#tableau-de-bord)
 - [Messages](#messages)
 - [Charge manuelle et arrêt automatique](#charge-manuelle-et-arrêt-automatique)
+- [Blocage de la décharge en cas de sous-tension](#blocage-de-la-décharge-en-cas-de-sous-tension)
 - [Dernière charge complète](#dernière-charge-complète)
 - [Passer des anciens scripts](#passer-des-anciens-scripts)
 - [Besoin en mémoire](#besoin-en-mémoire)
@@ -78,11 +79,11 @@ Le [Configurator](../Multiconfigurator/readme_FR.md) demande tout ce qu'il faut,
 
 Le dossier [Deploy](Deploy) contient des outils qui insèrent votre propre configuration, réduisent le script et le téléversent :
 
-1. Placer votre configuration dans un fichier séparé, par exemple `myconfig_zenDash_watch.js`. Il ne contient que le bloc `let CONFIG = { ... };`.
-2. Renseigner dans `deploy.cmd` : l'IP du Shelly, le nom du script, `QUELLE=..\zendash_watch_src.js` et `MEINE_CONFIG=myconfig_zenDash_watch.js`.
+1. **Créer vous-même le fichier `myconfig.js`** dans le dossier `Deploy` (à côté de `deploy.cmd`) – il n'est volontairement pas dans le dépôt. Il ne contient que votre bloc `let CONFIG = { ... };`, le plus simple via « 💾 Enregistrer seulement le bloc CONFIG » dans le [Configurator](../Multiconfigurator/readme_FR.md#les-fonctions-de-létape-résultat). `myconfig.js` figure dans le `.gitignore` : vos identifiants ne finissent donc pas dans un commit.
+2. Renseigner dans `deploy.cmd` : `SHELLY_IP` (Shelly tableau de bord) et `SKRIPTNAME` (par défaut `zd`). `QUELLE=..\zendash_watch_src.js` et `MEINE_CONFIG=myconfig.js` sont déjà préremplis.
 3. Lancer `deploy.cmd`.
 
-> **Important :** `deploy.cmd` prend toujours le bloc CONFIG de **votre** fichier. Les modifications faites directement dans `zendash_watch_src.js` seront écrasées.
+> **Important :** `deploy.cmd` prend toujours le bloc CONFIG de **votre** fichier. Les modifications faites directement dans `zendash_watch_src.js` seront écrasées. La version minifiée avec votre configuration est écrite dans `..\zendash_watch_mini.js` – donc par-dessus le fichier du dépôt. Ne pas committer cette modification, ou faire pointer `FERTIG` vers votre propre fichier.
 
 ### Après le démarrage
 
@@ -90,7 +91,7 @@ Un récapitulatif apparaît dans le journal du script (les sorties du script son
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.4.1 (Dashboard muss ebenfalls v3.4.1 sein)
+zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -133,7 +134,7 @@ devices: [
 | Réglage | Signification |
 |---|---|
 | `ip` | Adresse IP de la batterie |
-| `label` | Nom pour l'affichage et les messages. Seuls les 6 premiers caractères apparaissent dans le récapitulatif du matin/soir. |
+| `label` | Nom pour l'affichage et les messages. Seuls les 10 premiers caractères apparaissent dans le récapitulatif du matin/soir. |
 | `minSoc`, `maxSoc`, `maxInputPower`, `maxOutput`, `dischargeAllowed`, `reverse` | Valeurs comme dans le Controller. Le tableau de bord les utilise comme valeurs de départ et limites des curseurs. |
 | `inputLimit` | Puissance de charge depuis le réseau au démarrage, normalement `0`. N'existe pas dans le CONFIG du Controller – là, la valeur ne vient que du KVS. |
 | `watch` | `true` : le watchdog surveille cet appareil. `false` : il n'apparaît que dans le tableau de bord. En l'absence de l'entrée, `true` s'applique. |
@@ -194,7 +195,7 @@ watchdog: {
 | `enabled` | Watchdog activé ou désactivé |
 | `intervalSec` | Fréquence de vérification du watchdog lorsque le tableau de bord n'est pas ouvert, en secondes (au moins 60) |
 | `vollSchwelle` / `entladeReset` | Message « pleine » à partir de cet état de charge. Le message suivant ne vient qu'après que la batterie est passée entre-temps sous `entladeReset`. |
-| `minVoltWarn` / `minVoltReset` | Avertissement lorsqu'une cellule descend sous cette tension (volts). Nouvel avertissement seulement après être repassée au-dessus de `minVoltReset` entre-temps. |
+| `minVoltWarn` / `minVoltReset` | Avertissement lorsqu'une cellule descend sous cette tension (volts). Nouvel avertissement seulement après être repassée au-dessus de `minVoltReset` entre-temps. En plus, le Watchdog **bloque** alors la décharge de cette batterie (voir [Blocage de la décharge en cas de sous-tension](#blocage-de-la-décharge-en-cas-de-sous-tension)). |
 | `tempWarn` / `tempReset` | Avertissement lorsque la température de l'appareil dépasse `tempWarn` (°C). Nouvel avertissement seulement après être repassée sous `tempReset` entre-temps. |
 | `offlineAlarmMin` | Message lorsqu'une batterie n'est plus joignable depuis ce nombre de **minutes** |
 | `sunriseOffset` / `sunsetOffset` | Décalage du récapitulatif du matin et du soir par rapport au lever et au coucher du soleil, en minutes, p. ex. `30` = une demi-heure plus tard |
@@ -245,11 +246,11 @@ Le tableau de bord est une page web qui récupère ses données auprès de ce sc
 
 L'interface pour vos propres intégrations (p. ex. Home Assistant, Node-RED) est documentée dans la [description de l'API](API.md) (allemand).
 
-### Historique dans ThingSpeak
+### Historique dans ThingSpeak ou ThingsBoard
 
-Le proxy peut en plus envoyer chaque minute les mesures de vos batteries à ThingSpeak. Vous y obtenez un historique permanent avec des graphiques. L'envoi est facultatif et ne nécessite qu'un fichier supplémentaire à côté du proxy. Tant qu'un tableau de bord est ouvert, le proxy se contente de lire ses requêtes. Si l'envoi est désactivé, il n'adresse aucune requête au script.
+Le proxy peut en plus envoyer chaque minute les mesures de vos batteries à ThingSpeak et/ou ThingsBoard. Vous y obtenez un historique permanent avec des graphiques. L'envoi est facultatif et ne nécessite qu'un fichier supplémentaire à côté du proxy. Tant qu'un tableau de bord est ouvert, le proxy se contente de lire ses requêtes. Si l'envoi est désactivé, il n'adresse aucune requête au script.
 
-👉 **[Configurer l'envoi vers ThingSpeak](thingspeak.md)** (allemand)
+👉 **[Configurer l'envoi vers ThingSpeak](thingspeak.md)** · **[Configurer l'envoi vers ThingsBoard](thingsboard.md)** (allemand)
 
 ---
 
@@ -263,6 +264,7 @@ Le script peut envoyer les messages suivants. Les textes des messages sont en al
 | 🔋 SF2400 voll (99%) | l'état de charge a atteint `vollSchwelle` (pleine) |
 | 🔥 SF800 Temp hoch: 46.2C | température de l'appareil au-dessus de `tempWarn` (température élevée) |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | une cellule sous `minVoltWarn`, avec le numéro de série du pack |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | juste après : décharge de cette batterie désactivée dans le Controller, voir [blocage de la décharge](#blocage-de-la-décharge-en-cas-de-sous-tension) |
 | ❌ SF800: nicht erreichbar seit 10 min | la batterie ne répond plus (injoignable depuis 10 min) |
 | ❌ SF800: Report unlesbar seit 10 min | la batterie répond, mais avec des données incomplètes ou inutilisables (rapport illisible) |
 | ✅ SF800: wieder erreichbar | après l'un des deux messages précédents (de nouveau joignable) |
@@ -288,6 +290,17 @@ Dans le tableau de bord, vous pouvez faire charger une batterie manuellement dep
 Bon à savoir :
 - Le script ne garde l'état précédent qu'en mémoire vive. Si le Shelly redémarre pendant la charge manuelle, la décharge et la charge réseau sont **réactivées** à la fin.
 - Vous pouvez arrêter vous-même la charge manuelle à tout moment dans le tableau de bord.
+
+---
+
+## Blocage de la décharge en cas de sous-tension
+
+Si la cellule la plus faible d'une batterie surveillée (`watch: true`) descend sous `minVoltWarn`, le Watchdog désactive la décharge de cette batterie dans le Controller (KVS `zdmc_dev{numéro}_dischargeAllowed = 0`) et signale « ⛔ … Entladen gesperrt wegen Unterschreitung minVol ». La charge reste possible.
+
+- Condition : le Watchdog **et** la partie tableau de bord (`api.enabled`) sont activés, et le Controller a `kvsEnabled: true`.
+- Le blocage ne se lève **pas** tout seul. Vous ne pouvez le lever qu'à la main avec l'interrupteur « Décharge autorisée » du [tableau de bord](dashboard.md#bedienung) – idéalement une fois la batterie rechargée.
+- Si une charge manuelle est en cours, la décharge reste bloquée après la fin de celle-ci au lieu de rétablir l'état précédent.
+- Pour les batteries surveillées, le tableau de bord affiche le seuil de blocage après la cellule la plus faible, p. ex. « min 3,31 V (Sperre < 2,90 V) ».
 
 ---
 

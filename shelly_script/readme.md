@@ -11,7 +11,7 @@ Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit oh
 ## 👉 Hier starten
 
 1. **[Helfer herunterladen](https://github.com/surfer1264/Zendure-Stuff/releases/latest)** (Windows oder Mac mit Apple Silicon) und starten.
-2. Im Browser öffnet sich der Configurator. **„Neu konfigurieren“** wählen und die Fragen beantworten.
+2. Im Browser öffnet sich der Configurator. **„Neu konfigurieren oder manuell updaten“** wählen und die Fragen beantworten.
 3. Am Ende **„⚡ Direkt hochladen“** – fertig.
 
 Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen) steht beim **[Configurator](Multiconfigurator/readme.md)** · [English](Multiconfigurator/readme_EN.md) · [Français](Multiconfigurator/readme_FR.md)
@@ -22,7 +22,8 @@ Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen)
 |---|---|---|
 | **Controller-Shelly** | [Controller](Controller/readme.md) | regelt Laden und Entladen deiner Speicher |
 | **Dashboard-Shelly** | [zenDash-API + Watchdog](zendash_watch_API_ZenSDK/readme.md) | liefert die Daten fürs Dashboard und meldet Akku voll, Übertemperatur, Unterspannung oder Ausfälle |
-| **Multi-Configurator** | [Configurator](Multiconfigurator/readme.md) | Erstkonfiguration, Update, Logfile Generierung |
+
+Dazu kommt der **[Configurator](Multiconfigurator/readme.md)** mit Helfer auf deinem Rechner: Er übernimmt Erstkonfiguration, Update und Log-Aufzeichnung für beide Shellys.
 
 Auf jedem Shelly läuft **genau ein Script**. Shellys haben wenig Script-Speicher – zwei Scripte auf einem Gerät können sich gegenseitig zum Absturz bringen.
 
@@ -34,6 +35,8 @@ Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webse
 |---|---|
 | [Script_poller](Script_poller/readme.md) | Langzeit-Messung von Speicher und CPU eines Shelly-Scripts, Log-Mitschnitt über Stunden (für Fehlersuche und Entwicklung) |
 | [testController](testController/README.md) | Test-Umgebung für den Controller (für Entwickler) |
+| [thingsboard](thingsboard) | fertige Dashboards und Regelketten zum Import in ThingsBoard, passend zum [ThingsBoard-Upload](zendash_watch_API_ZenSDK/thingsboard.md) |
+| [Einordnung](Einordnung.md) | Vergleich mit anderen Multi-Device-Lösungen (ioBroker, Z-HA, EMS SolarFlow …) |
 
 ## Veraltet – bitte nicht mehr verwenden
 
@@ -44,7 +47,7 @@ Diese Ordner bleiben nur zum Nachschlagen erhalten und werden nicht mehr weitere
 | AkkuWatchDogMulti, WatchdogZenSDK | [zenDash-API + Watchdog](zendash_watch_API_ZenSDK/readme.md) |
 | zendash | [zenDash-API + Watchdog](zendash_watch_API_ZenSDK/readme.md) |
 | Upload_Controller | [Configurator mit Helfer](Multiconfigurator/readme.md) (Direkt-Upload und Update) |
-| Datenmonitor | – (rudimentärer Datenmonitor per MQTT und zenSDK, ohne Support) |
+| [Datenmonitor](Datenmonitor/readme.md) | – (rudimentärer Datenmonitor per MQTT und zenSDK, ohne Support) |
 
 ## Begriffe
 

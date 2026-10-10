@@ -110,7 +110,7 @@ eigenen Eingabe zusätzlich sofort.
 
 ```json
 {
-  "version": "3.4.1",
+  "version": "3.5.4",
   "setpoint": -20,
   "hysteresis": 12,
   "dischargeFixed": 0,

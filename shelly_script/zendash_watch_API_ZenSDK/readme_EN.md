@@ -26,6 +26,7 @@ The current version and all changes are listed in the [changelog](CHANGELOG.md).
 - [Dashboard](#dashboard)
 - [Messages](#messages)
 - [Manual charging and auto-stop](#manual-charging-and-auto-stop)
+- [Discharge lock on undervoltage](#discharge-lock-on-undervoltage)
 - [Last full charge](#last-full-charge)
 - [Switching from the old scripts](#switching-from-the-old-scripts)
 - [Memory usage](#memory-usage)
@@ -78,11 +79,11 @@ The [Configurator](../Multiconfigurator/readme_EN.md) asks for everything, takes
 
 The [Deploy](Deploy) folder contains tools that insert your own configuration, minify the script and upload it:
 
-1. Put your configuration into a separate file, for example `myconfig_zenDash_watch.js`. It only contains the `let CONFIG = { ... };` block.
-2. Enter in `deploy.cmd`: the Shelly's IP, the script name, `QUELLE=..\zendash_watch_src.js` and `MEINE_CONFIG=myconfig_zenDash_watch.js`.
+1. **Create the file `myconfig.js` yourself** in the `Deploy` folder (next to `deploy.cmd`) – it is deliberately not in the repository. It only contains your `let CONFIG = { ... };` block, easiest via "💾 Save CONFIG block only" in the [Configurator](../Multiconfigurator/readme_EN.md#functions-in-the-result-step). `myconfig.js` is listed in `.gitignore`, so your credentials do not end up in a commit.
+2. Enter in `deploy.cmd`: `SHELLY_IP` (dashboard Shelly) and `SKRIPTNAME` (default `zd`). `QUELLE=..\zendash_watch_src.js` and `MEINE_CONFIG=myconfig.js` are already preset.
 3. Run `deploy.cmd`.
 
-> **Important:** `deploy.cmd` always takes the CONFIG block from **your** file. Changes you make directly in `zendash_watch_src.js` will be overwritten.
+> **Important:** `deploy.cmd` always takes the CONFIG block from **your** file. Changes you make directly in `zendash_watch_src.js` will be overwritten. The minified version with your configuration is written to `..\zendash_watch_mini.js` – i.e. over the file from the repository. Do not commit this change, or point `FERTIG` to a file of your own.
 
 ### After starting
 
@@ -90,7 +91,7 @@ An overview appears in the script log (the script output is in German). Check th
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.4.1 (Dashboard muss ebenfalls v3.4.1 sein)
+zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -133,7 +134,7 @@ devices: [
 | Setting | Meaning |
 |---|---|
 | `ip` | IP address of the battery |
-| `label` | Name for display and messages. Only the first 6 characters appear in the morning/evening update. |
+| `label` | Name for display and messages. Only the first 10 characters appear in the morning/evening update. |
 | `minSoc`, `maxSoc`, `maxInputPower`, `maxOutput`, `dischargeAllowed`, `reverse` | Values as in the Controller. The dashboard uses them as start values and limits for the sliders. |
 | `inputLimit` | Charging power from the grid at startup, normally `0`. Does not exist in the Controller CONFIG – there the value only comes via the KVS. |
 | `watch` | `true`: the watchdog monitors this device. `false`: it only appears in the dashboard. If the entry is missing, `true` applies. |
@@ -194,7 +195,7 @@ watchdog: {
 | `enabled` | Watchdog on or off |
 | `intervalSec` | How often the watchdog checks when the dashboard is not open, in seconds (at least 60) |
 | `vollSchwelle` / `entladeReset` | "Full" message from this state of charge. The next message only comes after the battery has dropped below `entladeReset` in between. |
-| `minVoltWarn` / `minVoltReset` | Warning when a cell drops below this voltage (volts). Another warning only after it has been above `minVoltReset` again in between. |
+| `minVoltWarn` / `minVoltReset` | Warning when a cell drops below this voltage (volts). Another warning only after it has been above `minVoltReset` again in between. In addition, the Watchdog then **blocks** discharging of this battery (see [Discharge lock on undervoltage](#discharge-lock-on-undervoltage)). |
 | `tempWarn` / `tempReset` | Warning when the device temperature exceeds `tempWarn` (°C). Another warning only after it has been below `tempReset` in between. |
 | `offlineAlarmMin` | Message when a battery has been unreachable for this many **minutes** |
 | `sunriseOffset` / `sunsetOffset` | Shift of the morning and evening update relative to sunrise and sunset in minutes, e.g. `30` = half an hour later |
@@ -245,11 +246,11 @@ The dashboard is a web page that gets its data from this script. You open it via
 
 The interface for your own integrations (e.g. Home Assistant, Node-RED) is documented in the [API description](API.md) (German).
 
-### History in ThingSpeak
+### History in ThingSpeak or ThingsBoard
 
-The proxy can additionally send the readings of your batteries to ThingSpeak every minute. There you get a permanent history with charts. The upload is optional and only needs one additional file next to the proxy. As long as a dashboard is open, the proxy only reads along with its queries. If the upload is switched off, it does not send a single request to the script.
+The proxy can additionally send the readings of your batteries to ThingSpeak and/or ThingsBoard every minute. There you get a permanent history with charts. The upload is optional and only needs one additional file next to the proxy. As long as a dashboard is open, the proxy only reads along with its queries. If the upload is switched off, it does not send a single request to the script.
 
-👉 **[Set up the ThingSpeak upload](thingspeak.md)** (German)
+👉 **[Set up the ThingSpeak upload](thingspeak.md)** · **[Set up the ThingsBoard upload](thingsboard.md)** (German)
 
 ---
 
@@ -263,6 +264,7 @@ The script can send the following messages. The message texts are in German; the
 | 🔋 SF2400 voll (99%) | state of charge has reached `vollSchwelle` (full) |
 | 🔥 SF800 Temp hoch: 46.2C | device temperature above `tempWarn` (temperature high) |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | a cell below `minVoltWarn`, with the serial number of the battery pack |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | right after that: discharging of this battery switched off in the Controller, see [discharge lock](#discharge-lock-on-undervoltage) |
 | ❌ SF800: nicht erreichbar seit 10 min | battery no longer responds (unreachable for 10 min) |
 | ❌ SF800: Report unlesbar seit 10 min | battery responds, but with incomplete or unusable data (report unreadable) |
 | ✅ SF800: wieder erreichbar | after one of the two previous messages (reachable again) |
@@ -288,6 +290,17 @@ In the dashboard you can have a battery charged manually from the grid. For this
 Good to know:
 - The script only keeps the previous state in RAM. If the Shelly restarts during manual charging, discharging and grid charging are switched **on** again when it ends.
 - You can end manual charging yourself in the dashboard at any time.
+
+---
+
+## Discharge lock on undervoltage
+
+If the weakest cell of a monitored battery (`watch: true`) drops below `minVoltWarn`, the Watchdog switches off discharging of this battery in the Controller (KVS `zdmc_dev{number}_dischargeAllowed = 0`) and reports "⛔ … Entladen gesperrt wegen Unterschreitung minVol". Charging remains possible.
+
+- Requirement: Watchdog **and** the dashboard part (`api.enabled`) are switched on, and the Controller has `kvsEnabled: true`.
+- The lock is **not** lifted automatically. You can only release it by hand with the "Discharge allowed" switch in the [dashboard](dashboard.md#bedienung) – ideally only once the battery has been recharged.
+- If manual charging is running, discharging stays locked after it ends instead of restoring the previous state.
+- For monitored batteries, the dashboard shows the lock threshold behind the weakest cell, e.g. "min 3,31 V (Sperre < 2,90 V)".
 
 ---
 

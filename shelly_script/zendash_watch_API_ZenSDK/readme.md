@@ -26,6 +26,7 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 - [Dashboard](#dashboard)
 - [Nachrichten](#nachrichten)
 - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
+- [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
 - [Letzte Vollladung](#letzte-vollladung)
 - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
 - [Speicherbedarf](#speicherbedarf)
@@ -78,11 +79,11 @@ Der [Configurator](../Multiconfigurator/readme.md) fragt alles ab, übernimmt Ge
 
 Im Ordner [Deploy](Deploy) liegen Werkzeuge, die deine eigene Konfiguration einsetzen, das Script verkleinern und hochladen:
 
-1. Deine Konfiguration in eine eigene Datei legen, zum Beispiel `myconfig_zenDash_watch.js`. Sie enthält nur den `let CONFIG = { ... };`-Block.
-2. In `deploy.cmd` eintragen: IP des Shelly, Script-Name, `QUELLE=..\zendash_watch_src.js` und `MEINE_CONFIG=myconfig_zenDash_watch.js`.
+1. Im Ordner `Deploy` (neben `deploy.cmd`) die Datei **`myconfig.js` selbst anlegen** – sie liegt bewusst nicht im Repository. Sie enthält nur deinen `let CONFIG = { ... };`-Block, am einfachsten über „💾 Nur CONFIG-Block speichern“ im [Configurator](../Multiconfigurator/readme.md#die-funktionen-im-ergebnis-schritt). `myconfig.js` steht in der `.gitignore`, deine Zugangsdaten landen also nicht in einem Commit.
+2. In `deploy.cmd` eintragen: `SHELLY_IP` (Dashboard-Shelly) und `SKRIPTNAME` (Standard `zd`). `QUELLE=..\zendash_watch_src.js` und `MEINE_CONFIG=myconfig.js` sind schon vorbelegt.
 3. `deploy.cmd` starten.
 
-> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Änderungen, die du direkt in `zendash_watch_src.js` machst, werden dabei überschrieben.
+> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Änderungen, die du direkt in `zendash_watch_src.js` machst, werden dabei überschrieben. Die verkleinerte Fassung mit deiner Konfiguration schreibt es nach `..\zendash_watch_mini.js` – also über die Datei aus dem Repository. Diese Änderung nicht committen oder `FERTIG` auf eine eigene Datei umstellen.
 
 ### Nach dem Start
 
@@ -90,7 +91,7 @@ Im Log des Scripts erscheint eine Übersicht. Prüfe dort, ob alles so eingestel
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.4.1 (Dashboard muss ebenfalls v3.4.1 sein)
+zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -133,7 +134,7 @@ devices: [
 | Einstellung | Bedeutung |
 |---|---|
 | `ip` | IP-Adresse des Speichers |
-| `label` | Name für Anzeige und Nachrichten. Im Morgen-/Abend-Update erscheinen nur die ersten 6 Zeichen. |
+| `label` | Name für Anzeige und Nachrichten. Im Morgen-/Abend-Update erscheinen nur die ersten 10 Zeichen. |
 | `minSoc`, `maxSoc`, `maxInputPower`, `maxOutput`, `dischargeAllowed`, `reverse` | Werte wie im Controller. Das Dashboard nutzt sie als Startwerte und Grenzen für die Regler. |
 | `inputLimit` | Ladeleistung aus dem Netz beim Start, normalerweise `0`. Gibt es im Controller-CONFIG nicht – dort kommt der Wert nur über die KVS. |
 | `watch` | `true`: Der Watchdog überwacht dieses Gerät. `false`: Es erscheint nur im Dashboard. Fehlt der Eintrag, gilt `true`. |
@@ -194,7 +195,7 @@ watchdog: {
 | `enabled` | Watchdog an oder aus |
 | `intervalSec` | Wie oft der Watchdog ohne geöffnetes Dashboard nachschaut, in Sekunden (mindestens 60) |
 | `vollSchwelle` / `entladeReset` | Meldung „voll“ ab diesem Ladestand. Die nächste Meldung kommt erst, wenn der Akku zwischendurch unter `entladeReset` gefallen ist. |
-| `minVoltWarn` / `minVoltReset` | Warnung, wenn eine Zelle unter diese Spannung (Volt) fällt. Erneute Warnung erst, wenn sie zwischendurch wieder über `minVoltReset` lag. |
+| `minVoltWarn` / `minVoltReset` | Warnung, wenn eine Zelle unter diese Spannung (Volt) fällt. Erneute Warnung erst, wenn sie zwischendurch wieder über `minVoltReset` lag. Zusätzlich **sperrt** der Watchdog dann das Entladen dieses Speichers (siehe [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)). |
 | `tempWarn` / `tempReset` | Warnung bei Gerätetemperatur über `tempWarn` (°C). Erneute Warnung erst, wenn sie zwischendurch unter `tempReset` lag. |
 | `offlineAlarmMin` | Meldung, wenn ein Speicher so viele **Minuten** nicht erreichbar ist |
 | `sunriseOffset` / `sunsetOffset` | Verschiebung des Morgen- und Abend-Updates gegenüber Sonnenauf- und -untergang in Minuten, z. B. `30` = eine halbe Stunde später |
@@ -245,11 +246,11 @@ Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Du öffn
 
 Die Schnittstelle für eigene Anbindungen (z. B. Home Assistant, Node-RED) ist in der [API-Beschreibung](API.md) dokumentiert.
 
-### Verlauf in ThingSpeak
+### Verlauf in ThingSpeak oder ThingsBoard
 
-Der Proxy kann die Messwerte deiner Speicher zusätzlich jede Minute an ThingSpeak senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen. Der Upload ist optional und braucht nur eine zusätzliche Datei neben dem Proxy. Solange ein Dashboard offen ist, liest der Proxy dessen Abfragen nur mit. Ist der Upload ausgeschaltet, stellt er keine einzige Anfrage an das Script.
+Der Proxy kann die Messwerte deiner Speicher zusätzlich jede Minute an ThingSpeak und/oder ThingsBoard senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen. Der Upload ist optional und braucht nur eine zusätzliche Datei neben dem Proxy. Solange ein Dashboard offen ist, liest der Proxy dessen Abfragen nur mit. Ist der Upload ausgeschaltet, stellt er keine einzige Anfrage an das Script.
 
-👉 **[ThingSpeak-Upload einrichten](thingspeak.md)**
+👉 **[ThingSpeak-Upload einrichten](thingspeak.md)** · **[ThingsBoard-Upload einrichten](thingsboard.md)**
 
 ---
 
@@ -263,6 +264,7 @@ Diese Nachrichten kann das Script verschicken:
 | 🔋 SF2400 voll (99%) | Ladestand hat die `vollSchwelle` erreicht |
 | 🔥 SF800 Temp hoch: 46.2C | Gerätetemperatur über `tempWarn` |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | eine Zelle unter `minVoltWarn`, mit Seriennummer des Akkupacks |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | direkt danach: Entladen für diesen Speicher im Controller abgeschaltet, siehe [Entladesperre](#entladesperre-bei-unterspannung) |
 | ❌ SF800: nicht erreichbar seit 10 min | Speicher antwortet nicht mehr |
 | ❌ SF800: Report unlesbar seit 10 min | Speicher antwortet, aber mit unvollständigen oder unbrauchbaren Daten |
 | ✅ SF800: wieder erreichbar | nach einer der beiden vorigen Meldungen |
@@ -288,6 +290,17 @@ Im Dashboard kannst du einen Speicher manuell aus dem Netz laden lassen. Das Scr
 Gut zu wissen:
 - Den vorherigen Zustand merkt sich das Script nur im Arbeitsspeicher. Startet der Shelly während des manuellen Ladens neu, werden beim Beenden Entladen und Laden vom Netz wieder **eingeschaltet**.
 - Du kannst das manuelle Laden jederzeit im Dashboard selbst beenden.
+
+---
+
+## Entladesperre bei Unterspannung
+
+Fällt bei einem überwachten Speicher (`watch: true`) die schwächste Zelle unter `minVoltWarn`, schaltet der Watchdog im Controller das Entladen dieses Speichers ab (KVS `zdmc_dev{Nummer}_dischargeAllowed = 0`) und meldet „⛔ … Entladen gesperrt wegen Unterschreitung minVol“. Laden bleibt möglich.
+
+- Voraussetzung: Watchdog **und** Dashboard-Teil (`api.enabled`) sind eingeschaltet, und der Controller hat `kvsEnabled: true`.
+- Die Sperre hebt sich **nicht** von selbst auf. Freigeben kannst du sie nur von Hand mit dem Schalter „Entladen erlaubt“ im [Dashboard](dashboard.md#bedienung) – am besten erst, wenn der Akku wieder nachgeladen ist.
+- Läuft gerade manuelles Laden, bleibt das Entladen nach dessen Ende gesperrt, statt den vorherigen Zustand wiederherzustellen.
+- Im Dashboard steht bei überwachten Speichern hinter der schwächsten Zelle die Sperrschwelle, z. B. „min 3,31 V (Sperre < 2,90 V)“.
 
 ---
 

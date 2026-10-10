@@ -73,7 +73,7 @@ Il existe deux possibilités. L'**assistant local** (fichier EXE) est recommand�
 
 ### Recommandé : l'assistant local (installateur EXE)
 
-Un petit programme pour ton ordinateur. Il ouvre automatiquement le configurateur dans le navigateur et se charge de la connexion à tes Shelly. Pas d'installation, pas besoin de Python – télécharger, lancer, terminé.
+Un petit programme pour ton ordinateur. Il ouvre automatiquement le configurateur dans le navigateur et se charge de la connexion à tes Shelly. Rien à installer, pas même Python – télécharger, lancer, terminé.
 
 👉 **[Version actuelle (latest release)](https://github.com/surfer1264/Zendure-Stuff/releases/latest)**
 
@@ -81,12 +81,12 @@ Téléchargements directs :
 
 * [Windows (64 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)
 * [Windows (32 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)
-* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)
+* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – uniquement Mac avec Apple Silicon (M1 ou plus récent)
 
 Au premier lancement, ton système d'exploitation affiche un avertissement, car le fichier n'est pas signé :
 
 * **Windows :** à « Windows a protégé votre ordinateur » (SmartScreen), clique sur « Informations complémentaires » → « Exécuter quand même ».
-* **macOS :** clic droit sur le fichier → « Ouvrir » → confirme à nouveau « Ouvrir » dans la boîte de dialogue.
+* **macOS :** clic droit sur le fichier → « Ouvrir » → confirme à nouveau « Ouvrir » dans la boîte de dialogue. Si cela ne fonctionne pas (fréquent à partir de macOS Sequoia), consulte le [guide macOS détaillé](local_helper/mcos_helper.md) (allemand).
 
 Si tu veux t'assurer que le fichier n'a pas été modifié, tu peux le [vérifier](#vérifier-lintégrité-du-téléchargement).
 
@@ -115,7 +115,7 @@ Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« 
 1. **Démarrage** – choisir « Nouvelle configuration ou mise à jour manuelle »
 2. **Fonctions** – sélectionner Controller, zenDash-API et/ou Watchdog et saisir les **adresses IP de tes deux Shelly**. Si tu as déjà une configuration, tu peux l'[importer](#importer-une-configuration-existante) ici au lieu de tout ressaisir.
 3. **Appareils** – tes batteries Zendure avec IP, puissance maximale et minSoc/maxSoc ; pour chaque appareil, si le Watchdog doit le surveiller. **« Tester »** à côté de l'IP ouvre le rapport de la batterie (`/properties/report`) dans un nouvel onglet – tu vois ainsi tout de suite si l'IP est correcte
-4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT ou D0, everHome EcoTracker, Tasmota, Shelly 3EM sans Pro) Pour un compteur JSON, des modèles sont proposés (Zendure 3CT, Zendure D0, everHome EcoTracker, Shelly 3EM sans Pro, Tasmota) ; pour le D0 et l’EcoTracker, le modèle affiche une remarque de mise en place (D0 : activer une fois l’interface locale via HEMS dans l’app Zendure ; EcoTracker : activer « Serveur HTTP local » dans l’app everHome) ; il suffit ensuite de remplacer `<IP>` – pour Tasmota aussi `<Gerät>`. Les champs imbriqués se saisissent avec des points, par ex. `StatusSNS.DVS7420.power`. « Tester » ouvre l'URL ; l'aide dépliable « Comment trouver le nom du champ » explique quoi chercher dans la réponse.
+4. **Source réseau** – d'où vient la mesure de puissance réseau : le Controller tourne directement sur un Shelly Pro 3EM, un autre Pro 3EM du réseau, ou un compteur avec interface JSON (par ex. Zendure Smart Meter 3CT ou D0, everHome EcoTracker, Tasmota, Shelly 3EM sans Pro) Pour un compteur JSON, des modèles sont proposés (Zendure 3CT, Zendure D0, everHome EcoTracker, Shelly 3EM sans Pro, Tasmota) ; pour le D0 et l’EcoTracker, le modèle affiche une remarque de mise en place (D0 : activer une fois l’interface locale via HEMS dans l’app Zendure ; EcoTracker : activer « Serveur HTTP local » dans l’app everHome – l’activation via HEMS ne concerne que le compteur, tes batteries restent retirées du HEMS) ; il suffit ensuite de remplacer `<IP>` – pour Tasmota aussi `<Gerät>`. Les champs imbriqués se saisissent avec des points, par ex. `StatusSNS.DVS7420.power`. « Tester » ouvre l'URL ; l'aide dépliable « Comment trouver le nom du champ » explique quoi chercher dans la réponse.
 5. **Charge depuis le réseau** – quels appareils peuvent absorber le surplus d'autres installations
 6. **Notifications** – webhook, Signal ou WhatsApp ; commun au Controller et au Watchdog
 7. **Seuils du Watchdog** – uniquement avec le Watchdog : à partir de quand « batterie pleine », une tension de cellule trop basse et une température trop élevée sont signalées, et à partir de quelle valeur l'alerte est réarmée. Prérempli avec ta configuration importée ou les valeurs par défaut (99/90 %, 2,9/3,1 V, 45/30 °C).
@@ -145,7 +145,7 @@ Après le premier chargement réussi, l'assistant local mémorise les IP et les 
 
 Charge le script original actuel depuis GitHub, y insère ta configuration et te propose le script terminé sous forme de fichier. Il ne te reste plus qu'à le [charger manuellement](#charger-un-script-manuellement). Nécessite brièvement une connexion internet.
 
-Le nom du fichier contient la version du script, par ex. `zerooutput_multi_kvs_mini_v5.0.8.js` ou `zendash_watch_mini_v3.3.1.js`. Tu peux ainsi conserver plusieurs versions côte à côte et les [réimporter](#importer-une-configuration-existante) à tout moment.
+Le nom du fichier contient la version du script, par ex. `zerooutput_multi_kvs_mini_v5.1.7.js` ou `zendash_watch_mini_v3.5.4.js`. Tu peux ainsi conserver plusieurs versions côte à côte et les [réimporter](#importer-une-configuration-existante) à tout moment.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
@@ -294,9 +294,9 @@ Sans l'assistant local (les instructions sont aussi disponibles en section dépl
 1. À l'étape Résultat, clique sur « 🔗 Enregistrer le script complet depuis GitHub ».
 2. Ouvre l'IP du Shelly dans le navigateur (par ex. `http://192.168.178.151`) et va dans « Scripts ».
 3. Arrête et supprime un ancien script du même nom. **Supprime aussi les autres scripts** (voir [Plusieurs scripts](#plusieurs-scripts-sur-un-shelly)).
-4. « Add script », donne un nom, enregistre.
+4. « Create script » (« Add script » sur les anciens firmwares), donne un nom, enregistre.
 5. Ouvre le fichier téléchargé dans un éditeur de texte, copie tout et colle-le dans l'éditeur de code.
-6. « Save », puis « Start », et active **« Enable on boot »**.
+6. « Save », puis « Start », et active **« Run on startup »**.
 7. Vérifie dans le journal que le script tourne sans erreur.
 
 ### Vérifier la mémoire d'un Shelly
@@ -319,7 +319,7 @@ Pour le diagnostic – par exemple quand un script ne démarre pas ou se comport
 4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
 5. Clique sur **« Démarrer l'enregistrement »**.
 
-L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
+L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.1.7_261010-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
 
 * **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
 * **Sans filtre :** décoche la case – tous les messages du Shelly sont alors ajoutés, messages système compris. C'est nécessaire si le script ne démarre pas, car le Shelly signale les erreurs de démarrage ou le manque de mémoire sous forme de messages système. Les lignes du script sont alors marquées `[Script 8]`.

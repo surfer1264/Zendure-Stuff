@@ -15,6 +15,7 @@ Der Upload ist optional und läuft **unabhängig vom [ThingSpeak-Upload](thingsp
 - [Proxy einrichten](#proxy-einrichten)
 - [So arbeitet der Upload](#so-arbeitet-der-upload)
 - [Geräte und Werte](#geräte-und-werte)
+- [Vorlagen: Regelgüte](#vorlagen-regelgüte)
 - [Kontingent im Free-Tarif](#kontingent-im-free-tarif)
 - [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-im-free-plan-zu-bleiben)
 - [Eigener ThingsBoard-Server](#eigener-thingsboard-server)
@@ -115,6 +116,23 @@ Lehnt ThingsBoard eine Meldung ab oder ist das Internet weg, versucht der Proxy 
 ThingsBoard speichert keine Einheiten. Die trägst du im jeweiligen Dashboard-Widget ein.
 
 **Tipp für Dashboards:** Ein Zeitreihen-Widget kann Werte mehrerer Geräte in einem Diagramm zeigen, z. B. `electricLevel` aller Speicher übereinander oder `gridPower` zusammen mit `outputHomePower`. Anders als bei ThingSpeak brauchst du dafür kein Script.
+
+## Vorlagen: Regelgüte
+
+Im Ordner [`thingsboard`](../thingsboard) liegen fertige Vorlagen, mit denen ThingsBoard aus den hochgeladenen Werten die Regelgüte des Controllers auswertet:
+
+| Datei | Was es ist | Nutzt |
+|---|---|---|
+| [`regelgüte_echtzeit-klassifizierung.json`](../thingsboard/regelgüte_echtzeit-klassifizierung.json) | berechnetes Feld (Script): ordnet jeden Messwert einer Klasse zu – in Toleranz, kleiner/großer Bezug, kleiner/großer Export, gesättigt, ungeregelt | `gridPower`, `outputHomePower`, `outputPackPower` |
+| [`tägliche_regelgüte-statistik_shelly.json`](../thingsboard/tägliche_regelgüte-statistik_shelly.json) | berechnetes Feld (Aggregation): zählt die Klassen je Tag und bildet daraus einen Gütewert | Ergebnis der Echtzeit-Klassifizierung |
+| [`regelgüte.json`](../thingsboard/regelgüte.json) | Dashboard „Regelgüte“ mit Netzsaldo, Klassenverteilung und täglichem Gütewert | beide berechneten Felder |
+
+So gehst du vor:
+
+1. Erst die beiden berechneten Felder importieren (bei Gerät bzw. Geräteprofil unter **Calculated fields** → Import), zuerst die Echtzeit-Klassifizierung, dann die Tagesstatistik.
+2. Danach das Dashboard importieren (**Dashboards** → **+** → **Import dashboard**) und im Dashboard die Geräte bzw. Aliase auf deine Geräte aus [Geräte und Werte](#geräte-und-werte) stellen.
+
+Die Menünamen können je nach ThingsBoard-Version leicht abweichen. Berechnete Felder speichern ihre Ergebnisse als zusätzliche Werte – das zählt mit zum [Kontingent](#kontingent-im-free-tarif).
 
 ## Kontingent im Free-Tarif
 

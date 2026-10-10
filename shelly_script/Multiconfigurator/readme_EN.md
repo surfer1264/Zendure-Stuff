@@ -73,7 +73,7 @@ There are two ways. The **local helper** (EXE file) is recommended, because dire
 
 ### Recommended: the local helper (EXE installer)
 
-A small program for your computer. It opens the configurator in your browser automatically and handles the connection to your Shellys. No installation, no Python required – download, start, done.
+A small program for your computer. It opens the configurator in your browser automatically and handles the connection to your Shellys. Nothing to install, not even Python – download, start, done.
 
 👉 **[Current version (latest release)](https://github.com/surfer1264/Zendure-Stuff/releases/latest)**
 
@@ -81,12 +81,12 @@ Direct downloads:
 
 * [Windows (64-bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)
 * [Windows (32-bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)
-* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)
+* [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – Macs with Apple Silicon only (M1 or newer)
 
 On first start, your operating system shows a warning because the file is not signed:
 
 * **Windows:** At "Windows protected your PC" (SmartScreen), click "More info" → "Run anyway".
-* **macOS:** Right-click the file → "Open" → confirm "Open" again in the dialog.
+* **macOS:** Right-click the file → "Open" → confirm "Open" again in the dialog. If that does not work (common from macOS Sequoia on), see the [detailed macOS guide](local_helper/mcos_helper.md) (German).
 
 If you want to make sure the file is unmodified, you can [verify it](#verifying-the-download).
 
@@ -115,7 +115,7 @@ Start the helper. In the start dialog, choose **"Configure from scratch or updat
 1. **Start** – choose "Configure from scratch or update manually"
 2. **Functions** – select Controller, zenDash-API and/or Watchdog and enter the **IP addresses of your two Shellys**. If you already have a configuration, you can [import](#importing-an-existing-configuration) it here instead of entering everything again.
 3. **Devices** – your Zendure batteries with IP, maximum power and minSoc/maxSoc; for each device, whether the Watchdog should monitor it. **"Test"** next to the IP opens the battery's report (`/properties/report`) in a new tab – so you can see right away whether the IP is correct
-4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT or D0, everHome EcoTracker, Tasmota, Shelly 3EM without Pro) For a JSON meter there are templates (Zendure 3CT, Zendure D0, everHome EcoTracker, Shelly 3EM non-Pro, Tasmota); for D0 and EcoTracker the template shows a setup note (D0: enable the local interface once via HEMS in the Zendure app; EcoTracker: switch on “Local HTTP server” in the everHome app); then just replace `<IP>` – for Tasmota also `<Gerät>`. Enter nested fields with dots, e.g. `StatusSNS.DVS7420.power`. "Test" opens the URL; the expandable help "How to find the field name" explains what to look for in the response.
+4. **Grid source** – where the grid power reading comes from: the Controller runs directly on a Shelly Pro 3EM, another Pro 3EM in the network, or a meter with a JSON interface (e.g. Zendure Smart Meter 3CT or D0, everHome EcoTracker, Tasmota, Shelly 3EM without Pro) For a JSON meter there are templates (Zendure 3CT, Zendure D0, everHome EcoTracker, Shelly 3EM non-Pro, Tasmota); for D0 and EcoTracker the template shows a setup note (D0: enable the local interface once via HEMS in the Zendure app; EcoTracker: switch on “Local HTTP server” in the everHome app – enabling via HEMS only concerns the meter, your batteries still stay removed from HEMS); then just replace `<IP>` – for Tasmota also `<Gerät>`. Enter nested fields with dots, e.g. `StatusSNS.DVS7420.power`. "Test" opens the URL; the expandable help "How to find the field name" explains what to look for in the response.
 5. **Charge from grid** – which devices may absorb surplus from other systems
 6. **Notifications** – webhook, Signal or WhatsApp; shared by Controller and Watchdog
 7. **Watchdog thresholds** – Watchdog only: from when "battery full", low cell voltage and high temperature are reported, and from which value the message is armed again. Prefilled from your imported config or the defaults (99/90 %, 2.9/3.1 V, 45/30 °C).
@@ -145,7 +145,7 @@ After the first successful upload, the helper remembers the IPs and fills them i
 
 Loads the current original script from GitHub, inserts your configuration and offers you the finished script as a file. You then only need to [upload it manually](#uploading-a-script-manually). Requires a brief internet connection.
 
-The file name contains the script version, e.g. `zerooutput_multi_kvs_mini_v5.0.8.js` or `zendash_watch_mini_v3.3.1.js`. This lets you keep several versions side by side and [import](#importing-an-existing-configuration) them again at any time.
+The file name contains the script version, e.g. `zerooutput_multi_kvs_mini_v5.1.7.js` or `zendash_watch_mini_v3.5.4.js`. This lets you keep several versions side by side and [import](#importing-an-existing-configuration) them again at any time.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/d839f5b2-7433-4941-977c-a7c173ab7af2" />
 
@@ -294,9 +294,9 @@ Without the helper (the instructions are also available as an expandable section
 1. In the result step, click "🔗 Save complete script from GitHub".
 2. Open the Shelly's IP in your browser (e.g. `http://192.168.178.151`) and go to "Scripts".
 3. Stop and delete an old script of the same name. **Remove other scripts as well** (see [Several scripts](#several-scripts-on-one-shelly)).
-4. "Add script", give it a name, save.
+4. "Create script" ("Add script" on older firmware), give it a name, save.
 5. Open the downloaded file in a text editor, copy everything and paste it into the code editor.
-6. "Save", then "Start", and enable **"Enable on boot"**.
+6. "Save", then "Start", and enable **"Run on startup"**.
 7. Check in the log that the script runs without errors.
 
 ### Checking a Shelly's memory
@@ -319,7 +319,7 @@ For troubleshooting – for example when a script doesn't start or behaves oddly
 4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
 5. Click **"Start recording"**.
 
-The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.0.8_260927-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
+The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.1.7_261010-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
 
 * **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
 * **Unfiltered:** remove the tick – then all messages from the Shelly are added, including system messages. You need this if the script does not start, because the Shelly reports start errors or low memory as system messages. Lines from the script are then marked with `[Script 8]`.
