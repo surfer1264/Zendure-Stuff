@@ -61,7 +61,7 @@ Trois fonctions y tournent :
 
 Les fonctions se combinent librement – zenDash-API et Watchdog peuvent par exemple être ajoutés plus tard, quand le Controller tourne déjà. Les informations nécessaires à plusieurs fonctions (liste des appareils, source réseau, notifications) ne sont demandées **qu'une seule fois** et reportées correctement dans les deux scripts.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/487e63fb-734d-4bb1-b795-19f81921acb6" />
+<img width="907" height="1022" alt="image" src="https://github.com/user-attachments/assets/ba6ca290-07b9-4ab0-a26d-c24dddfad992" />
 
 Le configurateur est disponible en **allemand, anglais et français**.
 
