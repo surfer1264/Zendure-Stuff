@@ -13,4 +13,4 @@ myconfig.js
 *.exe
 thinkspeak
 Installer/
-_pycache_/
+__pycache__/
