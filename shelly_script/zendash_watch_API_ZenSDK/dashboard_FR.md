@@ -6,7 +6,8 @@
 
 Le tableau de bord affiche en direct la consommation réseau, l'état de charge et la puissance de vos batteries. Il permet aussi de modifier les réglages du Controller et de charger manuellement une batterie depuis le réseau.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/37575e2e-1564-44df-b77b-5641f87a4af6" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/576c25b9-15c4-432d-8fa4-969413884aa1" />
+
 
 **Sommaire**
 
