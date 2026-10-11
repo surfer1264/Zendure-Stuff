@@ -8,7 +8,7 @@
 
 Un script Shelly pour votre **Shelly tableau de bord**, qui assure deux tâches autour de vos batteries Zendure :
 
-- **API pour le tableau de bord** – Le [tableau de bord](dashboard.md) (allemand) affiche par ce biais la consommation réseau, l'état de charge et la puissance de vos batteries. Vous pouvez aussi modifier les réglages du Controller et lancer une charge manuelle.
+- **API pour le tableau de bord** – Le [tableau de bord](dashboard_FR.md) affiche par ce biais la consommation réseau, l'état de charge et la puissance de vos batteries. Vous pouvez aussi modifier les réglages du Controller et lancer une charge manuelle.
 - **Watchdog** – Le script vous prévient par Signal, WhatsApp ou webhook lorsqu'une batterie est pleine, devient trop chaude, qu'une cellule a une tension trop basse ou qu'une batterie n'est plus joignable. Vous recevez en plus un court récapitulatif le matin et le soir.
 
 Les deux parties peuvent être activées et désactivées séparément. Un seul script interroge les batteries et partage les données entre les deux tâches – cela économise la mémoire du Shelly et ménage vos appareils Zendure. Auparavant, il s'agissait de deux scripts séparés (zenDash API 2.x et AkkuVolt Watchdog 1.x) qui, ensemble, atteignaient la limite de mémoire du Shelly selon le nombre de batteries.
@@ -242,7 +242,7 @@ Dans le Controller, ce bloc s'appelle `signal`, ici `notify`. `enabled`, `typ`, 
 
 Le tableau de bord est une page web qui récupère ses données auprès de ce script. Vous l'ouvrez via un petit proxy sur un PC, un NAS (p. ex. Synology), Home Assistant ou un Raspberry Pi – pour Windows et Mac, il existe aussi sous forme de programme prêt à l'emploi.
 
-👉 **[Installer et utiliser le tableau de bord](dashboard.md)** (allemand)
+👉 **[Installer et utiliser le tableau de bord](dashboard_FR.md)**
 
 L'interface pour vos propres intégrations (p. ex. Home Assistant, Node-RED) est documentée dans la [description de l'API](API.md) (allemand).
 
@@ -298,7 +298,7 @@ Bon à savoir :
 Si la cellule la plus faible d'une batterie surveillée (`watch: true`) descend sous `minVoltWarn`, le Watchdog désactive la décharge de cette batterie dans le Controller (KVS `zdmc_dev{numéro}_dischargeAllowed = 0`) et signale « ⛔ … Entladen gesperrt wegen Unterschreitung minVol ». La charge reste possible.
 
 - Condition : le Watchdog **et** la partie tableau de bord (`api.enabled`) sont activés, et le Controller a `kvsEnabled: true`.
-- Le blocage ne se lève **pas** tout seul. Vous ne pouvez le lever qu'à la main avec l'interrupteur « Décharge autorisée » du [tableau de bord](dashboard.md#bedienung) – idéalement une fois la batterie rechargée.
+- Le blocage ne se lève **pas** tout seul. Vous ne pouvez le lever qu'à la main avec l'interrupteur « Décharge autorisée » du [tableau de bord](dashboard_FR.md#utilisation) – idéalement une fois la batterie rechargée.
 - Si une charge manuelle est en cours, la décharge reste bloquée après la fin de celle-ci au lieu de rétablir l'état précédent.
 - Pour les batteries surveillées, le tableau de bord affiche le seuil de blocage après la cellule la plus faible, p. ex. « min 3,31 V (Sperre < 2,90 V) ».
 
@@ -376,7 +376,7 @@ L'ancien watchdog tourne encore. Arrêtez-le et désactivez « Run on startup »
 
 **Le tableau de bord affiche une erreur de connexion.**
 - Le script tourne-t-il ? (interface web → Scripts)
-- L'IP **et** le numéro de script du Shelly tableau de bord sont-ils corrects dans le proxy sous `/setup` ? Voir [Dashboard – Wenn es nicht klappt](dashboard.md#wenn-es-nicht-klappt) (allemand, « si ça ne fonctionne pas »).
+- L'IP **et** le numéro de script du Shelly tableau de bord sont-ils corrects dans le proxy sous `/setup` ? Voir [Tableau de bord – En cas de problème](dashboard_FR.md#en-cas-de-problème).
 - `api.enabled` est-il à `true` ?
 
 **Le tableau de bord n'affiche que des valeurs par défaut, les modifications ne sont pas prises en compte.**

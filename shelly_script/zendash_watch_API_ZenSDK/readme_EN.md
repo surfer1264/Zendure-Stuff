@@ -8,7 +8,7 @@
 
 A Shelly script for your **Dashboard Shelly** that takes on two tasks around your Zendure batteries:
 
-- **API for the dashboard** – The [dashboard](dashboard.md) (German) uses it to show grid draw, state of charge and power of your batteries. You can also change Controller settings and start manual charging.
+- **API for the dashboard** – The [dashboard](dashboard_EN.md) uses it to show grid draw, state of charge and power of your batteries. You can also change Controller settings and start manual charging.
 - **Watchdog** – The script notifies you via Signal, WhatsApp or webhook when a battery is full, gets too warm, a cell voltage is too low or a battery can no longer be reached. In addition, you receive a short summary in the morning and in the evening.
 
 Both parts can be switched on and off individually. A single script queries the batteries and shares the data between both tasks – this saves memory on the Shelly and reduces the load on your Zendure devices. Previously there were two separate scripts (zenDash API 2.x and AkkuVolt Watchdog 1.x) which, depending on the number of batteries, together hit the Shelly's memory limit.
@@ -242,7 +242,7 @@ In the Controller this block is called `signal`, here `notify`. `enabled`, `typ`
 
 The dashboard is a web page that gets its data from this script. You open it via a small proxy on a PC, NAS (e.g. Synology), Home Assistant or Raspberry Pi – for Windows and Mac it is also available as a ready-made program.
 
-👉 **[Set up and use the dashboard](dashboard.md)** (German)
+👉 **[Set up and use the dashboard](dashboard_EN.md)**
 
 The interface for your own integrations (e.g. Home Assistant, Node-RED) is documented in the [API description](API.md) (German).
 
@@ -298,7 +298,7 @@ Good to know:
 If the weakest cell of a monitored battery (`watch: true`) drops below `minVoltWarn`, the Watchdog switches off discharging of this battery in the Controller (KVS `zdmc_dev{number}_dischargeAllowed = 0`) and reports "⛔ … Entladen gesperrt wegen Unterschreitung minVol". Charging remains possible.
 
 - Requirement: Watchdog **and** the dashboard part (`api.enabled`) are switched on, and the Controller has `kvsEnabled: true`.
-- The lock is **not** lifted automatically. You can only release it by hand with the "Discharge allowed" switch in the [dashboard](dashboard.md#bedienung) – ideally only once the battery has been recharged.
+- The lock is **not** lifted automatically. You can only release it by hand with the "Discharge allowed" switch in the [dashboard](dashboard_EN.md#operation) – ideally only once the battery has been recharged.
 - If manual charging is running, discharging stays locked after it ends instead of restoring the previous state.
 - For monitored batteries, the dashboard shows the lock threshold behind the weakest cell, e.g. "min 3,31 V (Sperre < 2,90 V)".
 
@@ -376,7 +376,7 @@ The old watchdog is still running. Stop it and switch off "Run on startup" for i
 
 **The dashboard shows a connection error.**
 - Is the script running? (web interface → Scripts)
-- Are the IP **and** script number of the Dashboard Shelly correct in the proxy under `/setup`? See [Dashboard – Wenn es nicht klappt](dashboard.md#wenn-es-nicht-klappt) (German, "if it doesn't work").
+- Are the IP **and** script number of the Dashboard Shelly correct in the proxy under `/setup`? See [Dashboard – If it does not work](dashboard_EN.md#if-it-does-not-work).
 - Is `api.enabled` set to `true`?
 
 **The dashboard only shows default values, changes are not applied.**
