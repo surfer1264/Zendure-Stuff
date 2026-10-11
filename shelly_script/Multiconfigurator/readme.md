@@ -59,7 +59,8 @@ Darauf laufen drei Funktionen:
 
 Die Funktionen sind frei kombinierbar – zenDash-API und Watchdog lassen sich zum Beispiel auch nachträglich einrichten, wenn der Controller schon läuft. Angaben, die mehrere Funktionen brauchen (Geräteliste, Netzquelle, Benachrichtigungen), fragt der Configurator nur **einmal** ab und trägt sie passend in beide Scripte ein.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/487e63fb-734d-4bb1-b795-19f81921acb6" />
+<img width="886" height="1010" alt="image" src="https://github.com/user-attachments/assets/31852329-c7b9-41fd-9217-4a42eca938d9" />
+
 
 Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
