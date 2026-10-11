@@ -61,7 +61,8 @@ Three functions run on them:
 
 The functions can be combined freely – for example, zenDash-API and Watchdog can be added later when the Controller is already running. Information needed by several functions (device list, grid source, notifications) is asked **only once** and written into both scripts accordingly.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/487e63fb-734d-4bb1-b795-19f81921acb6" />
+<img width="892" height="978" alt="image" src="https://github.com/user-attachments/assets/86350077-8c76-42a8-8348-90ed8662dd67" />
+
 
 The configurator is available in **German, English and French**.
 
