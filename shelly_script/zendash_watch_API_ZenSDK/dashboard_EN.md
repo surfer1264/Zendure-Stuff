@@ -6,7 +6,8 @@
 
 The dashboard shows you live grid draw, state of charge and power of your batteries. You can also use it to change Controller settings and to charge a battery manually from the grid.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/37575e2e-1564-44df-b77b-5641f87a4af6" />
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/ca41b303-7e07-4182-9bc3-f003360f0fd6" />
+
 
 **Contents**
 
