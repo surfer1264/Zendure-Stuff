@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-09T08:23:33Z",
+  "generated": "2026-10-13T17:27:42Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -146,12 +146,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.4",
+      "version": "3.5.5",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b05ad8718a830b568e65528fbf228491761881f3/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39855,
-      "codeHash": "sha256:ab59014cbac37f140ed7e3caf89cf15cd1eae035827c2b89d45e07c4ec54b7fa",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/59e45fffd0e2035623a8dc7da6c40b166800cd5f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 39950,
+      "codeHash": "sha256:47ae0d9d7fa07b6e1f9c89d615df0fb06d0648d4ec9647129c0ce8fa96d341f5",
       "configKeys": [
         "api",
         "apiEvents",
@@ -198,14 +198,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "Schloss-Icons",
-        "Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden",
-        "Dashboard: Hinweis an der Geraetekarte, wenn `minSoc` am Geraet von Konfiguration des Dashboard (KVS-Wert) abweicht (durch Änderung von \"außen\", oder wenn KVS Wert nicht auf das Gerät geschrieben wurde - Fehlerfall)"
+        "Fix 131; StackOverflow",
+        "https://github.com/surfer1264/Zendure-Stuff/issues/131"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.4",
+          "schema": 1,
+          "codeHash": "sha256:ab59014cbac37f140ed7e3caf89cf15cd1eae035827c2b89d45e07c4ec54b7fa",
+          "changes": [
+            "Schloss-Icons",
+            "Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden",
+            "Dashboard: Hinweis an der Geraetekarte, wenn `minSoc` am Geraet von Konfiguration des Dashboard (KVS-Wert) abweicht (durch Änderung von \"außen\", oder wenn KVS Wert nicht auf das Gerät geschrieben wurde - Fehlerfall)"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.3",
           "schema": 1,
@@ -297,15 +307,6 @@
           "codeHash": "sha256:b52918575936394839c2f6d842ef63f39717d1acfecbbef7b937abcda474dc1d",
           "changes": [
             "FullScreenMode"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.1",
-          "schema": 1,
-          "codeHash": "sha256:1bca94d940fe310edb08507d4881ef03589239eb5d82226a44e6cbf26b14003c",
-          "changes": [
-            "Zusammenlegung von Watchdog und zenDash API"
           ],
           "notice": null
         }
