@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-13T20:11:33Z",
+  "generated": "2026-10-13T20:30:06Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -146,12 +146,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.6",
+      "version": "3.5.7",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/80a76829c1289152f4db314a3435df399f70133a/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39958,
-      "codeHash": "sha256:9bb873f713fc8577728d1728bda9e23cfd2796f07014ba9182220e8dbb6ff1b2",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/9b62f4d9efc5217a02dfe103a5fa11b0cd6b424b/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 40098,
+      "codeHash": "sha256:d036f35b04ceb2eb601537753ec2011d42ad5d3755604434b00ec38869e0a1c3",
       "configKeys": [
         "api",
         "apiEvents",
@@ -197,13 +197,20 @@
         "watchdog",
         "webhookUrl"
       ],
-      "changes": [
-        "Speicheroptimierung"
-      ],
+      "changes": [],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.6",
+          "schema": 1,
+          "codeHash": "sha256:9bb873f713fc8577728d1728bda9e23cfd2796f07014ba9182220e8dbb6ff1b2",
+          "changes": [
+            "Speicheroptimierung"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.5",
           "schema": 1,
@@ -296,17 +303,6 @@
             "Letzte Vollladung jetzt ereignisgesteuert: Im Poll wird bei SoC 100 % nur ein Merker gesetzt; Datum lesen und `zdmc_dev{i}_lastFull` schreiben passiert einmal nach dem Poll, danach ruht die Funktion je Geraet bis Mitternacht",
             "Keine Systemstatus-Abfrage (`sys`) mehr in jedem Poll - vorher bis zu drei je 8-s-Takt, erhoehte den Speicher-Peak bei offenem Dashboard",
             "Meldung \"seit N Tagen nicht voll\" wird einmal taeglich beim Morgen-Update geprueft statt in jedem Poll"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.3",
-          "schema": 1,
-          "codeHash": "sha256:63d06439dda64e5cef9ac64e674f2e8b37fe71b86963bab1ee0659c7ee9b515a",
-          "changes": [
-            "Letzte Vollladung: echte 100 % SoC werden je Geraet als Datum (JJJJMMTT) in `zdmc_dev{i}_lastFull` gespeichert, hoechstens ein KVS-Schreibvorgang pro Geraet und Tag",
-            "config_api liefert je Geraet `lastFull` (0 = noch nie erfasst)",
-            "Dashboard: Zeile \"100 %: vor N Tagen\" je Geraet, gruen < 7 Tage, gelb 7-20 Tage, rot darueber; Antippen zeigt das Datum"
           ],
           "notice": null
         }
