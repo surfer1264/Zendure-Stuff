@@ -1,5 +1,13 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.8
+
+- Speicheroptimierung
+
+## Changelog 3.5.7
+
+- Speicheroptimierung
+
 ## Changelog 3.5.6
 
 - Speicheroptimierung

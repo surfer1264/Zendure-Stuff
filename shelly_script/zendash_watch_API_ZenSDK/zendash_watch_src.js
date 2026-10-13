@@ -49,12 +49,15 @@
 // 3.5.6: Weniger RAM bei vielen Packs - ungenutzte Felder minVolSn/minVolSoc
 // entfernt; lowVoltMsgSent fuehrt nur noch Packs im Alarm, Seriennummer
 // wird nur noch im Alarm bzw. beim Ruecksetzen eines Alarms gelesen.
-// 3.5.7: Weniger RAM in config_api und beim Start - der KVS-Inhalt wird
-// nicht mehr von kvsGetAll festgehalten, waehrend der Aufrufer schon die
-// Antwort baut; config_api gibt das devices-Array vor dem Senden frei.
+// 3.5.8: config_api in zwei Schritten - im KVS-Callback nur die Zahlen
+// auslesen, Antwort erst nach Timer.set(0) bauen. Die Firmware haelt die
+// HTTP-Antwort bis zum Ende des Callbacks fest; so ist sie beim stringify
+// schon frei. Fehler in config_api geben Slot und Warteschlange frei
+// (vorher blieb configPending haengen). KVS_TMP aus 3.5.7 entfernt (ohne
+// Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.7";
+let VERSION = "3.5.8";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -473,24 +476,15 @@ function kvsIsRemote() {
   return CONFIG.api.kvsHost !== "local" && CONFIG.api.kvsHost !== "";
 }
 
-// Uebergabe des KVS-Inhalts an den Aufrufer OHNE eigene Referenz: Eine
-// lokale Variable hier wuerde den Inhalt festhalten, solange der Aufrufer
-// laeuft (bei config_api inkl. stringify und Senden) - "store = null" beim
-// Aufrufer gaebe dann nichts frei. kvsTake() leert die Ablage vor dem Aufruf.
-let KVS_TMP = null;
-function kvsTake() {
-  let v = KVS_TMP;
-  KVS_TMP = null;
-  return v;
-}
-
+// Hinweis: Die Firmware haelt die Antwort (res/result) fest, bis dieser
+// Callback zurueckkehrt - auch "store = null" beim Aufrufer gibt vorher
+// nichts frei. Wer danach noch viel Speicher braucht, verlaesst den
+// Callback zuerst per Timer.set(0) (siehe serveConfig).
 function kvsGetAll(callback) {
   if (!kvsIsRemote()) {
     Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
-      if (error_code !== 0 || !result || !result.items) { result = null; callback(null); return; }
-      KVS_TMP = kvsItemsToMap(result.items);
-      result = null;
-      callback(kvsTake());
+      if (error_code !== 0 || !result || !result.items) { callback(null); return; }
+      callback(kvsItemsToMap(result.items));
     });
     return;
   }
@@ -498,10 +492,10 @@ function kvsGetAll(callback) {
     url: "http://" + CONFIG.api.kvsHost + "/rpc/KVS.GetMany?match=" + KVS_MATCH,
     timeout: CONFIG.httpTimeout
   }, function (res, error_code) {
-    if (error_code !== 0 || !res || res.code !== 200) { res = null; callback(null); return; }
-    KVS_TMP = res.body;
+    if (error_code !== 0 || !res || res.code !== 200) { callback(null); return; }
+    let body = res.body;
     res = null;
-    callback(kvsTake());
+    callback(body);
   });
 }
 
@@ -1520,11 +1514,31 @@ let CONFIG_WAIT_MAX = 10;
 let configPending = false;
 let configWaiters = [];
 
-function answerConfigWaiters(body) {
-  for (let i = 0; i < configWaiters.length; i++) sendJson(configWaiters[i], 200, body);
+function answerConfigWaiters(code, body) {
+  for (let i = 0; i < configWaiters.length; i++) sendJson(configWaiters[i], code, body);
   configWaiters = [];
 }
 
+// Fehler in config_api: Slot freigeben, Sammelabfrage beenden und ALLEN
+// Wartenden antworten - sonst bliebe configPending dauerhaft gesetzt und
+// kein Dashboard bekaeme mehr eine Konfiguration.
+function configFail(res, where, e) {
+  print("config_api (" + where + "): " + e);
+  busyLeave();
+  configPending = false;
+  let err = JSON.stringify({ success: false, error: "internal" });
+  try { sendJson(res, 500, err); } catch (e2) { }
+  answerConfigWaiters(500, err);
+}
+
+// Ablauf in zwei Schritten (ab 3.5.8):
+//   1. Im KVS-Callback NUR die Zahlen auslesen (kv[]). Die Firmware haelt
+//      die KVS-Antwort fest, bis dieser Callback zurueckkehrt.
+//   2. Per Timer.set(0) aus dem Callback heraus - die KVS-Antwort ist jetzt
+//      frei - und erst dann devices bauen, stringify, senden.
+// Der Ueberlappungsschutz bleibt ueber BEIDE Schritte belegt: dazwischen
+// kann weder geschrieben (kvs_set_api wartet) noch gepollt werden.
+// kv: [setpoint, dischargeFixed, je Geraet da, rv, minSoc, il]; null = fehlt
 function serveConfig(res, attempt) {
   if (attempt === 0) {
     if (configPending) { configWaiters[configWaiters.length] = res; return; }
@@ -1538,64 +1552,83 @@ function serveConfig(res, attempt) {
     (busyNow() ? ", Slot weiter belegt - trotzdem" : "") + ")" : ""));
 
   busyEnter();
-  let devices = buildDeviceDefaults();
-  let setpoint = 0;
-  let dischargeFixed = 0;
-
   kvsGetAll(function (store) {
-    if (DBG) memLog("config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")));
-    let v = kvsValue(store, "zdmc_setpoint");
-    if (v !== undefined) setpoint = Number(v);
-    let df = kvsValue(store, "zdmc_dischargeFixed");
-    if (df !== undefined) dischargeFixed = Number(df);
-
-    for (let i = 0; i < devices.length; i++) {
-      let d = kvsValue(store, "zdmc_dev" + i + "_dischargeAllowed");
-      let r = kvsValue(store, "zdmc_dev" + i + "_reverse");
-      let m = kvsValue(store, "zdmc_dev" + i + "_minSoc");
-      let l = kvsValue(store, "zdmc_dev" + i + "_inputLimit");
-      if (d !== undefined) devices[i].dischargeAllowed = (Number(d) !== 0);
-      if (r !== undefined) devices[i].reverse = (Number(r) !== 0);
-      if (m !== undefined) devices[i].minSoc = Number(m);
-      if (l !== undefined) devices[i].inputLimit = Number(l);
-      let lfv = kvsValue(store, "zdmc_dev" + i + "_lastFull");
-      if (lfv !== undefined) adoptLastFull(i, lfv);
-      devices[i].lastFull = LASTFULL[i].day;
-    }
-    if (DBG) memLog("config_api nach Auswertung");
+    let kv = null;
     let kvsOk = (store !== null);
-    store = null;
-
-    let body = JSON.stringify({
-      version: VERSION,
-      setpoint: setpoint,
-      hysteresis: CONFIG.api.hysteresis,
-      dischargeFixed: dischargeFixed,
-      dischargeStartupPower: CONFIG.api.dischargeStartupPower,
-      // Schwellen der Zellspannungs-Ueberwachung - nur zur Anzeige im
-      // Dashboard; sie gelten nur fuer Geraete mit watch: true
-      watchdog: { enabled: WD_ON, minVoltWarn: W.minVoltWarn, minVoltReset: W.minVoltReset },
-      devices: devices
-    });
-    if (DBG) memLog("config_api nach stringify (" + body.length + " B)");
-
-    busyLeave();
-    configPending = false;
-    if (DBG) {
-      let line = "config_api: Antwort" + (!kvsOk ? " (KVS NICHT lesbar - CONFIG-Vorgaben)" : "") +
-        " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed;
-      for (let j = 0; j < devices.length; j++) {
-        line += " | dev" + j + " da=" + (devices[j].dischargeAllowed ? 1 : 0) + " rv=" + (devices[j].reverse ? 1 : 0) +
-          " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit;
+    try {
+      if (DBG) memLog("config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")));
+      kv = [kvsNumOrNull(store, "zdmc_setpoint"), kvsNumOrNull(store, "zdmc_dischargeFixed")];
+      for (let i = 0; i < CONFIG.devices.length; i++) {
+        let pre = "zdmc_dev" + i + "_";
+        kv[kv.length] = kvsNumOrNull(store, pre + "dischargeAllowed");
+        kv[kv.length] = kvsNumOrNull(store, pre + "reverse");
+        kv[kv.length] = kvsNumOrNull(store, pre + "minSoc");
+        kv[kv.length] = kvsNumOrNull(store, pre + "inputLimit");
+        let lfv = kvsValue(store, pre + "lastFull");
+        if (lfv !== undefined) adoptLastFull(i, lfv);
       }
-      logDebug(line + (configWaiters.length ? " (+" + configWaiters.length + " wartende Anfragen)" : ""));
+      if (DBG) memLog("config_api nach Auswertung");
+    } catch (e) {
+      configFail(res, "Auswertung", e);
+      return;
     }
-    // Erst NACH der Debug-Zeile (die liest devices[j]) freigeben - die
-    // Antwort ist fertig, das Array wird beim Senden nicht mehr gebraucht.
-    devices = null;
-    sendJson(res, 200, body);
-    answerConfigWaiters(body);
+    store = null;
+    // Schritt 2 erst nach Ende dieses Callbacks
+    Timer.set(0, false, function () {
+      try { configRespond(res, kv, kvsOk); } catch (e) { configFail(res, "Antwort", e); }
+    });
   });
+}
+
+// Zahl aus der KVS oder null, wenn der Key fehlt.
+function kvsNumOrNull(store, key) {
+  let v = kvsValue(store, key);
+  return (v === undefined) ? null : Number(v);
+}
+
+function configRespond(res, kv, kvsOk) {
+  if (DBG) memLog("config_api Callback verlassen");
+  let devices = buildDeviceDefaults();
+  for (let i = 0; i < devices.length; i++) {
+    let k = 2 + i * 4;
+    if (kv[k] !== null) devices[i].dischargeAllowed = (kv[k] !== 0);
+    if (kv[k + 1] !== null) devices[i].reverse = (kv[k + 1] !== 0);
+    if (kv[k + 2] !== null) devices[i].minSoc = kv[k + 2];
+    if (kv[k + 3] !== null) devices[i].inputLimit = kv[k + 3];
+    devices[i].lastFull = LASTFULL[i].day;
+  }
+  let setpoint = (kv[0] !== null) ? kv[0] : 0;
+  let dischargeFixed = (kv[1] !== null) ? kv[1] : 0;
+  kv = null;
+
+  let body = JSON.stringify({
+    version: VERSION,
+    setpoint: setpoint,
+    hysteresis: CONFIG.api.hysteresis,
+    dischargeFixed: dischargeFixed,
+    dischargeStartupPower: CONFIG.api.dischargeStartupPower,
+    // Schwellen der Zellspannungs-Ueberwachung - nur zur Anzeige im
+    // Dashboard; sie gelten nur fuer Geraete mit watch: true
+    watchdog: { enabled: WD_ON, minVoltWarn: W.minVoltWarn, minVoltReset: W.minVoltReset },
+    devices: devices
+  });
+  if (DBG) memLog("config_api nach stringify (" + body.length + " B)");
+
+  if (DBG) {
+    let line = "config_api: Antwort" + (!kvsOk ? " (KVS NICHT lesbar - CONFIG-Vorgaben)" : "") +
+      " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed;
+    for (let j = 0; j < devices.length; j++) {
+      line += " | dev" + j + " da=" + (devices[j].dischargeAllowed ? 1 : 0) + " rv=" + (devices[j].reverse ? 1 : 0) +
+        " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit;
+    }
+    logDebug(line + (configWaiters.length ? " (+" + configWaiters.length + " wartende Anfragen)" : ""));
+  }
+  // Erst NACH der Debug-Zeile (die liest devices[j]) freigeben.
+  devices = null;
+  busyLeave();
+  configPending = false;
+  sendJson(res, 200, body);
+  answerConfigWaiters(200, body);
 }
 
 function keysHasField(keys, key) {
