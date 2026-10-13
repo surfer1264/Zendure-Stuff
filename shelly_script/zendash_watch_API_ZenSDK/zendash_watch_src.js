@@ -46,9 +46,12 @@
 // 3.5.5: Fix "Too much recursion" beim Auto-Stop - Nachbearbeitung nach
 // dem Poll und Auto-Stop laufen per Timer.set(0) auf frischem Stack,
 // kvsSafeNumber ohne verschachtelte Bedingung.
+// 3.5.6: Weniger RAM bei vielen Packs - ungenutzte Felder minVolSn/minVolSoc
+// entfernt; lowVoltMsgSent fuehrt nur noch Packs im Alarm, Seriennummer
+// wird nur noch im Alarm bzw. beim Ruecksetzen eines Alarms gelesen.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.5";
+let VERSION = "3.5.6";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1032,8 +1035,6 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
   };
   WSTATE[hi] = {
     hyperTemp: null,
-    minVolSn: null,
-    minVolSoc: null,
     ts: 0,               // letzter erfolgreicher Poll
     failSince: 0,        // Beginn des aktuellen Ausfalls (0 = keiner)
     failReason: "",
@@ -1041,7 +1042,10 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     akkuVollMsgSent: false,
     hyperTempMsgSent: false,
     notFullMsgSent: false,
-    lowVoltMsgSent: {}
+    // Nur Packs mit offenem Unterspannungs-Alarm (Seriennummer -> true).
+    // Gesunde Packs stehen NICHT darin - spart RAM bei vielen Packs.
+    lowVoltMsgSent: {},
+    lowVoltCount: 0      // Anzahl Eintraege in lowVoltMsgSent
   };
 }
 
@@ -1071,8 +1075,6 @@ function scanPacks(index, body, checkVolt, logPacks) {
   let lbl = CONFIG.devices[index].label;
 
   hub.minVol = null;
-  ws.minVolSn = null;
-  ws.minVolSoc = null;
 
   let p = jsonValuePos(body, "packData", 0, -1);
   if (p < 0 || body.charAt(p) !== "[") return logPacks ? "keine packData" : "";
@@ -1098,33 +1100,34 @@ function scanPacks(index, body, checkVolt, logPacks) {
         (raw === null ? "?V" : raw > 0 ? (raw / 100).toFixed(2) + "V" : "0V (schlaeft)");
     }
     if (raw !== null && raw > 0) {
-      let sn = null;
-      let packSoc = null;
-      if (checkVolt || hub.minVol === null || raw < hub.minVol) {
-        sn = jsonStr(body, "sn", objStart, objEnd);
-        if (sn === null) sn = "#" + count;
-        packSoc = jsonNum(body, "socLevel", objStart, objEnd);
-      }
-
       if (checkVolt) {
         let volt = raw / 100;
         if (volt < W.minVoltWarn) {
+          // Seriennummer nur im Alarmfall lesen
+          let sn = jsonStr(body, "sn", objStart, objEnd);
+          if (sn === null) sn = "#" + count;
           if (!ws.lowVoltMsgSent[sn]) {
             ws.lowVoltMsgSent[sn] = true;
+            ws.lowVoltCount++;
             notify("⚠️ " + lbl + " Zelle " + sn + " nur " + volt + "V");
             // zusaetzlich Entladen sperren - geschrieben wird erst nach dem Poll
             lockPending[index] = volt;
           }
-        } else if (volt > W.minVoltReset) {
-          ws.lowVoltMsgSent[sn] = false;
+        } else if (volt > W.minVoltReset && ws.lowVoltCount > 0) {
+          // Nur wenn ueberhaupt ein Alarm offen ist: Eintrag entfernen.
+          let sn = jsonStr(body, "sn", objStart, objEnd);
+          if (sn === null) sn = "#" + count;
+          if (ws.lowVoltMsgSent[sn]) {
+            ws.lowVoltCount--;
+            // Letzter Alarm weg -> Objekt neu anlegen (gibt sicher alles
+            // frei, auch falls "delete" in der Firmware nichts freigibt)
+            if (ws.lowVoltCount <= 0) { ws.lowVoltCount = 0; ws.lowVoltMsgSent = {}; }
+            else delete ws.lowVoltMsgSent[sn];
+          }
         }
       }
 
-      if (hub.minVol === null || raw < hub.minVol) {
-        hub.minVol = raw;
-        ws.minVolSn = sn;
-        ws.minVolSoc = packSoc;
-      }
+      if (hub.minVol === null || raw < hub.minVol) hub.minVol = raw;
     }
     pos = objEnd + 1;
   }
