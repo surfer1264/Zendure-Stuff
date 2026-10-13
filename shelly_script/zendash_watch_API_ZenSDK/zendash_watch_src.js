@@ -49,9 +49,12 @@
 // 3.5.6: Weniger RAM bei vielen Packs - ungenutzte Felder minVolSn/minVolSoc
 // entfernt; lowVoltMsgSent fuehrt nur noch Packs im Alarm, Seriennummer
 // wird nur noch im Alarm bzw. beim Ruecksetzen eines Alarms gelesen.
+// 3.5.7: Weniger RAM in config_api und beim Start - der KVS-Inhalt wird
+// nicht mehr von kvsGetAll festgehalten, waehrend der Aufrufer schon die
+// Antwort baut; config_api gibt das devices-Array vor dem Senden frei.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.6";
+let VERSION = "3.5.7";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -470,11 +473,24 @@ function kvsIsRemote() {
   return CONFIG.api.kvsHost !== "local" && CONFIG.api.kvsHost !== "";
 }
 
+// Uebergabe des KVS-Inhalts an den Aufrufer OHNE eigene Referenz: Eine
+// lokale Variable hier wuerde den Inhalt festhalten, solange der Aufrufer
+// laeuft (bei config_api inkl. stringify und Senden) - "store = null" beim
+// Aufrufer gaebe dann nichts frei. kvsTake() leert die Ablage vor dem Aufruf.
+let KVS_TMP = null;
+function kvsTake() {
+  let v = KVS_TMP;
+  KVS_TMP = null;
+  return v;
+}
+
 function kvsGetAll(callback) {
   if (!kvsIsRemote()) {
     Shelly.call("KVS.GetMany", { match: KVS_MATCH }, function (result, error_code) {
-      if (error_code !== 0 || !result || !result.items) { callback(null); return; }
-      callback(kvsItemsToMap(result.items));
+      if (error_code !== 0 || !result || !result.items) { result = null; callback(null); return; }
+      KVS_TMP = kvsItemsToMap(result.items);
+      result = null;
+      callback(kvsTake());
     });
     return;
   }
@@ -482,10 +498,10 @@ function kvsGetAll(callback) {
     url: "http://" + CONFIG.api.kvsHost + "/rpc/KVS.GetMany?match=" + KVS_MATCH,
     timeout: CONFIG.httpTimeout
   }, function (res, error_code) {
-    if (error_code !== 0 || !res || res.code !== 200) { callback(null); return; }
-    let body = res.body;
+    if (error_code !== 0 || !res || res.code !== 200) { res = null; callback(null); return; }
+    KVS_TMP = res.body;
     res = null;
-    callback(body);
+    callback(kvsTake());
   });
 }
 
@@ -1574,6 +1590,9 @@ function serveConfig(res, attempt) {
       }
       logDebug(line + (configWaiters.length ? " (+" + configWaiters.length + " wartende Anfragen)" : ""));
     }
+    // Erst NACH der Debug-Zeile (die liest devices[j]) freigeben - die
+    // Antwort ist fertig, das Array wird beim Senden nicht mehr gebraucht.
+    devices = null;
     sendJson(res, 200, body);
     answerConfigWaiters(body);
   });
