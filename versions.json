@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-13T17:27:42Z",
+  "generated": "2026-10-13T20:11:33Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -146,12 +146,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.5",
+      "version": "3.5.6",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/59e45fffd0e2035623a8dc7da6c40b166800cd5f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 39950,
-      "codeHash": "sha256:47ae0d9d7fa07b6e1f9c89d615df0fb06d0648d4ec9647129c0ce8fa96d341f5",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/80a76829c1289152f4db314a3435df399f70133a/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 39958,
+      "codeHash": "sha256:9bb873f713fc8577728d1728bda9e23cfd2796f07014ba9182220e8dbb6ff1b2",
       "configKeys": [
         "api",
         "apiEvents",
@@ -198,13 +198,22 @@
         "webhookUrl"
       ],
       "changes": [
-        "Fix 131; StackOverflow",
-        "https://github.com/surfer1264/Zendure-Stuff/issues/131"
+        "Speicheroptimierung"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.5",
+          "schema": 1,
+          "codeHash": "sha256:47ae0d9d7fa07b6e1f9c89d615df0fb06d0648d4ec9647129c0ce8fa96d341f5",
+          "changes": [
+            "Fix 131; StackOverflow",
+            "https://github.com/surfer1264/Zendure-Stuff/issues/131"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.4",
           "schema": 1,
@@ -298,15 +307,6 @@
             "Letzte Vollladung: echte 100 % SoC werden je Geraet als Datum (JJJJMMTT) in `zdmc_dev{i}_lastFull` gespeichert, hoechstens ein KVS-Schreibvorgang pro Geraet und Tag",
             "config_api liefert je Geraet `lastFull` (0 = noch nie erfasst)",
             "Dashboard: Zeile \"100 %: vor N Tagen\" je Geraet, gruen < 7 Tage, gelb 7-20 Tage, rot darueber; Antippen zeigt das Datum"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.2",
-          "schema": 1,
-          "codeHash": "sha256:b52918575936394839c2f6d842ef63f39717d1acfecbbef7b937abcda474dc1d",
-          "changes": [
-            "FullScreenMode"
           ],
           "notice": null
         }
