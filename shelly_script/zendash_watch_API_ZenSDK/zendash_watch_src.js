@@ -42,9 +42,13 @@
 // Mitternacht. config_api liefert den Wert je Geraet als lastFull (0 = noch
 // nie erfasst). Der Watchdog prueft einmal taeglich beim Morgen-Update, ob
 // ein ueberwachtes Geraet seit 20 Tagen nicht mehr voll war.
+//
+// 3.5.5: Fix "Too much recursion" beim Auto-Stop - Nachbearbeitung nach
+// dem Poll und Auto-Stop laufen per Timer.set(0) auf frischem Stack,
+// kvsSafeNumber ohne verschachtelte Bedingung.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.4";
+let VERSION = "3.5.5";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -495,12 +499,12 @@ function kvsValue(store, key) {
 
 // Nur Zahlen zulassen - schuetzt die URL beim entfernten Schreiben und haelt
 // die KVS sauber (alle zdmc_-Werte sind numerisch).
+let NUM_CHARS = "0123456789-.";
 function kvsSafeNumber(value) {
   let str = String(value);
   if (str.length === 0 || str.length > 12) return null;
   for (let i = 0; i < str.length; i++) {
-    let c = str.charAt(i);
-    if ((c < "0" || c > "9") && c !== "-" && c !== ".") return null;
+    if (NUM_CHARS.indexOf(str.charAt(i)) < 0) return null;
   }
   return str;
 }
@@ -821,7 +825,11 @@ function checkAutoStop() {
     if (!hub.online) continue;
     if (!isManualActive(deviceState[i])) continue;
     if (hub.socLimit !== 1) continue;
-    autoStopDevice(i);
+    // Ab 3.5.5: entkoppelt starten; Slot bis dahin reservieren, damit
+    // nichts dazwischenkommt.
+    let idx = i;
+    busyEnter();
+    Timer.set(0, false, function () { busyLeave(); autoStopDevice(idx); });
     return; // ein Geraet je Durchlauf
   }
 }
@@ -1372,7 +1380,13 @@ let lastWatchPoll = 0;
 let lastFast = false;
 
 function pollHubsSeq(index, fast, due, callback) {
-  if (index >= CONFIG.devices.length) { callback(); return; }
+  if (index >= CONFIG.devices.length) {
+    // Ab 3.5.5: Nachbearbeitung (Auto-Stop, lastFull, Entladesperre) auf
+    // frischem Stack starten statt noch im HTTP-Callback des letzten Hubs -
+    // sonst "Too much recursion" beim Auto-Stop.
+    Timer.set(0, false, callback);
+    return;
+  }
   let watch = WD_ON && CONFIG.devices[index].watch;
   if (!fast && !(due && watch)) {
     pollHubsSeq(index + 1, fast, due, callback);
@@ -1762,4 +1776,4 @@ if (API_ON) {
 } else if (WD_ON) {
   // Auch ohne API den KVS-Stand lesen - lastFull braucht der Watchdog.
   initDeviceState(startWatchdogPart);
-}
+}

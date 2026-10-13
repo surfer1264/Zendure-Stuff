@@ -1,5 +1,10 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.5
+
+- Fix 131; StackOverflow
+- https://github.com/surfer1264/Zendure-Stuff/issues/131
+
 ## Changelog 3.5.4
 - Schloss-Icons
 - Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden
