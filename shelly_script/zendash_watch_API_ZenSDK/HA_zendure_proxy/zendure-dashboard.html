@@ -32,7 +32,7 @@
     --teal:#4FD1C5; --teal-deep:#1FA394;
     --alert:#E2574C;
     --idle:#5B6B85;
-    --radius-lg:20px; --radius-md:14px; --radius-sm:10px;
+    --radius-lg:1.25rem; --radius-md:.875rem; --radius-sm:.625rem;
   }
 
   /* color-scheme ist entscheidend, nicht Kosmetik: Ohne die Angabe malt der
@@ -78,12 +78,17 @@
 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
-  /* Schriftgröße in drei Stufen - fast alle font-size-Werte unten sind in
-     rem angegeben, deshalb skaliert das Umstellen der html-Basisgröße den
-     gesamten Text proportional mit. */
+  /* Ansichtsgroesse in vier Stufen (100 / 115 / 130 / 150 %). Seit 3.5.5
+     sind nicht nur die Schriften, sondern auch Knoepfe, Schalter, Regler,
+     Akku-Grafik, Kurven und Abstaende in rem angegeben - das Umstellen der
+     html-Basisgroesse wirkt deshalb wie ein Zoom der ganzen Seite.
+     Bewusst in px geblieben: Rahmenlinien, Schatten, Fokusrahmen und der
+     seitliche Rand der Seite (sonst wird der Inhalt auf dem Handy bei
+     150 % unnoetig schmal). 1rem = 16px bei Stufe 1. */
   html{ font-size:100%; }
   html[data-fontsize="large"]{ font-size:115%; }
   html[data-fontsize="xlarge"]{ font-size:130%; }
+  html[data-fontsize="xxlarge"]{ font-size:150%; }
   /* Auch auf html, nicht nur auf body: Beim Ueberdehnen der Seite (Gummiband-
      Effekt auf Tablets) wird sonst die Flaeche darunter sichtbar, die der
      Browser selbst faerbt. */
@@ -96,21 +101,21 @@
   .app{
     min-height:100vh;
     background-image:var(--bg-glow);
-    padding: 20px 20px 60px;
+    padding: 1.25rem 20px 3.75rem;
     /* Als Home-Bildschirm-App (viewport-fit=cover, Statusleiste
        black-translucent) liegt die Seite unter der Statusleiste von
        iPad/iPhone. env() liefert deren Hoehe, ueberall sonst 0. */
-    padding-top: calc(20px + env(safe-area-inset-top, 0px));
+    padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
   }
   .mono{ font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-feature-settings:'ss04' 1; }
   .shell{ max-width:1180px; margin:0 auto; }
 
   header{
     display:flex; align-items:flex-start; justify-content:space-between;
-    flex-wrap:wrap; gap:16px;
-    padding: 6px 4px 26px;
+    flex-wrap:wrap; gap:1rem;
+    padding: .375rem .25rem 1.625rem;
   }
-  .brand{ display:flex; flex-direction:column; gap:4px; }
+  .brand{ display:flex; flex-direction:column; gap:.25rem; }
   .brand .word{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
     font-weight:600; letter-spacing:.14em; text-transform:uppercase;
@@ -125,7 +130,7 @@
      dann der Tag/Nacht-Knopf aus dem Bild, besonders bei 115 % oder 130 %
      Schriftgroesse, weil Pille und Uhr in rem bemessen sind und mitwachsen. */
   .head-right{
-    display:flex; align-items:center; gap:14px;
+    display:flex; align-items:center; gap:.875rem;
     flex-wrap:wrap; justify-content:flex-end;
   }
   /* Darf schrumpfen, statt die rechte Haelfte zu verdraengen */
@@ -133,13 +138,13 @@
   .status-pill{ max-width:100%; }
   .status-pill #statusText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .status-pill{
-    display:flex; align-items:center; gap:8px;
+    display:flex; align-items:center; gap:.5rem;
     background:var(--surface); border:1px solid var(--border);
-    border-radius:999px; padding:7px 14px; box-shadow:var(--shadow);
+    border-radius:999px; padding:.4375rem .875rem; box-shadow:var(--shadow);
     font-size:.78rem; color:var(--text-muted);
   }
   .status-dot{
-    width:8px; height:8px; border-radius:50%; background:var(--teal-text);
+    width:.5rem; height:.5rem; border-radius:50%; background:var(--teal-text);
     box-shadow:0 0 0 0 rgba(79,209,197,.6);
     animation:pulse 2.2s ease-out infinite;
   }
@@ -150,20 +155,20 @@
   }
   .status-dot.offline{ background:var(--alert-text); animation:none; }
   .hub-status-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--teal-text);
-    display:inline-block; margin-right:5px; flex-shrink:0;
+    width:.4375rem; height:.4375rem; border-radius:50%; background:var(--teal-text);
+    display:inline-block; margin-right:.3125rem; flex-shrink:0;
   }
   .hub-status-dot.offline{ background:var(--alert-text); }
   .clock{
     background:var(--surface); border:1px solid var(--border);
     border-radius:var(--radius-md); box-shadow:var(--shadow);
-    padding:8px 16px; text-align:right; min-width:118px;
+    padding:.5rem 1rem; text-align:right; min-width:7.375rem;
   }
   .clock .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:1.15rem; font-weight:600; line-height:1.1; }
-  .clock .date{ font-size:.72rem; color:var(--text-muted); margin-top:2px; }
+  .clock .date{ font-size:.72rem; color:var(--text-muted); margin-top:.125rem; }
 
   .theme-toggle{
-    width:42px; height:42px; border-radius:50%;
+    width:2.625rem; height:2.625rem; border-radius:50%;
     background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     color:var(--text); font-size:1.05rem;
@@ -171,72 +176,124 @@
   .theme-toggle:active{ transform:scale(.92); }
   .lock-toggle.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
   /* Schloss-Icons (SVG, Farbe ueber currentColor) */
-  .lock-icon{ width:22px; height:22px; display:block; overflow:visible; }
-  .soc-lock .lock-icon{ width:18px; height:18px; }
+  .lock-icon{ width:1.375rem; height:1.375rem; display:block; overflow:visible; }
+  .soc-lock .lock-icon{ width:1.125rem; height:1.125rem; }
   .font-toggle{ font-weight:700; position:relative; }
   .lang-toggle{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
     font-weight:600; font-size:.74rem; letter-spacing:.04em;
   }
   .font-toggle .lvl{
-    position:absolute; bottom:6px; right:7px;
+    position:absolute; bottom:.375rem; right:.4375rem;
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
-    font-size:9px; line-height:1; color:var(--text-muted);
+    font-size:.5625rem; line-height:1; color:var(--text-muted);
   }
 
   .btn{
     font-family:'IBM Plex Sans', sans-serif; font-size:.82rem; font-weight:600;
     color:var(--text); background:var(--surface-2);
     border:1px solid var(--border); border-radius:var(--radius-sm);
-    padding:8px 14px; cursor:pointer; width:100%;
+    padding:.5rem .875rem; cursor:pointer; width:100%;
   }
   .btn:active{ transform:scale(.98); }
   .btn:disabled{ opacity:.45; cursor:not-allowed; }
   .btn.stop{ color:var(--amber-text); border-color:var(--amber-deep); }
   .btn:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
 
-  .manual-row{ padding:8px 0 2px; }
-  .manual-row .hint{ font-size:.68rem; color:var(--text-muted); line-height:1.4; margin-bottom:7px; display:block; }
+  .manual-row{ padding:.5rem 0 .125rem; }
+  .manual-row .hint{ font-size:.68rem; color:var(--text-muted); line-height:1.4; margin-bottom:.4375rem; display:block; }
 
   .card{
     background:var(--surface); border:1px solid var(--border);
     border-radius:var(--radius-lg); box-shadow:var(--shadow);
   }
 
-  .row{ display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
-  .row>.card{ flex:1; min-width:240px; padding:22px 22px 18px; }
+  /* Die vier Kopfkacheln (Sollwert, Fix-Entladung, Netz, Solarflow) als
+     Raster mit fester Spaltenzahl statt frei umbrechender Flex-Reihe - so
+     gibt es nie 3 + 1, sondern 1, 2 oder 4 Spalten.
+     Die Grenzen haengen an der Bildschirmbreite UND an der Ansichtsstufe:
+       A1/A2 (100/115 %): 2 Spalten ab 600 px, 4 Spalten ab 1000 px
+                          -> iPad Pro 12,9" hochkant (1024) und alle iPad
+                             Pro quer (1194/1366) zeigen 4 nebeneinander
+       A3 (130 %):        2 Spalten ab 760 px, 4 Spalten ab 1300 px
+       A4 (150 %):        2 Spalten ab 760 px, nie 4 (Werte passen nicht)
+     Media-Queries in px beziehen sich auf die echte Bildschirmbreite und
+     werden von der Ansichtsstufe nicht beeinflusst. */
+  .row{
+    display:grid; grid-template-columns:repeat(var(--ov-cols, 1), minmax(0, 1fr));
+    gap:1.25rem; margin-bottom:1.5rem;
+  }
+  .row>.card{ min-width:0; padding:1.375rem 1.375rem 1.125rem; }
+  @media (min-width:600px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row{ --ov-cols:2; }
+  }
+  @media (min-width:760px){ .row{ --ov-cols:2; } }
+  @media (min-width:1000px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row{ --ov-cols:4; gap:1rem; }
+  }
+  @media (min-width:1300px){
+    html[data-fontsize="xlarge"] .row{ --ov-cols:4; gap:1rem; }
+  }
+  /* Bei 4 Spalten etwas weniger Innenrand und eine an die Breite gekoppelte
+     Wertgroesse, damit auch "+1234 W" in eine Kachel passt. */
+  @media (min-width:1000px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row>.card{ padding:1.125rem 1.125rem 1rem; }
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row .hero-value,
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row .hero-input{ font-size:clamp(1.6rem, 3.4vw, 2.8rem); }
+  }
+  @media (min-width:1300px){
+    html[data-fontsize="xlarge"] .row>.card{ padding:1.125rem 1.125rem 1rem; }
+    html[data-fontsize="xlarge"] .row .hero-value,
+    html[data-fontsize="xlarge"] .row .hero-input{ font-size:clamp(1.6rem, 3.4vw, 2.8rem); }
+  }
+
+  /* ---------- Uebersicht einklappen ----------
+     Der Titel ueber den Kopfkacheln ist ein Knopf. Eingeklappt verschwinden
+     die vier Kacheln, im Titel steht dann eine Kurzzeile mit den Werten. */
+  .section-toggle{
+    display:flex; align-items:baseline; flex-wrap:wrap; gap:.25rem .5rem;
+    background:none; border:0; padding:0; cursor:pointer; text-align:left;
+    font-family:inherit; width:calc(100% - .5rem);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .section-toggle:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
+  .section-toggle .chev{ display:inline-block; transition:transform .2s ease; }
+  #app.ov-collapsed .section-toggle .chev{ transform:rotate(-90deg); }
+  .ov-summary{
+    display:none; text-transform:none; letter-spacing:0; font-size:.78rem; color:var(--text);
+  }
+  #app.ov-collapsed .ov-summary{ display:inline; }
+  #app.ov-collapsed #overviewRow{ display:none; }
 
   .hero-label{
-    font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:6px;
+    font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:.375rem;
     line-height:1.3; min-height:2.6em; /* immer 2 Zeilen reserviert, egal ob 1 oder 2 Zeilen genutzt -
                                            sonst stehen die Werte je nach Labellaenge/Umbruch nicht auf gleicher Hoehe */
   }
   .hero-value{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
     font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
-    display:flex; align-items:baseline; gap:8px;
+    display:flex; align-items:baseline; gap:.5rem;
   }
   .hero-value .unit{ font-size:1rem; font-weight:500; color:var(--text-muted); }
-  .hero-state{ font-size:.82rem; margin-top:8px; color:var(--text-muted); }
+  .hero-state{ font-size:.82rem; margin-top:.5rem; color:var(--text-muted); }
   .hero-state b{ font-weight:600; }
 
-  .spark{ height:52px; margin-top:12px; }
+  .spark{ height:3.25rem; margin-top:.75rem; }
   .spark canvas{ display:block; width:100%; height:100%; }
   .meta-line{
-    display:flex; justify-content:center; flex-wrap:wrap; gap:6px 14px;
-    margin-top:8px; font-size:.72rem; color:var(--text-muted);
+    display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem;
+    margin-top:.5rem; font-size:.72rem; color:var(--text-muted);
   }
-  .meta-line a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
-  .meta-line a:hover, .meta-line a:focus-visible{ color:var(--teal-text); }
 
   .param-key{ font-size:.66rem; color:var(--text-muted); }
   .setpoint-card{ display:flex; flex-direction:column; }
   /* Regler und Hinweis nach unten schieben, damit sie mit den Sparklines
      der Nachbarkacheln auf einer Linie sitzen */
-  .setpoint-card input[type="range"]{ margin:auto 0 2px; }
+  .setpoint-card input[type="range"]{ margin:auto 0 .125rem; }
   input[type="range"]{
     -webkit-appearance:none; appearance:none;
-    width:100%; height:28px; background:transparent; accent-color:var(--teal-text); cursor:pointer;
+    width:100%; height:1.75rem; background:transparent; accent-color:var(--teal-text); cursor:pointer;
   }
 
   /* Zahleneingabe fuer zdmc_dischargeFixed - optisch wie der Sollwert-Wert,
@@ -244,11 +301,11 @@
   .hero-input{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
     font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
-    background:transparent; border:none; color:inherit; width:3.6ch; padding:0;
+    background:transparent; border:none; color:inherit; width:5ch; padding:0;
     -moz-appearance:textfield;
   }
   .hero-input::-webkit-outer-spin-button, .hero-input::-webkit-inner-spin-button{
-    opacity:1; margin-left:4px;
+    opacity:1; margin-left:.25rem;
   }
   .hero-input:focus{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
   .hero-input:disabled{ opacity:.55; }
@@ -262,16 +319,17 @@
      bleiben immer sichtbar. */
   #app.hide-hub-controls .hub .switch-row,
   #app.hide-hub-controls .hub .ctrl-row,
-  #app.hide-hub-controls .hub .manual-row{ display:none; }
+  #app.hide-hub-controls .hub .manual-row,
+  #app.hide-hub-controls .hub .ctrl-divider{ display:none; }
 
   /* Reglersperre fuer die Reserve (Stufe 2, nur Touch): Der Regler ist auch
      bei entsperrter Seite zunaechst gesperrt und wird ueber das kleine
      Schloss neben dem Wert einzeln freigegeben. Am PC (feiner Zeiger) ist
      das Schloss unsichtbar und der Regler wie bisher direkt bedienbar. */
-  .ctrl-end{ display:inline-flex; align-items:center; gap:8px; }
+  .ctrl-end{ display:inline-flex; align-items:center; gap:.5rem; }
   .soc-lock{
     display:none; align-items:center; justify-content:center;
-    width:30px; height:30px; border-radius:50%; padding:0;
+    width:1.875rem; height:1.875rem; border-radius:50%; padding:0;
     background:var(--surface-2); border:1px solid var(--amber-deep);
     color:var(--amber-text); font-size:.9rem; line-height:1; cursor:pointer;
     -webkit-tap-highlight-color:transparent;
@@ -286,27 +344,27 @@
   /* Ersatz-Anzeige fuer die ausgeblendeten Schalter: reiner Text, nur im
      gesperrten Zustand sichtbar (genau umgekehrt zu switch-row/ctrl-row
      oben), damit Entladen/Netzladen-Status auch gesperrt ablesbar bleibt. */
-  .lock-status{ display:none; font-size:.78rem; color:var(--text-muted); padding:6px 0 10px; }
+  .lock-status{ display:none; font-size:.78rem; color:var(--text-muted); padding:.375rem 0 .625rem; }
   #app.hide-hub-controls .hub .lock-status{ display:block; }
   input[type="range"]::-webkit-slider-runnable-track{
-    height:6px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
+    height:.375rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
   }
   input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; margin-top:-9px;
-    width:22px; height:22px; border-radius:50%;
+    -webkit-appearance:none; margin-top:calc(-.5rem - 1px);
+    width:1.375rem; height:1.375rem; border-radius:50%;
     background:var(--teal-text); border:3px solid var(--surface);
     box-shadow:0 2px 6px rgba(0,0,0,0.25);
   }
 
   .section-title{
     font-size:.8rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase;
-    margin: 0 4px 12px;
+    margin: 0 .25rem .75rem;
   }
   .hubs-grid{
-    display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
-    gap:20px;
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(min(16.25rem, 100%), 1fr));
+    gap:1.25rem;
   }
-  .hub{ position:relative; overflow:hidden; padding:20px 20px 16px; }
+  .hub{ position:relative; overflow:hidden; padding:1.25rem 1.25rem 1rem; }
   .hub::before{
     content:""; position:absolute; top:0; left:0; right:0; height:3px;
     background-image:repeating-linear-gradient(90deg, var(--flow-color, var(--idle)) 0 8px, transparent 8px 16px);
@@ -319,30 +377,34 @@
   .hub[data-flow="in"]::before{ animation-direction:reverse; }
   @keyframes flow{ from{ background-position:0 0; } to{ background-position:32px 0; } }
 
-  .hub-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+  .hub-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;
+    flex-wrap:wrap; gap:.375rem .5rem; }
+  /* Name nicht mitten im Wort umbrechen - bei grosser Ansicht rutscht
+     stattdessen die IP-Marke in die naechste Zeile. */
+  .hub-name{ white-space:nowrap; }
   .hub-name{ font-weight:600; font-size:1.02rem; }
   .hub-tag{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.68rem; color:var(--text-muted);
     background:var(--surface-2); border:1px solid var(--border);
-    border-radius:6px; padding:2px 6px;
+    border-radius:.375rem; padding:.125rem .375rem;
   }
 
-  .hub-body{ display:flex; gap:16px; align-items:center; margin-bottom:16px; }
+  .hub-body{ display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
   .battery{
-    width:30px; height:58px; border:2px solid var(--text-muted); border-radius:6px;
-    position:relative; display:flex; align-items:flex-end; padding:3px; flex-shrink:0;
+    width:1.875rem; height:3.625rem; border:2px solid var(--text-muted); border-radius:.375rem;
+    position:relative; display:flex; align-items:flex-end; padding:.1875rem; flex-shrink:0;
   }
   .battery::before{
-    content:""; position:absolute; top:-6px; left:50%; transform:translateX(-50%);
-    width:12px; height:4px; background:var(--text-muted); border-radius:2px 2px 0 0;
+    content:""; position:absolute; top:-.375rem; left:50%; transform:translateX(-50%);
+    width:.75rem; height:.25rem; background:var(--text-muted); border-radius:2px 2px 0 0;
   }
   .battery-fill{ width:100%; border-radius:3px; transition:height .6s ease, background .6s ease; }
 
-  .hub-metrics{ display:flex; flex-direction:column; gap:4px; }
+  .hub-metrics{ display:flex; flex-direction:column; gap:.25rem; }
   .soc-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.3rem; }
   .soc-sub{ font-size:.72rem; color:var(--text-muted); }
-  .power-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; margin-top:2px; }
-  .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem; color:var(--text-muted); margin-top:3px; }
+  .power-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; margin-top:.125rem; }
+  .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem; color:var(--text-muted); margin-top:.1875rem; }
   .pack-line .low{ color:var(--amber-text); }
   .pack-line .crit{ color:var(--alert-text); }
   /* Letzte echte Vollladung (100 %). Farbe nach Alter: gruen < 7 Tage,
@@ -350,34 +412,34 @@
      Datum. */
   .full-line{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem;
-    color:var(--text-muted); margin-top:3px; cursor:pointer; user-select:none;
+    color:var(--text-muted); margin-top:.1875rem; cursor:pointer; user-select:none;
     -webkit-tap-highlight-color:transparent;
   }
   .full-line.fresh{ color:var(--green-text); }
   .full-line.aging{ color:var(--amber-text); }
   .full-line.stale{ color:var(--alert-text); }
 
-  .divider{ height:1px; background:var(--border); margin:14px 0; }
+  .divider{ height:1px; background:var(--border); margin:.875rem 0; }
 
-  .hub-flags{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .hub-flags{ display:flex; flex-wrap:wrap; gap:.375rem; margin-bottom:.875rem; }
   .flag{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.66rem;
     color:var(--text-muted); background:var(--surface-2);
-    border:1px solid var(--border); border-radius:6px; padding:3px 7px;
+    border:1px solid var(--border); border-radius:.375rem; padding:.1875rem .4375rem;
   }
   .flag.warn{ color:var(--amber-text); border-color:var(--amber-deep); }
   .flag.block{ color:var(--alert-text); border-color:var(--alert); }
   .flag.ok{ color:var(--teal-text); border-color:var(--teal-deep); }
 
-  .ctrl-row{ padding:6px 0 2px; }
+  .ctrl-row{ padding:.375rem 0 .125rem; }
   .ctrl-head{
     display:flex; justify-content:space-between; align-items:baseline;
-    gap:8px; margin-bottom:2px;
+    gap:.5rem; margin-bottom:.125rem;
   }
   .ctrl-head .lbl{ font-size:.84rem; }
   .ctrl-head .val{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.88rem; }
   .ctrl-row .key{ font-size:.66rem; color:var(--text-muted); }
-  .ctrl-row input[type="range"]{ height:24px; margin-top:2px; }
+  .ctrl-row input[type="range"]{ height:1.5rem; margin-top:.125rem; }
 
   input[type="range"]:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
   .switch input:focus-visible ~ .track{ outline:2px solid var(--teal-text); outline-offset:3px; }
@@ -389,28 +451,28 @@
   .switch input:disabled ~ .thumb{ opacity:.45; }
 
 
-  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:.375rem 0; }
   .switch-text{ display:flex; flex-direction:column; }
   .switch-text .lbl{ font-size:.84rem; }
-  .switch-text .key{ font-size:.66rem; color:var(--text-muted); margin-top:1px; }
+  .switch-text .key{ font-size:.66rem; color:var(--text-muted); margin-top:.0625rem; }
 
-  .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
+  .switch{ position:relative; width:2.625rem; height:1.5rem; flex-shrink:0; }
   .switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:2; }
   .switch .track{
     position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border);
     border-radius:999px; transition:background .25s ease, border-color .25s ease;
   }
   .switch .thumb{
-    position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
+    position:absolute; top:.1875rem; left:.1875rem; width:1rem; height:1rem; border-radius:50%;
     background:var(--text-muted); transition:transform .25s ease, background .25s ease;
   }
   .switch.amber input:checked ~ .track{ background:var(--amber-deep); border-color:transparent; }
   .switch.teal input:checked ~ .track{ background:var(--teal-deep); border-color:transparent; }
-  .switch input:checked ~ .thumb{ transform:translateX(18px); background:#fff; }
+  .switch input:checked ~ .thumb{ transform:translateX(1.125rem); background:#fff; }
 
-  footer{ text-align:center; color:var(--text-muted); font-size:.74rem; margin-top:34px; }
+  footer{ text-align:center; color:var(--text-muted); font-size:.74rem; margin-top:2.125rem; }
   footer .toast{
-    display:inline-block; margin-top:10px; font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
+    display:inline-block; margin-top:.625rem; font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
     font-size:.7rem; color:var(--text-muted); opacity:0; transition:opacity .3s ease;
   }
   footer .toast.show{ opacity:1; }
@@ -418,7 +480,7 @@
   .diag{
     background:rgba(226,87,76,0.12); border:1px solid var(--alert);
     color:var(--text); border-radius:var(--radius-md);
-    padding:12px 16px; margin-bottom:20px; font-size:.82rem; line-height:1.4;
+    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.82rem; line-height:1.4;
   }
   .diag b{ color:var(--alert-text); }
 
@@ -432,10 +494,10 @@
     text-decoration-thickness:1px; text-underline-offset:3px;
   }
   .help-tip{
-    position:fixed; z-index:50; max-width:min(320px, calc(100vw - 16px));
+    position:fixed; z-index:50; max-width:min(20rem, calc(100vw - 16px));
     background:var(--surface-2); color:var(--text);
     border:1px solid var(--border); border-radius:var(--radius-sm);
-    box-shadow:var(--shadow); padding:10px 12px;
+    box-shadow:var(--shadow); padding:.625rem .75rem;
     font-size:.8rem; line-height:1.45; letter-spacing:0; text-transform:none;
     opacity:0; pointer-events:none; transition:opacity .15s ease;
   }
@@ -448,9 +510,9 @@
   @media (max-width:640px){
     /* Rechte Gruppe auf eine eigene volle Zeile - dann konkurriert sie nicht
        mehr mit dem Schriftzug um den Platz. */
-    .head-right{ width:100%; justify-content:flex-start; gap:10px; }
-    .clock{ min-width:0; padding:6px 12px; }
-    .status-pill{ padding:6px 12px; }
+    .head-right{ width:100%; justify-content:flex-start; gap:.625rem; }
+    .clock{ min-width:0; padding:.375rem .75rem; }
+    .status-pill{ padding:.375rem .75rem; }
   }
 
   @media (max-width:480px){ .clock{ text-align:left; } }
@@ -487,7 +549,7 @@
           <div class="date" id="clockDate">–</div>
         </div>
         <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button>
-        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Schriftgröße umschalten" data-i18n-aria="fontAria" title="Schriftgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
+        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Ansichtsgröße umschalten" data-i18n-aria="fontAria" title="Ansichtsgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
         <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button>
         <button class="theme-toggle fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button>
         <button class="theme-toggle lang-toggle" id="langToggle" aria-label="Sprache wechseln" data-i18n-aria="langAria" title="Sprache wechseln">DE</button>
@@ -496,7 +558,8 @@
 
     <div class="diag" id="diag" hidden></div>
 
-    <div class="row">
+    <button type="button" class="section-title section-toggle" id="overviewToggle" aria-expanded="true" aria-controls="overviewRow" data-i18n-title="overviewAria" title="Übersicht ein-/ausklappen"><span class="chev" aria-hidden="true">▾</span><span data-i18n="overview">Übersicht</span><span class="ov-summary mono" id="overviewSummary"></span></button>
+    <div class="row" id="overviewRow">
       <div class="card setpoint-card">
         <div class="hero-label"><span data-i18n="setpoint" class="help-mark" data-help="helpSetpoint">Sollwert</span> <span class="param-key mono">zdmc_setpoint</span></div>
         <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
@@ -531,7 +594,6 @@
         <span id="chartWindowLabel" data-i18n="chartBuilding">Verlauf wird aufgebaut</span>
         <span id="lastUpdate" data-i18n="lastUpdateNone">zuletzt aktualisiert –</span>
         <span id="versionLine">v–</span>
-        <a id="helpLink" href="https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard (GitHub)">Hilfe</a>
       </div>
       <div class="toast" id="toast"></div>
     </footer>
@@ -562,7 +624,7 @@
      Alle sichtbaren Texte stehen hier; im restlichen Code nur noch t('key').
      Platzhalter in {geschweiften} Klammern werden von t() ersetzt.
      Statische Elemente im HTML tragen data-i18n (Textinhalt),
-     data-i18n-title, data-i18n-aria bzw. data-i18n-href (Attribute) und werden von
+     data-i18n-title bzw. data-i18n-aria (Attribute) und werden von
      applyStaticTexts() beschriftet. Franzoesisch mit geschuetztem
      Leerzeichen (\u00a0) vor : ? und in « » - sonst brechen die Zeichen
      allein in die naechste Zeile um.
@@ -597,7 +659,7 @@
       connecting: 'Verbinde…',
       lockAria: 'Bedienung sperren/entsperren',
       socLockAria: 'Reserve-Regler entsperren/sperren',
-      fontAria: 'Schriftgröße umschalten',
+      fontAria: 'Ansichtsgröße umschalten',
       themeAria: 'Tag/Nacht umschalten',
       langAria: 'Sprache wechseln',
       langTitle: 'Sprache: Deutsch (antippen für English)',
@@ -607,9 +669,9 @@
       gridTitle: 'Netzbezug / Einspeisung',
       battTitle: 'Solarflow-Leistung',
       devices: 'Geräte',
+      overview: 'Übersicht', overviewAria: 'Übersicht ein-/ausklappen',
+      ovSummary: 'Soll {s} W · Netz {g} W · Speicher {b} W',
       footer: 'Eigenständige Seite · Daten & Regelparameter über die Shelly-API',
-      helpLink: 'Hilfe', helpTitle: 'Anleitung zum Dashboard (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md',
       chartBuilding: 'Verlauf wird aufgebaut',
       lastUpdateNone: 'zuletzt aktualisiert –',
       lastUpdate: 'zuletzt aktualisiert {time}',
@@ -618,8 +680,8 @@
       note: 'Hinweis:',
       toDay: 'Auf Tagsicht umschalten',
       toNight: 'Auf Nachtsicht umschalten',
-      fontNormal: 'Normal', fontLarge: 'Groß', fontXLarge: 'Sehr groß',
-      fontTitle: 'Schriftgröße: {lvl} (antippen für nächste Stufe)',
+      fontNormal: 'Normal', fontLarge: 'Groß', fontXLarge: 'Sehr groß', fontXXLarge: 'Maximal',
+      fontTitle: 'Ansichtsgröße: {lvl} (antippen für nächste Stufe)',
       unlock: 'Bedienung entsperren',
       lock: 'Bedienung sperren',
       httpErr: 'HTTP {status} bei {path}',
@@ -695,7 +757,7 @@
       connecting: 'Connecting…',
       lockAria: 'Lock/unlock controls',
       socLockAria: 'Unlock/lock reserve slider',
-      fontAria: 'Change font size',
+      fontAria: 'Change view size',
       themeAria: 'Toggle day/night',
       langAria: 'Change language',
       langTitle: 'Language: English (tap for Français)',
@@ -705,9 +767,9 @@
       gridTitle: 'Grid import / export',
       battTitle: 'Solarflow power',
       devices: 'Devices',
+      overview: 'Overview', overviewAria: 'Expand/collapse overview',
+      ovSummary: 'Target {s} W · Grid {g} W · Storage {b} W',
       footer: 'Standalone page · data & control parameters via the Shelly API',
-      helpLink: 'Help', helpTitle: 'Dashboard guide (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_EN.md',
       chartBuilding: 'Building history',
       lastUpdateNone: 'last updated –',
       lastUpdate: 'last updated {time}',
@@ -716,8 +778,8 @@
       note: 'Note:',
       toDay: 'Switch to day mode',
       toNight: 'Switch to night mode',
-      fontNormal: 'Normal', fontLarge: 'Large', fontXLarge: 'Extra large',
-      fontTitle: 'Font size: {lvl} (tap for next level)',
+      fontNormal: 'Normal', fontLarge: 'Large', fontXLarge: 'Extra large', fontXXLarge: 'Maximum',
+      fontTitle: 'View size: {lvl} (tap for next level)',
       unlock: 'Unlock controls',
       lock: 'Lock controls',
       httpErr: 'HTTP {status} for {path}',
@@ -793,7 +855,7 @@
       connecting: 'Connexion…',
       lockAria: 'Verrouiller/déverrouiller les commandes',
       socLockAria: 'Déverrouiller/verrouiller le curseur de réserve',
-      fontAria: 'Changer la taille du texte',
+      fontAria: 'Changer la taille d’affichage',
       themeAria: 'Basculer jour/nuit',
       langAria: 'Changer de langue',
       langTitle: 'Langue\u00a0: français (toucher pour Deutsch)',
@@ -803,9 +865,9 @@
       gridTitle: 'Soutirage / injection réseau',
       battTitle: 'Puissance Solarflow',
       devices: 'Appareils',
+      overview: 'Vue d’ensemble', overviewAria: 'Déplier/replier la vue d’ensemble',
+      ovSummary: 'Consigne {s}\u00a0W · Réseau {g}\u00a0W · Stockage {b}\u00a0W',
       footer: 'Page autonome · données et paramètres de régulation via l’API Shelly',
-      helpLink: 'Aide', helpTitle: 'Guide du tableau de bord (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_FR.md',
       chartBuilding: 'Historique en cours de constitution',
       lastUpdateNone: 'mis à jour –',
       lastUpdate: 'mis à jour à {time}',
@@ -814,8 +876,8 @@
       note: 'Remarque\u00a0:',
       toDay: 'Passer en mode jour',
       toNight: 'Passer en mode nuit',
-      fontNormal: 'Normale', fontLarge: 'Grande', fontXLarge: 'Très grande',
-      fontTitle: 'Taille du texte\u00a0: {lvl} (toucher pour le niveau suivant)',
+      fontNormal: 'Normale', fontLarge: 'Grande', fontXLarge: 'Très grande', fontXXLarge: 'Maximale',
+      fontTitle: 'Taille d’affichage\u00a0: {lvl} (toucher pour le niveau suivant)',
       unlock: 'Déverrouiller les commandes',
       lock: 'Verrouiller les commandes',
       httpErr: 'HTTP {status} pour {path}',
@@ -915,9 +977,6 @@
     document.querySelectorAll('[data-i18n-aria]').forEach(function(el){
       el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
     });
-    document.querySelectorAll('[data-i18n-href]').forEach(function(el){
-      el.href = t(el.getAttribute('data-i18n-href'));
-    });
   }
 
   function showDiag(msg){
@@ -970,15 +1029,17 @@
     else if (darkQuery.addListener) darkQuery.addListener(onSystemChange);
   }
 
-  /* ---------------- Schriftgröße ----------------
-     Drei Stufen, weiterhin bewusst nicht gespeichert (jeder Reload startet
+  /* ---------------- Ansichtsgröße ----------------
+     Vier Stufen (100/115/130/150 %), wirkt seit 3.5.5 als Zoom der ganzen
+     Seite (siehe CSS). Weiterhin bewusst nicht gespeichert (jeder Reload startet
      wieder bei diesem Standard) - Standard ist jetzt A2 (Groß) statt A1. */
   const fontSizeToggle = document.getElementById('fontSizeToggle');
   const fontSizeLvl = document.getElementById('fontSizeLvl');
   const FONT_LEVELS = [
     { key: 'normal', label: 'fontNormal' },
     { key: 'large',  label: 'fontLarge' },
-    { key: 'xlarge', label: 'fontXLarge' }
+    { key: 'xlarge', label: 'fontXLarge' },
+    { key: 'xxlarge', label: 'fontXXLarge' }
   ];
   let fontSizeIdx = 1; // Standard: A2 / "Groß"
   function applyFontSize(){
@@ -1125,8 +1186,14 @@
      den Wert - Tippen oder Wischen auf der Leiste wird zurueckgenommen.
      Mit Maus (feiner Zeiger) gilt nichts davon, dort bleibt alles wie bisher. */
   const SOC_OPEN_MS = 5000;
-  const SOC_THUMB_PX = 22;   // Breite des Reglerpunkts (siehe CSS)
-  const SOC_TOL_PX = 22;     // Fangbereich links/rechts der Punktmitte
+  // Reglerpunkt und Fangbereich sind seit 3.5.5 in rem (1,375rem = 22px bei
+  // Stufe 1) und wachsen mit der Ansichtsgroesse - deshalb in px umrechnen.
+  const SOC_THUMB_REM = 1.375;  // Breite des Reglerpunkts (siehe CSS)
+  const SOC_TOL_REM = 1.375;    // Fangbereich links/rechts der Punktmitte
+  function remPx(){
+    const v = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return v > 0 ? v : 16;
+  }
   const coarseQuery = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
   let socOpenId = null;      // id des freigegebenen Geraets (String) oder null
   let socTimer = null;
@@ -1169,8 +1236,9 @@
     const r = el.getBoundingClientRect();
     const min = Number(el.min), max = Number(el.max), v = Number(el.value);
     const frac = max > min ? (v - min) / (max - min) : 0;
-    const cx = r.left + SOC_THUMB_PX / 2 + frac * (r.width - SOC_THUMB_PX);
-    return Math.abs(clientX - cx) > SOC_TOL_PX;
+    const rp = remPx(), thumb = SOC_THUMB_REM * rp;
+    const cx = r.left + thumb / 2 + frac * (r.width - thumb);
+    return Math.abs(clientX - cx) > SOC_TOL_REM * rp;
   }
 
   // Schloss-Knoepfe und Rahmen dem Zustand anpassen. Ueber das DOM statt
@@ -1304,6 +1372,7 @@
 
   setpointSlider.addEventListener('input', function(e){
     showSetpoint(Number(e.target.value));
+    updateOverviewSummary();
   });
   setpointSlider.addEventListener('change', function(e){
     lockControl(e.target);
@@ -1454,6 +1523,26 @@
     drawSpark(battSpark, history);
   }
 
+  /* ---------------- Uebersicht einklappen ----------------
+     Zustand wird gemerkt (harmlos, anders als die Bediensperre). Beim
+     Aufklappen die Kurven neu zeichnen - eingeklappt haben die Canvas
+     keine Groesse, drawSpark() ueberspringt sie dann. */
+  const OV_KEY = 'zendash_overview_collapsed';
+  const overviewToggle = document.getElementById('overviewToggle');
+  let ovCollapsed = false;
+  try { ovCollapsed = localStorage.getItem(OV_KEY) === '1'; } catch (e) {}
+  function applyOverview(){
+    appEl.classList.toggle('ov-collapsed', ovCollapsed);
+    overviewToggle.setAttribute('aria-expanded', ovCollapsed ? 'false' : 'true');
+    if (!ovCollapsed) drawSparks();
+  }
+  overviewToggle.addEventListener('click', function(){
+    ovCollapsed = !ovCollapsed;
+    try { localStorage.setItem(OV_KEY, ovCollapsed ? '1' : '0'); } catch (e) {}
+    applyOverview();
+  });
+  applyOverview();
+
   applyFontSize(); // Standardgröße (A2) jetzt anwenden - erst hier sind gridSpark/battSpark, die drawSparks() braucht, tatsächlich initialisiert
 
   let resizeTimer = null;
@@ -1547,6 +1636,7 @@
           '<span class="key mono" id="minSocMax-' + d.id + '">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
           '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
         '</div>' +
+        '<div class="divider ctrl-divider"></div>' +
         '<div class="ctrl-row">' +
           '<div class="ctrl-head"><span class="lbl help-mark" data-i18n="inputLimitLbl" data-help="helpInputLimit">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : t('off')) + '</span></div>' +
           '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
@@ -2165,6 +2255,18 @@
     }
   }
 
+  // Kurzzeile im eingeklappten Uebersichts-Titel - liest die Werte aus den
+  // Kacheln, damit Vorzeichen und "n/a" genau gleich aussehen.
+  function updateOverviewSummary(){
+    const el = document.getElementById('overviewSummary');
+    if (!el) return;
+    el.textContent = t('ovSummary', {
+      s: setpointValueEl.textContent,
+      g: document.getElementById('gridValue').textContent,
+      b: document.getElementById('battValue').textContent
+    });
+  }
+
   function render(){
     const now = new Date();
     // Beim ersten echten Durchlauf die statischen Platzhalter aus dem
@@ -2198,6 +2300,7 @@
     battStateEl.textContent = t(totalBatt > 0 ? 'battOut' : (totalBatt < 0 ? 'battIn' : 'battIdle'));
 
     drawSparks();
+    updateOverviewSummary();
     lastUpdateEl.removeAttribute('data-i18n');
     lastUpdateEl.textContent = t('lastUpdate', { time: now.toLocaleTimeString(locale(), { hour12: false }) });
     const windowEl = document.getElementById('chartWindowLabel');
@@ -2327,6 +2430,7 @@
     applyLockState();
     showSetpointState();
     showDischargeFixedState();
+    updateOverviewSummary();
     if (lastApiVersion !== null) showVersion(lastApiVersion);
     if (lastStatusErrors !== null) updateStatusPill(lastStatusErrors);
     tickClock();
@@ -2357,4 +2461,4 @@
 })();
 </script>
 </body>
-</html>
+</html>
