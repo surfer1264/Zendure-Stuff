@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.7";
+let VERSION = "5.1.8";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -1011,13 +1011,19 @@ function calculate(myCycle) {
 
   updateGridReverseLock();
 
+  // v5.1.8: Asymmetrische Daempfung - immer in Richtung "weniger Export"
+  // ungedaempft (Faktor 1), in Gegenrichtung wie bisher mit dampingFactor.
+  // Entladen: sinkt der Bedarf (Last aus), wird sofort zurueckgenommen.
+  // Laden:    steigt der Ueberschuss (Wolke weg), wird sofort mehr geladen.
+  // Die Gegenrichtung (mehr Entladen / weniger Laden) bleibt gedaempft -
+  // dort entsteht kurz Netzbezug statt Export.
   let raw = Math.round((state.gridPower - CONFIG.setpoint) + sumZen);
 
   if (state.smoothedOutput === null) {
     state.smoothedOutput = raw;
   } else {
-    state.smoothedOutput =
-      state.smoothedOutput + CONFIG.dampingFactor * (raw - state.smoothedOutput);
+    let aD = (raw < state.smoothedOutput) ? 1 : CONFIG.dampingFactor;
+    state.smoothedOutput = state.smoothedOutput + aD * (raw - state.smoothedOutput);
   }
 
   let dischargeTarget = Math.round(state.smoothedOutput);
@@ -1032,8 +1038,8 @@ function calculate(myCycle) {
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
   } else {
-    state.smoothedCharge =
-      state.smoothedCharge + CONFIG.dampingFactor * (rawCharge - state.smoothedCharge);
+    let aC = (rawCharge < state.smoothedCharge) ? 1 : CONFIG.dampingFactor;
+    state.smoothedCharge = state.smoothedCharge + aC * (rawCharge - state.smoothedCharge);
   }
 
   let chargeTarget = Math.round(state.smoothedCharge);
@@ -1844,6 +1850,14 @@ function writeAllDevices(indices, plans, myCycle, pos, callback) {
   });
 }
 
+// v5.1.8: Netzmessung ZULETZT. Vorher wurde das Netz am Zyklusanfang gelesen
+// und die Geraete erst danach per HTTP (je ~0,5-1 s). Rampte ein Geraet
+// dazwischen, passten Netzsaldo und zenPower zeitlich nicht zusammen ->
+// falsches raw -> Ueberschwingen. Jetzt: erst alle Geraete, dann direkt
+// das Netz. Bei gridSource "local" ist der Netzwert damit praktisch
+// zeitgleich mit dem letzten Geraetewert.
+// Die idleSkip-Entscheidung faellt dafuer VOR den Messungen. Im Skip-Zyklus
+// wird wie bisher nur das Netz gelesen.
 function update() {
 
   if (state.busy) {
@@ -1856,9 +1870,13 @@ function update() {
 
   let myCycle = lock();
 
-  readGridPower(myCycle, function (ok) {
+  let afterGrid = function (ok) {
+    if (!ok) return; // unlock() ist in readGridPower bereits erfolgt
 
-    if (!ok) return;
+    Timer.set(0, false, function () {
+      calculate(myCycle);
+    });
+  };
 
     if (CONFIG.idleSkip.enabled && state.idleSkipRemaining > 0) {
       state.idleSkipRemaining = state.idleSkipRemaining - 1;
@@ -1869,9 +1887,7 @@ function update() {
           state.idleSkipRemaining + " Zyklen verbleibend, Netzmessung aktuell)");
       }
 
-      Timer.set(0, false, function () {
-        calculate(myCycle);
-      });
+    readGridPower(myCycle, afterGrid);
       return;
     }
 
@@ -1882,11 +1898,7 @@ function update() {
     }
 
     readAllDevices(0, myCycle, function () {
-
-      Timer.set(0, false, function () {
-        calculate(myCycle);
-      });
-    });
+    readGridPower(myCycle, afterGrid);
   });
 }
 

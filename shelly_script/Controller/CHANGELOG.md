@@ -1,5 +1,17 @@
 # Changelog Controller
 
+## v5.1.8
+
+-**Dämpfung nur noch in eine Richtung:** In Richtung „weniger Export“ reagiert der Controller sofort, ohne `dampingFactor`:
+- Entladen wird sofort zurückgenommen, wenn die Last sinkt.
+- Laden wird sofort erhöht, wenn der PV-Überschuss steigt.
+- Die Gegenrichtung (mehr entladen, weniger laden) bleibt wie bisher gedämpft. Dort gibt es kurz Netzbezug statt Einspeisung.
+- Nach „Wasserkocher aus“ ist die Einspeisung deutlich kürzer. In der Simulation sank die Dauer mit mehr als 50 W Export um rund 40–70 %
+- Etwas weniger Schreibbefehle an die Geräte.
+- Die erste Exportspitze direkt nach dem Abschalten bleibt. Sie entsteht, weil das Gerät seine Leistung nur mit begrenzter Geschwindigkeit herunterfährt, und lässt sich durch die Regelung nicht verhindern.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.1.7
 
 Nur Konsolenausgaben gekürzt. Keine Änderung an Regelung, Verteilung,
