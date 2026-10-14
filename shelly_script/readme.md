@@ -16,6 +16,11 @@ Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit oh
 
 Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen) steht beim **[Configurator](Multiconfigurator/readme.md)** · [English](Multiconfigurator/readme_EN.md) · [Français](Multiconfigurator/readme_FR.md)
 
+## Wieviel Solarflows kann ich betreiben? - Speicherbedarfsbetrachtung 
+
+[Speicherbedarfsbetrachtung](zendash_speichermodell.md)
+
+
 ## So ist das System aufgebaut
 
 | Shelly | Script | Aufgabe |
