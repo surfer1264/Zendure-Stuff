@@ -267,7 +267,7 @@ Not changeable in the dashboard are the **hysteresis** (only shown next to the s
 - **Next to the setpoint** is the hysteresis: the grid draw may deviate this far before the Controller readjusts.
 - **One card per battery** with:
   - state of charge and below it the operating window, e.g. `SoC · 15–100 %` (reserve to charge target)
-  - power, PV input and weakest cell voltage – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "min 3.31 V (lock < 2.90 V)", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
+  - power, PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell voltage – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "min 3.31 V (lock < 2.90 V)", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
   - notes when something different is set on the device than in the configuration: `socSet` (upper charge limit on the device) differs from `maxSoc`, or `minSoc` on the device differs from the reserve in the KVS. Usually the value was changed externally (app, Home Assistant). Tapping explains the remedy.
   - "100 %: N days ago" – when the battery was last completely full ([more on this](readme_EN.md#last-full-charge))
   - raw status `acMode`, `socLimit`, `gridReverse`. This explains the most common "Why is the battery doing nothing?" cases: `socLimit 1` = battery full, charging blocked; `socLimit 2` = discharging blocked; `gridReverse 2` = feed-in blocked.

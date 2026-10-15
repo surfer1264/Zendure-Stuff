@@ -1,5 +1,12 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.9
+
+- status_api liefert je Hub zusaetzlich `temp` (Geraetetemperatur in ganzen °C aus `hyperTmp`: (hyperTmp - 2731) / 10, gerundet) und `offGrid` (Leistung am Offgrid-Ausgang in W aus `gridOffPower`, `null` = kein Offgrid-Ausgang)
+- Dashboard: Zusatzzeile der Geraetekarte zeigt Offgrid-Leistung und Temperatur, z. B. "PV 420 W · Offgrid 0 W · 19 °C · min 3,28 V"
+- Dashboard: Versionsnummer 3.5.9
+- https://github.com/surfer1264/Zendure-Stuff/issues/138
+
 ## Changelog 3.5.8
 
 - Speicheroptimierung

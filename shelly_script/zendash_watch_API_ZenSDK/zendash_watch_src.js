@@ -27,7 +27,7 @@
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
-//                               minSocHw}] }
+//                               minSocHw,temp,offGrid}] }
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
 // AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
@@ -57,7 +57,7 @@
 // Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.8";
+let VERSION = "3.5.9";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1029,6 +1029,11 @@ function updateGridPowerStatus(callback) {
 //            uebernimmt jede Aenderung von zdmc_devN_minSoc aus der KVS auf
 //            die Hardware - das Dashboard vergleicht beide Werte und meldet
 //            eine anhaltende Abweichung (seit 3.5.4).
+//            temp: Geraetetemperatur in ganzen Grad C (Report hyperTmp,
+//            Zehntel-Kelvin: (hyperTmp - 2731) / 10, gerundet), null = Feld
+//            fehlt. offGrid: Leistung am Offgrid-Ausgang in W (Report
+//            gridOffPower), null = Geraet hat keinen Offgrid-Ausgang
+//            (seit 3.5.9).
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -1041,7 +1046,7 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     id: hi, soc: null, power: 0, acMode: null, socLimit: null,
     gridReverse: null, pv: null, minVol: null, online: false,
     home: null, gridIn: null, packIn: null, packOut: null, socSet: null,
-    minSocHw: null
+    minSocHw: null, temp: null, offGrid: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1070,7 +1075,7 @@ function setHubOffline(index) {
   h.soc = null; h.power = 0; h.acMode = null; h.socLimit = null;
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
   h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
-  h.socSet = null; h.minSocHw = null;
+  h.socSet = null; h.minSocHw = null; h.temp = null; h.offGrid = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1176,6 +1181,8 @@ function extractHub(index, body, watchNow, logPacks) {
 
   let ht = jsonNum(body, "hyperTmp");
   WSTATE[index].hyperTemp = (ht !== null) ? (ht - 2731) / 10 : null;
+  hub.temp = (ht !== null) ? Math.round((ht - 2731) / 10) : null;
+  hub.offGrid = jsonNum(body, "gridOffPower");
 
   let packLog = scanPacks(index, body, watchNow, logPacks);
   if (logPacks) {
