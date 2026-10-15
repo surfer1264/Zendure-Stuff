@@ -285,6 +285,8 @@
     display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem;
     margin-top:.5rem; font-size:.72rem; color:var(--text-muted);
   }
+  .meta-line a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
+  .meta-line a:hover, .meta-line a:focus-visible{ color:var(--teal-text); }
 
   .param-key{ font-size:.66rem; color:var(--text-muted); }
   .setpoint-card{ display:flex; flex-direction:column; }
@@ -594,6 +596,7 @@
         <span id="chartWindowLabel" data-i18n="chartBuilding">Verlauf wird aufgebaut</span>
         <span id="lastUpdate" data-i18n="lastUpdateNone">zuletzt aktualisiert –</span>
         <span id="versionLine">v–</span>
+        <a id="helpLink" href="https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard (GitHub)">Hilfe</a>
       </div>
       <div class="toast" id="toast"></div>
     </footer>
@@ -624,7 +627,7 @@
      Alle sichtbaren Texte stehen hier; im restlichen Code nur noch t('key').
      Platzhalter in {geschweiften} Klammern werden von t() ersetzt.
      Statische Elemente im HTML tragen data-i18n (Textinhalt),
-     data-i18n-title bzw. data-i18n-aria (Attribute) und werden von
+     data-i18n-title, data-i18n-aria bzw. data-i18n-href (Attribute) und werden von
      applyStaticTexts() beschriftet. Franzoesisch mit geschuetztem
      Leerzeichen (\u00a0) vor : ? und in « » - sonst brechen die Zeichen
      allein in die naechste Zeile um.
@@ -672,6 +675,8 @@
       overview: 'Übersicht', overviewAria: 'Übersicht ein-/ausklappen',
       ovSummary: 'Soll {s} W · Netz {g} W · Speicher {b} W',
       footer: 'Eigenständige Seite · Daten & Regelparameter über die Shelly-API',
+      helpLink: 'Hilfe', helpTitle: 'Anleitung zum Dashboard (GitHub)',
+      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md',
       chartBuilding: 'Verlauf wird aufgebaut',
       lastUpdateNone: 'zuletzt aktualisiert –',
       lastUpdate: 'zuletzt aktualisiert {time}',
@@ -770,6 +775,8 @@
       overview: 'Overview', overviewAria: 'Expand/collapse overview',
       ovSummary: 'Target {s} W · Grid {g} W · Storage {b} W',
       footer: 'Standalone page · data & control parameters via the Shelly API',
+      helpLink: 'Help', helpTitle: 'Dashboard guide (GitHub)',
+      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_EN.md',
       chartBuilding: 'Building history',
       lastUpdateNone: 'last updated –',
       lastUpdate: 'last updated {time}',
@@ -868,6 +875,8 @@
       overview: 'Vue d’ensemble', overviewAria: 'Déplier/replier la vue d’ensemble',
       ovSummary: 'Consigne {s}\u00a0W · Réseau {g}\u00a0W · Stockage {b}\u00a0W',
       footer: 'Page autonome · données et paramètres de régulation via l’API Shelly',
+      helpLink: 'Aide', helpTitle: 'Guide du tableau de bord (GitHub)',
+      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_FR.md',
       chartBuilding: 'Historique en cours de constitution',
       lastUpdateNone: 'mis à jour –',
       lastUpdate: 'mis à jour à {time}',
@@ -976,6 +985,9 @@
     });
     document.querySelectorAll('[data-i18n-aria]').forEach(function(el){
       el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria')));
+    });
+    document.querySelectorAll('[data-i18n-href]').forEach(function(el){
+      el.href = t(el.getAttribute('data-i18n-href'));
     });
   }
 
