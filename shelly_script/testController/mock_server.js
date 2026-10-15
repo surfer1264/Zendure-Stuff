@@ -53,8 +53,8 @@ function pvCurve(minuteOfDay, start, end, peak, maxPower) {
 }
 
 const WIN_START = 8 * 60, WIN_END = 18 * 60;
-function pv800(m) { return pvCurve(m, WIN_START-60, WIN_END, 10 * 60, 1500); }
-function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 1000); }
+function pv800(m) { return pvCurve(m, WIN_START-60, WIN_END-60, 10 * 60, 1400); }
+function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 900); }
 
 // ---------------------------------------------------------------
 // Geraete-Zustand
@@ -147,7 +147,76 @@ function advanceDevice(dev, elapsedMin) {
   return pvSurplus;
 }
 
-let lastGridPollAt = null;
+// ---------------------------------------------------------------
+// FIX (Controller ab 5.1.8): Simulationsschritt NICHT mehr an den
+// Netz-Poll koppeln. 5.1.8 liest erst die Geraete, dann das Netz.
+// Frueher lief der Zeitschritt im Grid-Handler -> Geraete-Ist war
+// immer einen Schritt aelter als der Netzwert -> Schwingung.
+// Jetzt: ein Schritt passiert, sobald ein Lese-Endpunkt im selben
+// Schritt ZUM ZWEITEN MAL abgefragt wird (= neuer Reglerzyklus).
+// Damit sehen Geraete-Report und Netzwert immer denselben Zustand,
+// egal in welcher Reihenfolge der Controller liest (auch Sparmodus).
+// ---------------------------------------------------------------
+let servedThisStep = new Set();
+let lastGrid = 0;
+
+function recompute(elapsed) {
+  if (elapsed > 0) simMinute += elapsed;
+
+  let surplus0 = 0, surplus1 = 0;
+  if (elapsed > 0) {
+    surplus0 = advanceDevice(dev0, elapsed);
+    surplus1 = advanceDevice(dev1, elapsed);
+  }
+
+  const load = householdLoad(simMinute);
+  const acSum = currentAcContribution(dev0) + currentAcContribution(dev1);
+
+  const totalSurplus = surplus0 + surplus1;
+  const remainingNeed = Math.max(load - acSum, 0);
+  const selfConsumed = Math.min(totalSurplus, remainingNeed);
+  const leftoverSurplus = totalSurplus - selfConsumed;
+
+  let exportAllowed = 0, verworfen0 = 0, verworfen1 = 0;
+  if (totalSurplus > 0 && leftoverSurplus > 0) {
+    const share0 = surplus0 / totalSurplus;
+    const share1 = surplus1 / totalSurplus;
+    const leftover0 = leftoverSurplus * share0;
+    const leftover1 = leftoverSurplus * share1;
+    if (dev0.gridReverse === 1) exportAllowed += leftover0; else verworfen0 = leftover0;
+    if (dev1.gridReverse === 1) exportAllowed += leftover1; else verworfen1 = leftover1;
+  }
+
+  dev0.lastPassThrough = Math.max(0, surplus0 - verworfen0);
+  dev1.lastPassThrough = Math.max(0, surplus1 - verworfen1);
+
+  const usableSurplus = selfConsumed + exportAllowed;
+  lastGrid = load - acSum - usableSurplus;
+
+  log.push({
+    t: hhmm(simMinute), minute: Math.round(simMinute * 10000) / 10000,
+    haushalt_W: Math.round(load),
+    grid_W: Math.round(lastGrid),
+    soc_sf800: Math.round(dev0.soc), soc_sf2400: Math.round(dev1.soc),
+    pv_sf800: Math.round(dev0.lastPv), pv_sf2400: Math.round(dev1.lastPv),
+    ueberschuss_sf800: Math.round(surplus0), ueberschuss_sf2400: Math.round(surplus1),
+    verworfen_sf800: Math.round(verworfen0), verworfen_sf2400: Math.round(verworfen1),
+    bypass_sf800: Math.round(dev0.lastPassThrough), bypass_sf2400: Math.round(dev1.lastPassThrough),
+    acMode_sf800: dev0.acMode, out_sf800: dev0.outputLimit, in_sf800: dev0.inputLimit,
+    acMode_sf2400: dev1.acMode, out_sf2400: dev1.outputLimit, in_sf2400: dev1.inputLimit,
+    socLimit_sf800: socLimitOf(dev0), socLimit_sf2400: socLimitOf(dev1),
+    gridReverse_sf800: dev0.gridReverse, gridReverse_sf2400: dev1.gridReverse,
+  });
+}
+
+// Vor jedem Lese-Endpunkt aufrufen
+function stepIfNewCycle(endpoint) {
+  if (servedThisStep.has(endpoint)) {
+    recompute(STEP_MIN);
+    servedThisStep.clear();
+  }
+  servedThisStep.add(endpoint);
+}
 
 function reportJson(dev) {
   // Im Bypass (PV-Ueberschuss wird AC-seitig durchgereicht) steht der
@@ -186,6 +255,7 @@ function currentAcContribution(dev) {
 // Log-Puffer (fuer die Auswertung nach dem Testlauf)
 // ---------------------------------------------------------------
 const log = [];
+recompute(0); // Startzustand (wie frueher der erste Grid-Poll mit elapsed 0)
 
 function readBody(req, cb) {
   let chunks = [];
@@ -199,72 +269,16 @@ const server = http.createServer((req, res) => {
 
   // ---------------- Netzzaehler ----------------
   if (path === "/grid/properties/report" && req.method === "GET") {
-    const elapsed = lastGridPollAt === null ? 0 : STEP_MIN;
-    if (elapsed > 0) simMinute += STEP_MIN;
-
-    let surplus0 = 0, surplus1 = 0;
-    if (elapsed > 0) {
-      surplus0 = advanceDevice(dev0, elapsed);
-      surplus1 = advanceDevice(dev1, elapsed);
-    }
-    lastGridPollAt = Date.now();
-
-    const load = householdLoad(simMinute);
-    const acSum = currentAcContribution(dev0) + currentAcContribution(dev1);
-
-    // PV-Ueberschuss wird vom Solarflow-Hybridwechselrichter AC-seitig
-    // durchgereicht - aber NUR bis zur Hoehe des aktuellen Hausbedarfs
-    // (Selbstverbrauch ist immer erlaubt, unabhaengig von gridReverse).
-    // Ueberschuss DARUEBER HINAUS (echte Netzeinspeisung) wird nur
-    // durchgereicht, wenn das jeweilige Geraet gridReverse=1 hat - bei
-    // gridReverse=2 (Fleet-Lock, alle Geraete voll) wird dieser Anteil
-    // verworfen, das Geraet liefert dann nur noch exakt den vom
-    // "Smartmeter" geforderten Wert, keinen Export darueber hinaus.
-    const totalSurplus = surplus0 + surplus1;
-    const remainingNeed = Math.max(load - acSum, 0);
-    const selfConsumed = Math.min(totalSurplus, remainingNeed);
-    const leftoverSurplus = totalSurplus - selfConsumed;
-
-    let exportAllowed = 0, verworfen0 = 0, verworfen1 = 0;
-    if (totalSurplus > 0 && leftoverSurplus > 0) {
-      const share0 = surplus0 / totalSurplus;
-      const share1 = surplus1 / totalSurplus;
-      const leftover0 = leftoverSurplus * share0;
-      const leftover1 = leftoverSurplus * share1;
-      if (dev0.gridReverse === 1) exportAllowed += leftover0; else verworfen0 = leftover0;
-      if (dev1.gridReverse === 1) exportAllowed += leftover1; else verworfen1 = leftover1;
-    }
-
-    // Bypass-Anteil je Geraet (Selbstverbrauch + erlaubter Export) fuer den Report merken
-    dev0.lastPassThrough = Math.max(0, surplus0 - verworfen0);
-    dev1.lastPassThrough = Math.max(0, surplus1 - verworfen1);
-
-    const usableSurplus = selfConsumed + exportAllowed;
-    const grid = load - acSum - usableSurplus;
-
-    log.push({
-      t: hhmm(simMinute), minute: Math.round(simMinute * 10000) / 10000,
-      haushalt_W: Math.round(load),
-      grid_W: Math.round(grid),
-      soc_sf800: Math.round(dev0.soc), soc_sf2400: Math.round(dev1.soc),
-      pv_sf800: Math.round(dev0.lastPv), pv_sf2400: Math.round(dev1.lastPv),
-      ueberschuss_sf800: Math.round(surplus0), ueberschuss_sf2400: Math.round(surplus1),
-      verworfen_sf800: Math.round(verworfen0), verworfen_sf2400: Math.round(verworfen1),
-      bypass_sf800: Math.round(dev0.lastPassThrough), bypass_sf2400: Math.round(dev1.lastPassThrough),
-      acMode_sf800: dev0.acMode, out_sf800: dev0.outputLimit, in_sf800: dev0.inputLimit,
-      acMode_sf2400: dev1.acMode, out_sf2400: dev1.outputLimit, in_sf2400: dev1.inputLimit,
-      socLimit_sf800: socLimitOf(dev0), socLimit_sf2400: socLimitOf(dev1),
-      gridReverse_sf800: dev0.gridReverse, gridReverse_sf2400: dev1.gridReverse,
-    });
-
+    stepIfNewCycle("grid");
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ total_power: Math.round(grid) }));
+    res.end(JSON.stringify({ total_power: Math.round(lastGrid) }));
     return;
   }
 
   // ---------------- Geraete lesen ----------------
   if ((path === "/dev0/properties/report" || path === "/dev1/properties/report") && req.method === "GET") {
     const dev = path === "/dev0/properties/report" ? dev0 : dev1;
+    stepIfNewCycle(path);
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(reportJson(dev));
     return;
