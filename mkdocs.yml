@@ -26,9 +26,8 @@ exclude_docs: |
   /WatchdogZenSDK/
   /Datenmonitor/
   /zendash/
-  # /Upload_Controller/
-  # /testController/
-  # /thingsboard/
+  /Upload_Controller/
+  
 
 # Englisch/Französisch nicht in der Seitenleiste zeigen
 # (bleiben über die Sprach-Links und die Suche erreichbar)
