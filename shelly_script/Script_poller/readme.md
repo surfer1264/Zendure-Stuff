@@ -2,6 +2,8 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
+# Shelly Monitoring
+
 Zwei Scripte helfen einen Überblick zu erhalten, was mit und auf dem Shelly passiert
 
 Der **Script-Status-Poller** schaut von außen drauf und misst in festem Takt (Standard 10 s, einstellbar) CPU und freien Speicher.
@@ -18,7 +20,7 @@ Lade die Dateien hier in **ein** Verzeichnis auf deinem Computer
 
 > **Wichtig:** Beide Scripte erwarten standardmäßig eine Datei namens `config.json` im selben Verzeichnis. Da hier beide Scripte gemeinsam in einem Ordner liegen, würden sich die Configs sonst gegenseitig überschreiben bzw. das jeweils falsche Script liest die falsche Datei. Deshalb bekommt jede Config in dieser Anleitung einen eigenen, eindeutigen Namen (`config_status_poller.json` bzw. `config_log_grabber.json`) und wird dem jeweiligen Script explizit per `--config` übergeben.
 
-# 1.) Shelly Script-Status-Poller
+## 1.) Shelly Script-Status-Poller
 
 So liest du den Status eines Shelly-Scripts regelmäßig aus und speicherst ihn in einer CSV-Datei.
 
@@ -31,7 +33,7 @@ und
 das eigentliche Script `Shelly_Script_Status_poller.py`.
 
 
-## Script ausführen
+### Script ausführen
 
 ```bash
 # in einer Kommandozeile aufrufen
@@ -41,14 +43,14 @@ python3 Shelly_Script_Status_poller.py --config config_status_poller.json --once
 
 Keine externen Abhängigkeiten (nur Python-Standardbibliothek).
 
-## Konfiguration (`config_status_poller.json`)
+### Konfiguration (`config_status_poller.json`)
 
 - `interval_seconds` – Abfrage-Takt (Standard: 10)
 - `timeout_seconds` – HTTP-Timeout pro Anfrage (Standard: 5)
 - `csv_file` – Zieldatei (wird angehängt, Header nur einmal geschrieben)
 - `targets` – Liste aus `{ "host", "script_id", "label" }`, beliebig viele, auch verschiedene Hosts
 
-### Beispiel
+#### Beispiel
 
 ```json
 {
@@ -63,13 +65,13 @@ Keine externen Abhängigkeiten (nur Python-Standardbibliothek).
 }
 ```
 
-## CSV-Spalten
+### CSV-Spalten
 
 `timestamp;host;script_id;label;running;cpu;mem_used;mem_peak;mem_free;error`
 
 Bei Verbindungsfehlern bleiben die Status-Felder leer, `error` enthält die Meldung – der Poller läuft unbeeindruckt weiter. Kann man direkt z.B. in Excel öffnen.
 
-### Beispiel
+#### Beispiel
 
 ```csv
 2026-08-06T12:36:34+02:00;192.168.178.117;8;Controller;False;0;;;25200;
@@ -78,20 +80,20 @@ Bei Verbindungsfehlern bleiben die Status-Felder leer, `error` enthält die Meld
 2026-08-06T12:36:49+02:00;192.168.178.151;1;zenDash-Watch;True;0;7112;13188;18074;
 ```
 
-## Bekannte Einschränkung
+### Bekannte Einschränkung
 
 Geht von einem offenen, unauthentifizierten lokalen Netz aus – kein Basic/Digest-Auth-Support.
 
 ---
 
 
-# 2) Shelly WebSocket Log Grabber
+## 2) Shelly WebSocket Log Grabber
 
 So schneidest du den Live-Log eines Shelly (Gen2 oder neuer) per WebSocket mit und speicherst ihn in einer Datei.
 
 ---
 
-## Vorbereitung & Installation
+### Vorbereitung & Installation
 
 Das Skript benötigt das Python-Modul `websocket-client`. Installiere es einmalig im Terminal bzw. in der Eingabeaufforderung:
 
@@ -101,7 +103,7 @@ pip install websocket-client
 
 ---
 
-## Konfiguration
+### Konfiguration
 
 Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`), die im selben Verzeichnis wie das Script liegt. Ein Bearbeiten der Datei `shelly_log_grabber.py` selbst ist nicht mehr nötig – alle Einstellungen stehen in der JSON-Datei:
 
@@ -143,7 +145,7 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
 
 ---
 
-## Skript ausführen
+### Skript ausführen
 
 Starte das Skript im Terminal:
 
@@ -151,20 +153,20 @@ Starte das Skript im Terminal:
 python3 shelly_log_grabber.py --config config_log_grabber.json
 ```
 
-### Ausgabe-Beispiel (Controller):
+#### Ausgabe-Beispiel (Controller):
 ```text
 [2026-09-27 13:43:27] [Script 1] Netzsaldo: 27 W | Ist-Summe: 0 W | Regelsignal: 18 W | Ladekorrektur: 0 W
 [2026-09-27 13:43:27] [Script 1] SF2400: Leistung gesetzt: 18 W (Export, smartMode 1)
 [2026-09-27 13:43:31] [Script 1] Netzsaldo: -30 W | Ist-Summe: 18 W | Regelsignal: -11 W | Ladekorrektur: 0 W
 ```
 
-## Testen
+### Testen
 Schau dir die geschriebenen Log-Dateien unbedingt einmal an – jede Shelly-Firmware hat ihre Eigenheiten.
 
 
 ---
 
-## Beenden
+### Beenden
 
 * Drücke **`Strg + C`** im Terminal, um den Log-Grabber sauber zu beenden.
 * Die gesammelten Logs findest du anschließend im selben Verzeichnis, im Namen basierend auf `log_file_path` aus `config_log_grabber.json` (Standard: `shelly_debug.log`). Solange `daily_log_rotation` aktiv ist (Standard), heißt die Datei tatsächlich `shelly_debug_YYMMDD.log` mit dem jeweiligen Tagesdatum (z. B. `shelly_debug_260823.log`) – pro Tag entsteht so automatisch eine neue Datei. Der aktuell aktive Dateiname wird beim Start des Scripts auch im Terminal angezeigt.
