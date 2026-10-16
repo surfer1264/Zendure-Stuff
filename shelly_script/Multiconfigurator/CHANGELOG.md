@@ -1,5 +1,9 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.8.0
+- Netzquelle http_json: eigenes Feld „IP-Adresse des Smartmeters“ – die IP wird in die URL bzw. die gewählte Vorlage übernommen, kein Ersetzen von `<IP>` in der URL mehr nötig
+- IP-Feld und URL-Feld bleiben synchron (Host in der URL von Hand geändert → IP-Feld zieht nach); beim Einlesen einer Config wird die IP aus der URL gelesen, die Config selbst bleibt unverändert
+
 ## 2.7.0
 - Netzquelle http_json: neue Vorlagen „Zendure Smart Meter D0“ (`/properties/report`, Feld `total_power`) und „everHome EcoTracker“ (`/v1/json`, Feld `power`)
 - Vorlagen mit Einrichtungshinweis: D0 – lokale Schnittstelle einmalig über HEMS in der Zendure-App freischalten; EcoTracker – „Lokaler HTTP-Server“ in der everHome-App einschalten; jeweils feste IP und Vorzeichen per „Testen“ prüfen

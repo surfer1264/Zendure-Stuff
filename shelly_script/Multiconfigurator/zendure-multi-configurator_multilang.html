@@ -149,7 +149,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.7.0";
+const APP_VERSION = "2.8.0";
 
 const I18N = {
 de: {
@@ -220,12 +220,14 @@ de: {
   grid_preset_choose: "– Gerät wählen oder unten selbst eintragen –",
   grid_preset_nopro: "ohne Pro",
   grid_preset_reader: "Lesekopf",
-  grid_preset_hint: "Füllt URL und Feldname aus. Danach <code>&lt;IP&gt;</code> (und bei Tasmota <code>&lt;Gerät&gt;</code>) durch deine Werte ersetzen.",
+  grid_preset_hint: "Füllt URL und Feldname aus. Bei Tasmota danach <code>&lt;Gerät&gt;</code> im Feldnamen durch den Namen deines Zählers ersetzen.",
   grid_preset_note_zendured0: "Zendure Smart Meter D0: Die lokale Schnittstelle ist ab Werk aus. Einmalig in der Zendure-App HEMS hinzufügen und wieder verlassen – danach antwortet der D0 unter <code>/properties/report</code>. Feste IP im Router vergeben. Das Vorzeichen bei Einspeisung mit „Testen“ prüfen.",
   grid_preset_note_ecotracker: "everHome EcoTracker: In der everHome-App „Lokaler HTTP-Server“ einschalten und im Router eine feste IP vergeben. Das Feld <code>power</code> ist die aktuelle Gesamtleistung in W (<code>powerAvg</code> ist für die Regelung zu träge). Das Vorzeichen bei Einspeisung mit „Testen“ prüfen.",
     grid_field_help_summary: "So findest du den Feldnamen",
   grid_field_help: "Die URL mit „Testen“ öffnen und in der Antwort das Feld mit der <b>gesamten Netzleistung in Watt</b> suchen.<br><br><b>Flache Antwort</b> (z. B. Zendure 3CT): <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → Feldname <code>total_power</code><br><br><b>Verschachtelte Antwort</b> (z. B. Tasmota): <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → die Namen vor den geschweiften Klammern mit Punkten verbinden: <code>StatusSNS.DVS7420.power</code>. Der mittlere Name hängt von deinem Zähler ab.<br><br>Das Vorzeichen prüfst du später: Bei Netzbezug muss der Wert positiv sein, sonst „Vorzeichen umkehren“ setzen.",
   nav_err_httpjson: "Bitte URL und Feldname eintragen – Platzhalter wie &lt;IP&gt; oder &lt;Gerät&gt; durch deine Werte ersetzen, keine leeren Teile zwischen den Punkten.",
+  grid_ip_field_httpjson: "IP-Adresse des Smartmeters",
+  grid_ip_httpjson_hint: "Wird in die URL übernommen. Feste IP im Router vergeben.",
   grid_url_field: "URL des Smartmeters",
   grid_field_field: "Feldname mit der Gesamtleistung (W)",
   grid_invert_checkbox: "Vorzeichen ist invertiert (nach Test einmalig prüfen)",
@@ -598,12 +600,14 @@ en: {
   grid_preset_choose: "– choose a device or enter it yourself below –",
   grid_preset_nopro: "non-Pro",
   grid_preset_reader: "IR reader",
-  grid_preset_hint: "Fills in URL and field name. Then replace <code>&lt;IP&gt;</code> (and for Tasmota <code>&lt;Gerät&gt;</code>) with your values.",
+  grid_preset_hint: "Fills in URL and field name. For Tasmota, then replace <code>&lt;Gerät&gt;</code> in the field name with the name of your meter.",
   grid_preset_note_zendured0: "Zendure Smart Meter D0: the local interface is off by default. Add HEMS once in the Zendure app and leave it again – after that the D0 answers at <code>/properties/report</code>. Give it a fixed IP in your router. Check the sign while feeding in using “Test”.",
   grid_preset_note_ecotracker: "everHome EcoTracker: switch on “Local HTTP server” in the everHome app and give it a fixed IP in your router. The field <code>power</code> is the current total power in W (<code>powerAvg</code> is too slow for control). Check the sign while feeding in using “Test”.",
     grid_field_help_summary: "How to find the field name",
   grid_field_help: "Open the URL with “Test” and look for the field holding the <b>total grid power in watts</b>.<br><br><b>Flat response</b> (e.g. Zendure 3CT): <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → field name <code>total_power</code><br><br><b>Nested response</b> (e.g. Tasmota): <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → join the names in front of the curly braces with dots: <code>StatusSNS.DVS7420.power</code>. The middle name depends on your meter.<br><br>Check the sign later: when drawing from the grid, the value must be positive – otherwise tick “Invert sign”.",
   nav_err_httpjson: "Please enter URL and field name – replace placeholders like &lt;IP&gt; or &lt;Gerät&gt; with your values, no empty parts between the dots.",
+  grid_ip_field_httpjson: "IP address of the smart meter",
+  grid_ip_httpjson_hint: "Is inserted into the URL. Give it a fixed IP in your router.",
   grid_url_field: "Smart meter URL",
   grid_field_field: "Field name holding total power (W)",
   grid_invert_checkbox: "Sign is inverted (check once after testing)",
@@ -976,12 +980,14 @@ fr: {
   grid_preset_choose: "– choisir un appareil ou saisir ci-dessous –",
   grid_preset_nopro: "sans Pro",
   grid_preset_reader: "tête de lecture",
-  grid_preset_hint: "Remplit l’URL et le nom du champ. Remplace ensuite <code>&lt;IP&gt;</code> (et pour Tasmota <code>&lt;Gerät&gt;</code>) par tes valeurs.",
+  grid_preset_hint: "Remplit l’URL et le nom du champ. Pour Tasmota, remplace ensuite <code>&lt;Gerät&gt;</code> dans le nom du champ par le nom de ton compteur.",
   grid_preset_note_zendured0: "Zendure Smart Meter D0 : l’interface locale est désactivée d’usine. Ajoute une fois HEMS dans l’app Zendure puis quitte-le – ensuite le D0 répond sous <code>/properties/report</code>. Attribue-lui une IP fixe dans ton routeur. Vérifie le signe en injection avec « Tester ».",
   grid_preset_note_ecotracker: "everHome EcoTracker : active « Serveur HTTP local » dans l’app everHome et attribue-lui une IP fixe dans ton routeur. Le champ <code>power</code> est la puissance totale actuelle en W (<code>powerAvg</code> est trop lent pour la régulation). Vérifie le signe en injection avec « Tester ».",
     grid_field_help_summary: "Comment trouver le nom du champ",
   grid_field_help: "Ouvre l’URL avec « Tester » et cherche dans la réponse le champ contenant la <b>puissance réseau totale en watts</b>.<br><br><b>Réponse plate</b> (par ex. Zendure 3CT) : <code>{\"a_aprt_power\":0, …, \"total_power\":2}</code> → nom du champ <code>total_power</code><br><br><b>Réponse imbriquée</b> (par ex. Tasmota) : <code>{\"StatusSNS\":{\"Time\":\"…\",\"DVS7420\":{\"energy\":20302,\"power\":353}}}</code> → relie par des points les noms placés avant les accolades : <code>StatusSNS.DVS7420.power</code>. Le nom du milieu dépend de ton compteur.<br><br>Vérifie le signe ensuite : en cas de soutirage réseau, la valeur doit être positive – sinon coche « Inverser le signe ».",
   nav_err_httpjson: "Saisis l’URL et le nom du champ – remplace les espaces réservés comme &lt;IP&gt; ou &lt;Gerät&gt; par tes valeurs, sans partie vide entre les points.",
+  grid_ip_field_httpjson: "Adresse IP du compteur intelligent",
+  grid_ip_httpjson_hint: "Est reprise dans l’URL. Attribue-lui une IP fixe dans ton routeur.",
   grid_url_field: "URL du compteur intelligent",
   grid_field_field: "Nom du champ contenant la puissance totale (W)",
   grid_invert_checkbox: "Le signe est inversé (à vérifier une fois après un test)",
@@ -1888,9 +1894,12 @@ function renderGridSource(){
       </select>
       <p class="hint" style="margin-top:4px; margin-bottom:0;">${t('grid_preset_hint')}</p>
       ${ GRID_PRESETS[state.gridPreset] && GRID_PRESETS[state.gridPreset].note ? `<p class="note" style="margin-top:8px;">${t(GRID_PRESETS[state.gridPreset].note)}</p>` : '' }
+      <label>${t('grid_ip_field_httpjson')}</label>
+      <input type="text" id="gridHostInput" value="${escapeHtml(gridHostFromUrl(state.gridSourceUrl))}" placeholder="192.168.178.10" oninput="setGridHost(this.value)">
+      <p class="hint" style="margin-top:-2px; margin-bottom:0;">${t('grid_ip_httpjson_hint')}</p>
       <label>${t('grid_url_field')}</label>
       <div style="display:flex; gap:8px; align-items:center;">
-        <input type="text" id="gridUrlInput" style="flex:1; min-width:0;" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="state.gridSourceUrl=this.value">
+        <input type="text" id="gridUrlInput" style="flex:1; min-width:0;" value="${escapeHtml(state.gridSourceUrl)}" placeholder="http://<IP-des-Messgeraets>/properties/report" oninput="setGridUrl(this.value)">
         <button type="button" class="btn" style="white-space:nowrap; flex:none;" onclick="testGridUrl()">${t('btn_test_url')}</button>
       </div>
       <p class="hint" style="margin-top:4px; margin-bottom:0;">${t('grid_url_test_hint')}</p>
@@ -1930,8 +1939,41 @@ function gridFieldValid(text){
   return parts.length > 0 && parts.every(function(p){ return p && p.indexOf('<') < 0; });
 }
 
-// Vorlagen fuer bekannte Smartmeter: setzen URL und Feld, eine bereits
-// eingetragene IP bleibt erhalten. "<IP>"/"<Gerät>" muss der Nutzer ersetzen.
+// IP-Feld fuer http_json: kein eigener State, die IP steckt nur in
+// gridSourceUrl (Host-Teil). IP-Feld und URL-Feld werden gegenseitig
+// nachgezogen, ohne render() - sonst verliert das Eingabefeld den Fokus.
+const GRID_URL_RE = /^(\s*(?:https?:\/\/)?)([^\/\s?#]*)(.*)$/i;
+function gridHostFromUrl(url){
+  const m = String(url || '').match(GRID_URL_RE);
+  const host = m ? m[2] : '';
+  return host.indexOf('<') < 0 ? host : '';
+}
+function cleanGridHost(v){
+  return String(v || '').trim().replace(/^https?:\/\//i, '').replace(/[\/?#].*$/, '').trim();
+}
+function setGridHost(v){
+  const host = cleanGridHost(v) || '<IP>';
+  const url = String(state.gridSourceUrl || '').trim();
+  if(!url){
+    const p = GRID_PRESETS[state.gridPreset];
+    state.gridSourceUrl = 'http://' + host + (p ? p.path : '/');
+  } else {
+    const m = url.match(GRID_URL_RE);
+    state.gridSourceUrl = (m[1] || 'http://') + host + m[3];
+  }
+  state.navError = '';
+  const el = document.getElementById('gridUrlInput');
+  if(el) el.value = state.gridSourceUrl;
+}
+function setGridUrl(v){
+  state.gridSourceUrl = v;
+  const el = document.getElementById('gridHostInput');
+  if(el && document.activeElement !== el) el.value = gridHostFromUrl(v);
+}
+
+// Vorlagen fuer bekannte Smartmeter: setzen URL und Feld, die IP aus dem
+// IP-Feld (= Host der bisherigen URL) bleibt erhalten. "<Gerät>" (Tasmota)
+// muss der Nutzer im Feldnamen ersetzen.
 // "note" = optionaler i18n-Schluessel fuer einen Einrichtungshinweis.
 const GRID_PRESETS = {
   zendure3ct: { path: '/properties/report', field: 'total_power' },
@@ -1949,8 +1991,7 @@ function gridPresetOption(key, label){
 function applyGridPreset(key){
   const p = GRID_PRESETS[key];
   if(!p){ state.gridPreset = ''; render(); return; }
-  const m = String(state.gridSourceUrl || '').match(/^\s*(?:https?:\/\/)?([^\/\s?#]+)/i);
-  const host = (m && m[1] && m[1].indexOf('<') < 0) ? m[1] : '<IP>';
+  const host = gridHostFromUrl(state.gridSourceUrl) || '<IP>';
   state.gridSourceUrl = 'http://' + host + p.path;
   state.gridSourceField = p.field;
   state.gridPreset = key;
