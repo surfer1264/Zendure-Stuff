@@ -23,7 +23,9 @@ exclude_docs: |
   /AkkuWatchDogMulti/
   /testController/
   /AkkuWatchDogMulti/
-  /WatchDogZenSDK/
+  /WatchdogZenSDK/
+  /Datenmonitor/
+  /zendash/
   # /Upload_Controller/
   # /testController/
   # /thingsboard/
