@@ -165,23 +165,17 @@
   .clock-pill .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; color:var(--text); }
   .clock-pill .date{ font-size:.75rem; }
 
-  /* Sperre: wichtigster Knopf der Seite - deshalb mit Text statt nur Symbol */
+  /* Sperre: wichtigster Knopf der Seite. Nur Symbol (runder Knopf, farbiger
+     Rand) - mit Text brach die Kopfzeile in laengeren Sprachen (Franzoesisch)
+     schon ab Ansichtsgroesse 2 um. */
   .lock-btn{
-    display:inline-flex; align-items:center; gap:.5rem; min-height:var(--tap);
-    padding:.375rem 1rem .375rem .75rem; border-radius:999px; cursor:pointer;
-    font-family:inherit; font-size:.85rem; font-weight:600; white-space:nowrap;
+    display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:var(--tap); height:var(--tap); padding:0; border-radius:50%; cursor:pointer;
     background:var(--surface); color:var(--teal-text); border:2px solid var(--teal-text); box-shadow:var(--shadow);
   }
   .lock-btn.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
   .lock-btn:active{ transform:scale(.97); }
   #lockIcon{ display:inline-flex; }
-  /* Knopfbreite fest auf den laengsten Text (Gesperrt / Offen mit Restzeit):
-     beide Texte liegen unsichtbar in derselben Rasterzelle. Sonst wuchs der
-     Knopf beim Entsperren und schob "Ansicht" weg bzw. in die naechste
-     Zeile - der naechste Klick ging dann daneben oder sperrte wieder. */
-  .lock-lbl{ display:inline-grid; font-variant-numeric:tabular-nums; }
-  .lock-lbl > *{ grid-area:1 / 1; }
-  .lock-sizer{ visibility:hidden; }
   .lock-icon{ width:1.25rem; height:1.25rem; display:block; overflow:visible; }
   .soc-lock .lock-icon{ width:1.125rem; height:1.125rem; }
 
@@ -588,7 +582,7 @@
       <div class="head-right">
         <div class="pill status-pill" role="status" aria-live="polite"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span id="statusText" data-i18n="connecting">Verbinde…</span></div>
         <div class="pill clock-pill"><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span></div>
-        <button type="button" class="lock-btn locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><span id="lockIcon" aria-hidden="true"><svg class="lock-icon"><use href="#lk-closed"/></svg></span><span class="lock-lbl"><span id="lockLabel">Gesperrt</span><span class="lock-sizer" id="lockSizerA" aria-hidden="true"></span><span class="lock-sizer" id="lockSizerB" aria-hidden="true"></span></span></button>
+        <button type="button" class="lock-btn locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><span id="lockIcon" aria-hidden="true"><svg class="lock-icon"><use href="#lk-closed"/></svg></span></button>
         <details class="menu" id="viewMenu">
           <summary><span aria-hidden="true">⚙</span><span data-i18n="viewMenu">Ansicht</span></summary>
           <div class="menu-panel">
@@ -1020,7 +1014,6 @@
     nowTitle: 'Jetzt', nowTag: 'Messwerte', controlTitle: 'Regelung', controlTag: 'Einstellungen',
     groupControl: 'Steuerung', groupManual: 'Manuelles Laden',
     lockedHint: 'Nur Anzeige – zum Ändern oben auf „Gesperrt“ tippen.',
-    lockLblLocked: 'Gesperrt', lockLblOpen: 'Offen · sperrt in {s} s',
     viewMenu: 'Ansicht', setSize: 'Ansichtsgröße', setTheme: 'Tag-/Nachtsicht', setLang: 'Sprache',
     setFs: 'Vollbild', setExpert: 'Technische Details',
     setExpertHint: 'KVS-Schlüssel, IP-Adressen und Rohwerte einblenden',
@@ -1038,7 +1031,6 @@
     nowTitle: 'Now', nowTag: 'Readings', controlTitle: 'Control', controlTag: 'Settings',
     groupControl: 'Controls', groupManual: 'Manual charging',
     lockedHint: 'View only – tap “Locked” at the top to make changes.',
-    lockLblLocked: 'Locked', lockLblOpen: 'Unlocked · locks in {s} s',
     viewMenu: 'View', setSize: 'View size', setTheme: 'Day/night view', setLang: 'Language',
     setFs: 'Full screen', setExpert: 'Technical details',
     setExpertHint: 'Show KVS keys, IP addresses and raw values',
@@ -1056,7 +1048,6 @@
     nowTitle: 'Maintenant', nowTag: 'Mesures', controlTitle: 'Régulation', controlTag: 'Réglages',
     groupControl: 'Commandes', groupManual: 'Charge manuelle',
     lockedHint: 'Affichage seul – touchez «\u00a0Verrouillé\u00a0» en haut pour modifier.',
-    lockLblLocked: 'Verrouillé', lockLblOpen: 'Ouvert · verrou dans {s}\u00a0s',
     viewMenu: 'Affichage', setSize: 'Taille d’affichage', setTheme: 'Mode jour/nuit', setLang: 'Langue',
     setFs: 'Plein écran', setExpert: 'Détails techniques',
     setExpertHint: 'Afficher clés KVS, adresses IP et valeurs brutes',
@@ -1343,14 +1334,10 @@
   const RELOCK_MS = 60000;
   let uiLocked = true;
   let relockTimer = null;
-  let relockAt = 0;          // Variante B: Zeitpunkt der Auto-Sperre (fuer die Restzeit-Anzeige)
 
   const lockToggle = document.getElementById('lockToggle');
   const appEl = document.getElementById('app');
   const lockIconEl = document.getElementById('lockIcon');
-  const lockLabelEl = document.getElementById('lockLabel');
-  const lockSizerA = document.getElementById('lockSizerA');
-  const lockSizerB = document.getElementById('lockSizerB');
 
   // Alle Bedienelemente einsammeln - die Hub-Karten entstehen erst spaeter,
   // deshalb bei jedem Aufruf frisch abfragen.
@@ -1471,7 +1458,6 @@
     appEl.classList.toggle('hide-hub-controls', uiLocked);
 
     setLockIcon(lockIconEl, !uiLocked);
-    updateLockLabel();
     lockToggle.classList.toggle('locked', uiLocked);
     lockToggle.title = t(uiLocked ? 'unlock' : 'lock');
   }
@@ -1480,7 +1466,7 @@
     uiLocked = next;
     if (uiLocked) { clearTimeout(socTimer); socDragging = false; socOpenId = null; }
     clearTimeout(relockTimer);
-    if (!uiLocked) { relockAt = Date.now() + RELOCK_MS; relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS); }
+    if (!uiLocked) { relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS); }
     applyLockState();
   }
 
@@ -1488,19 +1474,8 @@
   function touchLockTimer(){
     if (uiLocked) return;
     clearTimeout(relockTimer);
-    relockAt = Date.now() + RELOCK_MS;
     relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
   }
-
-  // Variante B: Zustand als Text am Knopf, offen mit Restzeit bis zur Auto-Sperre.
-  function updateLockLabel(){
-    if (!lockLabelEl) return;
-    lockSizerA.textContent = t('lockLblLocked');
-    lockSizerB.textContent = t('lockLblOpen', { s: Math.round(RELOCK_MS / 1000) });
-    lockLabelEl.textContent = uiLocked ? t('lockLblLocked')
-      : t('lockLblOpen', { s: Math.max(0, Math.ceil((relockAt - Date.now()) / 1000)) });
-  }
-  setInterval(function(){ if (!uiLocked) updateLockLabel(); }, 1000);
 
   lockToggle.addEventListener('click', function(){ setLocked(!uiLocked); });
 
