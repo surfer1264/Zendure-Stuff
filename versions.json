@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-16T14:57:07Z",
+  "generated": "2026-10-16T15:16:44Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.1.8",
+      "version": "5.1.9",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fde97996122df5dd3b2c9c887619d7eb861f49e1/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 45295,
-      "codeHash": "sha256:ff1a39720df917ff6c67ee5812601ca1c0a41e5a3a14cd904082ffad344b4d32",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fc009240316a9c966e0b5cd85d69037a7d883cf5/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 45427,
+      "codeHash": "sha256:ba810f94b6b5ad93a43e27141a2695e4ac72286fe6a372704eadef5279f4713f",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "Entladen wird sofort zurückgenommen, wenn die Last sinkt.",
-        "Laden wird sofort erhöht, wenn der PV-Überschuss steigt.",
-        "Die Gegenrichtung (mehr entladen, weniger laden) bleibt wie bisher gedämpft. Dort gibt es kurz Netzbezug statt Einspeisung."
+        "**Offgrid-Leistung im Log (nur mit `debug: true`):** Die Gerätezeile zeigt zusätzlich `offGP <W> W`, wenn der Speicher einen Offgrid-Ausgang hat (`gridOffPower`). Geräte ohne Offgrid-Ausgang und Betrieb ohne debug: Logzeile unverändert.",
+        "Ohne debug kein zusätzlicher Laufzeitspeicher; die Mini-Fassung wird um rund 130 Bytes größer."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.1.8",
+          "schema": 1,
+          "codeHash": "sha256:ff1a39720df917ff6c67ee5812601ca1c0a41e5a3a14cd904082ffad344b4d32",
+          "changes": [
+            "Entladen wird sofort zurückgenommen, wenn die Last sinkt.",
+            "Laden wird sofort erhöht, wenn der PV-Überschuss steigt.",
+            "Die Gegenrichtung (mehr entladen, weniger laden) bleibt wie bisher gedämpft. Dort gibt es kurz Netzbezug statt Einspeisung."
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.7",
           "schema": 1,
