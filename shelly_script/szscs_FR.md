@@ -24,20 +24,13 @@ _Principe_ : **Installer** – **Lancer** – **Oublier**
 
 ## 👉 Pour commencer
 
-1. **Télécharge l'assistant local** (voir [Téléchargements](#téléchargements)) et lance-le. Le configurateur s'ouvre dans le navigateur.
-2. Choisis **« Nouvelle configuration »** et réponds aux questions sur tes batteries, ton compteur intelligent et les notifications.
-3. À la fin, **« ⚡ Charger directement »** – les scripts arrivent entièrement configurés sur tes deux Shelly.
-
-Instructions détaillées : **[Configurateur](Multiconfigurator/readme_FR.md)**
+Télécharger l'assistant, répondre aux questions, charger – en 10 minutes ta régulation tourne. Les trois étapes sont sur la **[page d'accueil](readme_FR.md#-commencer-ici)**, les instructions détaillées dans le **[configurateur](Multiconfigurator/readme_FR.md)**.
 
 ---
 
 ## Ce qu'il te faut
 
-* **Deux Shelly** (Gen2 ou plus récent). Idéalement, l'un d'eux est un **Shelly Pro 3EM** – il mesure alors aussi la puissance réseau. Sinon, un autre compteur intelligent avec interface JSON, par ex. Zendure Smart Meter 3CT, une tête de lecture Tasmota ou un Shelly 3EM (sans Pro).
-* Les **adresses IP** de tes SolarFlow et de tes Shelly – idéalement fixées dans ton routeur.
-* Un **PC Windows ou un Mac** pour l'assistant local. Sans l'assistant local, n'importe quel navigateur suffit.
-* **Facultatif pour les notifications :** une clé API gratuite de [CallMeBot](https://www.callmebot.com) pour Signal ou WhatsApp – ou un webhook, par ex. dans Home Assistant.
+Deux Shelly (idéalement l'un d'eux est un **Shelly Pro 3EM**, qui mesure aussi la puissance réseau), un compteur intelligent et des SolarFlow compatibles zenSDK dans le même réseau. Les appareils qui conviennent et ce qu'il faut d'autre : **[Appareils compatibles](kompatible_geraete_FR.md)**.
 
 **Important :** retire tes SolarFlow du **HEMS** dans l'application Zendure, sinon le cloud envoie en parallèle ses propres commandes.
 
@@ -45,12 +38,7 @@ Instructions détaillées : **[Configurateur](Multiconfigurator/readme_FR.md)**
 
 ## Trois fonctions sur deux Shelly – sans cloud
 
-| Shelly | Script | Rôle |
-|---|---|---|
-| **Shelly Controller** | Controller (`zerooutput_multi_kvs`) | régule la charge et la décharge de tes SolarFlow |
-| **Shelly Dashboard** | API zenDash + watchdog (`zendash_watch`) | fournit les données du tableau de bord et envoie les notifications – chaque fonction désactivable séparément |
-
-Sur chaque Shelly tourne **exactement un script**. Les Shelly ont peu de mémoire de script – c'est pourquoi le Controller et le script du tableau de bord tournent toujours sur deux appareils séparés.
+Le **Shelly Controller** assure la régulation, le **Shelly Dashboard** l'API zenDash et le watchdog – chaque fonction pouvant y être désactivée séparément. Quel script va où : [Structure du système](readme_FR.md#structure-du-système).
 
 ### 1. Le Controller – la régulation
 
@@ -71,7 +59,7 @@ Sur chaque Shelly tourne **exactement un script**. Les Shelly ont peu de mémoir
 
 Le tableau de bord est une page web qui passe par un petit **proxy** – sous forme de programme prêt à l'emploi pour Windows et Mac (voir [Téléchargements](#téléchargements)), de script Python, sur un Synology ou comme application dans Home Assistant.
 
-📖 [Installer et utiliser le tableau de bord](zendash_watch_API_ZenSDK/dashboard_FR.md) (en allemand)
+📖 [Installer et utiliser le tableau de bord](zendash_watch_API_ZenSDK/dashboard_FR.md)
 
 ### 3. Le watchdog – les notifications
 
@@ -82,7 +70,7 @@ Le tableau de bord est une page web qui passe par un petit **proxy** – sous fo
 * avertissement quand une batterie **n'a pas été pleine depuis 20 jours**
 * envoi par **Signal**, **WhatsApp** ou **webhook** ; réglable pour chaque SolarFlow s'il doit être surveillé
 
-📖 [API zenDash + watchdog](zendash_watch_API_ZenSDK/readme_FR.md) (en allemand)
+📖 [API zenDash + watchdog](zendash_watch_API_ZenSDK/readme_FR.md)
 
 ---
 
@@ -104,34 +92,17 @@ Le Controller tourne sur n'importe quel Shelly et lit le compteur intelligent vi
 
 ## Téléchargements
 
-**Assistant local avec configurateur** – configure tout, charge les scripts sur les Shelly, fait les mises à jour, vérifie la mémoire et enregistre un journal en cas de problème. Aucune installation nécessaire : télécharger, lancer, c'est tout.
+Tous les programmes se trouvent sur la **[page des versions](https://github.com/surfer1264/Zendure-Stuff/releases/latest)**. Ce qu'il te faut pour quoi, et comment autoriser les fichiers au premier lancement :
 
-| Assistant local | pour |
-|---|---|
-| **[⬇️ zendure_local_helper-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)** | Windows 64 bits |
-| **[⬇️ zendure_local_helper-windows-x86.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)** | Windows 32 bits |
-| **[⬇️ zendure_local_helper-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)** | Mac avec Apple Silicon (M1 ou plus récent) |
-
-**Proxy du tableau de bord** – ouvre le tableau de bord dans le navigateur, sans installer Python.
-
-| Proxy du tableau de bord | pour |
-|---|---|
-| **[⬇️ zendure_proxy-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe)** | Windows 64 bits |
-| **[⬇️ zendure_proxy-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos)** | Mac avec Apple Silicon (M1 ou plus récent) |
-
-Au premier lancement, ton système d'exploitation affiche un avertissement, car les fichiers ne sont pas signés – comment les lancer quand même est expliqué dans la [documentation du configurateur](Multiconfigurator/readme_FR.md#recommandé--lassistant-local-installateur-exe). Tous les fichiers et sommes de contrôle : [Releases](https://github.com/surfer1264/Zendure-Stuff/releases/latest).
-
-**Sans l'assistant local :** le [configurateur web](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) fonctionne directement dans le navigateur. Tu peux tout configurer et enregistrer le script terminé – mais tu dois ensuite le charger toi-même via l'interface web du Shelly. La mise à jour, la vérification de la mémoire et l'enregistrement du journal ne sont disponibles qu'avec l'assistant local.
+- **Assistant local avec configurateur** – configure tout, charge les scripts sur les Shelly, fait les mises à jour : [Configurateur → téléchargement](Multiconfigurator/readme_FR.md#recommandé--lassistant-local-installateur-exe)
+- **Proxy du tableau de bord** – ouvre le tableau de bord dans le navigateur, sans installer Python : [Tableau de bord → en tant que programme](zendash_watch_API_ZenSDK/dashboard_FR.md#en-tant-que-programme-sous-windows-ou-macos)
+- **Sans l'assistant :** le [configurateur web](Multiconfigurator/readme_FR.md#alternative--le-configurateur-web-seul) dans le navigateur – tu charges alors le script toi-même.
 
 ---
 
 ## Mise à jour
 
-Quand une nouvelle version est disponible, lance l'assistant local et choisis **« Mettre à jour »**. Il compare les versions de tes Shelly avec GitHub, lit tes réglages directement sur le Shelly et installe la nouvelle version – tes réglages sont conservés.
-
-Si tu utilises le tableau de bord, récupère aussi le nouveau proxy ou la nouvelle page du tableau de bord après une mise à jour : les deux doivent avoir le même numéro de version que le script.
-
-**Passer des anciens scripts séparés au nouveau script :** auparavant, l'API zenDash et le watchdog étaient deux scripts séparés. La marche à suivre se trouve dans la [documentation du configurateur](Multiconfigurator/readme_FR.md#passer-des-anciens-scripts-séparés-au-nouveau-script).
+Lance l'assistant local, choisis **« Mettre à jour »** – tes réglages sont conservés. Détails, y compris le passage des anciens scripts séparés : [Configurateur → mise à jour](Multiconfigurator/readme_FR.md#4-mise-à-jour). Si tu utilises le tableau de bord, la page du tableau de bord et le script doivent avoir le même numéro de version ([tableau de bord](zendash_watch_API_ZenSDK/dashboard_FR.md)).
 
 ---
 

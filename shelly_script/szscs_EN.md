@@ -11,7 +11,7 @@
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/0267db3d-7941-472e-87de-e134ada66dea" />
 
 * You have **one** or **several** SolarFlows (SF800 or newer, zenSDK-capable)?
-* You have a Shelly Pro 3EM or another smart meter with a local interface?
+* You have a Shelly Pro 3EM or another smart meter with a local interface? See [Compatible devices](kompatible_geraete_EN.md)
 * You want local control – without the cloud?
 * You want little effort and something that simply works?
 * Home Assistant & co. are not (yet) an option for you?
@@ -24,20 +24,13 @@ _Principle_: **Install** – **Run** – **Forget**
 
 ## 👉 How to get started
 
-1. **Download the helper** (see [Downloads](#downloads)) and start it. The configurator opens in your browser.
-2. Choose **"Configure from scratch"** and answer the questions about your batteries, your smart meter and notifications.
-3. At the end, **"⚡ Upload directly"** – the scripts land fully set up on your two Shellys.
-
-Detailed instructions: **[Configurator](Multiconfigurator/readme_EN.md)**
+Download the helper, answer the questions, upload – after 10 minutes your control is running. The three steps are on the **[start page](readme_EN.md#-start-here)**, the detailed instructions with the **[Configurator](Multiconfigurator/readme_EN.md)**.
 
 ---
 
 ## What you need
 
-* **Two Shellys** (Gen2 or newer). Ideally one of them is a **Shelly Pro 3EM** – it then measures the grid power as well. Alternatively another smart meter with a JSON interface, e.g. Zendure Smart Meter 3CT, a Tasmota reading head or a Shelly 3EM (without Pro).
-* The **IP addresses** of your SolarFlows and Shellys – ideally fixed in your router.
-* A **Windows PC or Mac** for the helper. Without the helper, any browser will do.
-* **Optional for notifications:** a free API key from [CallMeBot](https://www.callmebot.com) for Signal or WhatsApp – or a webhook, e.g. in Home Assistant.
+Two Shellys (ideally one of them a **Shelly Pro 3EM**, which measures the grid power as well), a smart meter and zenSDK-capable SolarFlows in the same network. Which devices work and what else is needed is listed under **[Compatible devices](kompatible_geraete_EN.md)**.
 
 **Important:** Remove your SolarFlows from **HEMS** in the Zendure app, otherwise the cloud sends its own control commands in parallel.
 
@@ -45,12 +38,7 @@ Detailed instructions: **[Configurator](Multiconfigurator/readme_EN.md)**
 
 ## Three functions on two Shellys – without the cloud
 
-| Shelly | Script | Task |
-|---|---|---|
-| **Controller Shelly** | Controller (`zerooutput_multi_kvs`) | controls charging and discharging of your SolarFlows |
-| **Dashboard Shelly** | zenDash API + watchdog (`zendash_watch`) | provides the data for the dashboard and sends notifications – both functions can be switched off individually |
-
-**Exactly one script** runs on each Shelly. Shellys have little script memory – that's why the controller and the dashboard script always run on two separate devices.
+The **Controller Shelly** runs the control, the **Dashboard Shelly** runs the zenDash API and watchdog – both functions there can be switched off individually. Which script goes where: [How the system is structured](readme_EN.md#how-the-system-is-structured).
 
 ### 1. The controller – the control
 
@@ -71,7 +59,7 @@ Detailed instructions: **[Configurator](Multiconfigurator/readme_EN.md)**
 
 The dashboard is a web page that runs through a small **proxy** – as a ready-made program for Windows and Mac (see [Downloads](#downloads)), as a Python script, on a Synology or as an app in Home Assistant.
 
-📖 [Setting up and using the dashboard](zendash_watch_API_ZenSDK/dashboard_EN.md) (German)
+📖 [Setting up and using the dashboard](zendash_watch_API_ZenSDK/dashboard_EN.md)
 
 ### 3. The watchdog – the notifications
 
@@ -82,7 +70,7 @@ The dashboard is a web page that runs through a small **proxy** – as a ready-m
 * notice when a battery **hasn't been full for 20 days**
 * delivery via **Signal**, **WhatsApp** or **webhook**; configurable per SolarFlow whether it is monitored
 
-📖 [zenDash API + watchdog](zendash_watch_API_ZenSDK/readme_EN.md) (German)
+📖 [zenDash API + watchdog](zendash_watch_API_ZenSDK/readme_EN.md)
 
 ---
 
@@ -104,34 +92,17 @@ The controller runs on any Shelly and reads the smart meter over the network. Th
 
 ## Downloads
 
-**Helper with configurator** – sets everything up, uploads the scripts to the Shellys, runs updates, checks memory and records a log when something goes wrong. No installation needed: download, start, done.
+All programs are on the **[releases page](https://github.com/surfer1264/Zendure-Stuff/releases/latest)**. What you need for what, and how to allow the files on first start:
 
-| Helper | for |
-|---|---|
-| **[⬇️ zendure_local_helper-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)** | Windows 64-bit |
-| **[⬇️ zendure_local_helper-windows-x86.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)** | Windows 32-bit |
-| **[⬇️ zendure_local_helper-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)** | Mac with Apple Silicon (M1 or newer) |
-
-**Dashboard proxy** – opens the dashboard in your browser, no Python installation needed.
-
-| Dashboard proxy | for |
-|---|---|
-| **[⬇️ zendure_proxy-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe)** | Windows 64-bit |
-| **[⬇️ zendure_proxy-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos)** | Mac with Apple Silicon (M1 or newer) |
-
-On first start, your operating system shows a warning because the files are not signed – how to start them anyway is explained in the [configurator docs](Multiconfigurator/readme_EN.md#recommended-the-local-helper-exe-installer). All files and checksums: [Releases](https://github.com/surfer1264/Zendure-Stuff/releases/latest).
-
-**Without the helper:** The [web configurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) runs directly in your browser. You can configure everything and save the finished script – but you then have to upload it yourself via the Shelly's web interface. Update, memory check and log recording are only available with the helper.
+- **Helper with configurator** – sets everything up, uploads the scripts to the Shellys, runs updates: [Configurator → download](Multiconfigurator/readme_EN.md#recommended-the-local-helper-exe-installer)
+- **Dashboard proxy** – opens the dashboard in your browser, no Python installation needed: [Dashboard → as a program](zendash_watch_API_ZenSDK/dashboard_EN.md#as-a-program-on-windows-or-macos)
+- **Without the helper:** the [web configurator](Multiconfigurator/readme_EN.md#alternative-web-configurator-only) in your browser – you then upload the script yourself.
 
 ---
 
 ## Update
 
-When a new version is available, start the helper and choose **"Update"**. It compares the versions on your Shellys with GitHub, reads your settings directly from the Shelly and installs the new version – your settings are kept.
-
-If you use the dashboard, also get the new dashboard proxy or dashboard page after an update: both must have the same version number as the script.
-
-**Switching from the old separate scripts:** The zenDash API and watchdog used to be two separate scripts. How to switch to the shared script is explained in the [configurator docs](Multiconfigurator/readme_EN.md#switching-from-the-old-separate-scripts).
+Start the helper, choose **"Update"** – your settings are kept. Details, including switching from the old separate scripts: [Configurator → update](Multiconfigurator/readme_EN.md#4-update). If you use the dashboard, the dashboard page and the script must have the same version number ([Dashboard](zendash_watch_API_ZenSDK/dashboard_EN.md)).
 
 ---
 

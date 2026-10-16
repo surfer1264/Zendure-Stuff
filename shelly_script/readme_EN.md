@@ -6,7 +6,7 @@
 
 # Control Zendure batteries locally – with two Shellys
 
-Your Zendure batteries (zenSDK-capable devices from SolarFlow 800 onwards) are controlled without the cloud: one Shelly keeps your grid draw at zero, a second one provides the data for a dashboard and alerts you when something is wrong.
+Your Zendure batteries (zenSDK-capable devices from SolarFlow 800 onwards) are controlled without the cloud: one Shelly keeps your grid draw at zero, a second one provides the data for a dashboard and alerts you when something is wrong. What the suite can do in detail: **[What the suite can do](szscs_EN.md)**.
 
 ## 👉 Start here
 
@@ -16,7 +16,9 @@ Your Zendure batteries (zenSDK-capable devices from SolarFlow 800 onwards) are c
 
 Detailed instructions (including updates, replacing a Shelly and error messages) can be found with the **[Configurator](Multiconfigurator/readme_EN.md)** · [Deutsch](Multiconfigurator/readme.md) · [Français](Multiconfigurator/readme_FR.md)
 
-Which Shellys, smart meters and batteries work: [Compatible devices](kompatible_geraete_EN.md)
+## What you need
+
+Two Shellys, a smart meter and zenSDK-capable batteries – which devices work is listed under **[Compatible devices](kompatible_geraete_EN.md)**. How many batteries the dashboard script can handle is shown in the [memory requirements](zendash_speichermodell.md) (German).
 
 ## How the system is structured
 

@@ -6,7 +6,7 @@
 
 # Piloter les batteries Zendure en local – avec deux Shelly
 
-Vos batteries Zendure (appareils compatibles zenSDK à partir du SolarFlow 800) sont pilotées sans cloud : un Shelly maintient votre consommation réseau à zéro, un second fournit les données pour un tableau de bord et vous alerte en cas de problème.
+Vos batteries Zendure (appareils compatibles zenSDK à partir du SolarFlow 800) sont pilotées sans cloud : un Shelly maintient votre consommation réseau à zéro, un second fournit les données pour un tableau de bord et vous alerte en cas de problème. Ce que la suite sait faire en détail : **[Ce que fait la suite](szscs_FR.md)**.
 
 ## 👉 Commencer ici
 
@@ -16,7 +16,9 @@ Vos batteries Zendure (appareils compatibles zenSDK à partir du SolarFlow 800) 
 
 Les instructions détaillées (y compris mise à jour, remplacement d'un Shelly et messages d'erreur) se trouvent avec le **[Configurator](Multiconfigurator/readme_FR.md)** · [Deutsch](Multiconfigurator/readme.md) · [English](Multiconfigurator/readme_EN.md)
 
-Quels Shelly, compteurs et batteries conviennent : [Appareils compatibles](kompatible_geraete_FR.md)
+## Ce qu'il vous faut
+
+Deux Shelly, un compteur intelligent et des batteries compatibles zenSDK – les appareils qui conviennent sont listés sous **[Appareils compatibles](kompatible_geraete_FR.md)**. Le nombre de batteries que le script du tableau de bord peut gérer est indiqué dans [l’analyse des besoins en mémoire](zendash_speichermodell.md) (en allemand).
 
 ## Structure du système
 

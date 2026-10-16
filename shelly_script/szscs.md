@@ -11,7 +11,7 @@
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/0267db3d-7941-472e-87de-e134ada66dea" />
 
 * Du hast **einen** oder **mehrere** SolarFlow (SF800 oder neuer, zenSDK-fähig)?
-* Du hast einen Shelly Pro 3EM oder ein anderes Smartmeter mit lokaler Schnittstelle?, siehe [Kompatibil?](#shelly-und-smartmeter)
+* Du hast einen Shelly Pro 3EM oder ein anderes Smartmeter mit lokaler Schnittstelle?, siehe [Kompatible Geräte](kompatible_geraete.md)
 * Du willst eine lokale Regelung – ohne Cloud?
 * Du willst wenig Aufwand und etwas, das einfach funktioniert?
 * Home Assistant & Co. sind (noch) keine Option für dich?
@@ -24,13 +24,7 @@ _Prinzip_: **Install** – **Run** – **Forget**
 
 ## 👉 So startest du
 
-1. **Helfer/Installer herunterladen** (siehe [Downloads](#downloads)) und starten. Der Configurator öffnet sich im Browser.
-2. **„Neu konfigurieren“** wählen und die Fragen zu deinen Speichern, deinem Smartmeter und den Benachrichtigungen beantworten.
-3. Am Ende **„⚡ Direkt hochladen“** – die Scripte landen fertig eingerichtet auf deinen beiden Shellys.
-
-Nach 10 Minuten läuft Deine Regelung!
-
-Ausführliche Anleitung: **[Configurator](Multiconfigurator/readme.md)**
+Helfer herunterladen, Fragen beantworten, hochladen – nach 10 Minuten läuft deine Regelung. Die drei Schritte stehen auf der **[Startseite](readme.md#-hier-starten)**, die ausführliche Anleitung beim **[Configurator](Multiconfigurator/readme.md)**.
 
 ## Du bist Dir noch unsicher?
 
@@ -48,10 +42,7 @@ und wie ich Qualität sicherstelle
 
 ## Was du brauchst
 
-* **Zwei Shellys** (Gen2 oder neuer). Idealerweise ist einer davon ein **Shelly Pro 3EM** – der misst dann gleich den Netzbezug. Alternativ ein anderes Smartmeter mit JSON-Schnittstelle, z. B. Zendure Smart Meter 3CT, ein Tasmota-Lesekopf oder ein Shelly 3EM (ohne Pro).
-* Die **IP-Adressen** deiner SolarFlow und Shellys – am besten im Router fest vergeben.
-* Einen **Windows-PC oder Mac** für den Helfer. Ohne Helfer reicht jeder Browser.
-* **Optional für Benachrichtigungen:** einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com) für Signal oder WhatsApp – oder einen Webhook, z. B. in Home Assistant.
+Zwei Shellys (idealerweise einer davon ein **Shelly Pro 3EM**, der gleich den Netzbezug misst), ein Smartmeter und zenSDK-fähige SolarFlow im selben Netz. Welche Geräte passen und was sonst noch nötig ist, steht unter **[Kompatible Geräte](kompatible_geraete.md)**.
 
 **Wichtig:** Die SolarFlow in der Zendure-App aus dem **HEMS** entfernen, sonst schickt die Cloud parallel eigene Steuerbefehle.
 
@@ -59,12 +50,7 @@ und wie ich Qualität sicherstelle
 
 ## Drei Funktionen auf zwei Shellys – ohne Cloud
 
-| Shelly | Script | Aufgabe |
-|---|---|---|
-| **Controller-Shelly** | Controller (`zerooutput_multi_kvs`) | regelt Laden und Entladen deiner SolarFlow |
-| **Dashboard-Shelly** | zenDash-API + Watchdog (`zendash_watch`) | liefert die Daten fürs Dashboard und verschickt Meldungen – beide Funktionen einzeln abschaltbar |
-
-Auf jedem Shelly läuft **genau ein Script**. Shellys haben wenig Script-Speicher – deshalb laufen Controller und Dashboard-Script immer auf zwei getrennten Geräten.
+Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** zenDash-API und Watchdog – beide Funktionen dort einzeln abschaltbar. Welches Script wohin gehört: [So ist das System aufgebaut](readme.md#so-ist-das-system-aufgebaut).
 
 ### 1. Der Controller – die Regelung
 
@@ -119,34 +105,17 @@ Der Controller läuft auf einem beliebigen Shelly und liest das Smartmeter über
 
 ## Downloads
 
-**Helfer mit Configurator** – richtet alles ein, lädt die Scripte auf die Shellys, macht Updates, prüft den Speicher und zeichnet bei Problemen ein Log auf. Keine Installation nötig: herunterladen, starten, fertig.
+Alle Programme liegen auf der **[Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest)**. Was du wofür brauchst und wie du die Dateien beim ersten Start freigibst:
 
-| Helfer | für |
-|---|---|
-| **[⬇️ zendure_local_helper-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe)** | Windows 64 Bit |
-| **[⬇️ zendure_local_helper-windows-x86.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe)** | Windows 32 Bit |
-| **[⬇️ zendure_local_helper-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos)** | Mac mit Apple Silicon (M1 oder neuer) |
-
-**Dashboard-Proxy** – öffnet das Dashboard im Browser, ohne Python-Installation.
-
-| Dashboard-Proxy | für |
-|---|---|
-| **[⬇️ zendure_proxy-windows.exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe)** | Windows 64 Bit |
-| **[⬇️ zendure_proxy-macos](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos)** | Mac mit Apple Silicon (M1 oder neuer) |
-
-Beim ersten Start warnt dein Betriebssystem, weil die Dateien nicht signiert sind – wie du sie trotzdem startest, steht im [Configurator](Multiconfigurator/readme.md#empfohlen-der-lokale-helfer-exe-installer). Alle Dateien und Prüfsummen: [Releases](https://github.com/surfer1264/Zendure-Stuff/releases/latest).
-
-**Ohne Helfer:** Der [Web-Configurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) läuft direkt im Browser. Damit konfigurierst du alles und speicherst das fertige Script – hochladen musst du es dann selbst über die Weboberfläche des Shelly. Update, Speicherprüfung und Log-Aufzeichnung gibt es nur mit dem Helfer.
+- **Helfer mit Configurator** – richtet alles ein, lädt die Scripte auf die Shellys, macht Updates: [Configurator → Download](Multiconfigurator/readme.md#empfohlen-der-lokale-helfer-exe-installer)
+- **Dashboard-Proxy** – öffnet das Dashboard im Browser, ohne Python-Installation: [Dashboard → Als Programm](zendash_watch_API_ZenSDK/dashboard.md#als-programm-unter-windows-oder-macos)
+- **Ohne Helfer:** der [Web-Configurator](Multiconfigurator/readme.md#alternative-nur-der-web-configurator) im Browser – hochladen musst du das Script dann selbst.
 
 ---
 
 ## Update
 
-Gibt es eine neue Version, startest du den Helfer und wählst **„Updaten“**. Er vergleicht die Versionen auf deinen Shellys mit GitHub, liest deine Einstellungen direkt vom Shelly und spielt die neue Version ein – deine Einstellungen bleiben erhalten.
-
-Nutzt du das Dashboard, hol dir nach einem Update auch den neuen Dashboard-Proxy bzw. die neue Dashboard-Seite: Beide müssen dieselbe Versionsnummer haben wie das Script.
-
-**Umstieg von den alten Einzelscripten:** Früher waren zenDash-API und Watchdog zwei getrennte Scripte. Wie du auf das gemeinsame Script umsteigst, steht im [Configurator](Multiconfigurator/readme.md#umstieg-von-den-alten-einzelscripten).
+Helfer starten, **„Updaten“** wählen – deine Einstellungen bleiben erhalten. Details, auch zum Umstieg von den alten Einzelscripten: [Configurator → Update](Multiconfigurator/readme.md#4-update). Nutzt du das Dashboard, müssen Dashboard-Seite und Script dieselbe Versionsnummer haben ([Dashboard](zendash_watch_API_ZenSDK/dashboard.md)).
 
 ---
 
@@ -154,28 +123,7 @@ Nutzt du das Dashboard, hol dir nach einem Update auch den neuen Dashboard-Proxy
 
 ## Shelly und Smartmeter
 
-- **Shelly-Gen2/4-Geräten** mit Script-Engine und ausreichendem Script-Speicher
-  - Shelly 3EMPro - erfolgreich getestet
-  - Shelly 3EM-63W Gen3 - erfolgreich getestet
-  - Shelly 3EM 3ct63 - erfolgreich getestet
-  - Shelly 1PM Gen4 - erfolgreich getestet
-  - Shelly PM1Plus - erfolgreich getestet (Vorgänger von 1PM Gen3)
-  - Shelly Plus PlugS - erfolgreich getestet
-  - Shelly PlugS Gen3 - **nicht** erfolgreich getestet (out of memory)
-  - Shelly 1PM Gen3 - **nicht** erfolgreich getestet (out of memory)
-  - Shelly Mini gen3 - **nicht** erfolgreich getestet (out of memory)
-- Einen **Smartmeter** für den aktuellen Netz-Leistungswert (siehe **Kapitel 5** für Details
-  je Betriebsart).
-  - Shelly 3EMPro (beste Wahl, weil der lokal ohne Netzwerkrequest ausgelesen wird , wenn der Controller zeigleich auf dem Shelly läuft)
-  - Zendure D0
-  - Zendure CT
-  - Tasmota
-  - alle Shelly 3EM (mit und ohne Pro)
-  - alle **REST API** fähigen Smartmeter, **Ecotracker**….  
-- **HEMS-Kopplung entfernen:** Alle Zendure-Geräte müssen in der Zendure-App
-  **aus dem HEMS (Home Energy Management System)** entfernt werden, da sonst
-  die App/Cloud parallel eigene Steuerbefehle sendet und mit diesem Script
-  kollidiert.
+Getestete Shellys, unterstützte Smartmeter und wie du den Speicher deines Shelly selbst prüfst: **[Kompatible Geräte](kompatible_geraete.md)**.
 
 ## Fazit
 

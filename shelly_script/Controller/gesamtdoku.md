@@ -187,39 +187,12 @@ Was die Regelung kann:
 
 ## 3) Voraussetzungen
 
-- **Shelly-Gen2/3/4-Geräten** mit Script-Engine und ausreichendem Script-Speicher
-  - Shelly 3EMPro - erfolgreich getestet
-  - Shelly 3EM-63W Gen3 - erfolgreich getestet
-  - Shelly 3EM 3ct63 - erfolgreich getestet
-  - Shelly 1PM Gen4 - erfolgreich getestet
-  - Shelly PM1Plus - erfolgreich getestet (Vorgänger von 1PM Gen3)
-  - Shelly Plus PlugS - erfolgreich getestet
-  - Shelly PlugS Gen3 - **nicht** erfolgreich getestet (out of memory)
-  - Shelly 1PM Gen3 - **nicht** erfolgreich getestet (out of memory)
-  - Shelly Mini gen3 - **nicht** erfolgreich getestet (out of memory)
-- Einen **Smartmeter** für den aktuellen Netz-Leistungswert (siehe **Kapitel 5** für Details
-  je Betriebsart).
-  - Shelly 3EMPro (beste Wahl, weil der lokal ohne Netzwerkrequest ausgelesen wird , wenn der Controller zeigleich auf dem Shelly läuft)
-  - Zendure D0
-  - Zendure CT
-  - Tasmota
-  - alle Shelly 3EM (mit und ohne Pro)
-  - alle **REST API** fähigen Smartmeter, **Ecotracker**….  
-- Ein oder mehrere **Zendure-Geräte** im selben lokalen Netz, jeweils mit
-  **fester/bekannter IP-Adresse**. (Nur zenSDK fähige Geräte)
-- **HEMS-Kopplung entfernen:** Alle Zendure-Geräte müssen in der Zendure-App
-  **aus dem HEMS (Home Energy Management System)** entfernt werden, da sonst
-  die App/Cloud parallel eigene Steuerbefehle sendet und mit diesem Script
-  kollidiert.
-- **Netzwerkverbindung** zwischen dem Shelly, auf dem das Script läuft, und
-  allen Zendure-Geräten (gleiches LAN/WLAN, keine Firewall-Blockade auf den
-  genutzten Ports).
-- **Für Signal-/WhatsApp-Benachrichtigungen (optional):**
-  - Ein bei [CallMeBot](https://www.callmebot.com/blog/free-api-signal-send-messages/)
-    registrierter Signal- **oder** WhatsApp-Zugang mit API-Key (siehe Kapitel 8.5).
-  - Internetzugang des Shelly zum Versenden der Benachrichtigung (die
-    Kernregelung selbst benötigt dafür **kein** Internet – nur der optionale
-    Alarmversand).
+Welche Shellys getestet sind, welche Smartmeter unterstützt werden und was für Netzwerk, HEMS und Benachrichtigungen nötig ist, steht gesammelt unter **[Kompatible Geräte](../kompatible_geraete.md)**. Kurz:
+
+- Shelly Gen2/3/4 mit Script-Engine und genug Script-Speicher (siehe 3.1)
+- ein Smartmeter für den aktuellen Netz-Leistungswert (Details je Betriebsart in **Kapitel 5**)
+- zenSDK-fähige Zendure-Geräte im selben Netz mit fester IP-Adresse, **aus dem HEMS entfernt**
+- für Signal-/WhatsApp-Benachrichtigungen (optional): CallMeBot-Zugang (siehe Kapitel 8.5) und Internetzugang des Shelly – die Regelung selbst braucht **kein** Internet
 
 ### 3.1 Shelly
 

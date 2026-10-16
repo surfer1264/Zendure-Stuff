@@ -44,7 +44,13 @@ Der Controller braucht den aktuellen Netzbezug:
 
 - Nur **zenSDK-fähige Geräte** (ab SolarFlow 800), im selben Netz und am besten mit **fester IP-Adresse** (im Router einstellen).
 - Die Speicher in der Zendure-App aus dem **HEMS** entfernen – sonst schickt die Cloud parallel eigene Steuerbefehle. Ausnahme Zendure Smart Meter D0: Dessen lokale Schnittstelle wird einmalig über HEMS freigeschaltet. Das betrifft nur den Zähler, die Speicher bleiben trotzdem aus dem HEMS draußen.
+- **Es kann nur einen geben:** Kein zweiter Regler darf dieselben Speicher steuern – also kein HEMS, kein Z-HA, keine andere Automatik.
 
 ## Netzwerk
 
-Der Controller-Shelly muss alle Speicher und das Smartmeter im lokalen Netz erreichen. Internet braucht er nur für die optionalen Benachrichtigungen (Signal/WhatsApp über CallMeBot).
+Der Controller-Shelly muss alle Speicher und das Smartmeter im lokalen Netz erreichen (gleiches LAN/WLAN, keine Firewall dazwischen). Die **IP-Adressen** von Speichern und Shellys am besten im Router fest vergeben. Internet braucht der Shelly nur für die optionalen Benachrichtigungen.
+
+## Außerdem
+
+- Ein **Windows-PC oder Mac** (Apple Silicon) für den [Helfer mit Configurator](Multiconfigurator/readme.md). Ohne Helfer reicht jeder Browser – dann lädst du das Script selbst hoch.
+- **Optional für Benachrichtigungen:** ein kostenloser API-Key von [CallMeBot](https://www.callmebot.com/blog/free-api-signal-send-messages/) für Signal oder WhatsApp – oder ein Webhook, z. B. in Home Assistant.

@@ -29,6 +29,40 @@ exclude_docs: |
   /Upload_Controller/
   
 
+# ------------------------------------------------------------------
+# LESEREIHENFOLGE (Seitenleiste)
+# Neue Seiten hier eintragen, sonst erscheinen sie nicht in der
+# Seitenleiste (bleiben aber über Links und Suche erreichbar).
+# EN/FR-Fassungen nicht eintragen - siehe not_in_nav.
+# ------------------------------------------------------------------
+nav:
+  - Start: readme.md
+  - Überblick:
+      - Was die Suite kann: szscs.md
+      - Kompatible Geräte: kompatible_geraete.md
+  - Einrichten & Updaten:
+      - Configurator: Multiconfigurator/readme.md
+      - Helfer und Proxy auf dem Mac: Multiconfigurator/local_helper/mcos_helper.md
+      - Änderungen: Multiconfigurator/CHANGELOG.md
+  - Controller:
+      - Getting Started: Controller/readme.md
+      - Benutzerdokumentation: Controller/benutzerdoku.md
+      - Gesamtdokumentation: Controller/gesamtdoku.md
+      - Änderungen: Controller/CHANGELOG.md
+  - Dashboard & Meldungen:
+      - zenDash-API + Watchdog: zendash_watch_API_ZenSDK/readme.md
+      - Dashboard: zendash_watch_API_ZenSDK/dashboard.md
+      - Speicherbedarf: zendash_speichermodell.md
+      - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
+      - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
+      - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/readme.md
+      - API-Referenz: zendash_watch_API_ZenSDK/API.md
+      - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
+  - Werkzeuge:
+      - Script-Poller: Script_poller/readme.md
+  - Hintergrund:
+      - Vergleich mit anderen Lösungen: Einordnung.md
+
 # Englisch/Französisch nicht in der Seitenleiste zeigen
 # (bleiben über die Sprach-Links und die Suche erreichbar)
 not_in_nav: |

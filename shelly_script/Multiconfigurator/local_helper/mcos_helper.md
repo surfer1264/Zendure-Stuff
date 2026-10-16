@@ -1,6 +1,6 @@
-# Den Helfer unter macOS starten
+# Helfer und Dashboard-Proxy unter macOS starten
 
-[← zurück zur Configurator-Anleitung](../readme.md)
+[← zurück zur Configurator-Anleitung](../readme.md) · [← zurück zu Dashboard einrichten](../../zendash_watch_API_ZenSDK/dashboard.md)
 
 **Voraussetzung:** Die macOS-Datei ist ein reines arm64-Programm. Sie läuft nur auf Macs mit **Apple Silicon** (M1 oder neuer), nicht auf älteren Macs mit Intel-Prozessor. Dort bleibt nur der [Web-Configurator](../readme.md#alternative-nur-der-web-configurator).
 
@@ -33,6 +33,12 @@ Der Helfer öffnet dann den Configurator im Browser (`http://127.0.0.1:8787`). D
 Der Weg „Rechtsklick → Öffnen → erneut Öffnen“ funktioniert ab macOS Sequoia oft nicht mehr. Dann versuchst du die Datei einmal zu öffnen und gehst anschließend zu **Systemeinstellungen → Datenschutz & Sicherheit**. Dort klickst du ganz unten bei der blockierten Datei auf **„Dennoch öffnen“**.
 
 Erkennt macOS die Datei gar nicht als Programm, brauchst du trotzdem das Ausführungsrecht aus Schritt 3 oben.
+
+## Dashboard-Proxy
+
+Für den Dashboard-Proxy gelten dieselben Schritte. Setze dort statt `zendure_local_helper-macos` den Dateinamen **`zendure_proxy-macos`** ein. Wie der Helfer läuft auch der Proxy nur auf Macs mit **Apple Silicon** (M1 oder neuer).
+
+Nach dem Start öffnet der Proxy das Dashboard bzw. beim ersten Mal die Einrichtungsseite unter `http://localhost:8000/`. Das Terminal-Fenster muss offen bleiben, solange das Dashboard genutzt wird.
 
 ## Download prüfen (optional)
 

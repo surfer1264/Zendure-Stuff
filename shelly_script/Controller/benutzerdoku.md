@@ -24,46 +24,15 @@ Stell dir vor, du hast einen Stromzähler und einen oder mehrere Zendure-Speiche
 
 ## 2) Was du vorher brauchst
 
-| Was | Warum |
-|---|---|
-| Ein Shelly-Gerät (Gen2/3/4) mit Script-Funktion | Darauf läuft der Controller |
-| Ein Stromzähler ("Smartmeter") | Damit der Controller weiß, wie viel Strom gerade fließt |
-| Ein oder mehrere Zendure-Geräte mit **fester IP-Adresse** im selben Netzwerk | Damit der Controller sie erreichen und steuern kann |
-| **Deine Zendure-Geräte aus dem HEMS in der Zendure-App entfernen** | Sonst sendet die App gleichzeitig eigene Befehle, das kollidiert mit dem Controller |
-| (optional) Ein Zugang bei CallMeBot oder ein Home-Assistant-Webhook | Nur nötig, wenn du bei Problemen automatisch benachrichtigt werden willst |
-
-💡 Tipp zum Speicherplatz deines Shelly: Ruf im Browser `http://<IP-deines-Shelly>/rpc/Script.GetStatus?id=<Script-Nummer>` auf. Steht dort z. B. `"mem_free":25200`, hat dein Gerät genug freien Speicher. Manche kleinen/älteren Shellys (z. B. Plug S Gen3) reichen dafür **nicht** aus.
+Kurz: ein Shelly (Gen2 oder neuer) mit genug Script-Speicher, ein Smartmeter und Zendure-Geräte mit **fester IP-Adresse** im selben Netz – und die Geräte **aus dem HEMS** in der Zendure-App entfernt. Welche Shellys und Smartmeter passen und wie du den Speicher prüfst: **[Kompatible Geräte](../kompatible_geraete.md)**.
 
 ---
 
-## 3) Einrichtung in 4 Schritten
+## 3) Einrichtung und die wichtigsten Einstellungen
 
-### Schritt 1 – Script besorgen
-Lade das Script herunter (Link siehe unten, GitHub-Projekt) und öffne es in einem Text-Editor. Optional gibt es auch einen [Konfigurationsassistenten im Browser](../Multiconfigurator/readme.md), der dir beim Ausfüllen hilft.
+**Einrichten** geht am einfachsten mit dem [Configurator](../Multiconfigurator/readme.md) – er fragt alles Nötige ab und lädt das Script direkt hoch. Wer das Script von Hand anpassen und hochladen will, findet die Schritte unter [Getting Started → Ohne Configurator](readme.md#ohne-configurator-von-hand).
 
-### Schritt 2 – Dein(e) Zendure-Gerät(e) eintragen
-Mit dem [Konfigurationsassistenten im Browser](../Multiconfigurator/readme.md) hast Du schon alles Wesentliche erledigt. Du kannst Schritt 2 und 3 überspringen.
-
-Ganz oben im Script findest du für jedes Gerät einen Block wie diesen – hier trägst du deine eigenen Werte ein:
-
-```js
-{
-  ip: "192.168.1.50",       // IP-Adresse deines Zendure-Geräts
-  label: "Balkonspeicher",  // ein frei wählbarer Name für Logs/Meldungen
-
-  minSoc: 15,               // unter diesem Ladestand (%) wird nicht mehr entladen
-  maxSoc: 100,               // ab diesem Ladestand (%) wird nicht mehr geladen
-  maxOutput: 800,           // max. Entlade-/Exportleistung (Watt)
-  maxInputPower: 1200,      // max. Ladeleistung aus dem Netz (Watt)
-
-  dischargeAllowed: true,   // darf entladen/exportieren?
-  reverse: true,            // darf aus dem Netz laden?
-
-  dryRun: false             // true = nur beobachten, nichts wirklich schreiben (Testmodus)
-}
-```
-
-Hast du mehrere Geräte, kopierst du diesen Block einfach und passt die Werte an (siehe [Kapitel 5](#-ein-weiteres-gerät-hinzufügen)).
+Egal wie du einrichtest: Für jedes Zendure-Gerät gibt es im CONFIG-Block einen Eintrag in `devices`. Hast du mehrere Geräte, kommt pro Gerät ein Eintrag dazu (siehe [Kapitel 5](#-ein-weiteres-gerät-hinzufügen)).
 
 **Was die wichtigsten Werte bedeuten**, in einfachen Worten:
 
@@ -79,8 +48,7 @@ Hast du mehrere Geräte, kopierst du diesen Block einfach und passt die Werte an
 | `reverse` | Darf das Gerät aus dem Netz laden? (`false` = lädt nie vom Netz) |
 | `dryRun` | Testmodus: Gerät wird ausgelesen und mitgerechnet, aber **nie** tatsächlich angesteuert |
 
-### Schritt 3 – Stromzähler einstellen
-Der Controller braucht einen laufenden Netz-Messwert. Trage dazu bei `gridSource` eine dieser drei Optionen ein:
+**Stromzähler** – der Controller braucht einen laufenden Netz-Messwert. Dafür steht bei `gridSource` eine dieser drei Optionen:
 
 | Wenn du … | dann setze `gridSource` auf … |
 |---|---|
@@ -88,18 +56,11 @@ Der Controller braucht einen laufenden Netz-Messwert. Trage dazu bei `gridSource
 | einen **separaten** Shelly Pro 3EM im Netzwerk als Zähler nutzt | `"remote"` (zusätzlich `gridSourceIp` eintragen) |
 | einen anderen Zähler nutzt (z. B. Zendure Smart Meter, Tasmota, …) | `"http_json"` (zusätzlich `gridSourceUrl` und `gridSourceField` eintragen) |
 
-Bei `"http_json"` rufst du die angegebene Adresse einmal im Browser auf, suchst dort das Feld mit der Gesamtleistung (z. B. `total_power`) und trägst dessen Namen bei `gridSourceField` ein. **Achtung:** bei geschachtelten JSON-Strukturen (mehrere öffnende geschweifte Klammern), siehe Kapitel 5.1 für ein konkretes Beispiel (Tasmota).
+Bei `"http_json"` rufst du die angegebene Adresse einmal im Browser auf, suchst dort das Feld mit der Gesamtleistung (z. B. `total_power`) und trägst dessen Namen bei `gridSourceField` ein. **Achtung:** bei geschachtelten JSON-Strukturen (mehrere öffnende geschweifte Klammern), siehe [Kapitel 5.1 der Gesamtdokumentation](gesamtdoku.md#51-eigeneweitere-smart-meter-einbinden-http_json) für ein konkretes Beispiel (Tasmota).
 
 **Vorzeichen prüfen:** Schalte kurz einen größeren Verbraucher ein und schau im Log nach, ob der angezeigte Netzwert **positiver** wird (Bezug steigt). Wird er stattdessen negativer, setze `gridSourceInvert: true`.
 
-### Schritt 4 – Hochladen und starten
-Lade das Script über die Shelly-Weboberfläche (Bereich "Scripts") hoch, speichere und starte es. Der Controller synchronisiert beim ersten Start einmalig deine `minSoc`/`maxSoc`-Werte mit den Geräten und beginnt danach automatisch mit der Regelung – standardmäßig alle 4 Sekunden ein neuer Regelzyklus.
-
->**Achtung**
-> "Es kann nur einen geben"
-> HEMS ausschalten, kein zHA, keinen anderen Regler
-
-⭐ **Das reicht für den Start.** Alle weiteren Einstellungen (siehe Tabelle in der Vollversion) sind sinnvoll voreingestellt und lassen sich später bei Bedarf feinjustieren.
+⭐ **Das reicht für den Start.** Alle weiteren Einstellungen (siehe [Gesamtdokumentation](gesamtdoku.md#4-konfiguration)) sind sinnvoll voreingestellt und lassen sich später bei Bedarf feinjustieren.
 
 ---
 

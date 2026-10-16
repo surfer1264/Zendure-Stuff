@@ -44,7 +44,13 @@ Le Controller a besoin de la puissance réseau actuelle :
 
 - Uniquement des **appareils compatibles zenSDK** (à partir du SolarFlow 800), dans le même réseau et de préférence avec une **adresse IP fixe** (à régler dans ton routeur).
 - Retire les batteries du **HEMS** dans l’app Zendure – sinon le cloud envoie en parallèle ses propres commandes. Exception Zendure Smart Meter D0 : son interface locale s’active une fois via HEMS. Cela ne concerne que le compteur, les batteries restent hors du HEMS.
+- **Il ne peut en rester qu’un :** aucun second régulateur ne doit piloter les mêmes batteries – pas de HEMS, pas de Z-HA, pas d’autre automatisme.
 
 ## Réseau
 
-Le Shelly du Controller doit joindre toutes les batteries et le compteur dans le réseau local. Internet n’est nécessaire que pour les notifications optionnelles (Signal/WhatsApp via CallMeBot).
+Le Shelly du Controller doit joindre toutes les batteries et le compteur dans le réseau local (même LAN/Wi-Fi, pas de pare-feu entre les deux). Attribue de préférence des **adresses IP fixes** aux batteries et aux Shelly dans ton routeur. Le Shelly n’a besoin d’Internet que pour les notifications optionnelles.
+
+## Également nécessaire
+
+- Un **PC Windows ou un Mac** (Apple Silicon) pour [l’assistant local avec le configurateur](Multiconfigurator/readme_FR.md). Sans l’assistant, n’importe quel navigateur suffit – tu charges alors le script toi-même.
+- **Facultatif pour les notifications :** une clé API gratuite de [CallMeBot](https://www.callmebot.com/blog/free-api-signal-send-messages/) pour Signal ou WhatsApp – ou un webhook, par ex. dans Home Assistant.

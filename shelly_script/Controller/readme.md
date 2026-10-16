@@ -110,7 +110,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 
 ## Starten & prüfen
 
-1. Script **Start** und **„Run on startup“** aktivieren (beim Direkt-Upload passiert das automatisch).
+1. Script **Start** und **„Run on startup“** aktivieren (beim Direkt-Upload passiert das automatisch). Beim ersten Start gleicht der Controller einmalig `minSoc`/`maxSoc` mit den Geräten ab und regelt danach alle 4 Sekunden.
 2. Log öffnen und das Start-Banner prüfen: Es beginnt mit `Version …` und `Multi-Device Controller gestartet` und zeigt alle aktiven Werte auf einen Blick ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)).
 3. Erscheint regelmäßig eine Zeile wie
 
@@ -119,6 +119,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
    ```
 
    ✅ Fertig – der Controller regelt.
+4. Bei `"http_json"` einmal das **Vorzeichen prüfen**: einen größeren Verbraucher einschalten – der Netzwert im Log muss **steigen**. Sinkt er, `gridSourceInvert: true` setzen.
 
 Bleibt der Netzbezug länger ruhig, meldet der Controller „Sparmodus“ und fragt die Speicher seltener ab. Das ist normal.
 

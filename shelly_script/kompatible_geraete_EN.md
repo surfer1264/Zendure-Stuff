@@ -44,7 +44,13 @@ The Controller needs the current grid power:
 
 - Only **zenSDK-capable devices** (SolarFlow 800 and newer), in the same network and ideally with a **fixed IP address** (set it in your router).
 - Remove the batteries from **HEMS** in the Zendure app – otherwise the cloud sends its own control commands in parallel. Exception Zendure Smart Meter D0: its local interface is enabled once via HEMS. This only concerns the meter, the batteries still stay out of HEMS.
+- **There can be only one:** no second controller may control the same batteries – no HEMS, no Z-HA, no other automation.
 
 ## Network
 
-The Controller Shelly must reach all batteries and the smart meter in the local network. It only needs internet for the optional notifications (Signal/WhatsApp via CallMeBot).
+The Controller Shelly must reach all batteries and the smart meter in the local network (same LAN/Wi-Fi, no firewall in between). Ideally give the batteries and Shellys **fixed IP addresses** in your router. The Shelly only needs internet for the optional notifications.
+
+## Also needed
+
+- A **Windows PC or Mac** (Apple Silicon) for the [helper with configurator](Multiconfigurator/readme_EN.md). Without the helper any browser will do – you then upload the script yourself.
+- **Optional for notifications:** a free API key from [CallMeBot](https://www.callmebot.com/blog/free-api-signal-send-messages/) for Signal or WhatsApp – or a webhook, e.g. in Home Assistant.

@@ -6,7 +6,7 @@
 
 # Die Suite - Zendure-Speicher lokal steuern
 
-Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit ohne Cloud geregelt: Ein Shelly hält deinen Netzbezug auf null, ein zweiter liefert die Daten für ein Dashboard und meldet sich, wenn etwas nicht stimmt.
+Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit ohne Cloud geregelt: Ein Shelly hält deinen Netzbezug auf null, ein zweiter liefert die Daten für ein Dashboard und meldet sich, wenn etwas nicht stimmt. Was die Suite im Einzelnen kann: **[Was die Suite kann](szscs.md)**.
 
 ## 👉 Hier starten
 
@@ -16,9 +16,9 @@ Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit oh
 
 Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen) steht beim **[Configurator](Multiconfigurator/readme.md)** · [English](Multiconfigurator/readme_EN.md) · [Français](Multiconfigurator/readme_FR.md)
 
-## Wieviel Solarflows kann ich betreiben? - Speicherbedarfsbetrachtung 
+## Was du brauchst
 
-[Speicherbedarfsbetrachtung](zendash_speichermodell.md) · [Kompatible Geräte](kompatible_geraete.md)
+Zwei Shellys, ein Smartmeter und zenSDK-fähige Speicher – welche Geräte passen, steht unter **[Kompatible Geräte](kompatible_geraete.md)**. Wie viele Speicher das Dashboard-Script verkraftet, zeigt die [Speicherbedarfsbetrachtung](zendash_speichermodell.md).
 
 
 ## So ist das System aufgebaut
