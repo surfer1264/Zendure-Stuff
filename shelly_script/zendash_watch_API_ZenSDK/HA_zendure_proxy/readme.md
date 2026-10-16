@@ -45,8 +45,8 @@ Alle Dateien liegen in einem Ordner unter `/addons/`:
     └── zendure-dashboard-b.html
 ```
 
-`zendure-dashboard-b.html` ist ein alternatives Layout des Dashboards (gleiche Funktionen),
-erreichbar unter `http://<ha-ip>:8000/b`.
+`zendure-dashboard.html` ist das (neue) Standard-Layout, `zendure-dashboard-b.html` das bisherige
+Layout des Dashboards (gleiche Funktionen), erreichbar unter `http://<ha-ip>:8000/b`.
 
 `ts_bridge.py` ist nur für den [ThingSpeak- bzw. ThingsBoard-Upload](#thingspeak--und-thingsboard-upload) nötig.
 Fehlt die Datei, läuft der Proxy ganz normal, nur ohne ThingSpeak und ThingsBoard. Die

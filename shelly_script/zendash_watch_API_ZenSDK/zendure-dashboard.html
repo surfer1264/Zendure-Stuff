@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="de" data-theme="dark">
-<!-- Theme so frueh wie moeglich setzen, sonst blitzt beim Laden kurz die
-     falsche Variante auf, bevor das Script am Seitenende laeuft. -->
-<script>try{if(window.matchMedia&&!window.matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.setAttribute('data-theme','light');}catch(e){}</script>
+<!-- Theme und Ansichtsgroesse so frueh wie moeglich setzen, sonst blitzt beim
+     Laden kurz die falsche Variante auf, bevor das Script am Seitenende laeuft.
+     Variante B: gemerkte Wahl (localStorage) vor der Systemeinstellung. -->
+<script>(function(){var d=document.documentElement,s=null,f=null;
+  try{s=localStorage.getItem('zendash_b_theme');f=localStorage.getItem('zendash_b_fontsize');}catch(e){}
+  try{if(s!=='dark'&&s!=='light')s=(window.matchMedia&&!window.matchMedia('(prefers-color-scheme: dark)').matches)?'light':'dark';
+    d.setAttribute('data-theme',s);}catch(e){}
+  f=f||'large';if(f!=='normal')d.setAttribute('data-fontsize',f);})();</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -110,12 +114,29 @@
   .mono{ font-family:'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace; font-feature-settings:'ss04' 1; }
   .shell{ max-width:1180px; margin:0 auto; }
 
+  /* =================================================================
+     Standard-Layout (entstanden als "Variante B"). Das bisherige Layout
+     liegt in zendure-dashboard-b.html und ist im Proxy unter /b
+     erreichbar. Logik, API-Aufrufe und Sperren sind in beiden gleich -
+     geaendert sind nur Aufbau, Darstellung und Texte:
+       - Kopfzeile: Sperre als beschrifteter Knopf mit Restzeit,
+         Ansicht/Sprache/Theme im Menue "Ansicht"
+       - Uebersicht getrennt in "Jetzt" (Messwerte) und "Regelung"
+       - Technische Details (KVS-Schluessel, IP, Rohcodes) nur auf Wunsch
+       - groessere Tippflaechen, Beschriftungen fuer Screenreader,
+         Rueckmeldungen als Einblendung am unteren Bildrand
+     ================================================================= */
+  :root{ --tap:2.75rem; }
+  .num{ font-variant-numeric:tabular-nums; }
+  h2, h3{ margin:0; font:inherit; }
+  :focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
+
+  /* ---------- Kopfzeile ---------- */
   header{
-    display:flex; align-items:flex-start; justify-content:space-between;
-    flex-wrap:wrap; gap:1rem;
-    padding: .375rem .25rem 1.625rem;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:.75rem 1rem; padding:.25rem .25rem 1.25rem;
   }
-  .brand{ display:flex; flex-direction:column; gap:.25rem; }
+  .brand{ display:flex; flex-direction:column; gap:.25rem; min-width:0; }
   .brand .word{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
     font-weight:600; letter-spacing:.14em; text-transform:uppercase;
@@ -123,29 +144,16 @@
   }
   .brand .word span{ color:var(--teal-text); }
   .brand .sub{ font-size:.82rem; color:var(--text-muted); }
+  .head-right{ display:flex; align-items:center; gap:.625rem; flex-wrap:wrap; justify-content:flex-end; }
 
-  /* flex-wrap ist hier entscheidend: ohne das bilden Statuspille, Uhr und die
-     drei Knoepfe eine unteilbare Zeile. Wird sie breiter als das Display,
-     schiebt sie nach rechts hinaus statt umzubrechen - auf dem Handy wandert
-     dann der Tag/Nacht-Knopf aus dem Bild, besonders bei 115 % oder 130 %
-     Schriftgroesse, weil Pille und Uhr in rem bemessen sind und mitwachsen. */
-  .head-right{
-    display:flex; align-items:center; gap:.875rem;
-    flex-wrap:wrap; justify-content:flex-end;
+  .pill{
+    display:flex; align-items:center; gap:.5rem; min-height:var(--tap); max-width:100%;
+    background:var(--surface); border:1px solid var(--border); border-radius:999px;
+    padding:.375rem .875rem; box-shadow:var(--shadow); font-size:.8rem; color:var(--text-muted);
   }
-  /* Darf schrumpfen, statt die rechte Haelfte zu verdraengen */
-  .brand{ min-width:0; }
-  .status-pill{ max-width:100%; }
   .status-pill #statusText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .status-pill{
-    display:flex; align-items:center; gap:.5rem;
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:999px; padding:.4375rem .875rem; box-shadow:var(--shadow);
-    font-size:.78rem; color:var(--text-muted);
-  }
   .status-dot{
-    width:.5rem; height:.5rem; border-radius:50%; background:var(--teal-text);
-    box-shadow:0 0 0 0 rgba(79,209,197,.6);
+    width:.625rem; height:.625rem; border-radius:50%; background:var(--teal-text); flex-shrink:0;
     animation:pulse 2.2s ease-out infinite;
   }
   @keyframes pulse{
@@ -154,219 +162,226 @@
     100%{ box-shadow:0 0 0 0 rgba(79,209,197,0); }
   }
   .status-dot.offline{ background:var(--alert-text); animation:none; }
-  .hub-status-dot{
-    width:.4375rem; height:.4375rem; border-radius:50%; background:var(--teal-text);
-    display:inline-block; margin-right:.3125rem; flex-shrink:0;
-  }
-  .hub-status-dot.offline{ background:var(--alert-text); }
-  .clock{
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius-md); box-shadow:var(--shadow);
-    padding:.5rem 1rem; text-align:right; min-width:7.375rem;
-  }
-  .clock .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:1.15rem; font-weight:600; line-height:1.1; }
-  .clock .date{ font-size:.72rem; color:var(--text-muted); margin-top:.125rem; }
+  .clock-pill .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; color:var(--text); }
+  .clock-pill .date{ font-size:.75rem; }
 
-  .theme-toggle{
-    width:2.625rem; height:2.625rem; border-radius:50%;
-    background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-    color:var(--text); font-size:1.05rem;
+  /* Sperre: wichtigster Knopf der Seite - deshalb mit Text statt nur Symbol */
+  .lock-btn{
+    display:inline-flex; align-items:center; gap:.5rem; min-height:var(--tap);
+    padding:.375rem 1rem .375rem .75rem; border-radius:999px; cursor:pointer;
+    font-family:inherit; font-size:.85rem; font-weight:600; white-space:nowrap;
+    background:var(--surface); color:var(--teal-text); border:2px solid var(--teal-text); box-shadow:var(--shadow);
   }
-  .theme-toggle:active{ transform:scale(.92); }
-  .lock-toggle.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
-  /* Schloss-Icons (SVG, Farbe ueber currentColor) */
-  .lock-icon{ width:1.375rem; height:1.375rem; display:block; overflow:visible; }
+  .lock-btn.locked{ color:var(--amber-text); border-color:var(--amber-deep); }
+  .lock-btn:active{ transform:scale(.97); }
+  #lockIcon{ display:inline-flex; }
+  /* Knopfbreite fest auf den laengsten Text (Gesperrt / Offen mit Restzeit):
+     beide Texte liegen unsichtbar in derselben Rasterzelle. Sonst wuchs der
+     Knopf beim Entsperren und schob "Ansicht" weg bzw. in die naechste
+     Zeile - der naechste Klick ging dann daneben oder sperrte wieder. */
+  .lock-lbl{ display:inline-grid; font-variant-numeric:tabular-nums; }
+  .lock-lbl > *{ grid-area:1 / 1; }
+  .lock-sizer{ visibility:hidden; }
+  .lock-icon{ width:1.25rem; height:1.25rem; display:block; overflow:visible; }
   .soc-lock .lock-icon{ width:1.125rem; height:1.125rem; }
-  .font-toggle{ font-weight:700; position:relative; }
-  .lang-toggle{
-    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
-    font-weight:600; font-size:.74rem; letter-spacing:.04em;
+
+  /* Menue "Ansicht" */
+  .menu{ position:relative; }
+  .menu > summary{
+    list-style:none; display:inline-flex; align-items:center; gap:.4rem; min-height:var(--tap);
+    padding:.375rem .9rem; border-radius:999px; cursor:pointer; user-select:none;
+    background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow);
+    font-size:.85rem; font-weight:600; color:var(--text);
   }
+  .menu > summary::-webkit-details-marker{ display:none; }
+  .menu[open] > summary{ border-color:var(--teal-text); }
+  .menu-panel{
+    position:absolute; right:0; top:calc(100% + .5rem); z-index:40;
+    width:min(21rem, calc(100vw - 40px));
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md);
+    box-shadow:var(--shadow); padding:.375rem;
+  }
+  .set-row{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.375rem .5rem; }
+  .set-row[hidden]{ display:none; }
+  .set-row + .set-row{ border-top:1px solid var(--border); }
+  .set-row .lbl{ font-size:.88rem; }
+  .set-row .hint{ display:block; font-size:.72rem; color:var(--text-muted); margin-top:.125rem; line-height:1.35; }
+  .icon-btn{
+    min-width:var(--tap); height:var(--tap); padding:0 .625rem; flex-shrink:0;
+    display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+    border-radius:var(--radius-sm); background:var(--surface-2); border:1px solid var(--border);
+    color:var(--text); font-family:inherit; font-size:1.05rem;
+  }
+  .icon-btn:active{ transform:scale(.94); }
+  .font-toggle{ font-weight:700; }
   .font-toggle .lvl{
-    position:absolute; bottom:.375rem; right:.4375rem;
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
-    font-size:.5625rem; line-height:1; color:var(--text-muted);
+    font-size:.62rem; color:var(--text-muted); margin-left:.125rem; align-self:flex-end; margin-bottom:.625rem;
   }
-
-  .btn{
-    font-family:'IBM Plex Sans', sans-serif; font-size:.82rem; font-weight:600;
-    color:var(--text); background:var(--surface-2);
-    border:1px solid var(--border); border-radius:var(--radius-sm);
-    padding:.5rem .875rem; cursor:pointer; width:100%;
+  .lang-toggle{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.82rem; letter-spacing:.04em; }
+  .fs-toggle[hidden]{ display:none; }
+  .fs-toggle.active{ color:var(--teal-text); border-color:var(--teal-text); }
+  .sw-btn{
+    position:relative; width:3.25rem; height:1.875rem; flex-shrink:0; padding:0; cursor:pointer;
+    border-radius:999px; border:1px solid var(--border); background:var(--surface-2);
   }
-  .btn:active{ transform:scale(.98); }
-  .btn:disabled{ opacity:.45; cursor:not-allowed; }
-  .btn.stop{ color:var(--amber-text); border-color:var(--amber-deep); }
-  .btn:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
+  .sw-btn::after{
+    content:""; position:absolute; top:.1875rem; left:.1875rem; width:1.375rem; height:1.375rem;
+    border-radius:50%; background:var(--text-muted); transition:transform .2s ease;
+  }
+  .sw-btn[aria-checked="true"]{ background:var(--teal-deep); border-color:transparent; }
+  .sw-btn[aria-checked="true"]::after{ transform:translateX(1.375rem); background:#fff; }
 
-  .manual-row{ padding:.5rem 0 .125rem; }
-  .manual-row .hint{ font-size:.68rem; color:var(--text-muted); line-height:1.4; margin-bottom:.4375rem; display:block; }
+  /* ---------- Hinweise ---------- */
+  .diag{
+    background:rgba(226,87,76,0.12); border:1px solid var(--alert);
+    color:var(--text); border-radius:var(--radius-md);
+    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.85rem; line-height:1.45;
+  }
+  .diag b{ color:var(--alert-text); }
+
+  /* ---------- Abschnitte ---------- */
+  .section-title{
+    font-size:.8rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase;
+    margin:0 .25rem .75rem;
+  }
+  .section-toggle{
+    display:flex; align-items:center; flex-wrap:wrap; gap:.25rem .5rem; min-height:var(--tap);
+    background:none; border:0; padding:0; cursor:pointer; text-align:left;
+    font-family:inherit; width:calc(100% - .5rem); margin-bottom:.25rem;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .section-toggle .chev{ display:inline-block; transition:transform .2s ease; }
+  #app.ov-collapsed .section-toggle .chev{ transform:rotate(-90deg); }
+  .ov-summary{ display:none; text-transform:none; letter-spacing:0; font-size:.8rem; color:var(--text); }
+  #app.ov-collapsed .ov-summary{ display:inline; }
+  #app.ov-collapsed #overviewRow{ display:none; }
 
   .card{
     background:var(--surface); border:1px solid var(--border);
     border-radius:var(--radius-lg); box-shadow:var(--shadow);
   }
 
-  /* Die vier Kopfkacheln (Sollwert, Fix-Entladung, Netz, Solarflow) als
-     Raster mit fester Spaltenzahl statt frei umbrechender Flex-Reihe - so
-     gibt es nie 3 + 1, sondern 1, 2 oder 4 Spalten.
-     Die Grenzen haengen an der Bildschirmbreite UND an der Ansichtsstufe:
-       A1/A2 (100/115 %): 2 Spalten ab 600 px, 4 Spalten ab 1000 px
-                          -> iPad Pro 12,9" hochkant (1024) und alle iPad
-                             Pro quer (1194/1366) zeigen 4 nebeneinander
-       A3 (130 %):        2 Spalten ab 760 px, 4 Spalten ab 1300 px
-       A4 (150 %):        2 Spalten ab 760 px, nie 4 (Werte passen nicht)
-     Media-Queries in px beziehen sich auf die echte Bildschirmbreite und
-     werden von der Ansichtsstufe nicht beeinflusst. */
-  .row{
-    display:grid; grid-template-columns:repeat(var(--ov-cols, 1), minmax(0, 1fr));
-    gap:1.25rem; margin-bottom:1.5rem;
-  }
-  .row>.card{ min-width:0; padding:1.375rem 1.375rem 1.125rem; }
-  @media (min-width:600px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row{ --ov-cols:2; }
-  }
-  @media (min-width:760px){ .row{ --ov-cols:2; } }
+  /* Uebersicht: zwei Gruppen ("Jetzt" und "Regelung") mit je zwei Kacheln.
+     Nebeneinander nur, wenn genug Platz ist - abhaengig von Breite UND
+     Ansichtsstufe, wie im Original. */
+  .ov{ display:grid; grid-template-columns:minmax(0, 1fr); gap:1.5rem; margin-bottom:2rem; }
   @media (min-width:1000px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row{ --ov-cols:4; gap:1rem; }
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
   }
   @media (min-width:1300px){
-    html[data-fontsize="xlarge"] .row{ --ov-cols:4; gap:1rem; }
+    html[data-fontsize="xlarge"] .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
   }
-  /* Bei 4 Spalten etwas weniger Innenrand und eine an die Breite gekoppelte
-     Wertgroesse, damit auch "+1234 W" in eine Kachel passt. */
-  @media (min-width:1000px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row>.card{ padding:1.125rem 1.125rem 1rem; }
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row .hero-value,
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .row .hero-input{ font-size:clamp(1.6rem, 3.4vw, 2.8rem); }
+  .group-title{
+    display:flex; align-items:baseline; gap:.5rem; margin:0 .25rem .625rem;
+    font-size:1rem; font-weight:600;
   }
-  @media (min-width:1300px){
-    html[data-fontsize="xlarge"] .row>.card{ padding:1.125rem 1.125rem 1rem; }
-    html[data-fontsize="xlarge"] .row .hero-value,
-    html[data-fontsize="xlarge"] .row .hero-input{ font-size:clamp(1.6rem, 3.4vw, 2.8rem); }
+  .group-title .tag{ font-size:.72rem; font-weight:500; color:var(--text-muted); letter-spacing:.04em; }
+  .tiles{ display:grid; grid-template-columns:minmax(0, 1fr); gap:1rem; }
+  @media (min-width:520px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .tiles{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   }
-
-  /* ---------- Uebersicht einklappen ----------
-     Der Titel ueber den Kopfkacheln ist ein Knopf. Eingeklappt verschwinden
-     die vier Kacheln, im Titel steht dann eine Kurzzeile mit den Werten. */
-  .section-toggle{
-    display:flex; align-items:baseline; flex-wrap:wrap; gap:.25rem .5rem;
-    background:none; border:0; padding:0; cursor:pointer; text-align:left;
-    font-family:inherit; width:calc(100% - .5rem);
-    -webkit-tap-highlight-color:transparent;
-  }
-  .section-toggle:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
-  .section-toggle .chev{ display:inline-block; transition:transform .2s ease; }
-  #app.ov-collapsed .section-toggle .chev{ transform:rotate(-90deg); }
-  .ov-summary{
-    display:none; text-transform:none; letter-spacing:0; font-size:.78rem; color:var(--text);
-  }
-  #app.ov-collapsed .ov-summary{ display:inline; }
-  #app.ov-collapsed #overviewRow{ display:none; }
+  @media (min-width:640px){ .tiles{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
+  .tile{ min-width:0; padding:1.25rem 1.25rem 1.125rem; display:flex; flex-direction:column; }
+  /* Einstellbare Kacheln: farbige Oberkante, damit "hier kann man etwas
+     aendern" vom reinen Messwert unterscheidbar ist */
+  .tile.setpoint-card{ border-top:3px solid var(--teal-deep); }
 
   .hero-label{
-    font-size:.82rem; color:var(--text-muted); letter-spacing:.03em; margin-bottom:.375rem;
-    line-height:1.3; min-height:2.6em; /* immer 2 Zeilen reserviert, egal ob 1 oder 2 Zeilen genutzt -
-                                           sonst stehen die Werte je nach Labellaenge/Umbruch nicht auf gleicher Hoehe */
+    font-size:.84rem; color:var(--text-muted); letter-spacing:.02em; margin-bottom:.375rem;
+    line-height:1.3; min-height:2.6em;
   }
   .hero-value{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
     font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
-    display:flex; align-items:baseline; gap:.5rem;
+    display:flex; align-items:baseline; flex-wrap:wrap; gap:.5rem;
+  }
+  @media (min-width:1000px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-value,
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-input{ font-size:clamp(1.6rem, 3.2vw, 2.6rem); }
   }
   .hero-value .unit{ font-size:1rem; font-weight:500; color:var(--text-muted); }
-  .hero-state{ font-size:.82rem; margin-top:.5rem; color:var(--text-muted); }
-  .hero-state b{ font-weight:600; }
+  .dir{
+    align-self:center; font-family:'IBM Plex Sans', sans-serif; font-size:.75rem; font-weight:600;
+    padding:.125rem .5rem; border-radius:999px; color:var(--text-muted);
+    background:var(--surface-2); border:1px solid var(--border);
+  }
+  .dir:empty{ display:none; }
+  .hero-state{ font-size:.84rem; margin-top:.5rem; color:var(--text-muted); line-height:1.4; }
+  .hero-state b{ font-weight:600; color:var(--text); }
+  .hero-sub{ font-size:.78rem; margin-top:.25rem; color:var(--text-muted); line-height:1.4; }
+  .hero-sub:empty{ display:none; }
 
   .spark{ height:3.25rem; margin-top:.75rem; }
   .spark canvas{ display:block; width:100%; height:100%; }
-  .meta-line{
-    display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem;
-    margin-top:.5rem; font-size:.72rem; color:var(--text-muted);
-  }
-  footer a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
-  footer a:hover, footer a:focus-visible{ color:var(--teal-text); }
 
   .param-key{ font-size:.66rem; color:var(--text-muted); }
-  .setpoint-card{ display:flex; flex-direction:column; }
-  /* Regler und Hinweis nach unten schieben, damit sie mit den Sparklines
-     der Nachbarkacheln auf einer Linie sitzen */
   .setpoint-card input[type="range"]{ margin:auto 0 .125rem; }
-  input[type="range"]{
-    -webkit-appearance:none; appearance:none;
-    width:100%; height:1.75rem; background:transparent; accent-color:var(--teal-text); cursor:pointer;
-  }
-
-  /* Zahleneingabe fuer zdmc_dischargeFixed - optisch wie der Sollwert-Wert,
-     aber editierbar statt per Regler. Kein Slider, siehe Anforderung. */
-  .hero-input{
-    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
-    font-size:clamp(2rem, 5vw, 2.8rem); line-height:1;
-    background:transparent; border:none; color:inherit; width:5ch; padding:0;
-    -moz-appearance:textfield;
-  }
-  .hero-input::-webkit-outer-spin-button, .hero-input::-webkit-inner-spin-button{
-    opacity:1; margin-left:.25rem;
-  }
-  .hero-input:focus{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
-  .hero-input:disabled{ opacity:.55; }
-  .hero-input.invalid{ outline:2px solid var(--alert); outline-offset:3px; border-radius:4px; }
   .discharge-fixed-card .hero-state{ margin-top:auto; }
 
-  /* Schalter/Slider der Geräte-Karten haben im gesperrten Normalbetrieb
-     keinen Mehrwert (nicht bedienbar) - deshalb an die globale Sperre
-     gekoppelt unsichtbar, nicht nur deaktiviert. Betrifft bewusst NUR
-     .switch-row/.ctrl-row/.manual-row in .hub - Sollwert- und Fix-Entladung-Kachel
-     bleiben immer sichtbar. */
-  #app.hide-hub-controls .hub .switch-row,
-  #app.hide-hub-controls .hub .ctrl-row,
-  #app.hide-hub-controls .hub .manual-row,
-  #app.hide-hub-controls .hub .ctrl-divider{ display:none; }
+  .fixed-note{ display:none; font-size:.8rem; color:var(--amber-text); margin-top:.5rem; line-height:1.4; }
+  .ov.fixed-on .fixed-note{ display:block; }
+  .ov.fixed-on .setpoint-main .hero-value{ opacity:.55; }
+  .ov.fixed-on .discharge-fixed-card{ border-top-color:var(--amber-deep); }
 
-  /* Reglersperre fuer die Reserve (Stufe 2, nur Touch): Der Regler ist auch
-     bei entsperrter Seite zunaechst gesperrt und wird ueber das kleine
-     Schloss neben dem Wert einzeln freigegeben. Am PC (feiner Zeiger) ist
-     das Schloss unsichtbar und der Regler wie bisher direkt bedienbar. */
-  .ctrl-end{ display:inline-flex; align-items:center; gap:.5rem; }
-  .soc-lock{
-    display:none; align-items:center; justify-content:center;
-    width:1.875rem; height:1.875rem; border-radius:50%; padding:0;
-    background:var(--surface-2); border:1px solid var(--amber-deep);
-    color:var(--amber-text); font-size:.9rem; line-height:1; cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
+  .locked-hint{
+    display:none; align-items:center; gap:.5rem; margin:.75rem .25rem 0;
+    font-size:.82rem; color:var(--amber-text);
   }
-  @media (pointer: coarse){ .soc-lock{ display:inline-flex; } }
-  .soc-lock.open{ border-color:var(--teal-text); color:var(--teal-text); }
-  .ctrl-row.soc-open{
-    outline:2px solid var(--teal-text); outline-offset:4px;
-    border-radius:var(--radius-sm);
-  }
+  .locked-hint .lock-icon{ width:1rem; height:1rem; flex-shrink:0; }
+  #app.hide-hub-controls .locked-hint{ display:flex; }
 
-  /* Ersatz-Anzeige fuer die ausgeblendeten Schalter: reiner Text, nur im
-     gesperrten Zustand sichtbar (genau umgekehrt zu switch-row/ctrl-row
-     oben), damit Entladen/Netzladen-Status auch gesperrt ablesbar bleibt. */
-  .lock-status{ display:none; font-size:.78rem; color:var(--text-muted); padding:.375rem 0 .625rem; }
-  #app.hide-hub-controls .hub .lock-status{ display:block; }
+  /* ---------- Eingaben ---------- */
+  input[type="range"]{
+    -webkit-appearance:none; appearance:none;
+    width:100%; height:2.25rem; background:transparent; accent-color:var(--teal-text); cursor:pointer;
+  }
   input[type="range"]::-webkit-slider-runnable-track{
-    height:.375rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
+    height:.5rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
   }
   input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none; margin-top:calc(-.5rem - 1px);
-    width:1.375rem; height:1.375rem; border-radius:50%;
+    -webkit-appearance:none; margin-top:calc(-.5625rem - 1px);
+    width:1.625rem; height:1.625rem; border-radius:50%;
     background:var(--teal-text); border:3px solid var(--surface);
     box-shadow:0 2px 6px rgba(0,0,0,0.25);
   }
-
-  .section-title{
-    font-size:.8rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase;
-    margin: 0 .25rem .75rem;
+  input[type="range"]::-moz-range-track{
+    height:.5rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border);
   }
+  input[type="range"]::-moz-range-thumb{
+    width:1.625rem; height:1.625rem; border-radius:50%;
+    background:var(--teal-text); border:3px solid var(--surface); box-sizing:border-box;
+  }
+  input[type="range"]:disabled{ opacity:.45; cursor:not-allowed; }
+
+  .hero-input{
+    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600;
+    font-size:clamp(2rem, 5vw, 2.8rem); line-height:1.05;
+    background:transparent; color:inherit; width:5ch; padding:0 0 .125rem;
+    border:0; border-bottom:2px dashed var(--text-muted); border-radius:0;
+    -moz-appearance:textfield;
+  }
+  .hero-input::-webkit-outer-spin-button, .hero-input::-webkit-inner-spin-button{ opacity:1; margin-left:.25rem; }
+  .hero-input:focus{ outline:2px solid var(--teal-text); outline-offset:3px; border-radius:4px; }
+  .hero-input:disabled{ opacity:.55; border-bottom-color:transparent; }
+  .hero-input.invalid{ outline:2px solid var(--alert); outline-offset:3px; border-radius:4px; }
+
+  .btn{
+    font-family:'IBM Plex Sans', sans-serif; font-size:.88rem; font-weight:600;
+    color:var(--text); background:var(--surface);
+    border:1px solid var(--border); border-radius:var(--radius-sm);
+    min-height:var(--tap); padding:.5rem .875rem; cursor:pointer; width:100%;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .btn.stop{ color:var(--amber-text); border:2px solid var(--amber-deep); }
+
+  /* ---------- Geraete ---------- */
   .hubs-grid{
-    display:grid; grid-template-columns:repeat(auto-fit, minmax(min(16.25rem, 100%), 1fr));
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
     gap:1.25rem;
   }
-  .hub{ position:relative; overflow:hidden; padding:1.25rem 1.25rem 1rem; }
+  .hub{ position:relative; overflow:hidden; padding:1.25rem 1.25rem 1.125rem; }
   .hub::before{
     content:""; position:absolute; top:0; left:0; right:0; height:3px;
     background-image:repeating-linear-gradient(90deg, var(--flow-color, var(--idle)) 0 8px, transparent 8px 16px);
@@ -379,116 +394,127 @@
   .hub[data-flow="in"]::before{ animation-direction:reverse; }
   @keyframes flow{ from{ background-position:0 0; } to{ background-position:32px 0; } }
 
-  .hub-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem;
-    flex-wrap:wrap; gap:.375rem .5rem; }
-  /* Name nicht mitten im Wort umbrechen - bei grosser Ansicht rutscht
-     stattdessen die IP-Marke in die naechste Zeile. */
-  .hub-name{ white-space:nowrap; }
-  .hub-name{ font-weight:600; font-size:1.02rem; }
+  .hub-head{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.375rem .5rem; margin-bottom:1rem; }
+  .hub-name{ font-weight:600; font-size:1.05rem; white-space:nowrap; display:flex; align-items:center; }
+  .hub-status-dot{
+    width:.5rem; height:.5rem; border-radius:50%; background:var(--teal-text);
+    display:inline-block; margin-right:.4375rem; flex-shrink:0;
+  }
+  .hub-status-dot.offline{ background:var(--alert-text); }
   .hub-tag{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.68rem; color:var(--text-muted);
-    background:var(--surface-2); border:1px solid var(--border);
-    border-radius:.375rem; padding:.125rem .375rem;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:.375rem; padding:.125rem .375rem;
   }
 
-  .hub-body{ display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
+  .hub-body{ display:flex; gap:1rem; align-items:center; margin-bottom:.875rem; }
   .battery{
-    width:1.875rem; height:3.625rem; border:2px solid var(--text-muted); border-radius:.375rem;
+    width:2.25rem; height:4.25rem; border:2px solid var(--text-muted); border-radius:.4375rem;
     position:relative; display:flex; align-items:flex-end; padding:.1875rem; flex-shrink:0;
   }
   .battery::before{
-    content:""; position:absolute; top:-.375rem; left:50%; transform:translateX(-50%);
-    width:.75rem; height:.25rem; background:var(--text-muted); border-radius:2px 2px 0 0;
+    content:""; position:absolute; top:-.4375rem; left:50%; transform:translateX(-50%);
+    width:.875rem; height:.3125rem; background:var(--text-muted); border-radius:2px 2px 0 0;
   }
   .battery-fill{ width:100%; border-radius:3px; transition:height .6s ease, background .6s ease; }
 
-  .hub-metrics{ display:flex; flex-direction:column; gap:.25rem; }
-  .soc-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.3rem; }
-  .soc-sub{ font-size:.72rem; color:var(--text-muted); }
-  .power-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; margin-top:.125rem; }
-  .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem; color:var(--text-muted); margin-top:.1875rem; }
+  .hub-metrics{ display:flex; flex-direction:column; gap:.25rem; flex:1; min-width:0; }
+  .soc-line{ display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:.25rem .75rem; }
+  .soc-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.75rem; line-height:1.05; }
+  .power-wrap{ display:inline-flex; align-items:baseline; gap:.375rem; }
+  .power-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.05rem; }
+  .power-dir{ font-size:.75rem; color:var(--text-muted); }
+  .soc-sub{ font-size:.75rem; color:var(--text-muted); }
+  .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.74rem; color:var(--text-muted); margin-top:.125rem; }
   .pack-line .low{ color:var(--amber-text); }
   .pack-line .crit{ color:var(--alert-text); }
-  /* Letzte echte Vollladung (100 %). Farbe nach Alter: gruen < 7 Tage,
-     gelb 7-20 Tage, rot darueber. Antippen wechselt zwischen Alter und
-     Datum. */
+  .pack-line .cell-line{ display:block; }
   .full-line{
-    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.7rem;
-    color:var(--text-muted); margin-top:.1875rem; cursor:pointer; user-select:none;
-    -webkit-tap-highlight-color:transparent;
+    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.74rem;
+    color:var(--text-muted); margin-top:.125rem; cursor:pointer; user-select:none; align-self:flex-start;
+    padding:.125rem 0; -webkit-tap-highlight-color:transparent;
   }
   .full-line.fresh{ color:var(--green-text); }
   .full-line.aging{ color:var(--amber-text); }
   .full-line.stale{ color:var(--alert-text); }
 
-  .divider{ height:1px; background:var(--border); margin:.875rem 0; }
-
-  .hub-flags{ display:flex; flex-wrap:wrap; gap:.375rem; margin-bottom:.875rem; }
+  .hub-flags{ display:flex; flex-wrap:wrap; gap:.375rem; }
   .flag{
-    font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.66rem;
-    color:var(--text-muted); background:var(--surface-2);
-    border:1px solid var(--border); border-radius:.375rem; padding:.1875rem .4375rem;
+    font-size:.74rem; color:var(--text-muted); background:var(--surface-2);
+    border:1px solid var(--border); border-radius:999px; padding:.1875rem .625rem;
   }
+  .flag .raw{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; }
   .flag.warn{ color:var(--amber-text); border-color:var(--amber-deep); }
   .flag.block{ color:var(--alert-text); border-color:var(--alert); }
   .flag.ok{ color:var(--teal-text); border-color:var(--teal-deep); }
 
-  .ctrl-row{ padding:.375rem 0 .125rem; }
-  .ctrl-head{
-    display:flex; justify-content:space-between; align-items:baseline;
-    gap:.5rem; margin-bottom:.125rem;
+  .lock-status{ display:none; font-size:.8rem; color:var(--text-muted); margin-top:.875rem; padding-top:.75rem; border-top:1px solid var(--border); }
+  #app.hide-hub-controls .hub .lock-status{ display:block; }
+
+  .ctrl-group{ margin-top:.875rem; padding-top:.75rem; border-top:1px solid var(--border); }
+  .group-lbl{ font-size:.7rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:.25rem; }
+  .manual-group{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
+    padding:.75rem .875rem .875rem;
   }
-  .ctrl-head .lbl{ font-size:.84rem; }
-  .ctrl-head .val{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.88rem; }
-  .ctrl-row .key{ font-size:.66rem; color:var(--text-muted); }
-  .ctrl-row input[type="range"]{ height:1.5rem; margin-top:.125rem; }
+  .manual-group input[type="range"]::-webkit-slider-runnable-track{ background:var(--surface); }
+  .manual-group input[type="range"]::-moz-range-track{ background:var(--surface); }
+  /* Gesperrt: Bedienelemente der Geraete ausblenden, Status bleibt lesbar */
+  #app.hide-hub-controls .hub .ctrl-group{ display:none; }
 
-  input[type="range"]:focus-visible{ outline:2px solid var(--teal-text); outline-offset:3px; }
-  .switch input:focus-visible ~ .track{ outline:2px solid var(--teal-text); outline-offset:3px; }
+  .ctrl-row{ padding:.375rem 0 .125rem; }
+  .ctrl-head{ display:flex; justify-content:space-between; align-items:center; gap:.5rem; }
+  .ctrl-head .lbl{ font-size:.88rem; }
+  .ctrl-head .val{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.92rem; }
+  .ctrl-row .key{ font-size:.68rem; color:var(--text-muted); }
+  .ctrl-end{ display:inline-flex; align-items:center; gap:.5rem; }
+  .soc-lock{
+    display:none; align-items:center; justify-content:center;
+    width:2.5rem; height:2.5rem; border-radius:50%; padding:0;
+    background:var(--surface-2); border:1px solid var(--amber-deep);
+    color:var(--amber-text); cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  @media (pointer: coarse){ .soc-lock{ display:inline-flex; } }
+  .soc-lock.open{ border-color:var(--teal-text); color:var(--teal-text); }
+  .ctrl-row.soc-open{ outline:2px solid var(--teal-text); outline-offset:4px; border-radius:var(--radius-sm); }
 
-  /* Kurz gesperrt, während der Wert an die KVS geht */
-  input[type="range"]:disabled{ opacity:.45; cursor:progress; }
-  .switch input:disabled{ cursor:progress; }
-  .switch input:disabled ~ .track,
-  .switch input:disabled ~ .thumb{ opacity:.45; }
-
-
-  .switch-row{ display:flex; align-items:center; justify-content:space-between; padding:.375rem 0; }
+  .switch-row{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:var(--tap); padding:.25rem 0; }
   .switch-text{ display:flex; flex-direction:column; }
-  .switch-text .lbl{ font-size:.84rem; }
-  .switch-text .key{ font-size:.66rem; color:var(--text-muted); margin-top:.0625rem; }
-
-  .switch{ position:relative; width:2.625rem; height:1.5rem; flex-shrink:0; }
+  .switch-text .lbl{ font-size:.88rem; }
+  .switch-text .key{ font-size:.68rem; color:var(--text-muted); margin-top:.0625rem; }
+  .switch{ position:relative; width:3.25rem; height:1.875rem; flex-shrink:0; }
   .switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; z-index:2; }
   .switch .track{
     position:absolute; inset:0; background:var(--surface-2); border:1px solid var(--border);
     border-radius:999px; transition:background .25s ease, border-color .25s ease;
   }
   .switch .thumb{
-    position:absolute; top:.1875rem; left:.1875rem; width:1rem; height:1rem; border-radius:50%;
+    position:absolute; top:.25rem; left:.25rem; width:1.375rem; height:1.375rem; border-radius:50%;
     background:var(--text-muted); transition:transform .25s ease, background .25s ease;
   }
   .switch.amber input:checked ~ .track{ background:var(--amber-deep); border-color:transparent; }
   .switch.teal input:checked ~ .track{ background:var(--teal-deep); border-color:transparent; }
-  .switch input:checked ~ .thumb{ transform:translateX(1.125rem); background:#fff; }
+  .switch input:checked ~ .thumb{ transform:translateX(1.375rem); background:#fff; }
+  .switch input:focus-visible ~ .track{ outline:2px solid var(--teal-text); outline-offset:3px; }
+  .switch input:disabled{ cursor:not-allowed; }
+  .switch input:disabled ~ .track, .switch input:disabled ~ .thumb{ opacity:.45; }
 
-  footer{ text-align:center; color:var(--text-muted); font-size:.74rem; margin-top:2.125rem; }
-  footer .toast{
-    display:inline-block; margin-top:.625rem; font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1;
-    font-size:.7rem; color:var(--text-muted); opacity:0; transition:opacity .3s ease;
-  }
-  footer .toast.show{ opacity:1; }
+  .manual-row{ padding:.5rem 0 0; }
+  .manual-row .hint{ font-size:.74rem; color:var(--text-muted); line-height:1.4; margin-bottom:.5rem; display:block; }
 
-  .diag{
-    background:rgba(226,87,76,0.12); border:1px solid var(--alert);
-    color:var(--text); border-radius:var(--radius-md);
-    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.82rem; line-height:1.4;
-  }
-  .diag b{ color:var(--alert-text); }
+  /* ---------- Technische Details (Menue "Ansicht") ---------- */
+  #app:not(.expert) .param-key,
+  #app:not(.expert) .hub-tag,
+  #app:not(.expert) .hub .key:not(.keep),
+  #app:not(.expert) .raw,
+  #app:not(.expert) .flag.raw-only{ display:none; }
+  #app.expert .plain{ display:none; }
 
-  /* Hilfetexte: am Rechner als Mouse-over (title), auf Touchgeraeten per
-     Antippen der Beschriftung als kleine Blase. Die gepunktete Linie zeigt,
-     wo es eine Erklaerung gibt. Reine Anzeige, keine Bedienung. */
+  /* ---------- Fusszeile, Hilfe, Rueckmeldung ---------- */
+  footer{ text-align:center; color:var(--text-muted); font-size:.76rem; margin-top:2.25rem; line-height:1.5; }
+  footer a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
+  footer a:hover, footer a:focus-visible{ color:var(--teal-text); }
+  .meta-line{ display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem; margin-top:.5rem; font-size:.74rem; color:var(--text-muted); }
+
   [data-help]{ cursor:help; }
   button[data-help]{ cursor:pointer; }
   .help-mark{
@@ -500,24 +526,39 @@
     background:var(--surface-2); color:var(--text);
     border:1px solid var(--border); border-radius:var(--radius-sm);
     box-shadow:var(--shadow); padding:.625rem .75rem;
-    font-size:.8rem; line-height:1.45; letter-spacing:0; text-transform:none;
+    font-size:.82rem; line-height:1.45; letter-spacing:0; text-transform:none;
     opacity:0; pointer-events:none; transition:opacity .15s ease;
   }
   .help-tip.show{ opacity:1; }
-  /* Vollbild-Knopf: im Vollbild farblich hervorgehoben, damit klar ist,
-     wie man wieder herauskommt. hidden, wenn der Browser kein Vollbild kann. */
-  .fs-toggle[hidden]{ display:none; }
-  .fs-toggle.active{ color:var(--teal-text); border-color:var(--teal-text); }
+
+  /* Rueckmeldung nach dem Speichern: am unteren Bildrand statt in der
+     Fusszeile - dort war sie auf dem Handy meist ausserhalb des Bildes. */
+  .toast{
+    position:fixed; left:50%; bottom:calc(1rem + env(safe-area-inset-bottom, 0px)); z-index:60;
+    transform:translate(-50%, .75rem); max-width:calc(100vw - 32px);
+    background:var(--text); color:var(--bg); border-radius:var(--radius-sm); box-shadow:var(--shadow);
+    padding:.625rem 1rem; font-size:.86rem; line-height:1.35;
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
 
   @media (max-width:640px){
-    /* Rechte Gruppe auf eine eigene volle Zeile - dann konkurriert sie nicht
-       mehr mit dem Schriftzug um den Platz. */
-    .head-right{ width:100%; justify-content:flex-start; gap:.625rem; }
-    .clock{ min-width:0; padding:.375rem .75rem; }
-    .status-pill{ padding:.375rem .75rem; }
+    .head-right{ width:100%; justify-content:flex-start; }
+    /* Menue auf dem Handy ueber die volle Kopfzeilenbreite statt am
+       Knopf ausgerichtet - sonst ragt es seitlich aus dem Bild. */
+    header{ position:relative; }
+    .menu{ position:static; }
+    .menu-panel{ left:.25rem; right:.25rem; width:auto; top:calc(100% - .75rem); }
   }
-
-  @media (max-width:480px){ .clock{ text-align:left; } }
+  @media (max-width:420px){
+    .clock-pill .date{ display:none; }
+  }
+  /* Weniger Bewegung, wenn im System so eingestellt */
+  @media (prefers-reduced-motion: reduce){
+    .status-dot{ animation:none; }
+    .hub[data-flow="out"]::before, .hub[data-flow="in"]::before{ animation:none; }
+    *, *::before, *::after{ transition-duration:0s !important; }
+  }
 </style>
 </head>
 <body>
@@ -545,49 +586,70 @@
         <div class="sub"><span data-i18n="sub">Über lokalen Proxy</span> · zendure_proxy.py</div>
       </div>
       <div class="head-right">
-        <div class="status-pill"><span class="status-dot" id="statusDot"></span> <span id="statusText" data-i18n="connecting">Verbinde…</span></div>
-        <div class="clock">
-          <div class="time mono" id="clockTime">--:--:--</div>
-          <div class="date" id="clockDate">–</div>
-        </div>
-        <button class="theme-toggle lock-toggle locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button>
-        <button class="theme-toggle font-toggle" id="fontSizeToggle" aria-label="Ansichtsgröße umschalten" data-i18n-aria="fontAria" title="Ansichtsgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button>
-        <button class="theme-toggle" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button>
-        <button class="theme-toggle fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button>
-        <button class="theme-toggle lang-toggle" id="langToggle" aria-label="Sprache wechseln" data-i18n-aria="langAria" title="Sprache wechseln">DE</button>
+        <div class="pill status-pill" role="status" aria-live="polite"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span id="statusText" data-i18n="connecting">Verbinde…</span></div>
+        <div class="pill clock-pill"><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span></div>
+        <button type="button" class="lock-btn locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><span id="lockIcon" aria-hidden="true"><svg class="lock-icon"><use href="#lk-closed"/></svg></span><span class="lock-lbl"><span id="lockLabel">Gesperrt</span><span class="lock-sizer" id="lockSizerA" aria-hidden="true"></span><span class="lock-sizer" id="lockSizerB" aria-hidden="true"></span></span></button>
+        <details class="menu" id="viewMenu">
+          <summary><span aria-hidden="true">⚙</span><span data-i18n="viewMenu">Ansicht</span></summary>
+          <div class="menu-panel">
+            <div class="set-row"><span class="lbl" data-i18n="setSize">Ansichtsgröße</span><button type="button" class="icon-btn font-toggle" id="fontSizeToggle" aria-label="Ansichtsgröße umschalten" data-i18n-aria="fontAria" title="Ansichtsgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button></div>
+            <div class="set-row"><span class="lbl" data-i18n="setTheme">Tag-/Nachtsicht</span><button type="button" class="icon-btn" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button></div>
+            <div class="set-row"><span class="lbl" data-i18n="setLang">Sprache</span><button type="button" class="icon-btn lang-toggle" id="langToggle" aria-label="Sprache wechseln" data-i18n-aria="langAria" title="Sprache wechseln">DE</button></div>
+            <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
+            <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
+            <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details und Übersicht auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
+          </div>
+        </details>
       </div>
     </header>
 
-    <div class="diag" id="diag" hidden></div>
+    <div class="diag" id="diag" role="alert" hidden></div>
 
     <button type="button" class="section-title section-toggle" id="overviewToggle" aria-expanded="true" aria-controls="overviewRow" data-i18n-title="overviewAria" title="Übersicht ein-/ausklappen"><span class="chev" aria-hidden="true">▾</span><span data-i18n="overview">Übersicht</span><span class="ov-summary mono" id="overviewSummary"></span></button>
-    <div class="row" id="overviewRow">
-      <div class="card setpoint-card">
-        <div class="hero-label"><span data-i18n="setpoint" class="help-mark" data-help="helpSetpoint">Sollwert</span> <span class="param-key mono">zdmc_setpoint</span></div>
-        <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
-        <input type="range" id="setpointSlider" min="-40" max="40" step="5" value="0">
-        <div class="hero-state" id="setpointState" data-i18n="setpointInit">Ziel für den Netzsaldo, −40 bis +40 W</div>
-      </div>
-      <div class="card setpoint-card discharge-fixed-card">
-        <div class="hero-label"><span data-i18n="dischargeFixed" class="help-mark" data-help="helpDischargeFixed">Fix-Entladung</span> <span class="param-key mono">zdmc_dischargeFixed</span></div>
-        <div class="hero-value"><input type="number" id="dischargeFixedInput" class="hero-input" min="0" step="5" value="0" inputmode="numeric"><span class="unit">W</span></div>
-        <div class="hero-state" id="dischargeFixedState">0 = aus · sonst ≥ 35 W</div>
-      </div>
-      <div class="card">
-        <div class="hero-label"><span data-i18n="gridTitle" class="help-mark" data-help="helpGrid">Netzbezug / Einspeisung</span></div>
-        <div class="hero-value"><span id="gridValue">0</span><span class="unit">W</span></div>
-        <div class="hero-state" id="gridState" data-i18n="balanced">Ausgeglichen</div>
-        <div class="spark"><canvas id="gridSpark"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="hero-label"><span data-i18n="battTitle" class="help-mark" data-help="helpBatt">Solarflow-Leistung</span></div>
-        <div class="hero-value"><span id="battValue">0</span><span class="unit">W</span></div>
-        <div class="hero-state" id="battState">–</div>
-        <div class="spark"><canvas id="battSpark"></canvas></div>
-      </div>
+    <div class="ov" id="overviewRow">
+
+      <section class="ov-group" aria-labelledby="nowTitle">
+        <h2 class="group-title" id="nowTitle"><span data-i18n="nowTitle">Jetzt</span><span class="tag" data-i18n="nowTag">Messwerte</span></h2>
+        <div class="tiles">
+          <div class="card tile">
+            <div class="hero-label"><span data-i18n="gridTitle" class="help-mark" data-help="helpGrid" tabindex="0">Netzbezug / Einspeisung</span></div>
+            <div class="hero-value"><span id="gridValue">0</span><span class="unit">W</span><span class="dir" id="gridDir"></span></div>
+            <div class="hero-state" id="gridState" data-i18n="balanced">Ausgeglichen</div>
+            <div class="spark" aria-hidden="true"><canvas id="gridSpark"></canvas></div>
+          </div>
+          <div class="card tile">
+            <div class="hero-label"><span data-i18n="battTitle" class="help-mark" data-help="helpBatt" tabindex="0">Solarflow-Leistung</span></div>
+            <div class="hero-value"><span id="battValue">0</span><span class="unit">W</span></div>
+            <div class="hero-state" id="battState">–</div>
+            <div class="hero-sub" id="avgSoc"></div>
+            <div class="spark" aria-hidden="true"><canvas id="battSpark"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ov-group" aria-labelledby="ctlTitle">
+        <h2 class="group-title" id="ctlTitle"><span data-i18n="controlTitle">Regelung</span><span class="tag" data-i18n="controlTag">Einstellungen</span></h2>
+        <div class="tiles">
+          <div class="card tile setpoint-card setpoint-main">
+            <div class="hero-label"><span id="setpointLbl" data-i18n="setpoint" class="help-mark" data-help="helpSetpoint" tabindex="0">Sollwert</span> <span class="param-key mono">zdmc_setpoint</span></div>
+            <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
+            <input type="range" id="setpointSlider" min="-40" max="40" step="5" value="0" aria-labelledby="setpointLbl" aria-describedby="setpointState">
+            <div class="hero-state" id="setpointState" data-i18n="setpointInit">Ziel für den Netzsaldo, −40 bis +40 W</div>
+            <div class="fixed-note" data-i18n="fixedActive">Fix-Entladung aktiv – der Sollwert wird derzeit nicht ausgeregelt.</div>
+          </div>
+          <div class="card tile setpoint-card discharge-fixed-card">
+            <div class="hero-label"><span id="dischargeFixedLbl" data-i18n="dischargeFixed" class="help-mark" data-help="helpDischargeFixed" tabindex="0">Fix-Entladung</span> <span class="param-key mono">zdmc_dischargeFixed</span></div>
+            <div class="hero-value"><input type="number" id="dischargeFixedInput" class="hero-input" min="0" step="5" value="0" inputmode="numeric" enterkeyhint="done" aria-labelledby="dischargeFixedLbl" aria-describedby="dischargeFixedState"><span class="unit">W</span></div>
+            <div class="hero-state" id="dischargeFixedState">0 = aus · sonst ≥ 35 W</div>
+            <div class="hero-sub" data-i18n="fixedEnter">Wert eingeben, mit ↵ bzw. „Fertig“ übernehmen</div>
+          </div>
+        </div>
+        <p class="locked-hint"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg><span data-i18n="lockedHint">Nur Anzeige – zum Ändern oben auf „Gesperrt“ tippen.</span></p>
+      </section>
+
     </div>
 
-    <div class="section-title" data-i18n="devices">Geräte</div>
+    <h2 class="section-title" data-i18n="devices">Geräte</h2>
     <div class="hubs-grid" id="hubsGrid"></div>
 
     <footer>
@@ -606,12 +668,12 @@
         <a href="thingspeak" target="_blank" rel="noopener">ThingSpeak</a>
         <a href="thingsboard" target="_blank" rel="noopener">ThingsBoard</a>
       </div>
-      <div class="toast" id="toast"></div>
     </footer>
 
   </div>
 </div>
 
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="help-tip" id="helpTip" role="tooltip"></div>
 <script>
 (function(){
@@ -953,6 +1015,62 @@
     }
   };
 
+  /* Variante B: zusaetzliche bzw. geaenderte Texte fuer das neue Layout */
+  Object.assign(STRINGS.de, {
+    nowTitle: 'Jetzt', nowTag: 'Messwerte', controlTitle: 'Regelung', controlTag: 'Einstellungen',
+    groupControl: 'Steuerung', groupManual: 'Manuelles Laden',
+    lockedHint: 'Nur Anzeige – zum Ändern oben auf „Gesperrt“ tippen.',
+    lockLblLocked: 'Gesperrt', lockLblOpen: 'Offen · sperrt in {s} s',
+    viewMenu: 'Ansicht', setSize: 'Ansichtsgröße', setTheme: 'Tag-/Nachtsicht', setLang: 'Sprache',
+    setFs: 'Vollbild', setExpert: 'Technische Details',
+    setExpertHint: 'KVS-Schlüssel, IP-Adressen und Rohwerte einblenden',
+    avgSoc: 'Ø Ladestand {v} %',
+    dirOut: 'gibt ab', dirIn: 'lädt', dirIdle: 'Bereitschaft',
+    gridIn: 'Bezug', gridOut: 'Einspeisung', gridZero: '',
+    fixedActive: 'Fix-Entladung aktiv – der Sollwert wird derzeit nicht ausgeregelt.',
+    fixedEnter: 'Wert eingeben, mit ↵ bzw. „Fertig“ übernehmen',
+    socRange: 'Bereich {a}–{b} %', plainSocSet: 'Ladegrenze {v} %', plainMinSoc: 'Reserve am Gerät {v} %',
+    cellMin: 'Zelle min', kvsSet: 'Gespeichert:', valOn: 'an', valOff: 'aus',
+    setReset: 'Ansicht zurücksetzen', setResetHint: 'Größe, Tag/Nacht, Details und Übersicht auf Standard',
+    resetDone: 'Ansicht zurückgesetzt'
+  });
+  Object.assign(STRINGS.en, {
+    nowTitle: 'Now', nowTag: 'Readings', controlTitle: 'Control', controlTag: 'Settings',
+    groupControl: 'Controls', groupManual: 'Manual charging',
+    lockedHint: 'View only – tap “Locked” at the top to make changes.',
+    lockLblLocked: 'Locked', lockLblOpen: 'Unlocked · locks in {s} s',
+    viewMenu: 'View', setSize: 'View size', setTheme: 'Day/night view', setLang: 'Language',
+    setFs: 'Full screen', setExpert: 'Technical details',
+    setExpertHint: 'Show KVS keys, IP addresses and raw values',
+    avgSoc: 'Avg. charge {v} %',
+    dirOut: 'supplying', dirIn: 'charging', dirIdle: 'standby',
+    gridIn: 'import', gridOut: 'export', gridZero: '',
+    fixedActive: 'Fixed discharge active – the setpoint is not being regulated right now.',
+    fixedEnter: 'Enter a value, confirm with ↵ or “Done”',
+    socRange: 'Range {a}–{b} %', plainSocSet: 'Charge limit {v} %', plainMinSoc: 'Reserve on device {v} %',
+    cellMin: 'Cell min', kvsSet: 'Saved:', valOn: 'on', valOff: 'off',
+    setReset: 'Reset view', setResetHint: 'Size, day/night, details and overview back to default',
+    resetDone: 'View reset'
+  });
+  Object.assign(STRINGS.fr, {
+    nowTitle: 'Maintenant', nowTag: 'Mesures', controlTitle: 'Régulation', controlTag: 'Réglages',
+    groupControl: 'Commandes', groupManual: 'Charge manuelle',
+    lockedHint: 'Affichage seul – touchez «\u00a0Verrouillé\u00a0» en haut pour modifier.',
+    lockLblLocked: 'Verrouillé', lockLblOpen: 'Ouvert · verrou dans {s}\u00a0s',
+    viewMenu: 'Affichage', setSize: 'Taille d’affichage', setTheme: 'Mode jour/nuit', setLang: 'Langue',
+    setFs: 'Plein écran', setExpert: 'Détails techniques',
+    setExpertHint: 'Afficher clés KVS, adresses IP et valeurs brutes',
+    avgSoc: 'Charge moy. {v}\u00a0%',
+    dirOut: 'fournit', dirIn: 'charge', dirIdle: 'veille',
+    gridIn: 'soutirage', gridOut: 'injection', gridZero: '',
+    fixedActive: 'Décharge fixe active – la consigne n’est pas régulée pour l’instant.',
+    fixedEnter: 'Saisir une valeur, valider avec ↵ ou «\u00a0OK\u00a0»',
+    socRange: 'Plage {a}–{b}\u00a0%', plainSocSet: 'Limite de charge {v}\u00a0%', plainMinSoc: 'Réserve sur l’appareil {v}\u00a0%',
+    cellMin: 'Cellule min', kvsSet: 'Enregistré\u00a0:', valOn: 'activé', valOff: 'désactivé',
+    setReset: 'Réinitialiser l’affichage', setResetHint: 'Taille, jour/nuit, détails et vue d’ensemble par défaut',
+    resetDone: 'Affichage réinitialisé'
+  });
+
   // Gespeicherte Wahl hat Vorrang, sonst die erste passende Browsersprache.
   // Passt keine der drei, wird Englisch genommen.
   function detectLang(){
@@ -1019,11 +1137,19 @@
      Nachtmodus des Telefons schaltet auch hier die Nachtsicht ein. Wer den
      Knopf antippt, uebernimmt die Steuerung - danach wird das System nicht
      mehr beachtet, damit ein automatischer Wechsel am Abend die bewusste
-     Wahl nicht wieder ueberschreibt. */
+     Wahl nicht wieder ueberschreibt.
+     Variante B: Diese bewusste Wahl wird gemerkt (THEME_KEY) und gilt auch
+     nach einem Neuladen. "Ansicht zuruecksetzen" im Menue folgt wieder dem
+     System. */
+  const THEME_KEY = 'zendash_b_theme';
   const themeToggle = document.getElementById('themeToggle');
   const darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
   let themeManual = false;
   let theme = (darkQuery && darkQuery.matches === false) ? 'light' : 'dark';
+  try {
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'dark' || savedTheme === 'light') { theme = savedTheme; themeManual = true; }
+  } catch (e) {}
 
   function applyTheme(){
     document.documentElement.setAttribute('data-theme', theme);
@@ -1039,6 +1165,7 @@
   themeToggle.addEventListener('click', function(){
     themeManual = true;
     theme = theme === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
     applyTheme();
     drawSparks();
   });
@@ -1057,8 +1184,11 @@
 
   /* ---------------- Ansichtsgröße ----------------
      Vier Stufen (100/115/130/150 %), wirkt seit 3.5.5 als Zoom der ganzen
-     Seite (siehe CSS). Weiterhin bewusst nicht gespeichert (jeder Reload startet
-     wieder bei diesem Standard) - Standard ist jetzt A2 (Groß) statt A1. */
+     Seite (siehe CSS). Standard ist A2 (Groß).
+     Variante B: Die gewaehlte Stufe wird gemerkt (FONT_KEY), anders als im
+     Original - ein Wandtablet soll nach einem Neuladen nicht wieder klein
+     starten. */
+  const FONT_KEY = 'zendash_b_fontsize';
   const fontSizeToggle = document.getElementById('fontSizeToggle');
   const fontSizeLvl = document.getElementById('fontSizeLvl');
   const FONT_LEVELS = [
@@ -1068,6 +1198,11 @@
     { key: 'xxlarge', label: 'fontXXLarge' }
   ];
   let fontSizeIdx = 1; // Standard: A2 / "Groß"
+  try {
+    const savedFont = localStorage.getItem(FONT_KEY);
+    const savedIdx = FONT_LEVELS.findIndex(function(l){ return l.key === savedFont; });
+    if (savedIdx >= 0) fontSizeIdx = savedIdx;
+  } catch (e) {}
   function applyFontSize(){
     const lvl = FONT_LEVELS[fontSizeIdx];
     if (lvl.key === 'normal') document.documentElement.removeAttribute('data-fontsize');
@@ -1078,6 +1213,7 @@
   }
   fontSizeToggle.addEventListener('click', function(){
     fontSizeIdx = (fontSizeIdx + 1) % FONT_LEVELS.length;
+    try { localStorage.setItem(FONT_KEY, FONT_LEVELS[fontSizeIdx].key); } catch (e) {}
     applyFontSize();
   });
 
@@ -1153,13 +1289,32 @@
     toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
   }
 
+  // Variante B: Rueckmeldung mit Klartext statt KVS-Schluessel
+  // (mit "Technische Details" weiterhin der Rohschluessel).
+  function friendlyKey(key){
+    if (appEl.classList.contains('expert')) return key;
+    if (key === 'zdmc_setpoint') return t('setpoint');
+    if (key === 'zdmc_dischargeFixed') return t('dischargeFixed');
+    const m = /^zdmc_dev(\d+)_(\w+)$/.exec(key);
+    if (!m) return key;
+    const names = { dischargeAllowed: 'dischargeAllowed', reverse: 'reverseAllowed', minSoc: 'reserve', inputLimit: 'inputLimitLbl' };
+    const hub = hubs.find(function(h){ return String(h.id) === m[1]; });
+    return (hub ? hub.label : 'dev' + m[1]) + ' · ' + (names[m[2]] ? t(names[m[2]]) : m[2]);
+  }
+  function friendlyVal(key, value){
+    if (appEl.classList.contains('expert')) return String(value);
+    if (/_(dischargeAllowed|reverse)$/.test(key)) return t(Number(value) ? 'valOn' : 'valOff');
+    if (/_minSoc$/.test(key)) return value + ' %';
+    return value + ' W';
+  }
+
   async function kvsSet(key, value, quiet){
     const obj = {};
     obj[key] = value;
     try {
       const r = await fetchJ('kvs_set_api?data=' + encodeURIComponent(JSON.stringify(obj)));
       if (!r.success) throw new Error(t('shellyErr'));
-      if (!quiet) showToast(t('kvsSet') + ' ' + key + ' = ' + value);
+      if (!quiet) showToast(t('kvsSet') + ' ' + friendlyKey(key) + ' = ' + friendlyVal(key, value));
       return true;
     } catch (err) {
       showDiag(t('setFail', { key: key, err: err.message }));
@@ -1171,7 +1326,7 @@
     try {
       const r = await fetchJ('kvs_set_api?data=' + encodeURIComponent(JSON.stringify(obj)));
       if (!r.success) throw new Error(t('shellyErr'));
-      if (!quiet) showToast(t('kvsSet') + ' ' + Object.keys(obj).join(', '));
+      if (!quiet) showToast(t('kvsSet') + ' ' + Object.keys(obj).map(function(k){ return friendlyKey(k); }).join(', '));
       return true;
     } catch (err) {
       showDiag(t('setMultiFail', { err: err.message }));
@@ -1188,9 +1343,14 @@
   const RELOCK_MS = 60000;
   let uiLocked = true;
   let relockTimer = null;
+  let relockAt = 0;          // Variante B: Zeitpunkt der Auto-Sperre (fuer die Restzeit-Anzeige)
 
   const lockToggle = document.getElementById('lockToggle');
   const appEl = document.getElementById('app');
+  const lockIconEl = document.getElementById('lockIcon');
+  const lockLabelEl = document.getElementById('lockLabel');
+  const lockSizerA = document.getElementById('lockSizerA');
+  const lockSizerB = document.getElementById('lockSizerB');
 
   // Alle Bedienelemente einsammeln - die Hub-Karten entstehen erst spaeter,
   // deshalb bei jedem Aufruf frisch abfragen.
@@ -1310,7 +1470,8 @@
     // Sollwert oder Fix-Entladung - die bleiben immer sichtbar.
     appEl.classList.toggle('hide-hub-controls', uiLocked);
 
-    setLockIcon(lockToggle, !uiLocked);
+    setLockIcon(lockIconEl, !uiLocked);
+    updateLockLabel();
     lockToggle.classList.toggle('locked', uiLocked);
     lockToggle.title = t(uiLocked ? 'unlock' : 'lock');
   }
@@ -1319,7 +1480,7 @@
     uiLocked = next;
     if (uiLocked) { clearTimeout(socTimer); socDragging = false; socOpenId = null; }
     clearTimeout(relockTimer);
-    if (!uiLocked) relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
+    if (!uiLocked) { relockAt = Date.now() + RELOCK_MS; relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS); }
     applyLockState();
   }
 
@@ -1327,8 +1488,19 @@
   function touchLockTimer(){
     if (uiLocked) return;
     clearTimeout(relockTimer);
+    relockAt = Date.now() + RELOCK_MS;
     relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
   }
+
+  // Variante B: Zustand als Text am Knopf, offen mit Restzeit bis zur Auto-Sperre.
+  function updateLockLabel(){
+    if (!lockLabelEl) return;
+    lockSizerA.textContent = t('lockLblLocked');
+    lockSizerB.textContent = t('lockLblOpen', { s: Math.round(RELOCK_MS / 1000) });
+    lockLabelEl.textContent = uiLocked ? t('lockLblLocked')
+      : t('lockLblOpen', { s: Math.max(0, Math.ceil((relockAt - Date.now()) / 1000)) });
+  }
+  setInterval(function(){ if (!uiLocked) updateLockLabel(); }, 1000);
 
   lockToggle.addEventListener('click', function(){ setLocked(!uiLocked); });
 
@@ -1422,6 +1594,8 @@
   function showDischargeFixedState(){
     dischargeFixedStateEl.textContent =
       t('dischargeFixedState', { p: dischargeStartupPower });
+    // Variante B: Hinweis am Sollwert, solange die Fix-Entladung die Regelung ersetzt
+    document.getElementById('overviewRow').classList.toggle('fixed-on', liveDischargeFixed > 0);
   }
 
   function isDischargeFixedValid(v){
@@ -1445,7 +1619,7 @@
     e.target.value = v;
     lockControl(e.target);
     kvsSet('zdmc_dischargeFixed', v).then(function(ok){
-      if (ok) liveDischargeFixed = v;
+      if (ok) { liveDischargeFixed = v; showDischargeFixedState(); }
       else unlockControl(e.target);
     });
   });
@@ -1592,7 +1766,7 @@
   // deshalb hier nur Anzeige, kein Regler.
   function socSubText(d){
     const max = Number(d.maxSoc);
-    return 'SoC · ' + d.minSoc + '–' + (max > 0 ? max : 100) + ' %';
+    return t('socRange', { a: d.minSoc, b: (max > 0 ? max : 100) });
   }
 
   // Obergrenze = kleinere der beiden oberen Ladegrenzen MINUS 1:
@@ -1612,7 +1786,7 @@
     const ms = document.getElementById('minSoc-' + d.id);
     if (ms && !isBusy(ms)) ms.max = minSocCeiling(d);
     const mx = document.getElementById('minSocMax-' + d.id);
-    if (mx) mx.textContent = 'zdmc_dev' + d.id + '_minSoc \u00b7 max ' + minSocCeiling(d) + ' %';
+    if (mx) mx.innerHTML = '<span class="raw">zdmc_dev' + d.id + '_minSoc \u00b7 </span>max ' + minSocCeiling(d) + ' %';
   }
 
   // Reiner Text-Ersatz fuer die ausgeblendeten Schalter im gesperrten
@@ -1633,44 +1807,50 @@
       el.setAttribute('data-flow', 'idle');
       el.innerHTML =
         '<div class="hub-head">' +
-          '<div class="hub-name"><span class="hub-status-dot offline" id="hubDot-' + d.id + '"></span>' + d.label + '</div>' +
+          '<h3 class="hub-name"><span class="hub-status-dot offline" id="hubDot-' + d.id + '" aria-hidden="true"></span>' + d.label + '</h3>' +
           '<div class="hub-tag">[dev' + d.id + '] ' + d.ip + '</div>' +
         '</div>' +
         '<div class="hub-body">' +
-          '<div class="battery"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
+          '<div class="battery" aria-hidden="true"><div class="battery-fill" id="battFill-' + d.id + '"></div></div>' +
           '<div class="hub-metrics">' +
-            '<div class="soc-value" id="socValue-' + d.id + '">--%</div>' +
-            '<div class="soc-sub" id="socSub-' + d.id + '"><span class="help-mark" data-help="socWindow">' + socSubText(d) + '</span></div>' +
-            '<div class="power-value" id="powerValue-' + d.id + '" data-help="helpPower">-- W</div>' +
-            '<div class="pack-line" id="packLine-' + d.id + '" data-help="helpPack"></div>' +
+            '<div class="soc-line">' +
+              '<span class="soc-value" id="socValue-' + d.id + '">--%</span>' +
+              '<span class="power-wrap"><span class="power-value" id="powerValue-' + d.id + '" data-help="helpPower" tabindex="0">-- W</span><span class="power-dir" id="powerDir-' + d.id + '"></span></span>' +
+            '</div>' +
+            '<div class="soc-sub" id="socSub-' + d.id + '"><span class="help-mark" data-help="socWindow" tabindex="0">' + socSubText(d) + '</span></div>' +
+            '<div class="pack-line" id="packLine-' + d.id + '" data-help="helpPack" tabindex="0"></div>' +
             '<div class="full-line" id="fullLine-' + d.id + '" role="button" tabindex="0" data-i18n-title="fullTitle" title="' + t('fullTitle') + '"></div>' +
           '</div>' +
         '</div>' +
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
-        '<div class="divider"></div>' +
         '<div class="lock-status" id="lockStatus-' + d.id + '">' + lockStatusText(d.dischargeAllowed, d.reverse) + '</div>' +
-        '<div class="switch-row">' +
-          '<div class="switch-text"><span class="lbl" data-i18n="dischargeAllowed">' + t('dischargeAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
-          '<label class="switch amber"><input type="checkbox" id="discharge-' + d.id + '" ' + (d.dischargeAllowed ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+        '<div class="ctrl-group">' +
+          '<div class="group-lbl" data-i18n="groupControl">' + t('groupControl') + '</div>' +
+          '<div class="switch-row">' +
+            '<div class="switch-text"><span class="lbl" id="dischargeLbl-' + d.id + '" data-i18n="dischargeAllowed">' + t('dischargeAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
+            '<label class="switch amber"><input type="checkbox" role="switch" id="discharge-' + d.id + '" aria-labelledby="dischargeLbl-' + d.id + '" ' + (d.dischargeAllowed ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+          '</div>' +
+          '<div class="switch-row">' +
+            '<div class="switch-text"><span class="lbl" id="reverseLbl-' + d.id + '" data-i18n="reverseAllowed">' + t('reverseAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_reverse</span></div>' +
+            '<label class="switch teal"><input type="checkbox" role="switch" id="reverse-' + d.id + '" aria-labelledby="reverseLbl-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
+          '</div>' +
+          '<div class="ctrl-row">' +
+            '<div class="ctrl-head"><span class="lbl" id="reserveLbl-' + d.id + '" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button></span></div>' +
+            '<span class="key keep mono" id="minSocMax-' + d.id + '"><span class="raw">zdmc_dev' + d.id + '_minSoc &middot; </span>max ' + minSocCeiling(d) + ' %</span>' +
+            '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '" aria-labelledby="reserveLbl-' + d.id + '">' +
+          '</div>' +
         '</div>' +
-        '<div class="switch-row">' +
-          '<div class="switch-text"><span class="lbl" data-i18n="reverseAllowed">' + t('reverseAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_reverse</span></div>' +
-          '<label class="switch teal"><input type="checkbox" id="reverse-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
-        '</div>' +
-        '<div class="ctrl-row">' +
-          '<div class="ctrl-head"><span class="lbl" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button></span></div>' +
-          '<span class="key mono" id="minSocMax-' + d.id + '">zdmc_dev' + d.id + '_minSoc &middot; max ' + minSocCeiling(d) + ' %</span>' +
-          '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '">' +
-        '</div>' +
-        '<div class="divider ctrl-divider"></div>' +
-        '<div class="ctrl-row">' +
-          '<div class="ctrl-head"><span class="lbl help-mark" data-i18n="inputLimitLbl" data-help="helpInputLimit">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : t('off')) + '</span></div>' +
-          '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
-          '<input type="range" id="inputLimit-' + d.id + '" min="0" max="' + d.maxInputPower + '" step="50" value="' + d.inputLimit + '">' +
-        '</div>' +
-        '<div class="manual-row">' +
-          '<span class="hint help-mark" id="manualHint-' + d.id + '" data-help="helpManual"></span>' +
-          '<button class="btn" id="manualBtn-' + d.id + '" data-help="helpManual">' + t('manualStart') + '</button>' +
+        '<div class="ctrl-group manual-group">' +
+          '<div class="group-lbl" data-i18n="groupManual">' + t('groupManual') + '</div>' +
+          '<div class="ctrl-row">' +
+            '<div class="ctrl-head"><span class="lbl help-mark" id="inputLimitLbl-' + d.id + '" data-i18n="inputLimitLbl" data-help="helpInputLimit" tabindex="0">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : t('off')) + '</span></div>' +
+            '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
+            '<input type="range" id="inputLimit-' + d.id + '" min="0" max="' + d.maxInputPower + '" step="50" value="' + d.inputLimit + '" aria-labelledby="inputLimitLbl-' + d.id + '">' +
+          '</div>' +
+          '<div class="manual-row">' +
+            '<span class="hint help-mark" id="manualHint-' + d.id + '" data-help="helpManual" tabindex="0"></span>' +
+            '<button class="btn" id="manualBtn-' + d.id + '" data-help="helpManual">' + t('manualStart') + '</button>' +
+          '</div>' +
         '</div>';
       hubsGrid.appendChild(el);
 
@@ -2186,34 +2366,33 @@
 
     const flags = [];
 
-    if (d.acMode === 2)      flags.push(['ok',   'acMode 2 · ' + t('flagFeeding'), 'helpAcMode']);
-    else if (d.acMode === 1) flags.push(['ok',   'acMode 1 · ' + t('flagCharging'), 'helpAcMode']);
-    else                     flags.push(['',     'acMode ' + (d.acMode === null ? '?' : d.acMode) + ' · ' + t('flagStandby'), 'helpAcMode']);
+    // Variante B: Rohcodes (acMode, socLimit, ...) nur mit "Technische
+    // Details"; "socLimit 0 · frei" ist dann die einzige Marke, die sonst
+    // ganz entfaellt - sie sagt nur, dass nichts gesperrt ist.
+    function raw(s){ return '<span class="raw">' + s + ' · </span>'; }
+    function plain(s){ return '<span class="plain">' + s + ' · </span>'; }
 
-    if (d.socLimit === 1)      flags.push(['warn',  'socLimit 1 · ' + t('flagFull'), 'helpSocLimit']);
-    else if (d.socLimit === 2) flags.push(['warn',  'socLimit 2 · ' + t('flagEmpty'), 'helpSocLimit']);
-    else if (d.socLimit === 0) flags.push(['',      'socLimit 0 · ' + t('flagFree'), 'helpSocLimit']);
+    if (d.acMode === 2)      flags.push(['ok',   raw('acMode 2') + t('flagFeeding'), 'helpAcMode']);
+    else if (d.acMode === 1) flags.push(['ok',   raw('acMode 1') + t('flagCharging'), 'helpAcMode']);
+    else                     flags.push(['',     raw('acMode ' + (d.acMode === null ? '?' : d.acMode)) + t('flagStandby'), 'helpAcMode']);
 
-    // Obere Ladegrenze am Geraet (socSet) weicht von maxSoc aus der
-    // Konfiguration ab - nur dann anzeigen. Das Regel-Script gleicht sie
-    // nur beim Start ab; eine Aenderung von aussen bliebe sonst unbemerkt.
+    if (d.socLimit === 1)      flags.push(['warn',  raw('socLimit 1') + t('flagFull'), 'helpSocLimit']);
+    else if (d.socLimit === 2) flags.push(['warn',  raw('socLimit 2') + t('flagEmpty'), 'helpSocLimit']);
+    else if (d.socLimit === 0) flags.push(['raw-only', raw('socLimit 0') + t('flagFree'), 'helpSocLimit']);
+
+    // Obere Ladegrenze am Geraet (socSet) weicht von maxSoc ab (wie im Original)
     if (d.socSet !== null && d.socSet !== undefined && d.maxSoc !== undefined &&
         Math.round(Number(d.socSet)) !== Math.round(Number(d.maxSoc))) {
-      flags.push(['warn', 'socSet ' + d.socSet + ' % · ' + t('flagSocSetDiff', {max: d.maxSoc}), 'helpSocSet']);
+      flags.push(['warn', raw('socSet ' + d.socSet + ' %') + plain(t('plainSocSet', { v: d.socSet })) + t('flagSocSetDiff', {max: d.maxSoc}), 'helpSocSet']);
     }
 
-    // Untere Entladegrenze am Geraet (minSoc) weicht von der Reserve in der
-    // KVS ab. Referenz ist hier die KVS, nicht die Konfiguration: Das
-    // Regel-Script uebernimmt jede KVS-Aenderung auf das Geraet. Kurz nach
-    // einer Aenderung ist eine Abweichung normal (Regel-Script hat noch nicht
-    // geschrieben, config_api nur alle CONFIG_SEC) - gemeldet wird erst, wenn
-    // dasselbe Wertepaar laenger als MINSOC_DIFF_MS besteht.
+    // Untere Entladegrenze am Geraet weicht laenger von der KVS ab (wie im Original)
     if (minSocDiffPersists(d)) {
-      flags.push(['warn', 'minSoc ' + d.minSocHw + ' % · ' + t('flagMinSocDiff', {kvs: d.minSoc}), 'helpMinSoc']);
+      flags.push(['warn', raw('minSoc ' + d.minSocHw + ' %') + plain(t('plainMinSoc', { v: d.minSocHw })) + t('flagMinSocDiff', {kvs: d.minSoc}), 'helpMinSoc']);
     }
 
-    if (d.gridReverse === 2)      flags.push(['block', 'gridReverse 2 · ' + t('flagExportBlocked'), 'helpGridReverse']);
-    else if (d.gridReverse === 1) flags.push(['',      'gridReverse 1 · ' + t('flagExportAllowed'), 'helpGridReverse']);
+    if (d.gridReverse === 2)      flags.push(['block', raw('gridReverse 2') + t('flagExportBlocked'), 'helpGridReverse']);
+    else if (d.gridReverse === 1) flags.push(['',      raw('gridReverse 1') + t('flagExportAllowed'), 'helpGridReverse']);
 
     box.innerHTML = flags.map(function(f){
       return '<span class="flag ' + f[0] + '" data-help="' + f[2] + '">' + f[1] + '</span>';
@@ -2235,6 +2414,8 @@
     if (!d.online) { el.textContent = ''; return; }
 
     const parts = [];
+    // Zellspannung samt Sperrschwelle immer auf eigener Zeile (siehe .cell-line)
+    let cellPart = '';
     if (d.pv !== null && d.pv !== undefined) parts.push('PV ' + Math.round(d.pv) + ' W');
     if (d.offGrid !== null && d.offGrid !== undefined) parts.push('Offgrid ' + Math.round(d.offGrid) + ' W');
     if (d.temp !== null && d.temp !== undefined) parts.push(Math.round(d.temp) + ' °C');
@@ -2250,13 +2431,13 @@
       const cls = thr
         ? (volt < thr.warn ? 'crit' : (volt < thr.reset ? 'low' : ''))
         : (volt < 2.8 ? 'crit' : (volt < 3.0 ? 'low' : ''));
-      const txt = 'min ' + fmtVolt(volt) + ' V';
+      const txt = t('cellMin') + ' ' + fmtVolt(volt) + ' V';
       let part = cls ? '<span class="' + cls + '">' + txt + '</span>' : txt;
       if (thr) part += ' <span class="help-mark" data-help="helpCellLock">(' + t('cellLock', { v: fmtVolt(thr.warn) }) + ')</span>';
-      parts.push(part);
+      cellPart = '<span class="cell-line">' + part + '</span>';
     }
 
-    el.innerHTML = parts.join(' · ');
+    el.innerHTML = parts.join(' · ') + cellPart;
   }
 
   // lastFull kommt als JJJJMMTT (lokales Datum des Shelly), 0 = nie erfasst.
@@ -2328,10 +2509,25 @@
       gridStateEl.innerHTML = t('meterUnreachable');
     }
 
+    // Variante B: Richtung des Netzflusses zusaetzlich in Worten
+    const gridDirEl = document.getElementById('gridDir');
+    if (gridDirEl) {
+      const gr = Math.round(gridPower);
+      gridDirEl.textContent = gridOnline ? t(gr > 0 ? 'gridIn' : (gr < 0 ? 'gridOut' : 'gridZero')) : '';
+    }
+
     const totalBatt = hubs.reduce(function(sum, h){ return sum + (h.online ? h.power : 0); }, 0);
     battValueEl.textContent = (totalBatt > 0 ? '+' : '') + Math.round(totalBatt);
     battValueEl.style.color = totalBatt > 0 ? 'var(--amber-text)' : (totalBatt < 0 ? 'var(--teal-text)' : '');
     battStateEl.textContent = t(totalBatt > 0 ? 'battOut' : (totalBatt < 0 ? 'battIn' : 'battIdle'));
+    // Variante B: mittlerer Ladestand ueber alle erreichbaren Geraete (ab 2 Geraeten)
+    const avgEl = document.getElementById('avgSoc');
+    if (avgEl) {
+      const socs = hubs.filter(function(h){ return h.online && h.soc !== null && h.soc !== undefined; });
+      avgEl.textContent = socs.length > 1
+        ? t('avgSoc', { v: Math.round(socs.reduce(function(s, h){ return s + Number(h.soc); }, 0) / socs.length) })
+        : '';
+    }
 
     drawSparks();
     updateOverviewSummary();
@@ -2366,6 +2562,7 @@
 
       if (!d.online || d.soc === null || d.soc === undefined) {
         socEl.textContent = '--%'; powerEl.textContent = '-- W'; powerEl.style.color = '';
+        const dirOff = document.getElementById('powerDir-' + d.id); if (dirOff) dirOff.textContent = '';
         hubEl.setAttribute('data-flow', 'idle');
         return;
       }
@@ -2379,6 +2576,8 @@
       powerEl.textContent = (pw > 0 ? '+' : '') + pw + ' W';
       powerEl.style.color = pw > 0 ? 'var(--amber-text)' : (pw < 0 ? 'var(--teal-text)' : '');
       hubEl.setAttribute('data-flow', pw > 0 ? 'out' : (pw < 0 ? 'in' : 'idle'));
+      const dirEl = document.getElementById('powerDir-' + d.id);
+      if (dirEl) dirEl.textContent = t(pw > 0 ? 'dirOut' : (pw < 0 ? 'dirIn' : 'dirIdle'));
     });
   }
 
@@ -2485,6 +2684,67 @@
     relabelAll();
   });
 
+  /* ---------------- Variante B: Menue "Ansicht" ----------------
+     Technische Details (KVS-Schluessel, IP, Rohcodes) ein-/ausblenden -
+     reine Anzeige, wird pro Browser gemerkt. */
+  const EXPERT_KEY = 'zendash_b_expert';
+  const expertToggle = document.getElementById('expertToggle');
+  let expert = false;
+  try { expert = localStorage.getItem(EXPERT_KEY) === '1'; } catch (e) {}
+  function applyExpert(){
+    appEl.classList.toggle('expert', expert);
+    expertToggle.setAttribute('aria-checked', expert ? 'true' : 'false');
+  }
+  expertToggle.addEventListener('click', function(){
+    expert = !expert;
+    try { localStorage.setItem(EXPERT_KEY, expert ? '1' : '0'); } catch (e) {}
+    applyExpert();
+  });
+  applyExpert();
+
+  // Alle gemerkten Ansichtseinstellungen auf Standard (Sprache bleibt):
+  // Groesse A2, Tag/Nacht wieder nach System, Details aus, Uebersicht offen.
+  document.getElementById('viewReset').addEventListener('click', function(){
+    try {
+      [THEME_KEY, FONT_KEY, EXPERT_KEY, OV_KEY].forEach(function(k){ localStorage.removeItem(k); });
+    } catch (e) {}
+    themeManual = false;
+    theme = (darkQuery && darkQuery.matches === false) ? 'light' : 'dark';
+    applyTheme();
+    fontSizeIdx = 1;
+    applyFontSize();
+    expert = false;
+    applyExpert();
+    ovCollapsed = false;
+    applyOverview();
+    showToast(t('resetDone'));
+  });
+
+  // Vollbild-Zeile nur, wenn der Browser Vollbild kann
+  const fsRow = document.getElementById('fsRow');
+  if (fsRow) fsRow.hidden = fullscreenToggle.hidden;
+
+  // Menue schliessen: Tippen daneben oder Esc
+  const viewMenu = document.getElementById('viewMenu');
+  document.addEventListener('click', function(e){
+    if (viewMenu.open && !viewMenu.contains(e.target)) viewMenu.open = false;
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && viewMenu.open) { viewMenu.open = false; viewMenu.querySelector('summary').focus(); }
+  });
+
+  // Hilfetexte auch per Tastatur (Tab auf die gepunktet unterstrichene Beschriftung)
+  document.addEventListener('focusin', function(e){
+    const el = e.target.closest && e.target.closest('[data-help]');
+    if (!el || el.matches('button, input')) return;
+    let kb = false;
+    try { kb = el.matches(':focus-visible'); } catch (x) {}
+    if (kb) showHelp(el);
+  });
+  document.addEventListener('focusout', function(e){
+    if (helpOwner && e.target === helpOwner) hideHelp();
+  });
+
   relabelAll();
 
   } catch (err){
@@ -2495,4 +2755,4 @@
 })();
 </script>
 </body>
-</html>
+</html>

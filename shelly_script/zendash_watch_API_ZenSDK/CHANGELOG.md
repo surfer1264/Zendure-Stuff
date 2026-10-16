@@ -5,8 +5,8 @@
 - Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub
 - Fußzeile: config_api und status_api sind anklickbar (Rohdaten als JSON im neuen Tab)
 - Fußzeile: Links „Cloud-Upload einrichten: ThingSpeak · ThingsBoard“ auf die Einrichtungsseiten des Proxys
-- Neu: alternatives Layout `zendure-dashboard-b.html` (Variante B), im Proxy unter `/b` – gleiche Funktionen, anderer Aufbau: Sperrknopf mit Text und Restzeit, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü
-- Proxy: neue Adresse `/b` für Variante B; die exe und die Home-Assistant-App enthalten die Datei mit (HA-App-Version 3.5.9.1)
+- Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf mit Text und Restzeit, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile
+- Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)
 - Proxy: Einrichtungsseite, ThingSpeak- und ThingsBoard-Seite verwenden relative Pfade (Link „← Dashboard“, Abrufe) – funktioniert damit auch hinter einem Pfad-Präfix (z. B. Home-Assistant-Ingress)
 
 ## Changelog 3.5.9

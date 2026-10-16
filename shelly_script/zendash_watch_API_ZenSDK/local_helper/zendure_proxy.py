@@ -46,9 +46,9 @@ einen Konsolenbrowser starten. Erzwingen bzw. abschalten:
     python3 zendure_proxy.py --browser      immer oeffnen
     python3 zendure_proxy.py --no-browser   nie oeffnen
 
-Alternatives Layout: liegt zendure-dashboard-b.html daneben (bzw. ist sie in
-die exe eingebettet), zeigt http://localhost:8000/b das Dashboard in
-Variante B - gleiche Funktionen, anderer Aufbau.
+Bisheriges Layout: liegt zendure-dashboard-b.html daneben (bzw. ist sie in
+die exe eingebettet), zeigt http://localhost:8000/b das Dashboard im
+bisherigen Aufbau - gleiche Funktionen. Unter / laeuft das neue Layout.
 
 Beenden: Strg+C im Terminal.
 
@@ -98,7 +98,7 @@ SILENT = False
 OPEN_BROWSER = None
 
 HTML_FILENAME = "zendure-dashboard.html"
-# Alternatives Layout des Dashboards (gleiche Funktionen), erreichbar unter
+# Bisheriges Layout des Dashboards (gleiche Funktionen), erreichbar unter
 # /b. Optional - fehlt die Datei, gibt es dort nur eine 404.
 HTML_FILENAME_B = "zendure-dashboard-b.html"
 CONFIG_FILENAME = "zendure_proxy_config.json"
@@ -417,7 +417,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self.serve_setup()
             return
 
-        # Variante B. Nur ohne Schraegstrich am Ende: Die Seite fragt ihre
+        # Bisheriges Layout. Nur ohne Schraegstrich am Ende: Die Seite fragt ihre
         # Daten ueber relative Pfade ab (status_api ...), unter "/b/" landeten
         # die Anfragen sonst bei "/b/status_api". Relative Weiterleitung, damit
         # sie auch hinter einem Pfad-Praefix (z. B. Ingress) stimmt.
@@ -679,7 +679,7 @@ def main():
     if BIND_ADDRESS == "0.0.0.0":
         say("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
     if find_html(HTML_FILENAME_B) is not None:
-        say("  Layout B: " + url + "b")
+        say("  Bisher:   " + url + "b")
     if QUIET:
         say("  Protokoll: aus (-q)")
     if ts_bridge is not None:
