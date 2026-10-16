@@ -464,7 +464,7 @@ def page_html():
 <button class="sec" id="load">Geraete vom Shelly laden</button>
 <button id="btn">Speichern &amp; Keys testen</button>
 <div id="msg"></div>
-<p><a href="/">&larr; Dashboard</a> &middot; <a href="/thingsboard">ThingsBoard</a></p>
+<p><a href="./">&larr; Dashboard</a> &middot; <a href="thingsboard">ThingsBoard</a></p>
 <script>
 var S = """ + state + """;
 en.checked = S.enabled;
@@ -476,14 +476,14 @@ function row(id, label){
 // Ohne Klick keine Shelly-Abfrage: bekannte Channels aus der Config anzeigen
 devs.innerHTML = Object.keys(S.masked).map(function(id){ return row(id, 'Hub'); }).join('');
 load.onclick = function(){
-  fetch('/config_api').then(r=>r.json()).then(function(c){
+  fetch('config_api').then(r=>r.json()).then(function(c){
     devs.innerHTML = c.devices.map(function(d){ return row(d.id, d.label); }).join('');
   }).catch(function(){ msg.className='err'; msg.textContent='Geraeteliste nicht ladbar.'; });
 };
 btn.onclick = async function(){
   var ch = {}; document.querySelectorAll('[data-id]').forEach(function(i){ ch[i.dataset.id]=i.value; });
   btn.disabled=true; msg.className=''; msg.textContent='Pruefe...';
-  var r = await fetch('/thingspeak',{method:'POST',headers:{'Content-Type':'application/json'},
+  var r = await fetch('thingspeak',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({enabled:en.checked,channels:ch})});
   var d = await r.json(); btn.disabled=false;
   msg.className = d.ok?'ok':'err'; msg.textContent = d.ok?'Gespeichert.':d.error;
@@ -507,7 +507,7 @@ def page_html_tb():
 <button class="sec" id="load">Geraete vom Shelly laden</button>
 <button id="btn">Speichern &amp; Tokens testen</button>
 <div id="msg"></div>
-<p><a href="/">&larr; Dashboard</a> &middot; <a href="/thingspeak">ThingSpeak</a></p>
+<p><a href="./">&larr; Dashboard</a> &middot; <a href="thingspeak">ThingSpeak</a></p>
 <script>
 var S = """ + state + """;
 en.checked = S.enabled; host.value = S.host;
@@ -521,14 +521,14 @@ function gridRow(){ return row(S.grid, 'Netz (Netzsaldo)'); }
 devs.innerHTML = Object.keys(S.masked).filter(function(id){ return id!==S.grid; })
   .map(function(id){ return row(id, 'Hub '+id); }).join('') + gridRow();
 load.onclick = function(){
-  fetch('/config_api').then(r=>r.json()).then(function(c){
+  fetch('config_api').then(r=>r.json()).then(function(c){
     devs.innerHTML = c.devices.map(function(d){ return row(d.id, d.label+' (Hub '+d.id+')'); }).join('') + gridRow();
   }).catch(function(){ msg.className='err'; msg.textContent='Geraeteliste nicht ladbar.'; });
 };
 btn.onclick = async function(){
   var tk = {}; document.querySelectorAll('[data-id]').forEach(function(i){ tk[i.dataset.id]=i.value; });
   btn.disabled=true; msg.className=''; msg.textContent='Pruefe...';
-  var r = await fetch('/thingsboard',{method:'POST',headers:{'Content-Type':'application/json'},
+  var r = await fetch('thingsboard',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({enabled:en.checked,host:host.value,tokens:tk})});
   var d = await r.json(); btn.disabled=false;
   msg.className = d.ok?'ok':'err'; msg.textContent = d.ok?'Gespeichert.':d.error;

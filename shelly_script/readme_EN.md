@@ -16,6 +16,8 @@ Your Zendure batteries (zenSDK-capable devices from SolarFlow 800 onwards) are c
 
 Detailed instructions (including updates, replacing a Shelly and error messages) can be found with the **[Configurator](Multiconfigurator/readme_EN.md)** · [Deutsch](Multiconfigurator/readme.md) · [Français](Multiconfigurator/readme_FR.md)
 
+Which Shellys, smart meters and batteries work: [Compatible devices](kompatible_geraete_EN.md)
+
 ## How the system is structured
 
 | Shelly | Script | Task |

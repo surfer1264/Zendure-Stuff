@@ -1,5 +1,9 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.8.1
+- Hilfe-Links zeigen auf die neue Doku-Seite (GitHub Pages) statt auf GitHub bzw. das Wiki: Überblick über die Suite, kompatible Geräte (neue Seite), Anleitung zum Configurator, Script-Anleitungen
+- Neue Fußzeile mit „Hilfe“, „Überblick über die Suite“ und Versionsnummer
+
 ## 2.8.0
 - Netzquelle http_json: eigenes Feld „IP-Adresse des Smartmeters“ – die IP wird in die URL bzw. die gewählte Vorlage übernommen, kein Ersetzen von `<IP>` in der URL mehr nötig
 - IP-Feld und URL-Feld bleiben synchron (Host in der URL von Hand geändert → IP-Feld zieht nach); beim Einlesen einer Config wird die IP aus der URL gelesen, die Config selbst bleibt unverändert

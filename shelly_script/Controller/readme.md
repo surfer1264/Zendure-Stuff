@@ -13,7 +13,7 @@ Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steh
 
 ## Checkliste, bevor du anfängst
 
-- [ ] **Zwei Shellys** Gen2 oder neuer mit Script-Funktion ([kompatible Geräte](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#3-voraussetzungen)) – einer für den Controller, einer für zenDash-API + Watchdog. Der Controller läuft immer **allein** auf seinem Shelly.
+- [ ] **Zwei Shellys** Gen2 oder neuer mit Script-Funktion ([kompatible Geräte](../kompatible_geraete.md)) – einer für den Controller, einer für zenDash-API + Watchdog. Der Controller läuft immer **allein** auf seinem Shelly.
 - [ ] **Speicher mit zenSDK** (ab SolarFlow 800) im selben Netz, am besten mit fester IP-Adresse (im Router einstellen).
 - [ ] **Wichtig:** Die Speicher in der Zendure-App aus dem **HEMS** (Home Energy Management System) entfernen – sonst schickt die Cloud parallel eigene Steuerbefehle. Ausnahme Zendure Smart Meter D0: Dessen lokale Schnittstelle wird einmalig über HEMS freigeschaltet. Das betrifft nur den Zähler, die Speicher bleiben trotzdem aus dem HEMS draußen.
 - [ ] Ein **Smartmeter** für den Netzbezug. Am einfachsten: Der Controller läuft direkt auf einem Shelly Pro 3EM.

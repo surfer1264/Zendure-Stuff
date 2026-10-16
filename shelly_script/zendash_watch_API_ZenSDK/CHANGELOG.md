@@ -1,5 +1,12 @@
 # Changelog zendash API - WatchDog
 
+## Dashboard (ohne neue Script-Version, Versionsnummer bleibt 3.5.9)
+
+- Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub
+- Fußzeile: config_api und status_api sind anklickbar (Rohdaten als JSON im neuen Tab)
+- Fußzeile: Links „Cloud-Upload einrichten: ThingSpeak · ThingsBoard“ auf die Einrichtungsseiten des Proxys
+- Proxy: Einrichtungsseite, ThingSpeak- und ThingsBoard-Seite verwenden relative Pfade (Link „← Dashboard“, Abrufe) – funktioniert damit auch hinter einem Pfad-Präfix (z. B. Home-Assistant-Ingress)
+
 ## Changelog 3.5.9
 
 - status_api liefert je Hub zusaetzlich `temp` (Geraetetemperatur in ganzen °C aus `hyperTmp`: (hyperTmp - 2731) / 10, gerundet) und `offGrid` (Leistung am Offgrid-Ausgang in W aus `gridOffPower`, `null` = kein Offgrid-Ausgang)

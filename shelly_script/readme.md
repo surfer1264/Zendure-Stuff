@@ -18,7 +18,7 @@ Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen)
 
 ## Wieviel Solarflows kann ich betreiben? - Speicherbedarfsbetrachtung 
 
-[Speicherbedarfsbetrachtung](zendash_speichermodell.md)
+[Speicherbedarfsbetrachtung](zendash_speichermodell.md) · [Kompatible Geräte](kompatible_geraete.md)
 
 
 ## So ist das System aufgebaut

@@ -36,6 +36,8 @@
   .lang-btn.active{background:var(--accent-weak); color:var(--accent-text); border-color:var(--accent);}
   h1{font-size:1.4rem; margin:0 0 4px;}
   .sub{color:var(--muted); margin:0 0 28px; font-size:.95rem;}
+  .page-footer{text-align:center; color:var(--muted); font-size:.78rem; margin:32px 0 8px;}
+  .page-footer a{color:var(--accent-text);}
   .steps{display:flex; gap:6px; margin-bottom:28px; flex-wrap:wrap;}
   .step-dot{
     flex:1; min-width:60px; text-align:center; font-size:.72rem; padding:7px 4px;
@@ -130,14 +132,20 @@
   <div class="lang-switch" id="langSwitch"></div>
   <h1 id="pageH1"></h1>
   <p class="sub" id="pageSub"></p>
-  <a id="introDocLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
-  <a id="compatLink" href="https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#3-voraussetzungen" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
-  <a id="readmeLink" href="https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme.md" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
+  <a id="introDocLink" href="https://surfer1264.github.io/Zendure-Stuff/" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
+  <a id="compatLink" href="https://surfer1264.github.io/Zendure-Stuff/kompatible_geraete/" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
+  <a id="readmeLink" href="https://surfer1264.github.io/Zendure-Stuff/Multiconfigurator/" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
   <div id="buildDate" style="font-size:.72rem; color:var(--muted); margin-bottom:16px;"></div>
 
   <div class="steps" id="steps"></div>
 
   <div id="stepContainer"></div>
+
+  <footer class="page-footer">
+    <a id="footerHelpLink" href="https://surfer1264.github.io/Zendure-Stuff/Multiconfigurator/" target="_blank" rel="noopener"></a>
+    · <a id="footerSuiteLink" href="https://surfer1264.github.io/Zendure-Stuff/" target="_blank" rel="noopener"></a>
+    · <span id="footerVersion"></span>
+  </footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -149,14 +157,16 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.8.0";
+const APP_VERSION = "2.8.1";
 
 const I18N = {
 de: {
   pageTitle: "Zendure Multi-Device Suite – Konfigurations-Assistent",
   h1: "Zendure Multi-Device Suite",
-  intro_doc_link: "Systemüberblick im Wiki ↗",
-  compat_link: "Kompatible Shelly-Geräte (Voraussetzungen) ↗",
+  intro_doc_link: "Überblick über die Suite ↗",
+  compat_link: "Kompatible Geräte ↗",
+  footer_help: "Hilfe",
+  footer_suite: "Überblick über die Suite",
   readme_link: "Anleitung zum Configurator ↗",
   btn_test_url: "🔗 Testen",
   grid_url_test_hint: "„Testen“ öffnet die URL in einem neuen Tab. Dort sollten JSON-Daten mit dem unten angegebenen Feldnamen erscheinen.",
@@ -535,8 +545,10 @@ de: {
 en: {
   pageTitle: "Zendure Multi-Device Suite – Configuration Wizard",
   h1: "Zendure Multi-Device Suite",
-  intro_doc_link: "System overview in the wiki ↗",
-  compat_link: "Compatible Shelly devices (requirements) ↗",
+  intro_doc_link: "Suite overview ↗",
+  compat_link: "Compatible devices ↗",
+  footer_help: "Help",
+  footer_suite: "Suite overview",
   readme_link: "Configurator guide ↗",
   btn_test_url: "🔗 Test",
   grid_url_test_hint: "“Test” opens the URL in a new tab. It should show JSON data containing the field name entered below.",
@@ -915,8 +927,10 @@ en: {
 fr: {
   pageTitle: "Zendure Multi-Device Suite – Assistant de configuration",
   h1: "Zendure Multi-Device Suite",
-  intro_doc_link: "Vue d'ensemble du système dans le wiki ↗",
-  compat_link: "Appareils Shelly compatibles (prérequis) ↗",
+  intro_doc_link: "Vue d'ensemble de la suite ↗",
+  compat_link: "Appareils compatibles ↗",
+  footer_help: "Aide",
+  footer_suite: "Vue d'ensemble de la suite",
   readme_link: "Guide du configurateur ↗",
   btn_test_url: "🔗 Tester",
   grid_url_test_hint: "« Tester » ouvre l'URL dans un nouvel onglet. Des données JSON contenant le nom de champ indiqué ci-dessous devraient s'afficher.",
@@ -1425,10 +1439,19 @@ function renderHeader(){
   const introLink = document.getElementById('introDocLink');
   introLink.textContent = t('intro_doc_link');
   introLink.href = INTRO_DOC_URLS[state.lang] || INTRO_DOC_URLS.de;
-  document.getElementById('compatLink').textContent = t('compat_link');
+  const compatLink = document.getElementById('compatLink');
+  compatLink.textContent = t('compat_link');
+  compatLink.href = COMPAT_URLS[state.lang] || COMPAT_URLS.de;
   const readmeLink = document.getElementById('readmeLink');
   readmeLink.textContent = t('readme_link');
   readmeLink.href = README_URLS[state.lang] || README_URLS.de;
+  const footerHelp = document.getElementById('footerHelpLink');
+  footerHelp.textContent = t('footer_help');
+  footerHelp.href = readmeLink.href;
+  const footerSuite = document.getElementById('footerSuiteLink');
+  footerSuite.textContent = t('footer_suite');
+  footerSuite.href = introLink.href;
+  document.getElementById('footerVersion').textContent = t('version_label') + ' ' + APP_VERSION;
   document.getElementById('buildDate').textContent = t('version_label') + ' ' + APP_VERSION;
   document.getElementById('toast').textContent = t('toastCopied');
   const langs = ['de','en','fr'];
@@ -2742,22 +2765,30 @@ const FULL_SCRIPT_FILENAMES = {
   ctrl: 'zerooutput_multi_kvs_mini.js',
   zdw:  'zendash_watch_mini.js'
 };
-// Wiki- bzw. Readme-Links pro Script.
-// Systemueberblick im Wiki - je Sprache eine eigene Seite
+// Hilfe-Links auf die Doku-Seite (GitHub Pages, gebaut aus shelly_script/).
+// Pfade = Ordner bzw. Dateiname ohne .md, readme.md ist die Ordner-Startseite.
+const DOCS_BASE = 'https://surfer1264.github.io/Zendure-Stuff/';
+// Ueberblick ueber die Suite - je Sprache eine eigene Seite
 const INTRO_DOC_URLS = {
-  de: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System-(S%E2%80%90Z%E2%80%90S%E2%80%90C%E2%80%90S)',
-  en: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_EN',
-  fr: 'https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_FR'
+  de: DOCS_BASE,
+  en: DOCS_BASE + 'readme_EN/',
+  fr: DOCS_BASE + 'readme_FR/'
 };
 // Anleitung zum Configurator - je Sprache eine eigene README
 const README_URLS = {
-  de: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme.md',
-  en: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme_EN.md',
-  fr: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/readme_FR.md'
+  de: DOCS_BASE + 'Multiconfigurator/',
+  en: DOCS_BASE + 'Multiconfigurator/readme_EN/',
+  fr: DOCS_BASE + 'Multiconfigurator/readme_FR/'
+};
+// Kompatible Geraete / Voraussetzungen - je Sprache eine eigene Seite
+const COMPAT_URLS = {
+  de: DOCS_BASE + 'kompatible_geraete/',
+  en: DOCS_BASE + 'kompatible_geraete_EN/',
+  fr: DOCS_BASE + 'kompatible_geraete_FR/'
 };
 const DOC_URLS = {
-  ctrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md',
-  zdw:  'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/readme.md'
+  ctrl: DOCS_BASE + 'Controller/',
+  zdw:  DOCS_BASE + 'zendash_watch_API_ZenSDK/'
 };
 // Script-Name auf dem Shelly beim Direkt-Upload. Der Helfer ersetzt ein
 // gleichnamiges Script - "zd" ersetzt so eine per Helfer installierte alte

@@ -115,6 +115,9 @@ markdown_extensions:
   - tables
   - toc:
       permalink: true
+      # Sprungmarken wie auf GitHub (Umlaute/Akzente bleiben erhalten),
+      # damit #...-Links in den Readmes auf beiden Seiten funktionieren
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {kwds: {case: lower}}
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.highlight

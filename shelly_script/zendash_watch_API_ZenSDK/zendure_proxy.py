@@ -327,7 +327,7 @@ document.getElementById('f').addEventListener('submit', async function(e){{
   var msg = document.getElementById('msg');
   btn.disabled = true; msg.className = ''; msg.textContent = 'Pruefe Verbindung...';
   try {{
-    var r = await fetch('/setup', {{
+    var r = await fetch('setup', {{
       method: 'POST',
       headers: {{'Content-Type': 'application/json'}},
       body: JSON.stringify({{
@@ -339,7 +339,7 @@ document.getElementById('f').addEventListener('submit', async function(e){{
     if (data.ok) {{
       msg.className = 'ok';
       msg.textContent = 'Gespeichert. Weiter zum Dashboard...';
-      setTimeout(function(){{ location.href = '/'; }}, 900);
+      setTimeout(function(){{ location.href = './'; }}, 900);
     }} else {{
       msg.className = 'err';
       msg.textContent = data.error || 'Unbekannter Fehler';
@@ -354,7 +354,7 @@ document.getElementById('f').addEventListener('submit', async function(e){{
 </script>
 </body></html>""".format(
         banner=banner, ip=ip, sid=sid, msg_class=msg_class, message=message,
-        back_link='<p style="margin-top:16px"><a href="/">&larr; zurueck zum Dashboard</a></p>' if is_configured() else ""
+        back_link='<p style="margin-top:16px"><a href="./">&larr; zurueck zum Dashboard</a></p>' if is_configured() else ""
     )
 
 

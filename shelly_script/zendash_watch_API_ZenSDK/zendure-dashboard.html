@@ -285,8 +285,8 @@
     display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem;
     margin-top:.5rem; font-size:.72rem; color:var(--text-muted);
   }
-  .meta-line a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
-  .meta-line a:hover, .meta-line a:focus-visible{ color:var(--teal-text); }
+  footer a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
+  footer a:hover, footer a:focus-visible{ color:var(--teal-text); }
 
   .param-key{ font-size:.66rem; color:var(--text-muted); }
   .setpoint-card{ display:flex; flex-direction:column; }
@@ -591,12 +591,20 @@
     <div class="hubs-grid" id="hubsGrid"></div>
 
     <footer>
-      <span data-i18n="footer">Eigenständige Seite · Daten &amp; Regelparameter über die Shelly-API</span> (config_api / status_api / kvs_set_api).
+      <span data-i18n="footer">Eigenständige Seite · Daten &amp; Regelparameter über die Shelly-API</span>
+      (<a href="config_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">config_api</a>
+      / <a href="status_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">status_api</a>
+      / kvs_set_api).
       <div class="meta-line">
         <span id="chartWindowLabel" data-i18n="chartBuilding">Verlauf wird aufgebaut</span>
         <span id="lastUpdate" data-i18n="lastUpdateNone">zuletzt aktualisiert –</span>
         <span id="versionLine">v–</span>
-        <a id="helpLink" href="https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard (GitHub)">Hilfe</a>
+        <a id="helpLink" href="https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard">Hilfe</a>
+      </div>
+      <div class="meta-line">
+        <span data-i18n="cloudSetup">Cloud-Upload einrichten:</span>
+        <a href="thingspeak" target="_blank" rel="noopener">ThingSpeak</a>
+        <a href="thingsboard" target="_blank" rel="noopener">ThingsBoard</a>
       </div>
       <div class="toast" id="toast"></div>
     </footer>
@@ -675,8 +683,10 @@
       overview: 'Übersicht', overviewAria: 'Übersicht ein-/ausklappen',
       ovSummary: 'Soll {s} W · Netz {g} W · Speicher {b} W',
       footer: 'Eigenständige Seite · Daten & Regelparameter über die Shelly-API',
-      helpLink: 'Hilfe', helpTitle: 'Anleitung zum Dashboard (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard.md',
+      helpLink: 'Hilfe', helpTitle: 'Anleitung zum Dashboard',
+      helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/',
+      apiRawTitle: 'Rohdaten (JSON) im neuen Tab',
+      cloudSetup: 'Cloud-Upload einrichten:',
       chartBuilding: 'Verlauf wird aufgebaut',
       lastUpdateNone: 'zuletzt aktualisiert –',
       lastUpdate: 'zuletzt aktualisiert {time}',
@@ -775,8 +785,10 @@
       overview: 'Overview', overviewAria: 'Expand/collapse overview',
       ovSummary: 'Target {s} W · Grid {g} W · Storage {b} W',
       footer: 'Standalone page · data & control parameters via the Shelly API',
-      helpLink: 'Help', helpTitle: 'Dashboard guide (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_EN.md',
+      helpLink: 'Help', helpTitle: 'Dashboard guide',
+      helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard_EN/',
+      apiRawTitle: 'Raw data (JSON) in a new tab',
+      cloudSetup: 'Set up cloud upload:',
       chartBuilding: 'Building history',
       lastUpdateNone: 'last updated –',
       lastUpdate: 'last updated {time}',
@@ -875,8 +887,10 @@
       overview: 'Vue d’ensemble', overviewAria: 'Déplier/replier la vue d’ensemble',
       ovSummary: 'Consigne {s}\u00a0W · Réseau {g}\u00a0W · Stockage {b}\u00a0W',
       footer: 'Page autonome · données et paramètres de régulation via l’API Shelly',
-      helpLink: 'Aide', helpTitle: 'Guide du tableau de bord (GitHub)',
-      helpUrl: 'https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/dashboard_FR.md',
+      helpLink: 'Aide', helpTitle: 'Guide du tableau de bord',
+      helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard_FR/',
+      apiRawTitle: 'Données brutes (JSON) dans un nouvel onglet',
+      cloudSetup: 'Configurer l’envoi cloud :',
       chartBuilding: 'Historique en cours de constitution',
       lastUpdateNone: 'mis à jour –',
       lastUpdate: 'mis à jour à {time}',

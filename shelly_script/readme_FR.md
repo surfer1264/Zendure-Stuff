@@ -16,6 +16,8 @@ Vos batteries Zendure (appareils compatibles zenSDK à partir du SolarFlow 800) 
 
 Les instructions détaillées (y compris mise à jour, remplacement d'un Shelly et messages d'erreur) se trouvent avec le **[Configurator](Multiconfigurator/readme_FR.md)** · [Deutsch](Multiconfigurator/readme.md) · [English](Multiconfigurator/readme_EN.md)
 
+Quels Shelly, compteurs et batteries conviennent : [Appareils compatibles](kompatible_geraete_FR.md)
+
 ## Structure du système
 
 | Shelly | Script | Rôle |
