@@ -1,4 +1,4 @@
-# Skalierungsmodell - Wieviel Soalrflows
+# Skalierungsmodell - Wieviel Solarflows
 
 Stand: 15.10.2026 · gilt für `zendash_watch` v3.5.8 mit **Debug aus** · 5 Messpunkte
 
