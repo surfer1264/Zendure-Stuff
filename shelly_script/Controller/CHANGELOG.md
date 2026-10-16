@@ -1,5 +1,12 @@
 # Changelog Controller
 
+## v5.1.9
+
+- **Offgrid-Leistung im Log (nur mit `debug: true`):** Die Gerätezeile zeigt zusätzlich `offGP <W> W`, wenn der Speicher einen Offgrid-Ausgang hat (`gridOffPower`). Geräte ohne Offgrid-Ausgang und Betrieb ohne debug: Logzeile unverändert.
+- Ohne debug kein zusätzlicher Laufzeitspeicher; die Mini-Fassung wird um rund 130 Bytes größer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.1.8
 
 -**Dämpfung nur noch in eine Richtung:** In Richtung „weniger Export“ reagiert der Controller sofort, ohne `dampingFactor`:

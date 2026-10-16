@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.8";
+let VERSION = "5.1.9";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -904,6 +904,11 @@ function readDevice(index, myCycle, callback) {
       ds.gridReverse = (data.properties.gridReverse !== undefined) ?
         data.properties.gridReverse : null;
 
+      // v5.1.9: Offgrid-Leistung nur mit debug fuer die Logzeile merken -
+      // ohne debug kein zusaetzliches Feld im Geraetezustand. Geraete ohne
+      // Offgrid-Ausgang liefern kein gridOffPower (undefined -> nicht geloggt).
+      if (CONFIG.debug) ds.offGrid = data.properties.gridOffPower;
+
       let acMode = data.properties.acMode;
 
       if (acMode === 2) {
@@ -1722,6 +1727,7 @@ function applyOutputs(output, myCycle) {
       " | socL " + ds.socLimit +
       " | gridR " + (ds.gridReverse === null ? "n/a" : ds.gridReverse) +
       " | Ist " + ds.zenPower + " W | Soll " + output[i] + " W" +
+      (CONFIG.debug && typeof ds.offGrid === "number" ? " | offGP " + ds.offGrid + " W" : "") +
       " | acMode " + plan.acMode + " (" + acModeLabel(plan.acMode) + ")" +
       (plan !== rawPlan ? " [Cooldown haelt Standby]" : "") +
       (cfg.dryRun ? " [DRYRUN - wird nicht geschrieben]" : "")
