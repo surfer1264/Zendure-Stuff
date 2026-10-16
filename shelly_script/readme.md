@@ -4,7 +4,7 @@
 
 🌐 **Deutsch** · [English](readme_EN.md) · [Français](readme_FR.md)
 
-# Zendure-Speicher lokal steuern – mit zwei Shellys
+# Die Suite - Zendure-Speicher lokal steuern
 
 Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit ohne Cloud geregelt: Ein Shelly hält deinen Netzbezug auf null, ein zweiter liefert die Daten für ein Dashboard und meldet sich, wenn etwas nicht stimmt.
 
