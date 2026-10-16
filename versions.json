@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-15T16:50:20Z",
+  "generated": "2026-10-16T06:42:20Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -321,17 +321,25 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.7.0",
+      "version": "2.8.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ab16082d5925f166e3bcc2cae81d395d1e49d745/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2b0ad50b0fad737047be46730701d9109119b819/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Netzquelle http_json: neue Vorlagen „Zendure Smart Meter D0“ (`/properties/report`, Feld `total_power`) und „everHome EcoTracker“ (`/v1/json`, Feld `power`)",
-        "Vorlagen mit Einrichtungshinweis: D0 – lokale Schnittstelle einmalig über HEMS in der Zendure-App freischalten; EcoTracker – „Lokaler HTTP-Server“ in der everHome-App einschalten; jeweils feste IP und Vorzeichen per „Testen“ prüfen",
-        "Die gewählte Vorlage bleibt im Auswahlfeld sichtbar"
+        "Netzquelle http_json: eigenes Feld „IP-Adresse des Smartmeters“ – die IP wird in die URL bzw. die gewählte Vorlage übernommen, kein Ersetzen von `<IP>` in der URL mehr nötig",
+        "IP-Feld und URL-Feld bleiben synchron (Host in der URL von Hand geändert → IP-Feld zieht nach); beim Einlesen einer Config wird die IP aus der URL gelesen, die Config selbst bleibt unverändert"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.7.0",
+          "changes": [
+            "Netzquelle http_json: neue Vorlagen „Zendure Smart Meter D0“ (`/properties/report`, Feld `total_power`) und „everHome EcoTracker“ (`/v1/json`, Feld `power`)",
+            "Vorlagen mit Einrichtungshinweis: D0 – lokale Schnittstelle einmalig über HEMS in der Zendure-App freischalten; EcoTracker – „Lokaler HTTP-Server“ in der everHome-App einschalten; jeweils feste IP und Vorzeichen per „Testen“ prüfen",
+            "Die gewählte Vorlage bleibt im Auswahlfeld sichtbar"
+          ],
+          "notice": null
+        },
         {
           "version": "2.6.0",
           "changes": [
@@ -406,15 +414,6 @@
             "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
             "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr",
             "Liegen weitere Scripte auf dem Shelly, entscheidest du vor dem Hochladen, ob sie gelöscht oder behalten werden"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.0",
-          "changes": [
-            "Startdialog: Neu konfigurieren oder Updaten",
-            "Update: installierte Versionen mit GitHub vergleichen und mit bisherigen Einstellungen aktualisieren",
-            "Helfer merkt sich die Shelly-IPs und prüft vor dem Upload, ob nur ein Script auf dem Shelly liegt"
           ],
           "notice": null
         }
