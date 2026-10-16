@@ -420,9 +420,9 @@ interpoliert.
 Rohe Haushaltslast- und PV-Kurven (unabhängig von Batterie-Simulation),
 sowie der Effekt von `LOAD_SCALE`:
 
-[PVKurve](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/pv_curves.html)
+[PVKurve](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController/pv_curves.html)
 
-[Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController.js/hauslast_curves.html)
+[Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController/hauslast_curves.html)
 
 
 

@@ -1,0 +1,67 @@
+site_name: Zendure Stuff – Shelly Skripte
+site_url: https://surfer1264.github.io/Zendure-Stuff/
+repo_url: https://github.com/surfer1264/Zendure-Stuff
+repo_name: surfer1264/Zendure-Stuff
+edit_uri: edit/main/shelly_script/
+
+docs_dir: shelly_script
+site_dir: site
+
+# Skripte und Konfigurationsdateien nicht veröffentlichen;
+# Links darauf zeigen auf der Seite automatisch auf GitHub
+exclude_docs: |
+  *.js
+  *.py
+  *.cmd
+  *.json
+  *.yaml
+  __pycache__/
+
+hooks:
+  - .mkdocs/readme_index.py
+
+theme:
+  name: material
+  language: de
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Dunkles Design
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Helles Design
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search:
+      lang: [de, en, fr]
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+# Fehlende Link-Ziele nur melden, Build nicht abbrechen
+validation:
+  links:
+    not_found: warn
+    unrecognized_links: info
