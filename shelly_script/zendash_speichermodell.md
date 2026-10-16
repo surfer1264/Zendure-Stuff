@@ -1,4 +1,4 @@
-# zenDash-API + Watchdog – Speichermodell (v3.5.8)
+# Skalierungsmodell - Wieviel Soalrflows
 
 Stand: 15.10.2026 · gilt für `zendash_watch` v3.5.8 mit **Debug aus** · 5 Messpunkte
 
