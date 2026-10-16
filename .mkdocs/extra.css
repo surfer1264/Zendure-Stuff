@@ -70,12 +70,56 @@
 .md-typeset img { border-radius: .4rem; }
 
 /* Navigation: aktive Seite hervorheben */
-.md-nav__link--active { font-weight: 700; }
-.md-nav__item--section > .md-nav__link {
-  text-transform: uppercase;
-  font-size: .62rem;
-  letter-spacing: .08em;
-  opacity: .75;
+/* ---------- Linke Navigation ---------- */
+/* Farbe der Kapitelüberschriften: hell = Petrol, dunkel = Solar-Gelb */
+:root { --zs-nav-head: var(--md-primary-fg-color); }
+[data-md-color-scheme="slate"] { --zs-nav-head: var(--md-accent-fg-color); }
+
+/* Kapitelüberschriften (Ordner): größer, fett, farbig, mit Akzentbalken */
+@media screen and (min-width: 76.25em) {
+  .md-nav--primary .md-nav__item--section {
+    margin-top: 1.1em;
+  }
+  .md-nav--primary .md-nav__item--section > .md-nav__link {
+    font-size: .82rem;
+    font-weight: 800;
+    letter-spacing: .01em;
+    text-transform: none;
+    color: var(--zs-nav-head);
+    opacity: 1;
+    padding: .35em .6em;
+    margin-bottom: .3em;
+    border-left: 4px solid var(--md-accent-fg-color);
+    border-radius: 0 .35rem .35rem 0;
+    background: var(--zs-surface);
+  }
+  .md-nav--primary .md-nav__item--section > .md-nav__link a,
+  .md-nav--primary .md-nav__item--section > .md-nav__link .md-ellipsis {
+    color: inherit;
+    font-weight: inherit;
+  }
+  /* Unterkapitel: leicht eingerückt mit dünner Linie */
+  .md-nav--primary .md-nav__item--section > .md-nav {
+    margin-left: .55em;
+    padding-left: .5em;
+    border-left: 1px solid var(--zs-border);
+  }
+  .md-nav--primary .md-nav__item--section > .md-nav .md-nav__link {
+    font-size: .7rem;
+    color: var(--md-default-fg-color--light);
+  }
+}
+
+/* Seiten ohne Ordner (oberste Ebene) etwas kräftiger */
+.md-nav--primary > .md-nav__list > .md-nav__item:not(.md-nav__item--section) > .md-nav__link {
+  font-weight: 600;
+}
+
+/* Aktive Seite: fett und in Akzentfarbe */
+.md-nav--primary .md-nav__link--active,
+.md-nav--primary .md-nav__item--section > .md-nav .md-nav__link--active {
+  font-weight: 700;
+  color: var(--md-typeset-a-color);
 }
 
 /* Inhalt etwas breiter auf großen Bildschirmen */
