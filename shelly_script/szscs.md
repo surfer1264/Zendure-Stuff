@@ -1,4 +1,4 @@
-🌐 **Deutsch** · [English](szscs_EN.md) · [Français](szscs_FR.md)
+:de: **Deutsch** · [:gb: English](szscs_EN.md) · [:fr: Français](szscs_FR.md)
 
 # Simple Zendure Shelly Cloudless System
 

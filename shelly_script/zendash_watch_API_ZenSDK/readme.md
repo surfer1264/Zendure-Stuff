@@ -1,10 +1,10 @@
+:de: **Deutsch** · [:gb: English](readme_EN.md) · [:fr: Français](readme_FR.md)
+
 # zenDash-API + Watchdog
 
 <a href="https://ko-fi.com/surfer1264">
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
-
-🌐 **Deutsch** · [English](readme_EN.md) · [Français](readme_FR.md)
 
 Ein Shelly-Script für deinen **Dashboard-Shelly**, das zwei Aufgaben rund um deine Zendure-Speicher übernimmt:
 

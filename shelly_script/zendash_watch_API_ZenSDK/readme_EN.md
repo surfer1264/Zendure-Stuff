@@ -1,10 +1,10 @@
+[:de: Deutsch](readme.md) · :gb: **English** · [:fr: Français](readme_FR.md)
+
 # zenDash API + Watchdog
 
 <a href="https://ko-fi.com/surfer1264">
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
-
-🌐 [Deutsch](readme.md) · **English** · [Français](readme_FR.md)
 
 A Shelly script for your **Dashboard Shelly** that takes on two tasks around your Zendure batteries:
 

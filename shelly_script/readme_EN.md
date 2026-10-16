@@ -1,8 +1,8 @@
+[:de: Deutsch](readme.md) · :gb: **English** · [:fr: Français](readme_FR.md)
+
 <a href="https://ko-fi.com/surfer1264">
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
-
-🌐 [Deutsch](readme.md) · **English** · [Français](readme_FR.md)
 
 # Control Zendure batteries locally – with two Shellys
 

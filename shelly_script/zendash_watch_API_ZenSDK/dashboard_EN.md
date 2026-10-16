@@ -1,8 +1,8 @@
+[:de: Deutsch](dashboard.md) · :gb: **English** · [:fr: Français](dashboard_FR.md)
+
 # Setting up and using the dashboard
 
 [← back to zenDash API + Watchdog](readme_EN.md)
-
-🌐 [Deutsch](dashboard.md) · **English** · [Français](dashboard_FR.md)
 
 The dashboard shows you live grid draw, state of charge and power of your batteries. You can also use it to change Controller settings and to charge a battery manually from the grid.
 

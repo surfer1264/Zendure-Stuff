@@ -1,4 +1,4 @@
-[:de: Deutsch](readme.md) · [:gb: English](readme_EN.md) · [:fr: Français](readme_FR.md)
+[:de: Deutsch](readme.md) · [:gb: English](readme_EN.md) · :fr: **Français**
 
 # Le configurateur
 

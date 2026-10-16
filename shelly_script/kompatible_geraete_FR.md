@@ -1,4 +1,4 @@
-🌐 [Deutsch](kompatible_geraete.md) · [English](kompatible_geraete_EN.md) · **Français**
+[:de: Deutsch](kompatible_geraete.md) · [:gb: English](kompatible_geraete_EN.md) · :fr: **Français**
 
 # Appareils compatibles
 

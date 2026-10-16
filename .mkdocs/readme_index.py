@@ -6,10 +6,12 @@
 - Links auf nicht veröffentlichte Dateien/Ordner auf GitHub umbiegen
 - Startseite jedes Ordners in der Navigation nach oben sortieren
 - eigenes Stylesheet (.mkdocs/extra.css) einbinden, ohne es in shelly_script abzulegen
+- mehrsprachige Seiten (es gibt x_EN.md / x_FR.md) in der Seitenleiste kennzeichnen
 """
 import os
 import posixpath
 import re
+from urllib.parse import urljoin
 
 from mkdocs.structure.files import File
 from mkdocs.structure.nav import Section
@@ -21,6 +23,11 @@ CSS = "assets/zendure.css"
 _H1 = re.compile(r"^#\s+(.+?)\s*#*\s*$", re.MULTILINE)
 _LINK = re.compile(r"(\]\()([^)\s]+)(\))")
 _FENCE = re.compile(r"(```.*?```)", re.DOTALL)
+_NAVLINK = re.compile(r'<a href="([^"#]*)" class="md-nav__link')
+
+# Sprachfassungen neben der deutschen Seite: Suffix -> Kürzel in der Seitenleiste
+LANG_SUFFIXES = (("_EN", "EN"), ("_FR", "FR"))
+_multilang = {}  # URL der deutschen Seite -> "DE EN FR"
 
 
 def on_config(config):
@@ -67,7 +74,26 @@ def _sort(items):
 
 def on_nav(nav, config, files):
     _sort(nav.items)
+    _multilang.clear()
+    for page in nav.pages:
+        stem, ext = posixpath.splitext(page.file.src_uri)
+        langs = [code for suf, code in LANG_SUFFIXES
+                 if files.get_file_from_path(stem + suf + ext)]
+        if langs:
+            _multilang[urljoin("/", page.file.url)] = " ".join(["DE"] + langs)
     return nav
+
+
+def on_post_page(output, page, config):
+    # Links der Seitenleiste auf mehrsprachige Seiten markieren (Anzeige per CSS)
+    base = urljoin("/", page.file.url)
+
+    def mark(m):
+        langs = _multilang.get(urljoin(base, m.group(1) or "./"))
+        return m.group(0) if not langs else m.group(0).replace(
+            "<a ", f'<a data-langs="{langs}" ', 1)
+
+    return _NAVLINK.sub(mark, output)
 
 
 def _rewrite_links(markdown, page, config, files):

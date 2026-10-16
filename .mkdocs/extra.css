@@ -126,3 +126,18 @@
 @media screen and (min-width: 76.25em) {
   .md-grid { max-width: 72rem; }
 }
+/* Mehrsprachige Seiten in der Seitenleiste kennzeichnen (data-langs setzt der Hook) */
+.md-nav__link[data-langs]::after {
+  content: attr(data-langs);
+  flex-shrink: 0;
+  margin-left: .4em;
+  padding: 0 .35em;
+  border: 1px solid var(--zs-border);
+  border-radius: .3em;
+  font-size: .55rem;
+  font-weight: 600;
+  letter-spacing: .04em;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+  white-space: nowrap;
+}

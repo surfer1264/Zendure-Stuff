@@ -1,8 +1,8 @@
+[:de: Deutsch](dashboard.md) · [:gb: English](dashboard_EN.md) · :fr: **Français**
+
 # Installer et utiliser le tableau de bord
 
 [← retour à zenDash API + Watchdog](readme_FR.md)
-
-🌐 [Deutsch](dashboard.md) · [English](dashboard_EN.md) · **Français**
 
 Le tableau de bord affiche en direct la consommation réseau, l'état de charge et la puissance de vos batteries. Il permet aussi de modifier les réglages du Controller et de charger manuellement une batterie depuis le réseau.
 

@@ -1,8 +1,8 @@
+:de: **Deutsch** · [:gb: English](dashboard_EN.md) · [:fr: Français](dashboard_FR.md)
+
 # Dashboard einrichten und bedienen
 
 [← zurück zu zenDash-API + Watchdog](readme.md)
-
-🌐 **Deutsch** · [English](dashboard_EN.md) · [Français](dashboard_FR.md)
 
 Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. Du kannst darüber auch Einstellungen des Controllers ändern und einen Speicher manuell aus dem Netz laden.
 
