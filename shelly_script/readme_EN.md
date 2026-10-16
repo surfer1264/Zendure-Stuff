@@ -42,16 +42,6 @@ The **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** (German) itself is a 
 | [thingsboard](thingsboard) | ready-made dashboards and rule chains for import into ThingsBoard, matching the [ThingsBoard upload](zendash_watch_API_ZenSDK/thingsboard.md) (German) |
 | [Einordnung](Einordnung.md) (German) | comparison with other multi-device solutions (ioBroker, Z-HA, EMS SolarFlow …) |
 
-## Deprecated – please do not use anymore
-
-These folders are kept for reference only and are no longer developed:
-
-| Folder | Replaced by |
-|---|---|
-| AkkuWatchDogMulti, WatchdogZenSDK | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_EN.md) |
-| zendash | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_EN.md) |
-| Upload_Controller | [Configurator with helper](Multiconfigurator/readme_EN.md) (direct upload and update) |
-| [Datenmonitor](Datenmonitor/readme.md) | – (basic data monitor via MQTT and zenSDK, without support) |
 
 ## Terms
 

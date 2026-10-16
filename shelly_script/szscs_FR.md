@@ -22,20 +22,6 @@ _Principe_ : **Installer** – **Lancer** – **Oublier**
 
 ---
 
-## 👉 Pour commencer
-
-Télécharger l'assistant, répondre aux questions, charger – en 10 minutes ta régulation tourne. Les trois étapes sont sur la **[page d'accueil](readme_FR.md#-commencer-ici)**, les instructions détaillées dans le **[configurateur](Multiconfigurator/readme_FR.md)**.
-
----
-
-## Ce qu'il te faut
-
-Deux Shelly (idéalement l'un d'eux est un **Shelly Pro 3EM**, qui mesure aussi la puissance réseau), un compteur intelligent et des SolarFlow compatibles zenSDK dans le même réseau. Les appareils qui conviennent et ce qu'il faut d'autre : **[Appareils compatibles](kompatible_geraete_FR.md)**.
-
-**Important :** retire tes SolarFlow du **HEMS** dans l'application Zendure, sinon le cloud envoie en parallèle ses propres commandes.
-
----
-
 ## Trois fonctions sur deux Shelly – sans cloud
 
 Le **Shelly Controller** assure la régulation, le **Shelly Dashboard** l'API zenDash et le watchdog – chaque fonction pouvant y être désactivée séparément. Quel script va où : [Structure du système](readme_FR.md#structure-du-système).
@@ -87,6 +73,19 @@ Le Pro 3EM sert en même temps de Shelly Controller. On y ajoute un second Shell
 Le Controller tourne sur n'importe quel Shelly et lit le compteur intelligent via le réseau. On y ajoute le Shelly Dashboard – là aussi, deux Shelly donc.
 
 <img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
+---
+## 👉 Pour commencer
+
+Télécharger l'assistant, répondre aux questions, charger – en 10 minutes ta régulation tourne. Les trois étapes sont sur la **[page d'accueil](readme_FR.md#-commencer-ici)**, les instructions détaillées dans le **[configurateur](Multiconfigurator/readme_FR.md)**.
+
+---
+
+## Ce qu'il te faut
+
+Deux Shelly (idéalement l'un d'eux est un **Shelly Pro 3EM**, qui mesure aussi la puissance réseau), un compteur intelligent et des SolarFlow compatibles zenSDK dans le même réseau. Les appareils qui conviennent et ce qu'il faut d'autre : **[Appareils compatibles](kompatible_geraete_FR.md)**.
+
+**Important :** retire tes SolarFlow du **HEMS** dans l'application Zendure, sinon le cloud envoie en parallèle ses propres commandes.
 
 ---
 

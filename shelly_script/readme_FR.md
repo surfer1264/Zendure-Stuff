@@ -42,17 +42,6 @@ Le **[tableau de bord](zendash_watch_API_ZenSDK/dashboard.md)** (allemand) est l
 | [thingsboard](thingsboard) | tableaux de bord et chaînes de règles prêts à importer dans ThingsBoard, pour l'[envoi vers ThingsBoard](zendash_watch_API_ZenSDK/thingsboard.md) (allemand) |
 | [Einordnung](Einordnung.md) (allemand) | comparaison avec d'autres solutions multi-appareils (ioBroker, Z-HA, EMS SolarFlow …) |
 
-## Obsolète – merci de ne plus utiliser
-
-Ces dossiers sont conservés uniquement pour consultation et ne sont plus développés :
-
-| Dossier | Remplacé par |
-|---|---|
-| AkkuWatchDogMulti, WatchdogZenSDK | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_FR.md) |
-| zendash | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_FR.md) |
-| Upload_Controller | [Configurator avec assistant](Multiconfigurator/readme_FR.md) (téléversement direct et mise à jour) |
-| [Datenmonitor](Datenmonitor/readme.md) | – (moniteur de données basique via MQTT et zenSDK, sans support) |
-
 ## Termes
 
 | Terme | Signification |

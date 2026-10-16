@@ -22,32 +22,6 @@ _Prinzip_: **Install** – **Run** – **Forget**
 
 ---
 
-## 👉 So startest du
-
-Helfer herunterladen, Fragen beantworten, hochladen – nach 10 Minuten läuft deine Regelung. Die drei Schritte stehen auf der **[Startseite](readme.md#-hier-starten)**, die ausführliche Anleitung beim **[Configurator](Multiconfigurator/readme.md)**.
-
-## Du bist Dir noch unsicher?
-
-Lies diese Prinzipien, an die sich das Projekt hält:
-
-[Prinzipien](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Multi-Device-Controller-%E2%80%90-Prinzipien-erkl%C3%A4rt)
-
-und wie ich Qualität sicherstelle
-
-[Insight Development](https://github.com/surfer1264/Zendure-Stuff/wiki/Multi-Controller-Development-%E2%80%90-Inside-%E2%80%90)
-
-
-
----
-
-## Was du brauchst
-
-Zwei Shellys (idealerweise einer davon ein **Shelly Pro 3EM**, der gleich den Netzbezug misst), ein Smartmeter und zenSDK-fähige SolarFlow im selben Netz. Welche Geräte passen und was sonst noch nötig ist, steht unter **[Kompatible Geräte](kompatible_geraete.md)**.
-
-**Wichtig:** Die SolarFlow in der Zendure-App aus dem **HEMS** entfernen, sonst schickt die Cloud parallel eigene Steuerbefehle.
-
----
-
 ## Drei Funktionen auf zwei Shellys – ohne Cloud
 
 Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** zenDash-API und Watchdog – beide Funktionen dort einzeln abschaltbar. Welches Script wohin gehört: [So ist das System aufgebaut](readme.md#so-ist-das-system-aufgebaut).
@@ -100,6 +74,31 @@ Der Pro 3EM ist gleichzeitig der Controller-Shelly. Dazu kommt ein zweiter Shell
 Der Controller läuft auf einem beliebigen Shelly und liest das Smartmeter über das Netzwerk. Dazu kommt der Dashboard-Shelly – auch hier also zwei Shellys.
 
 <img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
+---
+
+## 👉 So startest du
+
+Helfer herunterladen, Fragen beantworten, hochladen – nach 10 Minuten läuft deine Regelung. Die drei Schritte stehen auf der **[Startseite](readme.md#-hier-starten)**, die ausführliche Anleitung beim **[Configurator](Multiconfigurator/readme.md)**.
+
+## Du bist Dir noch unsicher?
+
+Lies diese Prinzipien, an die sich das Projekt hält:
+
+[Prinzipien](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Multi-Device-Controller-%E2%80%90-Prinzipien-erkl%C3%A4rt)
+
+und wie ich Qualität sicherstelle
+
+[Insight Development](https://github.com/surfer1264/Zendure-Stuff/wiki/Multi-Controller-Development-%E2%80%90-Inside-%E2%80%90)
+
+
+---
+
+## Was du brauchst
+
+Zwei Shellys (idealerweise einer davon ein **Shelly Pro 3EM**, der gleich den Netzbezug misst), ein Smartmeter und zenSDK-fähige SolarFlow im selben Netz. Welche Geräte passen und was sonst noch nötig ist, steht unter **[Kompatible Geräte](kompatible_geraete.md)**.
+
+**Wichtig:** Die SolarFlow in der Zendure-App aus dem **HEMS** entfernen, sonst schickt die Cloud parallel eigene Steuerbefehle.
 
 ---
 

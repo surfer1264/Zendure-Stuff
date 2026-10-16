@@ -22,20 +22,6 @@ _Principle_: **Install** – **Run** – **Forget**
 
 ---
 
-## 👉 How to get started
-
-Download the helper, answer the questions, upload – after 10 minutes your control is running. The three steps are on the **[start page](readme_EN.md#-start-here)**, the detailed instructions with the **[Configurator](Multiconfigurator/readme_EN.md)**.
-
----
-
-## What you need
-
-Two Shellys (ideally one of them a **Shelly Pro 3EM**, which measures the grid power as well), a smart meter and zenSDK-capable SolarFlows in the same network. Which devices work and what else is needed is listed under **[Compatible devices](kompatible_geraete_EN.md)**.
-
-**Important:** Remove your SolarFlows from **HEMS** in the Zendure app, otherwise the cloud sends its own control commands in parallel.
-
----
-
 ## Three functions on two Shellys – without the cloud
 
 The **Controller Shelly** runs the control, the **Dashboard Shelly** runs the zenDash API and watchdog – both functions there can be switched off individually. Which script goes where: [How the system is structured](readme_EN.md#how-the-system-is-structured).
@@ -87,6 +73,20 @@ The Pro 3EM is also the controller Shelly. A second Shelly is added as the dashb
 The controller runs on any Shelly and reads the smart meter over the network. The dashboard Shelly is added – so here too, two Shellys.
 
 <img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
+---
+
+## 👉 How to get started
+
+Download the helper, answer the questions, upload – after 10 minutes your control is running. The three steps are on the **[start page](readme_EN.md#-start-here)**, the detailed instructions with the **[Configurator](Multiconfigurator/readme_EN.md)**.
+
+---
+
+## What you need
+
+Two Shellys (ideally one of them a **Shelly Pro 3EM**, which measures the grid power as well), a smart meter and zenSDK-capable SolarFlows in the same network. Which devices work and what else is needed is listed under **[Compatible devices](kompatible_geraete_EN.md)**.
+
+**Important:** Remove your SolarFlows from **HEMS** in the Zendure app, otherwise the cloud sends its own control commands in parallel.
 
 ---
 
