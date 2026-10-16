@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-16T06:42:20Z",
+  "generated": "2026-10-16T14:57:07Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -209,9 +209,9 @@
         "webhookUrl"
       ],
       "changes": [
-        "status_api liefert je Hub zusaetzlich `temp` (Geraetetemperatur in ganzen °C aus `hyperTmp`: (hyperTmp - 2731) / 10, gerundet) und `offGrid` (Leistung am Offgrid-Ausgang in W aus `gridOffPower`, `null` = kein Offgrid-Ausgang)",
-        "Dashboard: Zusatzzeile der Geraetekarte zeigt Offgrid-Leistung und Temperatur, z. B. \"PV 420 W · Offgrid 0 W · 19 °C · min 3,28 V\"",
-        "Dashboard: Versionsnummer 3.5.9"
+        "Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub",
+        "Fußzeile: config_api und status_api sind anklickbar (Rohdaten als JSON im neuen Tab)",
+        "Fußzeile: Links „Cloud-Upload einrichten: ThingSpeak · ThingsBoard“ auf die Einrichtungsseiten des Proxys"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
@@ -321,16 +321,24 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.8.0",
+      "version": "2.8.1",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/2b0ad50b0fad737047be46730701d9109119b819/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/99f60242315699bf4174062eb638dc85171383e4/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Netzquelle http_json: eigenes Feld „IP-Adresse des Smartmeters“ – die IP wird in die URL bzw. die gewählte Vorlage übernommen, kein Ersetzen von `<IP>` in der URL mehr nötig",
-        "IP-Feld und URL-Feld bleiben synchron (Host in der URL von Hand geändert → IP-Feld zieht nach); beim Einlesen einer Config wird die IP aus der URL gelesen, die Config selbst bleibt unverändert"
+        "Hilfe-Links zeigen auf die neue Doku-Seite (GitHub Pages) statt auf GitHub bzw. das Wiki: Überblick über die Suite, kompatible Geräte (neue Seite), Anleitung zum Configurator, Script-Anleitungen",
+        "Neue Fußzeile mit „Hilfe“, „Überblick über die Suite“ und Versionsnummer"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.8.0",
+          "changes": [
+            "Netzquelle http_json: eigenes Feld „IP-Adresse des Smartmeters“ – die IP wird in die URL bzw. die gewählte Vorlage übernommen, kein Ersetzen von `<IP>` in der URL mehr nötig",
+            "IP-Feld und URL-Feld bleiben synchron (Host in der URL von Hand geändert → IP-Feld zieht nach); beim Einlesen einer Config wird die IP aus der URL gelesen, die Config selbst bleibt unverändert"
+          ],
+          "notice": null
+        },
         {
           "version": "2.7.0",
           "changes": [
@@ -405,15 +413,6 @@
             "Neuer Einführungstext auf der Startseite (DE/EN/FR)",
             "Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)",
             "Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.0.1",
-          "changes": [
-            "Update: Config mit Umlauten und Sonderzeichen wird jetzt korrekt vom Shelly gelesen",
-            "Update: zusätzliche Scripte auf dem Shelly verhindern das Update nicht mehr",
-            "Liegen weitere Scripte auf dem Shelly, entscheidest du vor dem Hochladen, ob sie gelöscht oder behalten werden"
           ],
           "notice": null
         }
