@@ -1,4 +1,5 @@
-site_name: Zendure Stuff – Shelly Skripte
+site_name: Zendure Stuff
+site_description: Zendure-Speicher lokal steuern – mit Shelly-Skripten
 site_url: https://surfer1264.github.io/Zendure-Stuff/
 repo_url: https://github.com/surfer1264/Zendure-Stuff
 repo_name: surfer1264/Zendure-Stuff
@@ -7,15 +8,31 @@ edit_uri: edit/main/shelly_script/
 docs_dir: shelly_script
 site_dir: site
 
-# Skripte und Konfigurationsdateien nicht veröffentlichen;
-# Links darauf zeigen auf der Seite automatisch auf GitHub
+# ------------------------------------------------------------------
+# PFADE AUSSCHLIESSEN
+# Alles, was hier steht, landet NICHT auf der Seite. Links darauf
+# zeigen auf der Seite automatisch auf GitHub. Schreibweise wie in
+# .gitignore, ein Eintrag pro Zeile, Pfade relativ zu shelly_script.
+#   /Ordner/            ganzer Ordner
+#   /Ordner/datei.md    einzelne Datei
+#   CHANGELOG.md        diese Datei in allen Ordnern
+# ------------------------------------------------------------------
 exclude_docs: |
-  *.js
-  *.py
-  *.cmd
-  *.json
-  *.yaml
   __pycache__/
+  /perf/
+  /AkkuWatchDogMulti/
+  /testController/
+  /AkkuWatchDogMulti/
+  /WatchDogZenSDK/
+  # /Upload_Controller/
+  # /testController/
+  # /thingsboard/
+
+# Englisch/Französisch nicht in der Seitenleiste zeigen
+# (bleiben über die Sprach-Links und die Suche erreichbar)
+not_in_nav: |
+  *_EN.md
+  *_FR.md
 
 hooks:
   - .mkdocs/readme_index.py
@@ -23,29 +40,72 @@ hooks:
 theme:
   name: material
   language: de
+  icon:
+    logo: material/solar-power-variant
+    repo: fontawesome/brands/github
+  favicon: https://cdn.jsdelivr.net/npm/@mdi/svg@7/svg/solar-power-variant.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
   palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Hell
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      toggle:
-        icon: material/weather-night
-        name: Dunkles Design
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+      primary: custom
+      accent: custom
       toggle:
         icon: material/weather-sunny
-        name: Helles Design
+        name: Dunkel
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Automatisch (wie System)
   features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tracking
     - navigation.indexes
     - navigation.sections
     - navigation.top
+    - navigation.footer
+    - toc.follow
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
     - content.action.edit
+    - content.tooltips
 
 plugins:
   - search:
       lang: [de, en, fr]
+
+extra:
+  # Dateitypen, die nie veröffentlicht werden (Links gehen zu GitHub)
+  skip_extensions: [.js, .py, .cmd, .json, .yaml, .yml]
+  # Sprachauswahl (Globus-Symbol oben rechts)
+  alternate:
+    - name: Deutsch
+      link: ./
+      lang: de
+    - name: English
+      link: ./readme_EN/
+      lang: en
+    - name: Français
+      link: ./readme_FR/
+      lang: fr
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/surfer1264/Zendure-Stuff
+    - icon: simple/kofi
+      link: https://ko-fi.com/surfer1264
+  generator: false
 
 markdown_extensions:
   - admonition
@@ -57,10 +117,13 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.highlight
+  - pymdownx.inlinehilite
   - pymdownx.tasklist:
       custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
-# Fehlende Link-Ziele nur melden, Build nicht abbrechen
 validation:
   links:
     not_found: warn

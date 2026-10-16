@@ -1,6 +1,7 @@
-# Vergleich: ioBroker-Adapter (Nograx) – Z-HA (ex Fireson) – SMDC (surfer1264(2nd)) – EMS SolarFlow (basecubedev) – Omnibattery (ffunes) – zendure-automation (Felliglanz)
+# Vergleich Lösungen
 
 - Sechs **Multi-Device-Systeme** für die Zendure-Flotte im Vergleich
+- ioBroker-Adapter (Nograx) – Z-HA (ex Fireson) – SMDC (surfer1264(2nd)) – EMS SolarFlow (basecubedev) – Omnibattery (ffunes) – zendure-automation (Felliglanz)
 - Vier Plattformen und sechs Lösungen
 
 - ganz **heißer Kandidat**, um zHA den Thron im Home-Assistant-Umfeld streitig zu machen, ist [BSFAI](https://github.com/PalmManiac/battery-smartflow-ai), bietet aber noch keinen Multi-Device-Support an, ansonsten bereits ein Projekt absolut auf Augenhöhe, gut dokumentiert, installierbar über HACS.

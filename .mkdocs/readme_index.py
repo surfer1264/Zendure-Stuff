@@ -1,21 +1,44 @@
-"""MkDocs-Hooks für shelly_script:
+"""MkDocs-Hooks für shelly_script (GitHub Pages).
+
 - kleingeschriebene readme.md wie README.md als Ordner-Startseite behandeln
-- Seitentitel aus der ersten '# '-Überschrift nehmen, auch wenn davor Badges/Text stehen
-- Links auf Dateien/Ordner, die nicht veröffentlicht werden (Skripte, Ordner),
-  auf GitHub umbiegen, damit sie auf der Seite nicht ins Leere führen
+- Seitentitel aus der ersten '# '-Überschrift nehmen, auch wenn davor Badges stehen
+- Skripte/Konfig-Dateien (siehe extra.skip_extensions) nicht veröffentlichen
+- Links auf nicht veröffentlichte Dateien/Ordner auf GitHub umbiegen
+- Startseite jedes Ordners in der Navigation nach oben sortieren
+- eigenes Stylesheet (.mkdocs/extra.css) einbinden, ohne es in shelly_script abzulegen
 """
 import os
 import posixpath
 import re
+
+from mkdocs.structure.files import File
+from mkdocs.structure.nav import Section
+from mkdocs.structure.pages import Page
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+CSS = "assets/zendure.css"
 
 _H1 = re.compile(r"^#\s+(.+?)\s*#*\s*$", re.MULTILINE)
 _LINK = re.compile(r"(\]\()([^)\s]+)(\))")
 _FENCE = re.compile(r"(```.*?```)", re.DOTALL)
 
 
+def on_config(config):
+    config.extra_css.append(CSS)
+    return config
+
+
 def on_files(files, config):
-    for f in files:
-        if not f.src_uri.endswith(".md"):
+    docs = os.path.abspath(config["docs_dir"])
+    skip = {e.lower() for e in config.extra.get("skip_extensions", [])}
+
+    for f in list(files):
+        # nur Dateien aus shelly_script betreffen, niemals Theme-Dateien
+        if not f.abs_src_path or not os.path.abspath(f.abs_src_path).startswith(docs + os.sep):
+            continue
+        ext = os.path.splitext(f.src_uri)[1].lower()
+        if ext in skip:
+            files.remove(f)
             continue
         folder, name = posixpath.split(f.src_uri)
         if name.lower() == "readme.md" and name != "README.md":
@@ -23,19 +46,36 @@ def on_files(files, config):
                 continue
             f.dest_uri = posixpath.join(folder, "index.html")
             f.url = (folder + "/") if folder else "./"
+
+    files.append(File.generated(config, CSS, abs_src_path=os.path.join(HERE, "extra.css")))
     return files
 
 
-def _github_base(config):
-    repo = (config.get("repo_url") or "").rstrip("/")
-    docs = os.path.relpath(config["docs_dir"], os.path.dirname(config["config_file_path"]))
-    return repo, docs.replace(os.sep, "/")
+def _is_index(item):
+    if not isinstance(item, Page):
+        return False
+    name = posixpath.basename(item.file.src_uri).lower()
+    return name in ("readme.md", "index.md")
+
+
+def _sort(items):
+    items.sort(key=lambda i: 0 if _is_index(i) else 1)
+    for i in items:
+        if isinstance(i, Section):
+            _sort(i.children)
+
+
+def on_nav(nav, config, files):
+    _sort(nav.items)
+    return nav
 
 
 def _rewrite_links(markdown, page, config, files):
-    repo, docs_rel = _github_base(config)
+    repo = (config.get("repo_url") or "").rstrip("/")
     if not repo:
         return markdown
+    root = os.path.dirname(config["config_file_path"])
+    docs_rel = os.path.relpath(config["docs_dir"], root).replace(os.sep, "/")
     page_dir = posixpath.dirname(page.file.src_uri)
 
     def fix(m):

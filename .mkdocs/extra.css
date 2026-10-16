@@ -1,0 +1,84 @@
+/* Zendure Stuff – eigenes Farbschema: Petrol + Solar-Gelb */
+:root, [data-md-color-scheme="default"] {
+  --md-primary-fg-color: #0f4c5c;
+  --md-primary-fg-color--light: #1b6f84;
+  --md-primary-fg-color--dark: #0a3540;
+  --md-accent-fg-color: #f2a900;
+  --md-typeset-a-color: #0e7490;
+  --zs-surface: #f4f8f9;
+  --zs-border: #dbe6e9;
+}
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0b3a46;
+  --md-primary-fg-color--light: #12596b;
+  --md-primary-fg-color--dark: #072a33;
+  --md-accent-fg-color: #ffc23d;
+  --md-typeset-a-color: #5fd0e6;
+  --md-default-bg-color: #0f1719;
+  --md-default-bg-color--light: #141f22;
+  --zs-surface: #16252a;
+  --zs-border: #24363c;
+}
+
+/* Kopfzeile mit leichtem Verlauf */
+.md-header, .md-tabs {
+  background: linear-gradient(90deg, var(--md-primary-fg-color--dark), var(--md-primary-fg-color) 55%, var(--md-primary-fg-color--light));
+}
+.md-header__title { font-weight: 700; letter-spacing: .01em; }
+
+/* Überschriften kräftiger statt dünn-grau */
+.md-typeset h1 {
+  font-weight: 800;
+  color: var(--md-default-fg-color);
+  letter-spacing: -.015em;
+  margin-bottom: .8em;
+}
+.md-typeset h1::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin-top: .45em;
+  border-radius: 2px;
+  background: var(--md-accent-fg-color);
+}
+.md-typeset h2 {
+  font-weight: 700;
+  padding-bottom: .3em;
+  border-bottom: 1px solid var(--zs-border);
+}
+.md-typeset h3 { font-weight: 650; }
+
+/* Tabellen als Karten */
+.md-typeset table:not([class]) {
+  border: 1px solid var(--zs-border);
+  border-radius: .5rem;
+  overflow: hidden;
+  box-shadow: none;
+  font-size: .72rem;
+}
+.md-typeset table:not([class]) th {
+  background: var(--zs-surface);
+  font-weight: 700;
+}
+
+/* Code-Blöcke und Inline-Code */
+.md-typeset pre > code { border-radius: .5rem; }
+.md-typeset code { border-radius: .3rem; }
+
+/* Bilder mit runden Ecken */
+.md-typeset img { border-radius: .4rem; }
+
+/* Navigation: aktive Seite hervorheben */
+.md-nav__link--active { font-weight: 700; }
+.md-nav__item--section > .md-nav__link {
+  text-transform: uppercase;
+  font-size: .62rem;
+  letter-spacing: .08em;
+  opacity: .75;
+}
+
+/* Inhalt etwas breiter auf großen Bildschirmen */
+@media screen and (min-width: 76.25em) {
+  .md-grid { max-width: 72rem; }
+}
