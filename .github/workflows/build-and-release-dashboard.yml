@@ -42,6 +42,8 @@ permissions:
 env:
   PROXY_PATH: shelly_script/zendash_watch_API_ZenSDK/local_helper/zendure_proxy.py
   HTML_PATH: shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html
+  # Alternatives Layout (Variante B), im Proxy unter /b
+  HTML_B_PATH: shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-b.html
 
 jobs:
   build:
@@ -83,6 +85,7 @@ jobs:
         run: >-
           pyinstaller --onefile --console --name zendure_proxy
           --add-data "${{ env.HTML_PATH }}${{ matrix.data_sep }}."
+          --add-data "${{ env.HTML_B_PATH }}${{ matrix.data_sep }}."
           "${{ env.PROXY_PATH }}"
 
       - name: Asset benennen

@@ -46,6 +46,10 @@ einen Konsolenbrowser starten. Erzwingen bzw. abschalten:
     python3 zendure_proxy.py --browser      immer oeffnen
     python3 zendure_proxy.py --no-browser   nie oeffnen
 
+Alternatives Layout: liegt zendure-dashboard-b.html daneben (bzw. ist sie in
+die exe eingebettet), zeigt http://localhost:8000/b das Dashboard in
+Variante B - gleiche Funktionen, anderer Aufbau.
+
 Beenden: Strg+C im Terminal.
 
 Anpassen falls noetig: PORT, BIND_ADDRESS weiter unten. SHELLY_IP und
@@ -94,6 +98,9 @@ SILENT = False
 OPEN_BROWSER = None
 
 HTML_FILENAME = "zendure-dashboard.html"
+# Alternatives Layout des Dashboards (gleiche Funktionen), erreichbar unter
+# /b. Optional - fehlt die Datei, gibt es dort nur eine 404.
+HTML_FILENAME_B = "zendure-dashboard-b.html"
 CONFIG_FILENAME = "zendure_proxy_config.json"
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
@@ -148,7 +155,7 @@ APPLE_ICON_PATHS = (
 #                      (Home-Assistant-App: /data). Ablage fuer Shelly-
 #                      Config und ThingSpeak-Keys.
 # ---------------------------------------------------------------
-def html_candidates():
+def html_candidates(filename=HTML_FILENAME):
     """Alle Orte, an denen die Dashboard-HTML gesucht wird - in dieser
     Reihenfolge, die erste vorhandene gewinnt."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -162,18 +169,18 @@ def html_candidates():
     dirs.append(os.path.dirname(script_dir))       # eine Ebene hoeher
     seen, result = set(), []
     for d in dirs:
-        path = os.path.normpath(os.path.join(d, HTML_FILENAME))
+        path = os.path.normpath(os.path.join(d, filename))
         if path not in seen:
             seen.add(path)
             result.append(path)
     return result
 
 
-def find_html():
+def find_html(filename=HTML_FILENAME):
     """Pfad der ersten gefundenen Dashboard-HTML, sonst None. Wird bei jedem
     Seitenaufruf neu ermittelt - eine nachtraeglich abgelegte oder
     verschobene HTML wirkt also ohne Neustart."""
-    for path in html_candidates():
+    for path in html_candidates(filename):
         if os.path.isfile(path):
             return path
     return None
@@ -410,6 +417,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self.serve_setup()
             return
 
+        # Variante B. Nur ohne Schraegstrich am Ende: Die Seite fragt ihre
+        # Daten ueber relative Pfade ab (status_api ...), unter "/b/" landeten
+        # die Anfragen sonst bei "/b/status_api". Relative Weiterleitung, damit
+        # sie auch hinter einem Pfad-Praefix (z. B. Ingress) stimmt.
+        if path == "/b/":
+            self.send_response(301)
+            self.send_header("Location", "../b" + ("?" + query if query else ""))
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        if path == "/b":
+            if is_configured():
+                self.serve_html(HTML_FILENAME_B)
+            else:
+                self.serve_setup()
+            return
+
         if endpoint in API_ENDPOINTS:
             self.proxy_to_shelly(endpoint, query)
             return
@@ -510,10 +534,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def serve_html(self):
-        path = find_html()
+    def serve_html(self, filename=HTML_FILENAME):
+        path = find_html(filename)
         if path is None:
-            self.send_error(404, "Dashboard-HTML nicht gefunden. Gesucht in: " + " | ".join(html_candidates()))
+            self.send_error(404, filename + " nicht gefunden. Gesucht in: " + " | ".join(html_candidates(filename)))
             return
         try:
             with open(path, "rb") as f:
@@ -654,6 +678,8 @@ def main():
     say("  Lokal:    " + url)
     if BIND_ADDRESS == "0.0.0.0":
         say("  Im Netz:  http://{}:{}/  (von jedem Rechner im selben Netzwerk)".format(get_lan_ip(), PORT))
+    if find_html(HTML_FILENAME_B) is not None:
+        say("  Layout B: " + url + "b")
     if QUIET:
         say("  Protokoll: aus (-q)")
     if ts_bridge is not None:

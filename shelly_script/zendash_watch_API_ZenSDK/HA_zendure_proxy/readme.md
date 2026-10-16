@@ -20,7 +20,7 @@ ThingsBoard, siehe [ThingSpeak- und ThingsBoard-Upload](#thingspeak--und-thingsb
 
 - Home Assistant OS mit Supervisor
 - Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
-- alle sieben Dateien aus [diesem Ordner](.) (`config.yaml`, `build.yaml`, `Dockerfile`, `run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zendure-dashboard.html`)
+- alle acht Dateien aus [diesem Ordner](.) (`config.yaml`, `build.yaml`, `Dockerfile`, `run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zendure-dashboard.html`, `zendure-dashboard-b.html`)
 - IP-Adresse des **Dashboard-Shelly** (auf dem zenDash-API + Watchdog läuft) und die
   **Script-Nummer** dieses Scripts (über den Configurator hochgeladen heißt es `zd`) – beides wird erst nach der Installation
   gebraucht
@@ -41,8 +41,12 @@ Alle Dateien liegen in einem Ordner unter `/addons/`:
     ├── run.sh
     ├── zendure_proxy.py
     ├── ts_bridge.py
-    └── zendure-dashboard.html
+    ├── zendure-dashboard.html
+    └── zendure-dashboard-b.html
 ```
+
+`zendure-dashboard-b.html` ist ein alternatives Layout des Dashboards (gleiche Funktionen),
+erreichbar unter `http://<ha-ip>:8000/b`.
 
 `ts_bridge.py` ist nur für den [ThingSpeak- bzw. ThingsBoard-Upload](#thingspeak--und-thingsboard-upload) nötig.
 Fehlt die Datei, läuft der Proxy ganz normal, nur ohne ThingSpeak und ThingsBoard. Die
@@ -101,6 +105,7 @@ RUN apk add --no-cache python3
 COPY zendure_proxy.py /zendure_proxy.py
 COPY ts_bridge.py /ts_bridge.py
 COPY zendure-dashboard.html /zendure-dashboard.html
+COPY zendure-dashboard-b.html /zendure-dashboard-b.html
 
 COPY run.sh /etc/services.d/zendure_proxy/run
 RUN chmod a+x /etc/services.d/zendure_proxy/run
@@ -137,7 +142,7 @@ im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
 
 ## Installation
 
-1. Ordner `zendure_proxy` mit allen sieben Dateien unter `/addons/` anlegen
+1. Ordner `zendure_proxy` mit allen acht Dateien unter `/addons/` anlegen
    (per Samba-Freigabe oder SSH).
 2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
    drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
