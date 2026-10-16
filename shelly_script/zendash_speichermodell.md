@@ -68,7 +68,8 @@ Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Gerä
 | 3 | 3 | 1/1/1 | 1 | 21,8 kB | 3,4 kB | ✅ | Modell |
 | 3 | 6 | 2/2/2 | 2 | 21,8 kB | 3,4 kB | ✅ | Modell |
 | 3 | 7 | 3/3/1 | 3 | **21,6 kB** | 3,6 kB | ✅ | **gemessen** |
-| 3 | 8 | unbekannt (vermutl. 4/2/2) | 4 | **22,5 kB** | 2,7 kB | ⚠️ | **gemessen** |
+| 3 | 8 | 1/3/4 | 4 | **22,5 kB** | 2,7 kB | ⚠️ | **gemessen** |
+| 3 | 9 | 2/3/4 | 4 | 22,5 kB | 2,7 kB | ⚠️ | Modell |
 | 3 | 12 | 4/4/4 | 4 | 22,5 kB | 2,7 kB | ⚠️ | Modell |
 | 4 | 4 | 1/1/1/1 | 1 | 24,2 kB | 1,0 kB | ❌ | Modell |
 | 4 | 8 | 2/2/2/2 | 2 | 24,2 kB | 1,0 kB | ❌ | Modell |
@@ -91,7 +92,7 @@ Die Gesamtzahl der Akkus ist nicht entscheidend. Die Hub-Reports werden nacheina
 |---|---|---|---|---|---|
 | A | 1× SF2400 (1 Akku) | 13 062 | 17 066 | 17,0 kB | −0,1 kB |
 | A | SF2400 (1) + SF800 (2) | 15 106 | 19 320 | 19,4 kB | +0,1 kB |
-| B | 3× SF800 Pro, 8 Akkus (Verteilung unbekannt) | ~17 500 | 22 456 | 22,5 kB (bei A = 4) | ±0 |
+| B | 3× SF800 Pro, 8 Akkus (1/3/4) | ~17 500 | 22 456 | 22,5 kB | ±0 |
 | C | 2× SF800 Pro (je 3) + SF2400 Pro (1) | 16 870 | 21 560 | 22,2 kB | +0,6 kB |
 | D | SF2400 Pro (4) + SF800 Pro (3), jeweils inkl. integriertem Akku | 15 442 | 20 216 | 20,1 kB | −0,1 kB |
 
@@ -103,14 +104,14 @@ Alle Messungen mit v3.5.8 und Debug aus. Das Modell trifft alle Messwerte auf �
 |---|---|---|---|---|---|
 | C (3 Geräte, A = 3) | 4 690 | ~4 400 | ~290 | 1 | ~0,29 kB |
 | D (2 Geräte, A = 4) | 4 774 | 4 214 (Anlage A, 2 Geräte) | 560 | 2 | 0,28 kB |
-| B (3 Geräte, A = ?) | 4 956 | ~4 400 | ~560 | 2 → A = 4 | – |
+| B (3 Geräte, A = 4) | 4 956 | ~4 400 | ~560 | 2 | ~0,28 kB |
 
-Zwei Anlagen mit bekannter Verteilung ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Modell setzt 0,35 kB an und hat damit einen kleinen Sicherheitszuschlag.
+Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Modell setzt 0,35 kB an und hat damit einen kleinen Sicherheitszuschlag.
 
 ## Belastbarkeit
 
 - **Gerätekosten (2,4 kB):** gut belegt durch 5 Messpunkte an 4 Anlagen.
-- **Akkukosten (0,35 kB):** bestätigt durch zwei Anlagen mit bekannter Verteilung (C, D), die jeweils ~0,28–0,29 kB ergeben. Bei Anlage B ist die Verteilung 4/2/2 damit sehr wahrscheinlich, aber noch nicht bestätigt.
+- **Akkukosten (0,35 kB):** bestätigt durch drei Anlagen mit bekannter Verteilung (B, C, D), die jeweils ~0,28–0,29 kB ergeben.
 - **Integrierter Akku:** Bei Pro-Modellen mitzählen. Ohne ihn würde Anlage D um 0,45 kB unterschätzt.
 - **Gerätetypen:** SF2400, SF800, SF800 Pro und SF2400 Pro liefern unterschiedlich große Reports. Daraus ergeben sich Abweichungen von bis zu ±0,6 kB.
 - **`mem_peak`** zählt nur seit dem letzten Script-Start. Lief das Script erst kurz oder wurde noch kein Dashboard geladen, kann der echte Wert etwas höher liegen.
