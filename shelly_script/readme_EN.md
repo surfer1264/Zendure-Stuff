@@ -60,4 +60,4 @@ These folders are kept for reference only and are no longer developed:
 | **Helper** | small program for your computer that starts the Configurator and uploads the scripts to the Shellys |
 | **KVS** | key-value store in the Shelly for settings you can change during operation (e.g. from the dashboard) |
 
-More background can be found in the [Wiki](https://github.com/surfer1264/Zendure-Stuff/wiki/Simple-Zendure-Shelly-Cloudless-System_EN).
+More background can be found in the [system overview (S-Z-S-C-S)](szscs_EN.md).
