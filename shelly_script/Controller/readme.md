@@ -6,7 +6,7 @@
 
 Der Controller (`zerooutput_multi_kvs`) ist das Regel-Script auf deinem **Controller-Shelly**. Er misst deinen Netzbezug und verteilt Laden und Entladen so auf deine Zendure-Speicher, dass möglichst nichts aus dem Netz kommt und nichts ungenutzt ins Netz geht.
 
-Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steht in der [Benutzerdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-‐-SMDC-‐-Benutzerdokumentation) und der [Gesamtdokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController) im Wiki. Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
+Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steht in der [Benutzerdokumentation](benutzerdoku.md) und der [Gesamtdokumentation](gesamtdoku.md). Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
 
 ---
@@ -62,7 +62,7 @@ devices: [
 ],
 ```
 
-Für den ersten Lauf reicht es meist, `ip`, `label`, `maxInputPower` und `maxOutput` passend zu deinem Gerät zu setzen. Mehr dazu: [Kapitel 4b](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#4b-mehrere-solarflow-geräte-einpflegen).
+Für den ersten Lauf reicht es meist, `ip`, `label`, `maxInputPower` und `maxOutput` passend zu deinem Gerät zu setzen. Mehr dazu: [Kapitel 4b](gesamtdoku.md#4b-mehrere-solarflow-geräte-einpflegen).
 
 **Smartmeter** – `gridSource`:
 
@@ -70,9 +70,9 @@ Für den ersten Lauf reicht es meist, `ip`, `label`, `maxInputPower` und `maxOut
 - `"remote"`: ein **anderer** Shelly Pro 3EM im Netz, dazu `gridSourceIp` setzen.
 - `"http_json"`: ein Messgerät mit JSON-Schnittstelle (z. B. Zendure Smart Meter 3CT oder D0, everHome EcoTracker, Tasmota, Shelly 3EM ohne Pro), dazu `gridSourceUrl` und `gridSourceField`. Verschachtelte Felder als Array, z. B. `["StatusSNS","DVS7420","power"]`. Der Configurator hat dafür fertige Vorlagen.
 
-Details: [Kapitel 5](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick).
+Details: [Kapitel 5](gesamtdoku.md#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick).
 
-**Schwellwerte** – für den Start reichen die Standardwerte. Sie stehen zweimal im CONFIG-Block, getrennt für Entladen (`discharge: { ... }`) und Laden (`charge: { ... }`). Wer es gleich passend haben will ([Kapitel 7b](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#7b-empfehlung-für-ersteinstellung)):
+**Schwellwerte** – für den Start reichen die Standardwerte. Sie stehen zweimal im CONFIG-Block, getrennt für Entladen (`discharge: { ... }`) und Laden (`charge: { ... }`). Wer es gleich passend haben will ([Kapitel 7b](gesamtdoku.md#7b-empfehlung-für-ersteinstellung)):
 
 - `spreadAbove` ≈ Nennleistung eines Speichers (z. B. 800 W für ein SF800, 2400 W für ein SF2400)
 - `concentrateBelow` ≈ 0,6 × `spreadAbove`
@@ -111,7 +111,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 ## Starten & prüfen
 
 1. Script **Start** und **„Run on startup“** aktivieren (beim Direkt-Upload passiert das automatisch).
-2. Log öffnen und das Start-Banner prüfen: Es beginnt mit `Version …` und `Multi-Device Controller gestartet` und zeigt alle aktiven Werte auf einen Blick ([Kapitel 8.7](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#87-startprotokoll-banner)).
+2. Log öffnen und das Start-Banner prüfen: Es beginnt mit `Version …` und `Multi-Device Controller gestartet` und zeigt alle aktiven Werte auf einen Blick ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)).
 3. Erscheint regelmäßig eine Zeile wie
 
    ```
@@ -126,9 +126,9 @@ Bleibt der Netzbezug länger ruhig, meldet der Controller „Sparmodus“ und fr
 
 ## Danach optional vertiefen
 
-- Live-Einstellungen per KVS, z. B. aus dem [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md) oder Home Assistant – [Kapitel 13](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)
-- Signal-/WhatsApp-Benachrichtigung – [Kapitel 8.5](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#85-signal-benachrichtigung-callmebot--inkl-whatsapp)
-- Testmodus `dryRun` – [Kapitel 4c](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#4c-testmodus-dryrun)
+- Live-Einstellungen per KVS, z. B. aus dem [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md) oder Home Assistant – [Kapitel 13](gesamtdoku.md#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)
+- Signal-/WhatsApp-Benachrichtigung – [Kapitel 8.5](gesamtdoku.md#85-signal-benachrichtigung-callmebot--inkl-whatsapp)
+- Testmodus `dryRun` – [Kapitel 4c](gesamtdoku.md#4c-testmodus-dryrun)
 - Meldungen und Dashboard: [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md) auf dem zweiten Shelly
 
 ---
@@ -155,5 +155,5 @@ Bequemer geht es mit dem Helfer: „🔍 Speicher prüfen“ und „Log aufzeich
 | [`zerooutput_multi_kvs_mini.js`](zerooutput_multi_kvs_mini.js) | verkleinerte Fassung zum Hochladen |
 | [`CHANGELOG.md`](CHANGELOG.md) | Änderungen je Version |
 | [`Deploy`](Deploy) | eigene Deploy-Pipeline, siehe [oben](#für-fortgeschrittene-mit-deploycmd) |
-| [`yaml`](yaml) | Beispiel für Home Assistant: liest die KVS-Werte des Controllers per REST (`rest.yaml`), schreibt sie per `rest_command` zurück (`rest_commands.yaml`) und stellt sie als Regler bereit (`template/kvs.yaml`). Die IP `192.168.178.117` durch die deines Controller-Shellys ersetzen. `configuration.yaml` bindet in Home Assistant den Ordner `templates/` ein (`!include_dir_merge_list templates/`) – dorthin gehört die Datei `kvs.yaml` aus dem Repository-Ordner `template`. Hintergrund: [Kapitel 13.6](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly---Zendure---MultiController#136-nutzung-über-home-assistant) |
+| [`yaml`](yaml) | Beispiel für Home Assistant: liest die KVS-Werte des Controllers per REST (`rest.yaml`), schreibt sie per `rest_command` zurück (`rest_commands.yaml`) und stellt sie als Regler bereit (`template/kvs.yaml`). Die IP `192.168.178.117` durch die deines Controller-Shellys ersetzen. `configuration.yaml` bindet in Home Assistant den Ordner `templates/` ein (`!include_dir_merge_list templates/`) – dorthin gehört die Datei `kvs.yaml` aus dem Repository-Ordner `template`. Hintergrund: [Kapitel 13.6](gesamtdoku.md#136-nutzung-über-home-assistant) |
 | [`perf`](perf) | Arbeitsstand für Speicher- und Laufzeitmessungen (Entwicklung), nicht zum Hochladen |
