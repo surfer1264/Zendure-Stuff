@@ -1,6 +1,6 @@
 :de: **Deutsch** · [:gb: English](readme_EN.md) · [:fr: Français](readme_FR.md)
 
-# zenDash-API + Watchdog
+# Dashboard-Shelly - API + Watchdog
 
 <a href="https://ko-fi.com/surfer1264">
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
@@ -19,18 +19,32 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 
 ## Inhalt
 
-- [Was du brauchst](#was-du-brauchst)
-- [So arbeitet das Script](#so-arbeitet-das-script)
-- [Installation](#installation)
-- [Konfiguration](#konfiguration)
-- [Dashboard](#dashboard)
-- [Nachrichten](#nachrichten)
-- [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
-- [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
-- [Letzte Vollladung](#letzte-vollladung)
-- [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
-- [Speicherbedarf](#speicherbedarf)
-- [Fehlersuche](#fehlersuche)
+- [Dashboard-Shelly - API + Watchdog](#dashboard-shelly---api--watchdog)
+  - [Inhalt](#inhalt)
+  - [Was du brauchst](#was-du-brauchst)
+  - [So arbeitet das Script](#so-arbeitet-das-script)
+  - [Installation](#installation)
+    - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
+    - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
+    - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
+    - [Nach dem Start](#nach-dem-start)
+  - [Konfiguration](#konfiguration)
+    - [Geräte (`devices`)](#geräte-devices)
+    - [Dashboard-Teil (`api`)](#dashboard-teil-api)
+    - [Watchdog (`watchdog`)](#watchdog-watchdog)
+    - [Nachrichten (`notify`)](#nachrichten-notify)
+    - [Allgemein](#allgemein)
+  - [Dashboard](#dashboard)
+    - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
+  - [Nachrichten](#nachrichten)
+  - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
+  - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
+  - [Letzte Vollladung](#letzte-vollladung)
+  - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
+  - [Speicherbedarf](#speicherbedarf)
+  - [Fehlersuche](#fehlersuche)
+    - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
+    - [Häufige Probleme](#häufige-probleme)
 
 ---
 

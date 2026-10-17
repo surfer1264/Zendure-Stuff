@@ -12,6 +12,7 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
 **Inhalt**
 
 - [Wie das zusammenhängt](#wie-das-zusammenhängt)
+- [Bedienung](#bedienung)
 - [Welche Variante passt zu dir?](#welche-variante-passt-zu-dir)
 - [Voraussetzungen](#voraussetzungen)
 - [In 4 Schritten zum Dashboard](#in-4-schritten-zum-dashboard)
@@ -21,7 +22,6 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
 - [Startoptionen](#startoptionen)
 - [Gut zu wissen](#gut-zu-wissen)
 - [Wenn es nicht klappt](#wenn-es-nicht-klappt)
-- [Bedienung](#bedienung)
 
 ---
 
@@ -32,6 +32,96 @@ Der Browser darf die Daten nicht direkt beim Shelly abfragen – die Shelly-Firm
 ```
 Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
 ```
+
+---
+
+## Bedienung
+
+Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`. Das bisherige Layout unter `/b` hat dieselben Funktionen, nur anders angeordnet.
+
+### Aufbau der Seite
+
+| Bereich | Inhalt |
+|---|---|
+| **Kopfzeile** | Verbindungsstatus (z. B. „Live · Poll alle 4s“), Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
+| **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
+| **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert und Fix-Entladung |
+| **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
+| **Fußzeile** | Versionen, Zeitpunkt der letzten Aktualisierung, Link **Hilfe** (diese Seite), Rohdaten und Cloud-Upload |
+
+Ein Tipp auf die Zeile **„▾ Übersicht“** klappt die Übersicht ein. Eingeklappt steht dort eine Kurzfassung, z. B. `Soll 0 W · Netz 12 W · Speicher 340 W` – praktisch auf kleinen Bildschirmen, wenn nur die Gerätekarten interessieren. Der Zustand wird gemerkt.
+
+### Sperren und Entsperren
+
+Die Seite startet **gesperrt** – sie zeigt dann nur an, Hinweis „Nur Anzeige“ unter der Regelung. Ein Tipp auf das **Schloss** in der Kopfzeile gibt die Bedienung frei, das Symbol wechselt auf ein offenes Schloss. Nach 60 Sekunden ohne Eingabe sperrt sich die Seite von selbst wieder, ebenso nach jedem Neuladen. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
+
+Auf Touch-Geräten hat der Regler **Reserve (min. SoC)** zusätzlich ein eigenes kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
+
+### Menü „Ansicht“
+
+| Eintrag | Wirkung |
+|---|---|
+| **Ansichtsgröße** (A1–A4) | Schrift und Bedienelemente in vier Stufen: Normal, Groß (Standard), Sehr groß, Maximal |
+| **Tag-/Nachtsicht** | helle oder dunkle Darstellung. Ohne Umschalten folgt die Seite der Einstellung des Geräts. |
+| **Sprache** | DE → EN → FR. Standard ist die Sprache des Browsers. |
+| **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
+| **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
+| **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
+
+Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
+
+### Was du einstellen kannst
+
+Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regeltakt. Nach dem Speichern erscheint kurz eine Bestätigung, z. B. „Gespeichert: Akku 1 · Reserve (min. SoC) 20 %“.
+
+**In der Übersicht unter „Regelung“** (für alle Speicher gemeinsam):
+
+| Bedienelement | Wirkung | Bereich |
+|---|---|---|
+| **Sollwert** | Zielwert für den Netzbezug. Negativ = etwas einspeisen, positiv = etwas beziehen. Darunter steht die Toleranz (Hysterese): so weit darf der Netzbezug abweichen, bevor der Controller nachregelt. | −40 bis +40 W, in 5-W-Schritten |
+| **Fix-Entladung** | Feste Entladeleistung statt Regelung. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen. Solange sie aktiv ist, weist die Sollwert-Kachel darauf hin, dass der Sollwert gerade nicht ausgeregelt wird. | `0` = aus, sonst ab `dischargeStartupPower` (z. B. 35 W) |
+
+**Auf jeder Gerätekarte unter „Steuerung“:**
+
+| Bedienelement | Wirkung | Bereich |
+|---|---|---|
+| **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
+| **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
+| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). | 10 % bis 1 % unter der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
+
+**Auf jeder Gerätekarte unter „Manuelles Laden“:**
+
+| Bedienelement | Wirkung | Bereich |
+|---|---|---|
+| **Ladeleistung aus dem Netz** | wählt nur die Leistung, noch ohne Wirkung | 0 bis `maxInputPower`, in 50-W-Schritten |
+| **Manuelles Laden starten / beenden** | startet bzw. beendet das Laden mit der gewählten Leistung | – |
+
+Beim Start fragt das Dashboard einmal nach und schaltet dann für diesen Speicher „Entladen erlaubt“ und „Laden vom Netz erlaubt“ aus – der Speicher ist damit aus der Regelung genommen, der Hinweis neben dem Knopf zeigt „Aktiv mit … W“. Beim Beenden stellt es den vorherigen Zustand wieder her. Ist der Akku voll, beendet das Script das Laden selbst, auch bei geschlossenem Dashboard ([Auto-Stop](readme.md#manuelles-laden-und-auto-stop)). Bricht der Vorgang mittendrin ab (Shelly nicht erreichbar), erscheint ein Warnhinweis – dann Schalter und Ladeleistung auf der Karte prüfen.
+
+Nach einer Eingabe ist das jeweilige Bedienelement 4 Sekunden gesperrt, damit nichts doppelt ausgelöst wird.
+
+Nicht im Dashboard änderbar sind die **Hysterese** (wird nur unter dem Sollwert angezeigt) und das **Ladeziel** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
+
+### Was die Anzeige zeigt
+
+- **Netzbezug / Einspeisung:** aktueller Netzsaldo mit Richtung („Bezug“ bzw. „Einspeisung“) und Vergleich zum Sollwert, dazu eine Verlaufskurve der letzten 2 Minuten.
+- **Solarflow-Leistung:** Summe aller Speicher (+ = geben ab, − = laden), darunter der durchschnittliche Ladestand („Ø Ladestand … %“), ebenfalls mit Verlaufskurve. Beide Kurven haben unterschiedliche Maßstäbe und beginnen nach einem Neuladen der Seite wieder von vorn.
+- **Je Speicher eine Karte** mit:
+  - Name und Statuspunkt (grün = erreichbar); mit „Technische Details“ zusätzlich `[devN]` und IP-Adresse
+  - Ladestand als Batteriesymbol und Zahl, daneben die Leistung mit Richtung („gibt ab“, „lädt“, „Bereitschaft“)
+  - darunter das Arbeitsfenster, z. B. `Bereich 15–100 %` (Reserve bis Ladeziel)
+  - PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächste Zelle („Zelle min 3,28 V“) – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „Sperre < 2,90 V“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
+  - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war; Antippen zeigt das Datum ([mehr dazu](readme.md#letzte-vollladung))
+  - Status in Klartext, z. B. „speist ein“, „voll, Laden gesperrt“, „leer, Entladen gesperrt“, „Export verboten“. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle. Mit „Technische Details“ steht der Rohcode davor (`socLimit 1`, `gridReverse 2` …).
+  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration, z. B. „Ladegrenze 90 % · abweichend, Konfiguration 100 %“ (`socSet` ≠ `maxSoc`) oder „Reserve am Gerät 15 % · abweichend, KVS 20 %“. Meist wurde der Wert von außen geändert (App, Home Assistant).
+  - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
+- **Fußzeile:** Versionen von Seite und Script (gelb, wenn sie nicht zusammenpassen), Zeitpunkt der letzten Aktualisierung, Link **Hilfe** auf diese Anleitung. `config_api` und `status_api` öffnen die Rohdaten als JSON in einem neuen Tab. **ThingSpeak** und **ThingsBoard** führen zu den Einrichtungsseiten für den Cloud-Upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md)).
+
+**Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
+
+Die Seite frischt die Messwerte alle 4 Sekunden auf. Einstellungen, die jemand anders geändert hat (z. B. über Home Assistant), erscheinen nach spätestens etwa einer halben Minute. Solange der Tab im Hintergrund liegt oder das Fenster minimiert ist, pausieren die Abfragen.
+
+Technische Details zu Abfragetakt, Schnittstelle und Wertebereichen stehen in der [API-Beschreibung](API.md).
 
 ---
 
@@ -212,7 +302,7 @@ Port (`PORT`, Standard 8000) und Netzwerk-Schnittstelle (`BIND_ADDRESS`) stehen 
 
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup`. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Script-Nummer:** Beim **Update** über den Configurator bleibt die Nummer gleich. Wird das Script **neu angelegt** (erste Installation, „andere löschen“, Shelly-Wechsel oder Upload von Hand), bekommt es eine neue Nummer. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
-- **Neues Layout, bisheriges unter `/b`:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Ansichtsgröße und Tag/Nacht werden gemerkt. Das bisherige Layout mit denselben Funktionen gibt es weiterhin unter `http://<Proxy-Adresse>:8000/b`. Dafür muss `zendure-dashboard-b.html` neben `zendure-dashboard.html` liegen; im fertigen Programm und in der Home-Assistant-App ist sie enthalten.
+- **Neues Layout, bisheriges unter `/b`:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das bisherige Layout mit denselben Funktionen gibt es weiterhin unter `http://<Proxy-Adresse>:8000/b`. Dafür muss `zendure-dashboard-b.html` neben `zendure-dashboard.html` liegen; im fertigen Programm und in der Home-Assistant-App ist sie enthalten.
 - **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
 
 ---
@@ -231,56 +321,6 @@ Port (`PORT`, Standard 8000) und Netzwerk-Schnittstelle (`BIND_ADDRESS`) stehen 
 | Einstellungen wirken nicht | Im Controller `kvsEnabled: true` setzen. |
 | Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
 | Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Firewall-Freigabe prüfen. |
-| Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss oben rechts antippen. |
+| Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss in der Kopfzeile antippen. |
+| KVS-Schlüssel, IP-Adressen oder `acMode`/`socLimit` fehlen | Im Menü „Ansicht“ die **Technischen Details** einschalten. |
 | „Konnte Port 8000 nicht oeffnen“ | Der Proxy läuft schon (z. B. in einem zweiten Fenster), oder ein anderes Programm belegt den Port. |
-
----
-
-## Bedienung
-
-Die Seite startet **gesperrt**. Das Schloss oben rechts gibt die Bedienung frei; nach 60 Sekunden ohne Eingabe sperrt sie sich von selbst wieder. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
-
-### Was du einstellen kannst
-
-Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regeltakt.
-
-| Bedienelement | Wirkung | Bereich |
-|---|---|---|
-| **Sollwert** | Zielwert für den Netzbezug. Negativ = etwas einspeisen, positiv = etwas beziehen. | −40 bis +40 W |
-| **Fix-Entladung** | Feste Entladeleistung statt Regelung, für alle Speicher zusammen. `0` = aus, normale Regelung. | 0 oder ab `dischargeStartupPower` |
-| **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
-| **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
-| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Auf Touch-Geräten hat der Regler ein eigenes kleines Schloss neben dem Wert und reagiert nur auf Ziehen am Punkt, damit er nicht versehentlich verstellt wird. | 10 % bis 1 % unter der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
-| **Manuelles Laden** | Lädt diesen Speicher mit der gewählten Leistung aus dem Netz, bis du es beendest oder der Akku voll ist. | 0 bis `maxInputPower` |
-
-**Manuelles Laden** besteht aus zwei Teilen: Der Regler wählt nur die Leistung, der Knopf darunter startet bzw. beendet das Laden. Beim Start schaltet das Dashboard für diesen Speicher „Entladen erlaubt“ und „Laden vom Netz erlaubt“ aus, beim Beenden stellt es den vorherigen Zustand wieder her. Ist der Akku voll, beendet das Script das Laden selbst ([Auto-Stop](readme.md#manuelles-laden-und-auto-stop)). Bricht der Vorgang mittendrin ab (Shelly nicht erreichbar), erscheint ein Warnhinweis – dann die Karte des Speichers prüfen.
-
-Nach einer Eingabe ist das jeweilige Bedienelement 4 Sekunden gesperrt, damit nichts doppelt ausgelöst wird.
-
-Nicht im Dashboard änderbar sind die **Hysterese** (wird nur neben dem Sollwert angezeigt) und das **Ladeziel** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
-
-### Was die Anzeige zeigt
-
-- **Oben:** Netzsaldo und Summe der Speicher, jeweils mit einer kleinen Verlaufskurve der letzten 2 Minuten. Die beiden Kurven haben unterschiedliche Maßstäbe. Nach einem Neuladen der Seite beginnen sie wieder von vorn.
-- **Neben dem Sollwert** steht die Hysterese: So weit darf der Netzbezug abweichen, bevor der Controller nachregelt.
-- **Je Speicher eine Karte** mit:
-  - Ladestand und darunter dem Arbeitsfenster, z. B. `SoC · 15–100 %` (Reserve bis Ladeziel)
-  - Leistung, PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächster Zellspannung – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „min 3,31 V (Sperre < 2,90 V)“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
-  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration: `socSet` (obere Ladegrenze am Gerät) weicht von `maxSoc` ab, oder `minSoc` am Gerät weicht von der Reserve in der KVS ab. Meist wurde der Wert von außen geändert (App, Home Assistant). Antippen erklärt die Abhilfe.
-  - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war ([mehr dazu](readme.md#letzte-vollladung))
-  - Rohstatus `acMode`, `socLimit`, `gridReverse`. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Einspeisen gesperrt.
-- **Fußzeile:** Versionen von Seite und Script. Gelb, wenn sie nicht zusammenpassen.
-
-Die Seite frischt die Messwerte alle 4 Sekunden auf. Einstellungen, die jemand anders geändert hat (z. B. über Home Assistant), erscheinen nach spätestens etwa einer halben Minute.
-
-### Knöpfe oben rechts
-
-| Knopf | Wirkung |
-|---|---|
-| 🔒 Schloss | Bedienung freigeben / sperren |
-| DE/EN/FR | Sprache wechseln (Standard: Sprache des Browsers) |
-| Hell/Dunkel | Tag- oder Nachtansicht. Ohne Umschalten folgt die Seite der Einstellung des Geräts. |
-| A | Schriftgröße in drei Stufen: Normal, Groß (Standard), Sehr groß |
-| ⛶ | Vollbild (nur wenn der Browser es kann) |
-
-Technische Details zu Abfragetakt, Schnittstelle und Wertebereichen stehen in der [API-Beschreibung](API.md).

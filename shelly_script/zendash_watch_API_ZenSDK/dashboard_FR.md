@@ -12,6 +12,7 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
 **Sommaire**
 
 - [Comment tout cela s'articule](#comment-tout-cela-sarticule)
+- [Utilisation](#utilisation)
 - [Quelle variante vous convient ?](#quelle-variante-vous-convient-)
 - [Prérequis](#prérequis)
 - [Le tableau de bord en 4 étapes](#le-tableau-de-bord-en-4-étapes)
@@ -21,7 +22,6 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
 - [Options de démarrage](#options-de-démarrage)
 - [Bon à savoir](#bon-à-savoir)
 - [En cas de problème](#en-cas-de-problème)
-- [Utilisation](#utilisation)
 
 > Les messages de la console du proxy et sa page de configuration sont en allemand. Le tableau de bord lui-même peut être passé en français (bouton DE/EN/FR en haut à droite).
 
@@ -34,6 +34,96 @@ Le navigateur n'a pas le droit d'interroger directement le Shelly – le firmwar
 ```
 Navigateur  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Shelly tableau de bord (zenDash API)  ──►  Shelly Controller (KVS)
 ```
+
+---
+
+## Utilisation
+
+Ce qui suit décrit la mise en page par défaut à l'adresse `http://<adresse-du-proxy>:8000/`. L'ancienne mise en page sous `/b` offre les mêmes fonctions, simplement disposées autrement.
+
+### Organisation de la page
+
+| Zone | Contenu |
+|---|---|
+| **En-tête** | état de la connexion (p. ex. « En direct · relevé toutes les 4 s »), heure et date, le **cadenas** et le menu **⚙ Affichage** |
+| **Vue d'ensemble – Maintenant** | mesures : soutirage/injection réseau et puissance Solarflow (somme de toutes les batteries) avec courbe d'historique |
+| **Vue d'ensemble – Régulation** | réglages communs à toutes les batteries : consigne et décharge fixe |
+| **Appareils** | une carte par batterie avec mesures, état, « Commandes » et « Charge manuelle » |
+| **Pied de page** | versions, heure de la dernière actualisation, lien **Aide** (cette page), données brutes et envoi cloud |
+
+Toucher la ligne **« ▾ Vue d'ensemble »** replie la vue d'ensemble. Repliée, elle affiche un résumé, p. ex. `Consigne 0 W · Réseau 12 W · Stockage 340 W` – pratique sur un petit écran quand seules les cartes des appareils comptent. L'état est mémorisé.
+
+### Verrouiller et déverrouiller
+
+La page démarre **verrouillée** – elle ne fait alors qu'afficher, avec la mention « Affichage seul » sous la régulation. Toucher le **cadenas** dans l'en-tête déverrouille les commandes ; l'icône passe à un cadenas ouvert. Après 60 secondes sans saisie, la page se reverrouille d'elle-même, de même après chaque rechargement. C'est prévu pour les tableaux de bord affichés en permanence sur une tablette ou un second écran.
+
+Sur les appareils tactiles, le curseur **Réserve (SoC min.)** a en plus son propre petit cadenas à côté de la valeur. Il ne libère que ce seul curseur et le reverrouille après 5 secondes sans contact, après l'enregistrement ou lors d'un défilement. La valeur ne change qu'en faisant glisser le point – un appui ou un balayage sur la barre est annulé.
+
+### Menu « Affichage »
+
+| Entrée | Effet |
+|---|---|
+| **Taille d'affichage** (A1–A4) | texte et commandes en quatre niveaux : Normale, Grande (par défaut), Très grande, Maximale |
+| **Mode jour/nuit** | affichage clair ou sombre. Sans basculer, la page suit le réglage de l'appareil. |
+| **Langue** | DE → EN → FR. Par défaut : langue du navigateur. |
+| **Plein écran** | masque les barres du navigateur ; n'apparaît que si le navigateur le permet |
+| **Détails techniques** | affiche les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`). Sans cet interrupteur, le tableau de bord n'affiche que du texte en clair. |
+| **Réinitialiser l'affichage** ↺ | taille, jour/nuit, détails techniques et vue d'ensemble par défaut. La langue est conservée. |
+
+Toutes les entrées sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
+
+### Ce que vous pouvez régler
+
+Tous les réglages sont envoyés au Controller et prennent effet à son prochain cycle de régulation. Après l'enregistrement, une brève confirmation s'affiche, p. ex. « Enregistré : Batterie 1 · Réserve (SoC min.) 20 % ».
+
+**Dans la vue d'ensemble, sous « Régulation »** (pour toutes les batteries ensemble) :
+
+| Commande | Effet | Plage |
+|---|---|---|
+| **Consigne** | Valeur cible pour le soutirage réseau. Négatif = injecter un peu, positif = soutirer un peu. En dessous figure la tolérance (hystérésis) : l'écart de soutirage toléré avant que le Controller ne corrige. | −40 à +40 W, par pas de 5 W |
+| **Décharge fixe** | Puissance de décharge fixe au lieu de la régulation. Saisir la valeur dans le champ et valider avec ↵ ou « OK ». Tant qu'elle est active, la tuile de consigne indique que la consigne n'est pas régulée pour l'instant. | `0` = arrêt, sinon à partir de `dischargeStartupPower` (p. ex. 35 W) |
+
+**Sur chaque carte d'appareil, sous « Commandes » :**
+
+| Commande | Effet | Plage |
+|---|---|---|
+| **Décharge autorisée** | Cette batterie peut-elle alimenter la maison ? Si le watchdog a bloqué la décharge pour sous-tension, l'interrupteur est sur arrêt et doit être réactivé à la main ([blocage de la décharge](readme_FR.md#blocage-de-la-décharge-en-cas-de-sous-tension)). | marche/arrêt |
+| **Charge depuis le réseau autorisée** | Cette batterie peut-elle absorber un surplus venant du réseau ? | marche/arrêt |
+| **Réserve (SoC min.)** | En dessous de cet état de charge, pas de décharge. Est également réglée dans la batterie elle-même. La limite haute est indiquée sous la valeur (« max … % »). | 10 % jusqu'à 1 % sous la plus petite des deux limites : objectif de charge (`maxSoc`) et limite de charge réglée sur l'appareil (`socSet`) |
+
+**Sur chaque carte d'appareil, sous « Charge manuelle » :**
+
+| Commande | Effet | Plage |
+|---|---|---|
+| **Puissance de charge réseau** | choisit seulement la puissance, sans effet pour l'instant | 0 à `maxInputPower`, par pas de 50 W |
+| **Démarrer / Arrêter la charge manuelle** | démarre ou arrête la charge avec la puissance choisie | – |
+
+Au démarrage, le tableau de bord demande une confirmation, puis désactive « Décharge autorisée » et « Charge depuis le réseau autorisée » pour cette batterie – elle est ainsi retirée de la régulation, et l'indication à côté du bouton affiche « Active à … W ». À l'arrêt, il rétablit l'état précédent. Quand la batterie est pleine, le script arrête la charge de lui-même, même tableau de bord fermé ([arrêt automatique](readme_FR.md#charge-manuelle-et-arrêt-automatique)). Si l'opération est interrompue en cours de route (Shelly injoignable), un avertissement s'affiche – vérifier alors les interrupteurs et la puissance de charge sur la carte.
+
+Après une saisie, la commande concernée est bloquée 4 secondes pour éviter un double déclenchement.
+
+Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (seulement affichée sous la consigne) et l'**objectif de charge** (`maxSoc`). Les deux se règlent dans le Configurator ou dans le bloc CONFIG.
+
+### Ce qu'affiche l'écran
+
+- **Soutirage / injection réseau :** solde réseau actuel avec le sens (« soutirage » ou « injection ») et comparaison avec la consigne, plus une courbe d'historique des 2 dernières minutes.
+- **Puissance Solarflow :** somme de toutes les batteries (+ = fournissent, − = chargent), en dessous l'état de charge moyen (« Charge moy. … % »), également avec courbe d'historique. Les deux courbes ont des échelles différentes et repartent de zéro après un rechargement de la page.
+- **Une carte par batterie** avec :
+  - le nom et un point d'état (vert = joignable) ; avec « Détails techniques », en plus `[devN]` et l'adresse IP
+  - l'état de charge sous forme d'icône de batterie et de nombre, à côté la puissance avec le sens (« fournit », « charge », « veille »)
+  - en dessous la plage de travail, p. ex. `Plage 15–100 %` (de la réserve à l'objectif de charge)
+  - l'entrée PV, la puissance hors réseau (uniquement sur les appareils avec prise hors réseau), la température de l'appareil en °C et la cellule la plus faible (« Cellule min 3,28 V ») – significative seulement sous charge. Pour les batteries surveillées par le watchdog, le seuil de blocage suit, p. ex. « blocage < 2,90 V », et la couleur dépend des seuils du watchdog : jaune sous `minVoltReset`, rouge sous `minVoltWarn`. Sinon : jaune sous 3,0 V, rouge sous 2,8 V.
+  - « 100 % : il y a N jours » – quand la batterie a été pleine pour la dernière fois ; un appui affiche la date ([en savoir plus](readme_FR.md#dernière-charge-complète))
+  - l'état en clair, p. ex. « injecte », « pleine, charge bloquée », « vide, décharge bloquée », « export interdit ». Il explique les cas les plus fréquents de « Pourquoi la batterie ne fait-elle rien ? ». Avec « Détails techniques », le code brut est affiché devant (`socLimit 1`, `gridReverse 2` …).
+  - des indications lorsque l'appareil est réglé autrement que la configuration, p. ex. « Limite de charge 90 % · différent, configuration 100 % » (`socSet` ≠ `maxSoc`) ou « Réserve sur l'appareil 15 % · différent, KVS 20 % ». Le plus souvent, la valeur a été modifiée de l'extérieur (application, Home Assistant).
+  - en dessous « Décharge : autorisée · Charge réseau : bloquée », résumé des deux interrupteurs
+- **Pied de page :** versions de la page et du script (jaune si elles ne correspondent pas), heure de la dernière actualisation, lien **Aide** vers ce guide. `config_api` et `status_api` ouvrent les données brutes en JSON dans un nouvel onglet. **ThingSpeak** et **ThingsBoard** mènent aux pages de configuration de l'envoi cloud ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), en allemand).
+
+**Explications au toucher :** de nombreux libellés et valeurs sont soulignés en pointillés – consigne, décharge fixe, les deux tuiles de la vue d'ensemble, puissance, plage de travail, ligne complémentaire, seuil de blocage ; les étiquettes d'état aussi. Un appui (ou le survol à la souris) affiche une courte explication.
+
+La page actualise les mesures toutes les 4 secondes. Les réglages modifiés par quelqu'un d'autre (p. ex. via Home Assistant) apparaissent au plus tard après environ une demi-minute. Tant que l'onglet est en arrière-plan ou la fenêtre réduite, les relevés sont suspendus.
+
+Les détails techniques sur la fréquence d'interrogation, l'interface et les plages de valeurs se trouvent dans la [description de l'API](API.md) (allemand).
 
 ---
 
@@ -215,7 +305,7 @@ Le port (`PORT`, 8000 par défaut) et l'interface réseau (`BIND_ADDRESS`) se r�
 
 - **Pas de mot de passe :** toute personne du réseau domestique connaissant l'adresse peut ouvrir le tableau de bord et modifier les réglages – y compris l'adresse du Shelly sous `/setup`. Ne **jamais** exposer le proxy sur Internet par une redirection de port.
 - **Numéro du script :** lors d'une **mise à jour** via le Configurator, le numéro reste le même. Si le script est **recréé** (première installation, « supprimer les autres », changement de Shelly ou téléversement manuel), il reçoit un nouveau numéro. Si le tableau de bord ne fonctionne plus ensuite, saisir le nouveau numéro sous `http://<adresse-du-proxy>:8000/setup`. Pas besoin de redémarrer le proxy.
-- **Nouvelle mise en page, l'ancienne sous `/b` :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». La taille d'affichage et le mode jour/nuit choisis y sont mémorisés. L'ancienne mise en page, avec les mêmes fonctions, reste disponible à l'adresse `http://<adresse-du-proxy>:8000/b`. Il faut pour cela `zendure-dashboard-b.html` à côté de `zendure-dashboard.html` ; le programme prêt à l'emploi et l'app Home Assistant l'incluent.
+- **Nouvelle mise en page, l'ancienne sous `/b` :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page, avec les mêmes fonctions, reste disponible à l'adresse `http://<adresse-du-proxy>:8000/b`. Il faut pour cela `zendure-dashboard-b.html` à côté de `zendure-dashboard.html` ; le programme prêt à l'emploi et l'app Home Assistant l'incluent.
 - **Nouvelle version du tableau de bord :** avec le script Python et sur le Synology, il suffit de remplacer `zendure-dashboard.html` et de recharger la page dans le navigateur – le proxy relit le fichier à chaque requête. Dans le programme prêt à l'emploi, la page est intégrée ; elle arrive avec un nouveau téléchargement. Dans Home Assistant, l'app doit être reconstruite.
 
 ---
@@ -234,56 +324,6 @@ Le port (`PORT`, 8000 par défaut) et l'interface réseau (`BIND_ADDRESS`) se r�
 | Les réglages n'ont aucun effet | Définir `kvsEnabled: true` dans le Controller. |
 | Réglages perdus après redémarrage du Controller | Définir `kvsForceReseed: false` dans le Controller. |
 | Inaccessible depuis le téléphone | `http://` au lieu de `https://`, bonne IP de la ligne « Im Netz », vérifier l'autorisation du pare-feu. |
-| Rien n'est utilisable | La page est verrouillée – toucher le cadenas en haut à droite. |
+| Rien n'est utilisable | La page est verrouillée – toucher le cadenas dans l'en-tête. |
+| Clés KVS, adresses IP ou `acMode`/`socLimit` absents | Activer les **Détails techniques** dans le menu « Affichage ». |
 | « Konnte Port 8000 nicht oeffnen » (impossible d'ouvrir le port 8000) | Le proxy tourne déjà (p. ex. dans une deuxième fenêtre), ou un autre programme occupe le port. |
-
----
-
-## Utilisation
-
-La page démarre **verrouillée**. Le cadenas en haut à droite déverrouille les commandes ; après 60 secondes sans saisie, elle se verrouille d'elle-même. C'est prévu pour les tableaux de bord affichés en permanence sur une tablette ou un second écran.
-
-### Ce que vous pouvez régler
-
-Tous les réglages sont envoyés au Controller et prennent effet à son prochain cycle de régulation.
-
-| Commande | Effet | Plage |
-|---|---|---|
-| **Consigne** | Valeur cible pour le soutirage réseau. Négatif = injecter un peu, positif = soutirer un peu. | −40 à +40 W |
-| **Décharge fixe** | Puissance de décharge fixe au lieu de la régulation, pour toutes les batteries ensemble. `0` = arrêt, régulation normale. | 0 ou à partir de `dischargeStartupPower` |
-| **Décharge autorisée** | Cette batterie peut-elle alimenter la maison ? Si le watchdog a bloqué la décharge pour sous-tension, l'interrupteur est sur arrêt et doit être réactivé à la main ([blocage de la décharge](readme_FR.md#blocage-de-la-décharge-en-cas-de-sous-tension)). | marche/arrêt |
-| **Charge depuis le réseau autorisée** | Cette batterie peut-elle absorber un surplus venant du réseau ? | marche/arrêt |
-| **Réserve (SoC min.)** | En dessous de cet état de charge, pas de décharge. Est également réglée dans la batterie elle-même. Sur les appareils tactiles, le curseur a son propre petit cadenas à côté de la valeur et ne réagit qu'en faisant glisser le point, pour éviter tout réglage involontaire. | 10 % jusqu'à 1 % sous la plus petite des deux limites : objectif de charge (`maxSoc`) et limite de charge réglée sur l'appareil (`socSet`) |
-| **Charge manuelle** | Charge cette batterie depuis le réseau avec la puissance choisie, jusqu'à ce que vous l'arrêtiez ou que la batterie soit pleine. | 0 à `maxInputPower` |
-
-La **charge manuelle** se compose de deux parties : le curseur choisit seulement la puissance, le bouton en dessous démarre ou arrête la charge. Au démarrage, le tableau de bord désactive « Décharge autorisée » et « Charge depuis le réseau autorisée » pour cette batterie ; à l'arrêt, il rétablit l'état précédent. Quand la batterie est pleine, le script arrête la charge de lui-même ([arrêt automatique](readme_FR.md#charge-manuelle-et-arrêt-automatique)). Si l'opération est interrompue en cours de route (Shelly injoignable), un avertissement s'affiche – vérifier alors la carte de la batterie.
-
-Après une saisie, la commande concernée est bloquée 4 secondes pour éviter un double déclenchement.
-
-Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (seulement affichée à côté de la consigne) et l'**objectif de charge** (`maxSoc`). Les deux se règlent dans le Configurator ou dans le bloc CONFIG.
-
-### Ce qu'affiche l'écran
-
-- **En haut :** solde réseau et somme des batteries, chacun avec une petite courbe d'historique des 2 dernières minutes. Les deux courbes ont des échelles différentes. Après un rechargement de la page, elles repartent de zéro.
-- **À côté de la consigne** figure l'hystérésis : l'écart de soutirage toléré avant que le Controller ne corrige.
-- **Une carte par batterie** avec :
-  - l'état de charge et en dessous la plage de travail, p. ex. `SoC · 15–100 %` (de la réserve à l'objectif de charge)
-  - la puissance, l'entrée PV, la puissance hors réseau (uniquement sur les appareils avec prise hors réseau), la température de l'appareil en °C et la tension de la cellule la plus faible – significative seulement sous charge. Pour les batteries surveillées par le watchdog, le seuil de blocage suit, p. ex. « min 3,31 V (blocage < 2,90 V) », et la couleur dépend des seuils du watchdog : jaune sous `minVoltReset`, rouge sous `minVoltWarn`. Sinon : jaune sous 3,0 V, rouge sous 2,8 V.
-  - des indications lorsque l'appareil est réglé autrement que la configuration : `socSet` (limite de charge haute sur l'appareil) diffère de `maxSoc`, ou `minSoc` sur l'appareil diffère de la réserve dans la KVS. Le plus souvent, la valeur a été modifiée de l'extérieur (application, Home Assistant). Toucher l'indication explique comment y remédier.
-  - « 100 % : il y a N jours » – quand la batterie a été pleine pour la dernière fois ([en savoir plus](readme_FR.md#dernière-charge-complète))
-  - l'état brut `acMode`, `socLimit`, `gridReverse`. Il explique les cas les plus fréquents de « Pourquoi la batterie ne fait-elle rien ? » : `socLimit 1` = batterie pleine, charge bloquée ; `socLimit 2` = décharge bloquée ; `gridReverse 2` = injection bloquée.
-- **Pied de page :** versions de la page et du script. Jaune si elles ne correspondent pas.
-
-La page actualise les mesures toutes les 4 secondes. Les réglages modifiés par quelqu'un d'autre (p. ex. via Home Assistant) apparaissent au plus tard après environ une demi-minute.
-
-### Boutons en haut à droite
-
-| Bouton | Effet |
-|---|---|
-| 🔒 Cadenas | déverrouiller / verrouiller les commandes |
-| DE/EN/FR | changer de langue (par défaut : langue du navigateur) |
-| Clair/Sombre | affichage jour ou nuit. Sans basculer, la page suit le réglage de l'appareil. |
-| A | taille du texte en trois niveaux : Normale, Grande (par défaut), Très grande |
-| ⛶ | plein écran (seulement si le navigateur le permet) |
-
-Les détails techniques sur la fréquence d'interrogation, l'interface et les plages de valeurs se trouvent dans la [description de l'API](API.md) (allemand).

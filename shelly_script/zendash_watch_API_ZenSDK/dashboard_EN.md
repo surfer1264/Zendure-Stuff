@@ -12,6 +12,7 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 **Contents**
 
 - [How it fits together](#how-it-fits-together)
+- [Operation](#operation)
 - [Which option suits you?](#which-option-suits-you)
 - [Requirements](#requirements)
 - [Dashboard in 4 steps](#dashboard-in-4-steps)
@@ -21,7 +22,6 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 - [Start options](#start-options)
 - [Good to know](#good-to-know)
 - [If it does not work](#if-it-does-not-work)
-- [Operation](#operation)
 
 > The proxy's console output and its setup page are in German. The dashboard page itself can be switched to English (button DE/EN/FR at the top right).
 
@@ -34,6 +34,96 @@ The browser is not allowed to query the data directly from the Shelly – the Sh
 ```
 Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard Shelly (zenDash API)  ──►  Controller Shelly (KVS)
 ```
+
+---
+
+## Operation
+
+This describes the default layout at `http://<proxy-address>:8000/`. The previous layout at `/b` has the same functions, just arranged differently.
+
+### Page layout
+
+| Area | Content |
+|---|---|
+| **Header** | connection status (e.g. "Live · polling every 4s"), time and date, the **padlock** and the **⚙ View** menu |
+| **Overview – Now** | readings: grid import/export and Solarflow power (sum of all batteries) with history curve |
+| **Overview – Control** | settings for all batteries: setpoint and fixed discharge |
+| **Devices** | one card per battery with readings, status, "Controls" and "Manual charging" |
+| **Footer** | versions, time of the last update, **Help** link (this page), raw data and cloud upload |
+
+Tapping the **"▾ Overview"** line collapses the overview. When collapsed, a short summary is shown there, e.g. `Target 0 W · Grid 12 W · Storage 340 W` – handy on small screens when only the device cards matter. The state is remembered.
+
+### Locking and unlocking
+
+The page starts **locked** – it then only displays, with the note "View only" below the control section. Tapping the **padlock** in the header enables the controls, and the icon changes to an open padlock. After 60 seconds without input the page locks itself again, and also after every reload. This is meant for dashboards that stay open permanently on a tablet or second monitor.
+
+On touch devices the **Reserve (min. SoC)** slider additionally has its own small padlock next to the value. It only ever releases this one slider and locks it again after 5 seconds without touch, after saving or when scrolling. The value only changes by dragging the knob – tapping or swiping on the bar is reverted.
+
+### "View" menu
+
+| Entry | Effect |
+|---|---|
+| **View size** (A1–A4) | text and controls in four levels: Normal, Large (default), Extra large, Maximum |
+| **Day/night view** | light or dark display. Without switching, the page follows the device setting. |
+| **Language** | DE → EN → FR. Default is the browser language. |
+| **Full screen** | hides the browser bars; only shown if the browser supports it |
+| **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
+| **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
+
+All entries are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
+
+### What you can set
+
+All settings go to the Controller and take effect on its next control cycle. After saving, a short confirmation appears, e.g. "Saved: Battery 1 · Reserve (min. SoC) 20 %".
+
+**In the overview under "Control"** (for all batteries together):
+
+| Control | Effect | Range |
+|---|---|---|
+| **Setpoint** | Target value for the grid draw. Negative = feed in a little, positive = draw a little. Below it is the tolerance (hysteresis): the grid draw may deviate this far before the Controller readjusts. | −40 to +40 W, in 5 W steps |
+| **Fixed discharge** | Fixed discharge power instead of control. Type the value into the field and confirm with ↵ or "Done". While it is active, the setpoint tile notes that the setpoint is currently not being regulated. | `0` = off, otherwise from `dischargeStartupPower` (e.g. 35 W) |
+
+**On each device card under "Controls":**
+
+| Control | Effect | Range |
+|---|---|---|
+| **Discharge allowed** | May this battery supply the house? If the watchdog has locked discharging because of undervoltage, the switch is off and has to be switched on again by hand ([discharge lock](readme_EN.md#discharge-lock-on-undervoltage)). | on/off |
+| **Charging from grid allowed** | May this battery absorb surplus from the grid? | on/off |
+| **Reserve (min. SoC)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. The upper limit is shown below the value ("max … %"). | 10 % up to 1 % below the lower of charge target (`maxSoc`) and the charge limit set on the device (`socSet`) |
+
+**On each device card under "Manual charging":**
+
+| Control | Effect | Range |
+|---|---|---|
+| **Grid charging power** | only selects the power, no effect yet | 0 to `maxInputPower`, in 50 W steps |
+| **Start / stop manual charging** | starts or stops charging with the selected power | – |
+
+On start, the dashboard asks for confirmation once and then switches "Discharge allowed" and "Charging from grid allowed" off for this battery – the battery is thus taken out of control, and the note next to the button shows "Active at … W". On stop it restores the previous state. When the battery is full, the script ends charging by itself, even with the dashboard closed ([auto-stop](readme_EN.md#manual-charging-and-auto-stop)). If the process is interrupted halfway (Shelly not reachable), a warning appears – then check the switches and charging power on the card.
+
+After an input, the respective control is locked for 4 seconds so that nothing is triggered twice.
+
+Not changeable in the dashboard are the **hysteresis** (only shown below the setpoint) and the **charge target** (`maxSoc`). You set both in the Configurator or in the CONFIG block.
+
+### What the display shows
+
+- **Grid import / export:** current grid balance with direction ("import" or "export") and comparison with the setpoint, plus a history curve of the last 2 minutes.
+- **Solarflow power:** sum of all batteries (+ = supplying, − = charging), below it the average state of charge ("Avg. charge … %"), also with a history curve. The two curves have different scales and start from scratch after reloading the page.
+- **One card per battery** with:
+  - name and status dot (green = reachable); with "Technical details" also `[devN]` and IP address
+  - state of charge as battery icon and number, next to it the power with direction ("supplying", "charging", "standby")
+  - below it the operating window, e.g. `Range 15–100 %` (reserve to charge target)
+  - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
+  - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
+  - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
+  - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
+  - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
+- **Footer:** versions of page and script (yellow if they do not match), time of the last update, **Help** link to this guide. `config_api` and `status_api` open the raw data as JSON in a new tab. **ThingSpeak** and **ThingsBoard** lead to the setup pages for the cloud upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), German).
+
+**Explanations on tap:** Many labels and values have a dotted underline – setpoint, fixed discharge, the two overview tiles, power, operating window, extra line, lock threshold; the status tags too. Tapping (or hovering with the mouse) shows a short explanation.
+
+The page refreshes the measurements every 4 seconds. Settings changed by someone else (e.g. via Home Assistant) appear after about half a minute at the latest. While the tab is in the background or the window is minimised, polling pauses.
+
+Technical details on polling rate, interface and value ranges are in the [API description](API.md) (German).
 
 ---
 
@@ -215,7 +305,7 @@ Port (`PORT`, default 8000) and network interface (`BIND_ADDRESS`) can be change
 
 - **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup`. So **never** expose the proxy to the internet via port forwarding.
 - **Script number:** When **updating** via the Configurator, the number stays the same. If the script is **created anew** (first installation, "delete others", Shelly replacement or manual upload), it gets a new number. If the dashboard stops working after that, enter the new number under `http://<proxy-address>:8000/setup`. Restarting the proxy is not necessary.
-- **New layout, previous one at `/b`:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, technical details (KVS keys, IP addresses) only on request via the “View” menu. View size and day/night chosen there are remembered. The previous layout with the same functions is still available at `http://<proxy-address>:8000/b`. This needs `zendure-dashboard-b.html` next to `zendure-dashboard.html`; the ready-made program and the Home Assistant app include it.
+- **New layout, previous one at `/b`:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The previous layout with the same functions is still available at `http://<proxy-address>:8000/b`. This needs `zendure-dashboard-b.html` next to `zendure-dashboard.html`; the ready-made program and the Home Assistant app include it.
 - **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.
 
 ---
@@ -234,56 +324,6 @@ Port (`PORT`, default 8000) and network interface (`BIND_ADDRESS`) can be change
 | Settings have no effect | Set `kvsEnabled: true` in the Controller. |
 | Settings gone after restarting the Controller | Set `kvsForceReseed: false` in the Controller. |
 | Not reachable from the phone | `http://` instead of `https://`, correct IP from the "Im Netz" line, check the firewall rule. |
-| Nothing can be operated | The page is locked – tap the padlock at the top right. |
+| Nothing can be operated | The page is locked – tap the padlock in the header. |
+| KVS keys, IP addresses or `acMode`/`socLimit` are missing | Switch on **Technical details** in the “View” menu. |
 | "Konnte Port 8000 nicht oeffnen" (could not open port 8000) | The proxy is already running (e.g. in a second window), or another program is using the port. |
-
----
-
-## Operation
-
-The page starts **locked**. The padlock at the top right enables the controls; after 60 seconds without input it locks itself again. This is meant for dashboards that stay open permanently on a tablet or second monitor.
-
-### What you can set
-
-All settings go to the Controller and take effect on its next control cycle.
-
-| Control | Effect | Range |
-|---|---|---|
-| **Setpoint** | Target value for the grid draw. Negative = feed in a little, positive = draw a little. | −40 to +40 W |
-| **Fixed discharge** | Fixed discharge power instead of control, for all batteries together. `0` = off, normal control. | 0 or from `dischargeStartupPower` |
-| **Discharge allowed** | May this battery supply the house? If the watchdog has locked discharging because of undervoltage, the switch is off and has to be switched on again by hand ([discharge lock](readme_EN.md#discharge-lock-on-undervoltage)). | on/off |
-| **Charging from grid allowed** | May this battery absorb surplus from the grid? | on/off |
-| **Reserve (min. SoC)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. On touch devices the slider has its own small padlock next to the value and only reacts to dragging the knob, so it is not changed by accident. | 10 % up to 1 % below the lower of charge target (`maxSoc`) and the charge limit set on the device (`socSet`) |
-| **Manual charging** | Charges this battery from the grid with the selected power until you stop it or the battery is full. | 0 to `maxInputPower` |
-
-**Manual charging** consists of two parts: the slider only selects the power, the button below starts or stops charging. On start, the dashboard switches "Discharge allowed" and "Charging from grid allowed" off for this battery; on stop it restores the previous state. When the battery is full, the script ends charging by itself ([auto-stop](readme_EN.md#manual-charging-and-auto-stop)). If the process is interrupted halfway (Shelly not reachable), a warning appears – then check the battery's card.
-
-After an input, the respective control is locked for 4 seconds so that nothing is triggered twice.
-
-Not changeable in the dashboard are the **hysteresis** (only shown next to the setpoint) and the **charge target** (`maxSoc`). You set both in the Configurator or in the CONFIG block.
-
-### What the display shows
-
-- **Top:** grid balance and sum of the batteries, each with a small history curve of the last 2 minutes. The two curves have different scales. After reloading the page they start from scratch.
-- **Next to the setpoint** is the hysteresis: the grid draw may deviate this far before the Controller readjusts.
-- **One card per battery** with:
-  - state of charge and below it the operating window, e.g. `SoC · 15–100 %` (reserve to charge target)
-  - power, PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell voltage – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "min 3.31 V (lock < 2.90 V)", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
-  - notes when something different is set on the device than in the configuration: `socSet` (upper charge limit on the device) differs from `maxSoc`, or `minSoc` on the device differs from the reserve in the KVS. Usually the value was changed externally (app, Home Assistant). Tapping explains the remedy.
-  - "100 %: N days ago" – when the battery was last completely full ([more on this](readme_EN.md#last-full-charge))
-  - raw status `acMode`, `socLimit`, `gridReverse`. This explains the most common "Why is the battery doing nothing?" cases: `socLimit 1` = battery full, charging blocked; `socLimit 2` = discharging blocked; `gridReverse 2` = feed-in blocked.
-- **Footer:** versions of page and script. Yellow if they do not match.
-
-The page refreshes the measurements every 4 seconds. Settings changed by someone else (e.g. via Home Assistant) appear after about half a minute at the latest.
-
-### Buttons at the top right
-
-| Button | Effect |
-|---|---|
-| 🔒 Padlock | enable / lock the controls |
-| DE/EN/FR | switch language (default: browser language) |
-| Light/Dark | day or night view. Without switching, the page follows the device setting. |
-| A | font size in three levels: Normal, Large (default), Extra large |
-| ⛶ | full screen (only if the browser supports it) |
-
-Technical details on polling rate, interface and value ranges are in the [API description](API.md) (German).

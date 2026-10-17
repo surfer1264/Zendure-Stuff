@@ -2,15 +2,15 @@
 
 ## Changelog 3.5.9
 
+- Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile
+- Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)
 - Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub
 - Fußzeile: config_api und status_api sind anklickbar (Rohdaten als JSON im neuen Tab)
 - Fußzeile: Links „Cloud-Upload einrichten: ThingSpeak · ThingsBoard“ auf die Einrichtungsseiten des Proxys
-- Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile
-- Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)
-- Proxy: Einrichtungsseite, ThingSpeak- und ThingsBoard-Seite verwenden relative Pfade (Link „← Dashboard“, Abrufe) – funktioniert damit auch hinter einem Pfad-Präfix (z. B. Home-Assistant-Ingress)
 - status_api liefert je Hub zusaetzlich `temp` (Geraetetemperatur in ganzen °C aus `hyperTmp`: (hyperTmp - 2731) / 10, gerundet) und `offGrid` (Leistung am Offgrid-Ausgang in W aus `gridOffPower`, `null` = kein Offgrid-Ausgang)
 - Dashboard: Zusatzzeile der Geraetekarte zeigt Offgrid-Leistung und Temperatur, z. B. "PV 420 W · Offgrid 0 W · 19 °C · min 3,28 V"
 - Dashboard: Versionsnummer 3.5.9
+- **Proxy:** Einrichtungsseite, ThingSpeak- und ThingsBoard-Seite verwenden relative Pfade (Link „← Dashboard“, Abrufe) – funktioniert damit auch hinter einem Pfad-Präfix (z. B. Home-Assistant-Ingress)
 - https://github.com/surfer1264/Zendure-Stuff/issues/138
 
 ## Changelog 3.5.8
