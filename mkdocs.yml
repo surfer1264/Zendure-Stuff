@@ -156,6 +156,8 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.highlight
   - pymdownx.inlinehilite
+  # nackte URLs (z. B. Issue-Links in den Changelogs) klickbar wie auf GitHub
+  - pymdownx.magiclink
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.emoji:

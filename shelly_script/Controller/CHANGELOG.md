@@ -22,7 +22,8 @@ Keine Änderung am CONFIG-Block nötig.
 
 ## v5.1.8
 
--**Dämpfung nur noch in eine Richtung:** In Richtung „weniger Export“ reagiert der Controller sofort, ohne `dampingFactor`:
+**Dämpfung nur noch in eine Richtung:** In Richtung „weniger Export“ reagiert der Controller sofort, ohne `dampingFactor`:
+
 - Entladen wird sofort zurückgenommen, wenn die Last sinkt.
 - Laden wird sofort erhöht, wenn der PV-Überschuss steigt.
 - Die Gegenrichtung (mehr entladen, weniger laden) bleibt wie bisher gedämpft. Dort gibt es kurz Netzbezug statt Einspeisung.
@@ -38,14 +39,14 @@ Nur Konsolenausgaben gekürzt. Keine Änderung an Regelung, Verteilung,
 Schreibvorgängen, Fehlerbehandlung oder Benachrichtigungsinhalten.
 
 - socLimit-Wechsel: drei Meldungen zu einer zusammengefasst,
-  Format "<Label>: socLimit 0->1 (Ladesperre|Entladesperre|normal)"
+  Format `<Label>: socLimit 0->1 (Ladesperre|Entladesperre|normal)`
 - socStatus-Wechsel: eine Meldung,
-  "<Label>: socStatus 1 (Kalibrierung, aus Verteilung)" / "socStatus 0 (Kalibrierung beendet)"
+  `<Label>: socStatus 1 (Kalibrierung, aus Verteilung)` / `socStatus 0 (Kalibrierung beendet)`
 - maxSoc: "maxSoc erreicht (soc/maxSoc%)" bzw. "unter maxSoc (soc/maxSoc%)"
 - Sparmodus: "Sparmodus an: N Zyklen ohne Geraete-Poll" /
   "Sparmodus aus (Hysterese/Richtung)" (Hysterese/cyclesUnchanged nur noch im Banner)
 - Bypass-Korrektur: "Bypass-Korrektur: X W umverteilt"
-- Ausgleich: "Ausgleich -> <Label> (+N%)"
+- Ausgleich: `Ausgleich -> <Label> (+N%)`
 - Benachrichtigungen: neuer gemeinsamer Ergebnis-Callback msgResult(typ) für
   WEBHOOK/SIGNAL/WHATSAPP; "Sende ..."-Zeilen entfernt; Ausgabe nennt jetzt
   den tatsächlichen Kanal (vorher bei WhatsApp fälschlich "Signal-Nachricht")
@@ -62,7 +63,6 @@ Schreibvorgängen, Fehlerbehandlung oder Benachrichtigungsinhalten.
 - https://github.com/surfer1264/Zendure-Stuff/issues/125
 - Startmeldung ergänzt
 - gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird.
-
 
 ## Changelog 5.1.4
 
@@ -166,12 +166,12 @@ Speicheroptimierung (mem_peak im Regelbetrieb 19 880 -> 19 026 Bytes)
 Bei `standbySmartModeZero: false` (Standard) ist das Verhalten unverändert.
 
 Mit `standbySmartModeZero: true`
-wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird 
+wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird
 
 `standbySmartModeZero: true` ist grundsätzlich nicht empfohlen.
 Es gibt Geräte, die nicht sauber in den (echten) Standby wechseln und latent z.B: 20W einspeisen oder laden
 
-Diese Anpassung sorgt dafür, dass ein Pendeln um den Nullpunkt nicht zu einem latenten Flash-Schreiben führt, sondern erst nach einer Wartezeit (15 Takte = 1 Minute) zu einem Standby führt. 
+Diese Anpassung sorgt dafür, dass ein Pendeln um den Nullpunkt nicht zu einem latenten Flash-Schreiben führt, sondern erst nach einer Wartezeit (15 Takte = 1 Minute) zu einem Standby führt.
 
 ## Changelog 5.0.7
 
@@ -180,7 +180,7 @@ Manuelle Kalibrierung wird über `socStatus` gemeldet
 
 Gerät wird aus der Verteilung herausgenommen.
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/107
+- https://github.com/surfer1264/Zendure-Stuff/issues/107
 
 ## Changelog 5.0.6
 
@@ -194,17 +194,17 @@ Die Regelung wird damit deaktiviert und nur der fixe Wert geliefert
 `CONFIG.dischargeFixed ≥ dischargeStartupPower` : Regelung deaktiviert, System gibt `dischargeFixed` aus
 nur als KVS-Wert verfügbar wenn kvsEnabled: true
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/103
+- https://github.com/surfer1264/Zendure-Stuff/issues/103
 
 ## Changelog 5.0.4
 
 Bug: manuelles Laden startet nur sporadisch
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/104
+- https://github.com/surfer1264/Zendure-Stuff/issues/104
 
 ## Changelog 5.0.2
 
-Entprellung Concentrate => Above 
+Entprellung Concentrate => Above
 
 Beispiel:
 ein kurzer Lastimpuls (Kühlschrank-Kompressor: 1500 W) soll nicht zu einer Zuschaltung von weiteren Geräten führen...
@@ -221,7 +221,7 @@ doppelte Verifikation gelöscht
 
 ## Changelog 4.2.3 / 4.3.0
 
-Nur interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%) 
+Nur interne Speicheroptimierung, zur Laufzeit 1kB gespart ( das sind knapp 10%)
 
 ## Changelog 4.2.2
 
@@ -230,19 +230,19 @@ adressiert das Verhalten von mehr als zwei Solarflows im selektiven Bypass-Fall
 
 Hier geht es um die korrekte Berücksichtigung Ihres Anteils unter Berücksichtigung verschiedener Fallgruppen.
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/80
-* https://github.com/surfer1264/Zendure-Stuff/issues/81
+- https://github.com/surfer1264/Zendure-Stuff/issues/80
+- https://github.com/surfer1264/Zendure-Stuff/issues/81
 
 ## Changelog  4.2.1
 
-* https://github.com/surfer1264/Zendure-Stuff/issues/87
+- https://github.com/surfer1264/Zendure-Stuff/issues/87
 
 4.2.1 - idleSkip nutzt jetzt `CONFIG.hysteresis` als Toleranzband um den
 zuletzt geschriebenen Wert (ds.outputLimit) statt exakter
 Signaturgleichheit.. Richtungswechsel (Export vs.
 Idle/Import) zaehlt weiterhin immer als Aenderung.
 
-Adaptive Polling: NEUER PARAMETER  (`CONFIG.idleSkip`) eingefuehrt: 
+Adaptive Polling: NEUER PARAMETER  (`CONFIG.idleSkip`) eingefuehrt:
 reduziert HTTP-Last auf die Zendure-Geraete, wenn der Regel-Output ueber
 mehrere Zyklen stabil bleibt. Netzmessung laeuft davon
 unberuehrt weiterhin jeden Zyklus (readGridPower unveraendert).
@@ -267,16 +267,16 @@ Es sind Kürzungen von bis zu 50% möglich.
 **NEU in 4.0.0**
 socMin kann per KVS Zugriff ohne Neustart des Scriptes geändert werden und wird direkt auf den Solarflow synchronisiert
 
-## CHANGELOG 3.2.1 
+## CHANGELOG 3.2.1
 
 Bugfix in calculate(): die "excessSocLimit1"-Korrektur wurde aus der
 Ladeziel-Berechnung (rawCharge) entfernt.
-Problem: ein nicht volles Geraet wurde mit etwa der doppelten sinnvollen Leistung geladen, waehrend 
+Problem: ein nicht volles Geraet wurde mit etwa der doppelten sinnvollen Leistung geladen, waehrend
 gleichzeitig ein anderes (volles) Geraet entlud - Nettoeffekt: ein dauerhafter, ungedeckter Netzbezug trotz vorhandener Kapazitaet.
 
 ## Changelog 3.2.0
 
-Der Konfigurator: 
+Der Konfigurator:
 
 [Konfigurator](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zendure-config-wizard.html)
 
@@ -289,21 +289,21 @@ Vorher (3.1.1): Boolean `immerBypass:` false. false = dynamische Fleet-Sperrlogi
 Jetzt (3.2.0): String-Enum `gridReverseMode`: "dynamic" mit drei Werten:
 
 "dynamic" – wie bisher immerBypass: false; Netzexport ist so lange erlaubt wie Geräte per AC Ladebedarf haben, wenn alle Geräte socLimit: 1 (Akkus voll) melden, dann wird `grid_revers:2` gesetzt und der Export von Energie verboten  (automatische Sperre/Freigabe pro Zyklus über updateGridReverseLock()). mit `chargeResetMargin`wird die Sperre aufgehoben
-"always1" – beim Start wird `gridReverse: 1` fix geschrieben (Netzexport dauerhaft erlaubt), die dynamische Logik läuft nicht 
+"always1" – beim Start wird `gridReverse: 1` fix geschrieben (Netzexport dauerhaft erlaubt), die dynamische Logik läuft nicht
 "always2" – neu, gab es vorher gar nicht: beim Start wird `gridReverse: 2` fix geschrieben (Netzexport dauerhaft verboten).
-
 
 Auswirkung: Fein granularere Kontrolle beim Start – vorher konnte man den gridReverse-Wert beim Start nur "automatisch" oder "immer erlaubt" setzen, jetzt zusätzlich auch dauerhaft "immer verboten" fest vorgeben, ohne die dynamische Logik zu nutzen.
 
-* Bypass immer erlauben (always1)
-* Bypass immer verbieten (always2)
-* Bypass dynamisch setzen/verbieten (dynamic)
+- Bypass immer erlauben (always1)
+- Bypass immer verbieten (always2)
+- Bypass dynamisch setzen/verbieten (dynamic)
 
 ## Changelog 3.1.1
 
 Bezugnahme ist
-* https://github.com/surfer1264/Zendure-Stuff/issues/80
-* https://github.com/surfer1264/Zendure-Stuff/issues/81
+
+- https://github.com/surfer1264/Zendure-Stuff/issues/80
+- https://github.com/surfer1264/Zendure-Stuff/issues/81
 
 Der Konfigurationsparamteer `revers: true/false`steuert die AC-Ladefähigkeit der Solarflow im Controller.
 
@@ -323,9 +323,10 @@ Es wird nicht nur die Entladeleistung gliefert sondern der gesamte PV-Überschus
 ### Neu: Zustandserkennung beim Start
 
 **Problem:** In einem Testfall war `gridRevers: 2` (Exportsperre aktiv). Nach Scriptstart wurde die Sperre nicht aufgehoben, obwohl alle Voraussetzungen erfüllt waren.
-* In `syncSocLimitsDevice()` (einmalig beim Boot) wird jetzt geprüft: `if (data.properties && data.properties.gridReverse === 2) state.allMaxedLogged = true;`
-* Damit erkennt der Controller nach einem Neustart sofort, wenn ein Gerät bereits mit `gridReverse: 2` (Netzexport verboten) läuft, statt diesen Zustand erst nach einer vollen Regelrunde (Stunden später) neu herzuleiten.
-* Defacto wird die Prüfung durch Setzen des Status `state.allMaxedLogged = true` quasi erzwungen.
+
+- In `syncSocLimitsDevice()` (einmalig beim Boot) wird jetzt geprüft: `if (data.properties && data.properties.gridReverse === 2) state.allMaxedLogged = true;`
+- Damit erkennt der Controller nach einem Neustart sofort, wenn ein Gerät bereits mit `gridReverse: 2` (Netzexport verboten) läuft, statt diesen Zustand erst nach einer vollen Regelrunde (Stunden später) neu herzuleiten.
+- Defacto wird die Prüfung durch Setzen des Status `state.allMaxedLogged = true` quasi erzwungen.
 
 ## Fazit
 
@@ -346,8 +347,9 @@ Ein Neustart kann das beheben.
 
 **Wichtig** Im laufenden Betrieb des Controllers findet KEINE Synchronisation von Einstellugnen statt mit dem Solarflow statt.
 
-Bezugnahme ist 
-* https://github.com/surfer1264/Zendure-Stuff/issues/80
+Bezugnahme ist
+
+- https://github.com/surfer1264/Zendure-Stuff/issues/80
 
 Es is kein Fix im eigentlichen Sinne, der Zustand bildet sich im Controller automatisch über die Zeit korrekt ab.
 
@@ -360,7 +362,8 @@ Es is kein Fix im eigentlichen Sinne, der Zustand bildet sich im Controller auto
 **Grund:** Die Freigabe hing zuvor an chargeTarget < 0 – bei aktiver Export-Sperre wird jedoch im Zweifel kein Ladebefehl mehr ausgelöst (nur durch starkes Überschwingen an der Regelung), wodurch dieser Zweig nicht deterministisch erreicht wird, sondern eher zufällig. Der Discharge-Zweig läuft dagegen zuverlässig, solange Haushaltslast gedeckt wird. Beide Zweige behalten ihren Flankenschutz (state.allMaxedLogged).
 
 Fixed:
-* https://github.com/surfer1264/Zendure-Stuff/issues/79
+
+- https://github.com/surfer1264/Zendure-Stuff/issues/79
 
 httpTimeOut: 3 (vorher 5)
 
@@ -375,23 +378,23 @@ Dokumentation aktualisiert
 
 Logzeile:
 
-`  SF2400: SOC 45% | socL 0 | gridR 2 | Ist 195 W | Soll 195 W | acMode 2 (Export)`
+`SF2400: SOC 45% | socL 0 | gridR 2 | Ist 195 W | Soll 195 W | acMode 2 (Export)`
 
 Zweck: `grid_Reverse` ist eine Geräte-Property, die steuert, ob das Zendure-Gerät (Überschuss-)Energie exportieren darf.
 
 Werte, die der Controller selbst setzt:
 
-- Wert 1:	Export erlaubt/aktiviert	
+- Wert 1: Export erlaubt/aktiviert
   - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593), dauerhaft freigegeben, danach nie wieder verändert.
   - b) wenn nach einer Vollsperre (allMaxed) mind. ein Gerät wieder klar unter seinem maxSoc − chargeResetMargin liegt (clearlyBelow) – nur bei `immerBypass: false`
-- Wert 2:	Export gesperrt	wenn alle Geräte ihren maxSoc erreicht haben (allMaxed) – nur bei `immerBypass: false`, um unnötigen Export zu verhindern.
+- Wert 2: Export gesperrt, wenn alle Geräte ihren maxSoc erreicht haben (allMaxed) – nur bei `immerBypass: false`, um unnötigen Export zu verhindern.
 
 Wenn `immerBypass: true` findet kein aktives Schreiben oder Initalisieren dieses Wertes statt.
 
 ## Changelog 2.4.4
 
-* CONFIG.httpTimeout als Parameter entfernt (wird im Code hhtpGet und httpPost als fester Wert mitgegeben)) 
-* CONFIG.watchdog wird als abgeleiteter Wert von intervall (Faktor 2.5) definiert und ist nicht mehr veränderbar
+- CONFIG.httpTimeout als Parameter entfernt (wird im Code hhtpGet und httpPost als fester Wert mitgegeben))
+- CONFIG.watchdog wird als abgeleiteter Wert von intervall (Faktor 2.5) definiert und ist nicht mehr veränderbar
 
 ## Changelog 2.4.3
 
@@ -400,14 +403,15 @@ Feature Toggle `compensateSocLimitExcess`entfernt...keine Funktionsänderung
 ## Changelog 2.4.2
 
 **Geändert (Defaults)**
-* `compensateSocLimitExcess`: Default von false auf true geändert.
-* `hysteresis`: Default von 10 auf 12 W erhöht.
-* `dampingFactor`: Default von 0.6 auf 0.65 erhöht.
-* Grid-Log gerundet: Die Log-Zeile Grid: ... W gibt state.gridPower jetzt gerundet aus (Math.round(...)) statt mit Nachkommastellen.
+
+- `compensateSocLimitExcess`: Default von false auf true geändert.
+- `hysteresis`: Default von 10 auf 12 W erhöht.
+- `dampingFactor`: Default von 0.6 auf 0.65 erhöht.
+- Grid-Log gerundet: Die Log-Zeile Grid: ... W gibt state.gridPower jetzt gerundet aus (Math.round(...)) statt mit Nachkommastellen.
 
 **Neu hinzugefügt**
-* Neue Banner-Zeile beim Start: Bypass immer erlauben: aktiviert/deaktiviert.
 
+- Neue Banner-Zeile beim Start: Bypass immer erlauben: aktiviert/deaktiviert.
 
 ## Changelog 2.4.0
 
@@ -435,7 +439,7 @@ Nicht per KVS live-überschreibbar: immerBypass/chargeResetMargin sind reine CON
 
 **Problem**: Wenn in einer MultiDevice-Konfig ein Gerät bereits auf 100% (Bypass) stand, wurde der Überschuss genau dieses Gerätes nicht mehr aktiv auf die verbleibenden Geräte aufgeteilt
 
-**Änderung** Feature-Toggle compensateSocLimitExcess (neuer CONFIG-Schalter, Default: true). 
+**Änderung** Feature-Toggle compensateSocLimitExcess (neuer CONFIG-Schalter, Default: true).
 Kompensiert beim Laden (rawCharge) die Leistung von Geräten, die socLimit === 1 melden und ein outputLimit gesetzt haben: der Überschuss (zenPower - outputLimit, wenn > 0) wird über alle betroffenen Geräte aufsummiert (excessSocLimit1) und von rawCharge abgezogen.
 Alt: rawCharge = round((gridPower - setpoint) + sumZenReverse)
 Neu: rawCharge = round((gridPower - setpoint) + sumZenReverse - excessSocLimit1)
@@ -446,17 +450,19 @@ kann deaktiviert werden, der FIx wird dadurch deaktiviert
 ### Konstellationen mit ≥2 reverse:true-Geräten (mit eigener PV)
 
 **Problem**
+
 - keine Überschussverarbeitung in PV-enabled Geräten
 - Betrifft Konstellationen mit ≥2 `reverse:true`-Geräten, bei denen mindestens eines direkt angeschlossene PV-Module hat.
 - `sumZenReverse` schloss Geräte mit `socLimit === 1` (Laden vom Netz gesperrt) bisher nicht aus. Dadurch konnte die unsteuerbare, PV-erzwungene Weiterausspeisung eines an seiner SOC-Grenze blockierten Speichers einen echten Ladebedarf bei anderen, noch ladefähigen Geräten maskieren – der Regler berechnete fälschlich weiter einen positiven Entlade-Zielwert, statt Laden auszulösen.
 
-
 **Änderung**
+
 - `calculate()`: `sumZenReverse` prüft zusätzlich `state.devices[i].socLimit !== 1`, analog zur bereits bestehenden Filterung in `computeChargeWeights()`.
 - Fetaure Toggle `compensateSocLimitExcess`
 
 **Adressierte Bugs:**
-* https://github.com/surfer1264/Zendure-Stuff/issues/69
+
+- https://github.com/surfer1264/Zendure-Stuff/issues/69
 
 ## Changelog 2.3.1
 
@@ -467,16 +473,19 @@ kann deaktiviert werden, der FIx wird dadurch deaktiviert
 **Sonst nichts geändert:** `concentrateBelow`/`spreadAbove`, SOC-Balancing, Cooldown, socLimit-Handling, KVS-Logik – alles 1:1 wie in 2.3.0. Bei einer reinen "alle Geräte `reverse:true`"-Flotte ist `sumZenReverse === sumZen`, also verhält sich 2.3.1 dort exakt wie 2.3.0 (kein Regressionsrisiko).
 
 **Adressierte Bugs:**
-* https://github.com/surfer1264/Zendure-Stuff/issues/56
-* https://github.com/surfer1264/Zendure-Stuff/issues/52
+
+- https://github.com/surfer1264/Zendure-Stuff/issues/56
+- https://github.com/surfer1264/Zendure-Stuff/issues/52
 
 1. **Neue Variable `sumZenReverse`** – zählt beim Einlesen der Geräte zusätzlich zur bisherigen `sumZen` (alle Geräte) eine zweite Summe **nur** für Geräte mit `reverse:true`.
 
 2. **Zwei getrennte Zielsignale statt einem:**
+
    ```js
    dischargeTarget = gridPower + sumZen          // wie bisher, unveraendert
    chargeTarget     = gridPower + sumZenReverse   // NEU
    ```
+
    Dazu eine zweite, eigene Glättung (`state.smoothedCharge` statt nur `state.smoothedOutput`).
 
 3. **`calculate()` berechnet jetzt beide Pools im selben Zyklus** statt sich per `if/else` für genau eine Richtung zu entscheiden:
@@ -492,11 +501,12 @@ kann deaktiviert werden, der FIx wird dadurch deaktiviert
 
 **Hintergrund**: Seicher zur Laufzeit sparen
 
-Lasttests zeigen aber Lauffähigkeit auf 
-* Shelly 3EM Pro
-* Shelly 3EM-63
-* Shelly 1PM Gen4
-* Shelly Plus1PM (Gen2?)
+Lasttests zeigen aber Lauffähigkeit auf
+
+- Shelly 3EM Pro
+- Shelly 3EM-63
+- Shelly 1PM Gen4
+- Shelly Plus1PM (Gen2?)
 
 3.0.1 entspricht ansonsten inhaltlich der 2.3.0
 
