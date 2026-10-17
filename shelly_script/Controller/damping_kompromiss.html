@@ -117,6 +117,9 @@
   .tile .lbl { font-size: 13px; color: var(--muted); }
   .tile .big { font-size: 44px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .tile .sub { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+  .intro { margin: 0 0 14px; font-size: 14px; color: var(--text-2); }
+  .tile .cfg { margin-top: 8px; font-size: 13px; color: var(--text-2); }
+  .tile .cfg code { font-size: 13px; color: var(--text); }
   .tile .robust { margin-top: 10px; font-size: 13px; color: var(--text-2); }
   .tile .robust b { color: var(--text); }
 
@@ -225,22 +228,24 @@
         <dt>nur Testtag 1, 2 oder 3</dt>
         <dd>Rechnet mit den Werten eines einzelnen Tages. So siehst du, wie stark das Ergebnis vom Tag abhängt.</dd>
       </dl>
-      <p>Die Zeile „Sieger je Testtag“ im Ergebnis nutzt immer alle 3 Tage, unabhängig von dieser Auswahl.</p>
+      <p>Die Zeile „Bester dampingFactor je Testtag“ im Ergebnis nutzt immer alle 3 Tage, unabhängig von dieser Auswahl.</p>
     </details>
   </section>
 
   <section class="card">
-    <h2>2. Ergebnis</h2>
+    <h2>2. Ergebnis: empfohlener dampingFactor</h2>
+    <p class="intro">Bewertet werden die 4 Werte, die du im Skript für <code>dampingFactor</code> einstellen kannst: 0.4, 0.5, 0.65 und 0.8. Der Wert mit den meisten Punkten passt am besten zu deinen Prioritäten.</p>
     <div class="result">
       <div class="tile">
-        <div class="lbl">Empfehlung</div>
+        <div class="lbl">Empfohlener <code>dampingFactor</code></div>
         <div class="big" id="winVal">–</div>
         <div class="sub" id="winScore"></div>
+        <div class="cfg" id="winCfg"></div>
         <div class="robust" id="robust"></div>
       </div>
       <div class="chart" id="chart">
-        <div class="ttl">Punkte je Damping-Wert (0 bis 100, höher ist besser)</div>
-        <svg id="svg" viewBox="0 0 640 260" role="img" aria-label="Punkte je Damping-Wert"></svg>
+        <div class="ttl">Punkte je <code>dampingFactor</code> (0 bis 100, höher ist besser)</div>
+        <svg id="svg" viewBox="0 0 640 260" role="img" aria-label="Punkte je dampingFactor"></svg>
         <div class="tip" id="tip"></div>
       </div>
     </div>
@@ -426,14 +431,14 @@
   var svg = document.getElementById("svg");
   var tip = document.getElementById("tip");
   var chartEl = document.getElementById("chart");
-  var W = 640, H = 260, M = { l: 36, r: 8, t: 22, b: 30 };
+  var W = 640, H = 260, M = { l: 36, r: 8, t: 22, b: 46 };
   var last = null;
 
   function draw(rows, sc, win) {
     var ns = "http://www.w3.org/2000/svg";
     last = [rows, sc, win];
     W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 640);
-    H = W < 500 ? 220 : 260;
+    H = W < 500 ? 236 : 276;
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
     while (svg.firstChild) svg.removeChild(svg.firstChild);
     var iw = W - M.l - M.r, ih = H - M.t - M.b;
@@ -449,6 +454,10 @@
       tx.setAttribute("text-anchor", "end"); tx.setAttribute("class", "tick");
       tx.textContent = t; svg.appendChild(tx);
     });
+    var ax = document.createElementNS(ns, "text");
+    ax.setAttribute("x", M.l + iw / 2); ax.setAttribute("y", H - 6);
+    ax.setAttribute("text-anchor", "middle"); ax.setAttribute("class", "tick");
+    ax.textContent = "dampingFactor"; svg.appendChild(ax);
     var slot = iw / rows.length, bw = Math.min(64, slot * 0.56);
     rows.forEach(function (r, i) {
       var cx = M.l + slot * i + slot / 2;
@@ -467,7 +476,7 @@
       vl.setAttribute("text-anchor", "middle"); vl.setAttribute("class", "vlabel");
       vl.textContent = Math.round(v); g.appendChild(vl);
       var xl = document.createElementNS(ns, "text");
-      xl.setAttribute("x", cx); xl.setAttribute("y", H - 10);
+      xl.setAttribute("x", cx); xl.setAttribute("y", H - M.b + 18);
       xl.setAttribute("text-anchor", "middle"); xl.setAttribute("class", "xlabel");
       xl.textContent = fmtD(r.d) + (i === win ? " ★" : ""); g.appendChild(xl);
       // Trefferfläche größer als der Balken
@@ -484,7 +493,7 @@
   }
   function showTip(e, r, v) {
     var q = qualityEl.value;
-    tip.innerHTML = '<div class="h">Damping ' + fmtD(r.d) + ' · ' + Math.round(v) + ' Punkte</div><table>' +
+    tip.innerHTML = '<div class="h">dampingFactor ' + fmtD(r.d) + ' · ' + Math.round(v) + ' Punkte</div><table>' +
       '<tr><td>' + QLABEL[q] + '</td><td>' + de(r[q], 1) + ' %</td></tr>' +
       '<tr><td>Export</td><td>' + de(r.export, 2) + ' kWh</td></tr>' +
       '<tr><td>Netzbezug</td><td>' + de(r.bezug, 2) + ' kWh</td></tr>' +
@@ -509,7 +518,7 @@
     { k: "writes", t: "Schreibvorg.", n: 0, u: "", hi: false }
   ];
   function drawTable(rows, win) {
-    var html = "<thead><tr><th>Damping</th>" + COLS.map(function (c) { return "<th>" + c.t + "</th>"; }).join("") + "</tr></thead><tbody>";
+    var html = "<thead><tr><th>dampingFactor</th>" + COLS.map(function (c) { return "<th>" + c.t + "</th>"; }).join("") + "</tr></thead><tbody>";
     var best = {};
     COLS.forEach(function (c) {
       if (c.info) return;
@@ -536,13 +545,13 @@
     var order = sc.map(function (v, i) { return i; }).sort(function (a, b) { return sc[b] - sc[a]; });
     var second = order[1], gap = sc[win] - sc[second];
     if (gap < 3) {
-      items.push("Knapp: " + fmtD(rows[second].d) + " liegt nur " + de(gap, 1) + " Punkte dahinter. Beide Werte passen etwa gleich gut.");
+      items.push("Knapp: dampingFactor " + fmtD(rows[second].d) + " liegt nur " + de(gap, 1) + " Punkte dahinter. Beide Werte passen etwa gleich gut.");
     }
     [win - 1, win + 1].forEach(function (j) {
       if (j < 0 || j >= rows.length) return;
       var o = rows[j];
       var dq = r[q] - o[q], dex = r.export - o.export, dbz = r.bezug - o.bezug, dw = (r.writes - o.writes) / o.writes * 100;
-      items.push("Gegenüber " + fmtD(o.d) + ": Regelgüte " + (dq >= 0 ? "+" : "") + de(dq, 1) + " Punkte, Export " +
+      items.push("Gegenüber dampingFactor " + fmtD(o.d) + ": Regelgüte " + (dq >= 0 ? "+" : "") + de(dq, 1) + " Punkte, Export " +
         (dex >= 0 ? "+" : "") + de(dex, 2) + " kWh, Netzbezug " + (dbz >= 0 ? "+" : "") + de(dbz, 2) +
         " kWh, Schreibvorgänge " + (dw >= 0 ? "+" : "") + de(dw, 0) + " %.");
     });
@@ -559,6 +568,7 @@
     if (wsum === 0) {
       document.getElementById("winVal").textContent = "–";
       document.getElementById("winScore").textContent = "Mindestens einen Regler über 0 stellen.";
+      document.getElementById("winCfg").innerHTML = "";
       document.getElementById("robust").textContent = "";
       document.getElementById("why").innerHTML = "";
       draw(rows, sc, -1); drawTable(ALL[basis], -1);
@@ -566,11 +576,12 @@
     }
     document.getElementById("winVal").textContent = fmtD(rows[win].d);
     document.getElementById("winScore").textContent = Math.round(sc[win]) + " von 100 Punkten";
+    document.getElementById("winCfg").innerHTML = "Im CONFIG-Block:<br><code>dampingFactor: " + fmtD(rows[win].d) + ",</code>";
 
     var perSeed = ["1", "2", "3"].map(function (s) { return DATA[s][winnerIdx(score(DATA[s]))].d; });
     var stable = perSeed.every(function (d) { return d === perSeed[0]; });
     document.getElementById("robust").innerHTML =
-      "Sieger je Testtag: <b>" + perSeed.map(fmtD).join(" / ") + "</b><br>" +
+      "Bester dampingFactor je Testtag: <b>" + perSeed.map(fmtD).join(" / ") + "</b><br>" +
       (stable ? "Stabil über alle Testtage." : "Nicht an allen Testtagen gleich. Nachbarwerte sind ähnlich gut.");
 
     draw(rows, sc, win);
