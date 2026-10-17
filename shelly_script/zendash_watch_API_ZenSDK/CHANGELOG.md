@@ -5,6 +5,7 @@
 - ThingsBoard-Upload: Werte je Speicher auf `/thingsboard` per Häkchen auswählbar, für alle Speicher gemeinsam; gespeichert als `fields` in `zendure_thingsboard_config.json`. Ohne `fields` (ältere Konfiguration) bleiben die bisherigen sieben Werte
 - ThingsBoard-Upload: neue Werte `batteryPower` (berechnet `packIn` − `packOut`, + = Akku entlädt, − = Akku lädt) und `offGridPower` (Leistung am Offgrid-Ausgang), standardmäßig aus
 - ThingSpeak-Upload unverändert
+- Fehlerbehebung Cloud-Upload: Wurde der Upload aus- und gleich wieder eingeschaltet, während gerade gesendet oder abgefragt wurde, lief danach kein Upload mehr bis zum Neustart des Proxys. Jeder Takt-Thread hat jetzt ein eigenes Stopp-Signal
 - Home-Assistant-App-Version 3.5.9.2
 
 ## Changelog 3.5.9

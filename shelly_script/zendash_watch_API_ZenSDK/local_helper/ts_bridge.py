@@ -89,7 +89,8 @@ def _err(tag, msg):
 
 
 _lock = threading.Lock()
-_stop = threading.Event()
+_stop = threading.Event()  # Stopp-Signal des aktuellen Takt-Threads; jeder
+                           # Thread bekommt ein eigenes (siehe _apply)
 _thread = None
 _fetch = None
 _dir = None
@@ -259,14 +260,14 @@ def _ts_fields(data):
     return out
 
 
-def _ts_send(data, stamp):
+def _ts_send(data, stamp, stop):
     fields_by_hub = _ts_fields(data)
     created = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(stamp))
     for hid, key in list(TS["channels"].items()):
         fields = dict(fields_by_hub.get(hid) or {"status": "keine Daten"})
         fields["created_at"] = created
         ok, ans = _ts_post(key, fields)
-        if not ok and not _stop.wait(RETRY_S):
+        if not ok and not stop.wait(RETRY_S):
             ok, ans = _ts_post(key, fields)
         if ok:
             _log("thingspeak", "Hub {} {} gesendet (Eintrag {})".format(hid, created, ans))
@@ -310,7 +311,7 @@ def _tb_values(data):
     return out
 
 
-def _tb_send(data, stamp):
+def _tb_send(data, stamp, stop):
     values = _tb_values(data)
     host = TB["host"]
     ts_ms = int(stamp * 1000)
@@ -323,7 +324,7 @@ def _tb_send(data, stamp):
             continue
         payload = {"ts": ts_ms, "values": v}
         ok, ans = _tb_post(host, token, "telemetry", payload)
-        if not ok and not _stop.wait(RETRY_S):
+        if not ok and not stop.wait(RETRY_S):
             ok, ans = _tb_post(host, token, "telemetry", payload)
         if ok:
             _log("thingsboard", "{} {} gesendet ({} Wert{})".format(name, created, len(v), "" if len(v) == 1 else "e"))
@@ -334,27 +335,27 @@ def _tb_send(data, stamp):
 # ---------------------------------------------------------------
 # Minutentakt
 # ---------------------------------------------------------------
-def _flush(stamp):
+def _flush(stamp, stop):
     data = _take()
     senders = []
     if _ts_active():
-        senders.append(threading.Thread(target=_ts_send, args=(data, stamp), daemon=True))
+        senders.append(threading.Thread(target=_ts_send, args=(data, stamp, stop), daemon=True))
     if _tb_active():
-        senders.append(threading.Thread(target=_tb_send, args=(data, stamp), daemon=True))
+        senders.append(threading.Thread(target=_tb_send, args=(data, stamp, stop), daemon=True))
     for t in senders:
         t.start()
     for t in senders:                         # parallel, keiner bremst den anderen
         t.join(SEND_WAIT_S)
 
 
-def _fetch_fresh():
+def _fetch_fresh(stop):
     """Fallback ohne Dashboard. Jede Abfrage einzeln hinter _active()."""
     try:
         if not _active():
             return
         _log("bridge", "kein Dashboard offen - eigene Abfrage status_api (wecken)")
         feed(_fetch())                        # weckt; alter Stand wird verworfen
-        if _stop.wait(WAKE_WAIT_S) or not _active():
+        if stop.wait(WAKE_WAIT_S) or not _active():
             return
         _log("bridge", "eigene Abfrage status_api (frischer Stand)")
         feed(_fetch())
@@ -362,21 +363,21 @@ def _fetch_fresh():
         _err("bridge", "Shelly nicht erreichbar: {}".format(e))
 
 
-def _loop():
-    while not _stop.is_set():
+def _loop(stop):
+    while not stop.is_set():
         now = time.time()
         boundary = (int(now // 60) + 1) * 60
         if boundary - now < PREP_S:           # zu knapp -> naechste Minute
             boundary += 60
-        if _stop.wait(boundary - PREP_S - time.time()):
+        if stop.wait(boundary - PREP_S - time.time()):
             break
         if not _active():
             break
         if time.monotonic() - _last_live > FRESH_S:
-            _fetch_fresh()
-        if _stop.wait(max(0, boundary - time.time())) or not _active():
+            _fetch_fresh(stop)
+        if stop.wait(max(0, boundary - time.time())) or not _active():
             break
-        _flush(boundary)
+        _flush(boundary, stop)
 
 
 def _describe():
@@ -390,13 +391,19 @@ def _describe():
 
 
 def _apply():
-    """Thread an den Konfigurationszustand anpassen."""
-    global _thread
+    """Thread an den Konfigurationszustand anpassen.
+    Laeuft der Thread noch, ist aber schon gestoppt (aus und gleich wieder
+    an), endet er trotzdem; daneben startet ein neuer mit eigenem
+    Stopp-Signal. Ein gemeinsames Signal wieder zu loeschen reicht nicht:
+    Der alte Thread kann schon auf dem Weg nach draussen sein, und es
+    liefe danach keiner mehr."""
+    global _thread, _stop
     if _active():
-        if _thread is None or not _thread.is_alive():
-            _stop.clear()
+        if _thread is None or not _thread.is_alive() or _stop.is_set():
+            _stop.set()                       # alten Thread sicher beenden
+            _stop = threading.Event()
             _take()
-            _thread = threading.Thread(target=_loop, daemon=True)
+            _thread = threading.Thread(target=_loop, args=(_stop,), daemon=True)
             _thread.start()
         _log("bridge", "aktiv: " + _describe())
     else:
