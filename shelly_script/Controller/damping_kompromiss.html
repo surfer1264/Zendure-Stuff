@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Damping-Kompromiss</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+  /* Farben wie die Zendure-Stuff-Seite (Petrol + Solar-Gelb) */
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #f4f8f9;
+    --border: #dbe6e9;
+    --text: #0b1f24;
+    --text-2: #3f5459;
+    --muted: #6b7f84;
+    --primary: #0f4c5c;
+    --accent: #f2a900;
+    --link: #0e7490;
+    --bar: #9cc3cc;
+    --bar-win: #0e7490;
+    --grid: #e3ecee;
+    --baseline: #b9c9cd;
+    --row-win: #fff6dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1719;
+      --surface: #16252a;
+      --border: #24363c;
+      --text: #eef5f7;
+      --text-2: #b7c8cc;
+      --muted: #85999e;
+      --primary: #12596b;
+      --accent: #ffc23d;
+      --link: #5fd0e6;
+      --bar: #3d6f7a;
+      --bar-win: #5fd0e6;
+      --grid: #1f3238;
+      --baseline: #35505a;
+      --row-win: #2b2a17;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1719;
+    --surface: #16252a;
+    --border: #24363c;
+    --text: #eef5f7;
+    --text-2: #b7c8cc;
+    --muted: #85999e;
+    --primary: #12596b;
+    --accent: #ffc23d;
+    --link: #5fd0e6;
+    --bar: #3d6f7a;
+    --bar-win: #5fd0e6;
+    --grid: #1f3238;
+    --baseline: #35505a;
+    --row-win: #2b2a17;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.5; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 24px 16px 48px; }
+
+  header.top {
+    background: linear-gradient(90deg, #0a3540, #0f4c5c 55%, #1b6f84);
+    color: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px;
+    display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap;
+  }
+  header.top h1 { margin: 0 0 4px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+  header.top h1::after { content: ""; display: block; width: 48px; height: 4px; border-radius: 2px; background: #f2a900; margin-top: 8px; }
+  header.top p { margin: 0; color: #d5e7eb; font-size: 14px; max-width: 640px; }
+  .theme-btn {
+    font: inherit; font-size: 13px; color: #fff; background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.3); border-radius: 6px; padding: 5px 10px; cursor: pointer;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,.22); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+  h2 { font-size: 17px; font-weight: 700; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .hint { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
+
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .presets button {
+    font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-2);
+  }
+  .presets button:hover { border-color: var(--link); color: var(--text); }
+  .presets button.active { background: var(--link); border-color: var(--link); color: var(--bg); }
+
+  .sliders { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; }
+  @media (max-width: 640px) { .sliders { grid-template-columns: 1fr; } }
+  .slider label { display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
+  .slider label span.v { font-variant-numeric: tabular-nums; color: var(--link); }
+  .slider input[type=range] { width: 100%; accent-color: var(--link); margin: 6px 0 0; }
+  .slider .hint { margin-top: 0; }
+
+  .opts { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
+  .opts label { font-size: 14px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
+  select { font: inherit; font-size: 14px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+
+  .result { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 720px) { .result { grid-template-columns: 1fr; } }
+  .tile { background: var(--bg); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 10px; padding: 14px 16px; }
+  .tile .lbl { font-size: 13px; color: var(--muted); }
+  .tile .big { font-size: 44px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .tile .sub { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+  .tile .robust { margin-top: 10px; font-size: 13px; color: var(--text-2); }
+  .tile .robust b { color: var(--text); }
+
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; }
+  .chart .ttl { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .tick { fill: var(--muted); font-size: 11px; }
+  .vlabel { fill: var(--text); font-size: 12px; font-weight: 600; }
+  .xlabel { fill: var(--text-2); font-size: 12px; }
+  .tip {
+    position: absolute; pointer-events: none; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; font-size: 12px; color: var(--text); box-shadow: 0 4px 14px rgba(0,0,0,.12);
+    min-width: 190px; display: none; z-index: 2;
+  }
+  .tip table { border-collapse: collapse; width: 100%; }
+  .tip td { padding: 1px 0; }
+  .tip td:last-child { text-align: right; font-variant-numeric: tabular-nums; padding-left: 10px; }
+  .tip .h { font-weight: 700; margin-bottom: 4px; }
+
+  .why { margin: 14px 0 0; font-size: 14px; color: var(--text-2); }
+  .why li { margin: 2px 0; }
+
+  .tablewrap { overflow-x: auto; }
+  table.data { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  table.data th, table.data td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  table.data th:first-child, table.data td:first-child { text-align: left; }
+  table.data th { font-weight: 600; color: var(--text-2); background: var(--bg); }
+  table.data tr.win td { background: var(--row-win); }
+  table.data td.best { font-weight: 700; color: var(--link); }
+
+  .notes { font-size: 14px; color: var(--text-2); }
+  .notes ul { padding-left: 20px; margin: 6px 0; }
+  .notes li { margin: 3px 0; }
+  a { color: var(--link); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Damping-Kompromiss</h1>
+      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0).</p>
+    </div>
+    <button class="theme-btn" id="themeBtn" type="button" title="Farbschema wechseln">Automatisch</button>
+  </header>
+
+  <section class="card">
+    <h2>1. Prioritäten einstellen</h2>
+    <div class="presets" id="presets"></div>
+    <div class="sliders" id="sliders"></div>
+    <div class="opts">
+      <label>Regelgüte messen als
+        <select id="qualityMetric">
+          <option value="band">ganzer Tag</option>
+          <option value="ruhig">nur ruhige Zeiten</option>
+          <option value="wasch">nur Waschmaschine</option>
+        </select>
+      </label>
+      <label>Datenbasis
+        <select id="basis">
+          <option value="median">Median aus 3 Testtagen</option>
+          <option value="1">nur Testtag 1</option>
+          <option value="2">nur Testtag 2</option>
+          <option value="3">nur Testtag 3</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>2. Ergebnis</h2>
+    <div class="result">
+      <div class="tile">
+        <div class="lbl">Empfehlung</div>
+        <div class="big" id="winVal">–</div>
+        <div class="sub" id="winScore"></div>
+        <div class="robust" id="robust"></div>
+      </div>
+      <div class="chart" id="chart">
+        <div class="ttl">Punkte je Damping-Wert (0 bis 100, höher ist besser)</div>
+        <svg id="svg" viewBox="0 0 640 260" role="img" aria-label="Punkte je Damping-Wert"></svg>
+        <div class="tip" id="tip"></div>
+      </div>
+    </div>
+    <ul class="why" id="why"></ul>
+  </section>
+
+  <section class="card">
+    <h2>3. Messwerte</h2>
+    <div class="tablewrap">
+      <table class="data" id="table"></table>
+    </div>
+    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung.</p>
+  </section>
+
+  <section class="card notes">
+    <h2>So wird gerechnet</h2>
+    <ul>
+      <li>Jede Kennzahl wird auf 0 bis 100 umgerechnet: Der beste der 5 Damping-Werte bekommt 100, der schlechteste 0.</li>
+      <li>Die Punkte sind der gewichtete Mittelwert dieser Kennzahlen. Die Gewichte sind deine Regler.</li>
+      <li>Die Punkte vergleichen nur die 5 getesteten Werte untereinander. Sie sind keine absolute Note.</li>
+      <li>„Stabil über alle Testtage“ bedeutet: Mit deinen Gewichten gewinnt derselbe Wert an allen 3 Testtagen.</li>
+    </ul>
+    <h2 style="margin-top:18px">Kennzahlen</h2>
+    <ul>
+      <li><b>Regelgüte:</b> Anteil der Regelzyklen, in denen der Netzwert innerhalb ±13 W liegt. Zyklen, in denen kein Gerät mehr liefern oder laden konnte, sind nicht mitgezählt.</li>
+      <li><b>Export / Netzbezug:</b> Energie über den Testtag (06:00–20:00) in kWh.</li>
+      <li><b>Schreibvorgänge:</b> Wie oft der Controller den Geräten eine neue Leistung geschickt hat.</li>
+      <li><b>&gt; 50 W</b> und <b>Sättigung</b> stehen nur zur Information in der Tabelle und fließen nicht in die Punkte ein.</li>
+    </ul>
+    <h2 style="margin-top:18px">Grenzen</h2>
+    <ul>
+      <li>Alle Werte stammen aus einem simulierten Werktag (Mock), nicht von einer echten Anlage: 2 Geräte (800 W und 2000 W), Waschmaschine, Induktionskochfeld, Wasserkocher, Kühlschrank, Messrauschen, 3 s Reaktionszeit der Geräte, Regeltakt 4 s.</li>
+      <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller immer den festen Faktor 0.9, unabhängig von dieser Einstellung.</li>
+      <li>Andere Anlagen, Verbraucher und Einstellungen können zu einem anderen Ergebnis führen. Prüfe die Wahl mit einem Log deiner eigenen Anlage.</li>
+    </ul>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Messdaten: Testmatrix, 3 Testtage (Seeds) x 5 Damping-Werte ----
+  // Spalten: band, mittel(13-50 W), gross(>50 W), saett, bezug, export, writes, ruhig, wasch, induktion
+  var RAW = [
+    [1, 0.4, 59.07, 29.35, 11.58, 5.14, 0.93, 0.22, 3492, 67.60,  9.89, 7.64],
+    [1, 0.5, 61.65, 26.99, 11.37, 4.69, 0.88, 0.25, 3703, 70.36, 12.44, 8.61],
+    [1, 0.65,64.39, 24.96, 10.65, 4.83, 0.85, 0.31, 4003, 73.40, 12.15, 9.00],
+    [1, 0.8, 67.93, 21.93, 10.14, 4.98, 0.82, 0.35, 4501, 76.64, 21.54, 9.43],
+    [1, 1.0, 68.64, 22.47,  8.88, 5.82, 0.79, 0.39, 5616, 76.20, 29.20, 10.07],
+    [2, 0.4, 59.08, 29.56, 11.36, 5.74, 0.90, 0.17, 3659, 67.35, 12.33, 7.63],
+    [2, 0.5, 62.08, 26.63, 11.29, 5.83, 0.85, 0.20, 3817, 70.61, 13.56, 8.93],
+    [2, 0.65,64.58, 24.93, 10.49, 5.68, 0.80, 0.25, 4149, 73.45, 15.44, 7.64],
+    [2, 0.8, 66.68, 23.09, 10.24, 5.63, 0.77, 0.29, 4810, 75.11, 22.22, 9.32],
+    [2, 1.0, 67.21, 23.67,  9.12, 6.33, 0.74, 0.33, 6072, 74.77, 30.33, 8.92],
+    [3, 0.4, 58.53, 28.02, 13.46, 3.94, 0.82, 0.19, 3620, 66.52, 13.17, 0.54],
+    [3, 0.5, 62.99, 25.52, 11.48, 5.88, 0.76, 0.24, 3749, 71.70, 14.67, 0.27],
+    [3, 0.65,65.51, 23.30, 11.18, 5.33, 0.70, 0.31, 4081, 75.11, 15.32, 0.00],
+    [3, 0.8, 66.48, 21.67, 11.85, 4.59, 0.68, 0.35, 4710, 74.87, 19.98, 0.00],
+    [3, 1.0, 68.44, 22.49,  9.07, 6.82, 0.65, 0.39, 5713, 76.39, 28.13, 0.00]
+  ];
+  var KEYS = ["band","mittel","gross","saett","bezug","export","writes","ruhig","wasch","induktion"];
+  var DAMPINGS = [0.4, 0.5, 0.65, 0.8, 1.0];
+
+  function rowsFor(seed) {
+    return DAMPINGS.map(function (d) {
+      var r = RAW.filter(function (x) { return x[0] === seed && x[1] === d; })[0];
+      var o = { d: d };
+      KEYS.forEach(function (k, i) { o[k] = r[i + 2]; });
+      return o;
+    });
+  }
+  function median3(a) { var s = a.slice().sort(function (x, y) { return x - y; }); return s[1]; }
+  var DATA = { "1": rowsFor(1), "2": rowsFor(2), "3": rowsFor(3) };
+  DATA.median = DAMPINGS.map(function (d, i) {
+    var o = { d: d };
+    KEYS.forEach(function (k) { o[k] = median3([DATA["1"][i][k], DATA["2"][i][k], DATA["3"][i][k]]); });
+    return o;
+  });
+
+  // ---- Regler ----
+  var SLIDERS = [
+    { id: "quality", label: "Gute Regelung", hint: "Netzwert möglichst oft nahe 0 W" },
+    { id: "export",  label: "Wenig Export",   hint: "möglichst wenig Strom ins Netz" },
+    { id: "bezug",   label: "Wenig Netzbezug", hint: "möglichst wenig Strom aus dem Netz" },
+    { id: "writes",  label: "Wenig Schreibvorgänge", hint: "Geräte seltener neu ansteuern" }
+  ];
+  var PRESETS = [
+    { name: "Ausgewogen",            w: { quality: 5, export: 5, bezug: 0, writes: 5 } },
+    { name: "Beste Regelung",        w: { quality: 10, export: 0, bezug: 0, writes: 0 } },
+    { name: "Wenig Export",          w: { quality: 2, export: 10, bezug: 0, writes: 2 } },
+    { name: "Wenig Netzbezug",       w: { quality: 2, export: 0, bezug: 10, writes: 2 } },
+    { name: "Wenig Schreibvorgänge", w: { quality: 2, export: 0, bezug: 0, writes: 10 } }
+  ];
+  var weights = { quality: 5, export: 5, bezug: 0, writes: 5 };
+
+  var slidersEl = document.getElementById("sliders");
+  SLIDERS.forEach(function (s) {
+    var div = document.createElement("div");
+    div.className = "slider";
+    div.innerHTML =
+      '<label for="w_' + s.id + '">' + s.label + ' <span class="v" id="v_' + s.id + '"></span></label>' +
+      '<input type="range" min="0" max="10" step="1" id="w_' + s.id + '">' +
+      '<p class="hint">' + s.hint + '</p>';
+    slidersEl.appendChild(div);
+    var inp = div.querySelector("input");
+    inp.addEventListener("input", function () { weights[s.id] = Number(inp.value); markPreset(); update(); });
+  });
+
+  var presetsEl = document.getElementById("presets");
+  PRESETS.forEach(function (p, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.textContent = p.name; b.dataset.i = i;
+    b.addEventListener("click", function () {
+      Object.keys(p.w).forEach(function (k) { weights[k] = p.w[k]; });
+      syncSliders(); markPreset(); update();
+    });
+    presetsEl.appendChild(b);
+  });
+  function syncSliders() {
+    SLIDERS.forEach(function (s) {
+      document.getElementById("w_" + s.id).value = weights[s.id];
+    });
+  }
+  function markPreset() {
+    Array.prototype.forEach.call(presetsEl.children, function (b) {
+      var p = PRESETS[b.dataset.i].w;
+      var same = Object.keys(p).every(function (k) { return p[k] === weights[k]; });
+      b.classList.toggle("active", same);
+    });
+    SLIDERS.forEach(function (s) { document.getElementById("v_" + s.id).textContent = weights[s.id]; });
+  }
+
+  var qualityEl = document.getElementById("qualityMetric");
+  var basisEl = document.getElementById("basis");
+  qualityEl.addEventListener("change", update);
+  basisEl.addEventListener("change", update);
+
+  // ---- Bewertung ----
+  function norm(rows, key, higherBetter) {
+    var vals = rows.map(function (r) { return r[key]; });
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    return vals.map(function (v) {
+      if (mx === mn) return 100;
+      var t = (v - mn) / (mx - mn);
+      return (higherBetter ? t : 1 - t) * 100;
+    });
+  }
+  function score(rows) {
+    var q = qualityEl.value;
+    var parts = {
+      quality: norm(rows, q, true),
+      export: norm(rows, "export", false),
+      bezug: norm(rows, "bezug", false),
+      writes: norm(rows, "writes", false)
+    };
+    var wsum = weights.quality + weights.export + weights.bezug + weights.writes;
+    return rows.map(function (r, i) {
+      if (wsum === 0) return 0;
+      return (weights.quality * parts.quality[i] + weights.export * parts.export[i] +
+              weights.bezug * parts.bezug[i] + weights.writes * parts.writes[i]) / wsum;
+    });
+  }
+  function winnerIdx(sc) {
+    var best = 0;
+    sc.forEach(function (v, i) { if (v > sc[best] + 1e-9) best = i; });
+    return best;
+  }
+
+  function fmtD(d) { return d === 1 ? "1.0" : String(d); }
+  function de(v, n) { return v.toFixed(n).replace(".", ","); }
+  var QLABEL = { band: "Regelgüte ganzer Tag", ruhig: "Regelgüte ruhige Zeiten", wasch: "Regelgüte Waschmaschine" };
+
+  // ---- Diagramm ----
+  var svg = document.getElementById("svg");
+  var tip = document.getElementById("tip");
+  var chartEl = document.getElementById("chart");
+  var W = 640, H = 260, M = { l: 36, r: 8, t: 22, b: 30 };
+  var last = null;
+
+  function draw(rows, sc, win) {
+    var ns = "http://www.w3.org/2000/svg";
+    last = [rows, sc, win];
+    W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 640);
+    H = W < 500 ? 220 : 260;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var iw = W - M.l - M.r, ih = H - M.t - M.b;
+    function y(v) { return M.t + ih - v / 100 * ih; }
+    [0, 25, 50, 75, 100].forEach(function (t) {
+      var ln = document.createElementNS(ns, "line");
+      ln.setAttribute("x1", M.l); ln.setAttribute("x2", W - M.r);
+      ln.setAttribute("y1", y(t)); ln.setAttribute("y2", y(t));
+      ln.setAttribute("stroke", t === 0 ? "var(--baseline)" : "var(--grid)");
+      svg.appendChild(ln);
+      var tx = document.createElementNS(ns, "text");
+      tx.setAttribute("x", M.l - 8); tx.setAttribute("y", y(t) + 4);
+      tx.setAttribute("text-anchor", "end"); tx.setAttribute("class", "tick");
+      tx.textContent = t; svg.appendChild(tx);
+    });
+    var slot = iw / rows.length, bw = Math.min(64, slot * 0.56);
+    rows.forEach(function (r, i) {
+      var cx = M.l + slot * i + slot / 2;
+      var v = sc[i], top = y(v), h = Math.max(0, y(0) - top);
+      var g = document.createElementNS(ns, "g");
+      // Balken: oben abgerundet, unten gerade auf der Grundlinie
+      var rad = Math.min(4, h / 2), x0 = cx - bw / 2, x1 = cx + bw / 2, yb = y(0);
+      var p = document.createElementNS(ns, "path");
+      p.setAttribute("d", h <= 0 ? "" :
+        "M" + x0 + "," + yb + "V" + (top + rad) + "Q" + x0 + "," + top + " " + (x0 + rad) + "," + top +
+        "H" + (x1 - rad) + "Q" + x1 + "," + top + " " + x1 + "," + (top + rad) + "V" + yb + "Z");
+      p.setAttribute("fill", i === win ? "var(--bar-win)" : "var(--bar)");
+      g.appendChild(p);
+      var vl = document.createElementNS(ns, "text");
+      vl.setAttribute("x", cx); vl.setAttribute("y", top - 6);
+      vl.setAttribute("text-anchor", "middle"); vl.setAttribute("class", "vlabel");
+      vl.textContent = Math.round(v); g.appendChild(vl);
+      var xl = document.createElementNS(ns, "text");
+      xl.setAttribute("x", cx); xl.setAttribute("y", H - 10);
+      xl.setAttribute("text-anchor", "middle"); xl.setAttribute("class", "xlabel");
+      xl.textContent = fmtD(r.d) + (i === win ? " ★" : ""); g.appendChild(xl);
+      // Trefferfläche größer als der Balken
+      var hit = document.createElementNS(ns, "rect");
+      hit.setAttribute("x", cx - slot / 2); hit.setAttribute("y", M.t);
+      hit.setAttribute("width", slot); hit.setAttribute("height", ih + M.b);
+      hit.setAttribute("fill", "transparent");
+      hit.addEventListener("mousemove", function (e) { showTip(e, r, v); });
+      hit.addEventListener("mouseleave", function () { tip.style.display = "none"; });
+      hit.addEventListener("click", function (e) { showTip(e, r, v); });
+      g.appendChild(hit);
+      svg.appendChild(g);
+    });
+  }
+  function showTip(e, r, v) {
+    var q = qualityEl.value;
+    tip.innerHTML = '<div class="h">Damping ' + fmtD(r.d) + ' · ' + Math.round(v) + ' Punkte</div><table>' +
+      '<tr><td>' + QLABEL[q] + '</td><td>' + de(r[q], 1) + ' %</td></tr>' +
+      '<tr><td>Export</td><td>' + de(r.export, 2) + ' kWh</td></tr>' +
+      '<tr><td>Netzbezug</td><td>' + de(r.bezug, 2) + ' kWh</td></tr>' +
+      '<tr><td>Schreibvorgänge</td><td>' + Math.round(r.writes) + '</td></tr></table>';
+    tip.style.display = "block";
+    var box = chartEl.getBoundingClientRect();
+    var x = e.clientX - box.left + 12, yy = e.clientY - box.top + 12;
+    if (x + tip.offsetWidth > box.width) x = e.clientX - box.left - tip.offsetWidth - 12;
+    if (x < 0) x = 0;
+    tip.style.left = x + "px"; tip.style.top = yy + "px";
+  }
+
+  // ---- Tabelle ----
+  var COLS = [
+    { k: "band",   t: "im Band (Tag)", n: 1, u: " %", hi: true },
+    { k: "ruhig",  t: "im Band (ruhig)", n: 1, u: " %", hi: true },
+    { k: "wasch",  t: "im Band (Waschm.)", n: 1, u: " %", hi: true },
+    { k: "gross",  t: "> 50 W", n: 1, u: " %", hi: false },
+    { k: "saett",  t: "Sättigung", n: 1, u: " %", info: true },
+    { k: "export", t: "Export", n: 2, u: " kWh", hi: false },
+    { k: "bezug",  t: "Netzbezug", n: 2, u: " kWh", hi: false },
+    { k: "writes", t: "Schreibvorg.", n: 0, u: "", hi: false }
+  ];
+  function drawTable(rows, win) {
+    var html = "<thead><tr><th>Damping</th>" + COLS.map(function (c) { return "<th>" + c.t + "</th>"; }).join("") + "</tr></thead><tbody>";
+    var best = {};
+    COLS.forEach(function (c) {
+      if (c.info) return;
+      var vals = rows.map(function (r) { return r[c.k]; });
+      best[c.k] = c.hi ? Math.max.apply(null, vals) : Math.min.apply(null, vals);
+    });
+    rows.forEach(function (r, i) {
+      html += '<tr' + (i === win ? ' class="win"' : '') + '><td>' + fmtD(r.d) + (i === win ? ' ★' : '') + '</td>';
+      COLS.forEach(function (c) {
+        var v = r[c.k];
+        var txt = c.n === 0 ? String(Math.round(v)) : de(v, c.n);
+        html += '<td' + (!c.info && v === best[c.k] ? ' class="best"' : '') + '>' + txt + c.u + '</td>';
+      });
+      html += "</tr>";
+    });
+    document.getElementById("table").innerHTML = html + "</tbody>";
+  }
+
+  // ---- Text zum Ergebnis ----
+  function explain(rows, sc, win) {
+    var ul = document.getElementById("why");
+    var q = qualityEl.value, r = rows[win], items = [];
+    var order = sc.map(function (v, i) { return i; }).sort(function (a, b) { return sc[b] - sc[a]; });
+    var second = order[1], gap = sc[win] - sc[second];
+    if (gap < 3) {
+      items.push("Knapp: " + fmtD(rows[second].d) + " liegt nur " + de(gap, 1) + " Punkte dahinter. Beide Werte passen etwa gleich gut.");
+    }
+    [win - 1, win + 1].forEach(function (j) {
+      if (j < 0 || j >= rows.length) return;
+      var o = rows[j];
+      var dq = r[q] - o[q], dex = r.export - o.export, dbz = r.bezug - o.bezug, dw = (r.writes - o.writes) / o.writes * 100;
+      items.push("Gegenüber " + fmtD(o.d) + ": Regelgüte " + (dq >= 0 ? "+" : "") + de(dq, 1) + " Punkte, Export " +
+        (dex >= 0 ? "+" : "") + de(dex, 2) + " kWh, Netzbezug " + (dbz >= 0 ? "+" : "") + de(dbz, 2) +
+        " kWh, Schreibvorgänge " + (dw >= 0 ? "+" : "") + de(dw, 0) + " %.");
+    });
+    ul.innerHTML = items.map(function (t) { return "<li>" + t + "</li>"; }).join("");
+  }
+
+  function update() {
+    var basis = basisEl.value;
+    var rows = DATA[basis];
+    var wsum = weights.quality + weights.export + weights.bezug + weights.writes;
+    var sc = score(rows);
+    var win = winnerIdx(sc);
+
+    if (wsum === 0) {
+      document.getElementById("winVal").textContent = "–";
+      document.getElementById("winScore").textContent = "Mindestens einen Regler über 0 stellen.";
+      document.getElementById("robust").textContent = "";
+      document.getElementById("why").innerHTML = "";
+      draw(rows, sc, -1); drawTable(rows, -1);
+      return;
+    }
+    document.getElementById("winVal").textContent = fmtD(rows[win].d);
+    document.getElementById("winScore").textContent = Math.round(sc[win]) + " von 100 Punkten";
+
+    var perSeed = ["1", "2", "3"].map(function (s) { return DATA[s][winnerIdx(score(DATA[s]))].d; });
+    var stable = perSeed.every(function (d) { return d === perSeed[0]; });
+    document.getElementById("robust").innerHTML =
+      "Sieger je Testtag: <b>" + perSeed.map(fmtD).join(" / ") + "</b><br>" +
+      (stable ? "Stabil über alle Testtage." : "Nicht an allen Testtagen gleich. Nachbarwerte sind ähnlich gut.");
+
+    draw(rows, sc, win);
+    drawTable(rows, win);
+    explain(rows, sc, win);
+  }
+
+  // ---- Farbschema ----
+  var themeBtn = document.getElementById("themeBtn");
+  var THEMES = ["auto", "light", "dark"], NAMES = { auto: "Automatisch", light: "Hell", dark: "Dunkel" };
+  var theme = "auto";
+  try { theme = localStorage.getItem("dampingTheme") || "auto"; } catch (e) {}
+  function applyTheme() {
+    if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+    themeBtn.textContent = NAMES[theme];
+  }
+  themeBtn.addEventListener("click", function () {
+    theme = THEMES[(THEMES.indexOf(theme) + 1) % 3];
+    try { localStorage.setItem("dampingTheme", theme); } catch (e) {}
+    applyTheme();
+  });
+  applyTheme();
+
+  var rt;
+  window.addEventListener("resize", function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { if (last) draw(last[0], last[1], last[2]); }, 100);
+  });
+
+  syncSliders(); markPreset(); update();
+})();
+</script>
+</body>
+</html>
