@@ -50,7 +50,7 @@ nav:
       - Gesamtdokumentation: Controller/gesamtdoku.md
       - Änderungen: Controller/CHANGELOG.md
   - Dashboard & Meldungen:
-      - zenDash-API + Watchdog: zendash_watch_API_ZenSDK/readme.md
+      - Dashboard-Shelly: zendash_watch_API_ZenSDK/readme.md
       - Dashboard: zendash_watch_API_ZenSDK/dashboard.md
       - Speicherbedarf: zendash_speichermodell.md
       - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
