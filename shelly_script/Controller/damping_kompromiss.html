@@ -85,6 +85,13 @@
   h2 { font-size: 17px; font-weight: 700; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
   .hint { color: var(--muted); font-size: 13px; margin: 4px 0 0; }
 
+  .help { margin-top: 16px; border-top: 1px dashed var(--border); padding-top: 12px; font-size: 14px; color: var(--text-2); }
+  .help summary { cursor: pointer; font-weight: 600; color: var(--link); }
+  .help h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 14px 0 4px; }
+  .help dl { margin: 0; }
+  .help dt { font-weight: 600; color: var(--text); margin-top: 6px; }
+  .help dd { margin: 0 0 0 14px; }
+  .help p { margin: 4px 0; }
   .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
   .presets button {
     font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
@@ -179,6 +186,47 @@
         </select>
       </label>
     </div>
+    <details class="help">
+      <summary>Was bedeuten die Einstellungen?</summary>
+
+      <h3>a) Die 5 Voreinstellungen</h3>
+      <p>Ein Klick setzt die 4 Regler auf feste Werte. Danach kannst du die Regler frei verändern. Der Knopf bleibt hervorgehoben, solange die Regler zu ihm passen.</p>
+      <dl>
+        <dt>Ausgewogen</dt>
+        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): In den Tests bedeutet weniger Export fast immer mehr Netzbezug und umgekehrt. Beides gleich stark zu gewichten, würde sich weitgehend aufheben.</dd>
+        <dt>Beste Regelung</dt>
+        <dd>Nur die Regelgüte zählt (10). Export und Schreibvorgänge sind egal.</dd>
+        <dt>Wenig Export</dt>
+        <dd>Möglichst wenig Strom ins Netz (10). Regelung und Schreibvorgänge zählen ein wenig mit (je 2).</dd>
+        <dt>Wenig Netzbezug</dt>
+        <dd>Möglichst wenig Strom aus dem Netz (10). Regelung und Schreibvorgänge zählen ein wenig mit (je 2).</dd>
+        <dt>Wenig Schreibvorgänge</dt>
+        <dd>Die Geräte sollen möglichst selten neue Befehle bekommen (10). Regelung zählt ein wenig mit (2).</dd>
+      </dl>
+
+      <h3>b) Die 4 Regler</h3>
+      <p>Jeder Regler sagt, wie wichtig dir ein Ziel ist: 0 = egal, 10 = sehr wichtig. Es zählt nur das Verhältnis der Regler zueinander: 5 / 5 / 5 ergibt dasselbe wie 10 / 10 / 10.</p>
+      <dl>
+        <dt>Gute Regelung</dt>
+        <dd>Wie oft der Netzwert nahe 0 W liegt, genauer: innerhalb ±13 W. Über welche Zeit gemessen wird, stellst du bei „Regelgüte messen als“ ein: ganzer Tag, nur ruhige Zeiten ohne große Verbraucher oder nur während der Waschmaschine.</dd>
+        <dt>Wenig Export</dt>
+        <dd>Wie viel Strom über den Testtag ins Netz geht, in kWh.</dd>
+        <dt>Wenig Netzbezug</dt>
+        <dd>Wie viel Strom über den Testtag aus dem Netz kommt, in kWh.</dd>
+        <dt>Wenig Schreibvorgänge</dt>
+        <dd>Wie oft der Controller den Geräten eine neue Leistung schickt. Höheres Damping reagiert schneller, schickt aber mehr Befehle.</dd>
+      </dl>
+
+      <h3>c) Datenbasis</h3>
+      <p>Die Simulation wurde für jeden Damping-Wert an 3 Testtagen gerechnet. Alle 3 Tage haben dieselben festen Verbraucher, zum Beispiel die Waschmaschine um 10:00. Unterschiedlich sind das Messrauschen und die Uhrzeit der zufälligen Verbraucher (2 Wasserkocher und ein 800-W-Block).</p>
+      <dl>
+        <dt>Median aus 3 Testtagen</dt>
+        <dd>Für jede Kennzahl wird der mittlere der 3 Werte genommen. Ein einzelner ungewöhnlicher Tag fällt so kaum ins Gewicht. Das ist die empfohlene Einstellung.</dd>
+        <dt>nur Testtag 1, 2 oder 3</dt>
+        <dd>Rechnet mit den Werten eines einzelnen Tages. So siehst du, wie stark das Ergebnis vom Tag abhängt.</dd>
+      </dl>
+      <p>Die Zeile „Sieger je Testtag“ im Ergebnis nutzt immer alle 3 Tage, unabhängig von dieser Auswahl.</p>
+    </details>
   </section>
 
   <section class="card">
