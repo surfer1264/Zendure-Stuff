@@ -68,6 +68,9 @@ Die Einstellungen landen in `zendure_thingsboard_config.json` neben dem Proxy (i
 
 **Sicherheit:** Die Seite hat kein Passwort, genau wie `/setup` und `/thingspeak`. Jeder in deinem Netz, der den Proxy erreicht, kann den Upload ein- oder ausschalten und Tokens ersetzen, aber keine hinterlegten Tokens auslesen.
 
+<img width="500" alt="image" src="https://github.com/user-attachments/assets/1896d8e2-fb6d-477f-9ceb-f8fc45432610" />
+
+
 ## So arbeitet der Upload
 
 ThingSpeak und ThingsBoard teilen sich das Einsammeln der Werte. Der Ablauf ist deshalb derselbe wie beim [ThingSpeak-Upload](thingspeak.md#so-arbeitet-der-upload):
