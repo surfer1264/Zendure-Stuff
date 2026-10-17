@@ -27,6 +27,7 @@ Zendure-Geräten im lokalen Netz.
 
 
 ## Inhaltsverzeichnis
+- [Zendure Multi-Device Controller – Gesamtdokumentation](#zendure-multi-device-controller--gesamtdokumentation)
   - [Inhaltsverzeichnis](#inhaltsverzeichnis)
   - [1) Zweck](#1-zweck)
   - [2) Möglichkeiten und Flexibilität, Features](#2-möglichkeiten-und-flexibilität-features)
@@ -51,6 +52,7 @@ Zendure-Geräten im lokalen Netz.
   - [8) Detailfunktionalität](#8-detailfunktionalität)
     - [8.1) Ablauf eines Regelzyklus](#81-ablauf-eines-regelzyklus)
     - [8.2) Dämpfung der Lade-/Entladesignale](#82-dämpfung-der-lade-entladesignale)
+      - [Empfehlung für `dampingFactor`](#empfehlung-für-dampingfactor)
     - [8.3) Watchdog / Timer](#83-watchdog--timer)
     - [8.4) Fehlerzähler \& Benachrichtigung](#84-fehlerzähler--benachrichtigung)
     - [8.5) Signal-Benachrichtigung (CallMeBot) – inkl. WhatsApp](#85-signal-benachrichtigung-callmebot--inkl-whatsapp)
@@ -1157,6 +1159,11 @@ Geräte (siehe [Changelog](CHANGELOG.md) 5.1.8 und 5.2.0). Bei `remote`
 und `http_json` kommt der Messwert mit zusätzlicher Verzögerung an, bei
 mehreren Geräten dauert ein Zyklus länger – in beiden Fällen ist der
 Regelkreis träger, und eine stärkere Dämpfung verhindert Überschwingen.
+
+   🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
+   stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
+   Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
+   Simulation am besten dazu passt.
 
 ### 8.3) Watchdog / Timer
 

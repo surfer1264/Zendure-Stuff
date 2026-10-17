@@ -139,6 +139,7 @@
   table.data th { font-weight: 600; color: var(--text-2); background: var(--bg); }
   table.data tr.win td { background: var(--row-win); }
   table.data td.best { font-weight: 700; color: var(--link); }
+  table.data tr.off td { color: var(--muted); font-style: italic; }
 
   .notes { font-size: 14px; color: var(--text-2); }
   .notes ul { padding-left: 20px; margin: 6px 0; }
@@ -152,7 +153,7 @@
   <header class="top">
     <div>
       <h1>Damping-Kompromiss</h1>
-      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0).</p>
+      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0). Hintergrund: <a href="gesamtdoku/#empfehlung-für-dampingfactor" style="color:#ffd36b">Empfehlung für dampingFactor</a>.</p>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" title="Farbschema wechseln">Automatisch</button>
   </header>
@@ -203,15 +204,16 @@
     <div class="tablewrap">
       <table class="data" id="table"></table>
     </div>
-    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung.</p>
+    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung. * 1.0 nur zum Vergleich: Seit 5.2.0 setzt der Controller Werte über 0.8 auf 0.8. Deshalb wird 1.0 nicht bewertet.</p>
   </section>
 
   <section class="card notes">
     <h2>So wird gerechnet</h2>
     <ul>
-      <li>Jede Kennzahl wird auf 0 bis 100 umgerechnet: Der beste der 5 Damping-Werte bekommt 100, der schlechteste 0.</li>
+      <li>Bewertet werden die 4 Werte, die der Controller zulässt: 0.4, 0.5, 0.65 und 0.8.</li>
+      <li>Jede Kennzahl wird auf 0 bis 100 umgerechnet: Der beste dieser 4 Werte bekommt 100, der schlechteste 0.</li>
       <li>Die Punkte sind der gewichtete Mittelwert dieser Kennzahlen. Die Gewichte sind deine Regler.</li>
-      <li>Die Punkte vergleichen nur die 5 getesteten Werte untereinander. Sie sind keine absolute Note.</li>
+      <li>Die Punkte vergleichen nur diese 4 Werte untereinander. Sie sind keine absolute Note.</li>
       <li>„Stabil über alle Testtage“ bedeutet: Mit deinen Gewichten gewinnt derselbe Wert an allen 3 Testtagen.</li>
     </ul>
     <h2 style="margin-top:18px">Kennzahlen</h2>
@@ -225,6 +227,7 @@
     <ul>
       <li>Alle Werte stammen aus einem simulierten Werktag (Mock), nicht von einer echten Anlage: 2 Geräte (800 W und 2000 W), Waschmaschine, Induktionskochfeld, Wasserkocher, Kühlschrank, Messrauschen, 3 s Reaktionszeit der Geräte, Regeltakt 4 s.</li>
       <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller immer den festen Faktor 0.9, unabhängig von dieser Einstellung.</li>
+      <li>Der Netzwert kam im Test über <code>gridSource: "http_json"</code>. Für diesen Fall empfiehlt die <a href="gesamtdoku/#empfehlung-für-dampingfactor">Gesamtdokumentation</a> 0,5–0,6, für <code>local</code> 0,6–0,7.</li>
       <li>Andere Anlagen, Verbraucher und Einstellungen können zu einem anderen Ergebnis führen. Prüfe die Wahl mit einem Log deiner eigenen Anlage.</li>
     </ul>
   </section>
@@ -256,6 +259,7 @@
   ];
   var KEYS = ["band","mittel","gross","saett","bezug","export","writes","ruhig","wasch","induktion"];
   var DAMPINGS = [0.4, 0.5, 0.65, 0.8, 1.0];
+  var MAXD = 0.8; // seit 5.2.0 begrenzt der Controller dampingFactor auf 0.4 bis 0.8
 
   function rowsFor(seed) {
     return DAMPINGS.map(function (d) {
@@ -272,6 +276,10 @@
     KEYS.forEach(function (k) { o[k] = median3([DATA["1"][i][k], DATA["2"][i][k], DATA["3"][i][k]]); });
     return o;
   });
+  // Bewertet werden nur die Werte, die das Skript zulässt; 1.0 bleibt als Vergleich in der Tabelle
+  var ALL = DATA;
+  DATA = {};
+  Object.keys(ALL).forEach(function (k) { DATA[k] = ALL[k].filter(function (r) { return r.d <= MAXD; }); });
 
   // ---- Regler ----
   var SLIDERS = [
@@ -457,15 +465,16 @@
     var best = {};
     COLS.forEach(function (c) {
       if (c.info) return;
-      var vals = rows.map(function (r) { return r[c.k]; });
+      var vals = rows.filter(function (r) { return r.d <= MAXD; }).map(function (r) { return r[c.k]; });
       best[c.k] = c.hi ? Math.max.apply(null, vals) : Math.min.apply(null, vals);
     });
     rows.forEach(function (r, i) {
-      html += '<tr' + (i === win ? ' class="win"' : '') + '><td>' + fmtD(r.d) + (i === win ? ' ★' : '') + '</td>';
+      var off = r.d > MAXD;
+      html += '<tr' + (i === win ? ' class="win"' : off ? ' class="off"' : '') + '><td>' + fmtD(r.d) + (i === win ? ' ★' : '') + (off ? ' *' : '') + '</td>';
       COLS.forEach(function (c) {
         var v = r[c.k];
         var txt = c.n === 0 ? String(Math.round(v)) : de(v, c.n);
-        html += '<td' + (!c.info && v === best[c.k] ? ' class="best"' : '') + '>' + txt + c.u + '</td>';
+        html += '<td' + (!c.info && !off && v === best[c.k] ? ' class="best"' : '') + '>' + txt + c.u + '</td>';
       });
       html += "</tr>";
     });
@@ -504,7 +513,7 @@
       document.getElementById("winScore").textContent = "Mindestens einen Regler über 0 stellen.";
       document.getElementById("robust").textContent = "";
       document.getElementById("why").innerHTML = "";
-      draw(rows, sc, -1); drawTable(rows, -1);
+      draw(rows, sc, -1); drawTable(ALL[basis], -1);
       return;
     }
     document.getElementById("winVal").textContent = fmtD(rows[win].d);
@@ -517,7 +526,7 @@
       (stable ? "Stabil über alle Testtage." : "Nicht an allen Testtagen gleich. Nachbarwerte sind ähnlich gut.");
 
     draw(rows, sc, win);
-    drawTable(rows, win);
+    drawTable(ALL[basis], win);
     explain(rows, sc, win);
   }
 
