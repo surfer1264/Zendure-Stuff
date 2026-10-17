@@ -112,7 +112,8 @@ manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effiz
   bei Internetausfall.
 - **Takt:** Alle paar Sekunden wird die aktuelle Netzleistung
   gemessen sowie der Zustand aller Geräte abgefragt, daraus werden ein
-  Entlade- und ein Ladeziel getrennt gedämpft nachgeführt (siehe Kapitel
+  Entlade- und ein Ladeziel getrennt gedämpft nachgeführt – bei einem
+  Lastsprung in Richtung „weniger Export“ fast sofort (siehe Kapitel
   8.1/8.2) und anschließend auf die Geräte verteilt, wenn nötig.
 - **Einer oder Alle:** Bei kleinem Bedarf wird nur ein
   einzelnes Gerät angesprochen (**Konzentrationsmodus**, schont die übrigen Akkus, weniger
@@ -264,7 +265,7 @@ Alle Einstellungen befinden sich im `CONFIG`-Objekt am Anfang des Scripts.
 Die folgende Tabelle bündelt sämtliche Parameter.
 
 | Bereich | Feld | Standardwert | Beschreibung |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Geräte** (`CONFIG.devices[]`, ein Eintrag pro Zendure-Gerät) | `ip` | – (muss gesetzt werden) | IP-Adresse des Zendure-Geräts im lokalen Netz. Entspricht dem `zendure`-Parameter der Einzelgerät-Version, jetzt aber pro Geräteeintrag. |
 | | `label` | – | Freier Name für Logs und Benachrichtigungen (z. B. "SF800", "SF2400"). Hat keine Auswirkung auf die Regelung selbst. |
 | | `minSoc` | 15–18 % (Beispiel) | Unterhalb dieses Ladezustands wird **dieses Gerät** von der Entlade-Verteilung ausgeschlossen (Gewicht 0, siehe Kapitel 6a). Pendant zum globalen `minSoc` der Einzelgerät-Version, jetzt individuell pro Gerät einstellbar. |
@@ -276,17 +277,17 @@ Die folgende Tabelle bündelt sämtliche Parameter.
 | | `dryRun` | `false` | `true` = Gerät wird normal gelesen und fließt vollständig in Gewichtung/Verteilung ein, aber es wird **nie tatsächlich beschrieben**. Siehe Kapitel 4c. |
 | | `inputLimit` | `0` (optional, darf fehlen) | Startwert für das manuelle AC-Laden dieses Geräts in W (`0`…`maxInputPower`). Wird in der Praxis über den KVS-Key `zdmc_devN_inputLimit` genutzt, siehe Kapitel 13.4. |
 | **Netzquelle** (global) | `gridSource` | `"local"` | Betriebsart der Netzleistungsmessung: `"local"` = Script läuft direkt auf dem Shelly Pro 3EM; `"remote"` = Script läuft auf einem beliebigen anderen Shelly-Gerät und liest den Pro 3EM per RPC über das Netzwerk aus; `"http_json"` = Script liest die Netzleistung generisch per HTTP GET von einem beliebigen JSON-Smart-Meter. Details siehe Kapitel 5. |
-| (**remote**)| `gridSourceIp` | – | IP-Adresse des Shelly Pro 3EM. **Nur** relevant, wenn `gridSource = "remote"`. |
-| (**local/remote**)| `gridSourceEmId` | `0` | EM-Kanal-ID am Pro 3EM (in der Regel `0`). relevant, wenn `gridSource = "local" or "remote"`. |
-| (**http_json**)| `gridSourceUrl` | `"http://<IP-of-your-meter>/properties/report"` | Vollständige URL des generischen JSON-Smart-Meters. **Nur** relevant, wenn `gridSource = "http_json"`. |
+| (**remote**) | `gridSourceIp` | – | IP-Adresse des Shelly Pro 3EM. **Nur** relevant, wenn `gridSource = "remote"`. |
+| (**local/remote**) | `gridSourceEmId` | `0` | EM-Kanal-ID am Pro 3EM (in der Regel `0`). relevant, wenn `gridSource = "local" or "remote"`. |
+| (**http_json**) | `gridSourceUrl` | `"http://<IP-of-your-meter>/properties/report"` | Vollständige URL des generischen JSON-Smart-Meters. **Nur** relevant, wenn `gridSource = "http_json"`. |
 | (**http_json**) | `gridSourceField` | `"total_power"` | Name des JSON-Felds mit der gesamten Netzleistung in Watt. **Nur** relevant, wenn `gridSource = "http_json"`. |
-|(**http_json**) | `gridSourceInvert` | `false` | `true`, falls das Vorzeichen von `gridSourceField` umgekehrt zur Erwartung des Scripts ist. Siehe Kapitel 5 zur Vorzeichenprüfung. |
+| (**http_json**) | `gridSourceInvert` | `false` | `true`, falls das Vorzeichen von `gridSourceField` umgekehrt zur Erwartung des Scripts ist. Siehe Kapitel 5 zur Vorzeichenprüfung. |
 | **Regelverhalten** (global) | `interval` | `4000` ms | Zykluszeit der Regelschleife. Bei mehreren Geräten steigt die tatsächliche Zyklusdauer, da alle Geräte-Anfragen sequenziell laufen (siehe Kapitel 10) – bei Bedarf großzügiger wählen. ⚠️ **Seit V2.4.4** sind `watchdog` und `httpTimeout` **keine eigenen CONFIG-Felder mehr** – `watchdog` wird beim Start automatisch als `interval × 2.5` berechnet, `httpTimeout` ist im Code fest auf `4` s verdrahtet (korrigiert – frühere Doku-Stände nannten hier 3 s bzw. 5 s; im Code steht seit 4.x `timeout: 4`, siehe Kapitel 8.3). Beides ist über `CONFIG` nicht mehr direkt einstellbar, siehe Kapitel 8.3. |
 | | `setpoint` | `0` W | Ziel-Netzleistung, auf die geregelt wird (0 = Nullregelung; negativ = leichter Export; positiv = leichter Import erlaubt). Fließt seit V2.3.1 in **beide** getrennt berechneten Ziele ein (Entladeziel und Ladeziel, siehe Kapitel 8.1/8.2), nicht mehr in ein einzelnes kombiniertes Ziel. |
 | | `hysteresis` | `12` W (seit V2.4.2, vorher `10` W) | Mindeständerung **pro Gerät** gegenüber dem zuletzt an dieses Gerät geschriebenen Wert, bevor ein neuer Schreibvorgang an dieses Gerät ausgelöst wird. Wird für jedes Gerät individuell geprüft. |
-| | `dampingFactor` | `0.65` (seit V2.4.2, vorher `0.6`) | Dämpfungs-/Verstärkungsfaktor (`0 < x ≤ 1`), seit V2.3.1 gleichzeitig und unabhängig angewendet auf **zwei** getrennte Sollwerte (Entladeziel und Ladeziel), jeweils bevor diese auf die Geräte verteilt werden. Der Wert springt nicht direkt zum berechneten Ziel, sondern nähert sich ihm pro Zyklus nur um diesen Anteil der Restdifferenz an. `1.0` = keine Dämpfung. Details siehe Kapitel 8.2. |
+| | `dampingFactor` | `0.65` (seit V2.4.2, vorher `0.6`) | Dämpfungsfaktor (`0.4` bis `0.8`, seit 5.2.0; vorher bis `1`), seit V2.3.1 gleichzeitig und unabhängig angewendet auf **zwei** getrennte Sollwerte (Entladeziel und Ladeziel), jeweils bevor diese auf die Geräte verteilt werden. Der Wert springt nicht direkt zum berechneten Ziel, sondern nähert sich ihm pro Zyklus nur um diesen Anteil der Restdifferenz an. Ausnahme seit 5.1.8/5.2.0: Bei einem Sprung in Richtung „weniger Export“ gilt der feste Faktor `0.9`. **Empfehlung:** 0,6–0,7, bei `remote`/`http_json` oder 3 und mehr Geräten 0,5–0,6, über 0,7 nicht sinnvoll. Details und Begründung siehe Kapitel 8.2. |
 | **Verteil-Schwellen** | `discharge.concentrateBelow` / `discharge.spreadAbove` | `600` / `800` W | Schwellen für die Umschaltung zwischen einem Gerät (Konzentration) und allen Geräten (Verteilung) beim Entladen – siehe Kapitel 7. |
-| | `charge.concentrateBelow` / `charge.spreadAbove` | `600` / `800` W |  Schwellen für die Umschaltung zwischen einem Gerät (Konzentration) und allen Geräten (Verteilung) beim Laden  |
+| | `charge.concentrateBelow` / `charge.spreadAbove` | `600` / `800` W | Schwellen für die Umschaltung zwischen einem Gerät (Konzentration) und allen Geräten (Verteilung) beim Laden |
 | | `concentrateHoldMinutes` | `3` min | Zeitlich gekoppelte Hysterese **nur** für den Wechsel von Verteil- auf Konzentrationsmodus (`spread`→`single`): Der Zielwert muss ununterbrochen (mit Einfrieren in der Totzone zwischen den Schwellen) für diese Zeit unter `concentrateBelow` bleiben, bevor gewechselt wird. Gilt gemeinsam für `discharge` und `charge`. Wird beim Start in Zyklen umgerechnet (`CONCENTRATE_HOLD_CYCLES = max(5, round(concentrateHoldMinutes × 60000 / interval))`, siehe Kapitel 8.8). Der umgekehrte Wechsel (`single`→`spread`) bleibt davon unberührt (nur zwei Zyklen Entprellung, siehe Kapitel 7). |
 | **SoC Ausgleich** | `rebalance.socMargin` | `5` Prozentpunkte | Nötiger Gewichts-Vorsprung eines anderen Geräts gegenüber dem aktuell aktiven Gerät im Konzentrationsmodus, damit ein Wechsel ausgelöst wird. **Hinweis:** Dies ist das *einzige* `rebalance`-Feld – ein `holdMinutes`-Parameter existiert im `CONFIG`-Objekt nicht. Der Wechsel erfolgt **sofort**, sobald der Vorsprung erreicht ist, siehe Kapitel 6c. |
 | **Netzladen** (global) | `reverseStartupPower` | `35` W | Mindest-Ladebedarf (aggregiert über alle `reverse:true`-Geräte, systemweit bezogen auf das seit V2.3.1 getrennt berechnete Ladeziel, siehe Kapitel 8.1/8.2), ab dem das Laden vom Netz überhaupt erst gestartet wird – Totzone gegen unnötiges Anspringen. |
@@ -297,7 +298,7 @@ Die folgende Tabelle bündelt sämtliche Parameter.
 | | `dischargeStopPower` | `15` W | Leistungsschwelle **pro Gerät/Geräteanteil**, unterhalb derer dieses Gerät auf 0 W gesetzt wird (muss < `dischargeStartupPower` sein – wird beim Start automatisch korrigiert). Gilt sowohl im Konzentrations- als auch im Verteilmodus, für jedes Gerät einzeln. |
 | **AC-Richtungswechsel** (global) | `directionChangeHoldCycles` | `4` Zyklen (seit 4.3.0, vorher `2`) | Anzahl aufeinanderfolgender Regelzyklen, für die ein angeforderter Richtungswechsel (`acMode`, Laden↔Entladen) an einem Gerät zunächst zurückgehalten wird, bevor er tatsächlich ausgeführt wird. Während der Zurückhaltung wird das Gerät auf Standby gesetzt (`acMode 1`, 0 W) statt sofort umzuschalten. Der Zähler läuft nur so lange, wie durchgehend ein Wechsel angefordert wird – kehrt der Zielwert zwischenzeitlich auf 0 W zurück oder stimmt die angeforderte Richtung wieder mit der zuletzt tatsächlich geschriebenen Richtung überein, wird der Zähler zurückgesetzt. Wertebereich `4`–`20` (wird beim Start geklemmt) – die Bremse ist bewusst **nicht abschaltbar**. Details und Beispiel siehe Kapitel 8.10. |
 | | `standbySmartModeZero` | `false` | `true` erlaubt, ein Gerät im Standby (`acMode 1`, `outputLimit 0`, `inputLimit 0`) mit `smartMode 0` zu parken – aber erst, nachdem es mindestens `standbyHoldCycles` (intern fest `15`) Zyklen ununterbrochen im Standby war. Vorher, bei `false` und außerhalb des Standby-Falls (aktives Laden oder Entladen) wird stets `smartMode 1` geschrieben. Details siehe Kapitel 8.11. |
-|**Timer&DEBUG** | `errorThreshold` | `6` (seit 4.3.0, vorher `5`) | Anzahl aufeinanderfolgender Fehler desselben Typs (global oder pro Gerät), bevor eine Signal-/WhatsApp-Benachrichtigung ausgelöst wird. Siehe Kapitel 8.4. |
+| **Timer&DEBUG** | `errorThreshold` | `6` (seit 4.3.0, vorher `5`) | Anzahl aufeinanderfolgender Fehler desselben Typs (global oder pro Gerät), bevor eine Signal-/WhatsApp-Benachrichtigung ausgelöst wird. Siehe Kapitel 8.4. |
 | **Sparmodus / adaptives Polling** (global, siehe Kapitel 8.12) | `idleSkip.enabled` | `true` | Hauptschalter. `false` = Funktion komplett aus, jeder Zyklus fragt wie früher alle Geräte per HTTP ab. |
 | | `idleSkip.cyclesUnchanged` | `4` | So viele **aufeinanderfolgende Voll-Poll-Zyklen** muss der berechnete Output pro Gerät innerhalb der Schreib-Hysterese um den zuletzt geschriebenen Wert bleiben (und die Richtung gleich), bevor der Geräte-Poll ausgesetzt wird. |
 | | `idleSkip.maxSkipSeconds` | `44` s | Maximales Alter der Gerätedaten (SOC/`socLimit`/Ist-Leistung) während des Aussetzens. Wird beim Start in Zyklen umgerechnet (`IDLE_SKIP_CYCLES`). Danach erfolgt zwingend wieder ein Voll-Poll. |
@@ -317,7 +318,7 @@ optional und mit sinnvollen Standardwerten vorbelegt.
 **Interne Werte (nicht im CONFIG-Block einstellbar):**
 
 | Wert | Festwert | Bedeutung |
-|---|---|---|
+| --- | --- | --- |
 | `watchdog` | `interval × 2.5` | Watchdog-Zeit, siehe Kapitel 8.3 |
 | HTTP-Timeout | `4` s (Benachrichtigungen `8` s) | siehe Kapitel 8.3 |
 | `dischargeFixed` | `0` | Fix-Entladeleistung. Wird nach dem CONFIG-Block fest auf `0` gesetzt und ist **nur per KVS** (`zdmc_dischargeFixed`) wirksam, siehe Kapitel 13.4 |
@@ -333,9 +334,9 @@ Die Regel in folgender Tabelle beschreibt den gültigen Wertebereich. Wird dageg
 ⚠️ Die Validierung findet nur beim Start statt.
 
 | Parameter | Regel | Korrektur bei Verstoß |
-|---|---|---|
+| --- | --- | --- |
 | `interval` | ≥ 3000 ms | auf `3000` gesetzt |
-| `dampingFactor` | zwischen `0.4` und `1` | auf `0.4` bzw. `1` gesetzt |
+| `dampingFactor` | zwischen `0.4` und `0.8` (seit 5.2.0, vorher bis `1`) | auf `0.4` bzw. `0.8` gesetzt |
 | `concentrateBelow` (discharge/charge) | ≥ `35` | auf `35` gesetzt |
 | `spreadAbove` (discharge/charge) | ≥ `50` | auf `50` gesetzt |
 | `concentrateBelow` vs. `spreadAbove` | `concentrateBelow` < `spreadAbove` (echt kleiner) | `spreadAbove = concentrateBelow + 15` |
@@ -445,7 +446,7 @@ von `[DRYRUN] wuerde schreiben: X W (Export)` bzw. `(Laden vom Netz)`.
 > `Shelly.getComponentStatus()`.
 
 | | 1️⃣ `"local"` | 2️⃣ `"remote"` | 3️⃣ `"http_json"` |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Wo läuft das Script?** | zwingend **auf dem Shelly Pro 3EM** selbst | auf **jedem** Shelly Gen2/3-Gerät | auf **jedem** Shelly Gen2/3-Gerät |
 | **Messquelle** | `Shelly.getComponentStatus("em:X")` – interner Gerätespeicher | HTTP RPC `/rpc/EM.GetStatus` eines Shelly Pro 3EM | HTTP GET auf eine beliebige, frei konfigurierbare JSON-URL |
 | **Unterstützte Geräte** | nur der Pro 3EM, auf dem das Script selbst läuft | ausschließlich Shelly Pro 3EM (Standard-Firmware, unverändert) | **beliebige** Smart Meter mit JSON über HTTP GET (flach oder – per Array in `gridSourceField` – verschachtelt), z. B. Zendure Smart Meter 3CT, **Shelly 3EM (ohnePro)** |
@@ -685,7 +686,7 @@ in das Netz exportieren darf, unabhängig davon, was das Script per
 > haben beides fälschlich gekoppelt.
 
 | `gridReverse` | Bedeutung |
-|---:|---|
+| ---: | --- |
 | `0` | Deaktiviert (Bedeutung laut Hersteller nicht dokumentiert, wird vom Script nie gesetzt) |
 | `1` | Netzexport erlaubt |
 | `2` | Netzexport verboten |
@@ -916,7 +917,7 @@ gleiches Gewicht), `concentrateBelow: 1440`, `spreadAbove: 2400`:
 **Aufwärts (600 → 3000 W):**
 
 | Ziel (W) | Modus | Gerät 1 | Gerät 2 | Gerät 3 |
-|---:|:---|---:|---:|---:|
+| ---: | :--- | ---: | ---: | ---: |
 | 600–2400 | single | = Ziel | 0 | 0 |
 | **2500** | **spread** | 833 | 833 | 833 |
 | 2600 | spread | 867 | 867 | 867 |
@@ -928,7 +929,7 @@ gleiches Gewicht), `concentrateBelow: 1440`, `spreadAbove: 2400`:
 **Abwärts (3000 → 600 W):**
 
 | Ziel (W) | Modus | Gerät 1 | Gerät 2 | Gerät 3 |
-|---:|:---|---:|---:|---:|
+| ---: | :--- | ---: | ---: | ---: |
 | 3000–2500 | spread | Ziel/3 | Ziel/3 | Ziel/3 |
 | 2400 | spread | 800 | 800 | 800 |
 | 2300 | spread | 767 | 767 | 767 |
@@ -1089,20 +1090,39 @@ praktisch immer alle Geräte laufen (ineffizient).
 
 Seit V2.3.1 gibt es **zwei unabhängige** Glättungen – eine für das
 Entladeziel, eine für das Ladeziel, beide mit demselben `dampingFactor`,
-aber jeweils auf ihr eigenes Roh-Signal angewendet:
+aber jeweils auf ihr eigenes Roh-Signal angewendet. Seit 5.1.8 ist die
+Dämpfung **asymmetrisch**, seit 5.2.0 greift die schnelle Richtung nur bei
+einem echten Sprung:
 
-```
-state.smoothedOutput = state.smoothedOutput + dampingFactor * (raw       - state.smoothedOutput)   // Entladen
-state.smoothedCharge = state.smoothedCharge + dampingFactor * (rawCharge - state.smoothedCharge)    // Laden
+```text
+JUMP_THRESHOLD = min(3 × hysteresis, 50)     // bei hysteresis 12: 36 W
+JUMP_FACTOR    = 0.9                         // Konstante im Script, nicht im CONFIG-Block
+
+a = (raw < smoothed − JUMP_THRESHOLD) ? JUMP_FACTOR : dampingFactor
+state.smoothedOutput = state.smoothedOutput + a * (raw       - state.smoothedOutput)   // Entladen
+state.smoothedCharge = state.smoothedCharge + a * (rawCharge - state.smoothedCharge)   // Laden (eigenes a)
 ```
 
-- Die Dämpfung glättet das Reglerverhalten und verhindert ein Über- oder
-  Unterschwingen der Regelgröße. Sie wirkt jeweils auf das **rohe**
-  Entlade- bzw. Lade-Signal (`raw` aus Netzleistung + Summe **aller**
-  verfügbaren Geräte, bzw. `rawCharge` aus Netzleistung + Summe **nur der
-  `reverse:true`**-Geräte, siehe Kapitel 8.1), **bevor** das jeweilige Ziel auf die einzelnen
-  Geräte verteilt wird – nicht auf den Ausgabewert eines einzelnen Geräts.
-  Ein Gerätewechsel im Konzentrationsmodus oder eine Kapazitätsgrenze eines
+- **Richtung „weniger Export“ bei einem Sprung schnell:** Liegt der neue
+  Rohwert mehr als `JUMP_THRESHOLD` unter dem bisherigen geglätteten Wert,
+  übernimmt der Controller sofort 90 % der Änderung. Beim Entladen heißt
+  das: Sinkt die Last (Wasserkocher aus), wird die Entladeleistung sofort
+  zurückgenommen. Beim Laden: Steigt der PV-Überschuss (Wolke weg), wird
+  sofort mehr geladen. Der Faktor ist 0,9 statt 1, weil die Solarflows rund
+  3 s für eine Leistungsänderung brauchen – ein voller Sprung schoss beim
+  nächsten Messen leicht über und wurde im Folgetakt wieder zurückgenommen.
+- **Alles andere gedämpft:** Kleinere Abweichungen (Messrauschen) und die
+  Gegenrichtung (mehr entladen, weniger laden) laufen mit `dampingFactor`.
+  In der Gegenrichtung entsteht dadurch kurz Netzbezug statt Einspeisung.
+- **Schwelle** je nach `hysteresis`: 12 W → 36 W, 13 W → 39 W, ab 17 W →
+  50 W. Schwelle und Faktor stehen im Startbanner in der Zeile `Damping`
+  (Kapitel 12.1).
+- Die Dämpfung wirkt jeweils auf das **rohe** Entlade- bzw. Lade-Signal
+  (`raw` aus Netzleistung + Summe **aller** verfügbaren Geräte, bzw.
+  `rawCharge` aus Netzleistung + Summe **nur der `reverse:true`**-Geräte,
+  siehe Kapitel 8.1), **bevor** das jeweilige Ziel auf die einzelnen Geräte
+  verteilt wird – nicht auf den Ausgabewert eines einzelnen Geräts. Ein
+  Gerätewechsel im Konzentrationsmodus oder eine Kapazitätsgrenze eines
   einzelnen Geräts verändert also nicht die Glättung selbst, sondern nur,
   wie das bereits geglättete Ziel anschließend verteilt wird.
 - Weil beide Signale unabhängig voneinander geglättet werden, kann sich das
@@ -1113,8 +1133,30 @@ state.smoothedCharge = state.smoothedCharge + dampingFactor * (rawCharge - state
 - Beide Zustände (`state.smoothedOutput`/`state.smoothedCharge`) werden beim
   ersten Lauf nach Script-Start direkt auf ihren jeweils ersten berechneten
   Roh-Wert gesetzt (kein Einschwingen von 0 aus nötig).
-- `dampingFactor = 1.0` deaktiviert die Dämpfung faktisch für **beide**
-  Signale gleichzeitig (der jeweilige Zielwert wird sofort 1:1 übernommen).
+- `dampingFactor` ist seit 5.2.0 auf **0,4 bis 0,8** begrenzt (vorher bis
+  1,0). Höhere Werte setzt der Controller beim Start auf 0,8 (Kapitel 4a).
+  Ganz ohne Dämpfung lässt sich nicht mehr regeln.
+
+#### Empfehlung für `dampingFactor`
+
+| Situation | Empfohlener Wert |
+| --- | --- |
+| Standard (`gridSource: "local"`, `interval` 4000 ms) | **0,6–0,7**, Default `0.65` |
+| `gridSource: "remote"` oder `"http_json"`, oder 3 und mehr Geräte | **0,5–0,6** |
+| `interval` 3000 ms | **0,6** |
+
+**Über 0,7 nicht sinnvoll.** Die Energiebilanz wird dadurch nicht besser,
+nur die Zahl der Schreibvorgänge und Richtungswechsel steigt. Bei taktenden
+Lasten (Herd-Thermostat, Induktion, Heißluftfritteuse) kann es dann auch zu
+häufigeren Wechseln zwischen Laden und Entladen kommen. Schnelle Reaktion
+auf Lastabwurf liefert seit 5.1.8 ohnehin die schnelle Flanke
+(`JUMP_FACTOR`), nicht ein hoher `dampingFactor`.
+
+Grundlage ist eine Simulation mit 4 s Takt und 3 s Reaktionszeit der
+Geräte (siehe [Changelog](CHANGELOG.md) 5.1.8 und 5.2.0). Bei `remote`
+und `http_json` kommt der Messwert mit zusätzlicher Verzögerung an, bei
+mehreren Geräten dauert ein Zyklus länger – in beiden Fällen ist der
+Regelkreis träger, und eine stärkere Dämpfung verhindert Überschwingen.
 
 ### 8.3) Watchdog / Timer
 
@@ -1167,11 +1209,11 @@ Nicht unter 3 Sekunden gehen. Der daraus abgeleitete `watchdog`-Wert
 (`interval × 2.5`) steht danach automatisch im Start-Banner:
 
 | Anzahl Geräte | Bem. | `interval` (s) | `httpTimeout` (s, fest) | `watchdog` (ms, abgeleitet) |
-|---|---|---|---|---|
-|1||3000|4 (fest)|7500|
-|2||3500|4 (fest)|8750|
-|3|default|4000|4 (fest)|10000|
-|4||4500|4 (fest)|11250|
+| --- | --- | --- | --- | --- |
+| 1 | | 3000 | 4 (fest) | 7500 |
+| 2 | | 3500 | 4 (fest) | 8750 |
+| 3 | default | 4000 | 4 (fest) | 10000 |
+| 4 | | 4500 | 4 (fest) | 11250 |
 
 ℹ️ Der Sparmodus (Kapitel 8.12) verkürzt die Zyklusdauer in ruhigen Phasen
 deutlich, da die Geräte-Reads entfallen – am `watchdog`-Wert ändert das
@@ -1184,7 +1226,7 @@ gemeinsamen Zähler-Objekt lagen, sind die Zähler hier in **global** und
 **pro Gerät** aufgeteilt:
 
 | Geltungsbereich | Typ | Ausgelöst durch |
-|---|---|---|
+| --- | --- | --- |
 | Global (`state.errors`) | `em` | Netzmesswert nicht verfügbar (`local`: `em:0` fehlt; `remote`: Pro 3EM nicht erreichbar/Antwort ungültig; `http_json`: Meter nicht erreichbar, Antwort nicht als JSON parsbar, oder konfiguriertes `gridSourceField` fehlt) |
 | Global (`state.errors`) | `watchdog` | Zyklus durch Watchdog abgebrochen (siehe 8.3) |
 | Global (`state.errors`) | `kvs` | `KVS.GetMany` fehlgeschlagen (nur relevant bei `kvsEnabled: true`, siehe Kapitel 13) |
@@ -1325,7 +1367,7 @@ statt im dynamischen Modus fälschlich von „nicht gesperrt" auszugehen.
 `ds.socLimit`:
 
 | `socLimit` | Bedeutung | Auswirkung |
-|---:|---|---|
+| ---: | --- | --- |
 | `0` | keine Einschränkung | Laden und Entladen wie gewohnt möglich |
 | `1` | Ladesperre vom Gerät gemeldet | Gerät erhält in `computeChargeWeights()` immer Gewicht 0 (Laden vom Netz gesperrt). **Entladen bleibt ausdrücklich erlaubt** – das Gerät bekommt weiterhin einen Entlade-Soll (Deadlock-Vermeidung, siehe Kapitel 6a/6e). Zusätzlich Auslöser der fleet-weiten `gridReverse`-Sperre (Kapitel 6d). |
 | `2` | Entladesperre vom Gerät gemeldet | Gerät erhält in `computeDischargeWeights()` immer Gewicht 0 (Entladen gesperrt), Laden bleibt unberührt |
@@ -1427,7 +1469,7 @@ Reihenfolge beim Start:
    erreicht werden:
 
 | Bedingung | zusätzlich freigegeben |
-|---|---|
+| --- | --- |
 | `kvsEnabled: false` | `readKvsOverrides`, `kvsItemsToMap`, `applyKvsValue`, `syncMinSocDevice`, `syncInputLimitDevice` |
 | Signal aus oder `typ` ≠ `"WEBHOOK"` | `sendWebhookMessage` |
 | Signal aus oder `typ` = `"WEBHOOK"` | `simpleEncode` |
@@ -1497,7 +1539,7 @@ Start- und eine (niedrigere) Stop-Schwelle. Beide Schwellenpaare sind nach
 demselben Prinzip aufgebaut, wirken aber auf zwei unterschiedlichen Ebenen:
 
 | Schwelle | Wert (Standard) | Ebene |
-|---|---|---|
+| --- | --- | --- |
 | `dischargeStartupPower` | 35 W | **Aggregat** – einmal pro Zyklus, auf die Summe aller Geräte |
 | `dischargeStopPower` | 15 W | **Pro Gerät/Geräteanteil** – jedes Mal, für jedes Gerät einzeln |
 | `reverseStartupPower` | 35 W | **Aggregat** – einmal pro Zyklus, auf die Summe aller Geräte |
@@ -1543,7 +1585,7 @@ ineffizienten Werten.
 `dischargeStopPower: 15`):**
 
 | Zyklus | Ziel | Zustand vorher | Ergebnis | Warum |
-|---:|---:|---|---:|---|
+| ---: | ---: | --- | ---: | --- |
 | 1 | 30 W | aus | **0 W** | unter Start-Schwelle (35 W), noch nicht aktiv → bleibt aus |
 | 2 | 40 W | aus | **40 W** | ≥ Start-Schwelle (35 W) → läuft sofort mit vollem Zielwert an |
 | 3 | 20 W | aktiv (40 W) | **20 W** | bereits aktiv, 20 W ≥ Stop-Schwelle (15 W) → bleibt an |
@@ -1614,7 +1656,7 @@ lediglich die Möglichkeit eines kontrollierten Übergangs.
 **Beispiel** (`interval: 4000` ms, `directionChangeHoldCycles: 4` = Standard und Minimum):
 
 | Zyklus | Ziel (roh) | `reversalHoldCount` danach | tatsächlich geschrieben | `realDirection` danach |
-|---:|---:|---:|---:|---:|
+| ---: | ---: | ---: | ---: | ---: |
 | 1 | +500 W (Entladen) | 0 (keine `realDirection` vorhanden) | `acMode 2`, **500 W** | `2` |
 | 2 | −500 W (Laden) | 1 (1 ≤ 4 → Bremse aktiv) | `acMode 1` **Standby**, **0 W** | bleibt `2` |
 | 3 | −500 W (Laden) | 2 (Bremse aktiv) | Standby, 0 W (kein neuer Schreibvorgang, da Wert/`acMode`/`smartMode` unverändert) | bleibt `2` |
@@ -1691,7 +1733,7 @@ nahe 0 W).
 **Die Regel in Worten:**
 
 | Situation | `acMode` | `smartMode` |
-|---|---|---|
+| --- | --- | --- |
 | Standby (0 W), weniger als 15 Zyklen in Folge | `1` | `1` |
 | Standby (0 W), ab 15 Zyklen in Folge, `standbySmartModeZero: true` | `1` | `0` |
 | Standby (0 W), `standbySmartModeZero: false` | `1` | `1` |
@@ -1748,7 +1790,7 @@ setzt der Sparmodus zeitlich begrenzt aus.
 **Was ausgesetzt wird – und was nicht:**
 
 | | Im Sparmodus |
-|---|---|
+| --- | --- |
 | Netzmesswert (`readGridPower`) | wird **weiterhin in jedem Zyklus** gelesen |
 | `calculate()` | läuft **weiterhin in jedem Zyklus** |
 | Schreibvorgänge an die Geräte | erfolgen **weiterhin normal**, sobald die Hysterese verlassen wird |
@@ -1810,7 +1852,7 @@ Bei den Standardwerten (`maxSkipSeconds: 44`, `interval: 4000`) ergibt das
 `IDLE_SKIP_CYCLES: 11`):
 
 | Zyklus | Art | Geräte-Reads | Ereignis |
-|---:|---|---:|---|
+| ---: | --- | ---: | --- |
 | 1–3 | Voll-Poll | 2 | Output innerhalb Hysterese, Zähler 1→3 |
 | 4 | Voll-Poll | 2 | Zähler erreicht 4 → Sparmodus startet, 11 Zyklen |
 | 5–15 | Skip | 0 | nur Netzmessung, `calculate()` läuft weiter |
@@ -2053,7 +2095,7 @@ Wird beim Skriptstart einmal komplett ausgegeben:
 
 ```
 --------------------------------
-Version 5.1.4
+Version 5.2.0
 Multi-Device Controller gestartet
 Geraete    : 2
   - [dev0] SF2400Pro (192.168.169.42): Entladen ja, minSoc 10%, maxOutput 2300 W, Laden vom Netz ja (maxInput 2300 W, maxSoc 100%)
@@ -2063,7 +2105,7 @@ Interval   : 4000 ms
 Watchdog   : 10000 ms
 Setpoint   : 0 W
 Hysteresis : 12 W (pro Geraet)
-Damping    : 0.65
+Damping    : 0.65 (Sprung > 36 W in Richtung weniger Export: 0.9)
 Entladen   : ein Geraet unter 600 W, verteilen ueber 1000 W
 Laden      : ein Geraet unter 600 W, verteilen ueber 1000 W
 Konzentrieren-Haltezeit: 3 min (45 Zyklen) - gilt fuer spread->single, discharge+charge
@@ -2106,7 +2148,7 @@ Netzsaldo: -4 W | Ist-Summe: 387 W | Regelsignal: 384 W | Ladekorrektur: 0 W
 ```
 
 | Feld | Herkunft im Code | Bedeutung |
-|---|---|---|
+| --- | --- | --- |
 | **Netzsaldo** | `state.gridPower` | Aktuell gemessene Netzleistung. Negativ = Einspeisung/Überschuss, positiv = Bezug. Da der Setpoint 0 W ist, entspricht dieser Wert direkt der Regelabweichung. |
 | **Ist-Summe** | `sumZen` | Summe der tatsächlichen Ist-Leistung **aller** erreichbaren Geräte (unabhängig davon, ob sie gerade laden dürfen). |
 | **Regelsignal** | `dischargeTarget` | Geglättetes (Damping-Faktor) kombiniertes Entlade-Zielsignal für alle Geräte zusammen — **vor** der Verteilung auf einzelne Geräte. Bei aktivem `zdmc_dischargeFixed` steht hier der Fixwert mit Suffix `[FIX]` (z. B. `Regelsignal: 800 W [FIX]`). |
@@ -2130,12 +2172,13 @@ Wird **pro Gerät und Zyklus** direkt nach der Netzsaldo-Zeile ausgegeben (einge
 ```
 
 | Feld | Bedeutung |
-|---|---|
+| --- | --- |
 | `SOC` | Aktueller Ladezustand des Geräts in %. `n/a`, wenn das Gerät im aktuellen Zyklus nicht erreichbar war (letzter bekannter Wert wird dann für die Regelung weiterverwendet). |
 | `socL` (socLimit) | `0` = uneingeschränkt, `1` = Ladesperre (Netzladung gesperrt, Entladen weiterhin möglich), `2` = Entladesperre (Entladen gesperrt, Laden weiterhin möglich). Wird direkt vom Gerät gemeldet. |
 | `gridR` (gridReverse) | Aktueller Wert der `gridReverse`-Eigenschaft des Geräts. `n/a`, solange noch kein Wert vom Gerät bekannt ist. 1	Netzexport erlaubt, 2	Netzexport verboten |
 | `Ist` | Tatsächlich vom Gerät gemeldete aktuelle Leistung (`zenPower`), unabhängig vom kommandierten Wert. |
 | `Soll` | Für dieses Gerät im aktuellen Zyklus berechneter Ziel-Leistungswert (nach Verteilung des kombinierten Regelsignals auf die Geräte). |
+| `offGP` | Nur mit `debug: true` und nur bei Geräten mit Offgrid-Ausgang (seit 5.1.9): aktuelle Leistung am Offgrid-Ausgang (`gridOffPower`) in W. Steht zwischen `Soll` und `acMode`. |
 | `acMode` | `1` = Import/Idle, `2` = Export. Die Zahl gibt den intern geplanten Modus wieder, in Klammern die Klartext-Bezeichnung. |
 
 **Optionale Zusätze am Zeilenende:**
@@ -2181,7 +2224,7 @@ Umschaltung der `gridReverse`-Eigenschaft (Netzexport-Freigabe des Geräts: `1` 
 Erscheinen nur bei tatsächlichem Übergang, nicht in jedem Zyklus:
 
 | Meldung | Auslöser |
-|---|---|
+| --- | --- |
 | `<Geraet>: socLimit=1 vom Geraet gemeldet - Laden vom Netz gesperrt (Entladen weiterhin moeglich)` | Übergang `socL` → 1 (i. d. R. SOC erreicht `maxSoc`) |
 | `<Geraet>: socLimit=2 vom Geraet gemeldet - Entladen gesperrt (Laden weiterhin moeglich)` | Übergang `socL` → 2 (i. d. R. SOC erreicht `minSoc`) |
 | `<Geraet>: socLimit wieder 0 - Laden und Entladen uneingeschraenkt moeglich` | Übergang zurück auf `socL` = 0 |
@@ -2218,7 +2261,7 @@ FEHLER (<Label>/<Typ>): <Meldungstext> - aufeinanderfolgende Fehler: <N>
 ```
 
 | Label/Typ | Bedeutung |
-|---|---|
+| --- | --- |
 | `<Geraet>/connect` | Gerät unter der konfigurierten IP nicht erreichbar |
 | `<Geraet>/json` | Antwort des Geräts nicht als JSON parsbar |
 | `<Geraet>/serial` | Keine Seriennummer in der Geräte-Antwort |
@@ -2280,7 +2323,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
 ### 12.8) Wertetabellen (Kurzreferenz)
 
 | Feld | Wert | Bedeutung |
-|---|---|---|
+| --- | --- | --- |
 | `socLimit` (socL) | 0 | Normalbetrieb, keine Einschränkung |
 | | 1 | Ladesperre (Laden vom Netz gesperrt) |
 | | 2 | Entladesperre (Entladen gesperrt) |
@@ -2304,7 +2347,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
 Shelly-Adresse ersetzen):
 
 | Zweck | Befehl |
-|---|---|
+| --- | --- |
 | Laufende Scripts auflisten (IDs, Name, Status) | `http://<IP>/rpc/Script.List` |
 | Speicherverbrauch eines bestimmten Scripts | `http://<IP>/rpc/Script.GetStatus?id=<ID>` |
 | Geräte-Betriebszeit, RAM des Gesamtsystems | `http://<IP>/rpc/Sys.GetStatus` |
@@ -2401,7 +2444,7 @@ Maßgeblich sind die beiden CONFIG-Schalter `kvsEnabled` und
 **vor** dem Start des Regel-Timers (Reihenfolge siehe Kapitel 8.7).
 
 | Zeitpunkt | `kvsEnabled: false` | `kvsEnabled: true`, `kvsForceReseed: false` (Standard) | `kvsEnabled: true`, `kvsForceReseed: true` |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Start, vor dem Regelbetrieb | **kein KVS-Zugriff**, weder lesend noch schreibend. Log: `KVS-Seed uebersprungen - kvsEnabled: false` / `KVS-Funktion ist deaktiviert - KVS wird ignoriert.` | 1× `KVS.GetMany`, danach `KVS.Set` **nur für fehlende Keys** – bestehende Live-Overrides bleiben erhalten | 1× `KVS.GetMany`, danach `KVS.Set` für **alle** Keys – bestehende Live-Overrides werden überschrieben |
 | Laufender Regelbetrieb | – | **nie** | **nie** |
 | Bei KVS-Änderung von außen | – | nur **Lesen** (`KVS.GetMany`) | nur **Lesen** (`KVS.GetMany`) |
@@ -2411,7 +2454,7 @@ Geschrieben werden immer genau diese Keys – insgesamt `2 + 4 × Geräteanzahl`
 (bei zwei Geräten also 10):
 
 | Key | geschriebener Wert | Wertebereich der Quelle |
-|---|---|---|
+| --- | --- | --- |
 | `zdmc_setpoint` | `CONFIG.setpoint` | −40 … 40 W |
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` W |
 | `zdmc_devN_dischargeAllowed` | `1`, außer `dischargeAllowed: false` → `0` | `0` / `1` |
@@ -2436,7 +2479,7 @@ nachträgliches Seeding zur Laufzeit ist konstruktiv ausgeschlossen.
 #### 13.3.2) Wann liest das Script?
 
 | Auslöser | `kvsEnabled: false` | `kvsEnabled: true` |
-|---|---|---|
+| --- | --- | --- |
 | Seeding beim Start | – | 1× `KVS.GetMany` |
 | Initiales Einlesen beim Start | – | 1× `KVS.GetMany` (`Lade initiale KVS-Overrides...`) |
 | Änderung an einem beliebigen KVS-Key | – | 1× `KVS.GetMany` je Änderung, ausgelöst über `sys.kvs_rev` |
@@ -2461,7 +2504,7 @@ Der Status-Handler wird nur bei `kvsEnabled: true` überhaupt registriert
 ### 13.4) Live-überschreibbare Werte
 
 | KVS-Key | überschreibt | Gültigkeitsbereich | Besonderheit |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `zdmc_setpoint` | `CONFIG.setpoint` | -40…40 (W) | – |
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` (W), keine Obergrenze | Globaler Fix-Sollwert für die Entladung. `0` = aus (normale Netzsaldo-Regelung). Ist der Wert aktiv (`> 0`), ersetzt er im Entladepfad die Netzsaldo-basierte Berechnung **komplett** – der Ladepfad (`chargeTarget`) bleibt unberührt. Löst **keinen** Schreibvorgang am Zendure-Gerät aus, reiner Software-Override der Regelung. In der Zyklus-Kopfzeile (Kapitel 12.2) am Suffix `[FIX]` hinter dem Regelsignal erkennbar. |
 | `zdmc_devN_dischargeAllowed` | `CONFIG.devices[N].dischargeAllowed` | `0` / `1` | – |
@@ -2519,7 +2562,7 @@ damit das Gerät in die Regelung zurückkehrt.
 `CONFIG`-Block gesetzt, nicht per KVS):
 
 | CONFIG-Parameter | Standard | Wirkung |
-|---|---|---|
+| --- | --- | --- |
 | `kvsEnabled` | `false` | Hauptschalter. `false` deaktiviert das Feature komplett – kein Seeding, kein Einlesen, kein Status-Handler. Alle Live-Override-Parameter (`setpoint`, `dischargeFixed`, je Gerät `dischargeAllowed`, `reverse`, `minSoc`, `inputLimit`) bleiben fest auf den CONFIG-Werten, ein `KVS.Set` von außen hat keine Wirkung. |
 | `kvsForceReseed` | `false` | Nur bei `kvsEnabled: true` relevant. `true` überschreibt bei **jedem** Start alle Keys mit CONFIG – siehe Warnhinweis oben und die Matrix in 13.3.1. |
 
@@ -2667,7 +2710,7 @@ statt `set_value` und Werten `1`/`0`.
 **Aktuell konfigurierte Entities (Stand `kvs.yaml`):**
 
 | Parameter | KVS-Key | HA `unique_id` | Typ | Grenzen laut `kvs.yaml` |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Sollwert | `zdmc_setpoint` | `zdmc_setpoint` | `number` | −40…40 W, Schritt 5 |
 | Fix-Entladeleistung | `zdmc_dischargeFixed` | `zdmc_dischargefixed` | `number` | 0…1600 W, Schritt 20 |
 | dev0 minSoc | `zdmc_dev0_minSoc` | `zdmc_dev0_minsoc` | `number` | 10…90 %, Schritt 1 |
