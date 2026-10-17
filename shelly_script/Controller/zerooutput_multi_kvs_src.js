@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.1.9";
+let VERSION = "5.2.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -47,7 +47,7 @@ let CONFIG = {
   setpoint: 0, // (KVS-live-overridable)
   // Hysteresis in watts, PER DEVICE
   hysteresis: 12,
-  // Damping / gain factor for the COMBINED control signal (0 < factor <= 1),
+  // Damping / gain factor for the COMBINED control signal (0.4 <= factor <= 0.8),
   dampingFactor: 0.65,
 
   // ------------------------------------------------------------------
@@ -141,11 +141,18 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     Math.min(CONFIG.devices[i].maxInputPower, CONFIG.devices[i].inputLimit));
 }
 
-CONFIG.dampingFactor       = Math.max(0.4, Math.min(1, CONFIG.dampingFactor));
+CONFIG.dampingFactor       = Math.max(0.4, Math.min(0.8, CONFIG.dampingFactor));
 CONFIG.setpoint            = Math.max(-40, Math.min(40, CONFIG.setpoint));
 CONFIG.hysteresis          = Math.max(5, Math.min(40, CONFIG.hysteresis));
 CONFIG.rebalance.socMargin = Math.max(5, Math.min(25, CONFIG.rebalance.socMargin));
 CONFIG.chargeResetMargin   = Math.max(10, Math.min(25, CONFIG.chargeResetMargin));
+// v5.2.0: Sprungschwelle fuer die asymmetrische Daempfung (siehe calculate()).
+// 3x Hysterese, max. 50 W. hysteresis ist nicht KVS-aenderbar -> einmalig.
+let JUMP_THRESHOLD = Math.min(3 * CONFIG.hysteresis, 50);
+// Faktor der schnellen Flanke (1 = ungedaempft). 0.9 statt 1: bei ~3 s
+// Reaktionszeit der Geraete schiesst ein voller Sprung sonst leicht ueber
+// und wird im Folgetakt zurueckgenommen (Hin und Her).
+let JUMP_FACTOR = 0.9;
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 15; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 15;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 15; }
@@ -1016,18 +1023,22 @@ function calculate(myCycle) {
 
   updateGridReverseLock();
 
-  // v5.1.8: Asymmetrische Daempfung - immer in Richtung "weniger Export"
-  // ungedaempft (Faktor 1), in Gegenrichtung wie bisher mit dampingFactor.
-  // Entladen: sinkt der Bedarf (Last aus), wird sofort zurueckgenommen.
-  // Laden:    steigt der Ueberschuss (Wolke weg), wird sofort mehr geladen.
+  // v5.1.8: Asymmetrische Daempfung - in Richtung "weniger Export" schnell
+  // (Faktor JUMP_FACTOR), in Gegenrichtung wie bisher mit dampingFactor.
+  // Entladen: sinkt der Bedarf (Last aus), wird schnell zurueckgenommen.
+  // Laden:    steigt der Ueberschuss (Wolke weg), wird schnell mehr geladen.
   // Die Gegenrichtung (mehr Entladen / weniger Laden) bleibt gedaempft -
   // dort entsteht kurz Netzbezug statt Export.
+  // v5.2.0: schnelle Flanke (JUMP_FACTOR) erst ab einem Sprung > JUMP_THRESHOLD. Kleinere
+  // Abweichungen (Messrauschen) werden wieder symmetrisch gedaempft - sonst
+  // gehen Rausch-Ausreisser nach unten voll durch, nach oben nur gedaempft
+  // (Zittern, mehr Schreibvorgaenge, leichter Bias Richtung Netzbezug).
   let raw = Math.round((state.gridPower - CONFIG.setpoint) + sumZen);
 
   if (state.smoothedOutput === null) {
     state.smoothedOutput = raw;
   } else {
-    let aD = (raw < state.smoothedOutput) ? 1 : CONFIG.dampingFactor;
+    let aD = (raw < state.smoothedOutput - JUMP_THRESHOLD) ? JUMP_FACTOR : CONFIG.dampingFactor;
     state.smoothedOutput = state.smoothedOutput + aD * (raw - state.smoothedOutput);
   }
 
@@ -1043,7 +1054,7 @@ function calculate(myCycle) {
   if (state.smoothedCharge === null) {
     state.smoothedCharge = rawCharge;
   } else {
-    let aC = (rawCharge < state.smoothedCharge) ? 1 : CONFIG.dampingFactor;
+    let aC = (rawCharge < state.smoothedCharge - JUMP_THRESHOLD) ? JUMP_FACTOR : CONFIG.dampingFactor;
     state.smoothedCharge = state.smoothedCharge + aC * (rawCharge - state.smoothedCharge);
   }
 
@@ -2167,7 +2178,7 @@ function bannerLine(i) {
   if (j === 2) return "Watchdog   : " + CONFIG.watchdog + " ms";
   if (j === 3) return "Setpoint   : " + CONFIG.setpoint + " W";
   if (j === 4) return "Hysteresis : " + CONFIG.hysteresis + " W (pro Geraet)";
-  if (j === 5) return "Damping    : " + CONFIG.dampingFactor;
+  if (j === 5) return "Damping    : " + CONFIG.dampingFactor + " (Sprung > " + JUMP_THRESHOLD + " W in Richtung weniger Export: " + JUMP_FACTOR + ")";
 
   if (j === 6) return "Entladen   : ein Geraet unter " +
     CONFIG.discharge.concentrateBelow + " W, verteilen ueber " +

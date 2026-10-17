@@ -1,5 +1,18 @@
 # Changelog Controller
 
+## v5.2.0
+
+- **Ruhigere Regelung bei konstanter Last (Nachbesserung zu 5.1.8):** Die schnelle Flanke greift nur noch bei einem echten Sprung, wenn der neue Wert mehr als **3 × `hysteresis`** (höchstens **50 W**) unter dem aktuellen Regelsignal liegt. Kleinere Abweichungen werden wieder in beide Richtungen mit `dampingFactor` gedämpft, wie bis 5.1.7.
+- **Schnelle Flanke mit Faktor 0,9 statt ungedämpft:** Bei einem Sprung übernimmt der Controller 90 % der Änderung sofort, nicht 100 %. Wegen der Reaktionszeit der Solarflows (~3 s) steckt das Gerät beim nächsten Messen oft noch in der Rampe. Ein voller Sprung schoss dann leicht über und wurde im Folgetakt wieder zurückgenommen.
+- Simulation mit 4 s Takt und 3 s Reaktionszeit: beim Wasserkocher ein Drittel weniger Richtungswechsel, beim Herd-Thermostat rund 35 % weniger, bei taktender Induktion ein Viertel weniger Schreibbefehle. Der Export ist dabei nur 5–10 % höher als mit voll ungedämpfter Flanke, liegt aber weiter deutlich unter 5.1.7 (Wasserkocher: 23,8 statt 30,5 Wh).
+- Der Faktor steht als Konstante `JUMP_FACTOR` im Skript, nicht im CONFIG-Block.
+- **`dampingFactor` jetzt höchstens 0,8** (vorher 1,0, Untergrenze unverändert 0,4). Höhere Werte werden beim Start auf 0,8 gesetzt. Über 0,7 bringt ein höherer Wert in der Simulation keine Energie, sondern nur mehr Schreibbefehle und Richtungswechsel. Empfehlung: 0,6–0,7, bei `remote`/`http_json` 0,5–0,6.
+- Hintergrund: Seit 5.1.8 kam auch das Messrauschen nach unten ungedämpft durch, nach oben nur gedämpft. Bei konstanter Last schwankte das Regelsignal stärker, es wurde öfter geschrieben, und der Mittelwert lag leicht Richtung Netzbezug. Aufgeschaukelt hat sich die Regelung dabei nicht.
+- Schwelle: bei `hysteresis: 12` 36 W, bei 13 W 39 W, ab 17 W 50 W. Schwelle und Faktor stehen im Startbanner in der Zeile „Damping“.
+- Simulation: Bei konstanter Last wird wieder so oft geschrieben wie in 5.1.7 (64 statt 97 Schreibbefehle in 20 min). Der Gewinn bei Lastsprüngen aus 5.1.8 bleibt („Wasserkocher aus“: 15,0 Wh Export statt 18,0 Wh in 5.1.7).
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.1.9
 
 - **Offgrid-Leistung im Log (nur mit `debug: true`):** Die Gerätezeile zeigt zusätzlich `offGP <W> W`, wenn der Speicher einen Offgrid-Ausgang hat (`gridOffPower`). Geräte ohne Offgrid-Ausgang und Betrieb ohne debug: Logzeile unverändert.
