@@ -54,11 +54,15 @@ Der Netzsaldo ist bewusst ein eigenes Gerät: Er gehört zu keinem Speicher, son
 2. `http://<proxy-host>:8000/thingsboard` im Browser öffnen.
 3. **Server-Adresse** prüfen. Vorbelegt ist `https://eu.thingsboard.cloud`. Für einen eigenen Server z. B. `http://nas:8080` eintragen.
 4. Auf **„Geräte vom Shelly laden“** tippen. Für jeden Speicher erscheint ein Eingabefeld, darunter eines für **„Netz (Netzsaldo)“**.
-5. Die Access Tokens eintragen, **„Upload aktiv“** anhaken und **„Speichern & Tokens testen“**.
+5. Die Access Tokens eintragen.
+6. Unter **„Werte je Speicher“** die Werte anhaken, die gesendet werden sollen. Vorausgewählt sind die sieben Standardwerte, siehe [Geräte und Werte](#geräte-und-werte).
+7. **„Upload aktiv“** anhaken und **„Speichern & Tokens testen“**.
 
 Beim Speichern prüft der Proxy jedes neue Token. Dazu schreibt er beim Gerät ein Attribut `zendashBridgeTest` mit der aktuellen Uhrzeit – du findest es in ThingsBoard beim Gerät unter *Attributes*. Das kostet keinen Datenpunkt. Ist ein Token falsch, siehst du das sofort. Änderst du die Server-Adresse, prüft der Proxy alle Tokens neu.
 
 Die Einstellungen landen in `zendure_thingsboard_config.json` neben dem Proxy (in der Home Assistant App unter `/data`). Beim Umzug des Proxys, z. B. vom PC aufs NAS, kannst du die Datei einfach mitkopieren.
+
+**Werteauswahl:** Sie gilt für alle Speicher gemeinsam und steht als `fields` in `zendure_thingsboard_config.json`. Mindestens ein Wert muss angehakt sein. Ändert sich nur die Auswahl, prüft der Proxy die Tokens nicht erneut. Abgewählte Werte bleiben in ThingsBoard mit ihrem bisherigen Verlauf erhalten, es kommen nur keine neuen dazu. Ältere Konfigurationen ohne `fields` senden weiter die sieben Standardwerte.
 
 **Ändern und entfernen:** Ein leeres Feld behält das bisherige Token, ein `-` entfernt das Gerät aus dem Upload. Hinterlegte Tokens zeigt die Seite nur gekürzt an (`****AB12`).
 
@@ -95,17 +99,21 @@ Lehnt ThingsBoard eine Meldung ab oder ist das Internet weg, versucht der Proxy 
 
 ## Geräte und Werte
 
-**Speicher** – ein Gerät pro Speicher, Schlüssel wie im Zendure-Report:
+**Speicher** – ein Gerät pro Speicher, Schlüssel wie im Zendure-Report. Welche Werte gesendet werden, legst du auf `/thingsboard` unter „Werte je Speicher“ fest:
 
-| Schlüssel | Inhalt | Einheit | Quelle in `status_api` |
-|---|---|---|---|
-| `electricLevel` | Ladestand | % | `soc` |
-| `solarInputPower` | PV-Eingang | W | `pv` |
-| `outputHomePower` | Abgabe ans Haus | W | `home` |
-| `gridInputPower` | Aufnahme aus dem Netz | W | `gridIn` |
-| `packInputPower` | Entladen aus dem Akku | W | `packIn` |
-| `outputPackPower` | Laden in den Akku | W | `packOut` |
-| `minVol` | Niedrigste Zellspannung | V | `minVol` ÷ 100 |
+| Schlüssel | Inhalt | Einheit | Quelle in `status_api` | Standard |
+|---|---|---|---|---|
+| `electricLevel` | Ladestand | % | `soc` | an |
+| `solarInputPower` | PV-Eingang | W | `pv` | an |
+| `outputHomePower` | Abgabe ans Haus | W | `home` | an |
+| `gridInputPower` | Aufnahme aus dem Netz | W | `gridIn` | an |
+| `packInputPower` | Entladen aus dem Akku | W | `packIn` | an |
+| `outputPackPower` | Laden in den Akku | W | `packOut` | an |
+| `minVol` | Niedrigste Zellspannung | V | `minVol` ÷ 100 | an |
+| `batteryPower` | Akkuleistung, **+ = Akku entlädt, − = Akku lädt** | W | berechnet: `packIn` − `packOut` | aus |
+| `offGridPower` | Leistung am Offgrid-Ausgang | W | `offGrid` (ab zendash_watch 3.5.9) | aus |
+
+`batteryPower` spart ein berechnetes Feld in ThingsBoard: Statt `packInputPower` und `outputPackPower` einzeln reicht dieser eine Wert, wenn du nur die Akkuleistung brauchst. Er fehlt, wenn einer der beiden Ausgangswerte fehlt. `offGridPower` fehlt bei Geräten ohne Offgrid-Steckdose.
 
 **Netz** – ein Gerät für den Netzzähler:
 
@@ -138,7 +146,7 @@ Die Menünamen können je nach ThingsBoard-Version leicht abweichen. Berechnete 
 
 Der kostenlose Tarif der ThingsBoard Cloud erlaubt **5 Geräte** und pro Monat **1 Million Datenpunkte** sowie **30 Millionen Datenpunkt-Speichertage**. Ein Datenpunkt ist ein einzelner Wert. Speichertage sind Datenpunkte mal Aufbewahrungsdauer: Jeder Datenpunkt wird im Free-Tarif 30 Tage gespeichert und zählt deshalb sofort mit 30 Speichertagen. Die 30 Millionen entsprechen also genau 1 Million Datenpunkten im Monat – beide Grenzen sind gleich eng.
 
-Ein Speicher liefert bis zu 7 Datenpunkte pro Minute, das Netz-Gerät einen:
+Ein Speicher liefert so viele Datenpunkte pro Minute, wie Werte angehakt sind – mit der Standardauswahl bis zu 7 –, das Netz-Gerät einen. Die Tabelle gilt für die Standardauswahl:
 
 | Speicher | Geräte | Datenpunkte pro Minute | pro Tag | pro Monat (31 Tage) | Speichertage pro Monat |
 |---|---|---|---|---|---|
@@ -148,6 +156,8 @@ Ein Speicher liefert bis zu 7 Datenpunkte pro Minute, das Netz-Gerät einen:
 | 4 | 5 | 29 | 41.760 | ca. 1.295.000 | ca. 38,8 Mio. – zu viel |
 
 **Bis 2 Speicher passt es sicher in den Free-Tarif.** Bei 3 Speichern bleibt kein Spielraum: Schon ein paar zusätzliche Werte, etwa aus eigenen Regeln oder Tests, reichen, um das Limit zu reißen.
+
+**Weniger Werte, mehr Spielraum:** Mit der Werteauswahl sparst du gezielt. Wer z. B. statt `packInputPower` und `outputPackPower` nur `batteryPower` sendet, kommt mit 6 statt 7 Werten pro Speicher aus; mit 5 Werten passen auch 3 Speicher sicher in den Free-Tarif (16 Datenpunkte pro Minute, ca. 714.000 im Monat).
 
 Wie viele Datenpunkte die Bridge tatsächlich gesendet hat, steht in jeder Log-Zeile (siehe [Meldungen im Log](#meldungen-im-log)). Den Verbrauch aus Sicht von ThingsBoard zeigt das **API-Usage-Dashboard**. Liegt dort deutlich mehr als im Log, kommen Daten aus einer anderen Quelle, siehe [Fehlersuche](#fehlersuche).
 

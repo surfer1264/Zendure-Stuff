@@ -1,5 +1,12 @@
 # Changelog zendash API - WatchDog
 
+## Proxy 3.5.9.2 (ohne Änderung am Script)
+
+- ThingsBoard-Upload: Werte je Speicher auf `/thingsboard` per Häkchen auswählbar, für alle Speicher gemeinsam; gespeichert als `fields` in `zendure_thingsboard_config.json`. Ohne `fields` (ältere Konfiguration) bleiben die bisherigen sieben Werte
+- ThingsBoard-Upload: neue Werte `batteryPower` (berechnet `packIn` − `packOut`, + = Akku entlädt, − = Akku lädt) und `offGridPower` (Leistung am Offgrid-Ausgang), standardmäßig aus
+- ThingSpeak-Upload unverändert
+- Home-Assistant-App-Version 3.5.9.2
+
 ## Changelog 3.5.9
 
 - Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile

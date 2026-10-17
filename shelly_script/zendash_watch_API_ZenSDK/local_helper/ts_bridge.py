@@ -27,9 +27,13 @@ ThingSpeak - ein Channel pro Hub:
   Hub offline oder keine Daten: Eintrag nur mit Status, ohne Feldwerte.
 
 ThingsBoard - ein Geraet pro Hub plus ein Geraet "Netz":
-  Hub:  electricLevel, solarInputPower, outputHomePower, gridInputPower,
-        packInputPower, outputPackPower, minVol (V)
-  Netz: gridPower (W, positiv = Bezug)
+  Hub:  Auswahl aus TB_FIELDS, auf /thingsboard per Haekchen, gilt fuer alle
+        Hubs gemeinsam und steht als "fields" in der Config. Ohne "fields"
+        (aeltere Config) gelten die Standardwerte: electricLevel,
+        solarInputPower, outputHomePower, gridInputPower, packInputPower,
+        outputPackPower, minVol (V). Zusaetzlich waehlbar: batteryPower
+        (packIn - packOut, + = Akku entlaedt) und offGridPower.
+  Netz: gridPower (W, positiv = Bezug), immer
   Fehlende Werte werden weggelassen; Hub offline -> in dieser Minute nichts.
 """
 
@@ -60,14 +64,14 @@ WAKE_WAIT_S = 10    # pollIntervalSec (8 s) + Reserve
 RETRY_S = 5
 SEND_WAIT_S = 40    # so lange wartet der Takt hoechstens auf beide Sender
 
-# status_api-Schluessel -> ThingSpeak-Feld / ThingsBoard-Name
+# status_api-Schluessel -> ThingSpeak-Feld (fest, ThingsBoard siehe TB_FIELDS)
 HUB_VALUES = (
-    ("soc",     "field1", "electricLevel"),
-    ("pv",      "field2", "solarInputPower"),
-    ("home",    "field3", "outputHomePower"),
-    ("gridIn",  "field4", "gridInputPower"),
-    ("packIn",  "field5", "packInputPower"),
-    ("packOut", "field6", "outputPackPower"),
+    ("soc",     "field1"),
+    ("pv",      "field2"),
+    ("home",    "field3"),
+    ("gridIn",  "field4"),
+    ("packIn",  "field5"),
+    ("packOut", "field6"),
 )
 GRID_TB_KEY = "gridPower"
 TB_GRID_ID = "grid"
@@ -90,7 +94,7 @@ _thread = None
 _fetch = None
 _dir = None
 TS = {"enabled": False, "channels": {}}
-TB = {"enabled": False, "host": TB_DEFAULT_HOST, "tokens": {}}
+TB = {"enabled": False, "host": TB_DEFAULT_HOST, "tokens": {}, "fields": []}
 _latest = None      # letzte frische status_api-Antwort der laufenden Minute
 _last_feed = 0.0    # letzte Antwort ueberhaupt (auch veraltete)
 _last_live = 0.0    # letzte Antwort, die als frisch gilt
@@ -138,6 +142,8 @@ def _load(app_dir):
     TB["enabled"] = bool(d.get("enabled"))
     TB["host"] = d.get("host") or TB_DEFAULT_HOST
     TB["tokens"] = dict(d.get("tokens") or {})
+    f = d.get("fields")
+    TB["fields"] = _tb_norm_fields(f) if isinstance(f, list) else list(TB_DEFAULT_FIELDS)
 
 
 def _norm_host(h):
@@ -194,6 +200,35 @@ def _min_vol(h):
     return round(mv / 100, 2) if _num(mv) and mv > 0 else None
 
 
+def _battery_power(h):
+    """Akkuleistung: + = Akku entlaedt, - = Akku laedt (wie Solarflow-Leistung)."""
+    pi, po = h.get("packIn"), h.get("packOut")
+    return pi - po if _num(pi) and _num(po) else None
+
+
+# ThingsBoard: waehlbare Werte je Hub, fuer alle Hubs gemeinsam.
+# (Name in ThingsBoard, Beschriftung auf /thingsboard, Wert aus dem Hub,
+#  Standard an). Reihenfolge = Reihenfolge auf der Seite und in der Config.
+TB_FIELDS = (
+    ("electricLevel",   "Ladestand (%)",                         lambda h: h.get("soc"),     True),
+    ("solarInputPower", "PV-Eingang (W)",                        lambda h: h.get("pv"),      True),
+    ("outputHomePower", "Abgabe ans Haus (W)",                   lambda h: h.get("home"),    True),
+    ("gridInputPower",  "Aufnahme aus dem Netz (W)",             lambda h: h.get("gridIn"),  True),
+    ("packInputPower",  "Entladen aus dem Akku (W)",             lambda h: h.get("packIn"),  True),
+    ("outputPackPower", "Laden in den Akku (W)",                 lambda h: h.get("packOut"), True),
+    ("minVol",          "Niedrigste Zellspannung (V)",           _min_vol,                   True),
+    ("batteryPower",    "Akkuleistung (W, + entlaedt, - laedt)", _battery_power,             False),
+    ("offGridPower",    "Offgrid-Leistung (W)",                  lambda h: h.get("offGrid"), False),
+)
+TB_DEFAULT_FIELDS = [f[0] for f in TB_FIELDS if f[3]]
+
+
+def _tb_norm_fields(names):
+    """Nur bekannte Namen, ohne Doppel, in Katalog-Reihenfolge."""
+    wanted = set(n for n in names if isinstance(n, str))
+    return [f[0] for f in TB_FIELDS if f[0] in wanted]
+
+
 # ---------------------------------------------------------------
 # ThingSpeak
 # ---------------------------------------------------------------
@@ -218,7 +253,7 @@ def _ts_fields(data):
             out[hid] = {"status": "offline"}
             continue
         f = {"field7": grid, "field8": _min_vol(h)}
-        for key, fld, _ in HUB_VALUES:
+        for key, fld in HUB_VALUES:
             f[fld] = h.get(key)
         out[hid] = {k: v for k, v in f.items() if _num(v)}
     return out
@@ -261,11 +296,11 @@ def _tb_values(data):
     out = {}
     if data is None:
         return out
+    sel = set(TB["fields"])
     for h in data.get("hubs") or []:
         if not h.get("online"):
             continue                                    # offline -> nichts
-        v = {name: h.get(key) for key, _, name in HUB_VALUES}
-        v["minVol"] = _min_vol(h)
+        v = {name: get(h) for name, _, get, _ in TB_FIELDS if name in sel}
         v = {k: x for k, x in v.items() if _num(x)}
         if v:
             out[str(h.get("id"))] = v
@@ -350,7 +385,7 @@ def _describe():
         parts.append("ThingSpeak (Hub " + ", ".join(sorted(TS["channels"])) + ")")
     if _tb_active():
         devs = ["Netz" if d == TB_GRID_ID else "Hub " + d for d in sorted(TB["tokens"])]
-        parts.append("ThingsBoard (" + ", ".join(devs) + ")")
+        parts.append("ThingsBoard (" + ", ".join(devs) + "; je Hub: " + ", ".join(TB["fields"]) + ")")
     return " + ".join(parts)
 
 
@@ -406,8 +441,17 @@ def handle_post(data):
 
 def handle_post_tb(data):
     """/thingsboard: (ok, fehlertext). Token leer = behalten, "-" = entfernen.
-    Bei geaenderter Server-Adresse werden alle Tokens neu geprueft."""
+    Bei geaenderter Server-Adresse werden alle Tokens neu geprueft.
+    "fields" fehlt = Auswahl behalten; eine geaenderte Auswahl braucht
+    keinen Token-Test."""
     host = _norm_host(data.get("host"))
+    fields = TB["fields"]
+    if "fields" in data:
+        if not isinstance(data["fields"], list):
+            return False, "Werteauswahl hat nicht das erwartete Format."
+        fields = _tb_norm_fields(data["fields"])
+        if not fields:
+            return False, "Mindestens einen Wert je Speicher auswaehlen."
     new = dict(TB["tokens"])
     changed = {}
     for dev, tok in (data.get("tokens") or {}).items():
@@ -432,6 +476,7 @@ def handle_post_tb(data):
             return False, "ThingsBoard lehnt das Token fuer {} ab ({}).".format(name, ans)
     TB["host"] = host
     TB["tokens"] = new
+    TB["fields"] = fields
     TB["enabled"] = bool(data.get("enabled"))
     _write_json(TB_FILE, TB)
     _apply()
@@ -445,6 +490,7 @@ _CSS = """
  button{margin-top:16px;width:100%;padding:11px;border:0;border-radius:8px;background:#4FD1C5;color:#0B1220;font-weight:600}
  button.sec{background:#1f2b42;color:#E5E9F0} #msg{margin-top:12px} .err{color:#F87171} .ok{color:#4FD1C5} a{color:#4FD1C5}
  .hint{font-size:.8rem;color:#9AA7BD;margin-top:6px}
+ h2{color:#4FD1C5;font-size:1rem;margin-top:24px} label.fld{margin-top:8px;color:#E5E9F0} code{color:#9AA7BD}
 """
 
 
@@ -494,7 +540,9 @@ btn.onclick = async function(){
 
 def page_html_tb():
     state = json.dumps({"enabled": TB["enabled"], "host": TB["host"], "grid": TB_GRID_ID,
-                        "masked": {d: _mask(t) for d, t in TB["tokens"].items()}})
+                        "masked": {d: _mask(t) for d, t in TB["tokens"].items()},
+                        "fields": [{"name": f[0], "label": f[1]} for f in TB_FIELDS],
+                        "sel": TB["fields"]})
     return """<!doctype html><html lang="de"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZenDash - ThingsBoard</title><style>""" + _CSS + """</style></head><body>
@@ -505,12 +553,20 @@ def page_html_tb():
 <div class="hint">ThingsBoard Cloud EU: https://eu.thingsboard.cloud &middot; eigener Server z. B. http://nas:8080</div>
 <div id="devs"></div>
 <button class="sec" id="load">Geraete vom Shelly laden</button>
+<h2>Werte je Speicher</h2>
+<div class="hint">Gilt fuer alle Speicher gleich. Jeder Wert ist pro Speicher und Minute ein Datenpunkt
+(Kontingent im Free-Tarif). Das Geraet &bdquo;Netz&ldquo; sendet immer <code>gridPower</code>.</div>
+<div id="flds"></div>
 <button id="btn">Speichern &amp; Tokens testen</button>
 <div id="msg"></div>
 <p><a href="./">&larr; Dashboard</a> &middot; <a href="thingspeak">ThingSpeak</a></p>
 <script>
 var S = """ + state + """;
 en.checked = S.enabled; host.value = S.host;
+flds.innerHTML = S.fields.map(function(f){
+  return '<label class="fld"><input type="checkbox" data-f="'+f.name+'"'+
+    (S.sel.indexOf(f.name) >= 0 ? ' checked' : '')+'> '+f.label+' <code>'+f.name+'</code></label>';
+}).join('');
 function row(id, label){
   var m = S.masked[String(id)] || 'kein Token';
   return '<label>'+label+' - Access Token, aktuell: '+m+
@@ -527,9 +583,10 @@ load.onclick = function(){
 };
 btn.onclick = async function(){
   var tk = {}; document.querySelectorAll('[data-id]').forEach(function(i){ tk[i.dataset.id]=i.value; });
+  var fs = []; document.querySelectorAll('[data-f]').forEach(function(c){ if (c.checked) fs.push(c.dataset.f); });
   btn.disabled=true; msg.className=''; msg.textContent='Pruefe...';
   var r = await fetch('thingsboard',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({enabled:en.checked,host:host.value,tokens:tk})});
+    body:JSON.stringify({enabled:en.checked,host:host.value,tokens:tk,fields:fs})});
   var d = await r.json(); btn.disabled=false;
   msg.className = d.ok?'ok':'err'; msg.textContent = d.ok?'Gespeichert.':d.error;
   if (d.ok) setTimeout(function(){ location.reload(); }, 800);
