@@ -1,81 +1,119 @@
-{
-  "type": "SCRIPT",
-  "name": "Regelgüte Echtzeit-Klassifizierung",
-  "debugSettings": {
-    "failuresEnabled": false,
-    "allEnabled": false,
-    "allEnabledUntil": 1790765211178
-  },
-  "configurationVersion": 0,
-  "configuration": {
-    "type": "SCRIPT",
-    "arguments": {
-      "gridPower": {
-        "refEntityKey": {
-          "key": "gridPower",
-          "type": "TS_LATEST"
-        }
-      },
-      "sf2400charge": {
-        "refEntityId": {
-          "entityType": "DEVICE",
-          "id": "5ba96600-bc2b-11f1-890c-f73439e59bea"
-        },
-        "refEntityKey": {
-          "key": "outputPackPower",
-          "type": "TS_LATEST"
-        },
-        "defaultValue": ""
-      },
-      "sf2400home": {
-        "refEntityId": {
-          "entityType": "DEVICE",
-          "id": "5ba96600-bc2b-11f1-890c-f73439e59bea"
-        },
-        "refEntityKey": {
-          "key": "outputHomePower",
-          "type": "TS_LATEST"
-        },
-        "defaultValue": ""
-      },
-      "sf800charge": {
-        "refEntityId": {
-          "entityType": "DEVICE",
-          "id": "b43b5710-bc1c-11f1-a13e-7f52a2705c1b"
-        },
-        "refEntityKey": {
-          "key": "outputPackPower",
-          "type": "TS_LATEST"
-        },
-        "defaultValue": ""
-      },
-      "sf800home": {
-        "refEntityId": {
-          "entityType": "DEVICE",
-          "id": "b43b5710-bc1c-11f1-a13e-7f52a2705c1b"
-        },
-        "refEntityKey": {
-          "key": "outputHomePower",
-          "type": "TS_LATEST"
-        },
-        "defaultValue": ""
-      }
-    },
-    "expression": "// Regelguete-Bins (ThingsBoard Script Calculated Field, TBEL) - Geraet Netz\r\n//\r\n// Argumente (Gross-/Kleinschreibung beachten):\r\n//   gridPower                     Netz       gridPower\r\n//   sf2400home / sf800home        SF2400/800 outputHomePower\r\n//   sf2400charge / sf800charge    SF2400/800 outputPackPower   (Laden)\r\n//\r\n// Klassen (genau eine je Minute):\r\n//   binUnregulated  kein Netzwert oder kein Speicher aktiv\r\n//   binSaturated    ausserhalb Regelbereich:\r\n//                     - Summe outputHomePower beider SF < 15 W\r\n//                       (gesperrt, leer oder laedt nur PV - egal warum)\r\n//                     - oder ein Speicher an seiner Leistungsgrenze\r\n//   binRegulated    bewertbar -> 5 Klassen-Bins + qualityScore\r\n//\r\n// TBEL: keine \"a ? b : c\" in Map-Literalen.\r\n\r\nfunction leer(v) {\r\n    if (v == null) {\r\n        return true;\r\n    }\r\n    var s = (\"\" + v).trim();\r\n    return s == \"\" || s == \"null\" || s == \"unavailable\" || s == \"unknown\";\r\n}\r\n\r\nfunction num(v) {\r\n    if (leer(v)) {\r\n        return 0;\r\n    }\r\n    return parseDouble((\"\" + v).trim());\r\n}\r\n\r\nvar TOL = 15;\r\nvar GROSS = 50;\r\nvar AKTIV = 5;\r\nvar GRENZE_2400 = 790;\r\nvar GRENZE_800 = 790;\r\n\r\n// Zeitstempel-Sperre: nur rechnen, wenn Netz (vom Bridge zuletzt gesendet) neu ist\r\nvar tNetz = 0;\r\nif (ctx.args.gridPower != null) {\r\n    tNetz = ctx.args.gridPower.ts;\r\n}\r\nvar tMax = 0;\r\nif (ctx.args.sf2400home != null && ctx.args.sf2400home.ts > tMax) {\r\n    tMax = ctx.args.sf2400home.ts;\r\n}\r\nif (ctx.args.sf2400charge != null && ctx.args.sf2400charge.ts > tMax) {\r\n    tMax = ctx.args.sf2400charge.ts;\r\n}\r\nif (ctx.args.sf800home != null && ctx.args.sf800home.ts > tMax) {\r\n    tMax = ctx.args.sf800home.ts;\r\n}\r\nif (ctx.args.sf800charge != null && ctx.args.sf800charge.ts > tMax) {\r\n    tMax = ctx.args.sf800charge.ts;\r\n}\r\nif (tNetz < tMax) {\r\n    return {};\r\n}\r\n\r\nvar p = num(gridPower);\r\nvar a1 = num(sf2400home) + num(sf2400charge);\r\nvar a2 = num(sf800home) + num(sf800charge);\r\nvar home = num(sf2400home) + num(sf800home);\r\n\r\nvar aktiv = (a1 > AKTIV || a2 > AKTIV);\r\nvar grenze = (a1 > GRENZE_2400 || a2 > GRENZE_800);\r\n\r\n// 1) nicht geregelt\r\nif (leer(gridPower) || !aktiv) {\r\n    return {\r\n        \"binRegulated\": 0,\r\n        \"binSaturated\": 0,\r\n        \"binUnregulated\": 1\r\n    };\r\n}\r\n\r\n// 2) ausserhalb Regelbereich: kein Speicher liefert ins Haus, oder einer an der Grenze\r\nif (home < TOL || grenze) {\r\n    return {\r\n        \"binRegulated\": 0,\r\n        \"binSaturated\": 1,\r\n        \"binUnregulated\": 0\r\n    };\r\n}\r\n\r\n// 3) bewertbar\r\nvar inTol = 0;\r\nvar smallImp = 0;\r\nvar largeImp = 0;\r\nvar smallExp = 0;\r\nvar largeExp = 0;\r\nif (p >= -TOL && p <= TOL) {\r\n    inTol = 1;\r\n} else if (p > TOL && p <= GROSS) {\r\n    smallImp = 1;\r\n} else if (p > GROSS) {\r\n    largeImp = 1;\r\n} else if (p >= -GROSS) {\r\n    smallExp = 1;\r\n} else {\r\n    largeExp = 1;\r\n}\r\nvar q = 0;\r\nif (inTol == 1) {\r\n    q = 100;\r\n}\r\n\r\nreturn {\r\n    \"binRegulated\": 1,\r\n    \"binSaturated\": 0,\r\n    \"binUnregulated\": 0,\r\n    \"binInTolerance\": inTol,\r\n    \"binSmallImport\": smallImp,\r\n    \"binLargeImport\": largeImp,\r\n    \"binSmallExport\": smallExp,\r\n    \"binLargeExport\": largeExp,\r\n    \"qualityScore\": q\r\n};",
-    "output": {
-      "type": "TIME_SERIES",
-      "strategy": {
-        "type": "IMMEDIATE",
-        "ttl": 172800,
-        "saveTimeSeries": true,
-        "saveLatest": true,
-        "sendWsUpdate": true,
-        "processCfs": true
-      }
+// Regelguete-Bins (ThingsBoard Script Calculated Field, TBEL) - Geraet Netz
+//
+// Argumente (Gross-/Kleinschreibung beachten):
+//   gridPower                     Netz       gridPower
+//   sf2400home / sf800home        SF2400/800 outputHomePower
+//   sf2400charge / sf800charge    SF2400/800 outputPackPower   (Laden)
+//
+// Klassen (genau eine je Minute):
+//   binUnregulated  kein Netzwert oder kein Speicher aktiv
+//   binSaturated    ausserhalb Regelbereich:
+//                     - Summe outputHomePower beider SF < 15 W
+//                       (gesperrt, leer oder laedt nur PV - egal warum)
+//                     - oder ein Speicher an seiner Leistungsgrenze
+//   binRegulated    bewertbar -> 5 Klassen-Bins + qualityScore
+//
+// TBEL: keine "a ? b : c" in Map-Literalen.
+
+function leer(v) {
+    if (v == null) {
+        return true;
     }
-  },
-  "additionalInfo": {
-    "aiGenerated": true,
-    "aiGeneratedBy": "AI Assistant"
-  }
+    var s = ("" + v).trim();
+    return s == "" || s == "null" || s == "unavailable" || s == "unknown";
 }
+
+function num(v) {
+    if (leer(v)) {
+        return 0;
+    }
+    return parseDouble(("" + v).trim());
+}
+
+var TOL = 15;
+var GROSS = 50;
+var AKTIV = 5;
+var GRENZE_2400 = 790;
+var GRENZE_800 = 790;
+
+// Zeitstempel-Sperre: nur rechnen, wenn Netz (vom Bridge zuletzt gesendet) neu ist
+var tNetz = 0;
+if (ctx.args.gridPower != null) {
+    tNetz = ctx.args.gridPower.ts;
+}
+var tMax = 0;
+if (ctx.args.sf2400home != null && ctx.args.sf2400home.ts > tMax) {
+    tMax = ctx.args.sf2400home.ts;
+}
+if (ctx.args.sf2400charge != null && ctx.args.sf2400charge.ts > tMax) {
+    tMax = ctx.args.sf2400charge.ts;
+}
+if (ctx.args.sf800home != null && ctx.args.sf800home.ts > tMax) {
+    tMax = ctx.args.sf800home.ts;
+}
+if (ctx.args.sf800charge != null && ctx.args.sf800charge.ts > tMax) {
+    tMax = ctx.args.sf800charge.ts;
+}
+if (tNetz < tMax) {
+    return {};
+}
+
+var p = num(gridPower);
+var a1 = num(sf2400home) + num(sf2400charge);
+var a2 = num(sf800home) + num(sf800charge);
+var home = num(sf2400home) + num(sf800home);
+
+var aktiv = (a1 > AKTIV || a2 > AKTIV);
+var grenze = (num(sf2400home) > GRENZE_2400 || num(sf800home) > GRENZE_800);
+
+// 1) nicht geregelt
+if (leer(gridPower) || !aktiv) {
+    return {
+        "binRegulated": 0,
+        "binSaturated": 0,
+        "binUnregulated": 1
+    };
+}
+
+// 2) ausserhalb Regelbereich: kein Speicher liefert ins Haus, oder einer an der Grenze
+if (home < TOL || grenze) {
+    return {
+        "binRegulated": 0,
+        "binSaturated": 1,
+        "binUnregulated": 0
+    };
+}
+
+// 3) bewertbar
+var inTol = 0;
+var smallImp = 0;
+var largeImp = 0;
+var smallExp = 0;
+var largeExp = 0;
+if (p >= -TOL && p <= TOL) {
+    inTol = 1;
+} else if (p > TOL && p <= GROSS) {
+    smallImp = 1;
+} else if (p > GROSS) {
+    largeImp = 1;
+} else if (p >= -GROSS) {
+    smallExp = 1;
+} else {
+    largeExp = 1;
+}
+var q = 0;
+if (inTol == 1) {
+    q = 100;
+}
+
+return {
+    "binRegulated": 1,
+    "binSaturated": 0,
+    "binUnregulated": 0,
+    "binInTolerance": inTol,
+    "binSmallImport": smallImp,
+    "binLargeImport": largeImp,
+    "binSmallExport": smallExp,
+    "binLargeExport": largeExp,
+    "qualityScore": q
+};
