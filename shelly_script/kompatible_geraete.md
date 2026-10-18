@@ -45,6 +45,7 @@ Der Controller braucht den aktuellen Netzbezug:
 - Nur **zenSDK-fähige Geräte** (ab SolarFlow 800), im selben Netz und am besten mit **fester IP-Adresse** (im Router einstellen).
 - Die Speicher in der Zendure-App aus dem **HEMS** entfernen – sonst schickt die Cloud parallel eigene Steuerbefehle. Ausnahme Zendure Smart Meter D0: Dessen lokale Schnittstelle wird einmalig über HEMS freigeschaltet. Das betrifft nur den Zähler, die Speicher bleiben trotzdem aus dem HEMS draußen.
 - **Es kann nur einen geben:** Kein zweiter Regler darf dieselben Speicher steuern – also kein HEMS, kein Z-HA, keine andere Automatik.
+- **Nicht**: SF1200/SF2000/Hyper
 
 ## Netzwerk
 
