@@ -33,9 +33,9 @@ unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
 Werte untereinander verhalten. 
 
 **Grundlage:**
-- Damping-Matrix 2: 15 Läufe, 3 s Geräteverzögerung
-- Damping-Matrix 3: 12 Läufe (dampingFactor 0.4–0.8), zusätzlich Anlauf aus Standby (`START_DELAY_S=4`) und Kaffeevollautomat, ausgewertet mit `SAT_TOL_W=13`
-- Beispiel-Report (Abschnitt 8.2)
+- Damping-Matrix: 12 Läufe (dampingFactor 0.4–0.8), zusätzlich Anlauf aus Standby (`START_DELAY_S=4`)
+- Tagesprofil 14h, Waschmaschine, Induktionsherd, Kühlschrank, Kaffeevollautomat
+- Beispiel-Report [doku/beispiel_report.html](doku/beispiel_report.html)
 - zwei echte Tageslogs (11.10. mit 5.1.7, 15.10.)
 
 ### Regelgüte (qualitativ)
