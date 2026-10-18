@@ -13,6 +13,23 @@ Ein Shelly-Script für deinen **Dashboard-Shelly**, das zwei Aufgaben rund um de
 
 Beide Teile lassen sich einzeln ein- und ausschalten. Ein einziges Script fragt die Speicher ab und teilt die Daten zwischen beiden Aufgaben – das spart Speicher auf dem Shelly und entlastet deine Zendure-Geräte. Früher waren es zwei getrennte Scripte (zenDash-API 2.x und AkkuVolt-Watchdog 1.x), die zusammen je nach Anzahl der Speicher an die Speichergrenze des Shelly stießen.
 
+ordentlich**
+
+## Was macht der AkkuWatchDog?
+
+✅ Das Script liest die Akkudaten der angeschlossenen Akkus aus (`minVol`, `maxVol`, `socLevel`, Temperatur). Alle Packs eines Geräts werden automatisch gefunden (Temperatur des Hyper/Hubs ist ebenfalls dabei).
+
+✅ **WARNUNG:** Wenn das `electricLevel` eines Geräts über die Vollschwelle steigt, wird eine Nachricht verschickt — **pro Gerät einzeln**, mit Label zur Identifikation.
+
+✅ **WARNUNG:** Wenn `minVol` einer Zelle unter den Schwellwert fällt, wird eine Nachricht verschickt — **pro Gerät einzeln**.
+
+✅ **Übertemperatur:** Wenn die Geräte-Temperatur (Hyper/Hub) den Schwellwert überschreitet, wird ebenfalls eine eigene Warnung verschickt — pro Gerät einzeln.
+
+✅ Alle Warnschwellen (Voll, Unterspannung, Temperatur) gelten **global für alle konfigurierten Geräte gleichermaßen** — es gibt bewusst keine Schwellwerte pro Gerät, um die Konfiguration einfach zu halten.
+
+✅ **STATUS:** Sendet zum Sonnenaufgang (`+Offset`) und zum Sonnenuntergang (`+Offset`) **eine einzige Sammel-Nachricht für alle Geräte gemeinsam**. Jede Zeile zeigt SOC, Geräte-Temperatur und die kleinste Zellspannung eines Geräts, identifiziert über die letzten 4 Zeichen seiner Seriennummer. Die Zeilenlänge pro Gerät ist fest, dadurch bleibt die Nachricht auch bei vielen Geräten kurz und wird nicht zum Problem für Messenger-APIs mit Längenlimits (mehr dazu unten unter „Beispielausgaben“).
+
+
 Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 
 ---
