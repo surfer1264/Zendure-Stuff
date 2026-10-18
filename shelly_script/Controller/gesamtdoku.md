@@ -28,64 +28,64 @@ Zendure-Geräten im lokalen Netz.
 
 ## Inhaltsverzeichnis
 - [Zendure Multi-Device Controller – Gesamtdokumentation](#zendure-multi-device-controller--gesamtdokumentation)
-  - [Inhaltsverzeichnis](#inhaltsverzeichnis)
-  - [1) Zweck](#1-zweck)
-  - [2) Möglichkeiten und Flexibilität, Features](#2-möglichkeiten-und-flexibilität-features)
-  - [3) Voraussetzungen](#3-voraussetzungen)
-    - [3.1 Shelly](#31-shelly)
-  - [4) Konfiguration](#4-konfiguration)
-    - [4a) Plausibilitätsprüfungen (CONFIG-Validierung beim Start)](#4a-plausibilitätsprüfungen-config-validierung-beim-start)
-    - [4b) Mehrere Solarflow-Geräte einpflegen](#4b-mehrere-solarflow-geräte-einpflegen)
-    - [4c) Testmodus: `dryRun`](#4c-testmodus-dryrun)
-  - [5) Smartmeter Anbindung - Die drei Grid-Quellen im Überblick](#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick)
-    - [5.1) Eigene/weitere Smart Meter einbinden “http\_json”](#51-eigeneweitere-smart-meter-einbinden-http_json)
-    - [5.2) Vorzeichen bei `"http_json"` prüfen](#52-vorzeichen-bei-http_json-prüfen)
-  - [6) Regelverhalten](#6-regelverhalten)
-    - [6a) Entladen](#6a-entladen)
-    - [6b) Laden (vom Netz)](#6b-laden-vom-netz)
-    - [6c) Sanfter Ausgleich (Rebalance)](#6c-sanfter-ausgleich-rebalance)
-    - [6d) Bypass-Verhalten](#6d-bypass-verhalten)
-    - [6e) Bypass-Überschuss-Korrektur (`socLimit = 1`)](#6e-bypass-überschuss-korrektur-soclimit--1)
-  - [7) Lastaufteilung / Wie wirken `concentrateBelow` und `spreadAbove`](#7-lastaufteilung--wie-wirken-concentratebelow-und-spreadabove)
-    - [7a) Mindestlast ist richtungsabhängig](#7a-mindestlast-ist-richtungsabhängig)
-    - [7b) Empfehlung für Ersteinstellung](#7b-empfehlung-für-ersteinstellung)
-  - [8) Detailfunktionalität](#8-detailfunktionalität)
-    - [8.1) Ablauf eines Regelzyklus](#81-ablauf-eines-regelzyklus)
-    - [8.2) Dämpfung der Lade-/Entladesignale](#82-dämpfung-der-lade-entladesignale)
-      - [Empfehlung für `dampingFactor`](#empfehlung-für-dampingfactor)
-    - [8.3) Watchdog / Timer](#83-watchdog--timer)
-    - [8.4) Fehlerzähler \& Benachrichtigung](#84-fehlerzähler--benachrichtigung)
-    - [8.5) Signal-Benachrichtigung (CallMeBot) – inkl. WhatsApp](#85-signal-benachrichtigung-callmebot--inkl-whatsapp)
-    - [8.6) SoC-Grenzwerte: Start-Synchronisierung \& Laufzeit-Meldung (`socLimit`)](#86-soc-grenzwerte-start-synchronisierung--laufzeit-meldung-soclimit)
-    - [8.7) Startprotokoll (Banner)](#87-startprotokoll-banner)
-    - [8.8) Zeitlich gekoppelte Hysterese (spread → single)](#88-zeitlich-gekoppelte-hysterese-spread--single)
-    - [8.9) Start/Stop-Hysterese (Laden \& Entladen)](#89-startstop-hysterese-laden--entladen)
-    - [8.10) Richtungswechsel-Bremse (Beispiel)](#810-richtungswechsel-bremse-beispiel)
-    - [8.11) Bedeutung von `smartMode` (0 vs. 1)](#811-bedeutung-von-smartmode-0-vs-1)
-    - [8.12) Adaptives Polling / Sparmodus (`idleSkip`)](#812-adaptives-polling--sparmodus-idleskip)
-  - [9) Ablauf der Regelung (Diagramm)](#9-ablauf-der-regelung-diagramm)
-  - [10) Hinweis: Performance, Grenzen und Status-Prüfung des Shelly](#10-hinweis-performance-grenzen-und-status-prüfung-des-shelly)
-  - [11) Bekannte Einschränkungen](#11-bekannte-einschränkungen)
-  - [12) Logging](#12-logging)
-    - [12.1) Start-Banner (einmalig beim Start)](#121-start-banner-einmalig-beim-start)
-    - [12.2) Zyklus-Kopfzeile ("Netzsaldo"-Zeile)](#122-zyklus-kopfzeile-netzsaldo-zeile)
-    - [12.3) Pro-Geräte-Statuszeile](#123-pro-geräte-statuszeile)
-    - [12.4) Aktionszeilen (nur bei tatsächlicher Änderung)](#124-aktionszeilen-nur-bei-tatsächlicher-änderung)
-    - [12.5) Ereigniszeilen (Zustandsänderungen)](#125-ereigniszeilen-zustandsänderungen)
-    - [12.6) Fehlermeldungen](#126-fehlermeldungen)
-    - [12.7) Sonstige Meldungen](#127-sonstige-meldungen)
-    - [12.8) Wertetabellen (Kurzreferenz)](#128-wertetabellen-kurzreferenz)
-    - [12.9) Debug](#129-debug)
-  - [13) Live-Override der Regelparameter per KVS (z. B. Home Assistant)](#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)
-    - [13.1) Wofür ist KVS gut?](#131-wofür-ist-kvs-gut)
-    - [13.2) Gefahr: Flash-Verschleiß](#132-gefahr-flash-verschleiß)
-    - [13.3) Wie hält die Implementierung Zugriffe gering?](#133-wie-hält-die-implementierung-zugriffe-gering)
-      - [13.3.1) Wann schreibt das Script welche KVS-Werte?](#1331-wann-schreibt-das-script-welche-kvs-werte)
-      - [13.3.2) Wann liest das Script?](#1332-wann-liest-das-script)
-    - [13.4) Live-überschreibbare Werte](#134-live-überschreibbare-werte)
-    - [13.5) Nutzung per Kommandozeile (curl)](#135-nutzung-per-kommandozeile-curl)
-    - [13.6) Nutzung über Home Assistant](#136-nutzung-über-home-assistant)
-    - [13.7) KVS Store im Shelly](#137-kvs-store-im-shelly)
+    - [Inhaltsverzeichnis](#inhaltsverzeichnis)
+    - [1) Zweck](#1-zweck)
+    - [2) Möglichkeiten und Flexibilität, Features](#2-möglichkeiten-und-flexibilität-features)
+    - [3) Voraussetzungen](#3-voraussetzungen)
+        - [3.1 Shelly](#31-shelly)
+    - [4) Konfiguration](#4-konfiguration)
+        - [4a) Plausibilitätsprüfungen (CONFIG-Validierung beim Start)](#4a-plausibilitätsprüfungen-config-validierung-beim-start)
+        - [4b) Mehrere Solarflow-Geräte einpflegen](#4b-mehrere-solarflow-geräte-einpflegen)
+        - [4c) Testmodus: `dryRun`](#4c-testmodus-dryrun)
+    - [5) Smartmeter Anbindung - Die drei Grid-Quellen im Überblick](#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick)
+        - [5.1) Eigene/weitere Smart Meter einbinden “http\_json”](#51-eigeneweitere-smart-meter-einbinden-http_json)
+        - [5.2) Vorzeichen bei `"http_json"` prüfen](#52-vorzeichen-bei-http_json-prüfen)
+    - [6) Regelverhalten](#6-regelverhalten)
+        - [6a) Entladen](#6a-entladen)
+        - [6b) Laden (vom Netz)](#6b-laden-vom-netz)
+        - [6c) Sanfter Ausgleich (Rebalance)](#6c-sanfter-ausgleich-rebalance)
+        - [6d) Bypass-Verhalten](#6d-bypass-verhalten)
+        - [6e) Bypass-Überschuss-Korrektur (`socLimit = 1`)](#6e-bypass-überschuss-korrektur-soclimit--1)
+    - [7) Lastaufteilung / Wie wirken `concentrateBelow` und `spreadAbove`](#7-lastaufteilung--wie-wirken-concentratebelow-und-spreadabove)
+        - [7a) Mindestlast ist richtungsabhängig](#7a-mindestlast-ist-richtungsabhängig)
+        - [7b) Empfehlung für Ersteinstellung](#7b-empfehlung-für-ersteinstellung)
+    - [8) Detailfunktionalität](#8-detailfunktionalität)
+        - [8.1) Ablauf eines Regelzyklus](#81-ablauf-eines-regelzyklus)
+        - [8.2) Dämpfung der Lade-/Entladesignale](#82-dämpfung-der-lade-entladesignale)
+            - [Empfehlung für `dampingFactor`](#empfehlung-für-dampingfactor)
+        - [8.3) Watchdog / Timer](#83-watchdog--timer)
+        - [8.4) Fehlerzähler \& Benachrichtigung](#84-fehlerzähler--benachrichtigung)
+        - [8.5) Signal-Benachrichtigung (CallMeBot) – inkl. WhatsApp](#85-signal-benachrichtigung-callmebot--inkl-whatsapp)
+        - [8.6) SoC-Grenzwerte: Start-Synchronisierung \& Laufzeit-Meldung (`socLimit`)](#86-soc-grenzwerte-start-synchronisierung--laufzeit-meldung-soclimit)
+        - [8.7) Startprotokoll (Banner)](#87-startprotokoll-banner)
+        - [8.8) Zeitlich gekoppelte Hysterese (spread → single)](#88-zeitlich-gekoppelte-hysterese-spread--single)
+        - [8.9) Start/Stop-Hysterese (Laden \& Entladen)](#89-startstop-hysterese-laden--entladen)
+        - [8.10) Richtungswechsel-Bremse (Beispiel)](#810-richtungswechsel-bremse-beispiel)
+        - [8.11) Bedeutung von `smartMode` (0 vs. 1)](#811-bedeutung-von-smartmode-0-vs-1)
+        - [8.12) Adaptives Polling / Sparmodus (`idleSkip`)](#812-adaptives-polling--sparmodus-idleskip)
+    - [9) Ablauf der Regelung (Diagramm)](#9-ablauf-der-regelung-diagramm)
+    - [10) Hinweis: Performance, Grenzen und Status-Prüfung des Shelly](#10-hinweis-performance-grenzen-und-status-prüfung-des-shelly)
+    - [11) Bekannte Einschränkungen](#11-bekannte-einschränkungen)
+    - [12) Logging](#12-logging)
+        - [12.1) Start-Banner (einmalig beim Start)](#121-start-banner-einmalig-beim-start)
+        - [12.2) Zyklus-Kopfzeile ("Netzsaldo"-Zeile)](#122-zyklus-kopfzeile-netzsaldo-zeile)
+        - [12.3) Pro-Geräte-Statuszeile](#123-pro-geräte-statuszeile)
+        - [12.4) Aktionszeilen (nur bei tatsächlicher Änderung)](#124-aktionszeilen-nur-bei-tatsächlicher-änderung)
+        - [12.5) Ereigniszeilen (Zustandsänderungen)](#125-ereigniszeilen-zustandsänderungen)
+        - [12.6) Fehlermeldungen](#126-fehlermeldungen)
+        - [12.7) Sonstige Meldungen](#127-sonstige-meldungen)
+        - [12.8) Wertetabellen (Kurzreferenz)](#128-wertetabellen-kurzreferenz)
+        - [12.9) Debug](#129-debug)
+    - [13) Live-Override der Regelparameter per KVS (z. B. Home Assistant)](#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)
+        - [13.1) Wofür ist KVS gut?](#131-wofür-ist-kvs-gut)
+        - [13.2) Gefahr: Flash-Verschleiß](#132-gefahr-flash-verschleiß)
+        - [13.3) Wie hält die Implementierung Zugriffe gering?](#133-wie-hält-die-implementierung-zugriffe-gering)
+            - [13.3.1) Wann schreibt das Script welche KVS-Werte?](#1331-wann-schreibt-das-script-welche-kvs-werte)
+            - [13.3.2) Wann liest das Script?](#1332-wann-liest-das-script)
+        - [13.4) Live-überschreibbare Werte](#134-live-überschreibbare-werte)
+        - [13.5) Nutzung per Kommandozeile (curl)](#135-nutzung-per-kommandozeile-curl)
+        - [13.6) Nutzung über Home Assistant](#136-nutzung-über-home-assistant)
+        - [13.7) KVS Store im Shelly](#137-kvs-store-im-shelly)
 
 
 
@@ -964,10 +964,12 @@ Praxis in jedem Fall aktiv.
 Kompromiss zwischen Hysterese-Puffer und Mindestlast als Startpunkt.
 
 Beispiel: SF2400Pro
+
 - `spreadAbove` = 2400
 - `concentrateBelow` ≈ 2000
 
 Beispiel: SF800
+
 - `spreadAbove` = 800
 - `concentrateBelow` ≈ 600
 
@@ -984,13 +986,13 @@ praktisch immer alle Geräte laufen (ineffizient).
 
 1. **Timer** löst alle `interval` ms (Standard 4 s) `update()` aus.
 2. `update()` prüft `state.busy`:
-   - Läuft ein vorheriger Zyklus noch → der Takt wird übersprungen. Seit
-     5.1.3 erscheint dazu die Logzeile
-     `Takt uebersprungen - Zyklus N laeuft noch seit X ms` (Kapitel 12.7).
-     Hängt der Zyklus dauerhaft, greift nach `interval × 2.5` der Watchdog
-     (Kapitel 8.3).
-   - Andernfalls: `lock()` setzt `state.busy = true`, erhöht `state.cycleId`
-     und startet einen Watchdog-Timer (`watchdog` ms, siehe 8.3).
+    - Läuft ein vorheriger Zyklus noch → der Takt wird übersprungen. Seit
+      5.1.3 erscheint dazu die Logzeile
+      `Takt uebersprungen - Zyklus N laeuft noch seit X ms` (Kapitel 12.7).
+      Hängt der Zyklus dauerhaft, greift nach `interval × 2.5` der Watchdog
+      (Kapitel 8.3).
+    - Andernfalls: `lock()` setzt `state.busy = true`, erhöht `state.cycleId`
+      und startet einen Watchdog-Timer (`watchdog` ms, siehe 8.3).
 3. `readGridPower()` ermittelt den aktuellen Netz-Leistungswert – je nach
    `CONFIG.gridSource` lokal, per RPC (`remote`) oder generisch per HTTP-JSON
    (`http_json`), siehe Kapitel 5. Schlägt das fehl, wird ein Fehler vom Typ
@@ -1015,51 +1017,51 @@ praktisch immer alle Geräte laufen (ineffizient).
    bleibt der zuletzt bekannte Stand erhalten.
 6. `calculate()` bildet **zwei getrennte** Zielgrößen (seit V2.3.1, siehe
    auch den Hinweis am Dokumentanfang und Kapitel 8.2):
-   - `sumZen` = Summe der Ist-Leistung **aller verfügbaren** Geräte,
-     dedupliziert nach `ip` – Basis für das **Entladeziel**.
-   - `sumZenReverse` = Summe der Ist-Leistung **nur der Geräte mit
-     `reverse: true`, die keine Ladesperre (`socLimit = 1`) melden**, ebenfalls dedupliziert nach `ip` – Basis für das
-     **Ladeziel**.
-   - ⚠️ **Entfallen seit 4.2.2:** Das in 3.2.0 dokumentierte
-     `excessSocLimit1` (Abzug vom Ladeziel) existiert **nicht mehr**. Der
-     Bypass-Überschuss ladegesperrter Geräte wird jetzt erst **nach** der
-     Verteilung korrigiert, siehe Kapitel 6e.
-   - Sind gar keine Geräte verfügbar, wird der Zyklus ohne Schreibversuch
-     beendet ("Kein Geraet erreichbar").
-   - **gridReverse-Steuerung:** Danach läuft einmal `updateGridReverseLock()`
-     (nur bei `gridReverseMode: "dynamic"`, Kapitel 6d). Ein dabei ggf.
-     ausgelöster Schreibvorgang läuft asynchron neben dem Zyklus.
-   - **Entladeziel:** `raw = round((gridPower − setpoint) + sumZen)`,
-     gedämpft auf `state.smoothedOutput` → `dischargeTarget`. Ist per KVS
-     `dischargeFixed > 0` gesetzt, wird `dischargeTarget` durch diesen
-     Fixwert ersetzt (Log-Suffix `[FIX]`); die Glättung läuft im Hintergrund
-     weiter.
-   - **Ladeziel:** `rawCharge = round((gridPower − setpoint) + sumZenReverse)`,
-     unabhängig gedämpft auf `state.smoothedCharge` → `chargeTarget`.
-   - **Laden zuerst:** Ist mind. ein Gerät `reverse`-fähig und ist
-     `chargeTarget < 0` und entweder bereits am Laden (`sumZenReverse < 0`)
-     oder Bedarf ≥ `reverseStartupPower` → `distributeCharge(chargeTarget)`
-     (Kapitel 6b) liefert `chargeOutput`. Alle Geräte mit `chargeOutput ≠ 0`
-     werden in `chargeExclude` vermerkt. Ist kein Gerät `reverse`-fähig oder
-     die Anlauf-Totzone noch nicht erreicht → `chargeOutput` bleibt für alle
-     Geräte 0 W.
-   - **Entladen danach:** Ist `dischargeTarget ≥ 0` und entweder bereits am
-     Entladen (`sumZen > 0`) oder Bedarf ≥ `dischargeStartupPower` →
-     `distributeDischarge(dischargeTarget, chargeExclude)` (Kapitel 6a)
-     liefert `dischargeOutput` – Geräte in `chargeExclude` werden dabei mit
-     Gewicht 0 übersprungen. Sonst bleibt `dischargeOutput` für alle Geräte
-     0 W (Anlauf-Totzone, systemweit, siehe Kapitel 8.9).
-   - **Bypass-Korrektur:** Auf `dischargeOutput` wird
-     `applyBypassExcessCorrection()` angewandt (Kapitel 6e).
-   - **Zusammenführen:** Pro Gerät gilt `output[i] = chargeOutput[i]`, falls
-     das ≠ 0 ist, sonst `dischargeOutput[i]`. Da `chargeExclude` eine
-     Überschneidung verhindert, kann dabei ein Teil der Geräte im selben
-     Zyklus laden, während andere gleichzeitig entladen.
-   - **Sparmodus-Bewertung:** Zum Schluss prüft `calculate()` über
-     `isOutputWithinHysteresis()`, ob der berechnete Output je Gerät
-     innerhalb der Schreib-Hysterese um den zuletzt geschriebenen Wert liegt,
-     und startet bzw. beendet daraufhin einen Sparmodus-Zeitraum
-     (Kapitel 8.12).
+    - `sumZen` = Summe der Ist-Leistung **aller verfügbaren** Geräte,
+      dedupliziert nach `ip` – Basis für das **Entladeziel**.
+    - `sumZenReverse` = Summe der Ist-Leistung **nur der Geräte mit
+      `reverse: true`, die keine Ladesperre (`socLimit = 1`) melden**, ebenfalls dedupliziert nach `ip` – Basis für das
+      **Ladeziel**.
+    - ⚠️ **Entfallen seit 4.2.2:** Das in 3.2.0 dokumentierte
+      `excessSocLimit1` (Abzug vom Ladeziel) existiert **nicht mehr**. Der
+      Bypass-Überschuss ladegesperrter Geräte wird jetzt erst **nach** der
+      Verteilung korrigiert, siehe Kapitel 6e.
+    - Sind gar keine Geräte verfügbar, wird der Zyklus ohne Schreibversuch
+      beendet ("Kein Geraet erreichbar").
+    - **gridReverse-Steuerung:** Danach läuft einmal `updateGridReverseLock()`
+      (nur bei `gridReverseMode: "dynamic"`, Kapitel 6d). Ein dabei ggf.
+      ausgelöster Schreibvorgang läuft asynchron neben dem Zyklus.
+    - **Entladeziel:** `raw = round((gridPower − setpoint) + sumZen)`,
+      gedämpft auf `state.smoothedOutput` → `dischargeTarget`. Ist per KVS
+      `dischargeFixed > 0` gesetzt, wird `dischargeTarget` durch diesen
+      Fixwert ersetzt (Log-Suffix `[FIX]`); die Glättung läuft im Hintergrund
+      weiter.
+    - **Ladeziel:** `rawCharge = round((gridPower − setpoint) + sumZenReverse)`,
+      unabhängig gedämpft auf `state.smoothedCharge` → `chargeTarget`.
+    - **Laden zuerst:** Ist mind. ein Gerät `reverse`-fähig und ist
+      `chargeTarget < 0` und entweder bereits am Laden (`sumZenReverse < 0`)
+      oder Bedarf ≥ `reverseStartupPower` → `distributeCharge(chargeTarget)`
+      (Kapitel 6b) liefert `chargeOutput`. Alle Geräte mit `chargeOutput ≠ 0`
+      werden in `chargeExclude` vermerkt. Ist kein Gerät `reverse`-fähig oder
+      die Anlauf-Totzone noch nicht erreicht → `chargeOutput` bleibt für alle
+      Geräte 0 W.
+    - **Entladen danach:** Ist `dischargeTarget ≥ 0` und entweder bereits am
+      Entladen (`sumZen > 0`) oder Bedarf ≥ `dischargeStartupPower` →
+      `distributeDischarge(dischargeTarget, chargeExclude)` (Kapitel 6a)
+      liefert `dischargeOutput` – Geräte in `chargeExclude` werden dabei mit
+      Gewicht 0 übersprungen. Sonst bleibt `dischargeOutput` für alle Geräte
+      0 W (Anlauf-Totzone, systemweit, siehe Kapitel 8.9).
+    - **Bypass-Korrektur:** Auf `dischargeOutput` wird
+      `applyBypassExcessCorrection()` angewandt (Kapitel 6e).
+    - **Zusammenführen:** Pro Gerät gilt `output[i] = chargeOutput[i]`, falls
+      das ≠ 0 ist, sonst `dischargeOutput[i]`. Da `chargeExclude` eine
+      Überschneidung verhindert, kann dabei ein Teil der Geräte im selben
+      Zyklus laden, während andere gleichzeitig entladen.
+    - **Sparmodus-Bewertung:** Zum Schluss prüft `calculate()` über
+      `isOutputWithinHysteresis()`, ob der berechnete Output je Gerät
+      innerhalb der Schreib-Hysterese um den zuletzt geschriebenen Wert liegt,
+      und startet bzw. beendet daraufhin einen Sparmodus-Zeitraum
+      (Kapitel 8.12).
 7. Geräte im manuellen AC-Laden (`dischargeAllowed: false`, `reverse: false`
    **und** `inputLimit > 0`, Kapitel 13.4) werden komplett übersprungen – kein
    Plan, kein Schreibvorgang. Für alle **übrigen** Geräte wird zunächst der rohe Plan (`acMode`, `outputLimit`/
@@ -1477,9 +1479,9 @@ Reihenfolge beim Start:
    Überschreiben nicht, wird es stillschweigend ignoriert und das Script
    läuft unverändert weiter.
 
-   Zusätzlich werden – abhängig von der (nicht per KVS änderbaren)
-   Konfiguration – Funktionen freigegeben, deren Aufrufstellen dann nie
-   erreicht werden:
+    Zusätzlich werden – abhängig von der (nicht per KVS änderbaren)
+    Konfiguration – Funktionen freigegeben, deren Aufrufstellen dann nie
+    erreicht werden:
 
 | Bedingung | zusätzlich freigegeben |
 | --- | --- |
@@ -1656,15 +1658,15 @@ lediglich die Möglichkeit eines kontrollierten Übergangs.
    `reversalHoldCount` wird zurückgesetzt, der Plan geht unverändert durch.
 4. Andernfalls (echter Richtungswechsel angefordert) wird
    `reversalHoldCount` um 1 erhöht:
-   - Ist der neue Zählerstand **größer** als `directionChangeHoldCycles` →
-     die Bremszeit ist abgelaufen, der rohe Plan geht unverändert durch,
-     **direkt mit dem vollen aktuellen Zielwert** der neuen Richtung (kein
-     schrittweises Hochfahren). `ds.realDirection` wird nach erfolgreichem
-     Schreiben auf die neue Richtung aktualisiert.
-   - Sonst → der Plan wird überschrieben: **Standby** (`acMode 1`, 0 W,
-     `smartMode 1`; ob später `smartMode 0` zulässig ist, entscheidet
-     `resolveStandbySmartMode()`, Kapitel 8.11). Es erfolgt **kein**
-     `acMode`-Wechsel am Gerät.
+    - Ist der neue Zählerstand **größer** als `directionChangeHoldCycles` →
+      die Bremszeit ist abgelaufen, der rohe Plan geht unverändert durch,
+      **direkt mit dem vollen aktuellen Zielwert** der neuen Richtung (kein
+      schrittweises Hochfahren). `ds.realDirection` wird nach erfolgreichem
+      Schreiben auf die neue Richtung aktualisiert.
+    - Sonst → der Plan wird überschrieben: **Standby** (`acMode 1`, 0 W,
+      `smartMode 1`; ob später `smartMode 0` zulässig ist, entscheidet
+      `resolveStandbySmartMode()`, Kapitel 8.11). Es erfolgt **kein**
+      `acMode`-Wechsel am Gerät.
 
 **Beispiel** (`interval: 4000` ms, `directionChangeHoldCycles: 4` = Standard und Minimum):
 
@@ -2195,6 +2197,7 @@ Wird **pro Gerät und Zyklus** direkt nach der Netzsaldo-Zeile ausgegeben (einge
 | `acMode` | `1` = Import/Idle, `2` = Export. Die Zahl gibt den intern geplanten Modus wieder, in Klammern die Klartext-Bezeichnung. |
 
 **Optionale Zusätze am Zeilenende:**
+
 - `[Cooldown haelt Standby]` — Richtungswechsel wurde durch die Richtungswechsel-Bremse blockiert, Gerät bleibt im Standby (Kapitel 8.10).
 - `[DRYRUN - wird nicht geschrieben]` — Gerät ist im Simulationsmodus (`dryRun: true`), es wird nichts an das Gerät gesendet.
 
@@ -2424,6 +2427,7 @@ der zuletzt gültige Wert stehen – die Regelung läuft immer weiter.
 > echter Bedienung durch dich.
 >
 > **Daher:**
+>
 > - `KVS.Set` nur bei echter Nutzer-Interaktion auslösen (siehe Beispiele
 >   unten), nie zyklisch/automatisch.
 > - `kvsForceReseed` nur kurz auf `true` setzen, einmal neu starten lassen,
@@ -2441,6 +2445,7 @@ curl-Aufruf, deine Home-Assistant-Automation).
 
 **Lesen (`KVS.GetMany`):** Das Script liest **nicht** in jedem
 Regelzyklus neu. Es liest nur:
+
 - zweimal beim Start (einmal für das Seeding, einmal für die Overrides), und
 - danach **ereignisgesteuert**: Der Shelly meldet über einen
   `Shelly.addStatusHandler` jede Änderung am KVS (`sys.kvs_rev`). Erst dann

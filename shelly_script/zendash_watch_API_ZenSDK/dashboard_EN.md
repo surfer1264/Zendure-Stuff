@@ -109,14 +109,14 @@ Not changeable in the dashboard are the **hysteresis** (only shown below the set
 - **Grid import / export:** current grid balance with direction ("import" or "export") and comparison with the setpoint, plus a history curve of the last 2 minutes.
 - **Solarflow power:** sum of all batteries (+ = supplying, − = charging), below it the average state of charge ("Avg. charge … %"), also with a history curve. The two curves have different scales and start from scratch after reloading the page.
 - **One card per battery** with:
-  - name and status dot (green = reachable); with "Technical details" also `[devN]` and IP address
-  - state of charge as battery icon and number, next to it the power with direction ("supplying", "charging", "standby")
-  - below it the operating window, e.g. `Range 15–100 %` (reserve to charge target)
-  - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
-  - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
-  - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
-  - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
-  - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
+    - name and status dot (green = reachable); with "Technical details" also `[devN]` and IP address
+    - state of charge as battery icon and number, next to it the power with direction ("supplying", "charging", "standby")
+    - below it the operating window, e.g. `Range 15–100 %` (reserve to charge target)
+    - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
+    - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
+    - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
+    - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
+    - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
 - **Footer:** versions of page and script (yellow if they do not match), time of the last update, **Help** link to this guide. `config_api` and `status_api` open the raw data as JSON in a new tab. **ThingSpeak** and **ThingsBoard** lead to the setup pages for the cloud upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), German).
 
 **Explanations on tap:** Many labels and values have a dotted underline – setpoint, fixed discharge, the two overview tiles, power, operating window, extra line, lock threshold; the status tags too. Tapping (or hovering with the mouse) shows a short explanation.
@@ -150,8 +150,8 @@ Any computer will do for occasional viewing. If the dashboard should **always** 
 - To also **change settings** in the dashboard (setpoint, reserve, manual charging …), `kvsEnabled: true` and `kvsForceReseed: false` must be set in the Controller. Without KVS the dashboard only displays.
 - For the Python script and the Synology: **Python 3.7 or newer** ([python.org](https://www.python.org/downloads/)). Nothing else needs to be installed.
 - Except for the ready-made program, the two files from [this folder](.):
-  - [`zendure_proxy.py`](zendure_proxy.py) – the proxy
-  - [`zendure-dashboard.html`](zendure-dashboard.html) – the dashboard page
+    - [`zendure_proxy.py`](zendure_proxy.py) – the proxy
+    - [`zendure-dashboard.html`](zendure-dashboard.html) – the dashboard page
 
   The HTML file may be **in the same folder** as the proxy or **one level up**. If there is one in both places, the one in the same folder wins.
 
@@ -249,15 +249,15 @@ For each file there is a `.sha256` file on the [releases page](https://github.co
 ## Continuous operation on a Synology
 
 1. **Check Python.** DSM usually ships one already:
-   ```bash
-   which python3 && python3 --version
-   ```
+    ```bash
+    which python3 && python3 --version
+    ```
    3.7 or newer is enough – the proxy only uses the standard library. The interpreter is often at `/bin/python3`. If nothing shows up, install **Python 3** in the Package Center; the path is then `/var/packages/Python3*/target/bin/python3`.
 2. **Place the files.** Put `zendure_proxy.py` into its own folder, e.g. `/volume1/homes/<user>/zendure`, and `zendure-dashboard.html` next to it or one level up. Not into the `web` folder – that belongs to Web Station.
 3. **Create a task.** Control Panel → Task Scheduler → Create → **Triggered Task** → User-defined script. Event **Boot-up**, user **root**, and as command the full path:
-   ```bash
-   /bin/python3 /volume1/homes/<user>/zendure/zendure_proxy.py -q
-   ```
+    ```bash
+    /bin/python3 /volume1/homes/<user>/zendure/zendure_proxy.py -q
+    ```
 4. **Start right away**, without rebooting: select the task → **Run**.
 5. **Firewall.** If it is active under Control Panel → Security → Firewall, create a rule for TCP **8000**. Port 8000 does not collide with DSM itself (5000/5001).
 6. **Set up.** From a PC or phone open `http://<IP-of-Synology>:8000/` and enter IP and script number as in [step 4](#dashboard-in-4-steps).

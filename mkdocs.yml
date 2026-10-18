@@ -45,22 +45,23 @@ nav:
       - Helfer und Proxy auf dem Mac: Multiconfigurator/local_helper/mcos_helper.md
       - Änderungen: Multiconfigurator/CHANGELOG.md
   - Controller:
-      - Getting Started: Controller/readme.md
+      - Controller-Shelly: Controller/readme.md
       - Benutzerdokumentation: Controller/benutzerdoku.md
       - Gesamtdokumentation: Controller/gesamtdoku.md
       - Damping/Simulation: Controller/Damping_Kompromiss.md
       - Änderungen: Controller/CHANGELOG.md
   - Dashboard & Meldungen:
       - Dashboard-Shelly: zendash_watch_API_ZenSDK/readme.md
-      - Dashboard: zendash_watch_API_ZenSDK/dashboard.md
-      - Speicherbedarf: zendash_speichermodell.md
-      - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
-      - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
-      - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/readme.md
-      - API-Referenz: zendash_watch_API_ZenSDK/API.md
+      - Live-Dashboard: zendash_watch_API_ZenSDK/dashboard.md
+      - Tech Details:
+        - Speicherbedarf: zendash_speichermodell.md
+        - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
+        - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
+        - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/readme.md
+        - API-Referenz: zendash_watch_API_ZenSDK/API.md
       - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
   - Werkzeuge:
-      - Script-Poller: Script_poller/readme.md
+      - Script-Minitor: Script_poller/readme.md
   - Hintergrund:
       - Vergleich mit anderen Lösungen: Einordnung.md
 

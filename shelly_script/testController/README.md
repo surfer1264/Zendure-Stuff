@@ -8,29 +8,29 @@ geschlossener Regelkreis, echte Logik, keine Annahmen mehr über
 ## Dateien
 
 - `zdmc_test.js` – dein Original-Skript, CONFIG gepatcht auf:
-  - `devices[i].ip` → `localhost:3900/dev0`, `/dev1`, ...
-  - `gridSource` → `"http_json"`, `gridSourceUrl` → Mock-Endpoint,
-    `gridSourceField` → `"total_power"`
-  - Alles andere (minSoc, maxOutput, Hysterese, dischargeAllowed, ...)
-    bleibt exakt wie im Original
+    - `devices[i].ip` → `localhost:3900/dev0`, `/dev1`, ...
+    - `gridSource` → `"http_json"`, `gridSourceUrl` → Mock-Endpoint,
+      `gridSourceField` → `"total_power"`
+    - Alles andere (minSoc, maxOutput, Hysterese, dischargeAllowed, ...)
+      bleibt exakt wie im Original
 - `mock_server.js` – simuliert Netzzähler + beide Solarflows:
-  - PV lädt den Akku autonom (DC-seitig), unabhängig vom Regler
-  - reagiert auf `POST /devN/properties/write` (setzt acMode/outputLimit/
-    inputLimit/smartMode/minSoc/socSet/gridReverse tatsächlich)
-  - `socLimit` wird aus dem SOC + den vom Regler geschriebenen minSoc/socSet
-    berechnet (nicht aus der CONFIG kopiert – testet also auch, ob
-    `syncSocLimitsAll` korrekt schreibt)
-  - `minSoc`/`socSet` wirken als **harte physikalische Grenzen** in der
-    Akku-Simulation (wie echte Geräte-Firmware das auch tut) – kein
-    Überschwingen unter/über die geschriebenen Grenzwerte
-  - PV-Überschuss (Akku voll oder Ladeleistung gedeckelt) wird bis zur Höhe
-    des aktuellen Hausbedarfs immer durchgereicht (Selbstverbrauch). Darüber
-    hinausgehende Einspeisung nur, wenn das jeweilige Gerät `gridReverse=1`
-    hat – bei `gridReverse=2` (Fleet-Lock) wird dieser Anteil verworfen
-    (Spalten `verworfen_sf800`/`verworfen_sf2400` in der CSV)
-  - `GET /grid/properties/report` liefert `haushalt − Summe aktueller
-    AC-Leistung beider Geräte` (echter geschlossener Kreis) und rückt dabei
-    die simulierte Uhr um `STEP_MIN` Minuten weiter
+    - PV lädt den Akku autonom (DC-seitig), unabhängig vom Regler
+    - reagiert auf `POST /devN/properties/write` (setzt acMode/outputLimit/
+      inputLimit/smartMode/minSoc/socSet/gridReverse tatsächlich)
+    - `socLimit` wird aus dem SOC + den vom Regler geschriebenen minSoc/socSet
+      berechnet (nicht aus der CONFIG kopiert – testet also auch, ob
+      `syncSocLimitsAll` korrekt schreibt)
+    - `minSoc`/`socSet` wirken als **harte physikalische Grenzen** in der
+      Akku-Simulation (wie echte Geräte-Firmware das auch tut) – kein
+      Überschwingen unter/über die geschriebenen Grenzwerte
+    - PV-Überschuss (Akku voll oder Ladeleistung gedeckelt) wird bis zur Höhe
+      des aktuellen Hausbedarfs immer durchgereicht (Selbstverbrauch). Darüber
+      hinausgehende Einspeisung nur, wenn das jeweilige Gerät `gridReverse=1`
+      hat – bei `gridReverse=2` (Fleet-Lock) wird dieser Anteil verworfen
+      (Spalten `verworfen_sf800`/`verworfen_sf2400` in der CSV)
+    - `GET /grid/properties/report` liefert `haushalt − Summe aktueller
+      AC-Leistung beider Geräte` (echter geschlossener Kreis) und rückt dabei
+      die simulierte Uhr um `STEP_MIN` Minuten weiter
 - `shelly_shim.js` – stellt `Shelly.call` (HTTP.GET/HTTP.Request/KVS.*),
   `Timer.set/clear`, `print` bereit, damit das Skript 1:1 unter Node läuft.
   Beschleunigt über `SPEED_FACTOR` nur das **reale** Warten zwischen
@@ -109,13 +109,14 @@ set SPEED_FACTOR=150&&set STEP_MIN=0.05&&set CYCLES=28800&&set INTERVAL_MS=3000&
 | `MAX_WAIT_MS` | Sicherheits-Obergrenze für die Gesamtlaufzeit | Verhindert endloses Warten, falls ein Zyklus hängt (z. B. Watchdog-Stall) – normalerweise nicht selbst setzen, hat sinnvollen Default | `CYCLES × effectiveMs × 6 + 30000` |
 
 **Die vier, die für unterschiedliche Testziele am wichtigsten sind:**
+
 - **Realitätsnaher Tageslauf:** `STEP_MIN=0.05` + `CYCLES=28800` + `SPEED_FACTOR=150`
 - **Schneller grober Überblick:** `STEP_MIN=15` + `CYCLES=96` (ohne `SPEED_FACTOR`, läuft in ~5 Min.)
 - **Fleet-Lock (`gridReverse=2`) gezielt provozieren:** `LOAD_SCALE=0.05` + `START_SOC=85`, kombinierbar mit einem der beiden obigen
 - **2-Stunden-Test ab 08:00:**
-  ```powershell
-  $env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js
-  ```
+    ```powershell
+    $env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js
+    ```
   Achtung: `START_SOC=50` ist hier eine Vereinfachung – nach einer echten Nacht wären die Akkus um 08:00 realistischerweise eher schon niedriger (Richtung `minSoc`). Für einen wirklich realitätsnahen Ausschnitt entweder `START_SOC` niedriger ansetzen (z. B. 20–25) oder einen vollen Tag ab 00:00 laufen lassen und den Bereich `minute` 480–600 aus der CSV filtern.
 
 ## Geschwindigkeit: läuft das in Echtzeit? Kann man beschleunigen?
@@ -229,6 +230,7 @@ grobkörnig.
 ## Kann ich mit jedem neuen Codestand testen?
 
 Ja, mit zwei Einschränkungen:
+
 - Die CONFIG muss wieder auf den Mock gepatcht werden (siehe unten) –
   **einmal pro Codestand**, nicht bei jedem `run_test.js`-Aufruf
 - Nutzt der neue Code andere `Shelly.call`-Methoden (z. B. `Wifi.GetStatus`,
@@ -324,6 +326,7 @@ run_test.js
 **2. Die Sandbox (`shelly_shim.js`)**
 Das Original-Skript läuft per `vm.runInContext` in einer isolierten Umgebung
 mit drei globalen Objekten, die reine Weiterleitungen sind:
+
 - `Shelly.call("HTTP.GET"/"HTTP.Request", ...)` → echter `http.request()` an `localhost:3900/...`
 - `Timer.set/clear` → `setInterval`/`setTimeout` (Repeat-Timer via `SPEED_FACTOR` beschleunigt, Einmal-Timer unverändert real)
 - `print` → `console.log`
@@ -360,6 +363,7 @@ nächsten Zyklus sichtbare Konsequenz – genau wie bei echter Hardware.
 exakt ab, was am echten Gerät passiert".
 
 ✅ **Hohe Konfidenz bei:**
+
 - Der kompletten Entscheidungslogik – läuft unverändert, keine Nachbildung
 - Zustandsabhängigem Verhalten über Zeit: Hysterese, Richtungswechsel-
   Cooldown, Rebalancing, Ladesperre/Entladesperre-Übergänge (echte
@@ -370,6 +374,7 @@ exakt ab, was am echten Gerät passiert".
   → Unterschiede sind eindeutig dem Code zuzuordnen
 
 ⚠️ **Begrenzt bei:**
+
 - Physikalischer Genauigkeit (kein Wirkungsgrad, keine Rampzeiten, keine
   echten PV-Input-Limits)
 - Unkalibriertem `STEP_MIN` – zu groß gewählt, verwischt Hold-Timer-
@@ -393,6 +398,7 @@ Formel direkt in `mock_server.js` (`householdLoad()`), die bei jedem
 (`simMinute`) neu berechnet wird.
 
 **Aufbau der Formel:**
+
 1. `dayW` – ein Sigmoid-Übergang, der zwischen Nacht (~0) und Tag (~1) weich
    blendet, Übergänge bei 06:00/22:00
 2. `lower`/`upper` – Leistungsgrenzen, die zwischen Nacht (150–300 W) und
@@ -403,6 +409,7 @@ Formel direkt in `mock_server.js` (`householdLoad()`), die bei jedem
 5. `LOAD_SCALE` – Skalierungsfaktor (Env-Var), multipliziert alles
 
 **Wichtige Eigenschaften:**
+
 - **Deterministisch** – bei gleichem `simMinute`/`LOAD_SCALE` kommt immer
   derselbe Wert raus (kein Zufall, kein Seed nötig) → Testläufe sind
   reproduzierbar

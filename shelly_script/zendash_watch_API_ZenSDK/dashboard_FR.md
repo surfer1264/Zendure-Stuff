@@ -110,14 +110,14 @@ Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (seulement 
 - **Soutirage / injection réseau :** solde réseau actuel avec le sens (« soutirage » ou « injection ») et comparaison avec la consigne, plus une courbe d'historique des 2 dernières minutes.
 - **Puissance Solarflow :** somme de toutes les batteries (+ = fournissent, − = chargent), en dessous l'état de charge moyen (« Charge moy. … % »), également avec courbe d'historique. Les deux courbes ont des échelles différentes et repartent de zéro après un rechargement de la page.
 - **Une carte par batterie** avec :
-  - le nom et un point d'état (vert = joignable) ; avec « Détails techniques », en plus `[devN]` et l'adresse IP
-  - l'état de charge sous forme d'icône de batterie et de nombre, à côté la puissance avec le sens (« fournit », « charge », « veille »)
-  - en dessous la plage de travail, p. ex. `Plage 15–100 %` (de la réserve à l'objectif de charge)
-  - l'entrée PV, la puissance hors réseau (uniquement sur les appareils avec prise hors réseau), la température de l'appareil en °C et la cellule la plus faible (« Cellule min 3,28 V ») – significative seulement sous charge. Pour les batteries surveillées par le watchdog, le seuil de blocage suit, p. ex. « blocage < 2,90 V », et la couleur dépend des seuils du watchdog : jaune sous `minVoltReset`, rouge sous `minVoltWarn`. Sinon : jaune sous 3,0 V, rouge sous 2,8 V.
-  - « 100 % : il y a N jours » – quand la batterie a été pleine pour la dernière fois ; un appui affiche la date ([en savoir plus](readme_FR.md#dernière-charge-complète))
-  - l'état en clair, p. ex. « injecte », « pleine, charge bloquée », « vide, décharge bloquée », « export interdit ». Il explique les cas les plus fréquents de « Pourquoi la batterie ne fait-elle rien ? ». Avec « Détails techniques », le code brut est affiché devant (`socLimit 1`, `gridReverse 2` …).
-  - des indications lorsque l'appareil est réglé autrement que la configuration, p. ex. « Limite de charge 90 % · différent, configuration 100 % » (`socSet` ≠ `maxSoc`) ou « Réserve sur l'appareil 15 % · différent, KVS 20 % ». Le plus souvent, la valeur a été modifiée de l'extérieur (application, Home Assistant).
-  - en dessous « Décharge : autorisée · Charge réseau : bloquée », résumé des deux interrupteurs
+    - le nom et un point d'état (vert = joignable) ; avec « Détails techniques », en plus `[devN]` et l'adresse IP
+    - l'état de charge sous forme d'icône de batterie et de nombre, à côté la puissance avec le sens (« fournit », « charge », « veille »)
+    - en dessous la plage de travail, p. ex. `Plage 15–100 %` (de la réserve à l'objectif de charge)
+    - l'entrée PV, la puissance hors réseau (uniquement sur les appareils avec prise hors réseau), la température de l'appareil en °C et la cellule la plus faible (« Cellule min 3,28 V ») – significative seulement sous charge. Pour les batteries surveillées par le watchdog, le seuil de blocage suit, p. ex. « blocage < 2,90 V », et la couleur dépend des seuils du watchdog : jaune sous `minVoltReset`, rouge sous `minVoltWarn`. Sinon : jaune sous 3,0 V, rouge sous 2,8 V.
+    - « 100 % : il y a N jours » – quand la batterie a été pleine pour la dernière fois ; un appui affiche la date ([en savoir plus](readme_FR.md#dernière-charge-complète))
+    - l'état en clair, p. ex. « injecte », « pleine, charge bloquée », « vide, décharge bloquée », « export interdit ». Il explique les cas les plus fréquents de « Pourquoi la batterie ne fait-elle rien ? ». Avec « Détails techniques », le code brut est affiché devant (`socLimit 1`, `gridReverse 2` …).
+    - des indications lorsque l'appareil est réglé autrement que la configuration, p. ex. « Limite de charge 90 % · différent, configuration 100 % » (`socSet` ≠ `maxSoc`) ou « Réserve sur l'appareil 15 % · différent, KVS 20 % ». Le plus souvent, la valeur a été modifiée de l'extérieur (application, Home Assistant).
+    - en dessous « Décharge : autorisée · Charge réseau : bloquée », résumé des deux interrupteurs
 - **Pied de page :** versions de la page et du script (jaune si elles ne correspondent pas), heure de la dernière actualisation, lien **Aide** vers ce guide. `config_api` et `status_api` ouvrent les données brutes en JSON dans un nouvel onglet. **ThingSpeak** et **ThingsBoard** mènent aux pages de configuration de l'envoi cloud ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), en allemand).
 
 **Explications au toucher :** de nombreux libellés et valeurs sont soulignés en pointillés – consigne, décharge fixe, les deux tuiles de la vue d'ensemble, puissance, plage de travail, ligne complémentaire, seuil de blocage ; les étiquettes d'état aussi. Un appui (ou le survol à la souris) affiche une courte explication.
@@ -151,8 +151,8 @@ Pour un affichage occasionnel, n'importe quel ordinateur suffit. Si le tableau d
 - Pour pouvoir aussi **régler** depuis le tableau de bord (consigne, réserve, charge manuelle …), `kvsEnabled: true` et `kvsForceReseed: false` doivent être définis dans le Controller. Sans KVS, le tableau de bord ne fait qu'afficher.
 - Pour le script Python et le Synology : **Python 3.7 ou plus récent** ([python.org](https://www.python.org/downloads/)). Rien d'autre à installer.
 - Sauf pour le programme prêt à l'emploi, les deux fichiers de [ce dossier](.) :
-  - [`zendure_proxy.py`](zendure_proxy.py) – le proxy
-  - [`zendure-dashboard.html`](zendure-dashboard.html) – la page du tableau de bord
+    - [`zendure_proxy.py`](zendure_proxy.py) – le proxy
+    - [`zendure-dashboard.html`](zendure-dashboard.html) – la page du tableau de bord
 
   Le fichier HTML peut se trouver **dans le même dossier** que le proxy ou **un niveau au-dessus**. S'il y en a un aux deux endroits, celui du même dossier l'emporte.
 
@@ -250,15 +250,15 @@ Pour chaque fichier, la [page des releases](https://github.com/surfer1264/Zendur
 ## Fonctionnement permanent sur un Synology
 
 1. **Vérifier Python.** DSM en fournit généralement un :
-   ```bash
-   which python3 && python3 --version
-   ```
+    ```bash
+    which python3 && python3 --version
+    ```
    La version 3.7 ou plus suffit – le proxy n'utilise que la bibliothèque standard. L'interpréteur se trouve souvent sous `/bin/python3`. Si rien ne s'affiche, installer **Python 3** depuis le Centre de paquets ; le chemin est alors `/var/packages/Python3*/target/bin/python3`.
 2. **Déposer les fichiers.** `zendure_proxy.py` dans un dossier dédié, p. ex. `/volume1/homes/<utilisateur>/zendure`, et `zendure-dashboard.html` à côté ou un niveau au-dessus. Pas dans le dossier `web` – il appartient à Web Station.
 3. **Créer une tâche.** Panneau de configuration → Planificateur de tâches → Créer → **Tâche déclenchée** → Script défini par l'utilisateur. Événement **Démarrage**, utilisateur **root**, et comme commande le chemin complet :
-   ```bash
-   /bin/python3 /volume1/homes/<utilisateur>/zendure/zendure_proxy.py -q
-   ```
+    ```bash
+    /bin/python3 /volume1/homes/<utilisateur>/zendure/zendure_proxy.py -q
+    ```
 4. **Lancer tout de suite**, sans redémarrer : sélectionner la tâche → **Exécuter**.
 5. **Pare-feu.** S'il est actif sous Panneau de configuration → Sécurité → Pare-feu, créer une règle pour TCP **8000**. Le port 8000 n'entre pas en conflit avec DSM lui-même (5000/5001).
 6. **Configurer.** Depuis un PC ou un téléphone, ouvrir `http://<IP-du-Synology>:8000/` et saisir IP et numéro de script comme à l'[étape 4](#le-tableau-de-bord-en-4-étapes).

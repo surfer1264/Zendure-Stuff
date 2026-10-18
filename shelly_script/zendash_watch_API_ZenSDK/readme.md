@@ -37,31 +37,31 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 ## Inhalt
 
 - [Dashboard-Shelly - API + Watchdog](#dashboard-shelly---api--watchdog)
-  - [Inhalt](#inhalt)
-  - [Was du brauchst](#was-du-brauchst)
-  - [So arbeitet das Script](#so-arbeitet-das-script)
-  - [Installation](#installation)
-    - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
-    - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
-    - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
-    - [Nach dem Start](#nach-dem-start)
-  - [Konfiguration](#konfiguration)
-    - [Geräte (`devices`)](#geräte-devices)
-    - [Dashboard-Teil (`api`)](#dashboard-teil-api)
-    - [Watchdog (`watchdog`)](#watchdog-watchdog)
-    - [Nachrichten (`notify`)](#nachrichten-notify)
-    - [Allgemein](#allgemein)
-  - [Dashboard](#dashboard)
-    - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
-  - [Nachrichten](#nachrichten)
-  - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
-  - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
-  - [Letzte Vollladung](#letzte-vollladung)
-  - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
-  - [Speicherbedarf](#speicherbedarf)
-  - [Fehlersuche](#fehlersuche)
-    - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
-    - [Häufige Probleme](#häufige-probleme)
+    - [Inhalt](#inhalt)
+    - [Was du brauchst](#was-du-brauchst)
+    - [So arbeitet das Script](#so-arbeitet-das-script)
+    - [Installation](#installation)
+        - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
+        - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
+        - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
+        - [Nach dem Start](#nach-dem-start)
+    - [Konfiguration](#konfiguration)
+        - [Geräte (`devices`)](#geräte-devices)
+        - [Dashboard-Teil (`api`)](#dashboard-teil-api)
+        - [Watchdog (`watchdog`)](#watchdog-watchdog)
+        - [Nachrichten (`notify`)](#nachrichten-notify)
+        - [Allgemein](#allgemein)
+    - [Dashboard](#dashboard)
+        - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
+    - [Nachrichten](#nachrichten)
+    - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
+    - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
+    - [Letzte Vollladung](#letzte-vollladung)
+    - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
+    - [Speicherbedarf](#speicherbedarf)
+    - [Fehlersuche](#fehlersuche)
+        - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
+        - [Häufige Probleme](#häufige-probleme)
 
 ---
 
@@ -71,8 +71,8 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 - **Zendure-Speicher mit lokaler Schnittstelle** (zenSDK), erreichbar unter `http://<IP-des-Speichers>/properties/report`. Getestet mit SolarFlow 2400 Pro und SolarFlow 800.
 - **Den [Controller](../Controller/readme.md)** auf deinem Controller-Shelly, wenn du das Dashboard nutzen willst. Das Dashboard liest und schreibt dessen Einstellungen. Nutzt du nur den Watchdog, brauchst du ihn nicht.
 - **Für Nachrichten** (optional):
-  - Signal oder WhatsApp: einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com)
-  - oder einen Webhook, zum Beispiel in Home Assistant
+    - Signal oder WhatsApp: einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com)
+    - oder einen Webhook, zum Beispiel in Home Assistant
 
 > **Hinweis:** Auf dem Controller-Shelly darf **kein Passwortschutz** aktiv sein. Sonst kann dieses Script die Einstellungen dort nicht lesen und schreiben.
 
@@ -319,6 +319,7 @@ Im Dashboard kannst du einen Speicher manuell aus dem Netz laden lassen. Das Scr
 **Auto-Stop:** Sobald der Speicher meldet, dass er voll ist, beendet das Script das manuelle Laden selbstständig und stellt den vorherigen Zustand wieder her. Das funktioniert auch, wenn das Dashboard geschlossen ist.
 
 Gut zu wissen:
+
 - Den vorherigen Zustand merkt sich das Script nur im Arbeitsspeicher. Startet der Shelly während des manuellen Ladens neu, werden beim Beenden Entladen und Laden vom Netz wieder **eingeschaltet**.
 - Du kannst das manuelle Laden jederzeit im Dashboard selbst beenden.
 
@@ -383,9 +384,9 @@ Setze `debug: true` und starte das Script neu – oder setze im Configurator bei
 - Versand jeder Nachricht
 - die Speicherbelegung an den wichtigsten Stellen
 - bei jeder Watchdog-Runde eine Zeile je Speicher mit allen Akkupacks, zum Beispiel:
-  ```
-  [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
-  ```
+    ```
+    [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
+    ```
 
 Schalte `debug` danach wieder aus. Das Log wird sonst sehr lang. Zum Mitschneiden eignet sich „Log aufzeichnen“ im [Configurator](../Multiconfigurator/readme.md#log-aufzeichnen).
 
@@ -396,6 +397,7 @@ Das Script übernimmt Änderungen erst nach einem **Neustart** (Stop → Start).
 
 **Ich bekomme gar keine Nachrichten.**
 Schau in die Banner-Zeile „Nachrichten“:
+
 - `aus` bedeutet: `notify.enabled` ist `false`, oder `typ` ist unbekannt. Im zweiten Fall steht direkt darüber eine WARNUNG.
 - Bei Signal/WhatsApp: Stimmen Telefonnummer (mit `+49…`) und API-Key?
 - Bei Webhook: Ist die Adresse vom Shelly aus erreichbar?
@@ -406,6 +408,7 @@ Mit `debug: true` siehst du im Log, ob und wie jede Nachricht verschickt wurde.
 Der alte Watchdog läuft noch. Stoppe ihn und schalte bei ihm „Run on startup“ aus.
 
 **Das Dashboard zeigt einen Verbindungsfehler.**
+
 - Läuft das Script? (Weboberfläche → Scripts)
 - Stimmen im Proxy unter `/setup` IP **und** Script-Nummer des Dashboard-Shelly? Siehe [Dashboard – Wenn es nicht klappt](dashboard.md#wenn-es-nicht-klappt).
 - Ist `api.enabled` auf `true`?

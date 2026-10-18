@@ -15,6 +15,7 @@ Grundvoraussetzung ist eine Python-Umgebung. Die gibt es für jedes Betriebssyst
 > **Tipp:** Für einen kurzen Log-Mitschnitt (bis 10 Minuten) brauchst du diese Werkzeuge nicht – das kann der [Configurator](../Multiconfigurator/readme.md#log-aufzeichnen) mit dem Helfer auf Knopfdruck. Die Werkzeuge hier sind für Aufzeichnungen über Stunden oder Tage gedacht.
 
 Lade die Dateien hier in **ein** Verzeichnis auf deinem Computer
+
 * pass die CMD-Dateien an (Windows: `monitor.cmd` und `logger.cmd` – Laufwerk und Pfad auf dein Verzeichnis ändern)
 * konfiguriere die beiden Config-Dateien (siehe unten) – ein Bearbeiten der `.py`-Dateien ist **nicht** nötig
 
@@ -130,8 +131,8 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
 
 * **`shelly_ip`**: Die IPv4-Adresse des Shelly im lokalen Netz.
 * **`target_script_ids`**:
-  * Liste mit einer oder mehreren Script-IDs (z. B. `[8]` oder `[6, 8, 12]`), um nur Meldungen dieser Skripte anzuzeigen/zu speichern.
-  * `null` eintragen, um alle System- und Skript-Logs des Shelly zu erfassen.
+    * Liste mit einer oder mehreren Script-IDs (z. B. `[8]` oder `[6, 8, 12]`), um nur Meldungen dieser Skripte anzuzeigen/zu speichern.
+    * `null` eintragen, um alle System- und Skript-Logs des Shelly zu erfassen.
 * **`only_script_logs`**: `true` = Systemmeldungen ausblenden, nur echte Skript-Logs zeigen.
 * **`log_to_file`**: `true`/`false` – ob überhaupt in eine Datei geschrieben wird.
 * **`log_file_path`**: Zieldatei fürs Log (Standard: `shelly_debug.log`).

@@ -14,29 +14,29 @@ Quelques clics pour piloter localement ta flotte Zendure – configurer, mettre 
 
 1. [Ce que le configurateur met en place](#1-ce-que-le-configurateur-met-en-place)
 2. [Où trouver le configurateur](#2-où-trouver-le-configurateur)
-   * [Recommandé : l'assistant local (installateur EXE)](#recommandé--lassistant-local-installateur-exe)
-   * [Alternative : le configurateur web seul](#alternative--le-configurateur-web-seul)
+    * [Recommandé : l'assistant local (installateur EXE)](#recommandé--lassistant-local-installateur-exe)
+    * [Alternative : le configurateur web seul](#alternative--le-configurateur-web-seul)
 3. [Première configuration](#3-première-configuration)
-   * [Déroulement](#déroulement)
-   * [Les fonctions de l'étape Résultat](#les-fonctions-de-létape-résultat)
+    * [Déroulement](#déroulement)
+    * [Les fonctions de l'étape Résultat](#les-fonctions-de-létape-résultat)
 4. [Mise à jour](#4-mise-à-jour)
-   * [Comment faire](#comment-faire)
-   * [Ce que deviennent tes réglages lors d'une mise à jour](#ce-que-deviennent-tes-réglages-lors-dune-mise-à-jour)
-   * [Mise à jour sans l'assistant local](#mise-à-jour-sans-lassistant-local)
-   * [Passer des anciens scripts séparés au nouveau script](#passer-des-anciens-scripts-séparés-au-nouveau-script)
+    * [Comment faire](#comment-faire)
+    * [Ce que deviennent tes réglages lors d'une mise à jour](#ce-que-deviennent-tes-réglages-lors-dune-mise-à-jour)
+    * [Mise à jour sans l'assistant local](#mise-à-jour-sans-lassistant-local)
+    * [Passer des anciens scripts séparés au nouveau script](#passer-des-anciens-scripts-séparés-au-nouveau-script)
 5. [Remplacer un Shelly](#5-remplacer-un-shelly)
 6. [Messages d'erreur et situations problématiques](#6-messages-derreur-et-situations-problématiques)
-   * [Plusieurs scripts sur un Shelly](#plusieurs-scripts-sur-un-shelly)
-   * [Aperçu des messages](#aperçu-des-messages)
-   * [Problèmes avec l'assistant local](#problèmes-avec-lassistant-local)
+    * [Plusieurs scripts sur un Shelly](#plusieurs-scripts-sur-un-shelly)
+    * [Aperçu des messages](#aperçu-des-messages)
+    * [Problèmes avec l'assistant local](#problèmes-avec-lassistant-local)
 7. [Guides pratiques](#7-guides-pratiques)
-   * [Importer une configuration existante](#importer-une-configuration-existante)
-   * [Charger un script manuellement](#charger-un-script-manuellement)
-   * [Vérifier la mémoire d'un Shelly](#vérifier-la-mémoire-dun-shelly)
-   * [Sauvegarder la configuration](#sauvegarder-la-configuration)
-   * [Enregistrer le journal](#enregistrer-le-journal)
-   * [Réinitialiser les IP mémorisées](#réinitialiser-les-ip-mémorisées)
-   * [Vérifier l'intégrité du téléchargement](#vérifier-lintégrité-du-téléchargement)
+    * [Importer une configuration existante](#importer-une-configuration-existante)
+    * [Charger un script manuellement](#charger-un-script-manuellement)
+    * [Vérifier la mémoire d'un Shelly](#vérifier-la-mémoire-dun-shelly)
+    * [Sauvegarder la configuration](#sauvegarder-la-configuration)
+    * [Enregistrer le journal](#enregistrer-le-journal)
+    * [Réinitialiser les IP mémorisées](#réinitialiser-les-ip-mémorisées)
+    * [Vérifier l'intégrité du téléchargement](#vérifier-lintégrité-du-téléchargement)
 
 Les dernières modifications figurent dans le [changelog](CHANGELOG.md) (en allemand).
 
@@ -177,15 +177,16 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
 2. Les IP de tes Shelly sont normalement déjà saisies (mémorisées lors du dernier chargement). Sinon, saisis-les une fois – au moins une.
 3. Le configurateur compare les versions installées avec GitHub et affiche un tableau :
 
-   | Statut | Signification |
-   |---|---|
-   | **Mise à jour disponible** | Une version plus récente existe – les modifications sont listées juste en dessous. Cochée automatiquement. |
-   | **à jour** | Rien à faire. |
-   | **plus récent que GitHub** | Tu as une version de test ou préliminaire – rien à faire. |
-   | **non installé** / **pas de script unique** | Mise à jour impossible, choisis [« Nouvelle configuration ou mise à jour manuelle »](#3-première-configuration). |
-   | **Shelly injoignable** | voir [Messages d'erreur](#6-messages-derreur-et-situations-problématiques) |
+    | Statut | Signification |
+    |---|---|
+    | **Mise à jour disponible** | Une version plus récente existe – les modifications sont listées juste en dessous. Cochée automatiquement. |
+    | **à jour** | Rien à faire. |
+    | **plus récent que GitHub** | Tu as une version de test ou préliminaire – rien à faire. |
+    | **non installé** / **pas de script unique** | Mise à jour impossible, choisis [« Nouvelle configuration ou mise à jour manuelle »](#3-première-configuration). |
+    | **Shelly injoignable** | voir [Messages d'erreur](#6-messages-derreur-et-situations-problématiques) |
 
-   En dessous, tu vois aussi s'il existe une nouvelle version du configurateur/de l'assistant local lui-même – avec un lien de téléchargement.
+    En dessous, tu vois aussi s'il existe une nouvelle version du configurateur/de l'assistant local lui-même – avec un lien de téléchargement.
+
 4. Coche les scripts souhaités → **« Mettre à jour »**. Le configurateur lit ta configuration actuelle directement sur le Shelly et passe au résultat.
 5. Là, clique sur **« ⚡ Charger directement »**. Le nouveau script remplace l'ancien au même emplacement (le numéro de script reste identique – important par ex. pour le proxy du tableau de bord) et est redémarré.
 

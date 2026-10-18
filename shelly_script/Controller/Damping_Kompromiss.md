@@ -33,6 +33,7 @@ unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
 Werte untereinander verhalten. 
 
 **Grundlage:**
+
 - Damping-Matrix: 12 Läufe (dampingFactor 0.4–0.8), zusätzlich Anlauf aus Standby (`START_DELAY_S=4`)
 - Tagesprofil 14h, Waschmaschine, Induktionsherd, Kühlschrank, Kaffeevollautomat
 - Beispiel-Report [doku/beispiel_report.html](doku/beispiel_report.html)
@@ -110,6 +111,7 @@ Alle Dateien liegen im selben Ordner.
 | `doku/` | Beispiel-Report (`beispiel_report.html`) und die Bilder für Abschnitt 8.2. Nur für die Doku, für den Test nicht nötig | nein |
 
 Voraussetzungen:
+
 - **Node.js** für Mock, Runner, Matrix und Report. Dafür werden keine npm-Pakete gebraucht.
 - **Python 3** und **npx/Terser** nur zum Bauen von `zdmc_test.js` (siehe 4.1). Terser wird über `npx terser` aufgerufen und beim ersten Mal von npm geladen, falls er nicht installiert ist.
 
@@ -131,6 +133,7 @@ Voraussetzungen:
 Die Namen passen nicht zusammen. Die CSV-Spalte `sf800` gehört zum Controller-Gerät „SF2400“. Das ist historisch so gewachsen.
 
 **Physik je Schritt:**
+
 - PV lädt den Akku direkt, bis maxSoc.
 - Der Akku liefert oder lädt, was der Controller vorgibt, solange minSoc/maxSoc das erlauben.
 - Ist der Akku voll, wird der PV-Überschuss durchgereicht (Bypass). Ins Netz geht er nur bei `gridReverse = 1`.
@@ -185,17 +188,18 @@ python3 swap_config.py zerooutput_multi_kvs_mini.js --config-from testconfig.js 
 ```
 
 1. **Verkleinern:** `minify_keep_config.py` macht aus dem Quellcode im Git-Checkout die Mini-Version `zerooutput_multi_kvs_mini.js`, genau wie für den Shelly.
-   - Den CONFIG-Block findet es über `let CONFIG = {` am Zeilenanfang und Klammerzählung. Er bleibt Byte für Byte erhalten, inklusive Kommentaren.
-   - Alles davor und danach geht durch Terser (`--ecma 5`, ohne compress/mangle): Es fallen nur Kommentare und Leerraum weg, Namen bleiben.
-   - Danach prüft es selbst: keine `=>`, keine Template-Strings, gleiche Anzahl `function` und `let`, Gesamtdatei syntaktisch gültig. Schlägt eine Prüfung fehl, steht `ACHTUNG: mindestens eine Verifikation ist fehlgeschlagen` da, und das Skript endet mit Code 2.
+    - Den CONFIG-Block findet es über `let CONFIG = {` am Zeilenanfang und Klammerzählung. Er bleibt Byte für Byte erhalten, inklusive Kommentaren.
+    - Alles davor und danach geht durch Terser (`--ecma 5`, ohne compress/mangle): Es fallen nur Kommentare und Leerraum weg, Namen bleiben.
+    - Danach prüft es selbst: keine `=>`, keine Template-Strings, gleiche Anzahl `function` und `let`, Gesamtdatei syntaktisch gültig. Schlägt eine Prüfung fehl, steht `ACHTUNG: mindestens eine Verifikation ist fehlgeschlagen` da, und das Skript endet mit Code 2.
 2. **CONFIG tauschen:** `swap_config.py` sucht in der Mini-Version den Block `let CONFIG = { … };` (beachtet dabei Kommentare und Strings) und ersetzt ihn durch den Block aus `testconfig.js`. Der Rest bleibt unverändert, die Zeilenenden passt es an. Ergebnis ist `zdmc_test.js`.
-   - Mit `--check` statt `-o` zeigt es nur an, was es tun würde.
-   - **Warnung „Platzhalter uebrig“** bei `gridSourceIp` und `webhookUrl` ist im Test harmlos. Diese Einträge werden mit `gridSource: "http_json"` und `signal.enabled: false` nicht benutzt.
+    - Mit `--check` statt `-o` zeigt es nur an, was es tun würde.
+    - **Warnung „Platzhalter uebrig“** bei `gridSourceIp` und `webhookUrl` ist im Test harmlos. Diese Einträge werden mit `gridSource: "http_json"` und `signal.enabled: false` nicht benutzt.
 3. **Testlauf:** Am Ende startet `14hlauf0600.cmd` (Einzellauf ohne Rauschen). Für einen Lauf mit Rauschen oder die Matrix stattdessen `14hlauf0600_rauschen.cmd` bzw. `matrix_damping.cmd` eintragen oder nach dem Bauen selbst starten.
 
 Nach jedem `Pause` kann man die Ausgabe prüfen, bevor es weitergeht. Getestet wird so genau der Code, der auch auf den Shelly kommt (Mini-Version), nur mit Test-CONFIG.
 
 **Bei einer neuen Version zusätzlich prüfen:**
+
 - Hat die neue Version **neue CONFIG-Einträge**? Diese in `testconfig.js` nachtragen, sonst fehlen sie im Test. Einträge, die der Code selbst setzt (z. B. `watchdog`, `dischargeFixed`, `dischargeResetMargin`, `standbyHoldCycles`), gehören nicht hinein.
 - Nach dem ersten Lauf das Banner im Log prüfen: Version, Damping, Intervall.
 
@@ -376,12 +380,12 @@ Der Seed ist eine Startzahl für den Zufall. **Gleicher Seed = exakt gleicher Te
 
 - **Gleich bei jedem Seed:** Grundprofil, PV, feste Ereignisse mit Uhrzeit, Dauer und Leistung, Start-SoC.
 - **Verschieden je Seed:**
-  - Uhrzeit der Zufallsereignisse
-  - Verlauf von Grundrauschen und Zittern
-  - Phase des Kühlschranks
-  - Phase und Leistungsschwankung des Induktionsherds
-  - Trommelstöße der Waschmaschine
-  - Mess- und Geräterauschen
+    - Uhrzeit der Zufallsereignisse
+    - Verlauf von Grundrauschen und Zittern
+    - Phase des Kühlschranks
+    - Phase und Leistungsschwankung des Induktionsherds
+    - Trommelstöße der Waschmaschine
+    - Mess- und Geräterauschen
 
 Technisch rechnet der Mock jede Zufallszahl mit `rnd(seed, index, kanal)`. Der Index ist die Simulationszeit (Zyklus, Sekunde, Minute oder ein Zähler im Ereignis), der Kanal ein fester Name je Zweck (z. B. `"meter"`, `"zittern"`, `"f1d0:trommel"`). Es gibt keine fortlaufende Zufallsfolge. Deshalb kann der Controller die Last nicht beeinflussen, auch wenn er öfter liest oder schreibt.
 
@@ -403,17 +407,17 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 
 1. In `matrix_damping.cmd` `DAMPINGS`, `SEEDS`, `PARALLEL`, `CYCLES` und `SPEED_FACTOR` setzen.
 2. Starten. Im Konsolenfenster erscheint:
-   ```
-   [matrix] 12 Laeufe (Damping 0.5/0.65/0.7/0.8 x Seeds 1/2/3), parallel 3 -> ...\Matrix-261017-220145
-   [matrix] Start  seed 1 damping 0.5 (Port 3901)
-   ...
-   [matrix] Fertig seed 1 damping 0.5 nach 597 s (Exit 0)
-   ```
+    ```
+    [matrix] 12 Laeufe (Damping 0.5/0.65/0.7/0.8 x Seeds 1/2/3), parallel 3 -> ...\Matrix-261017-220145
+    [matrix] Start  seed 1 damping 0.5 (Port 3901)
+    ...
+    [matrix] Fertig seed 1 damping 0.5 nach 597 s (Exit 0)
+    ```
    `Exit 0` = Lauf vollständig. Am Ende wird die Ergebnistabelle angezeigt.
 3. Ergebnis im Ordner `Matrix-<Datum-Uhrzeit>`:
-   - `matrix_ergebnis.md`: eine Zeile je Damping, Median über die Seeds
-   - `matrix_laeufe.csv`: eine Zeile je Lauf
-   - je Lauf ein Unterordner `seed<S>_damp<D>` mit `lauf.log`, `closed_loop_result.csv`, `report.html`, `zdmc_run.js`
+    - `matrix_ergebnis.md`: eine Zeile je Damping, Median über die Seeds
+    - `matrix_laeufe.csv`: eine Zeile je Lauf
+    - je Lauf ein Unterordner `seed<S>_damp<D>` mit `lauf.log`, `closed_loop_result.csv`, `report.html`, `zdmc_run.js`
 
 **Dauer:** gemessen etwa 10 min je Lauf mit 12.600 Zyklen bei 3 parallelen Läufen. 12 Läufe dauern damit etwa 40 min. Ein Zyklus braucht real 30–45 ms; schneller als das wird es auch mit höherem SPEED_FACTOR nicht.
 
@@ -455,6 +459,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 | Damping-Vergleich | Matrix | `matrix_ergebnis.md` |
 
 **Nicht abgedeckt** (Stand heute):
+
 - **Störungen:** Gerät nicht erreichbar, langsame Antwort, Schreibfehler, Zählerausfall. Geplant als eigener Robustheitstest mit Störungen im Szenario.
 - **Verzögerung der Geräte:** ist als Option vorhanden (`DEVICE_DELAY_S`, `WRITE_LAG_S`, `START_DELAY_S`, siehe 4.3), aber standardmäßig aus. Für realistische Damping-Vergleiche einschalten.
 - **Hysterese von socLimit 1:** Der Mock nimmt socLimit 1 sofort zurück, wenn der SoC minimal unter 100 % fällt. Ob echte Geräte hier eine Hysterese haben, ist nicht bekannt. Im Log erscheinen dadurch mehrfache Wechsel 0 ↔ 1.
@@ -469,6 +474,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 ### 8.1 report.html (je Lauf)
 
 **Kopfzeile:**
+
 - Zyklen, simulierte Zeitspanne, Seed
 - mittlerer Betrag des Netzsaldos
 - Anteil der Zeit innerhalb ±30 W und innerhalb ±13 W (`BAND_W`)
@@ -563,6 +569,7 @@ Eine Zeile je Damping-Wert, jeweils Median über die Seeds:
 | Band ruhig / Waschm. / Induktion | Anteil im Band nur in diesen Zeitfenstern |
 
 **Gesättigt** heißt:
+
 - **Bezug,** obwohl jedes Gerät gesperrt (socLimit 2), am Maximum oder in der Entlade-Hysterese ist (still, SoC < minSoc + 3 %), oder
 - **Export,** obwohl jedes Gerät voll (socLimit 1 oder SoC ≥ maxSoc) oder am maximalen Laden ist.
 

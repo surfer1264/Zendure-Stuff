@@ -40,8 +40,8 @@ The current version and all changes are listed in the [changelog](CHANGELOG.md).
 - **Zendure batteries with local interface** (zenSDK), reachable at `http://<battery-IP>/properties/report`. Tested with SolarFlow 2400 Pro and SolarFlow 800.
 - **The [Controller](../Controller/readme.md)** (German) on your Controller Shelly if you want to use the dashboard. The dashboard reads and writes its settings. If you only use the watchdog, you don't need it.
 - **For messages** (optional):
-  - Signal or WhatsApp: a free API key from [CallMeBot](https://www.callmebot.com)
-  - or a webhook, for example in Home Assistant
+    - Signal or WhatsApp: a free API key from [CallMeBot](https://www.callmebot.com)
+    - or a webhook, for example in Home Assistant
 
 > **Note:** **No password protection** may be active on the Controller Shelly. Otherwise this script cannot read and write the settings there.
 
@@ -288,6 +288,7 @@ In the dashboard you can have a battery charged manually from the grid. For this
 **Auto-stop:** As soon as the battery reports that it is full, the script ends manual charging by itself and restores the previous state. This also works when the dashboard is closed.
 
 Good to know:
+
 - The script only keeps the previous state in RAM. If the Shelly restarts during manual charging, discharging and grid charging are switched **on** again when it ends.
 - You can end manual charging yourself in the dashboard at any time.
 
@@ -352,9 +353,9 @@ Set `debug: true` and restart the script – or tick "Debug-Ausgaben" (debug out
 - sending of every message
 - memory usage at the most important points
 - in each watchdog round, one line per battery with all battery packs, for example:
-  ```
-  [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
-  ```
+    ```
+    [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
+    ```
 
 Switch `debug` off again afterwards. Otherwise the log becomes very long. For recording, "Log aufzeichnen" (record log) in the [Configurator](../Multiconfigurator/readme_EN.md#recording-a-log) is useful.
 
@@ -365,6 +366,7 @@ The script only applies changes after a **restart** (Stop → Start). If you use
 
 **I don't get any messages at all.**
 Look at the "Nachrichten" line in the banner:
+
 - `aus` (off) means: `notify.enabled` is `false`, or `typ` is unknown. In the second case, a WARNUNG (warning) appears directly above it.
 - For Signal/WhatsApp: are the phone number (with `+49…`) and API key correct?
 - For webhook: is the address reachable from the Shelly?
@@ -375,6 +377,7 @@ With `debug: true` you can see in the log whether and how each message was sent.
 The old watchdog is still running. Stop it and switch off "Run on startup" for it.
 
 **The dashboard shows a connection error.**
+
 - Is the script running? (web interface → Scripts)
 - Are the IP **and** script number of the Dashboard Shelly correct in the proxy under `/setup`? See [Dashboard – If it does not work](dashboard_EN.md#if-it-does-not-work).
 - Is `api.enabled` set to `true`?

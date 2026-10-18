@@ -40,8 +40,8 @@ La version actuelle et toutes les modifications figurent dans le [changelog](CHA
 - **Des batteries Zendure avec interface locale** (zenSDK), joignables à l'adresse `http://<IP-de-la-batterie>/properties/report`. Testé avec SolarFlow 2400 Pro et SolarFlow 800.
 - **Le [Controller](../Controller/readme.md)** (allemand) sur votre Shelly contrôleur si vous voulez utiliser le tableau de bord. Le tableau de bord lit et écrit ses réglages. Si vous n'utilisez que le watchdog, vous n'en avez pas besoin.
 - **Pour les messages** (facultatif) :
-  - Signal ou WhatsApp : une clé API gratuite de [CallMeBot](https://www.callmebot.com)
-  - ou un webhook, par exemple dans Home Assistant
+    - Signal ou WhatsApp : une clé API gratuite de [CallMeBot](https://www.callmebot.com)
+    - ou un webhook, par exemple dans Home Assistant
 
 > **Remarque :** **aucune protection par mot de passe** ne doit être active sur le Shelly contrôleur. Sinon, ce script ne peut pas y lire ni écrire les réglages.
 
@@ -288,6 +288,7 @@ Dans le tableau de bord, vous pouvez faire charger une batterie manuellement dep
 **Arrêt automatique :** dès que la batterie signale qu'elle est pleine, le script met fin lui-même à la charge manuelle et rétablit l'état précédent. Cela fonctionne aussi lorsque le tableau de bord est fermé.
 
 Bon à savoir :
+
 - Le script ne garde l'état précédent qu'en mémoire vive. Si le Shelly redémarre pendant la charge manuelle, la décharge et la charge réseau sont **réactivées** à la fin.
 - Vous pouvez arrêter vous-même la charge manuelle à tout moment dans le tableau de bord.
 
@@ -352,9 +353,9 @@ Réglez `debug: true` et redémarrez le script – ou cochez « Debug-Ausgaben �
 - l'envoi de chaque message
 - l'occupation mémoire aux endroits les plus importants
 - à chaque passage du watchdog, une ligne par batterie avec tous les packs, par exemple :
-  ```
-  [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
-  ```
+    ```
+    [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
+    ```
 
 Désactivez ensuite `debug`. Sinon le journal devient très long. Pour l'enregistrer, « Log aufzeichnen » (enregistrer le journal) dans le [Configurator](../Multiconfigurator/readme_FR.md#enregistrer-le-journal) est pratique.
 
@@ -365,6 +366,7 @@ Le script n'applique les modifications qu'après un **redémarrage** (Stop → S
 
 **Je ne reçois aucun message.**
 Regardez la ligne « Nachrichten » du récapitulatif :
+
 - `aus` (désactivé) signifie : `notify.enabled` est `false`, ou `typ` est inconnu. Dans le second cas, un WARNUNG (avertissement) apparaît juste au-dessus.
 - Pour Signal/WhatsApp : le numéro de téléphone (avec `+33…`) et la clé API sont-ils corrects ?
 - Pour le webhook : l'adresse est-elle joignable depuis le Shelly ?
@@ -375,6 +377,7 @@ Avec `debug: true`, vous voyez dans le journal si et comment chaque message a é
 L'ancien watchdog tourne encore. Arrêtez-le et désactivez « Run on startup » pour lui.
 
 **Le tableau de bord affiche une erreur de connexion.**
+
 - Le script tourne-t-il ? (interface web → Scripts)
 - L'IP **et** le numéro de script du Shelly tableau de bord sont-ils corrects dans le proxy sous `/setup` ? Voir [Tableau de bord – En cas de problème](dashboard_FR.md#en-cas-de-problème).
 - `api.enabled` est-il à `true` ?

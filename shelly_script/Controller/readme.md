@@ -91,16 +91,17 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 
 1. Im Ordner `Deploy` (neben `deploy.cmd`) die Datei **`myconfig.js` selbst anlegen** – sie liegt bewusst nicht im Repository. Sie enthält nur deinen Block `let CONFIG = { ... };`. Am einfachsten bekommst du ihn aus dem [Configurator](../Multiconfigurator/readme.md#die-funktionen-im-ergebnis-schritt) über „💾 Nur CONFIG-Block speichern“; alternativ den Block aus `zerooutput_multi_kvs_src.js` kopieren und anpassen. Kommentarzeilen davor oder danach stören nicht.
 
-   ```js
-   // myconfig.js – nur der CONFIG-Block
-   let CONFIG = {
-     devices: [ /* deine Speicher */ ],
-     gridSource: "local",
-     // ... alle weiteren Einstellungen
-   };
-   ```
+    ```js
+    // myconfig.js – nur der CONFIG-Block
+    let CONFIG = {
+      devices: [ /* deine Speicher */ ],
+      gridSource: "local",
+      // ... alle weiteren Einstellungen
+    };
+    ```
 
-   `myconfig.js` steht in der `.gitignore` des Repositorys. Deine IPs und Zugangsdaten landen damit nicht versehentlich in einem Commit.
+    `myconfig.js` steht in der `.gitignore` des Repositorys. Deine IPs und Zugangsdaten landen damit nicht versehentlich in einem Commit.
+
 2. In `deploy.cmd` eintragen: `SHELLY_IP` (Controller-Shelly) und `SKRIPTNAME` (Standard `ctrl`). `MEINE_CONFIG` steht schon auf `myconfig.js` – nur ändern, wenn deine Datei anders heißt.
 3. `deploy.cmd` starten. Ablauf: CONFIG einsetzen (`swap_config.py`) → verkleinern (`minify_keep_config.py`) → hochladen und starten (`upload_shelly.py`).
 
@@ -114,11 +115,12 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 2. Log öffnen und das Start-Banner prüfen: Es beginnt mit `Version …` und `Multi-Device Controller gestartet` und zeigt alle aktiven Werte auf einen Blick ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)).
 3. Erscheint regelmäßig eine Zeile wie
 
-   ```
-   Netzsaldo: 12 W | Ist-Summe: 340 W | Regelsignal: 352 W | Ladekorrektur: 0 W
-   ```
+    ```
+    Netzsaldo: 12 W | Ist-Summe: 340 W | Regelsignal: 352 W | Ladekorrektur: 0 W
+    ```
 
-   ✅ Fertig – der Controller regelt.
+    ✅ Fertig – der Controller regelt.
+
 4. Bei `"http_json"` einmal das **Vorzeichen prüfen**: einen größeren Verbraucher einschalten – der Netzwert im Log muss **steigen**. Sinkt er, `gridSourceInvert: true` setzen.
 
 Bleibt der Netzbezug länger ruhig, meldet der Controller „Sparmodus“ und fragt die Speicher seltener ab. Das ist normal.

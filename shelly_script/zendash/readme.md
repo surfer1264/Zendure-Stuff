@@ -80,17 +80,17 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
 
 1. **Settings → Scripts** auf dem Gerät aus Schritt 2 → neues Script anlegen, Inhalt von `zendash_api_mini.js` einfügen. Liegt es auf demselben Shelly wie das Regel-Script, dieses **nicht** überschreiben, sondern ein zusätzliches anlegen.
 2. Im `CONFIG`-Block **exakt dieselben** Werte eintragen wie im Regel-Script:
-  - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
-  - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
-  - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
-  - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script. - Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
+    - `devices` — den kompletten Block 1:1 kopieren, gleiche Reihenfolge, gleiche IPs (Index `i` entspricht `zdmc_dev{i}_...` in der KVS). `minSoc`, `maxSoc` und `maxInputPower` bestimmen zusätzlich die Regler-Grenzen im Dashboard.
+    - `gridSource` + zugehörige `gridSource*`-Felder (unterstützt `"local"`, `"remote"`, `"http_json"` — 1:1 dieselbe Struktur wie im Regel-Script)
+    - `hysteresis` — denselben Wert wie im Regel-Script eintragen. Reine Anzeigegröße, siehe Bedienung.
+    - `kvsHost` — `"local"` bei gemeinsamem Betrieb, sonst die IP des Shelly mit dem Regel-Script. - Bei getrenntem Betrieb außerdem `gridSource: "remote"` und `gridSourceIp` auf den Shelly mit der EM-Messung.
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
-   ```
-   http://<shelly-ip>/script/<script-id>/config_api
-   http://<shelly-ip>/script/<script-id>/status_api
-   ```
+    ```
+    http://<shelly-ip>/script/<script-id>/config_api
+    http://<shelly-ip>/script/<script-id>/status_api
+    ```
    Beide sollten JSON liefern. Falls nicht: siehe Troubleshooting unten.
 
 ## 4) Proxy konfigurieren und starten
@@ -138,15 +138,15 @@ Der Proxy bedient Anfragen nebenläufig (`ThreadingHTTPServer`). Ohne das würde
 Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology geht es so:
 
 1. **Python prüfen.** DSM bringt meist schon eines mit:
-   ```bash
-   which python3 && python3 --version
-   ```
+    ```bash
+    which python3 && python3 --version
+    ```
    Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
 2. **Dateien ablegen.** `zendure_proxy.py` und `zendure-dashboard.html` in denselben Ordner, z. B. `/volume1/homes/<benutzer>/zendure`. Nicht in den `web`-Ordner — der gehört der Web Station.
 3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
-   ```bash
-   /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
-   ```
+    ```bash
+    /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
+    ```
 4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
 5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
 
@@ -196,9 +196,9 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 * **Reserve (min. SoC)** wird vom Regel-Script zusätzlich als Schutzgrenze auf die Hardware geschrieben (`syncMinSocDevice`) — der Wert ändert also nicht nur die Verteilrechnung, sondern das Gerät selbst.
 * Die **Obergrenze der Reserve** leitet das Dashboard aus `maxSoc` ab und hält einen Prozentpunkt Abstand. Das ist kein Schoenheitsfehler, sondern ein Schutz: Das Regel-Script gleicht `minSoc` und `maxSoc` nur beim **Start** gegeneinander ab, nicht beim Live-Override über die KVS. Rutschte `minSoc` über `maxSoc`, dürfte das Gerät weder unter die Reserve entladen noch bis dorthin laden — es fiele dauerhaft aus der Regelung, und `syncSocLimits()` schriebe das verdrehte Wertepaar zusätzlich auf die Hardware, wo es einen Scriptstopp überdauert. Wer den Wert direkt in der KVS setzt, umgeht diesen Schutz; dagegen hülfe nur eine Prüfung im Regel-Script selbst (`v < dev.maxSoc` statt `v <= 99`).
 * **Manuelles Laden** ist eine Aktion, kein einzelner Schalter. Der Regler „Ladeleistung aus dem Netz" wählt nur die Leistung aus und schreibt für sich genommen nichts; der Knopf darunter führt drei Schreibvorgänge in der richtigen Reihenfolge aus:
-  1. `dischargeAllowed = 0`
-  2. `reverse = 0`
-  3. `inputLimit = <gewählte Leistung>`
+    1. `dischargeAllowed = 0`
+    2. `reverse = 0`
+    3. `inputLimit = <gewählte Leistung>`
 
   Beim Beenden umgekehrt: erst `inputLimit = 0`, dann die Schalter zurück auf den Stand vor dem Start. Die Reihenfolge ist nicht kosmetisch — wird `inputLimit` gesetzt, solange das Gerät noch in der Regelung hängt, überschreibt das Regel-Script den Wert im nächsten Zyklus. Umgekehrt würde ein stehengebliebenes Ladelimit mit der wieder aktiven Regelung kollidieren.
 
@@ -207,6 +207,7 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
   Bricht die Kette in der Mitte ab (Shelly nicht erreichbar), erscheint ein Warnbanner — der Zustand ist dann unvollständig und gehört auf der Karte geprüft.
 
   Ob manuelles Laden läuft, leitet die Seite aus dem Live-Zustand ab (beide Schalter aus **und** `inputLimit > 0`). Das überlebt einen Reload und stimmt auch dann, wenn jemand anders die Werte gesetzt hat. Nur der Schalterzustand *vor* dem Start geht bei einem Reload verloren; das Beenden schaltet dann beide Schalter wieder ein.
+
 * **Fix-Entladung** (`zdmc_dischargeFixed`) ist ein globaler, geräteübergreifender Wert — anders als die übrigen Regler, die pro Gerät (`zdmc_dev{id}_...`) wirken. Sie ist eine Zahleneingabe statt eines Reglers, weil nur zwei Zustände gültig sind: `0` (aus) oder ≥ `dischargeStartupPower`. Werte dazwischen verwirft schon `kvs_set_api` mit einer Fehlermeldung, bevor sie in der KVS landen — das Regel-Script würde sie ohnehin kommentarlos ignorieren. `dischargeStartupPower` kommt aus `config_api` (Spiegel von `CONFIG.dischargeStartupPower` im API-Script) und steht als Hinweistext unter dem Feld (`0 = aus · sonst ≥ NN W`). Ein ungültiger Wert wird beim Verlassen des Felds sofort auf den zuletzt gültigen zurückgesetzt.
 * **Hysterese** ist im Regel-Script **nicht** über die KVS änderbar und taucht im Dashboard deshalb nicht als Bedienelement auf. `config_api` liefert den Wert trotzdem mit; die Seite braucht ihn nur intern, um den Netzbezug als Import, Export oder ausgeglichen einzustufen. Gepflegt wird er in `CONFIG.hysteresis` beider Scripte, die denselben Wert tragen müssen.
 * Die Seite startet **gesperrt**. Das Schloss-Symbol oben rechts gibt die Bedienung frei; nach 60 s ohne Eingabe (`RELOCK_MS`) sperrt sie sich von selbst wieder. Der Zustand wird absichtlich nicht gespeichert — jeder Reload beginnt gesperrt. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
@@ -218,8 +219,8 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 * Neben dem Sollwert steht die **Hysterese** als Toleranzangabe. Sie ist nicht einstellbar, gehört aber dorthin: Sie sagt, wie weit der Netzsaldo abweichen darf, bevor das Regel-Script überhaupt nachsteuert. Ohne sie wirkt ein Sollwert exakter, als er ist.
 * **acMode / socLimit / gridReverse** stehen als Rohstatus auf jeder Hub-Karte. Sie erklären die häufigsten „Warum tut der Hub nichts?"-Fälle: `socLimit 1` = Akku voll, Laden gesperrt; `socLimit 2` = Entladen gesperrt; `gridReverse 2` = Netzladen vom Regel-Script flottenweit gesperrt.
 * **PV-Eingang und schwächste Zelle** stehen als kleine Zeile unter der Leistung jeder Hub-Karte:
-  * Der PV-Wert ist `solarInputPower`, also der Gesamteingang des Geräts. Fehlt das Feld — etwa bei reinen AC-Ladern —, entfällt die Angabe komplett, statt fälschlich „0 W" zu zeigen.
-  * Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs, umgerechnet mit Faktor 0,01 (325 → 3,25 V). Packs, die 0 melden, werden übersprungen. Unter 3,0 V wird der Wert amber, unter 2,8 V rot. Aussagekräftig ist er nur unter Last — im Ruhezustand liegen alle Zellen dicht beieinander.
+    * Der PV-Wert ist `solarInputPower`, also der Gesamteingang des Geräts. Fehlt das Feld — etwa bei reinen AC-Ladern —, entfällt die Angabe komplett, statt fälschlich „0 W" zu zeigen.
+    * Die Zellspannung ist das Minimum über `packData[].minVol` aller Packs, umgerechnet mit Faktor 0,01 (325 → 3,25 V). Packs, die 0 melden, werden übersprungen. Unter 3,0 V wird der Wert amber, unter 2,8 V rot. Aussagekräftig ist er nur unter Last — im Ruhezustand liegen alle Zellen dicht beieinander.
 * **Der Verlauf** steckt als kompakte Kurve in den beiden Kacheln oben: Netzsaldo links, Hub-Summe rechts. Beide skalieren auf ihr eigenes Maximum und sind daher nicht gegeneinander ablesbar — die Nulllinie liegt jeweils in der Mitte, Amber oben, Teal unten.
 * Der Verlauf wird **in der Seite** geführt (`MAX_POINTS`, Standard 30 Werte à 4 s = 2 Minuten). Ein Ringpuffer im API-Script wäre komfortabler — er würde einen Reload überleben —, sprengte aber den Heap des Shelly. Nach einem Reload beginnen die Kurven deshalb wieder von vorn.
 * Die Seite folgt beim Start der **Systemeinstellung des Geräts** (`prefers-color-scheme`) — Nachtmodus am Handy schaltet auch hier die Nachtsicht ein, sonst startet sie in der Tagsicht, und ein späterer Systemwechsel wird live nachgezogen. Der Schalter oben rechts schaltet manuell um; ab dem ersten Antippen wird die Systemeinstellung ignoriert, damit ein automatischer Wechsel am Abend die bewusste Wahl nicht wieder überschreibt. Das gilt nur für die laufende Sitzung — ein Reload startet wieder bei der Systemeinstellung.

@@ -14,29 +14,29 @@ A few clicks to local control of your Zendure fleet – set up, update, done.
 
 1. [What does the configurator set up?](#1-what-does-the-configurator-set-up)
 2. [Where do I find the configurator?](#2-where-do-i-find-the-configurator)
-   * [Recommended: the local helper (EXE installer)](#recommended-the-local-helper-exe-installer)
-   * [Alternative: web configurator only](#alternative-web-configurator-only)
+    * [Recommended: the local helper (EXE installer)](#recommended-the-local-helper-exe-installer)
+    * [Alternative: web configurator only](#alternative-web-configurator-only)
 3. [Initial setup](#3-initial-setup)
-   * [The process](#the-process)
-   * [Functions in the result step](#functions-in-the-result-step)
+    * [The process](#the-process)
+    * [Functions in the result step](#functions-in-the-result-step)
 4. [Update](#4-update)
-   * [How it works](#how-it-works)
-   * [What happens to your settings during an update](#what-happens-to-your-settings-during-an-update)
-   * [Update without the helper](#update-without-the-helper)
-   * [Switching from the old separate scripts](#switching-from-the-old-separate-scripts)
+    * [How it works](#how-it-works)
+    * [What happens to your settings during an update](#what-happens-to-your-settings-during-an-update)
+    * [Update without the helper](#update-without-the-helper)
+    * [Switching from the old separate scripts](#switching-from-the-old-separate-scripts)
 5. [Replacing a Shelly](#5-replacing-a-shelly)
 6. [Error messages and problem situations](#6-error-messages-and-problem-situations)
-   * [Several scripts on one Shelly](#several-scripts-on-one-shelly)
-   * [Messages at a glance](#messages-at-a-glance)
-   * [Problems with the helper](#problems-with-the-helper)
+    * [Several scripts on one Shelly](#several-scripts-on-one-shelly)
+    * [Messages at a glance](#messages-at-a-glance)
+    * [Problems with the helper](#problems-with-the-helper)
 7. [How-tos](#7-how-tos)
-   * [Importing an existing configuration](#importing-an-existing-configuration)
-   * [Uploading a script manually](#uploading-a-script-manually)
-   * [Checking a Shelly's memory](#checking-a-shellys-memory)
-   * [Backing up your configuration](#backing-up-your-configuration)
-   * [Recording a log](#recording-a-log)
-   * [Resetting remembered IPs](#resetting-remembered-ips)
-   * [Verifying the download](#verifying-the-download)
+    * [Importing an existing configuration](#importing-an-existing-configuration)
+    * [Uploading a script manually](#uploading-a-script-manually)
+    * [Checking a Shelly's memory](#checking-a-shellys-memory)
+    * [Backing up your configuration](#backing-up-your-configuration)
+    * [Recording a log](#recording-a-log)
+    * [Resetting remembered IPs](#resetting-remembered-ips)
+    * [Verifying the download](#verifying-the-download)
 
 Recent changes are listed in the [changelog](CHANGELOG.md) (German).
 
@@ -178,15 +178,16 @@ When a new version of a script is available, you can bring your Shellys up to da
 2. Your Shellys' IPs are normally already filled in (remembered from the last upload). If not, enter them once – at least one.
 3. The configurator compares the installed versions with GitHub and shows a table:
 
-   | Status | Meaning |
-   |---|---|
-   | **Update available** | A newer version exists – the changes are listed directly below. Ticked automatically. |
-   | **up to date** | Nothing to do. |
-   | **newer than GitHub** | You have a test or pre-release version – nothing to do. |
-   | **not installed** / **no unique script** | Update not possible, please use ["Configure from scratch or update manually"](#3-initial-setup). |
-   | **Shelly not reachable** | see [Error messages](#6-error-messages-and-problem-situations) |
+    | Status | Meaning |
+    |---|---|
+    | **Update available** | A newer version exists – the changes are listed directly below. Ticked automatically. |
+    | **up to date** | Nothing to do. |
+    | **newer than GitHub** | You have a test or pre-release version – nothing to do. |
+    | **not installed** / **no unique script** | Update not possible, please use ["Configure from scratch or update manually"](#3-initial-setup). |
+    | **Shelly not reachable** | see [Error messages](#6-error-messages-and-problem-situations) |
 
-   Below the table you can also see whether there is a new version of the configurator/helper itself – with a download link.
+    Below the table you can also see whether there is a new version of the configurator/helper itself – with a download link.
+
 4. Tick the scripts you want → **"Update now"**. The configurator reads your current configuration directly from the Shelly and jumps to the result.
 5. There, click **"⚡ Upload directly"**. The new script replaces the old one in the same slot (the script number stays the same – important e.g. for the dashboard proxy) and is started again.
 

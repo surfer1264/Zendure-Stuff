@@ -12,29 +12,29 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
 
 1. [Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
 2. [Wo finde ich den Configurator?](#2-wo-finde-ich-den-configurator)
-   * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
-   * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
+    * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
+    * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
 3. [Ersteinrichtung](#3-ersteinrichtung)
-   * [Der Ablauf](#der-ablauf)
-   * [Die Funktionen im Ergebnis-Schritt](#die-funktionen-im-ergebnis-schritt)
+    * [Der Ablauf](#der-ablauf)
+    * [Die Funktionen im Ergebnis-Schritt](#die-funktionen-im-ergebnis-schritt)
 4. [Update](#4-update)
-   * [So geht's](#so-gehts)
-   * [Was beim Update mit deinen Einstellungen passiert](#was-beim-update-mit-deinen-einstellungen-passiert)
-   * [Update ohne Helfer](#update-ohne-helfer)
-   * [Umstieg von den alten Einzelscripten](#umstieg-von-den-alten-einzelscripten)
+    * [So geht's](#so-gehts)
+    * [Was beim Update mit deinen Einstellungen passiert](#was-beim-update-mit-deinen-einstellungen-passiert)
+    * [Update ohne Helfer](#update-ohne-helfer)
+    * [Umstieg von den alten Einzelscripten](#umstieg-von-den-alten-einzelscripten)
 5. [Wechsel eines Shelly](#5-wechsel-eines-shelly)
 6. [Fehlermeldungen und Problemsituationen](#6-fehlermeldungen-und-problemsituationen)
-   * [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly)
-   * [Meldungen im Überblick](#meldungen-im-überblick)
-   * [Probleme mit dem Helfer](#probleme-mit-dem-helfer)
+    * [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly)
+    * [Meldungen im Überblick](#meldungen-im-überblick)
+    * [Probleme mit dem Helfer](#probleme-mit-dem-helfer)
 7. [How-Tos](#7-how-tos)
-   * [Bestehende Konfiguration einlesen](#bestehende-konfiguration-einlesen)
-   * [Script von Hand hochladen](#script-von-hand-hochladen)
-   * [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
-   * [Konfiguration sichern](#konfiguration-sichern)
-   * [Log aufzeichnen](#log-aufzeichnen)
-   * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
-   * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
+    * [Bestehende Konfiguration einlesen](#bestehende-konfiguration-einlesen)
+    * [Script von Hand hochladen](#script-von-hand-hochladen)
+    * [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
+    * [Konfiguration sichern](#konfiguration-sichern)
+    * [Log aufzeichnen](#log-aufzeichnen)
+    * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
+    * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
 
 Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
@@ -176,15 +176,16 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 2. Die IPs deiner Shellys sind normalerweise schon eingetragen (vom letzten Upload gemerkt). Falls nicht, trägst du sie einmal ein – mindestens eine.
 3. Der Configurator vergleicht die installierten Versionen mit GitHub und zeigt eine Tabelle:
 
-   | Status | Bedeutung |
-   |---|---|
-   | **Update verfügbar** | Es gibt eine neuere Version – die Änderungen werden direkt darunter aufgelistet. Ist automatisch angehakt. |
-   | **aktuell** | Nichts zu tun. |
-   | **neuer als GitHub** | Du hast eine Test- oder Vorabversion – nichts zu tun. |
-   | **nicht installiert** / **kein eindeutiges Script** | Update nicht möglich, bitte [„Neu konfigurieren oder manuell updaten“](#3-ersteinrichtung). |
-   | **Shelly nicht erreichbar** | siehe [Fehlermeldungen](#6-fehlermeldungen-und-problemsituationen) |
+    | Status | Bedeutung |
+    |---|---|
+    | **Update verfügbar** | Es gibt eine neuere Version – die Änderungen werden direkt darunter aufgelistet. Ist automatisch angehakt. |
+    | **aktuell** | Nichts zu tun. |
+    | **neuer als GitHub** | Du hast eine Test- oder Vorabversion – nichts zu tun. |
+    | **nicht installiert** / **kein eindeutiges Script** | Update nicht möglich, bitte [„Neu konfigurieren oder manuell updaten“](#3-ersteinrichtung). |
+    | **Shelly nicht erreichbar** | siehe [Fehlermeldungen](#6-fehlermeldungen-und-problemsituationen) |
 
-   Darunter steht außerdem, ob es eine neue Version des Configurators/Helfers selbst gibt – mit Download-Link.
+    Darunter steht außerdem, ob es eine neue Version des Configurators/Helfers selbst gibt – mit Download-Link.
+
 4. Gewünschte Scripte anhaken → **„Jetzt updaten“**. Der Configurator liest deine aktuelle Konfiguration direkt vom Shelly und springt zum Ergebnis.
 5. Dort **„⚡ Direkt hochladen“** klicken. Das neue Script ersetzt das alte an derselben Stelle (die Script-Nummer bleibt gleich – wichtig z. B. für den Dashboard-Proxy) und wird wieder gestartet.
 

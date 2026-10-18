@@ -385,8 +385,8 @@ Zweck: `grid_Reverse` ist eine Geräte-Property, die steuert, ob das Zendure-Ger
 Werte, die der Controller selbst setzt:
 
 - Wert 1: Export erlaubt/aktiviert
-  - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593), dauerhaft freigegeben, danach nie wieder verändert.
-  - b) wenn nach einer Vollsperre (allMaxed) mind. ein Gerät wieder klar unter seinem maxSoc − chargeResetMargin liegt (clearlyBelow) – nur bei `immerBypass: false`
+    - a) beim initialen SoC-Sync, wenn immerBypass: true (Zeile ~1593), dauerhaft freigegeben, danach nie wieder verändert.
+    - b) wenn nach einer Vollsperre (allMaxed) mind. ein Gerät wieder klar unter seinem maxSoc − chargeResetMargin liegt (clearlyBelow) – nur bei `immerBypass: false`
 - Wert 2: Export gesperrt, wenn alle Geräte ihren maxSoc erreicht haben (allMaxed) – nur bei `immerBypass: false`, um unnötigen Export zu verhindern.
 
 Wenn `immerBypass: true` findet kein aktives Schreiben oder Initalisieren dieses Wertes statt.
@@ -422,8 +422,8 @@ Die Solarflow-Firmware besitzt einen eigenen Schalter `gridReverse` (0/1/2) auf 
 **Änderung**
 
 - Neuer **CONFIG-Schalter** immerBypass (Default: false) steuert, ob das Feature aktiv genutzt wird:
-  - **true**: gridReverse wird nur einmalig beim Start auf 1 (Export erlaubt) gesetzt, danach nie mehr verändert - kein Laufzeit-Effekt, geringstes Risiko.
-  - **false** (Default): Script schaltet `gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)` um.
+    - **true**: gridReverse wird nur einmalig beim Start auf 1 (Export erlaubt) gesetzt, danach nie mehr verändert - kein Laufzeit-Effekt, geringstes Risiko.
+    - **false** (Default): Script schaltet `gridReverse` aktiv zur Laufzeit zwischen `1 (Export erlaubt)` und `2 (Export gesperrt)` um.
 - Neuer CONFIG-Parameter chargeResetMargin (Default: 5 Prozentpunkte) - Hysterese-Abstand unterhalb maxSoc, den mindestens ein Gerät unterschreiten muss, bevor eine gesetzte Sperre wieder aufgehoben wird.
 
 **Codeänderung**
@@ -481,17 +481,17 @@ kann deaktiviert werden, der FIx wird dadurch deaktiviert
 
 2. **Zwei getrennte Zielsignale statt einem:**
 
-   ```js
-   dischargeTarget = gridPower + sumZen          // wie bisher, unveraendert
-   chargeTarget     = gridPower + sumZenReverse   // NEU
-   ```
+    ```js
+    dischargeTarget = gridPower + sumZen          // wie bisher, unveraendert
+    chargeTarget     = gridPower + sumZenReverse   // NEU
+    ```
 
-   Dazu eine zweite, eigene Glättung (`state.smoothedCharge` statt nur `state.smoothedOutput`).
+    Dazu eine zweite, eigene Glättung (`state.smoothedCharge` statt nur `state.smoothedOutput`).
 
 3. **`calculate()` berechnet jetzt beide Pools im selben Zyklus** statt sich per `if/else` für genau eine Richtung zu entscheiden:
-   - Lade-Pool zuerst (`distributeCharge(chargeTarget)`), Geräte die dabei laden landen in `chargeExclude`
-   - Entlade-Pool danach (`distributeDischarge(dischargeTarget, chargeExclude)`) – **mit** dem neuen zweiten Parameter, der die gerade ladenden Geräte ausschließt
-   - Ergebnis wird gemerged: `output[i] = chargeOutput[i] || dischargeOutput[i]`
+    - Lade-Pool zuerst (`distributeCharge(chargeTarget)`), Geräte die dabei laden landen in `chargeExclude`
+    - Entlade-Pool danach (`distributeDischarge(dischargeTarget, chargeExclude)`) – **mit** dem neuen zweiten Parameter, der die gerade ladenden Geräte ausschließt
+    - Ergebnis wird gemerged: `output[i] = chargeOutput[i] || dischargeOutput[i]`
 
 4. **`computeDischargeWeights()` und `distributeDischarge()`** bekommen dafür einen neuen optionalen `exclude`-Parameter.
 
@@ -518,9 +518,9 @@ Lasttests zeigen aber Lauffähigkeit auf
 
 - **Alt:** `ds.atMaxSoc = (ds.soc >= cfg.maxSoc)` – lokal aus dem konfigurierten `maxSoc` berechnet.
 - **Neu:** Liest `data.properties.socLimit` direkt vom Zendure-Gerät (0 = frei, 1 = Laden gesperrt, 2 = Entladen gesperrt), loggt Änderungen und nutzt es aktiv:
-  - `computeDischargeWeights()`: Entladen wird zusätzlich blockiert, wenn `socLimit === 2`
-  - `computeChargeWeights()`: Laden wird zusätzlich blockiert, wenn `socLimit === 1`
-  - Das ist eine echte Verhaltensänderung – vorher zählte nur der lokal konfigurierte `maxSoc`, jetzt zählt auch, was das Gerät selbst meldet.
+    - `computeDischargeWeights()`: Entladen wird zusätzlich blockiert, wenn `socLimit === 2`
+    - `computeChargeWeights()`: Laden wird zusätzlich blockiert, wenn `socLimit === 1`
+    - Das ist eine echte Verhaltensänderung – vorher zählte nur der lokal konfigurierte `maxSoc`, jetzt zählt auch, was das Gerät selbst meldet.
 
 ### 2. Richtungswechsel-Schutz komplett umgebaut
 
