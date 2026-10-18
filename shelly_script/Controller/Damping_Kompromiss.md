@@ -1,4 +1,4 @@
-# Testumgebung Multi-Device-Controller (zdmc)
+# Simulation - Einfluss Damping auf Energiebilanz
 
 Stand: 18.10.2026 · Controller-Version im Test: 5.2.0
 
