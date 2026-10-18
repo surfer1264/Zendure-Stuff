@@ -151,6 +151,17 @@
   table.data td.best { font-weight: 700; color: var(--link); }
   table.data tr.off td { color: var(--muted); font-style: italic; }
 
+  .disclaimer { border: 1px solid var(--border); border-left: 4px solid var(--accent); background: var(--surface); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; color: var(--text-2); }
+  .disclaimer b { color: var(--text); }
+  .disclaimer ol { margin: 6px 0 0; padding-left: 20px; }
+  .setup h3 { font-size: 14px; font-weight: 700; margin: 14px 0 6px; color: var(--text); }
+  .setup h3:first-of-type { margin-top: 0; }
+  .setup table.kv { border-collapse: collapse; width: 100%; font-size: 13px; margin-bottom: 4px; }
+  .setup table.kv th, .setup table.kv td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+  .setup table.kv th { color: var(--text-2); font-weight: 600; background: var(--bg); }
+  .setup table.kv td:first-child { color: var(--text-2); white-space: nowrap; }
+  .setup .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+  @media (max-width: 720px) { .setup .two { grid-template-columns: 1fr; } }
   .notes { font-size: 14px; color: var(--text-2); }
   .notes ul { padding-left: 20px; margin: 6px 0; }
   .notes li { margin: 3px 0; }
@@ -163,32 +174,23 @@
   <header class="top">
     <div>
       <h1>Damping-Kompromiss</h1>
-      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0). Hintergrund: <a href="gesamtdoku/#empfehlung-für-dampingfactor" style="color:#ffd36b">Empfehlung für dampingFactor</a>.</p>
+      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0, 12 simulierte Testtage). Hintergrund: <a href="gesamtdoku/#empfehlung-für-dampingfactor" style="color:#ffd36b">Empfehlung für dampingFactor</a>.</p>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" title="Farbschema wechseln">Automatisch</button>
   </header>
+
+  <div class="disclaimer" role="note">
+    <b>Wichtig vor dem Lesen</b>
+    <ol>
+      <li>Die Ergebnisse gelten nur für das simulierte Szenario (siehe Abschnitt 4 „Testaufbau“), nicht automatisch für deine Anlage.</li>
+      <li>Alle Werte dienen nur dem Vergleich der Damping-Werte untereinander. Die absoluten Zahlen, zum Beispiel die Energie in kWh, haben für sich allein keine Aussagekraft.</li>
+    </ol>
+  </div>
 
   <section class="card">
     <h2>1. Prioritäten einstellen</h2>
     <div class="presets" id="presets"></div>
     <div class="sliders" id="sliders"></div>
-    <div class="opts">
-      <label>Regelgüte messen als
-        <select id="qualityMetric">
-          <option value="band">ganzer Tag</option>
-          <option value="ruhig">nur ruhige Zeiten</option>
-          <option value="wasch">nur Waschmaschine</option>
-        </select>
-      </label>
-      <label>Datenbasis
-        <select id="basis">
-          <option value="median">Median aus 3 Testtagen</option>
-          <option value="1">nur Testtag 1</option>
-          <option value="2">nur Testtag 2</option>
-          <option value="3">nur Testtag 3</option>
-        </select>
-      </label>
-    </div>
     <details class="help">
       <summary>Was bedeuten die Einstellungen?</summary>
 
@@ -196,7 +198,7 @@
       <p>Ein Klick setzt die 4 Regler auf feste Werte. Danach kannst du die Regler frei verändern. Der Knopf bleibt hervorgehoben, solange die Regler zu ihm passen.</p>
       <dl>
         <dt>Ausgewogen</dt>
-        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): In den Tests bedeutet weniger Export fast immer mehr Netzbezug und umgekehrt. Beides gleich stark zu gewichten, würde sich weitgehend aufheben.</dd>
+        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): Er unterscheidet sich zwischen den Damping-Werten kaum (Median 0,97–1,03 kWh), der Export dagegen deutlich (0,20–0,36 kWh).</dd>
         <dt>Beste Regelung</dt>
         <dd>Nur die Regelgüte zählt (10). Export und Schreibvorgänge sind egal.</dd>
         <dt>Wenig Export</dt>
@@ -211,7 +213,7 @@
       <p>Jeder Regler sagt, wie wichtig dir ein Ziel ist: 0 = egal, 10 = sehr wichtig. Es zählt nur das Verhältnis der Regler zueinander: 5 / 5 / 5 ergibt dasselbe wie 10 / 10 / 10.</p>
       <dl>
         <dt>Gute Regelung</dt>
-        <dd>Wie oft der Netzwert nahe 0 W liegt, genauer: innerhalb ±13 W. Über welche Zeit gemessen wird, stellst du bei „Regelgüte messen als“ ein: ganzer Tag, nur ruhige Zeiten ohne große Verbraucher oder nur während der Waschmaschine.</dd>
+        <dd>Wie oft der Netzwert nahe 0 W liegt, genauer: innerhalb ±13 W. Gemessen über den ganzen Testtag.</dd>
         <dt>Wenig Export</dt>
         <dd>Wie viel Strom über den Testtag ins Netz geht, in kWh.</dd>
         <dt>Wenig Netzbezug</dt>
@@ -220,15 +222,6 @@
         <dd>Wie oft der Controller den Geräten eine neue Leistung schickt. Höheres Damping reagiert schneller, schickt aber mehr Befehle.</dd>
       </dl>
 
-      <h3>c) Datenbasis</h3>
-      <p>Die Simulation wurde für jeden Damping-Wert an 3 Testtagen gerechnet. Alle 3 Tage haben dieselben festen Verbraucher, zum Beispiel die Waschmaschine um 10:00. Unterschiedlich sind das Messrauschen und die Uhrzeit der zufälligen Verbraucher (2 Wasserkocher und ein 800-W-Block).</p>
-      <dl>
-        <dt>Median aus 3 Testtagen</dt>
-        <dd>Für jede Kennzahl wird der mittlere der 3 Werte genommen. Ein einzelner ungewöhnlicher Tag fällt so kaum ins Gewicht. Das ist die empfohlene Einstellung.</dd>
-        <dt>nur Testtag 1, 2 oder 3</dt>
-        <dd>Rechnet mit den Werten eines einzelnen Tages. So siehst du, wie stark das Ergebnis vom Tag abhängt.</dd>
-      </dl>
-      <p>Die Zeile „Bester dampingFactor je Testtag“ im Ergebnis nutzt immer alle 3 Tage, unabhängig von dieser Auswahl.</p>
     </details>
   </section>
 
@@ -257,7 +250,64 @@
     <div class="tablewrap">
       <table class="data" id="table"></table>
     </div>
-    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung. * 1.0 nur zum Vergleich: Seit 5.2.0 setzt der Controller Werte über 0.8 auf 0.8. Deshalb wird 1.0 nicht bewertet.</p>
+    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung. Werte über 0.8 setzt der Controller seit 5.2.0 auf 0.8, sie wurden deshalb nicht getestet.</p>
+  </section>
+
+  <section class="card setup">
+    <h2>4. Testaufbau</h2>
+    <p class="intro">Simulation mit einem Mock-Server: Netzzähler, 2 Speicher und Haushaltslast sind nachgebildet. Getestet wurde das echte Controller-Skript 5.2.0. Nur der Wert <code>dampingFactor</code> wurde verändert.</p>
+
+    <h3>Geräte</h3>
+    <div class="tablewrap"><table class="kv">
+      <tr><th></th><th>Gerät A</th><th>Gerät B</th></tr>
+      <tr><td>Akku</td><td>4 kWh</td><td>4 kWh</td></tr>
+      <tr><td>max. Abgabe (<code>maxOutput</code>)</td><td>800 W</td><td>2000 W</td></tr>
+      <tr><td>max. Laden (<code>maxInputPower</code>)</td><td>1000 W</td><td>2000 W</td></tr>
+      <tr><td>minSoc / maxSoc</td><td>15 % / 100 %</td><td>15 % / 100 %</td></tr>
+      <tr><td>Start-SoC</td><td>30 %</td><td>30 %</td></tr>
+      <tr><td>PV</td><td>bis 1400 W, 07:00–17:00, Spitze 10:00</td><td>bis 900 W, 08:00–19:00, Spitze 15:00</td></tr>
+      <tr><td><code>dischargeAllowed</code> / <code>reverse</code></td><td>true / true</td><td>true / true</td></tr>
+      <tr><td>Reaktionszeit</td><td colspan="2">neue Vorgabe kommt 1 s nach dem Schreiben an, danach 3 s Rampe; Start aus 0 W zusätzlich 4 s später (wie in echten Logs beobachtet)</td></tr>
+    </table></div>
+
+    <h3>Controller-Einstellungen</h3>
+    <div class="two">
+      <div class="tablewrap"><table class="kv">
+        <tr><td><code>interval</code></td><td>4000 ms</td></tr>
+        <tr><td><code>gridSource</code></td><td>http_json</td></tr>
+        <tr><td><code>setpoint</code></td><td>0 W</td></tr>
+        <tr><td><code>hysteresis</code></td><td>12 W</td></tr>
+        <tr><td><code>dampingFactor</code></td><td>0.4 / 0.5 / 0.65 / 0.8</td></tr>
+        <tr><td>schnelle Flanke</td><td>Faktor 0.9 bei Sprung &gt; 36 W</td></tr>
+        <tr><td><code>discharge</code> / <code>charge</code></td><td>concentrateBelow 600 W, spreadAbove 800 W</td></tr>
+        <tr><td><code>concentrateHoldMinutes</code></td><td>3</td></tr>
+      </table></div>
+      <div class="tablewrap"><table class="kv">
+        <tr><td><code>rebalance.socMargin</code></td><td>5 %</td></tr>
+        <tr><td><code>dischargeStartupPower</code> / <code>StopPower</code></td><td>35 W / 15 W</td></tr>
+        <tr><td><code>reverseStartupPower</code> / <code>StopPower</code></td><td>35 W / 15 W</td></tr>
+        <tr><td><code>gridReverseMode</code></td><td>dynamic</td></tr>
+        <tr><td><code>chargeResetMargin</code></td><td>10 (eingestellt 5, vom Skript auf 10 angehoben)</td></tr>
+        <tr><td><code>directionChangeHoldCycles</code></td><td>4 (eingestellt 2, vom Skript auf 4 angehoben)</td></tr>
+        <tr><td><code>standbySmartModeZero</code></td><td>false</td></tr>
+        <tr><td><code>idleSkip</code> / KVS</td><td>aus / aus</td></tr>
+      </table></div>
+    </div>
+
+    <h3>Simulierter Tag</h3>
+    <div class="tablewrap"><table class="kv">
+      <tr><td>Dauer</td><td>06:00–20:00, 12600 Regelzyklen à 4 s</td></tr>
+      <tr><td>Grundlast Haushalt</td><td>etwa 400–1500 W, mit Morgen-, Mittags- und Abendspitze</td></tr>
+      <tr><td>Rauschen der Last</td><td>±30 W langsam (Periode 60 s), ±5 W schnell</td></tr>
+      <tr><td>Messrauschen</td><td>Netzzähler ±8 W, Geräte ±3 W (nur der Messwert, nicht die echte Leistung)</td></tr>
+      <tr><td>Kühlschrank</td><td>100 W, 15 min an, 30 min aus</td></tr>
+      <tr><td>Wasserkocher</td><td>2000 W für 3 min um 07:10, dazu 2-mal zufällig zwischen 14:00 und 22:00</td></tr>
+      <tr><td>Waschmaschine</td><td>10:00–11:00, Heizphase 2000 W, danach Trommel und Schleudern</td></tr>
+      <tr><td>Induktion</td><td>1900 W, 12:15–12:45 (erste 6 min voll, dann taktend alle 12 s) und 18:30–19:00 (erste 5 min voll, dann taktend alle 8 s, ab Minute 20 alle 20 s)</td></tr>
+      <tr><td>Kaffeevollautomat</td><td>1500 W für 1 min, 6-mal zufällig zwischen 06:30 und 19:30</td></tr>
+      <tr><td>Zusätzlicher Verbraucher</td><td>800 W für 20 min, zufällig zwischen 08:00 und 20:00</td></tr>
+      <tr><td>Testtage</td><td>3 je Damping-Wert, unterschiedlich nur in Rauschen und Uhrzeit der zufälligen Verbraucher</td></tr>
+    </table></div>
   </section>
 
   <section class="card notes">
@@ -267,18 +317,20 @@
       <li>Jede Kennzahl wird auf 0 bis 100 umgerechnet: Der beste dieser 4 Werte bekommt 100, der schlechteste 0.</li>
       <li>Die Punkte sind der gewichtete Mittelwert dieser Kennzahlen. Die Gewichte sind deine Regler.</li>
       <li>Die Punkte vergleichen nur diese 4 Werte untereinander. Sie sind keine absolute Note.</li>
+      <li>Alle Werte sind der Median aus 3 simulierten Testtagen. Die Tage unterscheiden sich nur im Messrauschen und in der Uhrzeit einiger zufälliger Verbraucher.</li>
       <li>„Stabil über alle Testtage“ bedeutet: Mit deinen Gewichten gewinnt derselbe Wert an allen 3 Testtagen.</li>
     </ul>
     <h2 style="margin-top:18px">Kennzahlen</h2>
     <ul>
-      <li><b>Regelgüte:</b> Anteil der Regelzyklen, in denen der Netzwert innerhalb ±13 W liegt. Zyklen, in denen kein Gerät mehr liefern oder laden konnte, sind nicht mitgezählt.</li>
-      <li><b>Export / Netzbezug:</b> Energie über den Testtag (06:00–20:00) in kWh.</li>
+      <li><b>Regelgüte:</b> Anteil der Regelzyklen, in denen der Netzwert innerhalb ±13 W liegt. Zyklen, in denen kein Gerät mehr liefern oder laden konnte (gesperrt, leer, voll oder weniger als 13 W unter dem Maximum), sind nicht mitgezählt.</li>
+      <li><b>Export / Netzbezug:</b> Energie über den simulierten Testtag (06:00–20:00) in kWh. Nur zum Vergleich der Damping-Werte untereinander.</li>
       <li><b>Schreibvorgänge:</b> Wie oft der Controller den Geräten eine neue Leistung geschickt hat.</li>
       <li><b>&gt; 50 W</b> und <b>Sättigung</b> stehen nur zur Information in der Tabelle und fließen nicht in die Punkte ein.</li>
     </ul>
     <h2 style="margin-top:18px">Grenzen</h2>
     <ul>
-      <li>Alle Werte stammen aus einem simulierten Werktag (Mock), nicht von einer echten Anlage: 2 Geräte (800 W und 2000 W), Waschmaschine, Induktionskochfeld, Wasserkocher, Kühlschrank, Messrauschen, 3 s Reaktionszeit der Geräte, Regeltakt 4 s.</li>
+      <li>Die Ergebnisse gelten nur für das simulierte Szenario aus Abschnitt 4, nicht für eine echte Anlage.</li>
+      <li>Alle Werte dienen dem Vergleich der Damping-Werte untereinander. Die absoluten Zahlen (Energie, Schreibvorgänge, Prozent) haben für sich allein keine Aussagekraft.</li>
       <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller immer den festen Faktor 0.9, unabhängig von dieser Einstellung.</li>
       <li>Der Netzwert kam im Test über <code>gridSource: "http_json"</code>. Für diesen Fall empfiehlt die <a href="gesamtdoku/#empfehlung-für-dampingfactor">Gesamtdokumentation</a> 0,5–0,6, für <code>local</code> 0,6–0,7.</li>
       <li>Andere Anlagen, Verbraucher und Einstellungen können zu einem anderen Ergebnis führen. Prüfe die Wahl mit einem Log deiner eigenen Anlage.</li>
@@ -291,27 +343,24 @@
 (function () {
   "use strict";
 
-  // ---- Messdaten: Testmatrix, 3 Testtage (Seeds) x 5 Damping-Werte ----
+  // ---- Messdaten: Testmatrix 3, 3 Testtage (Seeds) x 4 Damping-Werte, Saettigung mit SAT_TOL_W=13 ----
   // Spalten: band, mittel(13-50 W), gross(>50 W), saett, bezug, export, writes, ruhig, wasch, induktion
   var RAW = [
-    [1, 0.4, 59.07, 29.35, 11.58, 5.14, 0.93, 0.22, 3492, 67.60,  9.89, 7.64],
-    [1, 0.5, 61.65, 26.99, 11.37, 4.69, 0.88, 0.25, 3703, 70.36, 12.44, 8.61],
-    [1, 0.65,64.39, 24.96, 10.65, 4.83, 0.85, 0.31, 4003, 73.40, 12.15, 9.00],
-    [1, 0.8, 67.93, 21.93, 10.14, 4.98, 0.82, 0.35, 4501, 76.64, 21.54, 9.43],
-    [1, 1.0, 68.64, 22.47,  8.88, 5.82, 0.79, 0.39, 5616, 76.20, 29.20, 10.07],
-    [2, 0.4, 59.08, 29.56, 11.36, 5.74, 0.90, 0.17, 3659, 67.35, 12.33, 7.63],
-    [2, 0.5, 62.08, 26.63, 11.29, 5.83, 0.85, 0.20, 3817, 70.61, 13.56, 8.93],
-    [2, 0.65,64.58, 24.93, 10.49, 5.68, 0.80, 0.25, 4149, 73.45, 15.44, 7.64],
-    [2, 0.8, 66.68, 23.09, 10.24, 5.63, 0.77, 0.29, 4810, 75.11, 22.22, 9.32],
-    [2, 1.0, 67.21, 23.67,  9.12, 6.33, 0.74, 0.33, 6072, 74.77, 30.33, 8.92],
-    [3, 0.4, 58.53, 28.02, 13.46, 3.94, 0.82, 0.19, 3620, 66.52, 13.17, 0.54],
-    [3, 0.5, 62.99, 25.52, 11.48, 5.88, 0.76, 0.24, 3749, 71.70, 14.67, 0.27],
-    [3, 0.65,65.51, 23.30, 11.18, 5.33, 0.70, 0.31, 4081, 75.11, 15.32, 0.00],
-    [3, 0.8, 66.48, 21.67, 11.85, 4.59, 0.68, 0.35, 4710, 74.87, 19.98, 0.00],
-    [3, 1.0, 68.44, 22.49,  9.07, 6.82, 0.65, 0.39, 5713, 76.39, 28.13, 0.00]
+    [1, 0.4, 57.72, 30.25, 12.03, 5.91, 1.13, 0.24, 3541, 66.36, 10.38, 7.64],
+    [1, 0.5, 61.74, 26.59, 11.67, 6.11, 1.07, 0.27, 3636, 70.4, 14.85, 8.61],
+    [1, 0.65, 64.43, 24.54, 11.03, 6.72, 1.11, 0.33, 4021, 73.09, 17, 9.04],
+    [1, 0.8, 67.89, 21.53, 10.58, 7.02, 1.08, 0.37, 4572, 76.59, 20.85, 9.43],
+    [2, 0.4, 56.52, 31.35, 12.13, 6.6, 1.03, 0.19, 3630, 64.81, 11.82, 7.71],
+    [2, 0.5, 61.54, 26.66, 11.8, 6.62, 0.97, 0.22, 3713, 70.34, 13.94, 8.93],
+    [2, 0.65, 64.57, 24.43, 11, 7.1, 1, 0.27, 4126, 73.7, 15.72, 7.78],
+    [2, 0.8, 66.01, 23.25, 10.74, 6.93, 0.97, 0.32, 4782, 74.59, 22.3, 9.32],
+    [3, 0.4, 58.09, 29.53, 12.38, 6.4, 0.96, 0.2, 3555, 66.45, 13.23, 0.54],
+    [3, 0.5, 62.35, 25.76, 11.88, 6.56, 0.9, 0.25, 3649, 71.13, 14.81, 0.27],
+    [3, 0.65, 65.7, 23.23, 11.06, 6.88, 0.83, 0.31, 3957, 74.67, 15.93, 0],
+    [3, 0.8, 67.32, 22.34, 10.34, 7.18, 0.8, 0.36, 4529, 75.97, 20.34, 0]
   ];
   var KEYS = ["band","mittel","gross","saett","bezug","export","writes","ruhig","wasch","induktion"];
-  var DAMPINGS = [0.4, 0.5, 0.65, 0.8, 1.0];
+  var DAMPINGS = [0.4, 0.5, 0.65, 0.8];
   var MAXD = 0.8; // seit 5.2.0 begrenzt der Controller dampingFactor auf 0.4 bis 0.8
 
   function rowsFor(seed) {
@@ -387,10 +436,9 @@
     SLIDERS.forEach(function (s) { document.getElementById("v_" + s.id).textContent = weights[s.id]; });
   }
 
-  var qualityEl = document.getElementById("qualityMetric");
-  var basisEl = document.getElementById("basis");
-  qualityEl.addEventListener("change", update);
-  basisEl.addEventListener("change", update);
+  // Feste Auswahl: Regelgüte über den ganzen Tag, Median aus 3 Testtagen
+  var qualityEl = { value: "band" };
+  var basisEl = { value: "median" };
 
   // ---- Bewertung ----
   function norm(rows, key, higherBetter) {
