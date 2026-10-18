@@ -86,6 +86,7 @@ Zendure-Geräten im lokalen Netz.
         - [13.5) Nutzung per Kommandozeile (curl)](#135-nutzung-per-kommandozeile-curl)
         - [13.6) Nutzung über Home Assistant](#136-nutzung-über-home-assistant)
         - [13.7) KVS Store im Shelly](#137-kvs-store-im-shelly)
+    - [14) Auswertungen aus dem Betrieb](#14-auswertungen-aus-dem-betrieb)
 
 ---
 
@@ -2738,3 +2739,16 @@ statt `set_value` und Werten `1`/`0`.
 ### 13.7) KVS Store im Shelly
 
 ![KVS Store im Shelly](gesamtdoku_kvs_store.png)
+
+---
+
+## 14) Auswertungen aus dem Betrieb
+
+Erfahrungen von Nutzern mit echten Anlagen (Stand August 2026, Controller 4.x):
+
+- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_3sun_20260811
+- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_zenrix_20260808
+- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_zenrix_20260810
+- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_surfer1264_20260826
+
+Neuere Simulationen zur Dämpfung: [Damping/Simulation](Damping_Kompromiss.md).

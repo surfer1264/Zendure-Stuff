@@ -1,7 +1,6 @@
-# Shelly Multi-Device Controller – Kurzanleitung für Nutzer
+# Controller im Alltag
 
-> Diese Anleitung ist die **schlanke, verständliche Kurzversion** der vollständigen technischen Dokumentation. Sie erklärt, was der Controller tut, wie du ihn einrichtest und wie du die wichtigsten Alltagsfragen selbst beantwortest – ohne Technik-Details, die du im Alltag nicht brauchst.
->
+> Diese Seite erklärt in einfachen Worten, was der Controller tut, woran du siehst, dass alles läuft, und wie du später etwas änderst. Eingerichtet wird er mit dem [Configurator](../Multiconfigurator/readme.md), siehe [Getting Started](readme.md). Alle technischen Details stehen in der [Gesamtdokumentation](gesamtdoku.md).
 
 <a href="https://ko-fi.com/surfer1264">
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
@@ -9,184 +8,102 @@
 
 ---
 
-## 1) Wozu ist das Ganze gut?
+## 1) Was der Controller macht
 
-Stell dir vor, du hast einen Stromzähler und einen oder mehrere Zendure-Speicher zuhause. Der Controller schaut sich **laufend an**, wie viel Strom dein Haus gerade vom Netz bezieht oder ins Netz einspeist – und steuert deine Zendure-Geräte automatisch so, dass **möglichst wenig Strom** teuer eingekauft oder ungenutzt ins Netz abgegeben wird.
+Der Controller läuft auf einem Shelly und schaut alle 4 Sekunden, wie viel Strom dein Haus gerade aus dem Netz bezieht oder einspeist. Dann steuert er deine Zendure-Speicher:
 
-- Er lädt deine Speicher, wenn Überschuss da ist (z. B. Solarstrom von der Dachanlage oder anderen Speichern, falls du das erlaubst).
-- Er entlädt deine Speicher, wenn dein Haus gerade Strom braucht.
-- Hast du **mehrere** Geräte, verteilt er die Arbeit automatisch fair unter ihnen – bei kleinem Bedarf nutzt er nur eins (schont die Akkus), bei großem Bedarf alle gemeinsam.
-- Alles läuft **lokal auf einem kleinen Shelly-Gerät** – ohne Cloud, ohne Internet, ohne App. Funktioniert also auch, wenn dein Internet mal ausfällt.
+- **Haus braucht Strom** → die Speicher geben ab.
+- **Überschuss da** (z. B. von einer anderen Solaranlage) → die Speicher laden, wenn du das erlaubt hast.
+- **Mehrere Speicher** → bei wenig Bedarf arbeitet nur einer, bei viel Bedarf alle gemeinsam.
+- Alles läuft **lokal**, ohne Cloud und ohne App. Fällt das Internet aus, regelt er weiter.
 
-⚠️ **Wichtig:** Betrieb auf eigene Gefahr und Verantwortung. Der Controller entbindet dich nicht davon, geltende regulatorische Regeln (z. B. zum Netzexport) einzuhalten.
+**Was normal ist:**
+
+- Der Netzwert steht nie exakt auf 0 W, sondern pendelt um wenige Watt. Die erlaubte Abweichung (Toleranz) zeigt das Dashboard unter dem Sollwert.
+- Schaltet ein großer Verbraucher ein oder aus (Wasserkocher, Herd), gibt es für ein paar Sekunden Bezug oder Einspeisung, bis die Speicher nachgezogen haben.
+- Ist der Netzbezug länger ruhig, meldet der Controller „Sparmodus“ und fragt die Speicher seltener ab.
+
+⚠️ Betrieb auf eigene Gefahr und Verantwortung. Der Controller entbindet dich nicht davon, geltende Regeln (z. B. zum Netzexport) einzuhalten.
 
 ---
 
-## 2) Was du vorher brauchst
+## 2) Läuft alles?
 
-Kurz: ein Shelly (Gen2 oder neuer) mit genug Script-Speicher, ein Smartmeter und Zendure-Geräte mit **fester IP-Adresse** im selben Netz – und die Geräte **aus dem HEMS** in der Zendure-App entfernt. Welche Shellys und Smartmeter passen und wie du den Speicher prüfst: **[Kompatible Geräte](../kompatible_geraete.md)**.
+- **Im [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md):** Alle Speicher haben einen grünen Statuspunkt, der Netzwert liegt nahe am Sollwert.
+- **Im Log des Controller-Shelly** (Weboberfläche → Scripts → Log) erscheint alle paar Sekunden eine Zeile wie
+
+    ```text
+    Netzsaldo: 12 W | Ist-Summe: 340 W | Regelsignal: 352 W | Ladekorrektur: 0 W
+    ```
+
+    *Netzsaldo* ist dein Netzbezug (negativ = du speist ein).
+
+**Einmal nach der Einrichtung prüfen:** Schalte einen großen Verbraucher ein. Der Netzwert muss kurz **steigen**. Sinkt er stattdessen, ist das Vorzeichen deines Messgeräts andersherum: im Configurator unter „Netzquelle“ das Häkchen „Vorzeichen ist invertiert“ setzen und neu hochladen.
 
 ---
 
-## 3) Einrichtung und die wichtigsten Einstellungen
+## 3) Deine Einstellungen in einfachen Worten
 
-**Einrichten** geht am einfachsten mit dem [Configurator](../Multiconfigurator/readme.md) – er fragt alles Nötige ab und lädt das Script direkt hoch. Wer das Script von Hand anpassen und hochladen will, findet die Schritte unter [Getting Started → Ohne Configurator](readme.md#ohne-configurator-von-hand).
+Diese Fragen stellt dir der Configurator. Alles andere ist sinnvoll voreingestellt.
 
-Egal wie du einrichtest: Für jedes Zendure-Gerät gibt es im CONFIG-Block einen Eintrag in `devices`. Hast du mehrere Geräte, kommt pro Gerät ein Eintrag dazu (siehe [Kapitel 5](#-ein-weiteres-gerät-hinzufügen)).
-
-**Was die wichtigsten Werte bedeuten**, in einfachen Worten:
-
-| Einstellung | Bedeutet für dich |
+| Einstellung | Bedeutet |
 |---|---|
-| `ip` | Wo im Netzwerk dein Gerät zu finden ist – muss immer gesetzt werden |
-| `label` | Nur ein Name, taucht in Meldungen/Log auf |
-| `minSoc` | "Nicht leerer als …%" – Schutzgrenze fürs Entladen |
-| `maxSoc` | "Nicht voller als …%" – Grenze fürs Laden aus dem Netz |
-| `maxOutput` | Wie viel Leistung das Gerät maximal abgeben (exportieren) darf |
-| `maxInputPower` | Wie viel Leistung das Gerät maximal aus dem Netz laden darf |
-| `dischargeAllowed` | Darf das Gerät überhaupt entladen? (`false` = Gerät wird nie zum Entladen benutzt, kann aber weiter laden) |
-| `reverse` | Darf das Gerät aus dem Netz laden? (`false` = lädt nie vom Netz) |
-| `dryRun` | Testmodus: Gerät wird ausgelesen und mitgerechnet, aber **nie** tatsächlich angesteuert |
+| **Reserve** (min. SoC) | So leer darf der Akku höchstens werden. Der Rest bleibt für Notfälle. |
+| **Ladeziel** (max. SoC) | So voll wird der Akku aus dem Netz geladen. |
+| **Maximale Leistung** | So viel darf der Speicher höchstens abgeben bzw. aufnehmen. |
+| **Laden vom Netz** | Darf der Speicher Überschuss aufnehmen, z. B. von einer anderen Solaranlage? Nein = er lädt nur mit seiner eigenen PV. |
+| **Bei vollem Akku** | Darf ein voller Speicher ins Netz einspeisen? „Automatisch“ (empfohlen): erlaubt, solange ein anderer Speicher noch laden kann; sind alle voll, wird es gesperrt, bis wieder Platz ist. Alternativ „immer erlauben“ oder „immer sperren“. |
+| **Netzquelle** | Woher der Controller den Netzwert bekommt, z. B. Shelly Pro 3EM oder Zendure Smart Meter. Für viele Messgeräte gibt es fertige Vorlagen. |
+| **Benachrichtigungen** | Nachricht per Webhook, Signal oder WhatsApp, wenn etwas mehrmals hintereinander schiefgeht (z. B. ein Speicher nicht erreichbar ist), und noch einmal, sobald es wieder läuft. |
+| **Live-Einstellungen (KVS)** | Erlaubt Änderungen im laufenden Betrieb, z. B. aus dem Dashboard. Ohne sie kann das Dashboard nur anzeigen. |
 
-**Stromzähler** – der Controller braucht einen laufenden Netz-Messwert. Dafür steht bei `gridSource` eine dieser drei Optionen:
+---
 
-| Wenn du … | dann setze `gridSource` auf … |
+## 4) Etwas ändern
+
+### Dauerhaft, z. B. einen Speicher hinzufügen oder die Leistung ändern
+
+1. [Helfer](../Multiconfigurator/readme.md#empfohlen-der-lokale-helfer-exe-installer) starten, **„Neu konfigurieren oder manuell updaten“** wählen.
+2. Unter „Funktionen“ **„📡 Vom Controller-Shelly lesen“** – deine aktuelle Konfiguration wird übernommen.
+3. Ändern, z. B. unter „Geräte“ einen Speicher hinzufügen.
+4. Im Ergebnis **„⚡ Direkt hochladen“**. Der Controller startet neu, fertig.
+
+Hast du Speicher hinzugefügt oder ihre Leistung geändert: Die Regelparameter passt der Configurator nicht von selbst an. Prüfe im Schritt „Regelparameter“ die Schwellen fürs Verteilen der Leistung, siehe [Empfehlung für die Ersteinstellung](gesamtdoku.md#7b-empfehlung-für-ersteinstellung).
+
+### Sofort, ohne Neustart – im Dashboard
+
+Nach dem Entsperren (Schloss oben rechts) kannst du im [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md#was-du-einstellen-kannst) live ändern:
+
+- **Sollwert** – etwas mehr Bezug oder Einspeisung als 0 W
+- **Fix-Entladung** – feste Leistung statt Regelung
+- je Speicher: **Entladen erlaubt**, **Laden vom Netz erlaubt**, **Reserve**
+- **Manuelles Laden** aus dem Netz mit fester Leistung
+
+Das geht nur mit eingeschalteten Live-Einstellungen (KVS). Ändere solche Werte von Hand, nicht automatisch alle paar Minuten (z. B. aus Home Assistant) – jede Änderung wird im Speicher des Shelly abgelegt, und der verschleißt dabei. Mehr dazu: [Gesamtdokumentation, Kapitel 13](gesamtdoku.md#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant).
+
+### Update auf eine neue Version
+
+Helfer starten → **„Updaten“**. Deine Einstellungen bleiben erhalten. Ablauf: [Update](../Multiconfigurator/readme.md#4-update).
+
+---
+
+## 5) Wenn etwas nicht klappt
+
+| Was passiert | Was du tun kannst |
 |---|---|
-| den Controller **direkt auf deinem Shelly Pro 3EM** laufen lässt | `"local"` (schnellste, einfachste Option) |
-| einen **separaten** Shelly Pro 3EM im Netzwerk als Zähler nutzt | `"remote"` (zusätzlich `gridSourceIp` eintragen) |
-| einen anderen Zähler nutzt (z. B. Zendure Smart Meter, Tasmota, …) | `"http_json"` (zusätzlich `gridSourceUrl` und `gridSourceField` eintragen) |
-
-Bei `"http_json"` rufst du die angegebene Adresse einmal im Browser auf, suchst dort das Feld mit der Gesamtleistung (z. B. `total_power`) und trägst dessen Namen bei `gridSourceField` ein. **Achtung:** bei geschachtelten JSON-Strukturen (mehrere öffnende geschweifte Klammern), siehe [Kapitel 5.1 der Gesamtdokumentation](gesamtdoku.md#51-eigeneweitere-smart-meter-einbinden-http_json) für ein konkretes Beispiel (Tasmota).
-
-**Vorzeichen prüfen:** Schalte kurz einen größeren Verbraucher ein und schau im Log nach, ob der angezeigte Netzwert **positiver** wird (Bezug steigt). Wird er stattdessen negativer, setze `gridSourceInvert: true`.
-
-⭐ **Das reicht für den Start.** Alle weiteren Einstellungen (siehe [Gesamtdokumentation](gesamtdoku.md#4-konfiguration)) sind sinnvoll voreingestellt und lassen sich später bei Bedarf feinjustieren.
+| Ein Speicher ist dauerhaft „nicht erreichbar“ | IP-Adresse noch richtig? Am besten im Router eine feste IP vergeben. Speicher im selben Netz (nicht im Gast-WLAN)? |
+| Ein Speicher macht nicht, was er soll | Ist er in der Zendure-App noch im **HEMS**? Dort entfernen, sonst steuert die Cloud dazwischen. |
+| Der Controller startet nicht oder stürzt ab | Auf dem Controller-Shelly darf nur dieses eine Script liegen. Mit [Speicher prüfen](../Multiconfigurator/readme.md#speicher-eines-shelly-prüfen) nachsehen, wie viel frei ist. |
+| Netzwert läuft falsch herum | siehe [Läuft alles?](#2-läuft-alles) – Vorzeichen umdrehen |
+| Ein Speicher tut gerade nichts | Im Dashboard steht der Grund in Klartext, z. B. „voll, Laden gesperrt“ oder „leer, Entladen gesperrt“. Meist ist das gewollt. |
+| Du brauchst Hilfe | Mit dem Helfer ein [Log aufzeichnen](../Multiconfigurator/readme.md#log-aufzeichnen) und in den [Discussions](https://github.com/surfer1264/Zendure-Stuff/discussions) fragen. Für mehr Details vorher die Debug-Ausgaben einschalten (Häkchen im Ergebnis-Schritt), danach wieder aus. |
 
 ---
 
-## 4) Wichtige Begriffe – bitte nicht verwechseln!
+## 6) Weiter lesen
 
-Diese drei Dinge klingen ähnlich, bedeuten aber unterschiedliche Sachen:
-
-| Begriff | Wo eingestellt | Bedeutung |
-|---|---|---|
-| **`reverse`** | Deine Konfiguration im Script | Darf dieses Gerät grundsätzlich aus dem Netz laden? `true` = Laden erlaubt, `false` = Laden nicht erlaubt |
-| **`socLimit`** | Meldet das Zendure-Gerät selbst | Aktueller Betriebszustand des Geräts: `0` = normaler Betrieb, `1` = Ladesperre (Akku voll, Laden vom Netz gesperrt), `2` = Entladesperre |
-| **`gridReverse`** | Eine Einstellung direkt am Zendure-Gerät | Legt fest, was das Gerät darf, **sobald es seine Ladesperre erreicht hat** – hat mit der Ladeeigenschaft (`reverse`) nichts zu tun! `1` = Netzexport erlaubt, `2` = Netzexport verboten |
-
-Kurz gesagt: `reverse` ist *deine* Entscheidung, ob ein Gerät laden darf. `socLimit` ist die *Rückmeldung* des Geräts über seinen aktuellen Zustand. `gridReverse` ist ein *zusätzlicher Sicherheitsschalter* am Gerät, der unabhängig davon regelt, ob bei vollem Akku noch exportiert werden darf. Der Controller kann diesen dritten Schalter optional automatisch mitsteuern (`gridReverseMode: "dynamic"`, Standardeinstellung) – dazu musst du nichts weiter tun.
-
-**Zwei weitere hilfreiche Begriffe:**
-
-- **Konzentrationsmodus / Verteilmodus:** Bei kleinem Leistungsbedarf nutzt der Controller nur ein Gerät (schont die anderen Akkus). Wird mehr gebraucht, schaltet er automatisch auf alle passenden Geräte gleichzeitig um.
-- **Testmodus (`dryRun`):** Ein Gerät mit `dryRun: true` wird ganz normal beobachtet und in die Berechnung einbezogen, aber es wird **nie** tatsächlich angesteuert. Ideal, um Neues gefahrlos auszuprobieren.
-
----
-
-## 5) Häufige Aufgaben – "Ich möchte …"
-
-### … ein weiteres Gerät hinzufügen
-
-1. Kopiere im Script einen kompletten Geräteblock (`{ ... }`) und füge ihn mit Komma getrennt in `CONFIG.devices` ein.
-2. Trage mindestens die `ip` des neuen Geräts ein, gib ihm einen eigenen `label`.
-3. Passe `minSoc`, `maxOutput` etc. an das jeweilige Gerät an.
-4. Starte das Script neu – der Rest passt sich automatisch an die neue Geräteanzahl an.
-
-### … ein Gerät nur laden lassen, nie entladen
-
-Setze bei diesem Gerät `dischargeAllowed: false` und `reverse: true`. So wird es nie zum Entladen herangezogen, kann aber weiterhin laden – praktisch, um ein Gerät gezielt für das Laden zu reservieren.
-
-### … ein Gerät nie aus dem Netz laden lassen
-
-Setze `reverse: false`. Das Gerät wird dann nie zum Laden benutzt (z. B. wenn es nur mit Solarstrom laden soll).
-
-### … Neues testen, ohne dass etwas passiert
-
-Setze bei dem betreffenden Geräteeintrag `dryRun: true`. Du siehst im Log, was der Controller *tun würde*, ohne dass real etwas geschrieben wird.
-
-### … benachrichtigt werden, wenn etwas nicht funktioniert
-
-Trage im Bereich `signal` deine Zugangsdaten ein und setze `enabled: true`:
-
-```js
-signal: {
-  enabled: true,
-  typ: "WEBHOOK",   // Alternativen: "SIGNAL" oder "WHATSAPP"
-  webhookUrl: "http://<deine-Adresse>/api/webhook/<deine-Webhook-ID>"
-}
-```
-
-Für Signal/WhatsApp brauchst du zusätzlich einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com). Du bekommst dann eine Meldung, wenn ein Fehler mehrfach hintereinander auftritt – und eine zweite, sobald er behoben ist.
-
-### … Werte ändern, ohne den Controller neu zu starten
-
-Dafür gibt es die **KVS-Live-Override-Funktion**: Damit kannst du z. B. per Kommandozeile oder aus Home Assistant heraus einzelne Werte (Sollwert, ob ein Gerät laden/entladen darf) live ändern, während der Controller läuft. Aktiviere dazu `kvsEnabled: true` im Script. Details und Beispiele (curl-Befehle, Home-Assistant-Einbindung) findest du in der ausführlichen Dokumentation, Kapitel 13.
-
-⚠️ Diese Funktion schreibt in den internen Speicher des Shelly – nutze sie nur bei echter Bedienung durch dich, nicht automatisiert/zyklisch, damit der Speicher nicht unnötig verschleißt.
-
-### … sicherstellen, dass mein Akku weder leer noch überlastet wird
-
-Das steuerst du über `minSoc` (untere Grenze fürs Entladen) und `maxSoc` (obere Grenze fürs Laden) – für jedes Gerät einzeln einstellbar. Diese Werte werden beim Start automatisch an dein Zendure-Gerät übertragen.
-
-### … prüfen, ob mein Smartmeter richtig eingebunden ist
-
-Siehe "Vorzeichen prüfen" in Schritt 3 – lade kurz mehr Strom im Haus und beobachte, ob der Netzwert im Log wie erwartet ansteigt.
-
----
-
-## 6) Was steht eigentlich im Log?
-
-Du musst das Log nicht auswendig lernen – hier die wichtigsten Zeilen kurz erklärt:
-
-**Zyklus-Kopfzeile** (einmal pro Regeltakt):
-
-```
-Netzsaldo: -4 W | Ist-Summe: 387 W | Regelsignal: 384 W | Ladekorrektur: 0 W
-```
-
-→ *Netzsaldo* ist dein aktueller Netzbezug (negativ = du speist ein). *Regelsignal* ist, was der Controller insgesamt gerade tun will.
-
-**Pro-Geräte-Zeile:**
-
-```
-SF2400Pro: SOC 88% | socL 0 | gridR 1 | Ist 523 W | Soll 799 W | acMode 2 (Export)
-```
-
-→ Zeigt Ladestand (`SOC`), gemeldete Sperren (`socL`, `gridR`, siehe Kapitel 4), tatsächliche (`Ist`) und geplante (`Soll`) Leistung sowie die Richtung (`acMode`: 1 = Laden/Ruhe, 2 = Entladen/Export).
-
-**Fehlermeldungen** sehen so aus:
-
-```
-FEHLER (<Gerät>/connect): Geraet nicht erreichbar - aufeinanderfolgende Fehler: 3
-```
-
-→ Taucht ein Gerät hier mehrfach auf, prüfe zuerst IP-Adresse und Netzwerkverbindung. Nach mehreren Fehlern in Folge (Standard: 5) bekommst du – falls aktiviert – automatisch eine Benachrichtigung.
-
----
-
-## 7) Wenn etwas nicht funktioniert
-
-| Symptom | Was du prüfen kannst |
-|---|---|
-| Gerät wird im Log dauerhaft als "nicht erreichbar" gemeldet | IP-Adresse korrekt? Gerät im selben Netzwerk? Firewall? |
-| Script startet nicht / stürzt ab | Speicherplatz des Shelly prüfen (siehe Kapitel 2, `mem_free`) |
-| Gerät reagiert nicht wie erwartet | Ist es evtl. noch im HEMS der Zendure-App? Dort entfernen |
-| Ich sehe nicht, was der Controller genau tut | `debug: true` setzen und Log genauer beobachten (danach wieder auf `false` zurücksetzen) |
-
----
-
-## 8) Weiterführende Links
-
-- 📖 [Vollständige technische Dokumentation](gesamtdoku.md)
-- 🧭 [Getting Started](readme.md)
-- 🛠️ [Konfigurationsassistent](../Multiconfigurator/readme.md)
-- 💬 Fragen & Austausch: [GitHub Discussions](https://github.com/surfer1264/Zendure-Stuff/discussions)
+- 🧭 [Getting Started](readme.md) – Einrichtung, auch von Hand
+- 🛠️ [Configurator](../Multiconfigurator/readme.md) – Einrichten, Update, Fehlermeldungen
+- 📊 [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md) – Bedienung und Anzeige
+- 📖 [Gesamtdokumentation](gesamtdoku.md) – alle Einstellungen, Log-Zeilen ([Kapitel 12](gesamtdoku.md#12-logging)), Fachbegriffe wie `socLimit` und `gridReverse` ([Kapitel 12.8](gesamtdoku.md#128-wertetabellen-kurzreferenz)), Testmodus ([Kapitel 4c](gesamtdoku.md#4c-testmodus-dryrun))
 - 🐛 Probleme melden: [GitHub Issues](https://github.com/surfer1264/Zendure-Stuff/issues)
-- [ab Version 4.x.x Script herunterladen](zerooutput_multi_kvs_mini.js) Minifyer eingesetzt
-
-## 9) Live Erfahrungen
-
-- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_3sun_20260811
-- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_zenrix_20260808
-- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_zenrix_20260810
-- https://github.com/surfer1264/Zendure-Stuff/wiki/Auswertung_surfer1264_20260826

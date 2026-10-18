@@ -33,7 +33,7 @@ The **Controller Shelly** runs the control, the **Dashboard Shelly** runs the ze
 * **charging & discharging**, distributed across all SolarFlows
 * settings can be changed during operation (KVS) – from the dashboard or e.g. from Home Assistant
 
-📖 [Getting started](Controller/readme.md) · [User documentation](Controller/benutzerdoku.md) · [All the details](Controller/gesamtdoku.md) (German)
+📖 [Getting started](Controller/readme.md) · [Day-to-day use](Controller/benutzerdoku.md) · [All the details](Controller/gesamtdoku.md) (German)
 
 ### 2. The dashboard – the overview
 

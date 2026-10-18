@@ -33,7 +33,7 @@ Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** 
 * **Laden & Entladen**, verteilt auf alle SolarFlow
 * Einstellungen im laufenden Betrieb änderbar (KVS) – aus dem Dashboard oder z. B. aus Home Assistant
 
-📖 [Getting Started](Controller/readme.md) · [Benutzerdokumentation](Controller/benutzerdoku.md) · [Alle Details](Controller/gesamtdoku.md)
+📖 [Getting Started](Controller/readme.md) · [Im Alltag](Controller/benutzerdoku.md) · [Alle Details](Controller/gesamtdoku.md)
 
 ### 2. Das Dashboard – der Überblick
 

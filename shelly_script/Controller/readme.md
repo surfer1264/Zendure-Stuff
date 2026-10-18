@@ -6,7 +6,7 @@
 
 Der Controller (`zerooutput_multi_kvs`) ist das Regel-Script auf deinem **Controller-Shelly**. Er misst deinen Netzbezug und verteilt Laden und Entladen so auf deine Zendure-Speicher, dass möglichst nichts aus dem Netz kommt und nichts ungenutzt ins Netz geht.
 
-Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steht in der [Benutzerdokumentation](benutzerdoku.md) und der [Gesamtdokumentation](gesamtdoku.md). Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
+Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Wie du ihn danach im Alltag prüfst und änderst, steht unter [Controller im Alltag](benutzerdoku.md), alle Details in der [Gesamtdokumentation](gesamtdoku.md). Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
 ---
 
