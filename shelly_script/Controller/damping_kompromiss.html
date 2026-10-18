@@ -106,6 +106,14 @@
   .slider label span.v { font-variant-numeric: tabular-nums; color: var(--link); }
   .slider input[type=range] { width: 100%; accent-color: var(--link); margin: 6px 0 0; }
   .slider .hint { margin-top: 0; }
+  .rel { color: var(--muted); white-space: nowrap; }
+  .slider .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 2px; }
+  .dbl {
+    font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer; padding: 3px 9px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text-2);
+  }
+  .dbl:hover { border-color: var(--accent); color: var(--text); }
+  .dbl[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #1b1300; font-weight: 600; }
 
   .opts { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--border); }
   .opts label { font-size: 14px; color: var(--text-2); display: flex; align-items: center; gap: 8px; }
@@ -198,7 +206,7 @@
       <p>Ein Klick setzt die 4 Regler auf feste Werte. Danach kannst du die Regler frei verändern. Der Knopf bleibt hervorgehoben, solange die Regler zu ihm passen.</p>
       <dl>
         <dt>Ausgewogen</dt>
-        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): Er unterscheidet sich zwischen den Damping-Werten kaum (Median 0,97–1,03 kWh), der Export dagegen deutlich (0,20–0,36 kWh).</dd>
+        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): Er unterscheidet sich zwischen den Damping-Werten kaum (0,95–1,04 kWh), der Export dagegen deutlich (0,21–0,35 kWh).</dd>
         <dt>Beste Regelung</dt>
         <dd>Nur die Regelgüte zählt (10). Export und Schreibvorgänge sind egal.</dd>
         <dt>Wenig Export</dt>
@@ -211,6 +219,8 @@
 
       <h3>b) Die 4 Regler</h3>
       <p>Jeder Regler sagt, wie wichtig dir ein Ziel ist: 0 = egal, 10 = sehr wichtig. Es zählt nur das Verhältnis der Regler zueinander: 5 / 5 / 5 ergibt dasselbe wie 10 / 10 / 10.</p>
+      <p><b>Aussagekraft</b> (neben jedem Regler): Wie eindeutig sich die Damping-Werte bei diesem Ziel an allen 3 Testtagen unterscheiden. Das Gewicht des Reglers wird damit multipliziert. Beim Netzbezug sind die Unterschiede klein und von Tag zu Tag verschieden, deshalb zählt er weniger als eingestellt.</p>
+      <p><b>★ besonders wichtig ×2:</b> verdoppelt das Gewicht eines Ziels, zum Beispiel aus 5 wird 10, aus 10 wird 20. So kannst du ein Ziel über die anderen stellen, auch wenn alle Regler schon auf 10 stehen. Es kann immer nur <b>ein</b> Ziel ×2 haben: Ein Klick auf ein anderes Ziel verschiebt den Stern dorthin, ein zweiter Klick auf dasselbe Ziel schaltet ihn aus. Steht der Regler auf 0, bleibt es bei 0. Ein Klick auf eine Voreinstellung schaltet ×2 wieder aus.</p>
       <dl>
         <dt>Gute Regelung</dt>
         <dd>Wie oft der Netzwert nahe 0 W liegt, genauer: innerhalb ±13 W. Gemessen über den ganzen Testtag.</dd>
@@ -250,7 +260,7 @@
     <div class="tablewrap">
       <table class="data" id="table"></table>
     </div>
-    <p class="hint">Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung. Werte über 0.8 setzt der Controller seit 5.2.0 auf 0.8, sie wurden deshalb nicht getestet.</p>
+    <p class="hint">Mittelwerte aus 3 Testtagen. Fett = bester Wert der Spalte. Gelb hinterlegt = aktuelle Empfehlung. Werte über 0.8 setzt der Controller seit 5.2.0 auf 0.8, sie wurden deshalb nicht getestet.</p>
   </section>
 
   <section class="card setup">
@@ -315,9 +325,10 @@
     <ul>
       <li>Bewertet werden die 4 Werte, die der Controller zulässt: 0.4, 0.5, 0.65 und 0.8.</li>
       <li>Jede Kennzahl wird auf 0 bis 100 umgerechnet: Der beste dieser 4 Werte bekommt 100, der schlechteste 0.</li>
-      <li>Die Punkte sind der gewichtete Mittelwert dieser Kennzahlen. Die Gewichte sind deine Regler.</li>
+      <li>Die Punkte sind der gewichtete Mittelwert dieser Kennzahlen. Die Gewichte sind deine Regler, bei „★ besonders wichtig“ verdoppelt.</li>
       <li>Die Punkte vergleichen nur diese 4 Werte untereinander. Sie sind keine absolute Note.</li>
-      <li>Alle Werte sind der Median aus 3 simulierten Testtagen. Die Tage unterscheiden sich nur im Messrauschen und in der Uhrzeit einiger zufälliger Verbraucher.</li>
+      <li>Alle Werte sind der Mittelwert aus 3 simulierten Testtagen. Die Tage unterscheiden sich nur im Messrauschen und in der Uhrzeit einiger zufälliger Verbraucher.</li>
+      <li><b>Aussagekraft:</b> Jede Kennzahl zählt nur so stark, wie sich die Damping-Werte an allen 3 Testtagen eindeutig unterscheiden. Ist ein Unterschied kleiner als die Schwankung zwischen den Tagen, zählt er weniger. Die Aussagekraft steht neben jedem Regler (100 % = eindeutig, 0 % = reiner Zufall). Gerechnet wird mit einer Varianzanalyse über Damping-Wert und Testtag.</li>
       <li>„Stabil über alle Testtage“ bedeutet: Mit deinen Gewichten gewinnt derselbe Wert an allen 3 Testtagen.</li>
     </ul>
     <h2 style="margin-top:18px">Kennzahlen</h2>
@@ -373,9 +384,11 @@
   }
   function median3(a) { var s = a.slice().sort(function (x, y) { return x - y; }); return s[1]; }
   var DATA = { "1": rowsFor(1), "2": rowsFor(2), "3": rowsFor(3) };
+  function mean3(a) { return (a[0] + a[1] + a[2]) / 3; }
+  // Mittelwert der 3 Testtage: alle Tage zaehlen gleich, kleine Unterschiede werden nicht von einem Tag allein bestimmt
   DATA.median = DAMPINGS.map(function (d, i) {
     var o = { d: d };
-    KEYS.forEach(function (k) { o[k] = median3([DATA["1"][i][k], DATA["2"][i][k], DATA["3"][i][k]]); });
+    KEYS.forEach(function (k) { o[k] = mean3([DATA["1"][i][k], DATA["2"][i][k], DATA["3"][i][k]]); });
     return o;
   });
   // Bewertet werden nur die Werte, die das Skript zulässt; 1.0 bleibt als Vergleich in der Tabelle
@@ -398,6 +411,10 @@
     { name: "Wenig Schreibvorgänge", w: { quality: 2, export: 0, bezug: 0, writes: 10 } }
   ];
   var weights = { quality: 5, export: 5, bezug: 0, writes: 5 };
+  // "besonders wichtig": verdoppelt das Gewicht genau eines Ziels (hoechstens eins aktiv)
+  var dbl = { quality: false, export: false, bezug: false, writes: false };
+  function wt(k) { return weights[k] * (dbl[k] ? 2 : 1) * (typeof REL === "object" ? REL[k] : 1); }
+  function wUser(k) { return weights[k] * (dbl[k] ? 2 : 1); }
 
   var slidersEl = document.getElementById("sliders");
   SLIDERS.forEach(function (s) {
@@ -406,10 +423,18 @@
     div.innerHTML =
       '<label for="w_' + s.id + '">' + s.label + ' <span class="v" id="v_' + s.id + '"></span></label>' +
       '<input type="range" min="0" max="10" step="1" id="w_' + s.id + '">' +
-      '<p class="hint">' + s.hint + '</p>';
+      '<div class="row"><p class="hint">' + s.hint + ' · <span class="rel" id="r_' + s.id + '"></span></p>' +
+      '<button type="button" class="dbl" id="d_' + s.id + '" aria-pressed="false" title="Gewicht dieses Ziels verdoppeln">★ besonders wichtig ×2</button></div>';
     slidersEl.appendChild(div);
     var inp = div.querySelector("input");
     inp.addEventListener("input", function () { weights[s.id] = Number(inp.value); markPreset(); update(); });
+    var btn = div.querySelector(".dbl");
+    btn.addEventListener("click", function () {
+      var on = !dbl[s.id];
+      Object.keys(dbl).forEach(function (k) { dbl[k] = false; });   // es kann nur einen geben
+      dbl[s.id] = on;
+      markPreset(); update();
+    });
   });
 
   var presetsEl = document.getElementById("presets");
@@ -417,7 +442,7 @@
     var b = document.createElement("button");
     b.type = "button"; b.textContent = p.name; b.dataset.i = i;
     b.addEventListener("click", function () {
-      Object.keys(p.w).forEach(function (k) { weights[k] = p.w[k]; });
+      Object.keys(p.w).forEach(function (k) { weights[k] = p.w[k]; dbl[k] = false; });
       syncSliders(); markPreset(); update();
     });
     presetsEl.appendChild(b);
@@ -430,13 +455,37 @@
   function markPreset() {
     Array.prototype.forEach.call(presetsEl.children, function (b) {
       var p = PRESETS[b.dataset.i].w;
-      var same = Object.keys(p).every(function (k) { return p[k] === weights[k]; });
+      var same = Object.keys(p).every(function (k) { return p[k] === weights[k] && !dbl[k]; });
       b.classList.toggle("active", same);
     });
-    SLIDERS.forEach(function (s) { document.getElementById("v_" + s.id).textContent = weights[s.id]; });
+    SLIDERS.forEach(function (s) {
+      document.getElementById("v_" + s.id).textContent = dbl[s.id] ? weights[s.id] + " × 2 = " + wUser(s.id) : weights[s.id];
+      var r = document.getElementById("r_" + s.id);
+      if (r) r.textContent = "Aussagekraft " + Math.round(REL[s.id] * 100) + " %";
+      document.getElementById("d_" + s.id).setAttribute("aria-pressed", dbl[s.id] ? "true" : "false");
+    });
   }
 
-  // Feste Auswahl: Regelgüte über den ganzen Tag, Median aus 3 Testtagen
+  // ---- Aussagekraft je Kennzahl ----
+  // Wie eindeutig unterscheiden sich die Damping-Werte, verglichen mit der
+  // Schwankung zwischen den Testtagen? Zweifache Varianzanalyse (Damping x Testtag):
+  // F = Streuung zwischen den Damping-Werten / Reststreuung, Aussagekraft = 1 - 1/F (0..1).
+  function reliability(key) {
+    var S = ["1", "2", "3"], nD = DAMPINGS.length, nS = S.length, g = 0;
+    var x = S.map(function (sd) { return DATA[sd].map(function (r) { return r[key]; }); });
+    x.forEach(function (row) { row.forEach(function (v) { g += v; }); }); g /= nD * nS;
+    var sm = x.map(function (row) { return row.reduce(function (a, b) { return a + b; }, 0) / nD; });
+    var dm = DAMPINGS.map(function (_, j) { return x.reduce(function (a, row) { return a + row[j]; }, 0) / nS; });
+    var ssd = 0, res = 0;
+    dm.forEach(function (v) { ssd += nS * (v - g) * (v - g); });
+    x.forEach(function (row, i) { row.forEach(function (v, j) { var e = v - sm[i] - dm[j] + g; res += e * e; }); });
+    var msd = ssd / (nD - 1), mse = res / ((nD - 1) * (nS - 1));
+    if (mse === 0) return 1;
+    return Math.max(0, Math.min(1, 1 - mse / msd));
+  }
+  var REL = { quality: reliability("band"), export: reliability("export"), bezug: reliability("bezug"), writes: reliability("writes") };
+
+  // Feste Auswahl: Regelgüte über den ganzen Tag, Mittelwert aus 3 Testtagen
   var qualityEl = { value: "band" };
   var basisEl = { value: "median" };
 
@@ -458,11 +507,11 @@
       bezug: norm(rows, "bezug", false),
       writes: norm(rows, "writes", false)
     };
-    var wsum = weights.quality + weights.export + weights.bezug + weights.writes;
+    var wsum = wt("quality") + wt("export") + wt("bezug") + wt("writes");
     return rows.map(function (r, i) {
       if (wsum === 0) return 0;
-      return (weights.quality * parts.quality[i] + weights.export * parts.export[i] +
-              weights.bezug * parts.bezug[i] + weights.writes * parts.writes[i]) / wsum;
+      return (wt("quality") * parts.quality[i] + wt("export") * parts.export[i] +
+              wt("bezug") * parts.bezug[i] + wt("writes") * parts.writes[i]) / wsum;
     });
   }
   function winnerIdx(sc) {
@@ -609,7 +658,7 @@
   function update() {
     var basis = basisEl.value;
     var rows = DATA[basis];
-    var wsum = weights.quality + weights.export + weights.bezug + weights.writes;
+    var wsum = wt("quality") + wt("export") + wt("bezug") + wt("writes");
     var sc = score(rows);
     var win = winnerIdx(sc);
 
