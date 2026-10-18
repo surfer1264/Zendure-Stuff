@@ -19,13 +19,11 @@ ordentlich**
 
 ✅ Das Script liest die Akkudaten der angeschlossenen Akkus aus (`minVol`, `maxVol`, `socLevel`, Temperatur). Alle Packs eines Geräts werden automatisch gefunden (Temperatur des Hyper/Hubs ist ebenfalls dabei).
 
-✅ **NEU — Multi-Device:** Für zenSDK-Geräte kann eine **beliebige Anzahl Hubs** gleichzeitig überwacht werden (einfach als Liste in der Konfiguration eintragen). Das Script skaliert ohne Codeänderung von 1 auf N Geräte.
-
 ✅ **WARNUNG:** Wenn das `electricLevel` eines Geräts über die Vollschwelle steigt, wird eine Nachricht verschickt — **pro Gerät einzeln**, mit Label zur Identifikation.
 
 ✅ **WARNUNG:** Wenn `minVol` einer Zelle unter den Schwellwert fällt, wird eine Nachricht verschickt — **pro Gerät einzeln**.
 
-✅ **NEU — Übertemperatur:** Wenn die Geräte-Temperatur (Hyper/Hub) den Schwellwert überschreitet, wird ebenfalls eine eigene Warnung verschickt — pro Gerät einzeln.
+✅ **Übertemperatur:** Wenn die Geräte-Temperatur (Hyper/Hub) den Schwellwert überschreitet, wird ebenfalls eine eigene Warnung verschickt — pro Gerät einzeln.
 
 ✅ Alle Warnschwellen (Voll, Unterspannung, Temperatur) gelten **global für alle konfigurierten Geräte gleichermaßen** — es gibt bewusst keine Schwellwerte pro Gerät, um die Konfiguration einfach zu halten.
 
