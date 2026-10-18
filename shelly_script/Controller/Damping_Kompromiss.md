@@ -8,7 +8,28 @@ Diese Testumgebung lässt das echte Controller-Skript (`zdmc_test.js`) gegen ein
 
 ## Fazit: Regelung 5.2.0 im Simulator (Entwurf)
 
-Grundlage:
+Untersucht wurde der Einfluss des damping-Faktors aus Netzbezug, netzeinspiesung, Schreibvorgänge und Regelgüte (im Hystereseband).
+
+Von diesen vier Größen beeinflusst der dampingFactor die **Einspeisung am stärksten** und den **Netzbezug am wenigsten**. Vergleich von 0.4 mit 0.8:
+
+| Rang | Kennzahl | 0.4 | 0.8 | Änderung | Eindeutig? |
+|---|---|---|---|---|---|
+| 1 (größte Wirkung) | **Einspeisung** | 0,21 kWh | 0,35 kWh | **+67 %** | ja (99 %) |
+| 2 | **Schreibvorgänge** | 3575 | 4628 | **+29 %** | ja (100 %) |
+| 3 | **Regelgüte (im Band ±13 W)** | 57,4 % | 67,1 % | **+17 %** (+9,6 Punkte) | ja (100 %) |
+| 4 (geringste Wirkung) | **Netzbezug** | 1,04 kWh | 0,95 kWh | **−9 %** | nur bedingt (71 %) |
+
+Ein höherer Wert verbessert die Regelgüte also spürbar. Bezahlt wird das vor allem mit **mehr Einspeisung** und mehr **Schreibvorgängen**. Der Netzbezug sinkt nur wenig.
+
+🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
+stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
+Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
+Simulation am besten dazu passt. Sie rechnet mit einem simulierten, bewusst
+unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
+Werte untereinander verhalten. Die Tabelle oben bleibt der Ausgangspunkt für
+die eigene Anlage.
+
+**Grundlage:**
 - Damping-Matrix 2: 15 Läufe, 3 s Geräteverzögerung
 - Damping-Matrix 3: 12 Läufe (dampingFactor 0.4–0.8), zusätzlich Anlauf aus Standby (`START_DELAY_S=4`) und Kaffeevollautomat, ausgewertet mit `SAT_TOL_W=13`
 - Beispiel-Report (Abschnitt 8.2)
@@ -40,38 +61,6 @@ Grundlage:
 ### Was noch
 - **Lastverteilung und Ausgleich funktionieren.** Ein Gerät deckt kleine Lasten allein, bei großen Lasten liefern beide. Die SoC-Werte gleichen sich über den Tag an.
 - **Volle Akkus:** Ist ein Gerät voll, nimmt das andere den PV-Überschuss über AC auf. Das Netz bleibt bei 0 W.
-
-### Empfehlung und Spielen für `dampingFactor`
-
-| Situation | Empfohlener Wert |
-| --- | --- |
-| Standard (`gridSource: "local"`, `interval` 4000 ms) | **0,6–0,7**, Default `0.65` |
-| `gridSource: "remote"` oder `"http_json"`, oder 3 und mehr Geräte | **0,5–0,6** |
-| `interval` 3000 ms | **0,6** |
-
-**Über 0,7 lohnt sich selten.** In der Simulation verbessert 0,8 gegenüber
-0,65 die Regelgüte nur wenig (+2,7 Prozentpunkte im Band ±13 W). Die
-Energiebilanz (Bezug + Export) wird nicht besser, die Zahl der
-Schreibvorgänge steigt um rund 14 %. Bei schnell taktenden Lasten
-(Induktion) hilft ein höherer Wert gar nicht. Schnelle Reaktion auf
-Lastabwurf liefert seit 5.1.8 ohnehin die schnelle Flanke (`JUMP_FACTOR`),
-nicht ein hoher `dampingFactor`.
-
-Grundlage ist eine Simulation mit 4 s Takt, 1 s Schreiblaufzeit, 3 s Rampe
-und zusätzlicher Anlaufzeit, wenn ein Gerät aus dem Standby startet (siehe
-[Changelog](CHANGELOG.md) 5.1.8 und 5.2.0 sowie
-[Damping/Simulation](Damping_Kompromiss.md)). Bei `remote` und `http_json`
-kommt der Messwert mit zusätzlicher Verzögerung an, bei mehreren Geräten
-dauert ein Zyklus länger. In beiden Fällen ist der Regelkreis träger, und
-eine stärkere Dämpfung verhindert Überschwingen.
-
-🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
-stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
-Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
-Simulation am besten dazu passt. Sie rechnet mit einem simulierten, bewusst
-unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
-Werte untereinander verhalten. Die Tabelle oben bleibt der Ausgangspunkt für
-die eigene Anlage.
 
 ---
 
