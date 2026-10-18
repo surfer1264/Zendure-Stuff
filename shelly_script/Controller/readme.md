@@ -159,4 +159,4 @@ Bequemer geht es mit dem Helfer: „🔍 Speicher prüfen“ und „Log aufzeich
 | [`CHANGELOG.md`](CHANGELOG.md) | Änderungen je Version |
 | [`Deploy`](Deploy) | eigene Deploy-Pipeline, siehe [oben](#für-fortgeschrittene-mit-deploycmd) |
 | [`yaml`](yaml) | Beispiel für Home Assistant: liest die KVS-Werte des Controllers per REST (`rest.yaml`), schreibt sie per `rest_command` zurück (`rest_commands.yaml`) und stellt sie als Regler bereit (`template/kvs.yaml`). Die IP `192.168.178.117` durch die deines Controller-Shellys ersetzen. `configuration.yaml` bindet in Home Assistant den Ordner `templates/` ein (`!include_dir_merge_list templates/`) – dorthin gehört die Datei `kvs.yaml` aus dem Repository-Ordner `template`. Hintergrund: [Kapitel 13.6](gesamtdoku.md#136-nutzung-über-home-assistant) |
-| [`perf`](perf) | Arbeitsstand für Speicher- und Laufzeitmessungen (Entwicklung), nicht zum Hochladen |
+
