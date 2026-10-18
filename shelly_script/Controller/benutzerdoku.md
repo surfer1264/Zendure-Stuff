@@ -86,21 +86,26 @@ Kurz gesagt: `reverse` ist *deine* Entscheidung, ob ein Gerät laden darf. `socL
 ## 5) Häufige Aufgaben – "Ich möchte …"
 
 ### … ein weiteres Gerät hinzufügen
+
 1. Kopiere im Script einen kompletten Geräteblock (`{ ... }`) und füge ihn mit Komma getrennt in `CONFIG.devices` ein.
 2. Trage mindestens die `ip` des neuen Geräts ein, gib ihm einen eigenen `label`.
 3. Passe `minSoc`, `maxOutput` etc. an das jeweilige Gerät an.
 4. Starte das Script neu – der Rest passt sich automatisch an die neue Geräteanzahl an.
 
 ### … ein Gerät nur laden lassen, nie entladen
+
 Setze bei diesem Gerät `dischargeAllowed: false` und `reverse: true`. So wird es nie zum Entladen herangezogen, kann aber weiterhin laden – praktisch, um ein Gerät gezielt für das Laden zu reservieren.
 
 ### … ein Gerät nie aus dem Netz laden lassen
+
 Setze `reverse: false`. Das Gerät wird dann nie zum Laden benutzt (z. B. wenn es nur mit Solarstrom laden soll).
 
 ### … Neues testen, ohne dass etwas passiert
+
 Setze bei dem betreffenden Geräteeintrag `dryRun: true`. Du siehst im Log, was der Controller *tun würde*, ohne dass real etwas geschrieben wird.
 
 ### … benachrichtigt werden, wenn etwas nicht funktioniert
+
 Trage im Bereich `signal` deine Zugangsdaten ein und setze `enabled: true`:
 
 ```js
@@ -114,14 +119,17 @@ signal: {
 Für Signal/WhatsApp brauchst du zusätzlich einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com). Du bekommst dann eine Meldung, wenn ein Fehler mehrfach hintereinander auftritt – und eine zweite, sobald er behoben ist.
 
 ### … Werte ändern, ohne den Controller neu zu starten
+
 Dafür gibt es die **KVS-Live-Override-Funktion**: Damit kannst du z. B. per Kommandozeile oder aus Home Assistant heraus einzelne Werte (Sollwert, ob ein Gerät laden/entladen darf) live ändern, während der Controller läuft. Aktiviere dazu `kvsEnabled: true` im Script. Details und Beispiele (curl-Befehle, Home-Assistant-Einbindung) findest du in der ausführlichen Dokumentation, Kapitel 13.
 
 ⚠️ Diese Funktion schreibt in den internen Speicher des Shelly – nutze sie nur bei echter Bedienung durch dich, nicht automatisiert/zyklisch, damit der Speicher nicht unnötig verschleißt.
 
 ### … sicherstellen, dass mein Akku weder leer noch überlastet wird
+
 Das steuerst du über `minSoc` (untere Grenze fürs Entladen) und `maxSoc` (obere Grenze fürs Laden) – für jedes Gerät einzeln einstellbar. Diese Werte werden beim Start automatisch an dein Zendure-Gerät übertragen.
 
 ### … prüfen, ob mein Smartmeter richtig eingebunden ist
+
 Siehe "Vorzeichen prüfen" in Schritt 3 – lade kurz mehr Strom im Haus und beobachte, ob der Netzwert im Log wie erwartet ansteigt.
 
 ---
@@ -131,21 +139,27 @@ Siehe "Vorzeichen prüfen" in Schritt 3 – lade kurz mehr Strom im Haus und beo
 Du musst das Log nicht auswendig lernen – hier die wichtigsten Zeilen kurz erklärt:
 
 **Zyklus-Kopfzeile** (einmal pro Regeltakt):
+
 ```
 Netzsaldo: -4 W | Ist-Summe: 387 W | Regelsignal: 384 W | Ladekorrektur: 0 W
 ```
+
 → *Netzsaldo* ist dein aktueller Netzbezug (negativ = du speist ein). *Regelsignal* ist, was der Controller insgesamt gerade tun will.
 
 **Pro-Geräte-Zeile:**
+
 ```
 SF2400Pro: SOC 88% | socL 0 | gridR 1 | Ist 523 W | Soll 799 W | acMode 2 (Export)
 ```
+
 → Zeigt Ladestand (`SOC`), gemeldete Sperren (`socL`, `gridR`, siehe Kapitel 4), tatsächliche (`Ist`) und geplante (`Soll`) Leistung sowie die Richtung (`acMode`: 1 = Laden/Ruhe, 2 = Entladen/Export).
 
 **Fehlermeldungen** sehen so aus:
+
 ```
 FEHLER (<Gerät>/connect): Geraet nicht erreichbar - aufeinanderfolgende Fehler: 3
 ```
+
 → Taucht ein Gerät hier mehrfach auf, prüfe zuerst IP-Adresse und Netzwerkverbindung. Nach mehreren Fehlern in Folge (Standard: 5) bekommst du – falls aktiviert – automatisch eine Benachrichtigung.
 
 ---

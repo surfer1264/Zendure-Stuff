@@ -63,7 +63,6 @@ The functions can be combined freely – for example, zenDash-API and Watchdog c
 
 <img width="892" height="978" alt="image" src="https://github.com/user-attachments/assets/86350077-8c76-42a8-8348-90ed8662dd67" />
 
-
 The configurator is available in **German, English and French**.
 
 ---

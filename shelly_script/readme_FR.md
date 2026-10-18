@@ -52,4 +52,3 @@ Le **[tableau de bord](zendash_watch_API_ZenSDK/dashboard.md)** (allemand) est l
 | **KVS** | stockage clé-valeur dans le Shelly pour les réglages modifiables en cours de fonctionnement (p. ex. depuis le tableau de bord) |
 
 Plus d'informations dans la [vue d'ensemble du système (S-Z-S-C-S)](szscs_FR.md).
-

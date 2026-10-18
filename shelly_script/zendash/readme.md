@@ -9,10 +9,6 @@ Screenshot
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/37575e2e-1564-44df-b77b-5641f87a4af6" />
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/79a3acfa-5e91-43cc-b358-97fbfe1b2a0c" />
 
-
-
-
-
 # Zendure Grid Dashboard — Inbetriebnahme
 
 Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly Multi Device Controller** (`zerooutput_multi_kvs.js`) — das Dashboard steuert ihn nur, es ersetzt ihn nicht.
@@ -24,7 +20,6 @@ Drei Dateien gehören zusammen. Voraussetzung ist ein bereits laufender **Shelly
 | `zendure-dashboard.html` | im Browser | Anzeige + Regelparameter setzen |
 
 `zendure_proxy.py` und `zendure-dashboard.html` gehören in **ein gemeinsames Verzeichnis** auf einem Rechner mit **Python**.
-
 
 ## Getting Started (für die ganz Schnellen)
 
@@ -87,11 +82,13 @@ Ist kein zweiter Shelly verfügbar, läuft die zusammengelegte Variante weiter. 
 3. Speichern, **„Run on startup"** aktivieren, Script starten.
 4. **Die Script-ID notieren** (steht in der Shelly-Scripts-Übersicht, z. B. `id: 2`) — die braucht der Proxy gleich.
 5. Kurzer Test direkt im Browser (Adresszeile, keine Datei nötig):
+
     ```
     http://<shelly-ip>/script/<script-id>/config_api
     http://<shelly-ip>/script/<script-id>/status_api
     ```
-   Beide sollten JSON liefern. Falls nicht: siehe Troubleshooting unten.
+
+    Beide sollten JSON liefern. Falls nicht: siehe Troubleshooting unten.
 
 ## 4) Proxy konfigurieren und starten
 
@@ -109,6 +106,7 @@ Beide Dateien (`zendure_proxy.py`, `zendure-dashboard.html`) müssen im selben O
 ```bash
 python3 zendure_proxy.py
 ```
+
 <img width="749" alt="image" src="https://github.com/user-attachments/assets/6e57b539-54f3-43a7-ad06-765ef67f1262" />
 
 Danach im Browser öffnen:
@@ -138,15 +136,20 @@ Der Proxy bedient Anfragen nebenläufig (`ThreadingHTTPServer`). Ohne das würde
 Ein Laptop, den man zuklappt, taugt nicht als Dauerläufer. Auf einer Synology geht es so:
 
 1. **Python prüfen.** DSM bringt meist schon eines mit:
+
     ```bash
     which python3 && python3 --version
     ```
-   Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+
+    Ab 3.7 reicht es — der Proxy nutzt nur die Standardbibliothek, es muss nichts nachinstalliert werden. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+
 2. **Dateien ablegen.** `zendure_proxy.py` und `zendure-dashboard.html` in denselben Ordner, z. B. `/volume1/homes/<benutzer>/zendure`. Nicht in den `web`-Ordner — der gehört der Web Station.
 3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
+
     ```bash
     /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
     ```
+
 4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
 5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
 
@@ -285,5 +288,3 @@ Alle Regelparameter werden per Shelly-KVS gesetzt und wirken beim nächsten Rege
 |---|---|---|
 | „out of memory", eines der beiden Scripte stürzt ab | Regel-Script und API-Script teilen sich den Variablenpool und fragen dieselben Hubs ab | API-Script auf einen eigenen Shelly umziehen (`kvsHost` auf die 3EM-IP, `gridSource: "remote"`). Als Zwischenlösung `pollIntervalSec` erhöhen |
 | `memPeak` deutlich höher als `memUsed` | Normal | `memPeak` ist der Höchststand seit Scriptstart und sinkt nie von selbst. Werte um 10 kB sind bei 25–30 kB Budget unkritisch. Für eine ehrliche Messung das Script neu starten |
-
-

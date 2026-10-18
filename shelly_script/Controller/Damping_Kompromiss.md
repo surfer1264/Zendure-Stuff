@@ -30,27 +30,46 @@ stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
 Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
 Simulation am besten dazu passt. Sie rechnet mit einem simulierten, bewusst
 unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
-Werte untereinander verhalten. 
+Werte untereinander verhalten.
 
 **Grundlage:**
 
 - Damping-Matrix: 12 Läufe (dampingFactor 0.4–0.8), zusätzlich Anlauf aus Standby (`START_DELAY_S=4`)
+- Gegenprobe mit langsameren Geräten: 12 Läufe mit 1,5 s Schreiblaufzeit und 3,2 s Rampe (`WRITE_LAG_S=1.5`, `DEVICE_DELAY_S=3.2`)
 - Tagesprofil 14h, Waschmaschine, Induktionsherd, Kühlschrank, Kaffeevollautomat
 - Beispiel-Report [doku/beispiel_report.html](doku/beispiel_report.html)
 - zwei echte Tageslogs (11.10. mit 5.1.7, 15.10.)
 
+Alle Zahlen im Fazit sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wie auf der Damping-Seite. `matrix_ergebnis.md` zeigt stattdessen den Median, die Werte weichen deshalb leicht ab.
+
 ### Regelgüte (qualitativ)
+
 - **Stabil:** In keinem der 15 Läufe hat sich die Regelung aufgeschaukelt, bei keinem Damping-Wert von 0.4 bis 0.8. Der Controller rechnet vom Ist-Wert der Geräte aus, nicht vom alten Sollwert.
 - **Ruhige Phasen:** Der Netzwert liegt meist eng um 0 W, Abweichungen über 50 W sind selten (Matrix 3: 0,8–1,1 % der Zyklen, an allen Testtagen gleich). Das gilt trotz eines bewusst unruhigen Haushalts.
 - **Damping verschiebt, statt zu verschlechtern:** Höheres Damping regelt schneller nach, verschiebt die Abweichung aber von Bezug zu Export und braucht mehr Schreibvorgänge. Bezug + Export bleiben fast gleich.
-- **Reihenfolge der Damping-Werte stabil:** In Matrix 3 steigt der Anteil im Band von 0.4 bis 0.8 an jedem Testtag, über den ganzen Tag und in ruhigen Phasen (Median: 57,7 → 61,7 → 64,6 → 67,3 %).
+- **Reihenfolge der Damping-Werte stabil:** In Matrix 3 steigt der Anteil im Band von 0.4 bis 0.8 an jedem Testtag, über den ganzen Tag und in ruhigen Phasen (Mittelwert der 3 Testtage: 57,4 → 61,9 → 64,9 → 67,1 %).
 - **Sättigung (Matrix 3: 6–7 %)** entsteht an Kapazitätsgrenzen: morgens minSoc, abends maximale Abgabe, oder ein Gerät steht weniger als die Hysterese unter seinem Maximum, während das andere leer ist. Das ist kein Regelfehler.
 
 ### Zeitverhalten
+
 - **Reaktion der Geräte realistisch nachgebildet:** 4-s-Takt, Schreiblaufzeit 1 s, Rampe 3 s und Anlauf aus dem Standby (+1 Takt). Beides ist an echten Logs überprüft.
 - **Schnelle Flanke wirkt:** Bei großem Lastabfall reagiert der Controller sofort mit Faktor 0.9. Der Export danach ist kurz und bei allen Damping-Werten gleich.
 - **Anlauf aus Standby und Kaffeevollautomat (Matrix 3 gegen Matrix 2):** Netzbezug +0,13 bis +0,20 kWh (der Kaffeevollautomat allein bringt 0,15 kWh Last am Tag), Export gleich, Schreibvorgänge leicht weniger (−65 bis −138).
-- **Robust:** Matrix 2: 0 Fehler in 15 Läufen. Matrix 3: alle 12 Läufe vollständig (Exit 0). Übersprungene Takte kommen vom beschleunigten Test, nicht vom Regler.
+- **Langsamere Geräte ändern die Empfehlung nicht:** Gegenprobe mit 1,5 s Schreiblaufzeit + 3,2 s Rampe = 4,7 s, also länger als der Takt von 4 s (vorher 1 s + 3 s = 4 s). Mittelwerte der 3 Testtage:
+
+    | dampingFactor | im Band | Band ruhig | Waschmaschine > 50 W | Bezug / Export |
+    |---|---|---|---|---|
+    | 0.4 | 57,4 → 56,3 % | 65,9 → 64,7 % | 63,5 → 71,6 % | +0,02 / +0,02 kWh |
+    | 0.5 | 61,9 → 60,8 % | 70,6 → 69,5 % | 61,2 → 70,7 % | +0,03 / +0,02 kWh |
+    | 0.65 | 64,9 → 64,2 % | 73,8 → 73,1 % | 54,0 → 64,6 % | +0,03 / +0,03 kWh |
+    | 0.8 | 67,1 → 66,6 % | 75,7 → 75,5 % | 50,4 → 60,3 % | +0,04 / +0,03 kWh |
+
+    - Kein Aufschaukeln, obwohl die Geräte zur nächsten Messung noch nicht fertig sind.
+    - Über den Tag nur 0,5–1,2 Punkte weniger im Band. Deutlich spürbar ist es nur bei wechselnden Lasten (Waschmaschine: 8–11 Punkte mehr über 50 W).
+    - Höheres Damping verliert im Alltag weniger (0.8: −0,5 Punkte, 0.4: −1,2 Punkte). Bei der Waschmaschine fällt 0.8 dagegen am stärksten (im Band 21,2 → 17,3 %).
+    - Schreibvorgänge unverändert, Reihenfolge der Damping-Werte an jedem Testtag gleich.
+
+- **Robust:** Matrix 2: 0 Fehler in 15 Läufen. Matrix 3 und Gegenprobe: alle Läufe vollständig (Exit 0). Übersprungene Takte kommen vom beschleunigten Test, nicht vom Regler.
 
 ### Ausreißer: Wo die Regelung an Grenzen kommt
 
@@ -63,6 +82,7 @@ Werte untereinander verhalten.
 | Akkus leer (minSoc) | Bezug in Höhe der Hauslast | Entladesperre, gewollt |
 
 ### Was noch
+
 - **Lastverteilung und Ausgleich funktionieren.** Ein Gerät deckt kleine Lasten allein, bei großen Lasten liefern beide. Die SoC-Werte gleichen sich über den Tag an.
 - **Volle Akkus:** Ist ein Gerät voll, nimmt das andere den PV-Überschuss über AC auf. Das Netz bleibt bei 0 W.
 
@@ -346,12 +366,14 @@ Ohne `SCENARIO` und ohne `NOISE_SEED` rechnet der Mock ohne Rauschen. Das Ergebn
 | `induktion` | `start`, `dauer`, `leistungW`, `stufe`, `periodeS` oder `stufen` | Takten zwischen 0 und leistungW (±5 %), Anteil „an“ = stufe, plus 25 W Lüfter; `stufe` 1.0 = Dauerleistung |
 
 Mit `stufen` lässt sich die Kochstufe während des Ereignisses ändern:
+
 ```json
 "stufen": [ { "abMin": 0, "stufe": 1.0 },
             { "abMin": 5, "stufe": 0.5, "periodeS": 8 } ]
 ```
 
 **Zufällige Ereignisse** (`zufallsEvents`) werden je Tag aus dem Seed in ein Zeitfenster gelegt:
+
 ```json
 { "typ": "wasserkocher", "anzahlProTag": 2, "von": "14:00", "bis": "22:00", "dauer": 3, "leistungW": 2000 }
 ```
@@ -369,6 +391,7 @@ Neue Zufallsereignisse immer **ans Ende** der Liste setzen. Der Zufall hängt an
 Zufallsereignisse können sich überlagern, zum Beispiel ein Kaffeevollautomat während der Waschmaschine. Im Report zählt ein Zyklus dann zu dem Fenster, das in dieser Reihenfolge zuerst kommt: Waschmaschine, Induktion, Wasserkocher, Kaffeevollautomat, sonstige. In der Matrix zählt der Kaffeevollautomat allein zu „sonstige“, nicht zu „ruhig“.
 
 Beim Start schreibt der Mock den Ereignisplan des ersten Tages ins Log:
+
 ```
 [mock] Rauschmodell: an | Szenario "werktag" | Seed 42 | Teilschritt 1.00 s (4 je Schritt) | ...
 [mock]   Ereignis Tag 0: waschmaschine 10:00-11:00 (60 min)
@@ -407,13 +430,16 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 
 1. In `matrix_damping.cmd` `DAMPINGS`, `SEEDS`, `PARALLEL`, `CYCLES` und `SPEED_FACTOR` setzen.
 2. Starten. Im Konsolenfenster erscheint:
+
     ```
     [matrix] 12 Laeufe (Damping 0.5/0.65/0.7/0.8 x Seeds 1/2/3), parallel 3 -> ...\Matrix-261017-220145
     [matrix] Start  seed 1 damping 0.5 (Port 3901)
     ...
     [matrix] Fertig seed 1 damping 0.5 nach 597 s (Exit 0)
     ```
-   `Exit 0` = Lauf vollständig. Am Ende wird die Ergebnistabelle angezeigt.
+
+    `Exit 0` = Lauf vollständig. Am Ende wird die Ergebnistabelle angezeigt.
+
 3. Ergebnis im Ordner `Matrix-<Datum-Uhrzeit>`:
     - `matrix_ergebnis.md`: eine Zeile je Damping, Median über die Seeds
     - `matrix_laeufe.csv`: eine Zeile je Lauf

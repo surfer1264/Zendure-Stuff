@@ -8,8 +8,6 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/b6a8b3ed-5828-4f12-9628-eee2a1e03df8" />
 
-
-
 **Sommaire**
 
 - [Comment tout cela s'articule](#comment-tout-cela-sarticule)
@@ -250,15 +248,20 @@ Pour chaque fichier, la [page des releases](https://github.com/surfer1264/Zendur
 ## Fonctionnement permanent sur un Synology
 
 1. **Vérifier Python.** DSM en fournit généralement un :
+
     ```bash
     which python3 && python3 --version
     ```
-   La version 3.7 ou plus suffit – le proxy n'utilise que la bibliothèque standard. L'interpréteur se trouve souvent sous `/bin/python3`. Si rien ne s'affiche, installer **Python 3** depuis le Centre de paquets ; le chemin est alors `/var/packages/Python3*/target/bin/python3`.
+
+    La version 3.7 ou plus suffit – le proxy n'utilise que la bibliothèque standard. L'interpréteur se trouve souvent sous `/bin/python3`. Si rien ne s'affiche, installer **Python 3** depuis le Centre de paquets ; le chemin est alors `/var/packages/Python3*/target/bin/python3`.
+
 2. **Déposer les fichiers.** `zendure_proxy.py` dans un dossier dédié, p. ex. `/volume1/homes/<utilisateur>/zendure`, et `zendure-dashboard.html` à côté ou un niveau au-dessus. Pas dans le dossier `web` – il appartient à Web Station.
 3. **Créer une tâche.** Panneau de configuration → Planificateur de tâches → Créer → **Tâche déclenchée** → Script défini par l'utilisateur. Événement **Démarrage**, utilisateur **root**, et comme commande le chemin complet :
+
     ```bash
     /bin/python3 /volume1/homes/<utilisateur>/zendure/zendure_proxy.py -q
     ```
+
 4. **Lancer tout de suite**, sans redémarrer : sélectionner la tâche → **Exécuter**.
 5. **Pare-feu.** S'il est actif sous Panneau de configuration → Sécurité → Pare-feu, créer une règle pour TCP **8000**. Le port 8000 n'entre pas en conflit avec DSM lui-même (5000/5001).
 6. **Configurer.** Depuis un PC ou un téléphone, ouvrir `http://<IP-du-Synology>:8000/` et saisir IP et numéro de script comme à l'[étape 4](#le-tableau-de-bord-en-4-étapes).

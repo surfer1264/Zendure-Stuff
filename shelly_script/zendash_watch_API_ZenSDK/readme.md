@@ -29,7 +29,6 @@ ordentlich**
 
 ✅ **STATUS:** Sendet zum Sonnenaufgang (`+Offset`) und zum Sonnenuntergang (`+Offset`) **eine einzige Sammel-Nachricht für alle Geräte gemeinsam**. Jede Zeile zeigt SOC, Geräte-Temperatur und die kleinste Zellspannung eines Geräts, identifiziert über die letzten 4 Zeichen seiner Seriennummer. Die Zeilenlänge pro Gerät ist fest, dadurch bleibt die Nachricht auch bei vielen Geräten kurz und wird nicht zum Problem für Messenger-APIs mit Längenlimits (mehr dazu unten unter „Beispielausgaben“).
 
-
 Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 
 ---
@@ -384,6 +383,7 @@ Setze `debug: true` und starte das Script neu – oder setze im Configurator bei
 - Versand jeder Nachricht
 - die Speicherbelegung an den wichtigsten Stellen
 - bei jeder Watchdog-Runde eine Zeile je Speicher mit allen Akkupacks, zum Beispiel:
+
     ```
     [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
     ```

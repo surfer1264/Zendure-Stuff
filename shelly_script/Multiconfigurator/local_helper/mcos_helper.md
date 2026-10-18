@@ -10,18 +10,25 @@ Die Datei (`zendure_local_helper-macos`) hat keine Dateiendung und wird vom Brow
 
 1. **Terminal öffnen** (Programme → Dienstprogramme → Terminal).
 2. **In den Download-Ordner wechseln:**
+
     ```bash
     cd ~/Downloads
     ```
+
 3. **Ausführbar machen:**
+
     ```bash
     chmod +x zendure_local_helper-macos
     ```
+
 4. **Quarantäne-Markierung entfernen** (sonst blockiert Gatekeeper die unsignierte Datei):
+
     ```bash
     xattr -d com.apple.quarantine zendure_local_helper-macos
     ```
+
 5. **Starten:**
+
     ```bash
     ./zendure_local_helper-macos
     ```

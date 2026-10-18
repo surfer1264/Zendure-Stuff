@@ -353,6 +353,7 @@ Set `debug: true` and restart the script – or tick "Debug-Ausgaben" (debug out
 - sending of every message
 - memory usage at the most important points
 - in each watchdog round, one line per battery with all battery packs, for example:
+
     ```
     [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
     ```

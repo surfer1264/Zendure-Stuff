@@ -20,7 +20,6 @@ Die ausführliche Anleitung (auch zu Update, Shelly-Wechsel und Fehlermeldungen)
 
 Zwei Shellys, ein Smartmeter und zenSDK-fähige Speicher – welche Geräte passen, steht unter **[Kompatible Geräte](kompatible_geraete.md)**. Wie viele Speicher das Dashboard-Script verkraftet, zeigt die [Speicherbedarfsbetrachtung](zendash_speichermodell.md).
 
-
 ## So ist das System aufgebaut
 
 | Shelly | Script | Aufgabe |
@@ -42,7 +41,6 @@ Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webse
 | [testController](testController/README.md) | Test-Umgebung für den Controller (für Entwickler) |
 | [thingsboard](thingsboard) | fertige Dashboards und Regelketten zum Import in ThingsBoard, passend zum [ThingsBoard-Upload](zendash_watch_API_ZenSDK/thingsboard.md) |
 | [Einordnung](Einordnung.md) | Vergleich mit anderen Multi-Device-Lösungen (ioBroker, Z-HA, EMS SolarFlow …) |
-
 
 ## Begriffe
 

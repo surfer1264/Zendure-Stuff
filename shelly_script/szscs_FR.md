@@ -75,6 +75,7 @@ Le Controller tourne sur n'importe quel Shelly et lit le compteur intelligent vi
 <img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
 
 ---
+
 ## 👉 Pour commencer
 
 Télécharger l'assistant, répondre aux questions, charger – en 10 minutes ta régulation tourne. Les trois étapes sont sur la **[page d'accueil](readme_FR.md#-commencer-ici)**, les instructions détaillées dans le **[configurateur](Multiconfigurator/readme_FR.md)**.

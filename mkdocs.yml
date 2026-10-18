@@ -61,7 +61,7 @@ nav:
         - API-Referenz: zendash_watch_API_ZenSDK/API.md
       - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
   - Werkzeuge:
-      - Script-Minitor: Script_poller/readme.md
+      - Script-Monitor: Script_poller/readme.md
   - Hintergrund:
       - Vergleich mit anderen Lösungen: Einordnung.md
 

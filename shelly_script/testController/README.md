@@ -80,16 +80,19 @@ nodejs.org installieren, Terminal neu öffnen, mit `node -v` prüfen.
 3. Test starten:
 
 **Mac/Linux:**
+
 ```bash
 SPEED_FACTOR=150 STEP_MIN=0.05 CYCLES=28800 INTERVAL_MS=3000 START_SOC=50 LOAD_SCALE=1 node run_test.js
 ```
 
 **PowerShell:**
+
 ```powershell
 $env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=28800; $env:INTERVAL_MS=3000; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js
 ```
 
 **Windows CMD:**
+
 ```cmd
 set SPEED_FACTOR=150&&set STEP_MIN=0.05&&set CYCLES=28800&&set INTERVAL_MS=3000&&node run_test.js
 ```
@@ -114,10 +117,12 @@ set SPEED_FACTOR=150&&set STEP_MIN=0.05&&set CYCLES=28800&&set INTERVAL_MS=3000&
 - **Schneller grober Überblick:** `STEP_MIN=15` + `CYCLES=96` (ohne `SPEED_FACTOR`, läuft in ~5 Min.)
 - **Fleet-Lock (`gridReverse=2`) gezielt provozieren:** `LOAD_SCALE=0.05` + `START_SOC=85`, kombinierbar mit einem der beiden obigen
 - **2-Stunden-Test ab 08:00:**
+
     ```powershell
     $env:SPEED_FACTOR=150; $env:STEP_MIN=0.05; $env:CYCLES=2400; $env:INTERVAL_MS=3000; $env:START_MIN=480; $env:START_SOC=50; $env:LOAD_SCALE=1; node run_test.js
     ```
-  Achtung: `START_SOC=50` ist hier eine Vereinfachung – nach einer echten Nacht wären die Akkus um 08:00 realistischerweise eher schon niedriger (Richtung `minSoc`). Für einen wirklich realitätsnahen Ausschnitt entweder `START_SOC` niedriger ansetzen (z. B. 20–25) oder einen vollen Tag ab 00:00 laufen lassen und den Bereich `minute` 480–600 aus der CSV filtern.
+
+    Achtung: `START_SOC=50` ist hier eine Vereinfachung – nach einer echten Nacht wären die Akkus um 08:00 realistischerweise eher schon niedriger (Richtung `minSoc`). Für einen wirklich realitätsnahen Ausschnitt entweder `START_SOC` niedriger ansetzen (z. B. 20–25) oder einen vollen Tag ab 00:00 laufen lassen und den Bereich `minute` 480–600 aus der CSV filtern.
 
 ## Geschwindigkeit: läuft das in Echtzeit? Kann man beschleunigen?
 
@@ -143,9 +148,11 @@ bevor die (realen, aber sehr schnellen) HTTP-Roundtrips zum Mock fertig sind.
 ## Wichtig: STEP_MIN und Hold-Timer müssen zusammenpassen
 
 Das Original-Skript berechnet einmal beim Start:
+
 ```
 CONCENTRATE_HOLD_CYCLES = round(concentrateHoldMinutes * 60000 / CONFIG.interval)
 ```
+
 Bei `interval: 3000` und `concentrateHoldMinutes: 3` sind das **60 Zyklen**.
 Ist `STEP_MIN` zu groß, springt die simulierte Umgebung während dieser 60
 Zyklen viel zu weit voran – Beispiel `STEP_MIN=15`: `60 × 15 = 900`
@@ -154,11 +161,13 @@ simulierte Minuten (15 Stunden!) vergehen, während der Regler intern
 schnell wechselnde Welt statt auf die geplanten 3 Minuten.
 
 **Kalibrierte Faustformel für Fidelity:**
+
 ```
 STEP_MIN ≈ concentrateHoldMinutes / CONCENTRATE_HOLD_CYCLES
          = 3 / 60 = 0.05   (bei interval = 3000 ms)
 CYCLES   = 1440 / STEP_MIN   (für einen kompletten simulierten Tag)
 ```
+
 Das ergibt viele Zyklen (28800 für einen Tag) – dank `SPEED_FACTOR` bleibt
 die reale Laufzeit trotzdem überschaubar:
 `28800 × max(15ms, 3000/150) ≈ 28800 × 20ms ≈ 9,6 Minuten`.
@@ -259,10 +268,12 @@ anzusprechen statt den Mock-Server.
 Verbindung zu den Geräten wird umgeleitet.
 
 **Workflow für jede neue Version:**
+
 ```bash
 node patch_for_mock.js neue_version.js zdmc_test.js
 node run_test.js
 ```
+
 Kein manuelles Editieren mehr nötig. `zdmc_test.js` bleibt danach stabil –
 `run_test.js` kannst du beliebig oft mit unterschiedlichen Env-Vars erneut
 laufen lassen, ohne erneut zu patchen. Nur bei mehr als 2 Geräten oder neuen
@@ -301,6 +312,7 @@ aus dem Log: Anzahl Rebalancing-/Modus-Wechsel-Ereignisse und **neue**
 ```bash
 node run_test.js > testlauf.log
 ```
+
 Die Konsolen-Ausgabe **ja** – das sind 1:1 die `print()`-Zeilen des
 unveränderten Skripts, genau wie auf der echten Shelly-Konsole.
 
@@ -317,6 +329,7 @@ Alles läuft in **einem** Node-Prozess (`run_test.js`), in zwei getrennten
 Rollen:
 
 **1. Start-Reihenfolge**
+
 ```
 run_test.js
  ├─ startet sofort: mock_server.js (http.createServer auf Port 3900)
@@ -335,6 +348,7 @@ Das Skript selbst merkt nichts von der Simulation – für den Code sieht es
 aus wie ein Shelly mit HTTP-Geräten im Netz.
 
 **3. Ein Regelzyklus (unverändert im Original-Skript)**
+
 ```
 Timer.set(interval, true, update)
   → readGridPower()      GET /grid/properties/report
@@ -430,8 +444,6 @@ sowie der Effekt von `LOAD_SCALE`:
 [PVKurve](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController/pv_curves.html)
 
 [Hauslast](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/testController/hauslast_curves.html)
-
-
 
 ## Bekannte Vereinfachungen des Mocks
 

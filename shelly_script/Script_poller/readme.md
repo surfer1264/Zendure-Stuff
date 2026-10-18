@@ -33,7 +33,6 @@ Relevante Dateien sind
 und
 das eigentliche Script `Shelly_Script_Status_poller.py`.
 
-
 ### Script ausführen
 
 ```bash
@@ -86,7 +85,6 @@ Bei Verbindungsfehlern bleiben die Status-Felder leer, `error` enthält die Meld
 Geht von einem offenen, unauthentifizierten lokalen Netz aus – kein Basic/Digest-Auth-Support.
 
 ---
-
 
 ## 2) Shelly WebSocket Log Grabber
 
@@ -154,7 +152,8 @@ Starte das Skript im Terminal:
 python3 shelly_log_grabber.py --config config_log_grabber.json
 ```
 
-#### Ausgabe-Beispiel (Controller):
+#### Ausgabe-Beispiel (Controller)
+
 ```text
 [2026-09-27 13:43:27] [Script 1] Netzsaldo: 27 W | Ist-Summe: 0 W | Regelsignal: 18 W | Ladekorrektur: 0 W
 [2026-09-27 13:43:27] [Script 1] SF2400: Leistung gesetzt: 18 W (Export, smartMode 1)
@@ -162,8 +161,8 @@ python3 shelly_log_grabber.py --config config_log_grabber.json
 ```
 
 ### Testen
-Schau dir die geschriebenen Log-Dateien unbedingt einmal an – jede Shelly-Firmware hat ihre Eigenheiten.
 
+Schau dir die geschriebenen Log-Dateien unbedingt einmal an – jede Shelly-Firmware hat ihre Eigenheiten.
 
 ---
 

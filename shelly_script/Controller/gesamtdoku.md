@@ -25,8 +25,8 @@ Zendure-Geräten im lokalen Netz.
 > **Achtung:** Ihr betreibt den Controller auf eigene Gefahr ⚠️ und Verantwortung.
 > Der Betrieb entbindet Euch nicht von der Einhaltung regulatorischer Regeln
 
-
 ## Inhaltsverzeichnis
+
 - [Zendure Multi-Device Controller – Gesamtdokumentation](#zendure-multi-device-controller--gesamtdokumentation)
     - [Inhaltsverzeichnis](#inhaltsverzeichnis)
     - [1) Zweck](#1-zweck)
@@ -87,8 +87,6 @@ Zendure-Geräten im lokalen Netz.
         - [13.6) Nutzung über Home Assistant](#136-nutzung-über-home-assistant)
         - [13.7) KVS Store im Shelly](#137-kvs-store-im-shelly)
 
-
-
 ---
 
 ## 1) Zweck
@@ -103,8 +101,7 @@ verteilt diese anschließend nach konfigurierbaren Regeln auf die einzelnen
 Geräte.
 
 > bei gemischten Konfigurationen können dabei auch **gleichzeitig**
-manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effizienz der Einzelgeräte. 
-
+manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effizienz der Einzelgeräte.
 
 **Kernprinzipien**:
 
@@ -122,11 +119,11 @@ manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effiz
   Schreibzugriffe), bei größerem Bedarf wird automatisch auf alle verfügbaren
   Geräte verteilt (**Verteilmodus** nach Prinzip "Wasserfüllung").
 - **Leistungsfähigkeit:** drei Geräte sind besser als eins, also stellt die Regelung sicher, dass alle Geräte gleichmässig
-  geladen oder entladen werden, um so lange wie möglich die volle Power 💪 des Gesamtpakets zu erhalten. 
+  geladen oder entladen werden, um so lange wie möglich die volle Power 💪 des Gesamtpakets zu erhalten.
 
 ---
 
-## 2) Möglichkeiten und Flexibilität, Features 
+## 2) Möglichkeiten und Flexibilität, Features
 
 Was die Regelung kann:
 
@@ -142,7 +139,7 @@ Was die Regelung kann:
 - **Kapazitäts-Deckelung mit Nachverteilung:** Jedes Gerät ist einzeln auf sein
   `maxOutput`/`maxInputPower` begrenzt; was ein gedeckeltes Gerät nicht
   abnehmen kann, wird automatisch auf die übrigen Geräte umverteilt.
-- **Cutoffs:** Gerätegrenzen der Firmware werden berücksichtigt. Geräte werden vom Entladen oder Laden 
+- **Cutoffs:** Gerätegrenzen der Firmware werden berücksichtigt. Geräte werden vom Entladen oder Laden
   ausgeschlossen, wenn die Firmware das meldet
 - **Laden vom Netz ist optional und pro Gerät einzeln freischaltbar**
   (`reverse: true/false`); Geräte mit `reverse:false` werden nie zum Laden
@@ -215,7 +212,6 @@ mit knappem Script-Speicher bitte die **minifizierte Fassung**
 liegen Quelltext und Bytecode kurzzeitig gleichzeitig im Heap, was den
 Speicher-Peak bestimmt. Siehe auch Kapitel 10.
 
-
 ---
 
 ## 4) Konfiguration
@@ -224,12 +220,10 @@ Speicher-Peak bestimmt. Siehe auch Kapitel 10.
 
 [Install-Exe](https://github.com/surfer1264/Zendure-Stuff/releases/latest) laden mit Upload Funktion in den Shelly
 
-
 **der halbautomatische Weg**
 
-Beginne mit Download: 
+Beginne mit Download:
 [ab Version 4.x.x Minified](zerooutput_multi_kvs_mini.js) Minifyer eingesetzt
-
 
 ℹ️ INFO: [Wie das mit den Scripte im Shelly funktioniert](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen#wie-das-mit-den-scripten-funktioniert)
 
@@ -358,7 +352,6 @@ Die Regel in folgender Tabelle beschreibt den gültigen Wertebereich. Wird dageg
 | `IDLE_SKIP_CYCLES` (abgeleitet) | ≥ `3` Zyklen | `max(3, round(maxSkipSeconds × 1000 / interval))` |
 | `CONCENTRATE_HOLD_CYCLES` (abgeleitet) | ≥ `5` Zyklen | `max(5, round(concentrateHoldMinutes × 60000 / interval))` |
 
-
 **Kein eigenes Logging:** Der Validierungsblock selbst gibt keine
 Korrektur-Meldungen aus – die jeweils gültigen Endwerte sind ohnehin im
 Start-Banner (Kapitel 8.7) sichtbar.
@@ -458,7 +451,6 @@ von `[DRYRUN] wuerde schreiben: X W (Export)` bzw. `(Laden vom Netz)`.
 | **Netzwerk nötig?** | nein | ja, zum Pro 3EM | ja, zum jeweiligen Meter |
 | **Besonderheit** | schnellste & robusteste Variante, da kein HTTP-Fehlerfall möglich | Pro 3EM bleibt unangetastet mit Standard-Firmware; Script selbst kann auf schwächerer Hardware laufen | **Vorzeichen vorher prüfen!** Nicht jeder Hersteller definiert „positiv = Bezug vom Netz" gleich – ggf. `gridSourceInvert: true` setzen |
 
-
 ### 5.1) Eigene/weitere Smart Meter einbinden “http_json”
 
 `"http_json"` ist bewusst generisch gehalten, damit sich künftig auch andere
@@ -496,13 +488,13 @@ gridSourceInvert: false   // erstmal so lassen, dann pruefen (siehe unten)
 ```
 
 **Shelly 3EM (ohne Pro) (flache JSON-Struktur, keine Verschachtelung):**
+
 ```
 gridSource: "http_json",
 gridSourceUrl: "http://<IP-des-3EM>/status",
 gridSourceField: "total_power",
 gridSourceInvert: false   // ggf. auf true, falls Vorzeichen beim Test verkehrt herum ist
 ```
-
 
 **Beispiel Tasmota (verschachtelte JSON-Struktur):**
 
@@ -624,7 +616,7 @@ mehr, sondern werden pro Gerät entschieden.
 **Achtung:** Laden vom Netz bezeichnet den Vorgang, Energie über den AC-Anschluss aufzunehmen.
 Grund: Ist die Übernahme von Überschüssen (negative Werte am Smartmeter), die entweder aus den Einspeisungen
 einer Dachanlage oder den exportierten Überschüssen anderer PV/BKW-Anlagen entstehen.
-Ein aktives AC-Laden (ohne negative Smartmeter-Werte) wird vom Controller **nicht** angestoßen – Ausnahme ist das manuelle AC-Laden per KVS (Kapitel 13.4). 
+Ein aktives AC-Laden (ohne negative Smartmeter-Werte) wird vom Controller **nicht** angestoßen – Ausnahme ist das manuelle AC-Laden per KVS (Kapitel 13.4).
 
 `reverse: true` in der Konfiguration aktiviert für dieses Gerät den Lademodus. Mit der Geräteeinstellung
 `gridReverse` (Netzexport, siehe Kapitel 6d) hat das nichts zu tun.
@@ -869,7 +861,6 @@ jeden Zyklus neu berechnet.
 ```
 Bypass-Korrektur: 240 W Ueberschuss von gesperrten Geraeten auf uebrige Geraete umgelegt
 ```
-
 
 ## 7) Lastaufteilung / Wie wirken `concentrateBelow` und `spreadAbove`
 
@@ -1323,7 +1314,7 @@ Prinzip ist identisch): [Shelly-Script-Akkudaten-auslesen – Wiki](https://gith
 
 **Webhook**
 
-WAs ist das? Ein Webhook ist eine automatisierte, ereignisgesteuerte Schnittstelle, die Daten in Echtzeit über HTTP von einer Anwendung an eine andere sendet. 
+WAs ist das? Ein Webhook ist eine automatisierte, ereignisgesteuerte Schnittstelle, die Daten in Echtzeit über HTTP von einer Anwendung an eine andere sendet.
 
 Um Webhook im HomeAssistent verarbeiten zu können, muss man sich eine Automation anlegen, damit die Nachrichten des Shelly Controller aufgefangen werden können, anbei die relevante yaml-Datei, mit der die Automation getestet wurde. Die Webhook-Id vergibt Home Assistent, oder Ihr definiert diese.
 
@@ -1346,8 +1337,6 @@ actions:
       title: Zendure Controller
 mode: single
 ```
-
-
 
 ### 8.6) SoC-Grenzwerte: Start-Synchronisierung & Laufzeit-Meldung (`socLimit`)
 
@@ -1518,7 +1507,6 @@ werden soll.
 
 **Zustand:** Jede Richtung führt einen eigenen Zähler:
 `state.discharge.holdCycles` bzw. `state.charge.holdCycles`.
-
 
 **Umrechnung Minuten → Zyklen:** Einmalig beim Start berechnet:
 
@@ -1706,7 +1694,7 @@ gaben hier ein Format mit Gerätenamen an, das es im Code nicht gibt.
 Bei jedem Schreibvorgang (`/properties/write`) übermittelt das Script neben
 `acMode`, `outputLimit` und `inputLimit` immer auch ein Feld `smartMode`.
 Dieses Kapitel fasst zusammen, wann das Script welchen Wert setzt und was
-das bewirkt. 
+das bewirkt.
 
 **Wo `smartMode` im Code entschieden wird:**
 
@@ -1774,7 +1762,7 @@ Verhalten, das in den Testläufen mit dieser Script-Familie beobachtet wurde,
 und ist daher als Erfahrungswert zu verstehen, nicht als garantierte
 Herstellerspezifikation.  Beobachtet werden konnte, dass Solarflows mit `smartmode =1`nicht in den Standby gehen und weiter aktiv  sind mit geringen Leistungsabgaben (z.B. 21W). Die Nutzung von `smartmode = 0`erscheint hier als Lösungsoption.
 
-- **`smartMode: 1`** – das Gerät übernimmt Daten in den RAM des Gerätes. 
+- **`smartMode: 1`** – das Gerät übernimmt Daten in den RAM des Gerätes.
 - **`smartMode: 0`** – die Daten werden in den Flashspeicher des Gerätes geschrieben. Dies wird ausschließlich im 0-W-Standby-Fall
   verwendet (sofern `standbySmartModeZero: true` gesetzt ist und das Gerät
   mindestens 15 Zyklen in Folge im Standby war). Ob und wie
@@ -1785,7 +1773,7 @@ Herstellerspezifikation.  Beobachtet werden konnte, dass Solarflows mit `smartmo
 Da `standbySmartModeZero` nur den Standby-Fall betrifft, hat der Schalter
 **keinen** Einfluss auf das eigentliche Regelverhalten (Verteilung,
 Hysterese, Richtungswechsel-Bremse) – er ändert ausschließlich, mit welchem
-`smartMode`-Wert ein Gerät bei 0 W geparkt wird. 
+`smartMode`-Wert ein Gerät bei 0 W geparkt wird.
 
 > Achtung: das hochfrequente Schreiben von Daten mit `smartmode = 0` darf nicht erfolgen und kann den Flashspeicher schädigen. Die Haltezeit `standbyHoldCycles` (15 Zyklen) begrenzt das, schließt es aber nicht vollständig aus. Wer kein ungewöhnliches Verhalten feststellt, sollte `standbySmartModeZero: false` setzen
 
@@ -2000,7 +1988,6 @@ flowchart TD
     G1 -.-> A
 ```
 
-
 ## 10) Hinweis: Performance, Grenzen und Status-Prüfung des Shelly
 
 **Performance & Grenzen**
@@ -2049,7 +2036,6 @@ flowchart TD
   Geräte-Neustart verloren und beginnt bei null – keine Persistenz über einen
   Neustart hinweg.
 
-
 ---
 
 ## 11) Bekannte Einschränkungen
@@ -2092,7 +2078,7 @@ Im laufenden Betrieb findet keine Synchronisation von Einstellungen mit dem
 Solarflow statt (Ausnahmen: `minSoc` und `inputLimit` per KVS-Override, Kapitel 13.4).
 Änderungen in der Zendure-App können den Betrieb beeinflussen.
 
-## 12) Logging 
+## 12) Logging
 
 Jede Zeile im Log beginnt mit einem Zeitstempel-Präfix, das vom Shelly-System selbst gesetzt wird:
 
@@ -2190,7 +2176,7 @@ Wird **pro Gerät und Zyklus** direkt nach der Netzsaldo-Zeile ausgegeben (einge
 | --- | --- |
 | `SOC` | Aktueller Ladezustand des Geräts in %. `n/a`, wenn das Gerät im aktuellen Zyklus nicht erreichbar war (letzter bekannter Wert wird dann für die Regelung weiterverwendet). |
 | `socL` (socLimit) | `0` = uneingeschränkt, `1` = Ladesperre (Netzladung gesperrt, Entladen weiterhin möglich), `2` = Entladesperre (Entladen gesperrt, Laden weiterhin möglich). Wird direkt vom Gerät gemeldet. |
-| `gridR` (gridReverse) | Aktueller Wert der `gridReverse`-Eigenschaft des Geräts. `n/a`, solange noch kein Wert vom Gerät bekannt ist. 1	Netzexport erlaubt, 2	Netzexport verboten |
+| `gridR` (gridReverse) | Aktueller Wert der `gridReverse`-Eigenschaft des Geräts. `n/a`, solange noch kein Wert vom Gerät bekannt ist. 1 Netzexport erlaubt, 2 Netzexport verboten |
 | `Ist` | Tatsächlich vom Gerät gemeldete aktuelle Leistung (`zenPower`), unabhängig vom kommandierten Wert. |
 | `Soll` | Für dieses Gerät im aktuellen Zyklus berechneter Ziel-Leistungswert (nach Verteilung des kombinierten Regelsignals auf die Geräte). |
 | `offGP` | Nur mit `debug: true` und nur bei Geräten mit Offgrid-Ausgang (seit 5.1.9): aktuelle Leistung am Offgrid-Ausgang (`gridOffPower`) in W. Steht zwischen `Soll` und `acMode`. |
@@ -2225,12 +2211,14 @@ Diese Zeilen erscheinen **nur**, wenn tatsächlich ein Schreibvorgang an ein Ger
 ```
 SF2400Pro: Leistung gesetzt: 799 W (Export, smartMode 1)
 ```
+
 Bestätigt einen erfolgreichen Schreibvorgang der Zielleistung. `smartMode 0` erscheint nur bei `standbySmartModeZero: true`, nachdem das Gerät mindestens 15 Zyklen in Folge im Standby war (Kapitel 8.11), `smartMode 1` ist der Normalbetrieb.
 
 ```
   SF800Pro: gridReverse=2 gesetzt
   SF800Pro: gridReverse=2 fehlgeschlagen
 ```
+
 Umschaltung der `gridReverse`-Eigenschaft (Netzexport-Freigabe des Geräts: `1` = Export erlaubt, `2` = Export verboten). Wird nur bei `gridReverseMode: "dynamic"` und Kapazitätsänderung ausgelöst, zentral geprüft über `updateGridReverseLock()` (siehe Kapitel 6d).
 
 ---
@@ -2313,7 +2301,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
 
 - `Sende Webhook-Benachrichtigung...` / `Webhook-Benachrichtigung erfolgreich gesendet.` — Versand externer Benachrichtigungen (nur bei `signal.enabled: true`). Analog `Sende Signal-Nachricht...` bei `typ: "SIGNAL"`/`"WHATSAPP"`.
 - `Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.` — bekannter Sonderfall; der Versand ist meist trotzdem erfolgreich.
-- `Synchronisiere SoC-Grenzwerte einmalig... ` / `SoC-Sync abgeschlossen.` — Klammern um den einmaligen Start-Sync.
+- `Synchronisiere SoC-Grenzwerte einmalig...` / `SoC-Sync abgeschlossen.` — Klammern um den einmaligen Start-Sync.
 - `<Geraet>: SoC-Grenzwerte synchronisiert (minSoc X%, maxSoc Y%)` — einmalig beim Start, Übertragung der konfigurierten SOC-Grenzen an das Gerät. Bei `gridReverseMode: "always1"`/`"always2"` ergänzt um `, gridReverse=N`.
 - `<Geraet>: SoC-Sync uebersprungen - ...` — SOC-Grenzwert-Synchronisierung beim Start fehlgeschlagen (Gerät nicht erreichbar, Parse-Fehler oder fehlende Seriennummer).
 - `<Geraet>: SoC-Sync fehlgeschlagen beim Schreiben` — das Gerät war erreichbar, hat den Schreibvorgang aber nicht mit `200` quittiert.
@@ -2357,6 +2345,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
 > voneinander unabhängige Dinge – siehe Kapitel 6d.
 
 ---
+
 ### 12.9) Debug
 
 **Befehle zur Statusprüfung** (im Browser aufrufen, `<IP>` durch die
@@ -2391,12 +2380,9 @@ Shelly-Adresse ersetzen):
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/8a639d77-8734-448d-9171-7b406ba843a4" />
 
-
 **Langzeitlog erstellen**
 
 siehe: https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller
-
-
 
 ## 13) Live-Override der Regelparameter per KVS (z. B. Home Assistant)
 
@@ -2553,7 +2539,6 @@ Der Wert wird gegen `CONFIG.devices[N].maxInputPower` geprüft (siehe Konfigurat
 > dem Gerät und überschreibt `inputLimit` beim nächsten eigenen
 > Schreibvorgang – `planWrite()` setzt `inputLimit` immer mit
 > (`0` bei Export/Standby, `|Zielwert|` beim geregelten Laden).
-
 
 > ℹ️ **Seit 5.0.3** erzwingt `syncInputLimitDevice()` `acMode 1` (Laden)
 > gleich mit – das Laden startet also unabhängig davon, in welchem Modus das
@@ -2749,7 +2734,6 @@ statt `set_value` und Werten `1`/`0`.
 > `homeassistant.update_entity`-Schritt einen sofortigen Re-Poll aller zehn
 > Sensoren). Wird ein Key extern (curl, ein anderes KVS-Tool) geändert,
 > zeigt HA bis zu 10 Minuten den alten Wert.
-
 
 ### 13.7) KVS Store im Shelly
 

@@ -44,10 +44,13 @@ Wichtig: Gebraucht wird der **Write API Key des Channels**. Der User API Key dei
 ## Proxy einrichten
 
 1. `ts_bridge.py` neben `zendure_proxy.py` legen und den Proxy starten. In der Startmeldung steht dann:
+
     ```
     ThingSpeak:  http://localhost:8000/thingspeak
     ```
-   Steht dort `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
+
+    Steht dort `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
+
 2. `http://<proxy-host>:8000/thingspeak` im Browser öffnen.
 3. Auf **„Geräte vom Shelly laden“** tippen. Für jeden Hub erscheint ein Eingabefeld.
 4. Die Write API Keys eintragen, **„Upload aktiv“** anhaken und **„Speichern & Keys testen“**.

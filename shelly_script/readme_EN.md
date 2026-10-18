@@ -42,7 +42,6 @@ The **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** (German) itself is a 
 | [thingsboard](thingsboard) | ready-made dashboards and rule chains for import into ThingsBoard, matching the [ThingsBoard upload](zendash_watch_API_ZenSDK/thingsboard.md) (German) |
 | [Einordnung](Einordnung.md) (German) | comparison with other multi-device solutions (ioBroker, Z-HA, EMS SolarFlow …) |
 
-
 ## Terms
 
 | Term | Meaning |

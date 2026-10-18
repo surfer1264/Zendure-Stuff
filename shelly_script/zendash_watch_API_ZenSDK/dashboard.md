@@ -8,7 +8,6 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/c4d6f53a-d9d9-4d4f-b597-8a069561e6ec" />
 
-
 **Inhalt**
 
 - [Wie das zusammenhängt](#wie-das-zusammenhängt)
@@ -246,15 +245,20 @@ Zu jeder Datei liegt auf der [Releases-Seite](https://github.com/surfer1264/Zend
 ## Dauerbetrieb auf einer Synology
 
 1. **Python prüfen.** DSM bringt meist schon eines mit:
+
     ```bash
     which python3 && python3 --version
     ```
-   Ab 3.7 reicht es – der Proxy nutzt nur die Standardbibliothek. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+
+    Ab 3.7 reicht es – der Proxy nutzt nur die Standardbibliothek. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
+
 2. **Dateien ablegen.** `zendure_proxy.py` in einen eigenen Ordner, z. B. `/volume1/homes/<benutzer>/zendure`, und `zendure-dashboard.html` daneben oder eine Ebene höher. Nicht in den `web`-Ordner – der gehört der Web Station.
 3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
+
     ```bash
     /bin/python3 /volume1/homes/<benutzer>/zendure/zendure_proxy.py -q
     ```
+
 4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
 5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
 6. **Einrichten.** Von einem PC oder Handy aus `http://<IP-der-Synology>:8000/` aufrufen und wie in [Schritt 4](#in-4-schritten-zum-dashboard) IP und Script-Nummer eintragen.

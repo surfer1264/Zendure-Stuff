@@ -8,7 +8,6 @@ Der Controller (`zerooutput_multi_kvs`) ist das Regel-Script auf deinem **Contro
 
 Diese Seite bringt dich zum **ersten funktionierenden Lauf**. Alles Weitere steht in der [Benutzerdokumentation](benutzerdoku.md) und der [Gesamtdokumentation](gesamtdoku.md). Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
-
 ---
 
 ## Checkliste, bevor du anfängst
@@ -159,4 +158,3 @@ Bequemer geht es mit dem Helfer: „🔍 Speicher prüfen“ und „Log aufzeich
 | [`CHANGELOG.md`](CHANGELOG.md) | Änderungen je Version |
 | [`Deploy`](Deploy) | eigene Deploy-Pipeline, siehe [oben](#für-fortgeschrittene-mit-deploycmd) |
 | [`yaml`](yaml) | Beispiel für Home Assistant: liest die KVS-Werte des Controllers per REST (`rest.yaml`), schreibt sie per `rest_command` zurück (`rest_commands.yaml`) und stellt sie als Regler bereit (`template/kvs.yaml`). Die IP `192.168.178.117` durch die deines Controller-Shellys ersetzen. `configuration.yaml` bindet in Home Assistant den Ordner `templates/` ein (`!include_dir_merge_list templates/`) – dorthin gehört die Datei `kvs.yaml` aus dem Repository-Ordner `template`. Hintergrund: [Kapitel 13.6](gesamtdoku.md#136-nutzung-über-home-assistant) |
-

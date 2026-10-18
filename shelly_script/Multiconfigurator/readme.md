@@ -61,7 +61,6 @@ Die Funktionen sind frei kombinierbar – zenDash-API und Watchdog lassen sich z
 
 <img width="886" height="1010" alt="image" src="https://github.com/user-attachments/assets/31852329-c7b9-41fd-9217-4a42eca938d9" />
 
-
 Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
 ---

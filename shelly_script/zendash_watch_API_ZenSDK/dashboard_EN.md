@@ -8,7 +8,6 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/ef6db2a0-6913-443e-af8f-65e0b327064c" />
 
-
 **Contents**
 
 - [How it fits together](#how-it-fits-together)
@@ -249,15 +248,20 @@ For each file there is a `.sha256` file on the [releases page](https://github.co
 ## Continuous operation on a Synology
 
 1. **Check Python.** DSM usually ships one already:
+
     ```bash
     which python3 && python3 --version
     ```
-   3.7 or newer is enough – the proxy only uses the standard library. The interpreter is often at `/bin/python3`. If nothing shows up, install **Python 3** in the Package Center; the path is then `/var/packages/Python3*/target/bin/python3`.
+
+    3.7 or newer is enough – the proxy only uses the standard library. The interpreter is often at `/bin/python3`. If nothing shows up, install **Python 3** in the Package Center; the path is then `/var/packages/Python3*/target/bin/python3`.
+
 2. **Place the files.** Put `zendure_proxy.py` into its own folder, e.g. `/volume1/homes/<user>/zendure`, and `zendure-dashboard.html` next to it or one level up. Not into the `web` folder – that belongs to Web Station.
 3. **Create a task.** Control Panel → Task Scheduler → Create → **Triggered Task** → User-defined script. Event **Boot-up**, user **root**, and as command the full path:
+
     ```bash
     /bin/python3 /volume1/homes/<user>/zendure/zendure_proxy.py -q
     ```
+
 4. **Start right away**, without rebooting: select the task → **Run**.
 5. **Firewall.** If it is active under Control Panel → Security → Firewall, create a rule for TCP **8000**. Port 8000 does not collide with DSM itself (5000/5001).
 6. **Set up.** From a PC or phone open `http://<IP-of-Synology>:8000/` and enter IP and script number as in [step 4](#dashboard-in-4-steps).

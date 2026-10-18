@@ -35,7 +35,6 @@ Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** 
 
 📖 [Getting Started](Controller/readme.md) · [Benutzerdokumentation](Controller/benutzerdoku.md) · [Alle Details](Controller/gesamtdoku.md)
 
-
 ### 2. Das Dashboard – der Überblick
 
 * **Live-Anzeige** von Netzbezug, Ladestand und Leistung je SolarFlow
@@ -90,7 +89,6 @@ Lies diese Prinzipien, an die sich das Projekt hält:
 und wie ich Qualität sicherstelle
 
 [Insight Development](https://github.com/surfer1264/Zendure-Stuff/wiki/Multi-Controller-Development-%E2%80%90-Inside-%E2%80%90)
-
 
 ---
 

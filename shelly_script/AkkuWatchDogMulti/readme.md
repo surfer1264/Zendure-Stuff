@@ -4,7 +4,6 @@
 
 > ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md). Neu einrichten am einfachsten mit dem [Configurator](../Multiconfigurator/readme.md). Diese Seite bleibt nur zum Nachschlagen.
 
-
 # AkkuVolt Watchdog — Multi-Device (zenSDK) — Schnellstart
 
 > ⚠️ Beobachtet nur, greift nicht aktiv ein. Auf eigene Verantwortung nutzen, ordentlich testen.
@@ -60,16 +59,19 @@ curl -X POST http://<shelly-ip>/rpc/Script.Eval -H "Content-Type: application/js
 ```
 
 Voll-Meldung simulieren (Gerät 0):
+
 ```
 curl -X POST http://<shelly-ip>/rpc/Script.Eval -H "Content-Type: application/json" -d "{\"id\": 1, \"code\": \"state.devices[0].soc = 100; checkSocFull(0);\"}"
 ```
 
 Übertemperatur simulieren:
+
 ```
 curl -X POST http://<shelly-ip>/rpc/Script.Eval -H "Content-Type: application/json" -d "{\"id\": 1, \"code\": \"state.devices[0].hyperTemp = 99; checkHyperTemp(0);\"}"
 ```
 
 Unterspannung simulieren (legt kurz einen Test-Pack an):
+
 ```
 curl -X POST http://<shelly-ip>/rpc/Script.Eval -H "Content-Type: application/json" -d "{\"id\": 1, \"code\": \"state.devices[0].packs['TEST01'] = {minV: 2.5}; checkPackVoltage(0, 'TEST01');\"}"
 ```

@@ -353,6 +353,7 @@ Réglez `debug: true` et redémarrez le script – ou cochez « Debug-Ausgaben �
 - l'envoi de chaque message
 - l'occupation mémoire aux endroits les plus importants
 - à chaque passage du watchdog, une ligne par batterie avec tous les packs, par exemple :
+
     ```
     [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
     ```

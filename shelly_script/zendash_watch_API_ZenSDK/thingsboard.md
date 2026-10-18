@@ -47,10 +47,13 @@ Der Netzsaldo ist bewusst ein eigenes Gerät: Er gehört zu keinem Speicher, son
 ## Proxy einrichten
 
 1. `ts_bridge.py` neben `zendure_proxy.py` legen und den Proxy starten. In der Startmeldung steht dann:
+
     ```
     ThingsBoard: http://localhost:8000/thingsboard
     ```
-   Steht dort `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
+
+    Steht dort `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)`, liegt die Datei nicht im richtigen Ordner.
+
 2. `http://<proxy-host>:8000/thingsboard` im Browser öffnen.
 3. **Server-Adresse** prüfen. Vorbelegt ist `https://eu.thingsboard.cloud`. Für einen eigenen Server z. B. `http://nas:8080` eintragen.
 4. Auf **„Geräte vom Shelly laden“** tippen. Für jeden Speicher erscheint ein Eingabefeld, darunter eines für **„Netz (Netzsaldo)“**.
@@ -69,7 +72,6 @@ Die Einstellungen landen in `zendure_thingsboard_config.json` neben dem Proxy (i
 **Sicherheit:** Die Seite hat kein Passwort, genau wie `/setup` und `/thingspeak`. Jeder in deinem Netz, der den Proxy erreicht, kann den Upload ein- oder ausschalten und Tokens ersetzen, aber keine hinterlegten Tokens auslesen.
 
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/1896d8e2-fb6d-477f-9ceb-f8fc45432610" />
-
 
 ## So arbeitet der Upload
 
