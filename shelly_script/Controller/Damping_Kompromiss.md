@@ -30,8 +30,7 @@ stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
 Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
 Simulation am besten dazu passt. Sie rechnet mit einem simulierten, bewusst
 unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
-Werte untereinander verhalten. Die Tabelle oben bleibt der Ausgangspunkt für
-die eigene Anlage.
+Werte untereinander verhalten. 
 
 **Grundlage:**
 - Damping-Matrix 2: 15 Läufe, 3 s Geräteverzögerung
