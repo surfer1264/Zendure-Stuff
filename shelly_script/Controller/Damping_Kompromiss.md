@@ -4,6 +4,8 @@ Stand: 18.10.2026 · Controller-Version im Test: 5.2.0
 
 Diese Testumgebung lässt das echte Controller-Skript (`zdmc_test.js`) gegen einen simulierten Stromzähler und zwei simulierte Zendure-Geräte laufen. Die Simulation reagiert auf das, was der Controller schreibt (geschlossener Regelkreis). Ein Testtag von 14 Stunden läuft in etwa 6–12 Minuten durch.
 
+Anbei ein vollständiges Tagespropfil eines Testlaufes: [doku/beispiel_report.html](doku/beispiel_report.html) (im Browser öffnen).
+
 ---
 
 ## Fazit: Regelung 5.2.0 im Simulator (Entwurf)
