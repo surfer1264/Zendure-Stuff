@@ -311,6 +311,20 @@ def _tb_values(data):
     return out
 
 
+_tb_tag = {"tag": "", "punkte": 0, "nachrichten": 0}   # Tageszaehler (lokales Datum)
+
+
+def _tb_zaehlen(punkte):
+    """Erfolgreich gesendete Datenpunkte des Tages mitzaehlen (nur im Speicher)."""
+    heute = time.strftime("%Y-%m-%d")
+    with _lock:
+        if _tb_tag["tag"] != heute:
+            _tb_tag.update(tag=heute, punkte=0, nachrichten=0)
+        _tb_tag["punkte"] += punkte
+        _tb_tag["nachrichten"] += 1
+        return _tb_tag["punkte"], _tb_tag["nachrichten"]
+
+
 def _tb_send(data, stamp, stop):
     values = _tb_values(data)
     host = TB["host"]
@@ -327,7 +341,9 @@ def _tb_send(data, stamp, stop):
         if not ok and not stop.wait(RETRY_S):
             ok, ans = _tb_post(host, token, "telemetry", payload)
         if ok:
-            _log("thingsboard", "{} {} gesendet ({} Wert{})".format(name, created, len(v), "" if len(v) == 1 else "e"))
+            punkte, nachrichten = _tb_zaehlen(len(v))
+            _log("thingsboard", "{} {} gesendet ({} Wert{}; heute {} Datenpunkte in {} Nachrichten)".format(
+                name, created, len(v), "" if len(v) == 1 else "e", punkte, nachrichten))
         else:
             _err("thingsboard", "{} {}: verworfen ({})".format(name, created, ans))
 
@@ -546,7 +562,12 @@ btn.onclick = async function(){
 
 
 def page_html_tb():
+    with _lock:
+        heute = dict(_tb_tag)
+        if heute["tag"] != time.strftime("%Y-%m-%d"):
+            heute = {"tag": "", "punkte": 0, "nachrichten": 0}   # Zaehler von gestern nicht zeigen
     state = json.dumps({"enabled": TB["enabled"], "host": TB["host"], "grid": TB_GRID_ID,
+                        "heute": heute,
                         "masked": {d: _mask(t) for d, t in TB["tokens"].items()},
                         "fields": [{"name": f[0], "label": f[1]} for f in TB_FIELDS],
                         "sel": TB["fields"]})
@@ -554,6 +575,7 @@ def page_html_tb():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ZenDash - ThingsBoard</title><style>""" + _CSS + """</style></head><body>
 <h1>ThingsBoard-Upload</h1>
+<div class="hint" id="zaehler"></div>
 <label><input type="checkbox" id="en"> Upload aktiv (jede volle Minute)</label>
 <label>Server-Adresse
 <input type="text" id="host"></label>
@@ -570,6 +592,10 @@ def page_html_tb():
 <script>
 var S = """ + state + """;
 en.checked = S.enabled; host.value = S.host;
+zaehler.textContent = S.heute.tag
+  ? 'Heute gesendet: ' + S.heute.punkte.toLocaleString('de-DE') +
+    ' Datenpunkte in ' + S.heute.nachrichten.toLocaleString('de-DE') + ' Nachrichten (seit Start des Proxys)'
+  : 'Heute noch nichts gesendet (Zaehler startet mit dem Proxy neu).';
 flds.innerHTML = S.fields.map(function(f){
   return '<label class="fld"><input type="checkbox" data-f="'+f.name+'"'+
     (S.sel.indexOf(f.name) >= 0 ? ' checked' : '')+'> '+f.label+' <code>'+f.name+'</code></label>';
