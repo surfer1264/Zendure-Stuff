@@ -88,6 +88,12 @@ Alle Zahlen im Fazit sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wi
 
 ---
 
+## Tech-Kram
+
+Folgende Kapitel beschreiben den technischen Part der Simulation und sind eher eine Entwicklerdokumentation (techn. Perspektive)
+
+---
+
 ## 1. Überblick
 
 ```
