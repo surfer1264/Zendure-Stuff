@@ -1135,11 +1135,14 @@ state.smoothedCharge = state.smoothedCharge + a * (rawCharge - state.smoothedCha
 
 #### Empfehlung für `dampingFactor`
 
-| Situation | Empfohlener Wert |
-| --- | --- |
-| Standard (`gridSource: "local"`, `interval` 4000 ms) | **0,6–0,7**, Default `0.65` |
-| `gridSource: "remote"` oder `"http_json"`, oder 3 und mehr Geräte | **0,5–0,6** |
-| `interval` 3000 ms | **0,6** |
+Die Empfehlung hängt sehr von den persönlichen Prioritäten ab:
+
+- hohe Regelgüte (Regelgröße befindet sich im Hystereseband)
+- wenig Einsopeisung
+- wenig Bezug
+- wenig Schreibbefehle auf die Solarflows, wenig Lastwechsel
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/2853784a-4c01-466d-baf7-7bfb8d58e9d2" />
 
 **Über 0,7 lohnt sich selten.** In der Simulation verbessert 0,8 gegenüber
 0,65 die Regelgüte nur wenig (+2,7 Prozentpunkte im Band ±13 W). Die
@@ -1148,14 +1151,6 @@ Schreibvorgänge steigt um rund 14 %. Bei schnell taktenden Lasten
 (Induktion) hilft ein höherer Wert gar nicht. Schnelle Reaktion auf
 Lastabwurf liefert seit 5.1.8 ohnehin die schnelle Flanke (`JUMP_FACTOR`),
 nicht ein hoher `dampingFactor`.
-
-Grundlage ist eine Simulation mit 4 s Takt, 1 s Schreiblaufzeit, 3 s Rampe
-und zusätzlicher Anlaufzeit, wenn ein Gerät aus dem Standby startet (siehe
-[Changelog](CHANGELOG.md) 5.1.8 und 5.2.0 sowie
-[Damping/Simulation](Damping_Kompromiss.md)). Bei `remote` und `http_json`
-kommt der Messwert mit zusätzlicher Verzögerung an, bei mehreren Geräten
-dauert ein Zyklus länger. In beiden Fällen ist der Regelkreis träger, und
-eine stärkere Dämpfung verhindert Überschwingen.
 
 🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
 stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
