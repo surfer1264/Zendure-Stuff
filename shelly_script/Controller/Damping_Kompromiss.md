@@ -6,7 +6,7 @@ Diese Testumgebung lässt das echte Controller-Skript (`zdmc_test.js`) gegen ein
 
 Anbei ein vollständiges Tagespropfil eines Testlaufes: [doku/beispiel_report.html](doku/beispiel_report.html) (im Browser öffnen).
 
-**Achtung:** Die Simulation spiegelt das Verhalten des Controllers in Version 5.2.0 wieder und ist damit nicht übertragbar auf andere Regelsysteme oder hat grundsätzliche Aussagekraft darüber hinaus! Sie gibt eine Orientierungshilfe für **Optimierer**
+**Achtung:** Die Simulation spiegelt das Verhalten des Controllers in Version 5.2.0 wieder und ist damit nicht übertragbar auf andere Regelsysteme oder hat grundsätzliche Aussagekraft darüber hinaus! Sie gibt eine Orientierungshilfe für **Optimierer** und für den Autoren und Entwickler des Controllers bezüglich der Frage: "Wie verhält sich der Controller bei unterschiedlichen Einstellungen."
 
 ---
 
