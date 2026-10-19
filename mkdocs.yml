@@ -58,7 +58,7 @@ nav:
         - Speicherbedarf: zendash_speichermodell.md
         - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
         - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
-        - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/readme.md
+        - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/INSTALLATION.md
         - API-Referenz: zendash_watch_API_ZenSDK/API.md
       - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
   - Werkzeuge:

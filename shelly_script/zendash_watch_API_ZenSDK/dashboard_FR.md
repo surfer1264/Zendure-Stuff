@@ -284,7 +284,7 @@ Le planificateur lance la tâche au démarrage, mais **ne la relance pas si le p
 
 Si vous utilisez Home Assistant OS, vous pouvez y faire tourner le proxy comme app à part entière. Il démarre alors avec Home Assistant et est relancé automatiquement en cas de plantage.
 
-👉 **[Guide de l'app Home Assistant](HA_zendure_proxy/readme.md)** (allemand)
+👉 **[Guide de l'app Home Assistant](HA_zendure_proxy/INSTALLATION.md)** (allemand)
 
 En bref : installer l'app depuis le dossier local, la démarrer, ouvrir `http://<IP-de-Home-Assistant>:8000/` et configurer comme à l'[étape 4](#le-tableau-de-bord-en-4-étapes).
 

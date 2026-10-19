@@ -275,7 +275,7 @@ Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn d
 
 Wer Home Assistant OS betreibt, kann den Proxy dort als eigene App laufen lassen. Er startet dann mit Home Assistant und wird bei einem Absturz automatisch neu gestartet.
 
-👉 **[Anleitung für die Home-Assistant-App](HA_zendure_proxy/readme.md)**
+👉 **[Anleitung für die Home-Assistant-App](HA_zendure_proxy/INSTALLATION.md)**
 
 Kurz gesagt: App aus dem lokalen Ordner installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard).
 

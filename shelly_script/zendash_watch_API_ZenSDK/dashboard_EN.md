@@ -284,7 +284,7 @@ The Task Scheduler starts the task at boot, but does **not restart it if the pro
 
 If you run Home Assistant OS, you can run the proxy there as its own app. It then starts together with Home Assistant and is restarted automatically after a crash.
 
-👉 **[Guide for the Home Assistant app](HA_zendure_proxy/readme.md)** (German)
+👉 **[Guide for the Home Assistant app](HA_zendure_proxy/INSTALLATION.md)** (German)
 
 In short: install the app from the local folder, start it, open `http://<IP-of-Home-Assistant>:8000/` and set up as in [step 4](#dashboard-in-4-steps).
 

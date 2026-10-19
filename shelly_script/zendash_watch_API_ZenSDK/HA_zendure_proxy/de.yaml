@@ -1,0 +1,2 @@
+network:
+  8000/tcp: "Dashboard und Einrichtungsseiten (/setup, /thingspeak, /thingsboard)"
