@@ -328,6 +328,14 @@ def _tb_values(data):
 
 
 _tb_tag = {"tag": "", "punkte": 0, "nachrichten": 0}   # Tageszaehler (lokales Datum)
+_START = time.time()                                    # fuer die Ist-Rate auf /thingsboard
+
+# Schaetzung auf /thingsboard: Speichertage = Datenpunkte x Aufbewahrung.
+# Rohdaten fest 30 Tage; Zusatz aus berechneten Feldern in ThingsBoard
+# (die Bridge sieht sie nicht) als feste Werte je Stunde zum Ankreuzen.
+TB_EST = {"ttl": 30, "richtwert": 40000,
+          "extras": [{"id": "energie", "label": "Stuendliche Energiewerte (2 x 5 Kennzahlen, 365 Tage)", "proStunde": 3650},
+                     {"id": "tag", "label": "Taegliche Regelguete-Statistik (8 Werte, 365 Tage)", "proStunde": 120}]}
 
 
 def _tb_zaehlen(punkte):
@@ -544,7 +552,9 @@ _CSS = """
  button{margin-top:16px;width:100%;padding:11px;border:0;border-radius:8px;background:#4FD1C5;color:#0B1220;font-weight:600}
  button.sec{background:#1f2b42;color:#E5E9F0} #msg{margin-top:12px} .err{color:#F87171} .ok{color:#4FD1C5} a{color:#4FD1C5}
  .hint{font-size:.8rem;color:#9AA7BD;margin-top:6px}
- h2{color:#4FD1C5;font-size:1rem;margin-top:24px} label.fld{margin-top:8px;color:#E5E9F0} code{color:#9AA7BD}
+ h2{color:#4FD1C5;font-size:1rem;margin-top:24px}
+ .est{margin-top:10px;font-size:.85rem;line-height:1.5} .bar{height:8px;border-radius:4px;background:#1f2b42;margin:4px 0}
+ .bar i{display:block;height:100%;border-radius:4px} label.fld{margin-top:8px;color:#E5E9F0} code{color:#9AA7BD}
 """
 
 
@@ -597,7 +607,10 @@ def page_html_tb():
         heute = dict(_tb_tag)
         if heute["tag"] != time.strftime("%Y-%m-%d"):
             heute = {"tag": "", "punkte": 0, "nachrichten": 0}   # Zaehler von gestern nicht zeigen
-    state = json.dumps({"enabled": TB["enabled"], "host": TB["host"], "grid": TB_GRID_ID,
+    lt = time.localtime()
+    mitternacht = time.mktime((lt.tm_year, lt.tm_mon, lt.tm_mday, 0, 0, 0, 0, 0, -1))
+    heute["sekunden"] = int(time.time() - max(mitternacht, _START))   # Zeitraum des Zaehlers
+    state = json.dumps({"est": TB_EST, "oc": list(TB_ON_CHANGE),"enabled": TB["enabled"], "host": TB["host"], "grid": TB_GRID_ID,
                         "heute": heute,
                         "masked": {d: _mask(t) for d, t in TB["tokens"].items()},
                         "fields": [{"name": f[0], "label": f[1]} for f in TB_FIELDS],
@@ -618,6 +631,11 @@ def page_html_tb():
 (Kontingent im Free-Tarif). Mit * markierte Werte nur bei Aenderung, einmal taeglich und nach
 einem Neustart. Das Geraet &bdquo;Netz&ldquo; sendet immer <code>gridPower</code>.</div>
 <div id="flds"></div>
+<h2>Schaetzung Speicherverbrauch</h2>
+<div class="hint">Schlechtester Fall: alle Geraete rund um die Uhr online. Rohdaten mit 30 Tagen
+Aufbewahrung; berechnete Felder in ThingsBoard sieht die Bridge nicht - bei Bedarf ankreuzen.</div>
+<div id="extras"></div>
+<div id="schaetz" class="est"></div>
 <button id="btn">Speichern &amp; Tokens testen</button>
 <div id="msg"></div>
 <p><a href="./">&larr; Dashboard</a> &middot; <a href="thingspeak">ThingSpeak</a></p>
@@ -641,9 +659,46 @@ function gridRow(){ return row(S.grid, 'Netz (Netzsaldo)'); }
 // Ohne Klick keine Shelly-Abfrage: bekannte Geraete aus der Config anzeigen
 devs.innerHTML = Object.keys(S.masked).filter(function(id){ return id!==S.grid; })
   .map(function(id){ return row(id, 'Hub '+id); }).join('') + gridRow();
+function n(x){ return Math.round(x).toLocaleString('de-DE'); }
+extras.innerHTML = S.est.extras.map(function(x){
+  return '<label class="fld"><input type="checkbox" data-x="'+x.proStunde+'"> '+x.label+
+    ' <code>+'+n(x.proStunde)+' / h</code></label>';
+}).join('');
+function aktiv(i){                       // Geraet hat danach ein Token?
+  var v = i.value.trim(), alt = !!S.masked[i.dataset.id];
+  return v === '-' ? false : (v !== '' || alt);
+}
+function schaetzen(){
+  var H = 0, N = 0, F = 0, FA = 0, X = 0;
+  document.querySelectorAll('[data-id]').forEach(function(i){
+    if (aktiv(i)) { if (i.dataset.id === S.grid) N = 1; else H++; }
+  });
+  document.querySelectorAll('[data-f]').forEach(function(c){
+    if (c.checked) { if (S.oc.indexOf(c.dataset.f) >= 0) FA++; else F++; }
+  });
+  document.querySelectorAll('[data-x]').forEach(function(c){ if (c.checked) X += +c.dataset.x; });
+  var proMin = H * F + N, roh = 60 * proMin + H * FA * 2 / 24;   // *-Werte ca. 2 je Tag
+  var tage = roh * S.est.ttl + X, anteil = tage / S.est.richtwert;
+  var farbe = anteil < 0.8 ? '#4FD1C5' : (anteil <= 1 ? '#F6C453' : '#F87171');
+  var t = '<b>' + H + ' Speicher x ' + F + (FA ? ' (+' + FA + ' *)' : '') + ' Werte' + (N ? ' + Netz' : '') + '</b><br>' +
+    'Datenpunkte: ' + n(proMin) + ' pro Minute &middot; ' + n(roh * 24) + ' pro Tag<br>' +
+    'Nachrichten: ' + n(1440 * (H + N)) + ' pro Tag<br>' +
+    'Speichertage: ca. ' + n(tage) + ' pro Stunde (' + Math.round(anteil * 100) + ' % von ' + n(S.est.richtwert) + ')' +
+    '<div class="bar"><i style="width:' + Math.min(100, anteil * 100) + '%;background:' + farbe + '"></i></div>' +
+    'Jeder weitere Minutenwert: +' + n(H * 60 * S.est.ttl) + ' pro Stunde';
+  if (S.heute.tag && S.heute.sekunden > 600) {
+    var ist = S.heute.punkte / (S.heute.sekunden / 3600);
+    t += '<br>Tatsaechlich heute: ' + n(ist) + ' Datenpunkte pro Stunde (Rohdaten, Soll ' + n(roh) + ')';
+  }
+  schaetz.innerHTML = t;
+}
+document.addEventListener('input', schaetzen);
+document.addEventListener('change', schaetzen);
+schaetzen();
 load.onclick = function(){
   fetch('config_api').then(r=>r.json()).then(function(c){
     devs.innerHTML = c.devices.map(function(d){ return row(d.id, d.label+' (Hub '+d.id+')'); }).join('') + gridRow();
+    schaetzen();
   }).catch(function(){ msg.className='err'; msg.textContent='Geraeteliste nicht ladbar.'; });
 };
 btn.onclick = async function(){
