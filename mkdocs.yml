@@ -47,8 +47,9 @@ nav:
       - Änderungen: Multiconfigurator/CHANGELOG.md
   - Controller:
       - Controller-Shelly: Controller/readme.md
-      - Gesamtdokumentation: Controller/gesamtdoku.md
-      - Damping/Simulation: Controller/Damping_Kompromiss.md
+      - Tech Details:
+        - Gesamtdokumentation: Controller/gesamtdoku.md
+        - Damping/Simulation: Controller/Damping_Kompromiss.md
       - Änderungen: Controller/CHANGELOG.md
   - Dashboard & Meldungen:
       - Dashboard-Shelly: zendash_watch_API_ZenSDK/readme.md
