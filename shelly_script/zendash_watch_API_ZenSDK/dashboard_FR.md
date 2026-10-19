@@ -10,17 +10,23 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
 
 **Sommaire**
 
-- [Comment tout cela s'articule](#comment-tout-cela-sarticule)
-- [Utilisation](#utilisation)
-- [Quelle variante vous convient ?](#quelle-variante-vous-convient-)
-- [Prérequis](#prérequis)
-- [Le tableau de bord en 4 étapes](#le-tableau-de-bord-en-4-étapes)
-- [En tant que programme sous Windows ou macOS](#en-tant-que-programme-sous-windows-ou-macos)
-- [Fonctionnement permanent sur un Synology](#fonctionnement-permanent-sur-un-synology)
-- [En tant qu'app dans Home Assistant](#en-tant-quapp-dans-home-assistant)
-- [Options de démarrage](#options-de-démarrage)
-- [Bon à savoir](#bon-à-savoir)
-- [En cas de problème](#en-cas-de-problème)
+- [Installer et utiliser le tableau de bord](#installer-et-utiliser-le-tableau-de-bord)
+  - [Comment tout cela s'articule](#comment-tout-cela-sarticule)
+  - [Utilisation](#utilisation)
+    - [Organisation de la page](#organisation-de-la-page)
+    - [Verrouiller et déverrouiller](#verrouiller-et-déverrouiller)
+    - [Menu « Affichage »](#menu--affichage-)
+    - [Ce que vous pouvez régler](#ce-que-vous-pouvez-régler)
+    - [Ce qu'affiche l'écran](#ce-quaffiche-lécran)
+  - [Quelle variante vous convient ?](#quelle-variante-vous-convient-)
+  - [Prérequis](#prérequis)
+  - [Le tableau de bord en 4 étapes](#le-tableau-de-bord-en-4-étapes)
+  - [En tant que programme sous Windows ou macOS](#en-tant-que-programme-sous-windows-ou-macos)
+  - [Fonctionnement permanent sur un Synology](#fonctionnement-permanent-sur-un-synology)
+  - [En tant qu'app dans Home Assistant](#en-tant-quapp-dans-home-assistant)
+  - [Options de démarrage](#options-de-démarrage)
+  - [Bon à savoir](#bon-à-savoir)
+  - [En cas de problème](#en-cas-de-problème)
 
 > Les messages de la console du proxy et sa page de configuration sont en allemand. Le tableau de bord lui-même peut être passé en français (bouton DE/EN/FR en haut à droite).
 
@@ -30,7 +36,7 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
 
 Le navigateur n'a pas le droit d'interroger directement le Shelly – le firmware du Shelly refuse ce type d'accès venant d'une page web étrangère. C'est pourquoi un petit **proxy** tourne sur un ordinateur du réseau domestique : il fournit la page du tableau de bord et interroge le Shelly à la place du navigateur.
 
-```
+```text
 Navigateur  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Shelly tableau de bord (zenDash API)  ──►  Shelly Controller (KVS)
 ```
 
@@ -168,7 +174,7 @@ Le proxy doit savoir à quelle adresse IP se trouve le Shelly tableau de bord et
 
 Ouvrir directement dans le navigateur (remplacer IP et numéro) :
 
-```
+```link
 http://<IP-du-Shelly-tableau-de-bord>/script/<numéro-du-script>/status_api
 ```
 
@@ -186,7 +192,7 @@ Sous Windows, la commande s'appelle souvent `python` ou `py` au lieu de `python3
 
 Au démarrage, le proxy affiche un bref résumé (en allemand) :
 
-```
+```text
 Zendure Dashboard Proxy
   Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
   HTML:     /home/pi/zendure/zendure-dashboard.html
@@ -214,7 +220,7 @@ Un clic sur **« Speichern & testen »** (enregistrer et tester) vérifie imméd
 
 Les réglages sont enregistrés dans le fichier `zendure_proxy_config.json` à côté du proxy. Au prochain démarrage, ils sont toujours là – la configuration n'est donc nécessaire qu'une fois. Vous pouvez les modifier à tout moment sous :
 
-```
+```link
 http://<adresse-du-proxy>:8000/setup
 ```
 

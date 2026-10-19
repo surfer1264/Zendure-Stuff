@@ -10,17 +10,23 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 
 **Contents**
 
-- [How it fits together](#how-it-fits-together)
-- [Operation](#operation)
-- [Which option suits you?](#which-option-suits-you)
-- [Requirements](#requirements)
-- [Dashboard in 4 steps](#dashboard-in-4-steps)
-- [As a program on Windows or macOS](#as-a-program-on-windows-or-macos)
-- [Continuous operation on a Synology](#continuous-operation-on-a-synology)
-- [As an app in Home Assistant](#as-an-app-in-home-assistant)
-- [Start options](#start-options)
-- [Good to know](#good-to-know)
-- [If it does not work](#if-it-does-not-work)
+- [Setting up and using the dashboard](#setting-up-and-using-the-dashboard)
+  - [How it fits together](#how-it-fits-together)
+  - [Operation](#operation)
+    - [Page layout](#page-layout)
+    - [Locking and unlocking](#locking-and-unlocking)
+    - ["View" menu](#view-menu)
+    - [What you can set](#what-you-can-set)
+    - [What the display shows](#what-the-display-shows)
+  - [Which option suits you?](#which-option-suits-you)
+  - [Requirements](#requirements)
+  - [Dashboard in 4 steps](#dashboard-in-4-steps)
+  - [As a program on Windows or macOS](#as-a-program-on-windows-or-macos)
+  - [Continuous operation on a Synology](#continuous-operation-on-a-synology)
+  - [As an app in Home Assistant](#as-an-app-in-home-assistant)
+  - [Start options](#start-options)
+  - [Good to know](#good-to-know)
+  - [If it does not work](#if-it-does-not-work)
 
 > The proxy's console output and its setup page are in German. The dashboard page itself can be switched to English (button DE/EN/FR at the top right).
 
@@ -30,7 +36,7 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 
 The browser is not allowed to query the data directly from the Shelly – the Shelly firmware rejects such requests coming from a foreign web page. That is why a small **proxy** runs on a computer in your home network: it serves the dashboard page and queries the Shelly on its behalf.
 
-```
+```text
 Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard Shelly (zenDash API)  ──►  Controller Shelly (KVS)
 ```
 
@@ -168,7 +174,7 @@ The proxy needs to know the IP address of the Dashboard Shelly and which number 
 
 Open directly in the browser (insert IP and number):
 
-```
+```link
 http://<IP-of-Dashboard-Shelly>/script/<script-number>/status_api
 ```
 
@@ -186,7 +192,7 @@ On Windows the command is often `python` or `py` instead of `python3`. The windo
 
 On start the proxy shows a short overview (in German):
 
-```
+```text
 Zendure Dashboard Proxy
   Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
   HTML:     /home/pi/zendure/zendure-dashboard.html
@@ -214,7 +220,7 @@ A click on **"Speichern & testen"** (save & test) immediately checks whether the
 
 The settings are stored in the file `zendure_proxy_config.json` next to the proxy. On the next start they are back – so setup is only needed once. You can change them at any time under:
 
-```
+```link
 http://<proxy-address>:8000/setup
 ```
 
