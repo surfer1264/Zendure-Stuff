@@ -39,14 +39,14 @@ nav:
   - Start: readme.md
   - Überblick:
       - Was die Suite kann: szscs.md
+      - Controller im Alltag: Controller/benutzerdoku.md
       - Kompatible Geräte: kompatible_geraete.md
   - Einrichten & Updaten:
       - Configurator: Multiconfigurator/readme.md
-      - Helfer und Proxy auf dem Mac: Multiconfigurator/local_helper/mcos_helper.md
+      - Helfer/Proxy auf Mac: Multiconfigurator/local_helper/mcos_helper.md
       - Änderungen: Multiconfigurator/CHANGELOG.md
   - Controller:
       - Controller-Shelly: Controller/readme.md
-      - Im Alltag: Controller/benutzerdoku.md
       - Gesamtdokumentation: Controller/gesamtdoku.md
       - Damping/Simulation: Controller/Damping_Kompromiss.md
       - Änderungen: Controller/CHANGELOG.md
