@@ -38,7 +38,6 @@ Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webse
 | Ordner | Wofür |
 |---|---|
 | [Script_poller](Script_poller/readme.md) | Langzeit-Messung von Speicher und CPU eines Shelly-Scripts, Log-Mitschnitt über Stunden (für Fehlersuche und Entwicklung) |
-| [testController](testController/README.md) | Test-Umgebung für den Controller (für Entwickler) |
 | [thingsboard](thingsboard) | fertige Dashboards und Regelketten zum Import in ThingsBoard, passend zum [ThingsBoard-Upload](zendash_watch_API_ZenSDK/thingsboard.md) |
 | [Einordnung](Einordnung.md) | Vergleich mit anderen Multi-Device-Lösungen (ioBroker, Z-HA, EMS SolarFlow …) |
 
