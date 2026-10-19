@@ -36,6 +36,7 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 ## Inhalt
 
 - [Dashboard-Shelly - API + Watchdog](#dashboard-shelly---api--watchdog)
+    - [Was macht der AkkuWatchDog?](#was-macht-der-akkuwatchdog)
     - [Inhalt](#inhalt)
     - [Was du brauchst](#was-du-brauchst)
     - [So arbeitet das Script](#so-arbeitet-das-script)
@@ -120,7 +121,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge, die deine eigene Konfiguration eins
 
 Im Log des Scripts erscheint eine Übersicht. Prüfe dort, ob alles so eingestellt ist, wie du es willst:
 
-```
+```text
 --------------------------------
 zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
 Module     : API AN | Watchdog AN
@@ -385,7 +386,7 @@ Setze `debug: true` und starte das Script neu – oder setze im Configurator bei
 - die Speicherbelegung an den wichtigsten Stellen
 - bei jeder Watchdog-Runde eine Zeile je Speicher mit allen Akkupacks, zum Beispiel:
 
-    ```
+    ```text
     [DEBUG] SF800: SoC 91%, 26.0C | Packs: CO1234…:91%/3.31V, BO5678…:91%/3.31V
     ```
 
