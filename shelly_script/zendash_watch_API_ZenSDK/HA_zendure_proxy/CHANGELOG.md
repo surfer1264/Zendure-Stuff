@@ -3,6 +3,12 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.9.6
+
+- „Web-UI öffnen“ zeigt das Dashboard jetzt innerhalb von Home Assistant (Ingress) – funktioniert auch, wenn Home Assistant über `homeassistant.local` oder von unterwegs geöffnet ist
+- Dashboard optional in der Seitenleiste („In Seitenleiste anzeigen“)
+- Direkter Zugang über `http://<ha-ip>:8000/` bleibt unverändert
+
 ## 3.5.9.5
 
 - Knopf „Web-UI öffnen“ auf der Seite der App und Link zum Projekt
