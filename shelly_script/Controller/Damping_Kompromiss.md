@@ -10,9 +10,9 @@ Anbei ein vollständiges Tagespropfil eines Testlaufes: [doku/beispiel_report.ht
 
 ---
 
-## Fazit: Regelung 5.2.0 im Simulator (Entwurf)
+## Fazit: Regelung 5.2.0 im Simulator
 
-Untersucht wurde der Einfluss des damping-Faktors auf Netzbezug, Netzeinspiesung, Schreibvorgänge und Regelgüte (im Hystereseband).
+Untersucht wurde der Einfluss des damping-Faktors auf Netzbezug, Netzeinspeisung, Schreibvorgänge und Regelgüte (im Hystereseband).
 
 Von diesen vier Größen beeinflusst der dampingFactor die **Einspeisung am stärksten** und den **Netzbezug am wenigsten**. Vergleich von 0.4 mit 0.8:
 
