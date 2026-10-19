@@ -16,14 +16,16 @@ Untersucht wurde der Einfluss des damping-Faktors auf Netzbezug, Netzeinspeisung
 
 Von diesen vier Größen beeinflusst der dampingFactor die **Einspeisung am stärksten** und den **Netzbezug am wenigsten**. Vergleich von 0.4 mit 0.8:
 
-| Rang | Kennzahl | 0.4 | 0.8 | Änderung | Eindeutig? |
-|---|---|---|---|---|---|
-| 1 (größte Wirkung) | **Einspeisung** | 0,21 kWh | 0,35 kWh | **+67 %** | ja (99 %) |
-| 2 | **Schreibvorgänge** | 3575 | 4628 | **+29 %** | ja (100 %) |
-| 3 | **Regelgüte (im Band ±13 W)** | 57,4 % | 67,1 % | **+17 %** (+9,6 Punkte) | ja (100 %) |
-| 4 (geringste Wirkung) | **Netzbezug** | 1,04 kWh | 0,95 kWh | **−9 %** | nur bedingt (71 %) |
+**Empfehlung:**
 
-Ein höherer Wert verbessert die Regelgüte also spürbar. Bezahlt wird das vor allem mit **mehr Einspeisung** und mehr **Schreibvorgängen**. Der Netzbezug sinkt nur wenig.
+Mit einer ausgewogenen Einstellung starten. Veränderungen sollten nur vorgenommen werden, wenn 
+
+- geeignete Auswertewerkezeuge zur Verfügung stehen
+- ein hinreichender Testzeitraum gewählt wurde (mind. 10h Tageslastprofil)
+- mehrere Testzeiträume mit ggf. anderen Lastkurven als Vergleich zur Verfügung stehen
+- eine Änderung pro Tag an der Konfiguration (statt 100 Änderungen in 10h) 
+
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/20bdb4a8-6b10-4c35-ba30-b2ef5f7bdd14" />
 
 🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
 stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
