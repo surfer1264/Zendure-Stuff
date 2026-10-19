@@ -31,6 +31,7 @@ La version actuelle et toutes les modifications figurent dans le [changelog](CHA
 - [Passer des anciens scripts](#passer-des-anciens-scripts)
 - [Besoin en mémoire](#besoin-en-mémoire)
 - [Dépannage](#dépannage)
+- [Téléchargement](#téléchargement)
 
 ---
 
@@ -391,3 +392,21 @@ La batterie a répondu, mais les données étaient incomplètes ou dans un forma
 
 **Le récapitulatif du matin et du soir arrive à la mauvaise heure ou pas du tout.**
 Vérifiez la localisation et le fuseau horaire dans les paramètres du Shelly. Le script crée deux planifications au démarrage. Les autres planifications du Shelly ne sont pas modifiées.
+
+---
+
+## Téléchargement
+
+**Afficher** ouvre le fichier sur GitHub, **Téléchargement** fournit le fichier brut. Si le navigateur l'affiche seulement comme texte : clic droit → « Enregistrer le lien sous … ».
+
+| Fichier | Usage | Links |
+|---|---|---|
+| `zendash_watch_mini.js` | à charger sur le Shelly du tableau de bord | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js) |
+| `zendash_watch_src.js` | version source lisible | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_src.js) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_src.js) |
+| `zendure_proxy.py` | proxy pour le tableau de bord | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py) |
+| `zendure-dashboard.html` | page du tableau de bord | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) |
+| `zendure-dashboard-b.html` | ancienne mise en page sous `/b` | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-b.html) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-b.html) |
+| `ts_bridge.py` | passerelle vers ThingSpeak/ThingsBoard | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py) |
+| `CHANGELOG.md` | modifications par version (en allemand) | [Afficher](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) · [Téléchargement](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) |
+
+Proxy en programme prêt à l'emploi : [Windows](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe) · [macOS (Apple Silicon)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos) · [Page des releases](https://github.com/surfer1264/Zendure-Stuff/releases/latest)

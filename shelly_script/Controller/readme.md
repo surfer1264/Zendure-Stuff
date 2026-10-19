@@ -170,7 +170,3 @@ Bequemer geht es mit dem Helfer: „🔍 Speicher prüfen“ und „Log aufzeich
 | `zerooutput_multi_kvs_mini.js` | zum Hochladen auf den Shelly | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) |
 | `zerooutput_multi_kvs_src.js` | lesbare Quellfassung | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) |
 | `CHANGELOG.md` | Änderungen je Version | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/CHANGELOG.md) |
-
-Ordner: [Deploy](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller/Deploy) · [yaml (Home Assistant)](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller/yaml) · [ganzer Controller-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller)
-
-Alles auf einmal: [Repository als ZIP](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)

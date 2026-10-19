@@ -440,7 +440,3 @@ Prüfe Standort und Zeitzone in den Shelly-Einstellungen. Das Script legt beim S
 | `CHANGELOG.md` | Änderungen je Version | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) |
 
 Proxy als fertiges Programm: [Windows](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe) · [macOS (Apple Silicon)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos) · [Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest)
-
-Ordner: [Deploy](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK/Deploy) · [Home-Assistant-App](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK/HA_zendure_proxy) · [ganzer Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK)
-
-Alles auf einmal: [Repository als ZIP](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)
