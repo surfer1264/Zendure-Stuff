@@ -18,12 +18,12 @@ Von diesen vier Größen beeinflusst der dampingFactor die **Einspeisung am stä
 
 **Empfehlung:**
 
-Mit einer ausgewogenen Einstellung starten. Veränderungen sollten nur vorgenommen werden, wenn 
+Mit einer ausgewogenen Einstellung starten. Veränderungen sollten nur vorgenommen werden, wenn
 
 - geeignete Auswertewerkezeuge zur Verfügung stehen
 - ein hinreichender Testzeitraum gewählt wurde (mind. 10h Tageslastprofil)
 - mehrere Testzeiträume mit ggf. anderen Lastkurven als Vergleich zur Verfügung stehen
-- eine Änderung pro Tag an der Konfiguration (statt 10 Änderungen in 10h) 
+- eine Änderung pro Tag an der Konfiguration (statt 10 Änderungen in 10h)
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/20bdb4a8-6b10-4c35-ba30-b2ef5f7bdd14" />
 
@@ -98,7 +98,7 @@ Folgende Kapitel beschreiben den technischen Part der Simulation und sind eher e
 
 ## 1. Überblick
 
-```
+```text
 matrix_damping.cmd ──► matrix.js ──┬─► run_test.js (Lauf 1) ──► mock_server.js  (Zähler + 2 Geräte)
    (optional)                      ├─► run_test.js (Lauf 2)      shelly_shim.js  (Shelly-Nachbildung)
                                    └─► ...                       zdmc_test.js    (Controller)
@@ -209,7 +209,7 @@ Beschreibt Rauschen und Ereignisse des Testtags (Aufbau siehe Abschnitt 5).
 
 **Normaler Weg: `minify_patch_start.cmd`**
 
-```
+```text
 python3 minify_keep_config.py D:\Uspace\git\Zendure-Stuff\shelly_script\Controller\zerooutput_multi_kvs_src.js zerooutput_multi_kvs_mini.js
 python3 swap_config.py zerooutput_multi_kvs_mini.js --config-from testconfig.js -o zdmc_test.js
 14hlauf0600.cmd
@@ -258,7 +258,7 @@ Alle anderen Werte (Damping, Hysterese, Schwellen, minSoc …) sind das, was get
 
 Der Controller nimmt sein Intervall aus `zdmc_test.js` (`interval`). Der Mock muss pro Zyklus genau so viel Zeit simulieren:
 
-```
+```text
 STEP_MIN = interval in ms / 60000
 ```
 
@@ -400,7 +400,7 @@ Zufallsereignisse können sich überlagern, zum Beispiel ein Kaffeevollautomat w
 
 Beim Start schreibt der Mock den Ereignisplan des ersten Tages ins Log:
 
-```
+```text
 [mock] Rauschmodell: an | Szenario "werktag" | Seed 42 | Teilschritt 1.00 s (4 je Schritt) | ...
 [mock]   Ereignis Tag 0: waschmaschine 10:00-11:00 (60 min)
 ```
@@ -439,7 +439,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 1. In `matrix_damping.cmd` `DAMPINGS`, `SEEDS`, `PARALLEL`, `CYCLES` und `SPEED_FACTOR` setzen.
 2. Starten. Im Konsolenfenster erscheint:
 
-    ```
+    ```text
     [matrix] 12 Laeufe (Damping 0.5/0.65/0.7/0.8 x Seeds 1/2/3), parallel 3 -> ...\Matrix-261017-220145
     [matrix] Start  seed 1 damping 0.5 (Port 3901)
     ...
