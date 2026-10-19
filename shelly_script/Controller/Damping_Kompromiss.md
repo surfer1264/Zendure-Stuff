@@ -23,7 +23,7 @@ Mit einer ausgewogenen Einstellung starten. Veränderungen sollten nur vorgenomm
 - geeignete Auswertewerkezeuge zur Verfügung stehen
 - ein hinreichender Testzeitraum gewählt wurde (mind. 10h Tageslastprofil)
 - mehrere Testzeiträume mit ggf. anderen Lastkurven als Vergleich zur Verfügung stehen
-- eine Änderung pro Tag an der Konfiguration (statt 100 Änderungen in 10h) 
+- eine Änderung pro Tag an der Konfiguration (statt 10 Änderungen in 10h) 
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/20bdb4a8-6b10-4c35-ba30-b2ef5f7bdd14" />
 
