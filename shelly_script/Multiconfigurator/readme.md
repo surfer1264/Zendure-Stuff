@@ -35,6 +35,7 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
     * [Log aufzeichnen](#log-aufzeichnen)
     * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
     * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
+8. [Download](#8-download)
 
 Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
@@ -361,3 +362,26 @@ shasum -a 256 -c zendure_local_helper-macos.sha256
 ```
 
 `OK` = alles in Ordnung. `FAILED` = Datei **nicht** ausführen, neu herunterladen.
+
+---
+
+## 8. Download
+
+| Was | Links |
+|---|---|
+| Helfer Windows (64 Bit) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe.sha256) |
+| Helfer Windows (32 Bit) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe.sha256) |
+| Helfer macOS (Apple Silicon) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos.sha256) |
+| Alle Versionen | [Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest) |
+| Web-Configurator | [im Browser öffnen](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) |
+
+Quelldateien – **Ansehen** öffnet die Datei auf GitHub, **Download** liefert die reine Datei. Öffnet der Browser sie nur als Text: Rechtsklick → „Link speichern unter …“.
+
+| Datei | Wofür | Links |
+|---|---|---|
+| `zendure-multi-configurator_multilang.html` | Configurator als einzelne HTML-Datei | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) |
+| `zendure_local_helper.py` | Helfer als Python-Script | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/local_helper/zendure_local_helper.py) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/local_helper/zendure_local_helper.py) |
+| `proxy_start.cmd` | Helfer per Python starten (Windows) | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/local_helper/proxy_start.cmd) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/local_helper/proxy_start.cmd) |
+| `CHANGELOG.md` | Änderungen je Version | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/CHANGELOG.md) |
+
+Ordner: [ganzer Configurator-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Multiconfigurator) · Alles auf einmal: [Repository als ZIP](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)

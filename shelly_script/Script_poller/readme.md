@@ -170,3 +170,20 @@ Schau dir die geschriebenen Log-Dateien unbedingt einmal an – jede Shelly-Firm
 
 * Drücke **`Strg + C`** im Terminal, um den Log-Grabber sauber zu beenden.
 * Die gesammelten Logs findest du anschließend im selben Verzeichnis, im Namen basierend auf `log_file_path` aus `config_log_grabber.json` (Standard: `shelly_debug.log`). Solange `daily_log_rotation` aktiv ist (Standard), heißt die Datei tatsächlich `shelly_debug_YYMMDD.log` mit dem jeweiligen Tagesdatum (z. B. `shelly_debug_260823.log`) – pro Tag entsteht so automatisch eine neue Datei. Der aktuell aktive Dateiname wird beim Start des Scripts auch im Terminal angezeigt.
+
+---
+
+## Download
+
+Alle Dateien in **ein** Verzeichnis legen. **Ansehen** öffnet die Datei auf GitHub, **Download** liefert die reine Datei. Öffnet der Browser sie nur als Text: Rechtsklick → „Link speichern unter …“.
+
+| Datei | Wofür | Links |
+|---|---|---|
+| `Shelly_Script_Status_poller.py` | Script-Status-Poller | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/Shelly_Script_Status_poller.py) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/Shelly_Script_Status_poller.py) |
+| `config_status_poller.json` | Konfiguration des Pollers | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/config_status_poller.json) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/config_status_poller.json) |
+| `monitor.cmd` | Poller starten (Windows) | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/monitor.cmd) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/monitor.cmd) |
+| `shelly_log_grabber.py` | Websocket-Log-Grabber | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/shelly_log_grabber.py) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/shelly_log_grabber.py) |
+| `config_log_grabber.json` | Konfiguration des Log-Grabbers | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/config_log_grabber.json) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/config_log_grabber.json) |
+| `logger.cmd` | Log-Grabber starten (Windows) | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Script_poller/logger.cmd) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Script_poller/logger.cmd) |
+
+Ordner: [ganzer Script_poller-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Script_poller) · Alles auf einmal: [Repository als ZIP](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)

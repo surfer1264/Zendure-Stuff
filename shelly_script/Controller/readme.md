@@ -158,3 +158,19 @@ Bequemer geht es mit dem Helfer: „🔍 Speicher prüfen“ und „Log aufzeich
 | [`CHANGELOG.md`](CHANGELOG.md) | Änderungen je Version |
 | [`Deploy`](Deploy) | eigene Deploy-Pipeline, siehe [oben](#für-fortgeschrittene-mit-deploycmd) |
 | [`yaml`](yaml) | Beispiel für Home Assistant: liest die KVS-Werte des Controllers per REST (`rest.yaml`), schreibt sie per `rest_command` zurück (`rest_commands.yaml`) und stellt sie als Regler bereit (`template/kvs.yaml`). Die IP `192.168.178.117` durch die deines Controller-Shellys ersetzen. `configuration.yaml` bindet in Home Assistant den Ordner `templates/` ein (`!include_dir_merge_list templates/`) – dorthin gehört die Datei `kvs.yaml` aus dem Repository-Ordner `template`. Hintergrund: [Kapitel 13.6](gesamtdoku.md#136-nutzung-über-home-assistant) |
+
+---
+
+## Download
+
+**Ansehen** öffnet die Datei auf GitHub, **Download** liefert die reine Datei. Öffnet der Browser sie nur als Text: Rechtsklick → „Link speichern unter …“.
+
+| Datei | Wofür | Links |
+|---|---|---|
+| `zerooutput_multi_kvs_mini.js` | zum Hochladen auf den Shelly | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_mini.js) |
+| `zerooutput_multi_kvs_src.js` | lesbare Quellfassung | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/zerooutput_multi_kvs_src.js) |
+| `CHANGELOG.md` | Änderungen je Version | [Ansehen](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/Controller/CHANGELOG.md) |
+
+Ordner: [Deploy](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller/Deploy) · [yaml (Home Assistant)](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller/yaml) · [ganzer Controller-Ordner](https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Controller)
+
+Alles auf einmal: [Repository als ZIP](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)
