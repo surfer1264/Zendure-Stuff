@@ -12,7 +12,7 @@ Seit Version 3.2 gibt es keine eigene API-Versionsnummer mehr: Die Schnittstelle
 
 ## Basisadresse
 
-```
+```link
 http://<shelly-ip>/script/<script-id>/<endpunkt>
 ```
 
@@ -22,7 +22,7 @@ Shelly-Firmware mit `403` abgewiesen, unabhängig von den CORS-Headern des Scrip
 Deshalb läuft der Zugriff über `zendure_proxy.py`, der serverseitig abfragt und
 same-origin weiterreicht:
 
-```
+```link
 http://<proxy-host>:8000/<endpunkt>
 ```
 
@@ -164,7 +164,7 @@ Mehrere gleichzeitige Anfragen (mehrere offene Dashboards, Reload-Sturm) werden 
 
 Schreibt Werte in die KVS.
 
-```
+```link
 GET kvs_set_api?data={"zdmc_setpoint":-20}
 ```
 
@@ -247,7 +247,7 @@ betroffenen Schlüsseln vermeidet das zuverlässig.
 
 Alle drei Schlüssel eines Geräts in einem `data`-Objekt, URL-kodiert:
 
-```
+```link
 GET kvs_set_api?data={"zdmc_dev1_dischargeAllowed":0,"zdmc_dev1_reverse":0,"zdmc_dev1_inputLimit":500}
 ```
 
@@ -259,7 +259,7 @@ Antwort: `{"success":true,"written":3}`
 
 Beenden — nur noch `inputLimit=0` nötig:
 
-```
+```link
 GET kvs_set_api?data={"zdmc_dev1_inputLimit":0}
 ```
 
