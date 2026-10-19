@@ -16,11 +16,14 @@ Unterschied: `run.sh` legt die Einstellungen im dauerhaften App-Speicher
 Optional sendet die App die Messwerte jede Minute an ThingSpeak und/oder
 ThingsBoard, siehe [ThingSpeak- und ThingsBoard-Upload](#thingspeak--und-thingsboard-upload).
 
+Die Bedienung nach der Installation beschreibt [DOCS.md](DOCS.md) – dieselbe Seite
+erscheint in Home Assistant im Reiter **Dokumentation** der App.
+
 ## Voraussetzungen
 
 - Home Assistant OS mit Supervisor
 - Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
-- alle acht Dateien aus [diesem Ordner](.) (`config.yaml`, `build.yaml`, `Dockerfile`, `run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zendure-dashboard.html`, `zendure-dashboard-b.html`)
+- die Dateien aus [diesem Ordner](.), siehe [Verzeichnisstruktur](#verzeichnisstruktur)
 - IP-Adresse des **Dashboard-Shelly** (auf dem zenDash-API + Watchdog läuft) und die
   **Script-Nummer** dieses Scripts (über den Configurator hochgeladen heißt es `zd`) – beides wird erst nach der Installation
   gebraucht
@@ -42,8 +45,24 @@ Alle Dateien liegen in einem Ordner unter `/addons/`:
     ├── zendure_proxy.py
     ├── ts_bridge.py
     ├── zendure-dashboard.html
-    └── zendure-dashboard-b.html
+    ├── zendure-dashboard-b.html
+    ├── README.md
+    ├── DOCS.md
+    ├── CHANGELOG.md
+    └── translations/
+        ├── de.yaml
+        └── en.yaml
 ```
+
+Die ersten acht Dateien braucht der Bau der App. Die übrigen zeigt Home Assistant
+nur an und sind optional:
+
+| Datei | Wo sie erscheint |
+|---|---|
+| `README.md` | Kurzbeschreibung im App Store (Seite der App vor der Installation) |
+| `DOCS.md` | Reiter **Dokumentation** der App |
+| `CHANGELOG.md` | Änderungen, die Home Assistant beim Update anzeigt |
+| `translations/de.yaml`, `translations/en.yaml` | Beschreibung des Ports 8000 im Reiter **Konfiguration** (Netzwerk). Home Assistant liest sie nur aus dem Unterordner `translations/`. |
 
 `zendure-dashboard.html` ist das (neue) Standard-Layout, `zendure-dashboard-b.html` das bisherige
 Layout des Dashboards (gleiche Funktionen), erreichbar unter `http://<ha-ip>:8000/b`.
@@ -59,9 +78,11 @@ dort entfernen, sonst bricht der Bau ab.
 
 ```yaml
 name: "Zendure Dashboard Proxy"
-version: "3.5.3"
+version: "3.5.9.4"
 slug: "zendure_proxy"
 description: "Lokaler Proxy für das Zendure-Dashboard (löst CORS-Problem der Shelly-Firmware)"
+url: "https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK"
+webui: "http://[HOST]:[PORT:8000]/"
 arch:
   - aarch64
   - amd64
@@ -77,7 +98,12 @@ ports_description:
 
 `init: false` ist entscheidend (siehe Troubleshooting weiter unten).
 
-Die `version` folgt der Versionsnummer des Dashboards. Sie bei jeder Änderung an den App-Dateien anheben – dann bietet Home
+`webui` sorgt für den Knopf **„Web-UI öffnen“** auf der Seite der App, `url` für
+den Link zum Projekt.
+
+Die ersten drei Stellen der `version` folgen der Versionsnummer des Dashboards,
+die vierte zählt Änderungen an der App selbst (z. B. `3.5.9.4`). Die Version bei
+jeder Änderung an den App-Dateien anheben – dann bietet Home
 Assistant ein Update an, und die Einstellungen bleiben erhalten (siehe
 [Änderungen an den App-Dateien](#änderungen-an-den-app-dateien)).
 
@@ -128,8 +154,9 @@ export ZENDURE_DATA_DIR=/data
 exec python3 zendure_proxy.py -q
 ```
 
-`ZENDURE_DATA_DIR=/data` legt `zendure_proxy_config.json` und
-`zendure_thingspeak_config.json` in den dauerhaften Speicher der App.
+`ZENDURE_DATA_DIR=/data` legt `zendure_proxy_config.json`,
+`zendure_thingspeak_config.json` und `zendure_thingsboard_config.json` in den
+dauerhaften Speicher der App.
 `/data` bekommt jede App von Home Assistant automatisch, in der `config.yaml`
 ist dafür nichts einzutragen. Ohne diese Zeile landen die Einstellungen im
 Container selbst und gehen bei jedem Neubau verloren.
@@ -142,7 +169,8 @@ im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
 
 ## Installation
 
-1. Ordner `zendure_proxy` mit allen acht Dateien unter `/addons/` anlegen
+1. Ordner `zendure_proxy` mit den Dateien aus der
+   [Verzeichnisstruktur](#verzeichnisstruktur) unter `/addons/` anlegen
    (per Samba-Freigabe oder SSH).
 2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
    drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
@@ -153,7 +181,7 @@ im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
    **„Watchdog“** aktivieren, damit der Proxy nach einem HA-Neustart
    automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
    startet. Siehe Bild 2.
-5. Im Browser `http://<ha-ip>:8000/` aufrufen. Beim ersten Mal erscheint die
+5. **„Web-UI öffnen“** wählen oder im Browser `http://<ha-ip>:8000/` aufrufen. Beim ersten Mal erscheint die
    **Einrichtungsseite**.
 6. **Shelly-IP** (Dashboard-Shelly, nicht Controller-Shelly) und
    **Script-ID** eintragen → **„Speichern & testen“**. Der Proxy prüft
@@ -211,7 +239,7 @@ müssen dieselbe Versionsnummer haben.
 So geht es, ohne die Einstellungen zu verlieren:
 
 1. Geänderte Dateien in `/addons/zendure_proxy/` ablegen.
-2. In `config.yaml` die `version` anheben (z. B. `3.5.3` → `3.5.4`, passend zur neuen Dashboard-Version).
+2. In `config.yaml` die `version` anheben – bei neuer Dashboard-Version die ersten drei Stellen (z. B. `3.5.9.4` → `3.6.0.0`), bei Änderungen nur an der App die vierte (z. B. `3.5.9.4` → `3.5.9.5`).
 3. **Repositories** im App Store neu laden (wie Installationsschritt 2).
 4. Auf der Seite der App erscheint **Aktualisieren** → ausführen. Home
    Assistant baut die App neu, `/data` bleibt erhalten.
@@ -239,6 +267,8 @@ Für die App gilt zusätzlich:
   übrigen Einstellungen.
 - Wegen `-q` erscheinen im Log der App keine Erfolgsmeldungen, nur Fehler.
   Ob Werte ankommen, siehst du direkt im ThingSpeak-Channel bzw. in ThingsBoard.
+  Für ThingsBoard zeigt außerdem `/thingsboard` oben, wie viele Datenpunkte heute
+  gesendet wurden.
 - Home Assistant braucht Internetzugang zu `api.thingspeak.com` bzw. zum
   ThingsBoard-Server (bei eigenem Server im Heimnetz entfällt das). Der Shelly
   und die Zendure-Geräte nicht.
@@ -253,8 +283,9 @@ Für die App gilt zusätzlich:
 | `env: can't execute 'bash\r'` | `run.sh` mit Windows-Zeilenenden (CRLF) statt Unix (LF) gespeichert | Datei mit LF-Zeilenenden neu speichern (z. B. in VS Code unten rechts CRLF → LF umstellen) |
 | Statt des Dashboards erscheint die Einrichtungsseite | App wurde deinstalliert und neu installiert (löscht `/data`), oder erster Start nach dem Umstieg von 1.0.x | Normal – IP und Script-ID erneut eintragen. Künftig per Update statt Deinstallation aktualisieren |
 | Einstellungen gehen nach jedem Update verloren | `run.sh` setzt `ZENDURE_DATA_DIR` nicht, Startübersicht zeigt `Konfig: /zendure_proxy_config.json` | `run.sh` aus diesem Ordner verwenden und App aktualisieren |
-| Startübersicht zeigt `ThingSpeak: nicht verfuegbar` | `ts_bridge.py` fehlt im Container | Datei in den App-Ordner legen, `COPY ts_bridge.py` im `Dockerfile` prüfen, App aktualisieren |
-| Bau der App bricht mit `COPY failed` ab | `Dockerfile` kopiert `ts_bridge.py`, die Datei fehlt aber im App-Ordner | Datei ablegen – oder ohne ThingSpeak die `COPY`-Zeile entfernen |
+| Startübersicht zeigt `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)` | `ts_bridge.py` fehlt im Container | Datei in den App-Ordner legen, `COPY ts_bridge.py` im `Dockerfile` prüfen, App aktualisieren |
+| Bau der App bricht mit `COPY failed` ab | `Dockerfile` kopiert eine Datei, die im App-Ordner fehlt (meist `ts_bridge.py`) | Datei ablegen – oder ohne Cloud-Upload die `COPY`-Zeile für `ts_bridge.py` entfernen |
+| Port 8000 hat im Reiter Konfiguration keine Beschreibung | `de.yaml`/`en.yaml` liegen nicht im Unterordner `translations/` | Dateien nach `translations/` verschieben, App aktualisieren |
 | „Speichern & testen“ meldet „Shelly nicht erreichbar“ | falsche IP, oder der Container erreicht das Netz des Shelly nicht | IP prüfen (Test im Browser: `http://<shelly-ip>/script/<id>/status_api`); bei getrennten Netzsegmenten siehe unten |
 | „Speichern & testen“ meldet eine falsche Antwort bzw. Status 404 | falsche Script-ID | Script-ID in der Shelly-Weboberfläche unter **Scripts** nachsehen |
 
@@ -266,6 +297,6 @@ Supervisor von Bridge- auf **Host-Netzwerk** umstellen.
 
 ## Sicherheit
 
-Das Dashboard und die Einrichtungsseiten `/setup` und `/thingspeak` haben keinen Passwortschutz.
+Das Dashboard und die Einrichtungsseiten `/setup`, `/thingspeak` und `/thingsboard` haben keinen Passwortschutz.
 Jeder im Heimnetz, der die Adresse kennt, kann Einstellungen ändern. Port 8000
 deshalb **nie** per Portweiterleitung ins Internet freigeben.
