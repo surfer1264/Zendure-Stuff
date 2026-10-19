@@ -3,6 +3,12 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.9.5
+
+- Knopf „Web-UI öffnen“ auf der Seite der App und Link zum Projekt
+- Beschreibung des Ports 8000 im Reiter Konfiguration (Deutsch und Englisch)
+- Neu: Kurzbeschreibung im App Store und Bedienungsanleitung im Reiter Dokumentation
+
 ## 3.5.9.4
 
 - ThingsBoard-Upload: neue Werte je Speicher `socLimit` (0 frei, 1 voll, 2 leer), `socSet` (obere Ladegrenze in %) und `minSoc` (untere Entladegrenze in %), standardmäßig aus

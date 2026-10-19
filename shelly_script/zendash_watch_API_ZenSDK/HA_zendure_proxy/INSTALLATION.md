@@ -78,7 +78,7 @@ dort entfernen, sonst bricht der Bau ab.
 
 ```yaml
 name: "Zendure Dashboard Proxy"
-version: "3.5.9.4"
+version: "3.5.9.5"
 slug: "zendure_proxy"
 description: "Lokaler Proxy für das Zendure-Dashboard (löst CORS-Problem der Shelly-Firmware)"
 url: "https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK"
@@ -99,10 +99,13 @@ ports_description:
 `init: false` ist entscheidend (siehe Troubleshooting weiter unten).
 
 `webui` sorgt für den Knopf **„Web-UI öffnen“** auf der Seite der App, `url` für
-den Link zum Projekt.
+den Link zum Projekt. Der Knopf erscheint nur, solange die App läuft. Werden
+`webui` oder `url` nachträglich eingetragen, übernimmt Home Assistant sie erst
+nach einem Update mit höherer `version` (siehe
+[Änderungen an den App-Dateien](#änderungen-an-den-app-dateien)).
 
 Die ersten drei Stellen der `version` folgen der Versionsnummer des Dashboards,
-die vierte zählt Änderungen an der App selbst (z. B. `3.5.9.4`). Die Version bei
+die vierte zählt Änderungen an der App selbst (z. B. `3.5.9.5`). Die Version bei
 jeder Änderung an den App-Dateien anheben – dann bietet Home
 Assistant ein Update an, und die Einstellungen bleiben erhalten (siehe
 [Änderungen an den App-Dateien](#änderungen-an-den-app-dateien)).
@@ -239,7 +242,7 @@ müssen dieselbe Versionsnummer haben.
 So geht es, ohne die Einstellungen zu verlieren:
 
 1. Geänderte Dateien in `/addons/zendure_proxy/` ablegen.
-2. In `config.yaml` die `version` anheben – bei neuer Dashboard-Version die ersten drei Stellen (z. B. `3.5.9.4` → `3.6.0.0`), bei Änderungen nur an der App die vierte (z. B. `3.5.9.4` → `3.5.9.5`).
+2. In `config.yaml` die `version` anheben – bei neuer Dashboard-Version die ersten drei Stellen (z. B. `3.5.9.5` → `3.6.0.0`), bei Änderungen nur an der App die vierte (z. B. `3.5.9.5` → `3.5.9.6`).
 3. **Repositories** im App Store neu laden (wie Installationsschritt 2).
 4. Auf der Seite der App erscheint **Aktualisieren** → ausführen. Home
    Assistant baut die App neu, `/data` bleibt erhalten.
@@ -285,6 +288,7 @@ Für die App gilt zusätzlich:
 | Einstellungen gehen nach jedem Update verloren | `run.sh` setzt `ZENDURE_DATA_DIR` nicht, Startübersicht zeigt `Konfig: /zendure_proxy_config.json` | `run.sh` aus diesem Ordner verwenden und App aktualisieren |
 | Startübersicht zeigt `Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)` | `ts_bridge.py` fehlt im Container | Datei in den App-Ordner legen, `COPY ts_bridge.py` im `Dockerfile` prüfen, App aktualisieren |
 | Bau der App bricht mit `COPY failed` ab | `Dockerfile` kopiert eine Datei, die im App-Ordner fehlt (meist `ts_bridge.py`) | Datei ablegen – oder ohne Cloud-Upload die `COPY`-Zeile für `ts_bridge.py` entfernen |
+| Kein Knopf „Web-UI öffnen“ | App läuft nicht, oder `webui` wurde in `config.yaml` ergänzt, ohne die `version` anzuheben | App starten; sonst `version` anheben, Repositories neu laden, App aktualisieren |
 | Port 8000 hat im Reiter Konfiguration keine Beschreibung | `de.yaml`/`en.yaml` liegen nicht im Unterordner `translations/` | Dateien nach `translations/` verschieben, App aktualisieren |
 | „Speichern & testen“ meldet „Shelly nicht erreichbar“ | falsche IP, oder der Container erreicht das Netz des Shelly nicht | IP prüfen (Test im Browser: `http://<shelly-ip>/script/<id>/status_api`); bei getrennten Netzsegmenten siehe unten |
 | „Speichern & testen“ meldet eine falsche Antwort bzw. Status 404 | falsche Script-ID | Script-ID in der Shelly-Weboberfläche unter **Scripts** nachsehen |
