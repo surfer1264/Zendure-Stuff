@@ -114,7 +114,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 2. Log öffnen und das Start-Banner prüfen: Es beginnt mit `Version …` und `Multi-Device Controller gestartet` und zeigt alle aktiven Werte auf einen Blick ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)).
 3. Erscheint regelmäßig eine Zeile wie
 
-    ```
+    ```text
     Netzsaldo: 12 W | Ist-Summe: 340 W | Regelsignal: 352 W | Ladekorrektur: 0 W
     ```
 
