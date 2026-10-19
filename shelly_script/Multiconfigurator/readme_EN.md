@@ -126,7 +126,7 @@ Start the helper. In the start dialog, choose **"Configure from scratch or updat
 
 Steps that are not needed for your selection are skipped.
 
-**About the control parameters:** The values are taken from your imported configuration or calculated from your device list using a rule of thumb. If you later change devices or power ratings, they are **not** adjusted automatically – please check them yourself. Meaning and recommendations are in the [Controller documentation](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md) (German).
+**About the control parameters:** The values are taken from your imported configuration or calculated from your device list using a rule of thumb. If you later change devices or power ratings, they are **not** adjusted automatically – please check them yourself. Meaning and recommendations are in the [Controller documentation](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme_EN.md).
 
 **Without KVS:** If you switch off live settings (KVS), the dashboard can only display values – changes made in the dashboard will then have no effect on the Controller.
 

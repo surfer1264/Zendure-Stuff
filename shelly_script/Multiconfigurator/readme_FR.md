@@ -126,7 +126,7 @@ Lance l'assistant local. Dans la boîte de dialogue de démarrage, choisis **« 
 
 Les étapes inutiles pour ta sélection sont sautées.
 
-**À propos des paramètres de régulation :** les valeurs sont reprises de ta configuration importée ou calculées à partir de ta liste d'appareils selon une règle empirique. Si tu modifies plus tard les appareils ou les puissances, elles ne sont **pas** ajustées automatiquement – vérifie-les toi-même. Leur signification et les recommandations se trouvent dans la [documentation du Controller](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme.md) (en allemand).
+**À propos des paramètres de régulation :** les valeurs sont reprises de ta configuration importée ou calculées à partir de ta liste d'appareils selon une règle empirique. Si tu modifies plus tard les appareils ou les puissances, elles ne sont **pas** ajustées automatiquement – vérifie-les toi-même. Leur signification et les recommandations se trouvent dans la [documentation du Controller](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/readme_FR.md).
 
 **Sans KVS :** si tu désactives les réglages en direct (KVS), le tableau de bord ne peut plus qu'afficher – les modifications faites depuis le tableau de bord n'ont alors aucun effet sur le Controller.
 

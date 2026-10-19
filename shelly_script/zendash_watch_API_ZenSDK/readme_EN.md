@@ -39,7 +39,7 @@ The current version and all changes are listed in the [changelog](CHANGELOG.md).
 
 - **A dedicated Shelly** with script support (generation 2 or newer: Plus, Pro, Gen3 …). The script always runs on a different Shelly than the Controller – both together do not fit into the memory of one Shelly.
 - **Zendure batteries with local interface** (zenSDK), reachable at `http://<battery-IP>/properties/report`. Tested with SolarFlow 2400 Pro and SolarFlow 800.
-- **The [Controller](../Controller/readme.md)** (German) on your Controller Shelly if you want to use the dashboard. The dashboard reads and writes its settings. If you only use the watchdog, you don't need it.
+- **The [Controller](../Controller/readme_EN.md)** on your Controller Shelly if you want to use the dashboard. The dashboard reads and writes its settings. If you only use the watchdog, you don't need it.
 - **For messages** (optional):
     - Signal or WhatsApp: a free API key from [CallMeBot](https://www.callmebot.com)
     - or a webhook, for example in Home Assistant

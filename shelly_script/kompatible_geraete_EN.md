@@ -6,7 +6,7 @@ What you need for the suite: two Shellys, a smart meter and zenSDK-capable Zendu
 
 ## Shellys
 
-You need **two Shellys** Gen2 or newer (Plus, Pro, Gen3, Gen4) with script support – one for the [Controller](Controller/readme.md), one for [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_EN.md). Both scripts together do not fit into the memory of one Shelly.
+You need **two Shellys** Gen2 or newer (Plus, Pro, Gen3, Gen4) with script support – one for the [Controller](Controller/readme_EN.md), one for [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_EN.md). Both scripts together do not fit into the memory of one Shelly.
 
 What matters is the **script memory**: with **25,000 bytes** or more, everything is fine.
 

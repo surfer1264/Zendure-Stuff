@@ -24,7 +24,7 @@ Deux Shelly, un compteur intelligent et des batteries compatibles zenSDK – les
 
 | Shelly | Script | Rôle |
 |---|---|---|
-| **Shelly contrôleur** | [Controller](Controller/readme.md) (allemand) | pilote la charge et la décharge de vos batteries |
+| **Shelly contrôleur** | [Controller](Controller/readme_FR.md) | pilote la charge et la décharge de vos batteries |
 | **Shelly tableau de bord** | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_FR.md) | fournit les données du tableau de bord et signale batterie pleine, surchauffe, sous-tension ou pannes |
 
 S'y ajoute le **[Configurator](Multiconfigurator/readme_FR.md)** avec l'assistant local sur votre ordinateur : il gère la configuration initiale, les mises à jour et l'enregistrement des journaux pour les deux Shelly.

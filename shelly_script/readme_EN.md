@@ -24,7 +24,7 @@ Two Shellys, a smart meter and zenSDK-capable batteries – which devices work i
 
 | Shelly | Script | Task |
 |---|---|---|
-| **Controller Shelly** | [Controller](Controller/readme.md) (German) | controls charging and discharging of your batteries |
+| **Controller Shelly** | [Controller](Controller/readme_EN.md) | controls charging and discharging of your batteries |
 | **Dashboard Shelly** | [zenDash API + Watchdog](zendash_watch_API_ZenSDK/readme_EN.md) | provides the data for the dashboard and reports battery full, overtemperature, undervoltage or failures |
 
 On top of that there is the **[Configurator](Multiconfigurator/readme_EN.md)** with the helper on your computer: it handles initial configuration, updates and log recording for both Shellys.

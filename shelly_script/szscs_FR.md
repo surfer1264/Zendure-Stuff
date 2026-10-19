@@ -33,7 +33,7 @@ Le **Shelly Controller** assure la régulation, le **Shelly Dashboard** l'API ze
 * **charge & décharge**, réparties sur tous les SolarFlow
 * réglages modifiables en fonctionnement (KVS) – depuis le tableau de bord ou par ex. depuis Home Assistant
 
-📖 [Premiers pas](Controller/readme.md) · [Au quotidien](Controller/benutzerdoku.md) · [Tous les détails](Controller/gesamtdoku.md) (en allemand)
+📖 [Premiers pas](Controller/readme_FR.md) · [Au quotidien](Controller/benutzerdoku.md) (en allemand) · [Tous les détails](Controller/gesamtdoku.md) (en allemand)
 
 ### 2. Le tableau de bord – la vue d'ensemble
 

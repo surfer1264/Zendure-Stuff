@@ -6,7 +6,7 @@ Ce qu’il te faut pour la suite : deux Shelly, un compteur intelligent et des b
 
 ## Shelly
 
-Il te faut **deux Shelly** Gen2 ou plus récents (Plus, Pro, Gen3, Gen4) avec fonction script – un pour le [Controller](Controller/readme.md), un pour [l’API zenDash + Watchdog](zendash_watch_API_ZenSDK/readme_FR.md). Les deux scripts ensemble ne tiennent pas dans la mémoire d’un seul Shelly.
+Il te faut **deux Shelly** Gen2 ou plus récents (Plus, Pro, Gen3, Gen4) avec fonction script – un pour le [Controller](Controller/readme_FR.md), un pour [l’API zenDash + Watchdog](zendash_watch_API_ZenSDK/readme_FR.md). Les deux scripts ensemble ne tiennent pas dans la mémoire d’un seul Shelly.
 
 Ce qui compte, c’est la **mémoire script** : à partir de **25 000 octets**, tout va bien.
 
