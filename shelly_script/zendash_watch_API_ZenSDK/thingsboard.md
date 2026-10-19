@@ -10,18 +10,27 @@ Der Upload ist optional und läuft **unabhängig vom [ThingSpeak-Upload](thingsp
 
 ## Inhalt
 
-- [Was du brauchst](#was-du-brauchst)
-- [ThingsBoard vorbereiten](#thingsboard-vorbereiten)
-- [Proxy einrichten](#proxy-einrichten)
-- [So arbeitet der Upload](#so-arbeitet-der-upload)
-- [Geräte und Werte](#geräte-und-werte)
-- [Vorlagen: Regelgüte](#vorlagen-regelgüte)
-- [Kontingent im Free-Tarif](#kontingent-im-free-tarif)
-- [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-im-free-plan-zu-bleiben)
-- [Eigener ThingsBoard-Server](#eigener-thingsboard-server)
-- [Betreiber und Datenschutz](#betreiber-und-datenschutz)
-- [Meldungen im Log](#meldungen-im-log)
-- [Fehlersuche](#fehlersuche)
+- [ThingsBoard-Upload](#thingsboard-upload)
+  - [Inhalt](#inhalt)
+  - [Was du brauchst](#was-du-brauchst)
+  - [ThingsBoard vorbereiten](#thingsboard-vorbereiten)
+  - [Proxy einrichten](#proxy-einrichten)
+  - [So arbeitet der Upload](#so-arbeitet-der-upload)
+  - [Geräte und Werte](#geräte-und-werte)
+  - [Vorlagen: Regelgüte](#vorlagen-regelgüte)
+  - [Kontingent im Free-Tarif](#kontingent-im-free-tarif)
+    - [Aufbewahrung: nur 30 Tage](#aufbewahrung-nur-30-tage)
+    - [Laufzeit](#laufzeit)
+  - [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-im-free-plan-zu-bleiben)
+    - [Das Prinzip: Speichertage](#das-prinzip-speichertage)
+    - [Was passiert, wenn das Limit erreicht ist](#was-passiert-wenn-das-limit-erreicht-ist)
+    - [Checkliste: diese Einstellungen prüfen](#checkliste-diese-einstellungen-prüfen)
+    - [Richtwerte zum Vergleichen](#richtwerte-zum-vergleichen)
+    - [Wenn es doch passiert ist](#wenn-es-doch-passiert-ist)
+  - [Eigener ThingsBoard-Server](#eigener-thingsboard-server)
+  - [Betreiber und Datenschutz](#betreiber-und-datenschutz)
+  - [Meldungen im Log](#meldungen-im-log)
+  - [Fehlersuche](#fehlersuche)
 
 ---
 
@@ -48,7 +57,7 @@ Der Netzsaldo ist bewusst ein eigenes Gerät: Er gehört zu keinem Speicher, son
 
 1. `ts_bridge.py` neben `zendure_proxy.py` legen und den Proxy starten. In der Startmeldung steht dann:
 
-    ```
+    ```link
     ThingsBoard: http://localhost:8000/thingsboard
     ```
 
@@ -68,6 +77,8 @@ Die Einstellungen landen in `zendure_thingsboard_config.json` neben dem Proxy (i
 **Werteauswahl:** Sie gilt für alle Speicher gemeinsam und steht als `fields` in `zendure_thingsboard_config.json`. Mindestens ein Wert muss angehakt sein. Ändert sich nur die Auswahl, prüft der Proxy die Tokens nicht erneut. Abgewählte Werte bleiben in ThingsBoard mit ihrem bisherigen Verlauf erhalten, es kommen nur keine neuen dazu. Ältere Konfigurationen ohne `fields` senden weiter die sieben Standardwerte.
 
 **Ändern und entfernen:** Ein leeres Feld behält das bisherige Token, ein `-` entfernt das Gerät aus dem Upload. Hinterlegte Tokens zeigt die Seite nur gekürzt an (`****AB12`).
+
+**Tageszähler:** Oben auf der Seite steht, wie viele Datenpunkte heute schon gesendet wurden (seit Mitternacht bzw. seit Start des Proxys), siehe [Meldungen im Log](#meldungen-im-log).
 
 **Sicherheit:** Die Seite hat kein Passwort, genau wie `/setup` und `/thingspeak`. Jeder in deinem Netz, der den Proxy erreicht, kann den Upload ein- oder ausschalten und Tokens ersetzen, aber keine hinterlegten Tokens auslesen.
 
@@ -117,8 +128,13 @@ Lehnt ThingsBoard eine Meldung ab oder ist das Internet weg, versucht der Proxy 
 | `minVol` | Niedrigste Zellspannung | V | `minVol` ÷ 100 | an |
 | `batteryPower` | Akkuleistung, **+ = Akku entlädt, − = Akku lädt** | W | berechnet: `packIn` − `packOut` | aus |
 | `offGridPower` | Leistung am Offgrid-Ausgang | W | `offGrid` (ab zendash_watch 3.5.9) | aus |
+| `socLimit` * | Ladegrenzen-Status: 0 frei, 1 voll, 2 leer | – | `socLimit` | aus |
+| `socSet` * | Obere Ladegrenze am Gerät | % | `socSet` (ab zendash_watch 3.5.1) | aus |
+| `minSoc` * | Untere Entladegrenze am Gerät | % | `minSocHw` (ab zendash_watch 3.5.4) | aus |
 
 `batteryPower` spart ein berechnetes Feld in ThingsBoard: Statt `packInputPower` und `outputPackPower` einzeln reicht dieser eine Wert, wenn du nur die Akkuleistung brauchst. Er fehlt, wenn einer der beiden Ausgangswerte fehlt. `offGridPower` fehlt bei Geräten ohne Offgrid-Steckdose.
+
+Die mit * markierten Werte ändern sich selten. Sie werden deshalb nur gesendet, wenn sie sich ändern, dazu einmal am Tag, nach einem Neustart des Proxys und nach jedem Speichern auf `/thingsboard`. Sie kosten daher kaum Datenpunkte.
 
 **Netz** – ein Gerät für den Netzzähler:
 
@@ -190,7 +206,7 @@ Die Bridge allein bleibt mit 2 Speichern sicher im Free-Plan. Knapp wird es erst
 
 Die engste Grenze sind die **Datenpunkt-Speichertage** (Free: 30 Mio. pro Monat):
 
-```
+```text
 Speichertage = gespeicherte Datenpunkte × Aufbewahrungsdauer (TTL) in Tagen
 ```
 
@@ -274,7 +290,7 @@ Dieser Abschnitt betrifft nur die ThingsBoard **Cloud**. Beim eigenen Server ble
 
 **Rechtlicher Rahmen:** Weil der Betreiber ein US-Unternehmen ist, kann er trotz EU-Speicherort US-Recht unterliegen, etwa dem CLOUD Act. Laut Nutzungsbedingungen bist du selbst dafür verantwortlich, dass deine Nutzung mit der DSGVO vereinbar ist. Details stehen in den [Nutzungsbedingungen der EU Cloud](https://thingsboard.io/products/paas/eu/terms-of-use/).
 
-**Was übertragen wird:** Nur Leistungswerte, Ladestände, die Zellspannung und Zeitstempel – keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Die Gerätenamen in ThingsBoard vergibst du selbst. Ganz belanglos sind solche Verläufe trotzdem nicht: Am Hausverbrauch über den Tag lässt sich zum Beispiel ablesen, wann jemand zu Hause ist.
+**Was übertragen wird:** Nur Leistungswerte, Ladestände, die Zellspannung, auf Wunsch die Ladegrenzen und Zeitstempel – keine Namen, Adressen, Geräte-Seriennummern oder IP-Adressen deiner Geräte. Die Gerätenamen in ThingsBoard vergibst du selbst. Ganz belanglos sind solche Verläufe trotzdem nicht: Am Hausverbrauch über den Tag lässt sich zum Beispiel ablesen, wann jemand zu Hause ist.
 
 **Empfehlung:** Dashboards nicht öffentlich freigeben. Wer seine Daten nicht außer Haus geben möchte, nimmt einen eigenen Server oder lässt den Upload einfach aus.
 
@@ -282,9 +298,17 @@ Stand dieser Angaben: September 2026. Maßgeblich sind die aktuellen Seiten von 
 
 ## Meldungen im Log
 
+Beim Start und nach jedem Speichern zeigt der Proxy, was hochgeladen wird:
+
+```text
+[bridge] aktiv: ThingsBoard (Hub 0, Hub 1, Netz; je Hub: electricLevel, solarInputPower, ...)
+```
+
+Sind ThingSpeak und ThingsBoard aus, steht dort `[bridge] inaktiv - keine Abfragen`.
+
 Im Normalbetrieb schreibt der Proxy pro Minute und Gerät eine Zeile:
 
-```
+```text
 [thingsboard] Hub 0 2026-09-29T16:13:00Z gesendet (7 Werte; heute 20.160 Datenpunkte in 2.880 Nachrichten)
 [thingsboard] Netz 2026-09-29T16:13:00Z gesendet (1 Wert; heute 20.161 Datenpunkte in 2.881 Nachrichten)
 ```
@@ -293,20 +317,20 @@ Der Tageszähler zählt alle erfolgreich an ThingsBoard gesendeten Datenpunkte s
 
 Ohne offenes Dashboard kommen davor zwei Zeilen dazu. Sie gelten für ThingSpeak und ThingsBoard gemeinsam:
 
-```
+```text
 [bridge] kein Dashboard offen - eigene Abfrage status_api (wecken)
 [bridge] eigene Abfrage status_api (frischer Stand)
 ```
 
 Ist ein Speicher offline, steht dort:
 
-```
+```text
 [thingsboard] Hub 1 2026-09-29T16:13:00Z: keine Daten (offline oder nicht geliefert)
 ```
 
 Mit `-q` oder `-s` fallen diese Zeilen weg. Fehler erscheinen immer:
 
-```
+```text
 [thingsboard] Hub 0 2026-09-29T16:13:00Z: verworfen (HTTP 401)
 [bridge] Shelly nicht erreichbar: ...
 ```

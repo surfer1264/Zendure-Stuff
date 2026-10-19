@@ -54,6 +54,7 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
       "packIn": 111,
       "packOut": 0,
       "socSet": 100,
+      "minSocHw": 15,
       "temp": 19,
       "offGrid": 0
     }
@@ -79,6 +80,7 @@ Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
 | `packIn` | Leistung aus dem Akku, also Entladen, in W (`packInputPower`). Seit 3.5.0 |
 | `packOut` | Leistung in den Akku, also Laden, in W (`outputPackPower`). Seit 3.5.0 |
 | `socSet` | Am Gerät eingestellte obere Ladegrenze in % (Report `socSet` / 10, also `950` → 95). `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.1 |
+| `minSocHw` | Am Gerät eingestellte untere Entladegrenze in % (Report `minSoc` / 10, also `150` → 15). Das Regel-Script überträgt jede Änderung von `zdmc_dev{id}_minSoc` auf das Gerät; das Dashboard vergleicht beide Werte und meldet eine anhaltende Abweichung. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.4 |
 | `temp` | Gerätetemperatur in ganzen °C. Report `hyperTmp` in Zehntel-Kelvin, umgerechnet `(hyperTmp − 2731) / 10` und gerundet, also `2921` → 19. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.9 |
 | `offGrid` | Leistung am Offgrid-Ausgang in W (`gridOffPower`). `null` = Gerät hat keinen Offgrid-Ausgang bzw. Hub offline. Seit 3.5.9 |
 
@@ -97,7 +99,7 @@ zeigt die Abweichung als Hinweis an der Gerätekarte.
 manuellen Modus `socLimit: 1`, beendet das API-Script den Modus von selbst.
 
 Die Antwort kommt aus einem Zwischenspeicher, der einmal je Hintergrund-Durchlauf
-gebaut wird (Standard alle 8 s, `CONFIG.pollIntervalSec`). Der Endpunkt selbst
+gebaut wird (Standard alle 8 s, `CONFIG.api.pollIntervalSec`). Der Endpunkt selbst
 fragt nichts ab und ist entsprechend billig.
 
 **Alter der Daten:** Fragt längere Zeit niemand an, pausiert der Hintergrund-Durchlauf
@@ -185,12 +187,20 @@ entsprechend rund eine Sekunde.
 | `200` mit `success: true` | alle Schlüssel geschrieben |
 | `200` mit `written: 0` | kein Schlüssel mit Präfix `zdmc_` dabei, nichts geschrieben |
 | `400` | `data` fehlt oder ist kein gültiges JSON-Objekt |
-| `500` mit `success: false` | mindestens ein Schreibvorgang fehlgeschlagen |
+| `400` | `zdmc_dischargeFixed` ist weder `0` noch ≥ `dischargeStartupPower` – dann wird **kein** Schlüssel geschrieben |
+| `500` mit `success: false` | mindestens ein Schreibvorgang fehlgeschlagen bzw. interner Fehler |
+
+Fehlerantworten enthalten zusätzlich ein Feld `error` mit einem kurzen Text, z. B.
+`{"success":false,"error":"invalid json"}`.
 
 Nur Schlüssel mit dem Präfix `zdmc_` werden angenommen, alle anderen stillschweigend
-übergangen. Werte müssen numerisch sein (Ziffern, Minus, Punkt) — andernfalls wird
-nichts geschrieben und `success: false` gemeldet. Das schützt beim entfernten
-Schreiben davor, dass ein Wert die URL zerlegt.
+übergangen. Werte müssen numerisch sein (Ziffern, Minus, Punkt, höchstens 12 Zeichen) —
+ein anderer Wert wird nicht geschrieben, die übrigen Schlüssel schon; die Antwort ist
+dann `500` mit `success: false`. Das schützt beim entfernten Schreiben davor, dass ein
+Wert die URL zerlegt.
+
+Ist gerade eine Abfrage oder ein anderer Schreibvorgang aktiv, wartet der Endpunkt
+bis zu 2 s (10 × 200 ms) auf einen freien Slot und schreibt danach auf jeden Fall.
 
 ### Schlüssel und Wertebereiche
 
@@ -201,13 +211,17 @@ die Regelung ignoriert sie.
 | Schlüssel | Bereich | Wirkung |
 |---|---|---|
 | `zdmc_setpoint` | −40 … 40 | Zielwert für den Netzsaldo in W |
-| `zdmc_dischargeFixed` | `0` oder ≥ `dischargeStartupPower` | Feste Entladeleistung in W statt Netzsaldo-Regelung. `0` schaltet zurück auf die normale Regelung. Werte zwischen `1` und der unteren Grenze verwirft das Regel-Script |
+| `zdmc_dischargeFixed` | `0` oder ≥ `dischargeStartupPower` | Feste Entladeleistung in W statt Netzsaldo-Regelung. `0` schaltet zurück auf die normale Regelung. Werte zwischen `1` und der unteren Grenze lehnt `kvs_set_api` mit `400` ab (das Regel-Script würde sie verwerfen) |
 | `zdmc_dev{id}_dischargeAllowed` | `0` / `1` | Entladen erlaubt |
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
 | `zdmc_dev{id}_minSoc` | 10 … 99 | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
 | `zdmc_dev{id}_inputLimit` | 0 … `maxInputPower` | Manuelle Ladeleistung in W |
 
-Zusätzlich schreibt das Script selbst `zdmc_dev{id}_lastFull` (Datum der letzten Vollladung, JJJJMMTT) – höchstens einmal je Gerät und Tag. Der Controller wertet diesen Schlüssel nicht aus.
+Zusätzlich schreibt das Script selbst:
+
+- `zdmc_dev{id}_lastFull` (Datum der letzten Vollladung, JJJJMMTT) – höchstens einmal je Gerät und Tag. Der Controller wertet diesen Schlüssel nicht aus.
+- `zdmc_dev{id}_dischargeAllowed = 0`, wenn der Watchdog bei einem überwachten Gerät eine Zelle unter `minVoltWarn` sieht ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). Zurückgesetzt wird nur von außen.
+- `inputLimit`, `dischargeAllowed` und `reverse` beim [automatischen Stopp](#automatischer-stopp-bei-voller-batterie) des manuellen Ladens.
 
 **`minSoc` muss unter `maxSoc` bleiben.** Das Regel-Script gleicht beide Werte nur
 beim Start gegeneinander ab, nicht beim Live-Override. Rutscht `minSoc` darüber, darf
@@ -310,11 +324,15 @@ Damit das funktioniert:
 **Hintergrundabfrage.** Ein Timer fragt alle `pollIntervalSec` Netzzähler und Hubs ab —
 aber nur, solange in den letzten 15 s ein Endpunkt aufgerufen wurde **oder** mindestens
 ein Gerät im manuellen Lademodus ist (siehe [„Manuelles Laden“](#manuelles-laden)).
-Trifft beides nicht zu, pausiert die Abfrage vollständig.
+Trifft beides nicht zu, ruht diese Abfrage und `status_api` wird nicht mehr aktualisiert.
+Unabhängig davon fragt der Watchdog (falls eingeschaltet) alle `watchdog.intervalSec`
+die überwachten Hubs ab – ohne Netzzähler.
 
-**Überlappungsschutz.** Ein Zähler verhindert, dass Hintergrundabfrage und `config_api`
-gleichzeitig laufen; ein eigener Riegel schützt den Durchlauf gegen sich selbst. Beides
-ist keine Kosmetik: Espruino stellt pro Gerät rund 1600 Variablen für **alle** Scripte
+**Überlappungsschutz.** Ein gemeinsamer Zähler verhindert, dass Hintergrundabfrage,
+`config_api`, `kvs_set_api`, Auto-Stop, Entladesperre, `lastFull`-Schreiben und
+Nachrichtenversand gleichzeitig laufen; ein eigener Riegel schützt den Durchlauf gegen
+sich selbst. `config_api` und `kvs_set_api` warten bis zu 2 s auf einen freien Slot und
+laufen danach trotzdem. Das ist keine Kosmetik: Espruino stellt pro Gerät rund 1600 Variablen für **alle** Scripte
 zusammen bereit, und zwei gleichzeitig verarbeitete Hub-Antworten von je etwa 1,3 kB
 sprengen diesen Pool.
 
@@ -352,9 +370,10 @@ Ergänzend zur [Bedienung](dashboard.md#bedienung) – wie die Seite mit der Sch
 
 ---
 
-## ThingSpeak-Upload
+## ThingSpeak- und ThingsBoard-Upload
 
 `zendure_proxy.py` kann die Messwerte aus `status_api` jede Minute an ThingSpeak
-senden. Solange ein Dashboard offen ist, liest er dabei nur mit; ohne Dashboard
-fragt er selbst ab. Ist der Upload aus, stellt er keine einzige Anfrage an die API.
-Einrichtung und Verhalten: [ThingSpeak-Upload](thingspeak.md).
+und/oder ThingsBoard senden. Solange ein Dashboard offen ist, liest er dabei nur mit;
+ohne Dashboard fragt er selbst ab. Sind beide Uploads aus, stellt er keine einzige
+Anfrage an die API. Einrichtung und Verhalten: [ThingSpeak-Upload](thingspeak.md) ·
+[ThingsBoard-Upload](thingsboard.md).

@@ -13,8 +13,6 @@ Ein Shelly-Script für deinen **Dashboard-Shelly**, das zwei Aufgaben rund um de
 
 Beide Teile lassen sich einzeln ein- und ausschalten. Ein einziges Script fragt die Speicher ab und teilt die Daten zwischen beiden Aufgaben – das spart Speicher auf dem Shelly und entlastet deine Zendure-Geräte. Früher waren es zwei getrennte Scripte (zenDash-API 2.x und AkkuVolt-Watchdog 1.x), die zusammen je nach Anzahl der Speicher an die Speichergrenze des Shelly stießen.
 
-ordentlich**
-
 ## Was macht der AkkuWatchDog?
 
 ✅ Das Script liest die Akkudaten der angeschlossenen Akkus aus (`minVol`, `maxVol`, `socLevel`, Temperatur). Alle Packs eines Geräts werden automatisch gefunden (Temperatur des Hyper/Hubs ist ebenfalls dabei).
@@ -27,7 +25,7 @@ ordentlich**
 
 ✅ Alle Warnschwellen (Voll, Unterspannung, Temperatur) gelten **global für alle konfigurierten Geräte gleichermaßen** — es gibt bewusst keine Schwellwerte pro Gerät, um die Konfiguration einfach zu halten.
 
-✅ **STATUS:** Sendet zum Sonnenaufgang (`+Offset`) und zum Sonnenuntergang (`+Offset`) **eine einzige Sammel-Nachricht für alle Geräte gemeinsam**. Jede Zeile zeigt SOC, Geräte-Temperatur und die kleinste Zellspannung eines Geräts, identifiziert über die letzten 4 Zeichen seiner Seriennummer. Die Zeilenlänge pro Gerät ist fest, dadurch bleibt die Nachricht auch bei vielen Geräten kurz und wird nicht zum Problem für Messenger-APIs mit Längenlimits (mehr dazu unten unter „Beispielausgaben“).
+✅ **STATUS:** Sendet zum Sonnenaufgang (`+Offset`) und zum Sonnenuntergang (`+Offset`) **eine einzige Sammel-Nachricht für alle überwachten Geräte gemeinsam**. Jede Zeile zeigt SOC, Geräte-Temperatur und die kleinste Zellspannung eines Geräts, identifiziert über die ersten 10 Zeichen seines `label`. Die Zeilenlänge pro Gerät ist damit begrenzt, dadurch bleibt die Nachricht auch bei vielen Geräten kurz und wird nicht zum Problem für Messenger-APIs mit Längenlimits (mehr dazu unter [Nachrichten](#nachrichten)).
 
 Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 
@@ -133,7 +131,7 @@ Nachrichten: SIGNAL -> callmebot | Debug: AUS
 
 `[W]` hinter einem Gerät bedeutet: Der Watchdog überwacht es. Die Versionsnummer ist die deines Scripts.
 
-Sind Nachrichten eingeschaltet, bekommst du außerdem die Meldung **„✅ zenDash/Watchdog v… gestartet“**. So weißt du sofort, dass der Nachrichtenweg funktioniert.
+Sind Nachrichten und Watchdog eingeschaltet, bekommst du außerdem die Meldung **„✅ zenDash/Watchdog v… gestartet“**. So weißt du sofort, dass der Nachrichtenweg funktioniert.
 
 ---
 
@@ -198,9 +196,9 @@ api: {
 | `hysteresis` | Nur zur Anzeige im Dashboard. Muss **denselben Wert** haben wie im Controller. |
 | `dischargeStartupPower` | Kleinster erlaubter Wert für die Fix-Entladung (außer 0). Muss **denselben Wert** haben wie im Controller. |
 | `gridSource` | Woher kommt die Netzmessung? `"remote"`: ein Shelly Pro 3EM im Netz (meist der Controller-Shelly), `"http_json"`: ein anderes Messgerät mit JSON-Schnittstelle, `"local"`: nur wenn dieser Shelly selbst ein Pro 3EM ist. |
-| `gridSourceIp`, `gridSourceEmId` | bei `"remote"`: IP des Messgeräts und Kanal (meist 0) |
-| `gridSourceUrl`, `gridSourceField`, `gridSourceInvert` | bei `"http_json"`: Adresse, Feldname der Gesamtleistung, Vorzeichen umdrehen ja/nein |
-| `pollIntervalSec` | Abfragetakt bei geöffnetem Dashboard in Sekunden. Standard 8. |
+| `gridSourceIp`, `gridSourceEmId` | bei `"remote"`: IP des Messgeräts und Kanal (meist 0). `gridSourceEmId` gilt auch bei `"local"`. |
+| `gridSourceUrl`, `gridSourceField`, `gridSourceInvert` | bei `"http_json"`: Adresse, Feldname der Gesamtleistung, Vorzeichen umdrehen ja/nein. Verschachtelte Felder als Array, z. B. `["StatusSNS","SML","Watt_Summe"]`. |
+| `pollIntervalSec` | Abfragetakt bei geöffnetem Dashboard in Sekunden. Standard 8, mindestens 4. |
 
 Damit du im Dashboard auch **einstellen** kannst, muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
 
@@ -232,6 +230,8 @@ watchdog: {
 | `offlineAlarmMin` | Meldung, wenn ein Speicher so viele **Minuten** nicht erreichbar ist |
 | `sunriseOffset` / `sunsetOffset` | Verschiebung des Morgen- und Abend-Updates gegenüber Sonnenauf- und -untergang in Minuten, z. B. `30` = eine halbe Stunde später |
 
+Liegt ein Reset-Wert auf der falschen Seite seiner Warnschwelle, korrigiert das Script ihn beim Start: `entladeReset` auf `vollSchwelle − 5`, `minVoltReset` auf `minVoltWarn + 0,1`, `tempReset` auf `tempWarn − 5`.
+
 > Damit die Uhrzeiten für Sonnenauf- und -untergang stimmen, muss im Shelly der **Standort** eingestellt sein (Einstellungen → Standort bzw. Zeitzone).
 
 ### Nachrichten (`notify`)
@@ -254,7 +254,7 @@ notify: {
 | `typ` | `"SIGNAL"`, `"WHATSAPP"` oder `"WEBHOOK"` |
 | `phone`, `apiKey` | nur für Signal und WhatsApp: deine Nummer mit Ländervorwahl und der CallMeBot-Key |
 | `webhookUrl` | nur für Webhook: vollständige Adresse |
-| `maxMessageLength` | Längere Nachrichten werden gekürzt |
+| `maxMessageLength` | Längere Nachrichten werden gekürzt. Werte bis 50 ersetzt das Script durch 900. |
 | `apiEvents` | `true`: auch Meldungen zum Auto-Stop beim manuellen Laden verschicken |
 
 Im Controller heißt dieser Block `signal`, hier `notify`. `enabled`, `typ`, `phone`, `apiKey` und `webhookUrl` bedeuten in beiden dasselbe; `maxMessageLength` und `apiEvents` gibt es nur hier. Steht in einer alten Konfiguration noch ein `signal`-Block, verwendet das Script ihn, wenn kein `notify` vorhanden ist.
@@ -265,7 +265,7 @@ Im Controller heißt dieser Block `signal`, hier `notify`. `enabled`, `typ`, `ph
 
 | Einstellung | Bedeutung |
 |---|---|
-| `httpTimeout` | Wie viele Sekunden das Script höchstens auf eine Antwort wartet. Standard 5. |
+| `httpTimeout` | Wie viele Sekunden das Script höchstens auf eine Antwort wartet. Standard 5, mindestens 3. |
 | `debug` | `false`: normale Ausgabe. `true`: ausführliches Log zur Fehlersuche (siehe [Fehlersuche](#fehlersuche)). |
 
 ---
@@ -301,11 +301,13 @@ Diese Nachrichten kann das Script verschicken:
 | ❌ SF800: Report unlesbar seit 10 min | Speicher antwortet, aber mit unvollständigen oder unbrauchbaren Daten |
 | ✅ SF800: wieder erreichbar | nach einer der beiden vorigen Meldungen |
 | ⚠️ SF800 seit 20 Tagen nicht voll | einmal täglich beim Morgen-Update geprüft, siehe [Letzte Vollladung](#letzte-vollladung) |
-| 🌅 Morgen-Update / 🌇 Abend-Update | zu Sonnenauf- und -untergang: Ladestand, Temperatur und niedrigste Zellspannung je Gerät |
+| 🌅 Morgen-Update / 🌇 Abend-Update | zu Sonnenauf- und -untergang: Ladestand, Temperatur und niedrigste Zellspannung je überwachtem Gerät |
 | ✅ SF2400: manuelles Laden beendet (voll) … | Auto-Stop hat funktioniert (bei `apiEvents: true`) |
 | ⚠️ SF2400: Auto-Stop fehlgeschlagen … | Auto-Stop konnte die Einstellungen nicht zurücksetzen. Bitte im Dashboard prüfen. |
 
 Jede Warnung kommt **einmal**, nicht bei jeder Abfrage. Erst wenn sich der Wert wieder normalisiert hat, kann sie erneut kommen.
+
+Nachrichten werden nacheinander verschickt. Es warten höchstens 5 in der Schlange; kommt eine weitere dazu, fällt die älteste weg (Log: „Nachrichten-Warteschlange voll“).
 
 Im Morgen- und Abend-Update steht `n/a`, wenn für ein Gerät keine aktuellen Werte vorliegen, zum Beispiel weil es gerade nicht erreichbar ist.
 
@@ -330,7 +332,7 @@ Gut zu wissen:
 
 Fällt bei einem überwachten Speicher (`watch: true`) die schwächste Zelle unter `minVoltWarn`, schaltet der Watchdog im Controller das Entladen dieses Speichers ab (KVS `zdmc_dev{Nummer}_dischargeAllowed = 0`) und meldet „⛔ … Entladen gesperrt wegen Unterschreitung minVol“. Laden bleibt möglich.
 
-- Voraussetzung: Watchdog **und** Dashboard-Teil (`api.enabled`) sind eingeschaltet, und der Controller hat `kvsEnabled: true`.
+- Voraussetzung: Der Watchdog ist eingeschaltet, `api.kvsHost` enthält die IP des Controller-Shelly, und der Controller hat `kvsEnabled: true`. Der Dashboard-Teil (`api.enabled`) muss dafür nicht eingeschaltet sein.
 - Die Sperre hebt sich **nicht** von selbst auf. Freigeben kannst du sie nur von Hand mit dem Schalter „Entladen erlaubt“ im [Dashboard](dashboard.md#bedienung) – am besten erst, wenn der Akku wieder nachgeladen ist.
 - Läuft gerade manuelles Laden, bleibt das Entladen nach dessen Ende gesperrt, statt den vorherigen Zustand wiederherzustellen.
 - Im Dashboard steht bei überwachten Speichern hinter der schwächsten Zelle die Sperrschwelle, z. B. „min 3,31 V (Sperre < 2,90 V)“.
@@ -343,7 +345,8 @@ Lithium-Akkus sollten ab und zu einmal ganz voll werden, damit der Speicher sein
 
 - Das Datum wird höchstens einmal am Tag im Controller-Shelly gespeichert (KVS-Eintrag `zdmc_dev{Nummer}_lastFull`) und übersteht damit einen Neustart.
 - Im **Dashboard** steht je Speicher „100 %: vor N Tagen“ – grün unter 7 Tagen, gelb bis 20 Tage, rot darüber. Antippen zeigt das Datum.
-- Der **Watchdog** meldet einmalig, wenn ein überwachter Speicher seit 20 Tagen nicht mehr voll war.
+- Erfasst wird nur, solange der Speicher ohnehin abgefragt wird: überwachte Speicher immer, Speicher mit `watch: false` nur bei geöffnetem Dashboard.
+- Der **Watchdog** meldet einmalig, wenn ein überwachter Speicher seit 20 Tagen nicht mehr voll war. Ohne gespeichertes Datum gibt es keine Meldung. Nach einem Neustart des Scripts kann die Meldung noch einmal kommen.
 
 ---
 

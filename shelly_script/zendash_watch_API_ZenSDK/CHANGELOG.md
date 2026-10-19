@@ -1,5 +1,15 @@
 # Changelog zendash API - WatchDog
 
+## Proxy 3.5.9.4 (ohne Änderung am Script)
+
+- ThingsBoard-Upload: neue Werte je Speicher `socLimit` (0 frei, 1 voll, 2 leer), `socSet` (obere Ladegrenze in %) und `minSoc` (untere Entladegrenze in %, aus `minSocHw`), standardmäßig aus. Sie werden nur bei Änderung gesendet, dazu einmal täglich und nach jedem Neustart oder Speichern der Einstellungen
+- Home-Assistant-App-Version 3.5.9.4
+
+## Proxy 3.5.9.3 (ohne Änderung am Script)
+
+- ThingsBoard-Upload: Seite `/thingsboard` zeigt die heute gesendeten Datenpunkte und Nachrichten (Zähler im Speicher, beginnt um Mitternacht und bei jedem Proxy-Start neu); die Sendezeilen im Log enthalten den Tagesstand
+- Home-Assistant-App-Version 3.5.9.3
+
 ## Proxy 3.5.9.2 (ohne Änderung am Script)
 
 - ThingsBoard-Upload: Werte je Speicher auf `/thingsboard` per Häkchen auswählbar, für alle Speicher gemeinsam; gespeichert als `fields` in `zendure_thingsboard_config.json`. Ohne `fields` (ältere Konfiguration) bleiben die bisherigen sieben Werte

@@ -33,6 +33,9 @@ ThingsBoard - ein Geraet pro Hub plus ein Geraet "Netz":
         solarInputPower, outputHomePower, gridInputPower, packInputPower,
         outputPackPower, minVol (V). Zusaetzlich waehlbar: batteryPower
         (packIn - packOut, + = Akku entlaedt) und offGridPower.
+        Status/Grenzen socLimit, socSet (%), minSoc (%; status_api minSocHw)
+        werden nur bei Aenderung gesendet, dazu einmal je Tag und nach
+        jedem Neustart (TB_ON_CHANGE) - sie aendern sich selten.
   Netz: gridPower (W, positiv = Bezug), immer
   Fehlende Werte werden weggelassen; Hub offline -> in dieser Minute nichts.
 """
@@ -220,7 +223,14 @@ TB_FIELDS = (
     ("minVol",          "Niedrigste Zellspannung (V)",           _min_vol,                   True),
     ("batteryPower",    "Akkuleistung (W, + entlaedt, - laedt)", _battery_power,             False),
     ("offGridPower",    "Offgrid-Leistung (W)",                  lambda h: h.get("offGrid"), False),
+    ("socLimit",        "Ladegrenzen-Status (0 frei, 1 voll, 2 leer) *", lambda h: h.get("socLimit"), False),
+    ("socSet",          "Obere Ladegrenze (%) *",                lambda h: h.get("socSet"),  False),
+    ("minSoc",          "Untere Entladegrenze (%) *",            lambda h: h.get("minSocHw"), False),
 )
+# Nur bei Aenderung senden (plus einmal je Tag und nach Neustart) - in der
+# Liste mit * markiert. Merker je Hub: {hub-id: {key: (wert, datum)}}.
+TB_ON_CHANGE = ("socLimit", "socSet", "minSoc")
+_tb_last = {}
 TB_DEFAULT_FIELDS = [f[0] for f in TB_FIELDS if f[3]]
 
 
@@ -298,13 +308,19 @@ def _tb_values(data):
     if data is None:
         return out
     sel = set(TB["fields"])
+    heute = time.strftime("%Y-%m-%d")
     for h in data.get("hubs") or []:
         if not h.get("online"):
             continue                                    # offline -> nichts
+        hid = str(h.get("id"))
         v = {name: get(h) for name, _, get, _ in TB_FIELDS if name in sel}
         v = {k: x for k, x in v.items() if _num(x)}
-        if v:
-            out[str(h.get("id"))] = v
+        with _lock:
+            last = _tb_last.get(hid, {})
+            for k in TB_ON_CHANGE:                      # unveraendert -> weglassen
+                if k in v and last.get(k) == (v[k], heute):
+                    del v[k]
+        out[hid] = v                                    # online, evtl. leer
     g = _grid_power(data)
     if g is not None:
         out[TB_GRID_ID] = {GRID_TB_KEY: g}
@@ -325,6 +341,16 @@ def _tb_zaehlen(punkte):
         return _tb_tag["punkte"], _tb_tag["nachrichten"]
 
 
+def _tb_merken(dev, v):
+    """Gesendete Status-/Grenzwerte merken (Vergleich im naechsten Takt)."""
+    heute = time.strftime("%Y-%m-%d")
+    with _lock:
+        last = _tb_last.setdefault(dev, {})
+        for k in TB_ON_CHANGE:
+            if k in v:
+                last[k] = (v[k], heute)
+
+
 def _tb_send(data, stamp, stop):
     values = _tb_values(data)
     host = TB["host"]
@@ -333,14 +359,17 @@ def _tb_send(data, stamp, stop):
     for dev, token in list(TB["tokens"].items()):
         name = "Netz" if dev == TB_GRID_ID else "Hub " + dev
         v = values.get(dev)
-        if not v:
+        if v is None:
             _log("thingsboard", "{} {}: keine Daten (offline oder nicht geliefert)".format(name, created))
             continue
+        if not v:
+            continue                                    # online, nur Unveraendertes
         payload = {"ts": ts_ms, "values": v}
         ok, ans = _tb_post(host, token, "telemetry", payload)
         if not ok and not stop.wait(RETRY_S):
             ok, ans = _tb_post(host, token, "telemetry", payload)
         if ok:
+            _tb_merken(dev, v)
             punkte, nachrichten = _tb_zaehlen(len(v))
             _log("thingsboard", "{} {} gesendet ({} Wert{}; heute {} Datenpunkte in {} Nachrichten)".format(
                 name, created, len(v), "" if len(v) == 1 else "e", punkte, nachrichten))
@@ -500,6 +529,8 @@ def handle_post_tb(data):
     TB["host"] = host
     TB["tokens"] = new
     TB["fields"] = fields
+    with _lock:
+        _tb_last.clear()                     # neue Auswahl/Tokens -> alles einmal senden
     TB["enabled"] = bool(data.get("enabled"))
     _write_json(TB_FILE, TB)
     _apply()
@@ -584,7 +615,8 @@ def page_html_tb():
 <button class="sec" id="load">Geraete vom Shelly laden</button>
 <h2>Werte je Speicher</h2>
 <div class="hint">Gilt fuer alle Speicher gleich. Jeder Wert ist pro Speicher und Minute ein Datenpunkt
-(Kontingent im Free-Tarif). Das Geraet &bdquo;Netz&ldquo; sendet immer <code>gridPower</code>.</div>
+(Kontingent im Free-Tarif). Mit * markierte Werte nur bei Aenderung, einmal taeglich und nach
+einem Neustart. Das Geraet &bdquo;Netz&ldquo; sendet immer <code>gridPower</code>.</div>
 <div id="flds"></div>
 <button id="btn">Speichern &amp; Tokens testen</button>
 <div id="msg"></div>
