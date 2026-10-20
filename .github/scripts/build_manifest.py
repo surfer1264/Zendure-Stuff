@@ -64,6 +64,10 @@ RE_APP_TYPE = re.compile(r"""\bAPP_TYPE\s*=\s*["']([^"']+)["']""")
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 RE_CONFIG_START = re.compile(r"^let CONFIG\s*=\s*\{", re.MULTILINE)
 RE_CHANGELOG_NAME = re.compile(r"chang\w*log", re.IGNORECASE)
+# Ordner mit Kopien fuer Home-Assistant-Apps (HA_zendure_proxy,
+# HA_zendure_installer): dieselben Dateien wie im Ordner darueber, sie
+# wuerden sonst als doppelter SCRIPT_TYPE/APP_TYPE gemeldet.
+RE_HA_COPY = re.compile(r"(^|[/\\])HA_[^/\\]+[/\\]")
 RE_CHANGELOG_HEAD = re.compile(r"^#{2,3}\s+(?:[^\d\s]\S*\s+)*v?(\d+(?:\.\d+)+)\b")
 
 errors = []
@@ -418,6 +422,8 @@ def main():
 
     scripts = {}
     for path in sorted(glob.glob(SCRIPT_GLOB, recursive=True)):
+        if RE_HA_COPY.search(path):
+            continue
         stype, entry = build_entry(path, repo, sha, meta)
         if stype is None:
             continue
@@ -431,6 +437,8 @@ def main():
             stype, scripts[stype]["version"], scripts[stype]["schema"], scripts[stype]["file"]))
 
     for path in sorted(glob.glob(APP_GLOB, recursive=True)):
+        if RE_HA_COPY.search(path):
+            continue
         atype, entry = build_app_entry(path, repo, sha)
         if atype is None:
             continue
