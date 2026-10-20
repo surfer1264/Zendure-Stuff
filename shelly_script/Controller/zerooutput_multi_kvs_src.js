@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.1";
+let VERSION = "5.2.2";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -15,11 +15,11 @@ let CONFIG = {
       reverse: true,
       maxInputPower: 1000,
       maxOutput: 800,
-      dryRun: false              
+      dryRun: false
     },
     {
-      ip: "192.168.178.150",   
-      label: "Fatamorgana",     
+      ip: "192.168.178.150",
+      label: "Fatamorgana",
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
@@ -41,7 +41,7 @@ let CONFIG = {
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
   gridSourceField: "total_power",
   gridSourceInvert: false,
-  
+
   // ------------------------------------------------------------------
   // RULES ENGINE CORE PARAMETERS
   setpoint: 0, // (KVS-live-overridable)
@@ -61,7 +61,7 @@ let CONFIG = {
     concentrateBelow: 600,
     spreadAbove: 800
   },
-  // Time-coupled hysteresis for  (only) spread -> single 
+  // Time-coupled hysteresis for  (only) spread -> single
   concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
@@ -73,7 +73,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // REVERSE-Hysterese, nur bei reverse:true relevant
   reverseStartupPower: 35,
-  // Ladeleistung, unter der gestoppt wird 
+  // Ladeleistung, unter der gestoppt wird
   reverseStopPower: 15,
   // gridReverse-Modus: dynamic / always1 / always2
   gridReverseMode: "dynamic",
@@ -82,7 +82,7 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION
   dischargeStartupPower: 35,
-  // Entladeleistung, unter der gestoppt wird 
+  // Entladeleistung, unter der gestoppt wird
   dischargeStopPower: 15,
 
   // ------------------------------------------------------------------
@@ -231,12 +231,12 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
     socLimit: null,
     socStatus: null,
     serial: null,
-    zenPower: 0,   
-    available: false,  
+    zenPower: 0,
+    available: false,
     outputLimit: null,
     maxSocLogged: false,
     gridReverse: null,
-    acMode: null,       
+    acMode: null,
     smartMode: null,
 
     realDirection: null, reversalHoldCount: 0, standbyHoldCount: 0,
@@ -269,7 +269,7 @@ function simpleEncode(str) {
 //
 // Der Call-Pool des Shelly ist begrenzt. Ist er voll, wird der Aufruf
 // NICHT angenommen: Shelly.call wirft dann sofort ("Too many calls in
-// progress") und der Callback laeuft nie. 
+// progress") und der Callback laeuft nie.
 // Hier wird der Wurf abgefangen und in den normalen Fehlerpfad umgeleitet:
 // der Callback wird mit res=null nachgezogen. Alle Aufrufer pruefen bereits
 // auf "res && res.code === 200" bzw. "err_code !== 0" und landen damit in
@@ -345,7 +345,7 @@ function sendSignalMessage(text) {
     url = "https://api.callmebot.com/signal/send.php?phone=" + CONFIG.signal.phone + "&apikey=" + CONFIG.signal.apiKey +  "&text=" + safeText;
   else
 	url = "https://api.callmebot.com/whatsapp.php?phone=" + CONFIG.signal.phone + "&text=" + safeText + "&apikey=" + CONFIG.signal.apiKey;
-		
+
   safeCall(
     "HTTP.GET",
     { url: url, timeout: 8 },
@@ -1000,6 +1000,11 @@ function calculate(myCycle) {
   let sumZen = 0;
   let sumZenReverse = 0;
   let availableCount = 0;
+  // v5.2.2: entlaedt gerade (Ist) ein Geraet, das NICHT in der Ladesperre
+  // steht? socLimit=1-Geraete (PV-Bypass bei vollem Akku) zaehlen bewusst
+  // nicht - deren Einspeisung soll weiterhin von einem anderen Geraet
+  // geladen werden duerfen.
+  let anyDischarging = false;
 
   let countedIps = {};
 
@@ -1009,9 +1014,14 @@ function calculate(myCycle) {
 
       if (!countedIps[ip]) {
         sumZen += state.devices[i].zenPower;
-        
+
         if (CONFIG.devices[i].reverse && state.devices[i].socLimit !== 1) {
           sumZenReverse += state.devices[i].zenPower;
+        }
+
+        if (state.devices[i].socLimit !== 1 &&
+            state.devices[i].zenPower > CONFIG.dischargeStopPower) {
+          anyDischarging = true;
         }
 
         countedIps[ip] = true;
@@ -1048,6 +1058,12 @@ function calculate(myCycle) {
     state.smoothedOutput = state.smoothedOutput + aD * (raw - state.smoothedOutput);
   }
 
+  // v5.2.2: Entlade-Signal nicht unter 0 W fallen lassen. dischargeTarget
+  // wird nur bei >= 0 verwendet - ein negativer Wert hatte keine Funktion,
+  // musste nach einer kurzen Exportspitze aber gedaempft wieder hochlaufen
+  // (mehrere Zyklen Netzbezug, bevor das Entladen wieder startete).
+  if (state.smoothedOutput < 0) state.smoothedOutput = 0;
+
   let dischargeTarget = Math.round(state.smoothedOutput);
   let dischargeFixedActive = CONFIG.dischargeFixed > 0;
 
@@ -1080,8 +1096,18 @@ function calculate(myCycle) {
   if (anyReverseCapable) {
     let alreadyChargingRev = sumZenReverse < 0;
 
+    // v5.2.2: Laden nur NEU starten, wenn kein Geraet mehr real entlaedt.
+    // Ein Export-Ausschlag waehrend des Entladens (Last kurz aus) wird so
+    // zuerst nur durch Zuruecknehmen der Entladung beantwortet. Liegt im
+    // Folgezyklus (Ist = 0 W) weiterhin Export an, startet das Laden dann
+    // regulaer. Laufendes Laden (alreadyChargingRev) bleibt unberuehrt.
+    // Bei aktivem dischargeFixed gilt die Sperre nicht: die feste Entladung
+    // ist gewollt, PV-Ueberschuss soll weiter von einem anderen Geraet
+    // geladen werden duerfen (Verhalten wie 5.2.1).
     if (chargeTarget < 0 &&
-        (alreadyChargingRev || chargeTarget <= (CONFIG.reverseStartupPower * -1))) {
+        (alreadyChargingRev ||
+         ((!anyDischarging || dischargeFixedActive) &&
+          chargeTarget <= (CONFIG.reverseStartupPower * -1)))) {
       chargeOutput = distributeCharge(chargeTarget);
 
       for (let i = 0; i < n; i++) {
@@ -1197,7 +1223,7 @@ function updateMode(directionState, targetMagnitude, cfg, capExceeded) {
     return "spread";
   }
 
-  // Dead zone between concentrateBelow and spreadAbove: 
+  // Dead zone between concentrateBelow and spreadAbove:
   return "spread";
 }
 
@@ -2146,7 +2172,7 @@ function syncSocLimitsAll(index, callback) {
 
 // ---------------------------------------------------------------
 // Banner: Zeilen werden LAZY erzeugt - es liegt immer nur EINE
-// fertige Zeile im Heap. 
+// fertige Zeile im Heap.
 // ---------------------------------------------------------------
 let bannerIndex = 0;
 

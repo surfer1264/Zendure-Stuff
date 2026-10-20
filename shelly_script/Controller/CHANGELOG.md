@@ -1,5 +1,16 @@
 # Changelog Controller
 
+## v5.2.2
+
+- **Kein Laden mehr, solange noch entladen wird:** Fällt die Last kurz weg (z. B. Wasserkocher aus), entsteht beim Entladen ein kurzer Export. Bisher konnte im selben Zyklus schon ein anderes Gerät (mit `reverse: true`) mit dem Laden beginnen – ein Speicher entlud, der andere lud, und die Regelung wechselte unnötig die Richtung. Jetzt wird zuerst nur die Entladung zurückgenommen. Erst wenn kein Gerät mehr real entlädt (Ist-Leistung höchstens `dischargeStopPower`) und der Export weiter anliegt, startet das Laden regulär.
+  - Laufendes Laden ist davon nicht betroffen.
+  - Geräte mit vollem Akku (`socLimit` 1, PV-Bypass) zählen nicht als „entlädt“ – ihre Einspeisung darf ein anderes Gerät weiterhin laden.
+  - Bei aktivem `dischargeFixed` gilt die Sperre nicht: Die feste Entladung ist gewollt, PV-Überschuss darf weiter von einem anderen Gerät geladen werden (wie bisher).
+- **Entladen startet nach einer Exportspitze schneller wieder:** Das gedämpfte Entlade-Signal fällt nicht mehr unter 0 W. Ein negativer Wert hatte keine Wirkung, musste nach einer kurzen Exportspitze aber erst über mehrere Zyklen wieder hochlaufen – so lange wurde Strom aus dem Netz bezogen, bevor das Entladen wieder einsetzte.
+- Leerzeichen am Zeilenende im Quelltext entfernt (ohne Auswirkung auf die Funktion).
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.1
 
 - **minSoc/maxSoc: Mindestabstand 5 Prozentpunkte:** Beim Start gilt jetzt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`). Liegen beide Werte zu eng beieinander, wird `maxSoc` angehoben, die Reserve bleibt erhalten.
