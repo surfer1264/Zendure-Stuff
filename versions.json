@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-20T18:33:38Z",
+  "generated": "2026-10-20T19:23:41Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -343,16 +343,25 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.8.1",
+      "version": "2.9.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/99f60242315699bf4174062eb638dc85171383e4/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/a47339591743e6b286c86f650d5cda7d51a446b2/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Hilfe-Links zeigen auf die neue Doku-Seite (GitHub Pages) statt auf GitHub bzw. das Wiki: Überblick über die Suite, kompatible Geräte (neue Seite), Anleitung zum Configurator, Script-Anleitungen",
-        "Neue Fußzeile mit „Hilfe“, „Überblick über die Suite“ und Versionsnummer"
+        "**Neu: Home-Assistant-App** „Zendure Multi-Configurator“ (Ordner `HA_zendure_installer`): Configurator und Helfer laufen in Home Assistant, Aufruf über „Web-UI öffnen“. Anleitung: [HA_zendure_installer/INSTALLATION.md](HA_zendure_installer/INSTALLATION.md)",
+        "Helfer: Adresse, Port, Ablageort der gemerkten IPs und das Öffnen des Browsers lassen sich über Umgebungsvariablen einstellen (`ZENDURE_HELPER_BIND`, `_PORT`, `_DATA_DIR`, `_NO_BROWSER`, `_TRUSTED_PEERS`). Ohne diese Variablen verhält sich die EXE wie bisher",
+        "Helfer: Lauscht er im Netz, sind auch Anfragen von der eigenen Seite zugelassen (gleicher Origin, nur mit IP-Adresse)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.8.1",
+          "changes": [
+            "Hilfe-Links zeigen auf die neue Doku-Seite (GitHub Pages) statt auf GitHub bzw. das Wiki: Überblick über die Suite, kompatible Geräte (neue Seite), Anleitung zum Configurator, Script-Anleitungen",
+            "Neue Fußzeile mit „Hilfe“, „Überblick über die Suite“ und Versionsnummer"
+          ],
+          "notice": null
+        },
         {
           "version": "2.8.0",
           "changes": [
@@ -426,15 +435,6 @@
             "Bestehende Config einlesen: neuer Button „📂 Datei laden…“ – lädt eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) ins Textfeld, übernommen wird wie bisher mit „Einlesen & übernehmen“",
             "Komplettes Script speichern: Dateiname enthält jetzt die Script-Version (z. B. `zerooutput_multi_kvs_mini_v5.0.8.js`)",
             "Link zur Anleitung (README) auf der Startseite, je nach Sprache auf die deutsche, englische oder französische Fassung"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.0.2",
-          "changes": [
-            "Neuer Einführungstext auf der Startseite (DE/EN/FR)",
-            "Link zur Liste kompatibler Shelly-Geräte (Wiki, Kapitel Voraussetzungen)",
-            "Netzquelle http_json: Button „Testen“ öffnet die Smartmeter-URL in einem neuen Tab"
           ],
           "notice": null
         }
