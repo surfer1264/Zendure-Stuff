@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-17T15:33:42Z",
+  "generated": "2026-10-20T18:33:38Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.2.0",
+      "version": "5.2.1",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d74fe27df3533709f7664f6de8b2e8693c66f642/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 45633,
-      "codeHash": "sha256:0d4557441900efde0543a9aac033351c494743012b12e64761ca1411c804ff62",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/309e8d973336b003347ae1fd211b343a191be057/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 45827,
+      "codeHash": "sha256:e543b66f9bb34afbe79d15b0a260e39fd0ec223f03f046749a67a85efde0af6a",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Ruhigere Regelung bei konstanter Last (Nachbesserung zu 5.1.8):** Die schnelle Flanke greift nur noch bei einem echten Sprung, wenn der neue Wert mehr als **3 × `hysteresis`** (höchstens **50 W**) unter dem aktuellen Regelsignal liegt. Kleinere Abweichungen werden wieder in beide Richtungen mit `dampingFactor` gedämpft, wie bis 5.1.7.",
-        "**Schnelle Flanke mit Faktor 0,9 statt ungedämpft:** Bei einem Sprung übernimmt der Controller 90 % der Änderung sofort, nicht 100 %. Wegen der Reaktionszeit der Solarflows (~3 s) steckt das Gerät beim nächsten Messen oft noch in der Rampe. Ein voller Sprung schoss dann leicht über und wurde im Folgetakt wieder zurückgenommen.",
-        "Simulation mit 4 s Takt und 3 s Reaktionszeit: beim Wasserkocher ein Drittel weniger Richtungswechsel, beim Herd-Thermostat rund 35 % weniger, bei taktender Induktion ein Viertel weniger Schreibbefehle. Der Export ist dabei nur 5–10 % höher als mit voll ungedämpfter Flanke, liegt aber weiter deutlich unter 5.1.7 (Wasserkocher: 23,8 statt 30,5 Wh)."
+        "**minSoc/maxSoc: Mindestabstand 5 Prozentpunkte:** Beim Start gilt jetzt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`). Liegen beide Werte zu eng beieinander, wird `maxSoc` angehoben, die Reserve bleibt erhalten.",
+        "**KVS-Override `zdmc_devN_minSoc` wird gegen `maxSoc` geprüft:** Übernommen wird nur ein Wert zwischen 10 und `maxSoc − 5`. Vorher galt 10–99 ohne Bezug zu `maxSoc` – ein zu hoher Wert (z. B. aus Home Assistant oder Node-RED) wurde übernommen und per `syncMinSocDevice()` sogar aufs Gerät geschrieben. Ungültige Werte werden jetzt ignoriert (mit `debug: true` steht ein Hinweis im Log).",
+        "Fehlt `minSoc` oder `maxSoc` im CONFIG-Block eines Geräts, gilt 10 % bzw. 100 % (vorher `NaN`)."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.0",
+          "schema": 1,
+          "codeHash": "sha256:0d4557441900efde0543a9aac033351c494743012b12e64761ca1411c804ff62",
+          "changes": [
+            "**Ruhigere Regelung bei konstanter Last (Nachbesserung zu 5.1.8):** Die schnelle Flanke greift nur noch bei einem echten Sprung, wenn der neue Wert mehr als **3 × `hysteresis`** (höchstens **50 W**) unter dem aktuellen Regelsignal liegt. Kleinere Abweichungen werden wieder in beide Richtungen mit `dampingFactor` gedämpft, wie bis 5.1.7.",
+            "**Schnelle Flanke mit Faktor 0,9 statt ungedämpft:** Bei einem Sprung übernimmt der Controller 90 % der Änderung sofort, nicht 100 %. Wegen der Reaktionszeit der Solarflows (~3 s) steckt das Gerät beim nächsten Messen oft noch in der Rampe. Ein voller Sprung schoss dann leicht über und wurde im Folgetakt wieder zurückgenommen.",
+            "Simulation mit 4 s Takt und 3 s Reaktionszeit: beim Wasserkocher ein Drittel weniger Richtungswechsel, beim Herd-Thermostat rund 35 % weniger, bei taktender Induktion ein Viertel weniger Schreibbefehle. Der Export ist dabei nur 5–10 % höher als mit voll ungedämpfter Flanke, liegt aber weiter deutlich unter 5.1.7 (Wasserkocher: 23,8 statt 30,5 Wh)."
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.9",
           "schema": 1,
@@ -163,27 +174,16 @@
             "Heap-Ausgabe (memLog) im Debug-Modus"
           ],
           "notice": null
-        },
-        {
-          "version": "5.0.8",
-          "schema": 1,
-          "codeHash": "sha256:58fb945baae900d9945f8f8f8c5a7bdd9631d1ff363825708881ca9f3954f863",
-          "changes": [
-            "only für Verhalten bei `standbySmartModeZero: false` (aktueller Stand) unverändert zu vorher",
-            "aber wenn `standbySmartModeZero: true`",
-            "wirkt ein `CONFIG.standbyHoldCycles = 15` (15 Takte) bevor der Standby mit `smartmode: 0` geschrieben wird"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.9",
+      "version": "3.5.10",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d5fbf810b95eeb14a91a7175be6e76b2865b0e9d/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 40722,
-      "codeHash": "sha256:c650f545f9ca5b266222fb25eb2d3c9d2d2098c18ba6756ecc70850378b83a73",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/309e8d973336b003347ae1fd211b343a191be057/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 40802,
+      "codeHash": "sha256:350bfc955ba9f6b262b025e8e085c70839e81d9f5c57968bad5325687cdb6589",
       "configKeys": [
         "api",
         "apiEvents",
@@ -230,14 +230,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile",
-        "Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)",
-        "Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub"
+        "minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)",
+        "config_api: Die Reserve aus der KVS (`zdmc_devN_minSoc`) wird auf 10 … `maxSoc − 5` begrenzt, bevor sie ans Dashboard geht",
+        "Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.9",
+          "schema": 1,
+          "codeHash": "sha256:c650f545f9ca5b266222fb25eb2d3c9d2d2098c18ba6756ecc70850378b83a73",
+          "changes": [
+            "Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile",
+            "Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)",
+            "Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.8",
           "schema": 1,
@@ -325,16 +336,6 @@
             "status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
             "Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)",
             "Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.4.1",
-          "schema": 1,
-          "codeHash": "sha256:895a36d798b27d049cc4a1760d7f0f42d13937f66e56ccbdc3c95c982886b2e6",
-          "changes": [
-            "config_api-Cache im Script wieder entfernt: kostete ~770 B Heap bei offenem Dashboard und traf bei einem Dashboard (Abfrage alle 32 s) nie - jede config_api-Abfrage liest die KVS frisch",
-            "Dashboard: nur Versionsnummer angehoben (Script und Dashboard muessen gleich sein)"
           ],
           "notice": null
         }
