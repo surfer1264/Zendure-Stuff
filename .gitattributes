@@ -1,6 +1,6 @@
 node_red export-ignore
 shelly_script/testController export-ignore
-shelly_script/Datennonitor export-ignore
+shelly_script/Datenmonitor export-ignore
 shelly_script/WatchdogZenSDK export-ignore
 shelly_script/AkkuWatchDogMulti export-ignore
 shelly_script/zendash export-ignore
