@@ -630,7 +630,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.5.9";
+  const VERSION = "3.5.10";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -1583,9 +1583,9 @@
   let hubs = [];
   const hubsGrid = document.getElementById('hubsGrid');
 
-  // Obergrenze fuer die Reserve. Sie muss UNTER maxSoc bleiben: Das
-  // Regel-Script normalisiert die beiden Werte nur beim Start gegeneinander,
-  // nicht beim Live-Override ueber die KVS. Kaeme minSoc ueber maxSoc, duerfte
+  // Obergrenze fuer die Reserve. Sie muss mindestens 5 Punkte UNTER maxSoc
+  // bleiben. Ab Regel-Script 5.2.1 prueft auch der Live-Override ueber die
+  // KVS das; aeltere Scripts normalisieren nur beim Start. Kaeme minSoc ueber maxSoc, duerfte
   // das Geraet weder unter die Reserve entladen noch bis dorthin laden - es
   // fiele dauerhaft aus der Regelung, und der verdrehte Grenzwert landete
   // per syncSocLimits() auch noch auf der Hardware.
@@ -1597,7 +1597,7 @@
     return 'SoC · ' + d.minSoc + '–' + (max > 0 ? max : 100) + ' %';
   }
 
-  // Obergrenze = kleinere der beiden oberen Ladegrenzen MINUS 1:
+  // Obergrenze = kleinere der beiden oberen Ladegrenzen MINUS 5 (Mindestabstand wie im Regel-Script):
   // maxSoc aus der Konfiguration und - ab Script 3.5.1 - socSet, die am
   // Geraet tatsaechlich eingestellte Grenze. Wurde socSet von aussen
   // gesenkt, darf die Reserve trotzdem nie die echte Ladegrenze erreichen.
@@ -1605,7 +1605,7 @@
   function minSocCeiling(d){
     const cfgMax = Number(d.maxSoc) > 0 ? Number(d.maxSoc) : 100;
     const devMax = (d.socSet !== null && d.socSet !== undefined && Number(d.socSet) > 0) ? Number(d.socSet) : 100;
-    return Math.max(10, Math.min(99, Math.min(cfgMax, devMax) - 1));
+    return Math.max(10, Math.min(95, Math.min(cfgMax, devMax) - 5));
   }
 
   // Regler-Obergrenze und Beschriftung "max X %" nachfuehren - nach jedem

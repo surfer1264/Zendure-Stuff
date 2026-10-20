@@ -214,7 +214,7 @@ die Regelung ignoriert sie.
 | `zdmc_dischargeFixed` | `0` oder ≥ `dischargeStartupPower` | Feste Entladeleistung in W statt Netzsaldo-Regelung. `0` schaltet zurück auf die normale Regelung. Werte zwischen `1` und der unteren Grenze lehnt `kvs_set_api` mit `400` ab (das Regel-Script würde sie verwerfen) |
 | `zdmc_dev{id}_dischargeAllowed` | `0` / `1` | Entladen erlaubt |
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
-| `zdmc_dev{id}_minSoc` | 10 … 99 | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
+| `zdmc_dev{id}_minSoc` | 10 … `maxSoc − 5` | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
 | `zdmc_dev{id}_inputLimit` | 0 … `maxInputPower` | Manuelle Ladeleistung in W |
 
 Zusätzlich schreibt das Script selbst:
@@ -223,10 +223,11 @@ Zusätzlich schreibt das Script selbst:
 - `zdmc_dev{id}_dischargeAllowed = 0`, wenn der Watchdog bei einem überwachten Gerät eine Zelle unter `minVoltWarn` sieht ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). Zurückgesetzt wird nur von außen.
 - `inputLimit`, `dischargeAllowed` und `reverse` beim [automatischen Stopp](#automatischer-stopp-bei-voller-batterie) des manuellen Ladens.
 
-**`minSoc` muss unter `maxSoc` bleiben.** Das Regel-Script gleicht beide Werte nur
-beim Start gegeneinander ab, nicht beim Live-Override. Rutscht `minSoc` darüber, darf
-das Gerät weder unter die Reserve entladen noch bis dorthin laden und fällt dauerhaft
-aus der Regelung.
+**`minSoc` muss mindestens 5 Prozentpunkte unter `maxSoc` bleiben.** Ab Regel-Script
+5.2.1 wird ein KVS-Wert über `maxSoc − 5` ignoriert. Ältere Regel-Scripts gleichen beide
+Werte nur beim Start gegeneinander ab, nicht beim Live-Override. Rutscht `minSoc` dort
+über `maxSoc`, darf das Gerät weder unter die Reserve entladen noch bis dorthin laden und
+fällt dauerhaft aus der Regelung.
 
 **`inputLimit` setzt eine Reihenfolge voraus.** Erst `dischargeAllowed` und `reverse`
 auf `0`, dann die Ladeleistung — sonst überschreibt das Regel-Script den Wert im

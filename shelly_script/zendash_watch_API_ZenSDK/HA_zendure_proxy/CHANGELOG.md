@@ -3,6 +3,11 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.10.0
+
+- Dashboard 3.5.10: Der Regler für die Reserve (minSoc) hält jetzt 5 Prozentpunkte Abstand zur Ladegrenze (vorher 1 Punkt)
+- Passt zum Shelly-Script zendash_watch 3.5.10 und zum Regel-Script ab 5.2.1
+
 ## 3.5.9.6
 
 - „Web-UI öffnen“ zeigt das Dashboard jetzt innerhalb von Home Assistant (Ingress) – funktioniert auch, wenn Home Assistant über `homeassistant.local` oder von unterwegs geöffnet ist

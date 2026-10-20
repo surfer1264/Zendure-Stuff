@@ -1,5 +1,13 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.10
+
+- minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)
+- config_api: Die Reserve aus der KVS (`zdmc_devN_minSoc`) wird auf 10 … `maxSoc − 5` begrenzt, bevor sie ans Dashboard geht
+- Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10
+- Passt zum Regel-Script ab 5.2.1; mit älterem Regel-Script funktioniert alles weiter, der Abstand wird dann nur im Dashboard eingehalten
+- Home-Assistant-App-Version 3.5.10.0
+
 ## Proxy 3.5.9.4 (ohne Änderung am Script)
 
 - ThingsBoard-Upload: neue Werte je Speicher `socLimit` (0 frei, 1 voll, 2 leer), `socSet` (obere Ladegrenze in %) und `minSoc` (untere Entladegrenze in %, aus `minSocHw`), standardmäßig aus. Sie werden nur bei Änderung gesendet, dazu einmal täglich und nach jedem Neustart oder Speichern der Einstellungen

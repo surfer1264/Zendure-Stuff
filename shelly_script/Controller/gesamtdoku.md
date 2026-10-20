@@ -344,8 +344,8 @@ Die Regel in folgender Tabelle beschreibt den gültigen Wertebereich. Wird dageg
 | `setpoint` | zwischen `-40` und `40` | auf `-40` bzw. `40` gesetzt |
 | `hysteresis` | zwischen `5` und `40` | auf `5` bzw. `40` gesetzt |
 | `rebalance.socMargin` | zwischen `5` und `25` | auf `5` bzw. `25` gesetzt |
-| `minSoc` (je Gerät) | zwischen `10` und `99` | auf `10` bzw. `99` gesetzt |
-| `maxSoc` (je Gerät) | zwischen `minSoc + 1` und `100` | auf `minSoc + 1` bzw. `100` gesetzt |
+| `minSoc` (je Gerät) | zwischen `10` und `95`; fehlt das Feld, gilt `10` | auf `10` bzw. `95` gesetzt |
+| `maxSoc` (je Gerät) | zwischen `minSoc + 5` und `100` (seit 5.2.1, vorher `minSoc + 1`); fehlt das Feld, gilt `100` | auf `minSoc + 5` bzw. `100` gesetzt |
 | `inputLimit` (je Gerät, optional) | zwischen `0` und `maxInputPower`; fehlt das Feld, gilt `0` | auf `0` bzw. `maxInputPower` gesetzt |
 | `chargeResetMargin` | zwischen `10` und `25` | auf `10` bzw. `25` gesetzt |
 | `idleSkip.cyclesUnchanged` | zwischen `3` und `50` | auf `3` bzw. `50` gesetzt |
@@ -2092,7 +2092,7 @@ Wird beim Skriptstart einmal komplett ausgegeben:
 
 ```
 --------------------------------
-Version 5.2.0
+Version 5.2.1
 Multi-Device Controller gestartet
 Geraete    : 2
   - [dev0] SF2400Pro (192.168.169.42): Entladen ja, minSoc 10%, maxOutput 2300 W, Laden vom Netz ja (maxInput 2300 W, maxSoc 100%)
@@ -2459,7 +2459,7 @@ Geschrieben werden immer genau diese Keys – insgesamt `2 + 4 × Geräteanzahl`
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` W |
 | `zdmc_devN_dischargeAllowed` | `1`, außer `dischargeAllowed: false` → `0` | `0` / `1` |
 | `zdmc_devN_reverse` | `1` bei `reverse: true`, sonst `0` | `0` / `1` |
-| `zdmc_devN_minSoc` | `CONFIG.devices[N].minSoc` | 10 … 99 % |
+| `zdmc_devN_minSoc` | `CONFIG.devices[N].minSoc` | 10 … `maxSoc − 5` % |
 | `zdmc_devN_inputLimit` | `CONFIG.devices[N].inputLimit` | 0 … `maxInputPower` |
 
 > ℹ️ Geschrieben wird der **normalisierte** CONFIG-Wert, also der Stand
@@ -2509,7 +2509,7 @@ Der Status-Handler wird nur bei `kvsEnabled: true` überhaupt registriert
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` (W), keine Obergrenze | Globaler Fix-Sollwert für die Entladung. `0` = aus (normale Netzsaldo-Regelung). Ist der Wert aktiv (`> 0`), ersetzt er im Entladepfad die Netzsaldo-basierte Berechnung **komplett** – der Ladepfad (`chargeTarget`) bleibt unberührt. Löst **keinen** Schreibvorgang am Zendure-Gerät aus, reiner Software-Override der Regelung. In der Zyklus-Kopfzeile (Kapitel 12.2) am Suffix `[FIX]` hinter dem Regelsignal erkennbar. |
 | `zdmc_devN_dischargeAllowed` | `CONFIG.devices[N].dischargeAllowed` | `0` / `1` | – |
 | `zdmc_devN_reverse` | `CONFIG.devices[N].reverse` | `0` / `1` | `1` = Laden aus dem Netz erlaubt |
-| `zdmc_devN_minSoc` | `CONFIG.devices[N].minSoc` | 10…99 (%) | Löst zusätzlich sofort einen Schreibvorgang **am Zendure-Gerät selbst** aus (`syncMinSocDevice()`) – die Hardware-Schutzgrenze wird live mitaktualisiert. |
+| `zdmc_devN_minSoc` | `CONFIG.devices[N].minSoc` | 10…`maxSoc − 5` (%, seit 5.2.1; vorher 10…99) | Löst zusätzlich sofort einen Schreibvorgang **am Zendure-Gerät selbst** aus (`syncMinSocDevice()`) – die Hardware-Schutzgrenze wird live mitaktualisiert. |
 | `zdmc_devN_inputLimit` | `CONFIG.devices[N].inputLimit` | 0…`maxInputPower` (W) | **Seit 4.5.0.** Reine Zusatz-Schnittstelle für manuelles AC-Laden, **kein** Bestandteil der Regelung. Löst bei Änderung sofort `syncInputLimitDevice()` aus – ein POST mit `acMode 1`, `outputLimit 0`, `inputLimit` und `smartMode 1`, das Laden wird also explizit erzwungen. `0` = aus (Gerät geht in Standby). |
 
 `N` = Array-Index des Geräts, siehe `[devN]` im Start-Banner (Kapitel 8.7).

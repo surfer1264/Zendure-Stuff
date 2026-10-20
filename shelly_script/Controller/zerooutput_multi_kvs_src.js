@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.0";
+let VERSION = "5.2.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -133,9 +133,15 @@ function checkBand(band) {
 checkBand(CONFIG.discharge);
 checkBand(CONFIG.charge);
 
+// Mindestabstand zwischen minSoc und maxSoc in Prozentpunkten. Gilt beim
+// Start und beim Live-Override von zdmc_devN_minSoc ueber die KVS.
+let SOC_GAP = 5;
+
 for (let i = 0; i < CONFIG.devices.length; i++) {
-  CONFIG.devices[i].minSoc = Math.max(10, Math.min(99, CONFIG.devices[i].minSoc));
-  CONFIG.devices[i].maxSoc = Math.max(CONFIG.devices[i].minSoc+1, Math.min(100, CONFIG.devices[i].maxSoc));
+  if (typeof CONFIG.devices[i].minSoc !== "number") CONFIG.devices[i].minSoc = 10;
+  if (typeof CONFIG.devices[i].maxSoc !== "number") CONFIG.devices[i].maxSoc = 100;
+  CONFIG.devices[i].minSoc = Math.max(10, Math.min(100 - SOC_GAP, CONFIG.devices[i].minSoc));
+  CONFIG.devices[i].maxSoc = Math.max(CONFIG.devices[i].minSoc + SOC_GAP, Math.min(100, CONFIG.devices[i].maxSoc));
   if (typeof CONFIG.devices[i].inputLimit !== "number") CONFIG.devices[i].inputLimit = 0;
   CONFIG.devices[i].inputLimit = Math.max(0,
     Math.min(CONFIG.devices[i].maxInputPower, CONFIG.devices[i].inputLimit));
@@ -553,7 +559,7 @@ function readKvsOverrides(callback) {
         let oldMinSoc = dev.minSoc;
 
         applyKvsValue(minSocKey, items[minSocKey].value, dev.minSoc,
-          function (v) { return v >= 10 && v <= 99; },
+          function (v) { return v >= 10 && v <= dev.maxSoc - SOC_GAP; },
           function (v) { dev.minSoc = v; });
 
         if (dev.minSoc !== oldMinSoc) {

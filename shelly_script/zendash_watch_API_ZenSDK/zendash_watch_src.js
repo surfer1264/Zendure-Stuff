@@ -57,7 +57,7 @@
 // Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.9";
+let VERSION = "3.5.10";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -217,6 +217,9 @@ if (W.entladeReset >= W.vollSchwelle) W.entladeReset = W.vollSchwelle - 5;
 if (W.minVoltReset <= W.minVoltWarn) W.minVoltReset = W.minVoltWarn + 0.1;
 if (W.tempReset >= W.tempWarn) W.tempReset = W.tempWarn - 5;
 
+// Mindestabstand minSoc/maxSoc in Prozentpunkten - wie im Regel-Script.
+let SOC_GAP = 5;
+
 let WATCH_COUNT = 0;
 for (let i = 0; i < CONFIG.devices.length; i++) {
   let d = CONFIG.devices[i];
@@ -224,8 +227,8 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
   if (d.watch) WATCH_COUNT++;
   // Grenzen wie im Regel-Script normalisieren, damit die Dashboard-Regler
   // dieselben Bereiche anbieten, die der Regler auch akzeptiert.
-  d.minSoc = Math.max(10, Math.min(99, d.minSoc || 10));
-  d.maxSoc = Math.max(d.minSoc + 1, Math.min(100, d.maxSoc || 100));
+  d.minSoc = Math.max(10, Math.min(100 - SOC_GAP, d.minSoc || 10));
+  d.maxSoc = Math.max(d.minSoc + SOC_GAP, Math.min(100, d.maxSoc || 100));
   if (typeof d.inputLimit !== "number") d.inputLimit = 0;
   d.inputLimit = Math.max(0, Math.min(d.maxInputPower || 0, d.inputLimit));
 }
@@ -1600,7 +1603,10 @@ function configRespond(res, kv, kvsOk) {
     let k = 2 + i * 4;
     if (kv[k] !== null) devices[i].dischargeAllowed = (kv[k] !== 0);
     if (kv[k + 1] !== null) devices[i].reverse = (kv[k + 1] !== 0);
-    if (kv[k + 2] !== null) devices[i].minSoc = kv[k + 2];
+    // KVS-Reserve auf den Bereich begrenzen, den das Regel-Script annimmt
+    if (kv[k + 2] !== null) {
+      devices[i].minSoc = Math.max(10, Math.min(devices[i].maxSoc - SOC_GAP, kv[k + 2]));
+    }
     if (kv[k + 3] !== null) devices[i].inputLimit = kv[k + 3];
     devices[i].lastFull = LASTFULL[i].day;
   }

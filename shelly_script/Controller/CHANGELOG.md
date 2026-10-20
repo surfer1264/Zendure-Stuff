@@ -1,5 +1,13 @@
 # Changelog Controller
 
+## v5.2.1
+
+- **minSoc/maxSoc: Mindestabstand 5 Prozentpunkte:** Beim Start gilt jetzt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`). Liegen beide Werte zu eng beieinander, wird `maxSoc` angehoben, die Reserve bleibt erhalten.
+- **KVS-Override `zdmc_devN_minSoc` wird gegen `maxSoc` geprüft:** Übernommen wird nur ein Wert zwischen 10 und `maxSoc − 5`. Vorher galt 10–99 ohne Bezug zu `maxSoc` – ein zu hoher Wert (z. B. aus Home Assistant oder Node-RED) wurde übernommen und per `syncMinSocDevice()` sogar aufs Gerät geschrieben. Ungültige Werte werden jetzt ignoriert (mit `debug: true` steht ein Hinweis im Log).
+- Fehlt `minSoc` oder `maxSoc` im CONFIG-Block eines Geräts, gilt 10 % bzw. 100 % (vorher `NaN`).
+
+Keine Änderung am CONFIG-Block nötig. Steht in einer CONFIG `minSoc` über 95 oder liegt `maxSoc` weniger als 5 Punkte darüber, wird der Wert beim Start angepasst.
+
 ## v5.2.0
 
 - **Ruhigere Regelung bei konstanter Last (Nachbesserung zu 5.1.8):** Die schnelle Flanke (Faktor 0.9) greift nur noch, wenn das Signal in Richtung „weniger Export“ um mehr als 3 × hysteresis (höchstens 50 W) springt, also beim Entladen die Last deutlich fällt oder beim Laden der Überschuss deutlich steigt. Sprünge in die Gegenrichtung und kleinere Abweichungen werden weiter mit dampingFactor gedämpft. Die Regel lautet also: Droht Export, wird schnell reagiert. Droht Netzbezug, wird gedämpft reagiert (konfigurierbar über `dampingFactor`).
