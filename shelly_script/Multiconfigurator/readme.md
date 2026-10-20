@@ -13,6 +13,7 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
 1. [Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
 2. [Wo finde ich den Configurator?](#2-wo-finde-ich-den-configurator)
     * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
+    * [Alternative: als Home-Assistant-App](#alternative-als-home-assistant-app)
     * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
 3. [Ersteinrichtung](#3-ersteinrichtung)
     * [Der Ablauf](#der-ablauf)
@@ -92,6 +93,12 @@ Wer sichergehen will, dass die Datei unverändert ist, kann sie [prüfen](#integ
 **Wichtig:** Das Fenster des Helfers muss offen bleiben, solange du einrichtest oder aktualisierst. Danach kannst du es schließen (oder `Strg+C`).
 
 **Was der Helfer macht – und was nicht:** Er läuft nur auf deinem eigenen Rechner (`http://127.0.0.1:8787`) und ist aus deinem Netzwerk nicht erreichbar. Er merkt sich nach einem erfolgreichen Upload nur die **IP-Adressen** deiner beiden Shellys – keine Konfiguration, keine Passwörter. Ist ein Shelly passwortgeschützt, fragt der Configurator nach dem Passwort; der Helfer behält es nur im Arbeitsspeicher, bis du ihn beendest.
+
+### Alternative: als Home-Assistant-App
+
+Wer Home Assistant OS nutzt, kann den Configurator samt Helfer auch als App installieren – ohne EXE auf dem PC, auch vom Tablet oder Handy aus. Alle Funktionen des Helfers stehen zur Verfügung.
+
+👉 **[Anleitung für die Home-Assistant-App](HA_zendure_installer/INSTALLATION.md)**
 
 ### Alternative: nur der Web-Configurator
 

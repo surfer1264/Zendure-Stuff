@@ -1,0 +1,2 @@
+network:
+  8787/tcp: "Configurator directly in the home network (without Home Assistant login) – enable only if needed"

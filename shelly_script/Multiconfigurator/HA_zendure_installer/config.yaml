@@ -1,0 +1,23 @@
+name: "Zendure Multi-Configurator"
+version: "2.9.0.0"
+slug: "zendure_installer"
+description: "Configurator und Upload-Helfer für die Zendure-Shelly-Scripte (Controller, zenDash-API + Watchdog)"
+url: "https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Multiconfigurator"
+ingress: true
+ingress_port: 8787
+panel_icon: mdi:cog-transfer
+arch:
+  - aarch64
+  - amd64
+  - armv7
+startup: application
+boot: manual
+init: false
+# Port standardmaessig AUS: Der Helfer kann Scripte auf jeden Shelly im
+# Heimnetz schreiben. Ueber "Web-UI oeffnen" (Ingress) laeuft alles mit
+# der Anmeldung von Home Assistant. Freigeben nur bei Bedarf im Reiter
+# Konfiguration -> Netzwerk.
+ports:
+  8787/tcp: null
+ports_description:
+  8787/tcp: "Configurator direkt im Heimnetz (ohne Home-Assistant-Anmeldung)"

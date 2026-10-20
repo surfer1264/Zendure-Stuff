@@ -157,7 +157,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.8.1";
+const APP_VERSION = "2.9.0";
 
 const I18N = {
 de: {
@@ -3057,7 +3057,11 @@ async function downloadFullScript(key){
 // CORS mit dem Browser - er selbst redet dann serverseitig per RPC mit
 // dem jeweiligen Shelly. Jeder Upload-Aufruf traegt seine eigene Ziel-IP,
 // verschiedene Scripts koennen also auf verschiedene Shellys gehen.
-const HELPER_URL = 'http://127.0.0.1:8787';
+// Liefert der Helfer die Seite selbst aus (lokal oder als Home-Assistant-App),
+// setzt er <meta name="zendure-helper">. Dann wird er relativ angesprochen -
+// das klappt auch hinter dem Pfad-Praefix des HA-Ingress und von einem
+// anderen Rechner aus. Sonst (Web-Configurator, githack) wie bisher.
+const HELPER_URL = document.querySelector('meta[name="zendure-helper"]') ? '.' : 'http://127.0.0.1:8787';
 let helperAvailable = false;
 
 // Faehigkeiten des laufenden Helfers (aus /api/health). Aeltere Helfer

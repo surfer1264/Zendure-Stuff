@@ -44,6 +44,7 @@ nav:
   - Einrichten & Updaten:
       - Configurator: Multiconfigurator/readme.md
       - Helfer/Proxy auf Mac: Multiconfigurator/local_helper/mcos_helper.md
+      - Home-Assistant-App: Multiconfigurator/HA_zendure_installer/INSTALLATION.md
       - Änderungen: Multiconfigurator/CHANGELOG.md
   - Controller:
       - Controller-Shelly: Controller/readme.md

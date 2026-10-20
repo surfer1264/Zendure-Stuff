@@ -54,6 +54,17 @@ Fuers Bauen als exe (PyInstaller) muss die HTML-Datei mitgegeben werden,
 siehe --add-data im build-and-release.yml-Workflow.
 
 Beenden: Strg+C im Terminal.
+
+Home-Assistant-App (Multiconfigurator/HA_zendure_installer): derselbe Code,
+run.sh setzt nur Umgebungsvariablen:
+    ZENDURE_HELPER_BIND           Adresse, Standard 127.0.0.1 (App: 0.0.0.0)
+    ZENDURE_HELPER_PORT           Port, Standard 8787
+    ZENDURE_HELPER_DATA_DIR       Ordner fuer zendure_helper_config.json (App: /data)
+    ZENDURE_HELPER_NO_BROWSER     gesetzt = keinen Browser oeffnen
+    ZENDURE_HELPER_TRUSTED_PEERS  kommagetrennte IPs, deren Anfragen ohne
+                                  Origin-Pruefung gelten (App: 172.30.32.2,
+                                  der Ingress-Proxy von Home Assistant - der
+                                  hat den Nutzer bereits angemeldet)
 """
 
 import base64
@@ -75,8 +86,12 @@ import webbrowser
 # ---------------------------------------------------------------
 # Konfiguration - hier anpassen
 # ---------------------------------------------------------------
-PORT = 8787
-BIND_ADDRESS = "127.0.0.1"   # bewusst NUR dieser Rechner, nicht das ganze Netz
+PORT = int(os.environ.get("ZENDURE_HELPER_PORT") or 8787)
+# bewusst NUR dieser Rechner, nicht das ganze Netz - ausser als HA-App
+BIND_ADDRESS = os.environ.get("ZENDURE_HELPER_BIND") or "127.0.0.1"
+OPEN_BROWSER = not os.environ.get("ZENDURE_HELPER_NO_BROWSER")
+TRUSTED_PEERS = {p.strip() for p in (os.environ.get("ZENDURE_HELPER_TRUSTED_PEERS") or "").split(",")
+                 if p.strip()}
 CHUNK_SIZE = 1024            # Zeichen pro Script.PutCode-Aufruf
 HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Gemeinsame Version von Helfer und Configurator: steht NUR in der
@@ -164,6 +179,9 @@ def user_dir():
 
 
 def settings_candidates():
+    data_dir = os.environ.get("ZENDURE_HELPER_DATA_DIR")
+    if data_dir:                          # HA-App: nur /data uebersteht Updates
+        return [os.path.join(data_dir, SETTINGS_FILENAME)]
     return [os.path.join(app_dir(), SETTINGS_FILENAME),
             os.path.join(user_dir(), SETTINGS_FILENAME)]
 
@@ -1025,7 +1043,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def _origin_ok(self):
         origin = self.headers.get("Origin")
-        return origin is None or origin in ALLOWED_ORIGINS
+        if origin is None or origin in ALLOWED_ORIGINS:
+            return True
+        if self.client_address[0] in TRUSTED_PEERS:
+            return True
+        # Nur wenn der Helfer im Netz lauscht (HA-App mit freigegebenem Port):
+        # Seite und Helfer auf demselben Origin. Nur fuer IP-Adressen - ein
+        # Hostname koennte per DNS-Rebinding auf den Helfer umgebogen werden.
+        if BIND_ADDRESS != "127.0.0.1":
+            host = self.headers.get("Host") or ""
+            if origin == "http://" + host and RE_IP.match(host.rsplit(":", 1)[0]):
+                return True
+        return False
 
     def _reject(self):
         body = b'{"ok": false, "error": "origin not allowed"}'
@@ -1166,6 +1195,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 {"ok": False, "error": "Configurator-HTML nicht gefunden (%s): %s" % (HTML_FILENAME, err)},
             )
             return
+        # Markierung "vom Helfer ausgeliefert": der Configurator spricht den
+        # Helfer dann relativ an statt ueber http://127.0.0.1:8787 - noetig
+        # hinter dem HA-Ingress (Pfad-Praefix) und von anderen Rechnern aus.
+        body = body.replace(b"<head>", b'<head><meta name="zendure-helper" content="same-origin">', 1)
         self.send_response(200)
         self._cors()
         self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -1275,14 +1308,19 @@ def main():
 
     url = "http://%s:%s/" % (BIND_ADDRESS, PORT)
     print("Zendure Multi-Configurator %s - lokaler Helfer laeuft auf %s" % (APP_VERSION, url))
-    print("Oeffne den Configurator automatisch im Browser...")
-    try:
-        webbrowser.open(url)
-    except Exception as err:
-        print("Konnte den Browser nicht automatisch oeffnen (%s) - Adresse manuell aufrufen: %s"
-              % (err, url))
-    print("Dieses Fenster offen lassen, solange hochgeladen wird.")
-    print("Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).")
+    if TRUSTED_PEERS:
+        print("Ohne Origin-Pruefung zugelassen: %s" % ", ".join(sorted(TRUSTED_PEERS)))
+    if not OPEN_BROWSER:
+        sys.stdout.flush()
+    else:
+        print("Oeffne den Configurator automatisch im Browser...")
+        try:
+            webbrowser.open(url)
+        except Exception as err:
+            print("Konnte den Browser nicht automatisch oeffnen (%s) - Adresse manuell aufrufen: %s"
+                  % (err, url))
+        print("Dieses Fenster offen lassen, solange hochgeladen wird.")
+        print("Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

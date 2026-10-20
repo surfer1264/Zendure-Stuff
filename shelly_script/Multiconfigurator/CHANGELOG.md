@@ -1,5 +1,12 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.9.0
+
+- **Neu: Home-Assistant-App** „Zendure Multi-Configurator“ (Ordner `HA_zendure_installer`): Configurator und Helfer laufen in Home Assistant, Aufruf über „Web-UI öffnen“. Anleitung: [HA_zendure_installer/INSTALLATION.md](HA_zendure_installer/INSTALLATION.md)
+- Helfer: Adresse, Port, Ablageort der gemerkten IPs und das Öffnen des Browsers lassen sich über Umgebungsvariablen einstellen (`ZENDURE_HELPER_BIND`, `_PORT`, `_DATA_DIR`, `_NO_BROWSER`, `_TRUSTED_PEERS`). Ohne diese Variablen verhält sich die EXE wie bisher
+- Helfer: Lauscht er im Netz, sind auch Anfragen von der eigenen Seite zugelassen (gleicher Origin, nur mit IP-Adresse)
+- Configurator: Liefert der Helfer die Seite selbst aus, spricht der Configurator ihn relativ an statt über `http://127.0.0.1:8787` – nötig hinter dem Ingress von Home Assistant. Web-Configurator (githack) unverändert
+
 ## 2.8.1
 
 - Hilfe-Links zeigen auf die neue Doku-Seite (GitHub Pages) statt auf GitHub bzw. das Wiki: Überblick über die Suite, kompatible Geräte (neue Seite), Anleitung zum Configurator, Script-Anleitungen

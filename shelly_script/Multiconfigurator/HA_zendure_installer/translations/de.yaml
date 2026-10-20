@@ -1,0 +1,2 @@
+network:
+  8787/tcp: "Configurator direkt im Heimnetz (ohne Home-Assistant-Anmeldung) – nur bei Bedarf freigeben"
