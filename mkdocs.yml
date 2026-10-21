@@ -66,6 +66,8 @@ nav:
       - Script-Monitor: Script_poller/readme.md
   - Hintergrund:
       - Vergleich mit anderen Lösungen: Einordnung.md
+  - Referenz:
+      - Report: referenz.md
 
 # Englisch/Französisch nicht in der Seitenleiste zeigen
 # (bleiben über die Sprach-Links und die Suche erreichbar)
