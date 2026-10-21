@@ -130,7 +130,7 @@ MQTT.subscribe(mqttTopic, function (topic, msg) {
                     lowVoltMsgSent[sn] = false;
                 }
             }
-            if (pack.maxTemp !== undefined) packs[sn].maxT = pack.maxTemp - 273.1;
+            if (pack.maxTemp !== undefined) packs[sn].maxT = Math.round((pack.maxTemp - 2731) / 10);
             if (pack.socLevel !== undefined) packs[sn].soc = pack.socLevel;
 
             Druck(sn);
