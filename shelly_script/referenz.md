@@ -11,7 +11,7 @@ Geräte (wie am 07.10.): **ZSF800P1**, **ZSF800P2** (SF800 Pro), **ZSF2400P1** (
 - **Regelgüte:** Im Band ±13 W lagen 66,3 % der nicht gesättigten Zyklen (07.10.: 53,2 %), über 50 W nur noch 6,7 % (07.10.: 17,8 %). Über alle Zyklen lagen 63,7 % im Band (07.10.: 24,2 %).
 - **Sättigung** 3,9 % (07.10.: 54,5 %). Am 20.10. gab es keine Phase, in der alle Geräte per Einstellung auf Soll 0 W standen. Die Sättigung entstand nur durch die Entladesperre bei 40 % (12:50–13:05 und ab 23:14).
 - **Median der Regelabweichung: −1 W** (07.10.: 288 W).
-- **Netzbezug ** 1,02 kWh am ganzen Tag (07.10.: 11,07 kWh). In den nicht gesättigten Zyklen: 0,40 kWh Bezug und 0,29 kWh Einspeisung (07.10.: 0,82 kWh und 0,46 kWh).
+- **Netzbezug** 1,02 kWh am ganzen Tag (07.10.: 11,07 kWh). In den nicht gesättigten Zyklen: 0,40 kWh Bezug und 0,29 kWh Einspeisung (07.10.: 0,82 kWh und 0,46 kWh).
 - **Soll und Ist stimmen eng überein** (Median 0–1 W, wie am 07.10.).
 - **Sparmodus:** 40,9 % ohne Geräte-Poll (07.10.: 52,7 %). Schreibvorgänge: 5.758 (07.10.: 3.731).
 - **Verbindungsfehler:** 18 (07.10.: 2), jeweils höchstens 2 in Folge. Übersprungene Takte: 66 (07.10.: 122).
