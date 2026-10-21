@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-20T19:53:13Z",
+  "generated": "2026-10-21T07:43:50Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -178,12 +178,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.10",
+      "version": "3.5.11",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/309e8d973336b003347ae1fd211b343a191be057/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 40802,
-      "codeHash": "sha256:350bfc955ba9f6b262b025e8e085c70839e81d9f5c57968bad5325687cdb6589",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c4dd429258d6a03cf185be355f16e015244f807c/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 40971,
+      "codeHash": "sha256:6f36544578f41829949f5d8225ec7ac7a2193d7ebb82ac15c3f868ba7b52a77f",
       "configKeys": [
         "api",
         "apiEvents",
@@ -230,14 +230,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)",
-        "config_api: Die Reserve aus der KVS (`zdmc_devN_minSoc`) wird auf 10 … `maxSoc − 5` begrenzt, bevor sie ans Dashboard geht",
-        "Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10"
+        "Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs",
+        "`status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert",
+        "Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.10",
+          "schema": 1,
+          "codeHash": "sha256:350bfc955ba9f6b262b025e8e085c70839e81d9f5c57968bad5325687cdb6589",
+          "changes": [
+            "minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)",
+            "config_api: Die Reserve aus der KVS (`zdmc_devN_minSoc`) wird auf 10 … `maxSoc − 5` begrenzt, bevor sie ans Dashboard geht",
+            "Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.9",
           "schema": 1,
@@ -325,17 +336,6 @@
             "status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
             "Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis",
             "Dashboard: Versionsnummer 3.5.1"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.0",
-          "schema": 1,
-          "codeHash": "sha256:c066f66ee49869a0ce88386eec5f6372ea64f53e671d746a629cda0e54cef19f",
-          "changes": [
-            "status_api liefert je Hub zusaetzlich `home`, `gridIn`, `packIn`, `packOut` (Rohwerte `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower` in W, `null` = Feld fehlt bzw. Hub offline) - vier `jsonNum`-Aufrufe auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
-            "Watchdog: Geraetename im Abend-/Morgen-Update auf 10 Zeichen gekuerzt (vorher 6)",
-            "Changelog-Kommentare aus dem Script-Quelltext entfernt, die Historie steht nur noch hier"
           ],
           "notice": null
         }
