@@ -28,6 +28,7 @@
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
 //                               minSocHw,temp,offGrid}] }
+//                      ?bg=wake: ein einzelner Poll (Cloud-Upload), ?bg=read: nur lesen
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
 // AUTO-STOP MANUELLES LADEN: Laedt ein Geraet manuell (dischargeAllowed=0,
@@ -57,7 +58,7 @@
 // Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.10";
+let VERSION = "3.5.11";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1399,6 +1400,11 @@ function setupAstroSchedules(done) {
 
 let lastRequestAt = 0;
 let IDLE_MS = 15000;
+// Ab 3.5.11: status_api?bg=wake (Cloud-Upload des Proxys ohne offenes
+// Dashboard) loest genau EINEN Poll aus, statt den schnellen Takt fuer
+// 15 s zu starten. Wird erst beim tatsaechlichen Start des Polls
+// zurueckgesetzt - ist der Slot belegt, holt der naechste Tick ihn nach.
+let oneShot = false;
 let lastWatchPoll = 0;
 let lastFast = false;
 
@@ -1426,13 +1432,13 @@ function pollHubsSeq(index, fast, due, callback) {
 
 function tick() {
   let now = Date.now();
-  let fast = API_ON && ((now - lastRequestAt) <= IDLE_MS || anyManualActive());
+  let fast = API_ON && ((now - lastRequestAt) <= IDLE_MS || oneShot || anyManualActive());
   // 1 s Toleranz: der Takt trifft das Intervall sonst je nach Timer-Jitter
   // erst einen Tick spaeter.
   let due = WD_ON && WATCH_COUNT > 0 && (now - lastWatchPoll) >= W.intervalSec * 1000 - 1000;
 
   if (DBG && fast !== lastFast) {
-    logDebug(fast ? ("Schneller Takt AN (" + (anyManualActive() ? "manuelles Laden" : "Dashboard aktiv") + ")") : "Schneller Takt AUS - Leerlauf");
+    logDebug(fast ? ("Schneller Takt AN (" + (anyManualActive() ? "manuelles Laden" : (oneShot ? "Einmal-Poll Cloud-Upload" : "Dashboard aktiv")) + ")") : "Schneller Takt AUS - Leerlauf");
   }
   lastFast = fast;
 
@@ -1441,6 +1447,7 @@ function tick() {
 
   bgRunning = true;
   busyEnter();
+  if (fast) oneShot = false;
   // Beginn statt Ende des Durchlaufs merken - sonst wandert das Intervall
   // um die Dauer jedes Polls nach hinten.
   if (due) lastWatchPoll = now;
@@ -1765,9 +1772,14 @@ function registerEndpoints() {
     }
   });
 
+  // status_api?bg=wake : einen Poll anstossen (kein schneller Takt)
+  // status_api?bg=read : nur lesen, kein Poll, kein schneller Takt
+  // ohne bg            : wie bisher (Dashboard), schneller Takt fuer 15 s
   HTTPServer.registerEndpoint("status_api", function (req, res) {
     if (handlePreflight(req, res)) return;
-    lastRequestAt = Date.now();
+    let bg = getQueryParam(req.query, "bg");
+    if (bg === "wake") oneShot = true;
+    else if (bg !== "read") lastRequestAt = Date.now();
     sendJson(res, 200, STATUS_BODY);
   });
 

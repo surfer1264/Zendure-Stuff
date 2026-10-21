@@ -35,6 +35,16 @@ Alle Endpunkte antworten mit `Content-Type: application/json` und
 
 Messwerte. Ändert sich laufend, wird vom Dashboard alle 4 s geholt.
 
+Optionaler Parameter `bg` (ab 3.5.11, für den Cloud-Upload des Proxys):
+
+| Aufruf | Wirkung im Script |
+|---|---|
+| `status_api` | wie bisher: schneller Takt (`pollIntervalSec`) für 15 s |
+| `status_api?bg=wake` | genau **ein** Poll beim nächsten Tick, kein schneller Takt |
+| `status_api?bg=read` | nur lesen – kein Poll, kein schneller Takt |
+
+Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
+
 ```json
 {
   "grid": { "power": -180, "online": true },
@@ -326,6 +336,8 @@ Damit das funktioniert:
 aber nur, solange in den letzten 15 s ein Endpunkt aufgerufen wurde **oder** mindestens
 ein Gerät im manuellen Lademodus ist (siehe [„Manuelles Laden“](#manuelles-laden)).
 Trifft beides nicht zu, ruht diese Abfrage und `status_api` wird nicht mehr aktualisiert.
+`status_api?bg=wake` löst ausnahmsweise genau einen Durchlauf aus, `?bg=read` zählt
+nicht als Aufruf (siehe [`status_api`](#status_api)).
 Unabhängig davon fragt der Watchdog (falls eingeschaltet) alle `watchdog.intervalSec`
 die überwachten Hubs ab – ohne Netzzähler.
 

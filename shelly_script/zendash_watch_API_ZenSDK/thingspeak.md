@@ -71,7 +71,7 @@ Die Keys landen in `zendure_thingspeak_config.json` neben dem Proxy. Beim Umzug 
 
 **Keine Zusatzlast bei offenem Dashboard.** Solange ein Dashboard offen und sichtbar ist, liest der Proxy dessen Abfragen nur mit und fragt selbst nichts ab.
 
-**Ohne Dashboard fragt der Proxy selbst.** Ist kein Dashboard offen oder der Tab im Hintergrund, fragt der Proxy etwa 12 s vor der vollen Minute zweimal `status_api` ab. Die erste Abfrage weckt das Script, das nach 15 s ohne Anfrage schläft. Die zweite liefert 10 s später den frischen Stand. Das sind 2 Abfragen pro Minute.
+**Ohne Dashboard fragt der Proxy selbst.** Ist kein Dashboard offen oder der Tab im Hintergrund, fragt der Proxy etwa 14 s vor der vollen Minute zweimal `status_api` ab. Die erste Abfrage (`?bg=wake`) lässt das Script genau einmal Netzzähler und Hubs abfragen. Die zweite (`?bg=read`) holt 12 s später den frischen Stand, ohne eine weitere Abfrage auszulösen. Das sind 2 Anfragen an die API und ein Poll-Durchlauf pro Minute. Mit zendash_watch vor 3.5.11 startet jede der beiden Anfragen den schnellen 8-s-Takt für 15 s – das Script ist dann etwa 25 s pro Minute aktiv.
 
 **Veraltete Antworten werden erkannt.** Eine Antwort gilt nur als frisch, wenn die vorige Anfrage weniger als 14 s zurückliegt, das Script also wach war. Fragt z. B. ein vom Browser gedrosselter alter Tab nur einmal pro Minute, verwirft der Proxy diese Antworten und holt sich selbst einen frischen Stand.
 

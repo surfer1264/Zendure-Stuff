@@ -3,6 +3,11 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.11.0
+
+- Weniger Last auf dem Shelly bei aktivem ThingSpeak-/ThingsBoard-Upload ohne offenes Dashboard: ein Poll-Durchlauf pro Minute statt drei bis vier
+- Passt zum Shelly-Script zendash_watch 3.5.11 (mit älterem Script funktioniert alles wie bisher)
+
 ## 3.5.10.0
 
 - Dashboard 3.5.10: Der Regler für die Reserve (minSoc) hält jetzt 5 Prozentpunkte Abstand zur Ladegrenze (vorher 1 Punkt)

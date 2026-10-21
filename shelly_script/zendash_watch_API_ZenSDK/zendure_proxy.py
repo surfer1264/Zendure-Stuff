@@ -594,11 +594,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def fetch_status_for_bridge():
-    """Wird von ts_bridge nur aufgerufen, wenn ThingSpeak aktiv ist."""
+def fetch_status_for_bridge(query=""):
+    """Wird von ts_bridge nur aufgerufen, wenn ein Cloud-Upload aktiv ist.
+    query: "bg=wake" (ein Poll im Script anstossen) oder "bg=read" (nur
+    lesen) - beide ohne den schnellen 8-s-Takt des Scripts (ab 3.5.11)."""
     if not is_configured():
         raise RuntimeError("Proxy noch nicht eingerichtet")
-    with urllib.request.urlopen(shelly_base() + "status_api", timeout=TIMEOUT) as resp:
+    url = shelly_base() + "status_api" + ("?" + query if query else "")
+    with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
         return resp.read()
 
 

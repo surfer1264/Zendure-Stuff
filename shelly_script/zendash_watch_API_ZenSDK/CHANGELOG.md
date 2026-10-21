@@ -1,5 +1,14 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.11
+
+- Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs
+- `status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert
+- Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier
+- Kompatibel: Ein älteres Script ignoriert `bg` und verhält sich wie bisher; der neue Proxy funktioniert damit weiter
+- Dashboard: nur Versionsnummer 3.5.11
+- Home-Assistant-App-Version 3.5.11.0
+
 ## Changelog 3.5.10
 
 - minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)
