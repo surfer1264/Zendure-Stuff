@@ -48,7 +48,8 @@ Gerätewerte (CONFIG) unverändert: ZSF800P1/P2 je 800 W Ausgang, 1.000 W Eingan
 
 Regelabweichung = Netzsaldo − Setpoint (0 W).
 
-![Regelabweichung 20.10.](chart_regelabweichung_20.10.png)
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/daff5fc8-91a0-4f31-9143-5d1dba570e66" />
+
 
 | Kennzahl | 20.10. alle | 20.10. ohne gesättigte | 07.10. alle | 07.10. ohne gesättigte |
 |---|---|---|---|---|
@@ -82,7 +83,8 @@ Berechnet aus Netzsaldo je Zyklus mal Zeit bis zum nächsten Zyklus (Lücken üb
 
 ## 2.2) SOLL/IST-Vergleich je Gerät
 
-![Soll/Ist je Gerät 20.10.](chart_soll_ist_20.10.png)
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/0b2ade09-9a48-4151-bfb9-cf5df4daafc0" />
+
 
 **Bedeutung:** SOLL ist die Leistung, die der Controller dem Gerät vorgibt. IST ist die Leistung, die das Gerät tatsächlich meldet.
 
@@ -100,7 +102,8 @@ Am 20.10. gab es keine längeren Abschnitte mit großer Abweichung. Die längste
 
 ## 3) Regelgröße je Gerät
 
-![Regelgröße je Gerät 20.10.](chart_regelgroesse_20.10.png)
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/68c5fedd-cbef-401a-97d7-9591bd5e9b25" />
+
 
 | Gerät | Zyklen Entladen 20.10. | Median / Max 20.10. | Zyklen Entladen 07.10. | Median / Max 07.10. |
 |---|---|---|---|---|
@@ -115,7 +118,8 @@ Das bevorzugte Gerät wechselte am 20.10. 11-mal durch den SoC-Ausgleich (07.10.
 
 ## 4) SoC-Verlauf je Gerät
 
-![SoC-Verlauf je Gerät 20.10.](chart_soc_20.10.png)
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/bfba28fc-5b85-409a-9827-b674571112f6" />
+
 
 | Gerät | Start → Ende 20.10. | Min (Zeit) 20.10. | Start → Ende 07.10. | Min 07.10. |
 |---|---|---|---|---|
