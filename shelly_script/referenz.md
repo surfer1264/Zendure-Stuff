@@ -1,20 +1,20 @@
-# Analyse Multi-Device-Controller – 20.10.2026 im Vergleich zum 07.10.2026 (Kurzform)
+Dieser Report ist generiert aus den Tageslogfiles des Shelly Controllers und vergleicht zwei 24h Profile
+
+# Analyse Multi-Device-Controller – 20.10.2026 im Vergleich zum 07.10.2026
 
 Analysierte Logs: `…20.10.2026_00-00`, `…08-00`, `…16-00` (Rohdaten Controller, zusammen 84.899 Zeilen) und `…16-00_ereignisse.txt`.
 Zeitraum: 20.10.2026, 00:00:10 bis 23:59:58 (24 h). Regelzyklen: **19.116** (07.10.: 19.054).
 Geräte (wie am 07.10.): **ZSF800P1**, **ZSF800P2** (SF800 Pro), **ZSF2400P1** (SF2400 Pro).
 
-**Hinweis zum Vergleich:** Die Werte vom 07.10. wurden mit derselben Sättigungsregel neu gerechnet wie die vom 20.10. Sie weichen deshalb leicht vom Bericht vom 07.10. ab (Sättigung dort 55,5 %, hier 54,5 %). Die beiden Tage verliefen sehr unterschiedlich: Am 07.10. wurden die Speicher geladen bis 100 %. Am 20.10. wurde **nicht geladen**, die Speicher entluden von ca. 100 % auf 40 %.
-
 ## Fazit
 
-- **Regelgüte deutlich besser:** Im Band ±13 W lagen 66,3 % der nicht gesättigten Zyklen (07.10.: 53,2 %), über 50 W nur noch 6,7 % (07.10.: 17,8 %). Über alle Zyklen lagen 63,7 % im Band (07.10.: 24,2 %).
-- **Sättigung fast weg:** 3,9 % (07.10.: 54,5 %). Am 20.10. gab es keine Phase, in der alle Geräte per Einstellung auf Soll 0 W standen. Die Sättigung entstand nur durch die Entladesperre bei 40 % (12:50–13:05 und ab 23:14).
+- **Regelgüte:** Im Band ±13 W lagen 66,3 % der nicht gesättigten Zyklen (07.10.: 53,2 %), über 50 W nur noch 6,7 % (07.10.: 17,8 %). Über alle Zyklen lagen 63,7 % im Band (07.10.: 24,2 %).
+- **Sättigung** 3,9 % (07.10.: 54,5 %). Am 20.10. gab es keine Phase, in der alle Geräte per Einstellung auf Soll 0 W standen. Die Sättigung entstand nur durch die Entladesperre bei 40 % (12:50–13:05 und ab 23:14).
 - **Median der Regelabweichung: −1 W** (07.10.: 288 W).
-- **Netzbezug stark gesunken:** 1,02 kWh am ganzen Tag (07.10.: 11,07 kWh). In den nicht gesättigten Zyklen: 0,40 kWh Bezug und 0,29 kWh Einspeisung (07.10.: 0,82 kWh und 0,46 kWh).
+- **Netzbezug ** 1,02 kWh am ganzen Tag (07.10.: 11,07 kWh). In den nicht gesättigten Zyklen: 0,40 kWh Bezug und 0,29 kWh Einspeisung (07.10.: 0,82 kWh und 0,46 kWh).
 - **Soll und Ist stimmen eng überein** (Median 0–1 W, wie am 07.10.).
-- **Weniger Sparmodus:** 40,9 % ohne Geräte-Poll (07.10.: 52,7 %). Schreibvorgänge: 5.758 (07.10.: 3.731).
-- **Mehr Verbindungsfehler:** 18 (07.10.: 2), jeweils höchstens 2 in Folge. Übersprungene Takte: 66 (07.10.: 122).
+- **Sparmodus:** 40,9 % ohne Geräte-Poll (07.10.: 52,7 %). Schreibvorgänge: 5.758 (07.10.: 3.731).
+- **Verbindungsfehler:** 18 (07.10.: 2), jeweils höchstens 2 in Folge. Übersprungene Takte: 66 (07.10.: 122).
 - **Neue Version 5.2.0** (07.10.: 5.1.5) mit zusätzlicher Dämpfung 0,9 bei Sprüngen über 36 W in Richtung „weniger Export".
 - **gridReverse dynamic:** eine Umschaltung, 02:35 Uhr von 2 auf 1 (ZSF800P1 bei 89 %).
 
