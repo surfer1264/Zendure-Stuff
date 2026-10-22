@@ -29,6 +29,7 @@ The current version and all changes are listed in the [changelog](CHANGELOG.md).
 - [Discharge lock on undervoltage](#discharge-lock-on-undervoltage)
 - [Last full charge](#last-full-charge)
 - [Switching from the old scripts](#switching-from-the-old-scripts)
+- [Moving the script to another Shelly](#moving-the-script-to-another-shelly)
 - [Memory usage](#memory-usage)
 - [Troubleshooting](#troubleshooting)
 - [Download](#download)
@@ -326,6 +327,23 @@ If you have been using the separate scripts zenDash API 2.x and AkkuVolt Watchdo
 
 ---
 
+## Moving the script to another Shelly
+
+At startup, the watchdog creates two schedules on its Shelly for the morning and evening update. These schedules belong to the **Shelly**, not to the script: if the script is stopped, deleted or moved to another Shelly, they remain on the old device and keep firing there at sunrise and sunset.
+
+If another script is still running on the old Shelly, for example the controller, this can cause trouble: if that script has the script number the old schedule points to, the call is executed there. The script then aborts with `ReferenceError: "sendAstroStatus" is not defined` and stays stopped.
+
+So when moving the script – or when deleting it for good – do this on the **old** Shelly:
+
+1. Stop the script and switch off "Run on startup", or delete the script.
+2. Open `http://<IP-of-old-Shelly>/rpc/Schedule.List` in the browser. Every entry with `sendAstroStatus` in the `code` field comes from the watchdog.
+3. Delete these entries: in the web interface under **Schedules**, or via `http://<IP-of-old-Shelly>/rpc/Schedule.Delete?id=<id>` (the `id` is shown with each entry in the list).
+4. If the controller runs there, restart it once afterwards.
+
+On the new Shelly, the script creates its schedules by itself at startup.
+
+---
+
 ## Memory usage
 
 A Shelly script has about **25 kB** of RAM. Measured on a real device with two batteries (version 3.1):
@@ -392,6 +410,9 @@ The battery responded, but the data was incomplete or had an unexpected format. 
 
 **The morning and evening update comes at the wrong time or not at all.**
 Check location and time zone in the Shelly settings. The script creates two schedules at startup. Other schedules on the Shelly remain untouched.
+
+**The controller (or another script) stops in the morning or evening with `ReferenceError: "sendAstroStatus" is not defined`.**
+Schedules from an earlier watchdog are still on this Shelly, usually after the script was moved to another Shelly. See [Moving the script to another Shelly](#moving-the-script-to-another-shelly).
 
 ---
 

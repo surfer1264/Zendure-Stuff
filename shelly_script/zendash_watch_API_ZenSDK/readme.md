@@ -56,6 +56,7 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
     - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
     - [Letzte Vollladung](#letzte-vollladung)
     - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
+    - [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen)
     - [Speicherbedarf](#speicherbedarf)
     - [Fehlersuche](#fehlersuche)
         - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
@@ -360,6 +361,23 @@ Hast du bisher die getrennten Scripte zenDash-API 2.x und AkkuVolt-Watchdog 1.x 
 
 ---
 
+## Script auf einen anderen Shelly umziehen
+
+Der Watchdog legt beim Start auf seinem Shelly zwei Zeitpläne (Schedules) für das Morgen- und Abend-Update an. Diese Zeitpläne gehören zum **Shelly**, nicht zum Script: Wird das Script gestoppt, gelöscht oder auf einen anderen Shelly verlegt, bleiben sie auf dem alten Gerät stehen und lösen dort weiter zu Sonnenauf- und -untergang aus.
+
+Läuft auf dem alten Shelly noch ein anderes Script, zum Beispiel der Controller, kann das zum Problem werden: Hat dieses Script die Script-Nummer, auf die der alte Zeitplan zeigt, wird der Aufruf dort ausgeführt. Das Script bricht dann mit `ReferenceError: "sendAstroStatus" is not defined` ab und bleibt stehen.
+
+Deshalb beim Umzug – oder wenn du das Script ersatzlos löschst – auf dem **alten** Shelly:
+
+1. Das Script stoppen und „Run on startup“ ausschalten bzw. das Script löschen.
+2. Im Browser `http://<IP-des-alten-Shelly>/rpc/Schedule.List` öffnen. Jeder Eintrag mit `sendAstroStatus` im Feld `code` stammt vom Watchdog.
+3. Diese Einträge löschen: in der Weboberfläche unter **Zeitpläne** oder per `http://<IP-des-alten-Shelly>/rpc/Schedule.Delete?id=<id>` (die `id` steht beim jeweiligen Eintrag in der Liste).
+4. Läuft dort der Controller, ihn danach einmal neu starten.
+
+Auf dem neuen Shelly legt das Script seine Zeitpläne beim Start selbst an.
+
+---
+
 ## Speicherbedarf
 
 Ein Shelly-Script hat rund **25 kB** Arbeitsspeicher. Gemessen auf einem echten Gerät mit zwei Speichern (Version 3.1):
@@ -426,6 +444,9 @@ Der Speicher hat geantwortet, aber die Daten waren unvollständig oder hatten ei
 
 **Das Morgen- und Abend-Update kommt zur falschen Zeit oder gar nicht.**
 Prüfe Standort und Zeitzone in den Shelly-Einstellungen. Das Script legt beim Start zwei Zeitpläne an. Andere Zeitpläne auf dem Shelly bleiben dabei unberührt.
+
+**Der Controller (oder ein anderes Script) stoppt morgens oder abends mit `ReferenceError: "sendAstroStatus" is not defined`.**
+Auf diesem Shelly stehen noch Zeitpläne eines früheren Watchdogs, meist nach einem Umzug des Scripts auf einen anderen Shelly. Siehe [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen).
 
 ---
 

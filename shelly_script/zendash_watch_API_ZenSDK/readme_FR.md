@@ -29,6 +29,7 @@ La version actuelle et toutes les modifications figurent dans le [changelog](CHA
 - [Blocage de la décharge en cas de sous-tension](#blocage-de-la-décharge-en-cas-de-sous-tension)
 - [Dernière charge complète](#dernière-charge-complète)
 - [Passer des anciens scripts](#passer-des-anciens-scripts)
+- [Déplacer le script vers un autre Shelly](#déplacer-le-script-vers-un-autre-shelly)
 - [Besoin en mémoire](#besoin-en-mémoire)
 - [Dépannage](#dépannage)
 - [Téléchargement](#téléchargement)
@@ -326,6 +327,23 @@ Si vous utilisiez jusqu'ici les scripts séparés zenDash API 2.x et AkkuVolt Wa
 
 ---
 
+## Déplacer le script vers un autre Shelly
+
+Au démarrage, le watchdog crée sur son Shelly deux planifications (schedules) pour le récapitulatif du matin et du soir. Ces planifications appartiennent au **Shelly**, pas au script : si le script est arrêté, supprimé ou déplacé vers un autre Shelly, elles restent sur l'ancien appareil et continuent de se déclencher au lever et au coucher du soleil.
+
+Si un autre script tourne encore sur l'ancien Shelly, par exemple le contrôleur, cela peut poser problème : si ce script porte le numéro de script visé par l'ancienne planification, l'appel y est exécuté. Le script s'interrompt alors avec `ReferenceError: "sendAstroStatus" is not defined` et reste arrêté.
+
+Lors d'un déplacement – ou si vous supprimez le script définitivement – faites donc ceci sur l'**ancien** Shelly :
+
+1. Arrêter le script et désactiver « Run on startup », ou supprimer le script.
+2. Ouvrir `http://<IP-de-l-ancien-Shelly>/rpc/Schedule.List` dans le navigateur. Chaque entrée contenant `sendAstroStatus` dans le champ `code` provient du watchdog.
+3. Supprimer ces entrées : dans l'interface web sous **Schedules** (planifications), ou via `http://<IP-de-l-ancien-Shelly>/rpc/Schedule.Delete?id=<id>` (l'`id` figure à côté de chaque entrée de la liste).
+4. Si le contrôleur tourne sur ce Shelly, le redémarrer une fois ensuite.
+
+Sur le nouveau Shelly, le script crée lui-même ses planifications au démarrage.
+
+---
+
 ## Besoin en mémoire
 
 Un script Shelly dispose d'environ **25 Ko** de mémoire vive. Mesuré sur un appareil réel avec deux batteries (version 3.1) :
@@ -392,6 +410,9 @@ La batterie a répondu, mais les données étaient incomplètes ou dans un forma
 
 **Le récapitulatif du matin et du soir arrive à la mauvaise heure ou pas du tout.**
 Vérifiez la localisation et le fuseau horaire dans les paramètres du Shelly. Le script crée deux planifications au démarrage. Les autres planifications du Shelly ne sont pas modifiées.
+
+**Le contrôleur (ou un autre script) s'arrête le matin ou le soir avec `ReferenceError: "sendAstroStatus" is not defined`.**
+Des planifications d'un ancien watchdog se trouvent encore sur ce Shelly, le plus souvent après le déplacement du script vers un autre Shelly. Voir [Déplacer le script vers un autre Shelly](#déplacer-le-script-vers-un-autre-shelly).
 
 ---
 
