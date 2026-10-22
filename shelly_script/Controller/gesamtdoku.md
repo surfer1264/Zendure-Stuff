@@ -1157,7 +1157,8 @@ Die Empfehlung hängt sehr von den persönlichen Prioritäten ab:
 - wenig Bezug
 - wenig Schreibbefehle auf die Solarflows, wenig Lastwechsel
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/2853784a-4c01-466d-baf7-7bfb8d58e9d2" />
+<img width="800"  alt="image" src="https://github.com/user-attachments/assets/be599884-dffd-4b4f-afa7-c12c24d15da1" />
+
 
 **Über 0,7 lohnt sich selten.** In der Simulation verbessert 0,8 gegenüber
 0,65 die Regelgüte nur wenig (+2,7 Prozentpunkte im Band ±13 W). Die
