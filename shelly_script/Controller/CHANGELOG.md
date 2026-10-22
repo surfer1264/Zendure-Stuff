@@ -1,5 +1,19 @@
 # Changelog Controller
 
+## v5.2.3
+
+- **Sprungfaktor optional im CONFIG-Block:** Der Faktor der schnellen Flanke (`JUMP_FACTOR`, bisher fest 0,9) lässt sich jetzt mit `jumpFactor` im CONFIG-Block setzen. Der Eintrag ist optional: Fehlt er, gilt wie bisher 0,9.
+  - Ein gesetzter Wert hat Vorrang vor dem Standard und wird auf 0,4 bis 0,9 begrenzt (nie über 0,9).
+  - Ungültige Werte (keine Zahl) werden ignoriert, dann gilt 0,9.
+  - Der wirksame Wert steht im Startbanner in der Zeile „Damping“.
+  - Nicht per KVS änderbar.
+- **Regelndes Gerät wird zuletzt abgefragt, direkt vor dem Zähler:** Bisher wurden die Geräte in CONFIG-Reihenfolge abgefragt und danach der Zähler. Jede Abfrage dauert je nach Gerät/Netzwerk rund 1 s. Stand das regelnde Gerät vorne, lagen bei 3 Geräten ca. 2 s zwischen seinem Ist und dem Netzwert. Der Netzwert zeigte die neue Leistung schon, das Ist noch die alte – das Regelsignal sprang im Wechsel hoch und runter (Zickzack).
+  - Jetzt werden zuerst die Geräte abgefragt, die gerade nicht regeln (zuletzt geschriebenes Soll 0 W und Ist 0 W), danach die regelnden, dann sofort der Zähler.
+  - Regeln alle Geräte (Verteilen), bleibt die Reihenfolge wie bisher.
+  - Kein zusätzlicher Aufruf, keine Änderung am Sparmodus.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.2
 
 - **Kein Laden mehr, solange noch entladen wird:** Fällt die Last kurz weg (z. B. Wasserkocher aus), entsteht beim Entladen ein kurzer Export. Bisher konnte im selben Zyklus schon ein anderes Gerät (mit `reverse: true`) mit dem Laden beginnen – ein Speicher entlud, der andere lud, und die Regelung wechselte unnötig die Richtung. Jetzt wird zuerst nur die Entladung zurückgenommen. Erst wenn kein Gerät mehr real entlädt (Ist-Leistung höchstens `dischargeStopPower`) und der Export weiter anliegt, startet das Laden regulär.

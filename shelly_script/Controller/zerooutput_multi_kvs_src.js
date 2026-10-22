@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.2";
+let VERSION = "5.2.3";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -49,6 +49,9 @@ let CONFIG = {
   hysteresis: 12,
   // Damping / gain factor for the COMBINED control signal (0.4 <= factor <= 0.8),
   dampingFactor: 0.65,
+  // OPTIONAL: Faktor der schnellen Flanke bei Spruengen in Richtung
+  // "weniger Export" (0.4 <= factor <= 0.9). Fehlt der Eintrag, gilt 0.9.
+  // jumpFactor: 0.9,
 
   // ------------------------------------------------------------------
   // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES
@@ -158,7 +161,13 @@ let JUMP_THRESHOLD = Math.min(3 * CONFIG.hysteresis, 50);
 // Faktor der schnellen Flanke (1 = ungedaempft). 0.9 statt 1: bei ~3 s
 // Reaktionszeit der Geraete schiesst ein voller Sprung sonst leicht ueber
 // und wird im Folgetakt zurueckgenommen (Hin und Her).
+// v5.2.3: optional per CONFIG.jumpFactor setzbar. Fehlt der Eintrag (oder ist
+// er keine gueltige Zahl), gilt der Standard 0.9. Ein gesetzter Wert wird auf
+// 0.4 ... 0.9 begrenzt - nie ueber 0.9.
 let JUMP_FACTOR = 0.9;
+if (typeof CONFIG.jumpFactor === "number" && isFinite(CONFIG.jumpFactor)) {
+  JUMP_FACTOR = Math.max(0.4, Math.min(0.9, CONFIG.jumpFactor));
+}
 if (CONFIG.reverseStopPower >= CONFIG.reverseStartupPower) {  CONFIG.reverseStartupPower = CONFIG.reverseStopPower + 15; }
 if (CONFIG.dischargeStopPower < 0) CONFIG.dischargeStopPower = 15;
 if (CONFIG.dischargeStopPower >= CONFIG.dischargeStartupPower) { CONFIG.dischargeStartupPower = CONFIG.dischargeStopPower + 15; }
@@ -939,14 +948,41 @@ function readDevice(index, myCycle, callback) {
   );
 }
 
-function readAllDevices(index, myCycle, callback) {
-  if (index >= CONFIG.devices.length) {
+// v5.2.3: Abfrage-Reihenfolge pro Zyklus. Zuerst Geraete, die gerade NICHT
+// regeln, danach die regelnden (zuletzt geschriebenes Soll != 0 oder
+// gemeldetes Ist != 0) - jeweils in CONFIG-Reihenfolge. Direkt danach liest
+// update() den Zaehler. So liegt das Ist des regelnden Geraets zeitlich
+// unmittelbar vor dem Netzwert und raw = Netz + Ist passt zusammen, auch wenn
+// jede HTTP-Abfrage ~1 s dauert. Regeln alle Geraete, entspricht die
+// Reihenfolge der bisherigen (CONFIG-Reihenfolge).
+function buildPollOrder() {
+  let idle = [];
+  let active = [];
+
+  for (let i = 0; i < CONFIG.devices.length; i++) {
+    let ds = state.devices[i];
+    let isActive = (ds.outputLimit !== null && ds.outputLimit !== 0) ||
+      ds.zenPower !== 0;
+
+    if (isActive) active.push(i);
+    else idle.push(i);
+  }
+
+  for (let k = 0; k < active.length; k++) {
+    idle.push(active[k]);
+  }
+
+  return idle;
+}
+
+function readAllDevices(order, pos, myCycle, callback) {
+  if (pos >= order.length) {
     callback();
     return;
   }
 
-  readDevice(index, myCycle, function () {
-    readAllDevices(index + 1, myCycle, callback);
+  readDevice(order[pos], myCycle, function () {
+    readAllDevices(order, pos + 1, myCycle, callback);
   });
 }
 
@@ -1907,6 +1943,9 @@ function writeAllDevices(indices, plans, myCycle, pos, callback) {
 // zeitgleich mit dem letzten Geraetewert.
 // Die idleSkip-Entscheidung faellt dafuer VOR den Messungen. Im Skip-Zyklus
 // wird wie bisher nur das Netz gelesen.
+// v5.2.3: Das regelnde Geraet wird zuletzt abgefragt (siehe buildPollOrder()).
+// Vorher lagen bei 3 Geraeten ca. 2 s zwischen dessen Ist und dem Netzwert,
+// weil die nicht regelnden Geraete dazwischen abgefragt wurden.
 function update() {
 
   if (state.busy) {
@@ -1946,7 +1985,7 @@ function update() {
       state.devices[i].available = false;
     }
 
-    readAllDevices(0, myCycle, function () {
+    readAllDevices(buildPollOrder(), 0, myCycle, function () {
     readGridPower(myCycle, afterGrid);
   });
 }
