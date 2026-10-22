@@ -182,7 +182,7 @@
   <header class="top">
     <div>
       <h1>Damping-Kompromiss</h1>
-      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.0, 12 simulierte Testtage). Hintergrund: <a href="gesamtdoku/#empfehlung-für-dampingfactor" style="color:#ffd36b">Empfehlung für dampingFactor</a>.</p>
+      <p>Welcher <code>dampingFactor</code> passt zu deinen Prioritäten? Stelle ein, was dir wichtig ist. Die Seite rechnet mit den Ergebnissen einer Testmatrix (Mock, Controller 5.2.2, 12 simulierte Testtage). Hintergrund: <a href="gesamtdoku/#empfehlung-für-dampingfactor" style="color:#ffd36b">Empfehlung für dampingFactor</a>.</p>
     </div>
     <button class="theme-btn" id="themeBtn" type="button" title="Farbschema wechseln">Automatisch</button>
   </header>
@@ -206,7 +206,7 @@
       <p>Ein Klick setzt die 4 Regler auf feste Werte. Danach kannst du die Regler frei verändern. Der Knopf bleibt hervorgehoben, solange die Regler zu ihm passen.</p>
       <dl>
         <dt>Ausgewogen</dt>
-        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): Er unterscheidet sich zwischen den Damping-Werten kaum (0,95–1,04 kWh), der Export dagegen deutlich (0,21–0,35 kWh).</dd>
+        <dd>Regelung, Export und Schreibvorgänge sind gleich wichtig (je 5). Netzbezug zählt nicht (0): Er bewegt sich gegenläufig zum Export (weniger Bezug, mehr Export). Bezug und Export zusammen bleiben bei allen Damping-Werten fast gleich (1,27–1,31 kWh).</dd>
         <dt>Beste Regelung</dt>
         <dd>Nur die Regelgüte zählt (10). Export und Schreibvorgänge sind egal.</dd>
         <dt>Wenig Export</dt>
@@ -265,7 +265,7 @@
 
   <section class="card setup">
     <h2>4. Testaufbau</h2>
-    <p class="intro">Simulation mit einem Mock-Server: Netzzähler, 2 Speicher und Haushaltslast sind nachgebildet. Getestet wurde das echte Controller-Skript 5.2.0. Nur der Wert <code>dampingFactor</code> wurde verändert.</p>
+    <p class="intro">Simulation mit einem Mock-Server: Netzzähler, 2 Speicher und Haushaltslast sind nachgebildet. Getestet wurde das echte Controller-Skript 5.2.2. Nur der Wert <code>dampingFactor</code> wurde verändert.</p>
 
     <h3>Geräte</h3>
     <div class="tablewrap"><table class="kv">
@@ -277,7 +277,7 @@
       <tr><td>Start-SoC</td><td>30 %</td><td>30 %</td></tr>
       <tr><td>PV</td><td>bis 1400 W, 07:00–17:00, Spitze 10:00</td><td>bis 900 W, 08:00–19:00, Spitze 15:00</td></tr>
       <tr><td><code>dischargeAllowed</code> / <code>reverse</code></td><td>true / true</td><td>true / true</td></tr>
-      <tr><td>Reaktionszeit</td><td colspan="2">neue Vorgabe kommt 1 s nach dem Schreiben an, danach 3 s Rampe; Start aus 0 W zusätzlich 4 s später (wie in echten Logs beobachtet)</td></tr>
+      <tr><td>Reaktionszeit</td><td colspan="2">gemessenes Modell aus echten Logs: 1,25 s Totzeit, danach Rampe mit 350 W/s (100 W in 0,3 s, 800 W in 2,3 s); Start aus 0 W mit 4,5 s Totzeit</td></tr>
     </table></div>
 
     <h3>Controller-Einstellungen</h3>
@@ -288,7 +288,7 @@
         <tr><td><code>setpoint</code></td><td>0 W</td></tr>
         <tr><td><code>hysteresis</code></td><td>12 W</td></tr>
         <tr><td><code>dampingFactor</code></td><td>0.4 / 0.5 / 0.65 / 0.8</td></tr>
-        <tr><td>schnelle Flanke (<code>jumpFactor</code>)</td><td>Faktor 0.9 (Standard) bei Sprung &gt; 36 W</td></tr>
+        <tr><td>schnelle Flanke</td><td>Faktor 0.9 bei Sprung &gt; 36 W</td></tr>
         <tr><td><code>discharge</code> / <code>charge</code></td><td>concentrateBelow 600 W, spreadAbove 800 W</td></tr>
         <tr><td><code>concentrateHoldMinutes</code></td><td>3</td></tr>
       </table></div>
@@ -308,13 +308,13 @@
     <div class="tablewrap"><table class="kv">
       <tr><td>Dauer</td><td>06:00–20:00, 12600 Regelzyklen à 4 s</td></tr>
       <tr><td>Grundlast Haushalt</td><td>etwa 400–1500 W, mit Morgen-, Mittags- und Abendspitze</td></tr>
-      <tr><td>Rauschen der Last</td><td>±30 W langsam (Periode 60 s), ±5 W schnell</td></tr>
-      <tr><td>Messrauschen</td><td>Netzzähler ±8 W, Geräte ±3 W (nur der Messwert, nicht die echte Leistung)</td></tr>
+      <tr><td>Rauschen der Last</td><td>±30 W langsam (Periode 60 s), ±8 W schnell</td></tr>
+      <tr><td>Messrauschen</td><td>Netzzähler ±3 W, Geräte ±2 W (nur der Messwert, nicht die echte Leistung)</td></tr>
       <tr><td>Kühlschrank</td><td>100 W, 15 min an, 30 min aus</td></tr>
       <tr><td>Wasserkocher</td><td>2000 W für 3 min um 07:10, dazu 2-mal zufällig zwischen 14:00 und 22:00</td></tr>
       <tr><td>Waschmaschine</td><td>10:00–11:00, Heizphase 2000 W, danach Trommel und Schleudern</td></tr>
       <tr><td>Induktion</td><td>1900 W, 12:15–12:45 (erste 6 min voll, dann taktend alle 12 s) und 18:30–19:00 (erste 5 min voll, dann taktend alle 8 s, ab Minute 20 alle 20 s)</td></tr>
-      <tr><td>Kaffeevollautomat</td><td>1500 W für 1 min, 6-mal zufällig zwischen 06:30 und 19:30</td></tr>
+      <tr><td>Kaffeevollautomat</td><td>1500 W für 1 min, 12-mal zufällig zwischen 06:30 und 16:30</td></tr>
       <tr><td>Zusätzlicher Verbraucher</td><td>800 W für 20 min, zufällig zwischen 08:00 und 20:00</td></tr>
       <tr><td>Testtage</td><td>3 je Damping-Wert, unterschiedlich nur in Rauschen und Uhrzeit der zufälligen Verbraucher</td></tr>
     </table></div>
@@ -342,7 +342,7 @@
     <ul>
       <li>Die Ergebnisse gelten nur für das simulierte Szenario aus Abschnitt 4, nicht für eine echte Anlage.</li>
       <li>Alle Werte dienen dem Vergleich der Damping-Werte untereinander. Die absoluten Zahlen (Energie, Schreibvorgänge, Prozent) haben für sich allein keine Aussagekraft.</li>
-      <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller den Faktor der schnellen Flanke, unabhängig von dieser Einstellung. In der Simulation war das der Standard 0.9; seit 5.2.3 lässt er sich optional mit <code>jumpFactor</code> im CONFIG-Block einstellen (0.4 bis 0.9).</li>
+      <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller immer den festen Faktor 0.9, unabhängig von dieser Einstellung.</li>
       <li>Der Netzwert kam im Test über <code>gridSource: "http_json"</code>. Für diesen Fall empfiehlt die <a href="gesamtdoku/#empfehlung-für-dampingfactor">Gesamtdokumentation</a> 0,5–0,6, für <code>local</code> 0,6–0,7.</li>
       <li>Andere Anlagen, Verbraucher und Einstellungen können zu einem anderen Ergebnis führen. Prüfe die Wahl mit einem Log deiner eigenen Anlage.</li>
     </ul>
@@ -354,21 +354,21 @@
 (function () {
   "use strict";
 
-  // ---- Messdaten: Testmatrix 3, 3 Testtage (Seeds) x 4 Damping-Werte, Saettigung mit SAT_TOL_W=13 ----
+  // ---- Messdaten: Testmatrix 5 (gemessenes Geraetemodell), 3 Testtage (Seeds) x 4 Damping-Werte, Saettigung mit SAT_TOL_W=13 ----
   // Spalten: band, mittel(13-50 W), gross(>50 W), saett, bezug, export, writes, ruhig, wasch, induktion
   var RAW = [
-    [1, 0.4, 57.72, 30.25, 12.03, 5.91, 1.13, 0.24, 3541, 66.36, 10.38, 7.64],
-    [1, 0.5, 61.74, 26.59, 11.67, 6.11, 1.07, 0.27, 3636, 70.4, 14.85, 8.61],
-    [1, 0.65, 64.43, 24.54, 11.03, 6.72, 1.11, 0.33, 4021, 73.09, 17, 9.04],
-    [1, 0.8, 67.89, 21.53, 10.58, 7.02, 1.08, 0.37, 4572, 76.59, 20.85, 9.43],
-    [2, 0.4, 56.52, 31.35, 12.13, 6.6, 1.03, 0.19, 3630, 64.81, 11.82, 7.71],
-    [2, 0.5, 61.54, 26.66, 11.8, 6.62, 0.97, 0.22, 3713, 70.34, 13.94, 8.93],
-    [2, 0.65, 64.57, 24.43, 11, 7.1, 1, 0.27, 4126, 73.7, 15.72, 7.78],
-    [2, 0.8, 66.01, 23.25, 10.74, 6.93, 0.97, 0.32, 4782, 74.59, 22.3, 9.32],
-    [3, 0.4, 58.09, 29.53, 12.38, 6.4, 0.96, 0.2, 3555, 66.45, 13.23, 0.54],
-    [3, 0.5, 62.35, 25.76, 11.88, 6.56, 0.9, 0.25, 3649, 71.13, 14.81, 0.27],
-    [3, 0.65, 65.7, 23.23, 11.06, 6.88, 0.83, 0.31, 3957, 74.67, 15.93, 0],
-    [3, 0.8, 67.32, 22.34, 10.34, 7.18, 0.8, 0.36, 4529, 75.97, 20.34, 0]
+    [1, 0.4, 54.98, 33.19, 11.83, 6.48, 1.16, 0.24, 3376, 62.66, 16.22, 7.39],
+    [1, 0.5, 57.91, 30.93, 11.17, 6.61, 1.14, 0.3, 3445, 65.6, 18.32, 8.85],
+    [1, 0.65, 61.62, 28.08, 10.29, 6.71, 1.1, 0.36, 3669, 69.35, 23.22, 9.29],
+    [1, 0.8, 63.5, 27.01, 9.49, 6.92, 1.07, 0.4, 4129, 70.92, 26.6, 10.31],
+    [2, 0.4, 54.14, 34, 11.86, 6.92, 1.07, 0.19, 3543, 61.48, 16.83, 9.19],
+    [2, 0.5, 57.34, 31.55, 11.12, 6.79, 0.95, 0.24, 3544, 65.04, 17.73, 8.79],
+    [2, 0.65, 60.42, 29.46, 10.12, 7, 0.9, 0.3, 3730, 68.21, 21.74, 8.49],
+    [2, 0.8, 62.44, 27.98, 9.57, 6.89, 0.95, 0.35, 4246, 69.72, 29.88, 9.34],
+    [3, 0.4, 54.8, 33.26, 11.93, 6.42, 0.94, 0.22, 3428, 62.2, 18.84, 2.3],
+    [3, 0.5, 58.2, 30.61, 11.19, 6.56, 0.89, 0.28, 3484, 65.93, 20.49, 2.04],
+    [3, 0.65, 62.32, 27.37, 10.3, 6.87, 0.81, 0.34, 3670, 70.12, 24.44, 1.93],
+    [3, 0.8, 63.4, 27.27, 9.33, 7.18, 0.77, 0.38, 4069, 70.73, 28.8, 1.85]
   ];
   var KEYS = ["band","mittel","gross","saett","bezug","export","writes","ruhig","wasch","induktion"];
   var DAMPINGS = [0.4, 0.5, 0.65, 0.8];
