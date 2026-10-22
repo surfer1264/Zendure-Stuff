@@ -55,7 +55,7 @@ Alle Zahlen im Fazit sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wi
 ### Zeitverhalten
 
 - **Reaktion der Geräte realistisch nachgebildet:** 4-s-Takt, Schreiblaufzeit 1 s, Rampe 3 s und Anlauf aus dem Standby (+1 Takt). Beides ist an echten Logs überprüft.
-- **Schnelle Flanke wirkt:** Bei großem Lastabfall reagiert der Controller sofort mit Faktor 0.9. Der Export danach ist kurz und bei allen Damping-Werten gleich.
+- **Schnelle Flanke wirkt:** Bei großem Lastabfall reagiert der Controller sofort mit dem Faktor der schnellen Flanke (in der Simulation 0.9 = Standard; seit 5.2.3 per `jumpFactor` einstellbar). Der Export danach ist kurz und bei allen Damping-Werten gleich.
 - **Anlauf aus Standby und Kaffeevollautomat (Matrix 3 gegen Matrix 2):** Netzbezug +0,13 bis +0,20 kWh (der Kaffeevollautomat allein bringt 0,15 kWh Last am Tag), Export gleich, Schreibvorgänge leicht weniger (−65 bis −138).
 - **Langsamere Geräte ändern die Empfehlung nicht:** Gegenprobe mit 1,5 s Schreiblaufzeit + 3,2 s Rampe = 4,7 s, also länger als der Takt von 4 s (vorher 1 s + 3 s = 4 s). Mittelwerte der 3 Testtage:
 

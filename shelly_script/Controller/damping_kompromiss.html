@@ -288,7 +288,7 @@
         <tr><td><code>setpoint</code></td><td>0 W</td></tr>
         <tr><td><code>hysteresis</code></td><td>12 W</td></tr>
         <tr><td><code>dampingFactor</code></td><td>0.4 / 0.5 / 0.65 / 0.8</td></tr>
-        <tr><td>schnelle Flanke</td><td>Faktor 0.9 bei Sprung &gt; 36 W</td></tr>
+        <tr><td>schnelle Flanke (<code>jumpFactor</code>)</td><td>Faktor 0.9 (Standard) bei Sprung &gt; 36 W</td></tr>
         <tr><td><code>discharge</code> / <code>charge</code></td><td>concentrateBelow 600 W, spreadAbove 800 W</td></tr>
         <tr><td><code>concentrateHoldMinutes</code></td><td>3</td></tr>
       </table></div>
@@ -342,7 +342,7 @@
     <ul>
       <li>Die Ergebnisse gelten nur für das simulierte Szenario aus Abschnitt 4, nicht für eine echte Anlage.</li>
       <li>Alle Werte dienen dem Vergleich der Damping-Werte untereinander. Die absoluten Zahlen (Energie, Schreibvorgänge, Prozent) haben für sich allein keine Aussagekraft.</li>
-      <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller immer den festen Faktor 0.9, unabhängig von dieser Einstellung.</li>
+      <li>Getestet wurde nur <code>dampingFactor</code>. Bei einem großen Lastabfall (mehr als 36 W) nutzt der Controller den Faktor der schnellen Flanke, unabhängig von dieser Einstellung. In der Simulation war das der Standard 0.9; seit 5.2.3 lässt er sich optional mit <code>jumpFactor</code> im CONFIG-Block einstellen (0.4 bis 0.9).</li>
       <li>Der Netzwert kam im Test über <code>gridSource: "http_json"</code>. Für diesen Fall empfiehlt die <a href="gesamtdoku/#empfehlung-für-dampingfactor">Gesamtdokumentation</a> 0,5–0,6, für <code>local</code> 0,6–0,7.</li>
       <li>Andere Anlagen, Verbraucher und Einstellungen können zu einem anderen Ergebnis führen. Prüfe die Wahl mit einem Log deiner eigenen Anlage.</li>
     </ul>

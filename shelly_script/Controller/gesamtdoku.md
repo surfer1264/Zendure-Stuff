@@ -282,7 +282,8 @@ Die folgende Tabelle bündelt sämtliche Parameter.
 | **Regelverhalten** (global) | `interval` | `4000` ms | Zykluszeit der Regelschleife. Bei mehreren Geräten steigt die tatsächliche Zyklusdauer, da alle Geräte-Anfragen sequenziell laufen (siehe Kapitel 10) – bei Bedarf großzügiger wählen. ⚠️ **Seit V2.4.4** sind `watchdog` und `httpTimeout` **keine eigenen CONFIG-Felder mehr** – `watchdog` wird beim Start automatisch als `interval × 2.5` berechnet, `httpTimeout` ist im Code fest auf `4` s verdrahtet (korrigiert – frühere Doku-Stände nannten hier 3 s bzw. 5 s; im Code steht seit 4.x `timeout: 4`, siehe Kapitel 8.3). Beides ist über `CONFIG` nicht mehr direkt einstellbar, siehe Kapitel 8.3. |
 | | `setpoint` | `0` W | Ziel-Netzleistung, auf die geregelt wird (0 = Nullregelung; negativ = leichter Export; positiv = leichter Import erlaubt). Fließt seit V2.3.1 in **beide** getrennt berechneten Ziele ein (Entladeziel und Ladeziel, siehe Kapitel 8.1/8.2), nicht mehr in ein einzelnes kombiniertes Ziel. |
 | | `hysteresis` | `12` W (seit V2.4.2, vorher `10` W) | Mindeständerung **pro Gerät** gegenüber dem zuletzt an dieses Gerät geschriebenen Wert, bevor ein neuer Schreibvorgang an dieses Gerät ausgelöst wird. Wird für jedes Gerät individuell geprüft. |
-| | `dampingFactor` | `0.65` (seit V2.4.2, vorher `0.6`) | Dämpfungsfaktor (`0.4` bis `0.8`, seit 5.2.0; vorher bis `1`), seit V2.3.1 gleichzeitig und unabhängig angewendet auf **zwei** getrennte Sollwerte (Entladeziel und Ladeziel), jeweils bevor diese auf die Geräte verteilt werden. Der Wert springt nicht direkt zum berechneten Ziel, sondern nähert sich ihm pro Zyklus nur um diesen Anteil der Restdifferenz an. Ausnahme seit 5.1.8/5.2.0: Bei einem Sprung in Richtung „weniger Export“ gilt der feste Faktor `0.9`. **Empfehlung:** 0,6–0,7, bei `remote`/`http_json` oder 3 und mehr Geräten 0,5–0,6, über 0,7 nicht sinnvoll. Details und Begründung siehe Kapitel 8.2. |
+| | `dampingFactor` | `0.65` (seit V2.4.2, vorher `0.6`) | Dämpfungsfaktor (`0.4` bis `0.8`, seit 5.2.0; vorher bis `1`), seit V2.3.1 gleichzeitig und unabhängig angewendet auf **zwei** getrennte Sollwerte (Entladeziel und Ladeziel), jeweils bevor diese auf die Geräte verteilt werden. Der Wert springt nicht direkt zum berechneten Ziel, sondern nähert sich ihm pro Zyklus nur um diesen Anteil der Restdifferenz an. Ausnahme seit 5.1.8/5.2.0: Bei einem Sprung in Richtung „weniger Export“ gilt `jumpFactor` (Standard `0.9`, siehe nächste Zeile). **Empfehlung:** 0,6–0,7, bei `remote`/`http_json` oder 3 und mehr Geräten 0,5–0,6, über 0,7 nicht sinnvoll. Details und Begründung siehe Kapitel 8.2. |
+| | `jumpFactor` | – (optional, Standard `0.9`) | **Seit 5.2.3, optional.** Faktor der schnellen Flanke: Anteil der Änderung, den der Controller bei einem Sprung in Richtung „weniger Export“ (größer als `JUMP_THRESHOLD`) sofort übernimmt. Fehlt der Eintrag oder ist er keine Zahl, gilt `0.9`. Ein gesetzter Wert hat Vorrang und wird auf `0.4` bis `0.9` begrenzt. Nicht per KVS änderbar. Details siehe Kapitel 8.2. |
 | **Verteil-Schwellen** | `discharge.concentrateBelow` / `discharge.spreadAbove` | `600` / `800` W | Schwellen für die Umschaltung zwischen einem Gerät (Konzentration) und allen Geräten (Verteilung) beim Entladen – siehe Kapitel 7. |
 | | `charge.concentrateBelow` / `charge.spreadAbove` | `600` / `800` W | Schwellen für die Umschaltung zwischen einem Gerät (Konzentration) und allen Geräten (Verteilung) beim Laden |
 | | `concentrateHoldMinutes` | `3` min | Zeitlich gekoppelte Hysterese **nur** für den Wechsel von Verteil- auf Konzentrationsmodus (`spread`→`single`): Der Zielwert muss ununterbrochen (mit Einfrieren in der Totzone zwischen den Schwellen) für diese Zeit unter `concentrateBelow` bleiben, bevor gewechselt wird. Gilt gemeinsam für `discharge` und `charge`. Wird beim Start in Zyklen umgerechnet (`CONCENTRATE_HOLD_CYCLES = max(5, round(concentrateHoldMinutes × 60000 / interval))`, siehe Kapitel 8.8). Der umgekehrte Wechsel (`single`→`spread`) bleibt davon unberührt (nur zwei Zyklen Entprellung, siehe Kapitel 7). |
@@ -334,6 +335,7 @@ Die Regel in folgender Tabelle beschreibt den gültigen Wertebereich. Wird dageg
 | --- | --- | --- |
 | `interval` | ≥ 3000 ms | auf `3000` gesetzt |
 | `dampingFactor` | zwischen `0.4` und `0.8` (seit 5.2.0, vorher bis `1`) | auf `0.4` bzw. `0.8` gesetzt |
+| `jumpFactor` (optional, seit 5.2.3) | zwischen `0.4` und `0.9` | auf `0.4` bzw. `0.9` gesetzt; fehlt der Eintrag oder ist er keine Zahl: `0.9` |
 | `concentrateBelow` (discharge/charge) | ≥ `35` | auf `35` gesetzt |
 | `spreadAbove` (discharge/charge) | ≥ `50` | auf `50` gesetzt |
 | `concentrateBelow` vs. `spreadAbove` | `concentrateBelow` < `spreadAbove` (echt kleiner) | `spreadAbove = concentrateBelow + 15` |
@@ -985,18 +987,13 @@ praktisch immer alle Geräte laufen (ineffizient).
       (Kapitel 8.3).
     - Andernfalls: `lock()` setzt `state.busy = true`, erhöht `state.cycleId`
       und startet einen Watchdog-Timer (`watchdog` ms, siehe 8.3).
-3. `readGridPower()` ermittelt den aktuellen Netz-Leistungswert – je nach
-   `CONFIG.gridSource` lokal, per RPC (`remote`) oder generisch per HTTP-JSON
-   (`http_json`), siehe Kapitel 5. Schlägt das fehl, wird ein Fehler vom Typ
-   `em` gemeldet, `unlock()` aufgerufen und der Zyklus abgebrochen – **ohne**
-   dass überhaupt ein Gerät gelesen wird.
-4. **Sparmodus-Weiche (`idleSkip`, seit 4.x):** Steht noch ein Skip-Guthaben
+3. **Sparmodus-Weiche (`idleSkip`, seit 4.x):** Steht noch ein Skip-Guthaben
    an (`state.idleSkipRemaining > 0`), wird der Geräte-Poll in diesem Zyklus
-   **komplett übersprungen**. Es geht direkt mit dem frisch gemessenen
-   Netzwert und den zuletzt bekannten Gerätedaten zu `calculate()`. Ist kein
-   Skip aktiv, folgt der reguläre Voll-Poll (Schritt 5). Details siehe
+   **komplett übersprungen**. Es wird nur das Netz gelesen (Schritt 5) und
+   mit den zuletzt bekannten Gerätedaten zu `calculate()` gegangen. Ist kein
+   Skip aktiv, folgt der reguläre Voll-Poll (Schritt 4). Details siehe
    Kapitel 8.12.
-5. `readAllDevices()` fragt **sequenziell** (ein Gerät nach dem anderen, nicht
+4. `readAllDevices()` fragt **sequenziell** (ein Gerät nach dem anderen, nicht
    parallel) für jedes konfigurierte Gerät `/properties/report` ab: SOC, das
    geräteseitig gemeldete `socLimit` (0/1/2, siehe Kapitel 8.6), den
    Kalibrierstatus `socStatus`, den aktuellen `gridReverse`-Wert (siehe Kapitel 6d), die aktuelle
@@ -1007,6 +1004,23 @@ praktisch immer alle Geräte laufen (ineffizient).
    fließen entsprechend nicht in die Verteilung ein. Vor jedem Voll-Poll wird
    `available` für alle Geräte auf `false` zurückgesetzt; in Skip-Zyklen
    bleibt der zuletzt bekannte Stand erhalten.
+    - **Reihenfolge (seit 5.2.3, `buildPollOrder()`):** Zuerst werden die
+      Geräte abgefragt, die gerade **nicht** regeln (zuletzt geschriebenes
+      Soll 0 W **und** gemeldetes Ist 0 W), danach die regelnden – jeweils in
+      CONFIG-Reihenfolge. So liegt die Ist-Leistung des regelnden Geräts
+      zeitlich unmittelbar vor dem Netzwert (Schritt 5). Jede Abfrage dauert
+      je nach Gerät/Netzwerk rund 1 s. Bis 5.2.2 galt immer die
+      CONFIG-Reihenfolge: Stand das regelnde Gerät vorne, lagen bei 3 Geräten
+      rund 2 s zwischen seinem Ist und dem Netzwert. Der Netzwert zeigte die
+      neue Leistung dann schon, das Ist noch die alte – `raw` war falsch und
+      das Regelsignal sprang im Wechsel hoch und runter. Regeln alle Geräte
+      (Verteilen) oder keines, bleibt es bei der CONFIG-Reihenfolge.
+5. `readGridPower()` ermittelt **direkt nach dem letzten Gerät** (seit 5.1.8;
+   vorher am Zyklusanfang vor den Geräten) den aktuellen Netz-Leistungswert –
+   je nach `CONFIG.gridSource` lokal, per RPC (`remote`) oder generisch per
+   HTTP-JSON (`http_json`), siehe Kapitel 5. Schlägt das fehl, wird ein Fehler
+   vom Typ `em` gemeldet, `unlock()` aufgerufen und der Zyklus abgebrochen –
+   `calculate()` läuft dann nicht, es wird nichts geschrieben.
 6. `calculate()` bildet **zwei getrennte** Zielgrößen (seit V2.3.1, siehe
    auch den Hinweis am Dokumentanfang und Kapitel 8.2):
     - `sumZen` = Summe der Ist-Leistung **aller verfügbaren** Geräte,
@@ -1092,7 +1106,7 @@ einem echten Sprung:
 
 ```text
 JUMP_THRESHOLD = min(3 × hysteresis, 50)     // bei hysteresis 12: 36 W
-JUMP_FACTOR    = 0.9                         // Konstante im Script, nicht im CONFIG-Block
+JUMP_FACTOR    = 0.9                         // Standard; seit 5.2.3 optional per jumpFactor im CONFIG-Block (0.4 bis 0.9)
 
 a = (raw < smoothed − JUMP_THRESHOLD) ? JUMP_FACTOR : dampingFactor
 state.smoothedOutput = state.smoothedOutput + a * (raw       - state.smoothedOutput)   // Entladen
@@ -1101,7 +1115,8 @@ state.smoothedCharge = state.smoothedCharge + a * (rawCharge - state.smoothedCha
 
 - **Richtung „weniger Export“ bei einem Sprung schnell:** Liegt der neue
   Rohwert mehr als `JUMP_THRESHOLD` unter dem bisherigen geglätteten Wert,
-  übernimmt der Controller sofort 90 % der Änderung. Beim Entladen heißt
+  übernimmt der Controller sofort den Anteil `JUMP_FACTOR` der Änderung
+  (Standard 0,9 = 90 %, seit 5.2.3 per `jumpFactor` einstellbar). Beim Entladen heißt
   das: Sinkt die Last (Wasserkocher aus), wird die Entladeleistung sofort
   zurückgenommen. Beim Laden: Steigt der PV-Überschuss (Wolke weg), wird
   sofort mehr geladen. Der Faktor ist 0,9 statt 1, weil die Solarflows rund
@@ -1150,7 +1165,9 @@ Energiebilanz (Bezug + Export) wird nicht besser, die Zahl der
 Schreibvorgänge steigt um rund 14 %. Bei schnell taktenden Lasten
 (Induktion) hilft ein höherer Wert gar nicht. Schnelle Reaktion auf
 Lastabwurf liefert seit 5.1.8 ohnehin die schnelle Flanke (`JUMP_FACTOR`),
-nicht ein hoher `dampingFactor`.
+nicht ein hoher `dampingFactor`. Seit 5.2.3 lässt sich deren Faktor
+optional mit `jumpFactor` im CONFIG-Block einstellen (0,4 bis 0,9,
+Standard 0,9).
 
 🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
 stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
@@ -2513,7 +2530,7 @@ Der Status-Handler wird nur bei `kvsEnabled: true` überhaupt registriert
 | `zdmc_devN_inputLimit` | `CONFIG.devices[N].inputLimit` | 0…`maxInputPower` (W) | **Seit 4.5.0.** Reine Zusatz-Schnittstelle für manuelles AC-Laden, **kein** Bestandteil der Regelung. Löst bei Änderung sofort `syncInputLimitDevice()` aus – ein POST mit `acMode 1`, `outputLimit 0`, `inputLimit` und `smartMode 1`, das Laden wird also explizit erzwungen. `0` = aus (Gerät geht in Standby). |
 
 `N` = Array-Index des Geräts, siehe `[devN]` im Start-Banner (Kapitel 8.7).
-`hysteresis` und `dampingFactor` bleiben reine `CONFIG`-Werte, nicht per
+`hysteresis`, `dampingFactor` und `jumpFactor` bleiben reine `CONFIG`-Werte, nicht per
 KVS überschreibbar. Ebenso `gridReverseMode`, `chargeResetMargin`, der
 gesamte `idleSkip`-Block sowie alle Kapazitätsgrenzen (`maxOutput`,
 `maxInputPower`, `maxSoc`).
