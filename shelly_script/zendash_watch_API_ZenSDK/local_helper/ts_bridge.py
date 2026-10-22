@@ -13,9 +13,12 @@ Regeln:
 
 Datenquelle (fuer beide Ziele gemeinsam):
   1. Dashboard offen: mitgelesene status_api-Antworten (keine Zusatzabfrage).
-  2. Kein Dashboard:  12 s vor der vollen Minute zwei eigene Abfragen
-                      (die erste weckt die Hintergrundabfrage des Scripts,
-                      die zweite liefert den frischen Stand).
+  2. Kein Dashboard:  14 s vor der vollen Minute zwei eigene Abfragen.
+                      Die erste (status_api?bg=wake) stoesst im Script genau
+                      EINEN Poll an, die zweite (?bg=read) 12 s spaeter holt
+                      den frischen Stand, ohne den schnellen 8-s-Takt zu
+                      starten. Script vor 3.5.11 ignoriert bg und laeuft wie
+                      bisher (schneller Takt nach jeder Abfrage).
 Gesendet werden die echten Werte der letzten frischen status_api-Antwort
 vor dem Sendezeitpunkt (kein Mittelwert, hoechstens ca. 8 s alt).
 
@@ -62,8 +65,8 @@ LIVE_S = 14         # Abstand zur vorigen Anfrage < IDLE_MS (15 s) im Script:
                     # Antwort ist frisch. Sonst kam die Anfrage aus der
                     # Pause (z.B. gedrosselter Browser-Tab) und liefert
                     # noch den alten Stand.
-PREP_S = 12         # Vorlauf vor der vollen Minute fuer den Fallback
-WAKE_WAIT_S = 10    # pollIntervalSec (8 s) + Reserve
+PREP_S = 14         # Vorlauf vor der vollen Minute fuer den Fallback
+WAKE_WAIT_S = 12    # naechster Tick (pollIntervalSec 8 s) + Poll + Reserve
 RETRY_S = 5
 SEND_WAIT_S = 40    # so lange wartet der Takt hoechstens auf beide Sender
 
@@ -407,11 +410,11 @@ def _fetch_fresh(stop):
         if not _active():
             return
         _log("bridge", "kein Dashboard offen - eigene Abfrage status_api (wecken)")
-        feed(_fetch())                        # weckt; alter Stand wird verworfen
+        feed(_fetch("bg=wake"))               # ein Poll; alter Stand wird verworfen
         if stop.wait(WAKE_WAIT_S) or not _active():
             return
         _log("bridge", "eigene Abfrage status_api (frischer Stand)")
-        feed(_fetch())
+        feed(_fetch("bg=read"))
     except Exception as e:
         _err("bridge", "Shelly nicht erreichbar: {}".format(e))
 
