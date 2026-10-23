@@ -98,6 +98,10 @@ Wer sichergehen will, dass die Datei unverändert ist, kann sie [prüfen](#integ
 
 Wer Home Assistant OS nutzt, kann den Configurator samt Helfer auch als App installieren – ohne EXE auf dem PC, auch vom Tablet oder Handy aus. Alle Funktionen des Helfers stehen zur Verfügung.
 
+[![Repository zu Home Assistant hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
+
+Kurz gesagt: das Repository `https://github.com/surfer1264/ha-zendure-apps` im App Store hinzufügen (Knopf oben), die App „Zendure Multi-Configurator“ installieren, starten und „Web-UI öffnen“ wählen.
+
 👉 **[Anleitung für die Home-Assistant-App](HA_zendure_installer/INSTALLATION.md)**
 
 ### Alternative: nur der Web-Configurator

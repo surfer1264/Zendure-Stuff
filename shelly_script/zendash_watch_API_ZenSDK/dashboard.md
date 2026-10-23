@@ -277,9 +277,11 @@ Wer Home Assistant OS betreibt, kann den Proxy dort als eigene App laufen lassen
 
 👉 **[Anleitung für die Home-Assistant-App](HA_zendure_proxy/INSTALLATION.md)**
 
-Kurz gesagt: App aus dem lokalen Ordner installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard).
+[![Repository zu Home Assistant hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
 
-> **Achtung:** Die Einstellungen liegen in Home Assistant im Container der App. Wird die App deinstalliert und neu installiert (z. B. für eine neue Dashboard-Version), ist die Einrichtung einmal zu wiederholen.
+Kurz gesagt: das Repository `https://github.com/surfer1264/ha-zendure-apps` im App Store hinzufügen (Knopf oben), die App „Zendure Dashboard Proxy“ installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard). Neue Versionen bietet Home Assistant dann selbst als Update an.
+
+> **Achtung:** Die Einstellungen liegen im dauerhaften Speicher der App und überstehen Updates. Neue Versionen deshalb immer per **Aktualisieren** einspielen – wird die App deinstalliert und neu installiert, ist die Einrichtung einmal zu wiederholen.
 
 ---
 

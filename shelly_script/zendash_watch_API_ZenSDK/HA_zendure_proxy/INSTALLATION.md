@@ -22,8 +22,6 @@ erscheint in Home Assistant im Reiter **Dokumentation** der App.
 ## Voraussetzungen
 
 - Home Assistant OS mit Supervisor
-- Zugriff auf `/addons/` per Samba-Freigabe (`\\<ha-ip>\addons`) oder SSH
-- die Dateien aus [diesem Ordner](.), siehe [Verzeichnisstruktur](#verzeichnisstruktur)
 - IP-Adresse des **Dashboard-Shelly** (auf dem zenDash-API + Watchdog läuft) und die
   **Script-Nummer** dieses Scripts (über den Configurator hochgeladen heißt es `zd`) – beides wird erst nach der Installation
   gebraucht
@@ -31,13 +29,80 @@ erscheint in Home Assistant im Reiter **Dokumentation** der App.
 > **Hinweis zur Benennung:** Seit Home Assistant 2026.2 heißen „Add-ons“ im
 > Frontend **„Apps“** (Einstellungen → Apps → App Store).
 
-## Verzeichnisstruktur
+## Installation
 
-Alle Dateien liegen in einem Ordner unter `/addons/`:
+[![Repository zu Home Assistant hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
 
-```
-/addons/
-└── zendure_proxy/
+1. Auf den Knopf oben klicken und das Repository in Home Assistant hinzufügen.
+   Oder von Hand: **Einstellungen → Apps → App Store** → oben rechts die drei
+   Punkte → **Repositories** → `https://github.com/surfer1264/ha-zendure-apps`
+   eintragen → **Hinzufügen**.
+2. Die App **„Zendure Dashboard Proxy“** erscheint im App Store im Bereich
+   **Zendure Apps (surfer1264)** → auswählen → **Installieren** (baut das
+   Docker-Image).
+3. Starten. In der App-Konfiguration **„Beim Booten starten“** und
+   **„Watchdog“** aktivieren, damit der Proxy nach einem HA-Neustart
+   automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
+   startet. Siehe Bild 1.
+4. **„Web-UI öffnen“** wählen oder im Browser `http://<ha-ip>:8000/` aufrufen. Beim ersten Mal erscheint die
+   **Einrichtungsseite**.
+5. **Shelly-IP** (Dashboard-Shelly, nicht Controller-Shelly) und
+   **Script-ID** eintragen → **„Speichern & testen“**. Der Proxy prüft
+   sofort, ob unter dieser Adresse das API-Script antwortet, und leitet bei
+   Erfolg zum Dashboard weiter.
+
+Ab jetzt ist das Dashboard unter `http://<ha-ip>:8000/` von jedem Gerät im
+Heimnetz erreichbar.
+
+Ob die Einstellungen am richtigen Ort liegen, zeigt die Startübersicht im Log
+der App: Dort muss `Konfig: /data/zendure_proxy_config.json` stehen.
+
+Dasselbe Repository enthält auch den
+[Zendure Multi-Configurator](../../Multiconfigurator/HA_zendure_installer/INSTALLATION.md).
+
+----
+
+**Bild 1: Nach Installation**
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/cb24431a-f998-4aee-ac1b-1aa81445240d" />
+
+----
+
+## Updates
+
+Home Assistant sucht selbst nach neuen Versionen. Gibt es eine, erscheint auf der
+Seite der App **Aktualisieren** (und unter **Einstellungen** ein Hinweis). Sofort
+prüfen lässt es sich im App Store über die drei Punkte → **Nach Updates suchen**.
+
+Das ist nach jedem Script-Update nötig, denn Dashboard-Seite und Script
+müssen dieselbe Versionsnummer haben.
+
+Beim Update bleibt `/data` erhalten. **Nicht** deinstallieren – das löscht
+`/data` und damit Shelly-IP sowie ThingSpeak- und ThingsBoard-Zugangsdaten.
+
+## Umstieg von der lokalen App
+
+Wer die App bisher aus einem Ordner unter `/addons/` installiert hatte: Für Home
+Assistant sind die lokale App und die App aus dem Repository zwei verschiedene
+Apps. Die Einstellungen in `/data` werden **nicht** übernommen.
+
+1. Vorher notieren: Shelly-IP und Script-ID (Seite `/setup`), bei Bedarf die
+   Zugangsdaten für ThingSpeak bzw. ThingsBoard.
+2. Die lokale App **deinstallieren** und den Ordner `/addons/zendure_proxy/`
+   löschen, sonst steht die App zweimal im App Store. Beide Apps zugleich
+   laufen lassen geht ohnehin nicht – sie belegen denselben Port 8000.
+3. Wie unter [Installation](#installation) beschrieben aus dem Repository
+   installieren und die notierten Werte wieder eintragen.
+
+## Aufbau der App
+
+Die App liegt im Repository
+[ha-zendure-apps](https://github.com/surfer1264/ha-zendure-apps) im Ordner
+`zendure_proxy/`. Das Repository wird bei jeder Änderung automatisch aus
+[diesem Ordner](.) gespiegelt – gepflegt wird nur hier.
+
+```text
+zendure_proxy/
     ├── config.yaml
     ├── build.yaml
     ├── Dockerfile
@@ -184,45 +249,6 @@ im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
 **Wichtig:** Datei muss mit **LF**-Zeilenenden gespeichert sein, nicht CRLF
 (siehe Troubleshooting).
 
-## Installation
-
-1. Ordner `zendure_proxy` mit den Dateien aus der
-   [Verzeichnisstruktur](#verzeichnisstruktur) unter `/addons/` anlegen
-   (per Samba-Freigabe oder SSH).
-2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
-   drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
-   ebenfalls einen Rescan von `/addons/`). Siehe Bild 1.
-3. Die App **„Zendure Dashboard Proxy“** erscheint im lokalen Bereich →
-   auswählen → **Install** (baut das Docker-Image).
-4. Starten. In der App-Konfiguration **„Beim Booten starten“** und
-   **„Watchdog“** aktivieren, damit der Proxy nach einem HA-Neustart
-   automatisch wieder hochkommt bzw. sich nach einem Absturz selbst neu
-   startet. Siehe Bild 2.
-5. **„Web-UI öffnen“** wählen oder im Browser `http://<ha-ip>:8000/` aufrufen. Beim ersten Mal erscheint die
-   **Einrichtungsseite**.
-6. **Shelly-IP** (Dashboard-Shelly, nicht Controller-Shelly) und
-   **Script-ID** eintragen → **„Speichern & testen“**. Der Proxy prüft
-   sofort, ob unter dieser Adresse das API-Script antwortet, und leitet bei
-   Erfolg zum Dashboard weiter.
-
-Ab jetzt ist das Dashboard unter `http://<ha-ip>:8000/` von jedem Gerät im
-Heimnetz erreichbar.
-
-Ob die Einstellungen am richtigen Ort liegen, zeigt die Startübersicht im Log
-der App: Dort muss `Konfig: /data/zendure_proxy_config.json` stehen.
-
-----
-
-**Bild 1: Vor Installation**
-
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/1f669708-a57e-4e73-a7d0-69d4192b50d7" />
-
-**Bild 2: Nach Installation**
-
-<img width="400" alt="image" src="https://github.com/user-attachments/assets/cb24431a-f998-4aee-ac1b-1aa81445240d" />
-
----
-
 ## Einstellungen ändern
 
 Ändert sich die IP des Shelly oder die Script-Nummer (z. B. wenn das Script neu
@@ -239,7 +265,7 @@ Die Einstellungen liegen in `/data/zendure_proxy_config.json`, dem dauerhaften
 Speicher der App. Sie überstehen Neustarts der App und von Home Assistant
 sowie Updates der App. Verloren gehen sie nur, wenn die App **deinstalliert**
 wird – Home Assistant löscht dabei auch `/data`. Nach einer Neuinstallation
-erscheint deshalb wieder die Einrichtungsseite – einfach Schritt 6
+erscheint deshalb wieder die Einrichtungsseite – einfach Schritt 5
 wiederholen.
 
 ## Änderungen an den App-Dateien
@@ -247,27 +273,46 @@ wiederholen.
 **Bei Änderungen an den App-Dateien** (`config.yaml`, `Dockerfile`,
 `run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zendure-dashboard.html` usw.)
 muss die App neu gebaut werden – ein bloßer Restart liest die geänderten
-Dateien nicht neu ein. Der Container enthält eine eigene Kopie; nur der
-Austausch der Datei im Ordner `/addons/zendure_proxy/` bewirkt gar nichts.
+Dateien nicht neu ein. Der Container enthält eine eigene Kopie.
 
-Das ist nach jedem Script-Update nötig, denn Dashboard-Seite und Script
-müssen dieselbe Versionsnummer haben.
+### Neue Version veröffentlichen
 
-So geht es, ohne die Einstellungen zu verlieren:
+Für Änderungen an der App selbst (hier im Repository Zendure-Stuff):
 
-1. Geänderte Dateien in `/addons/zendure_proxy/` ablegen.
-2. In `config.yaml` die `version` anheben – bei neuer Dashboard-Version die ersten drei Stellen (z. B. `3.5.9.5` → `3.6.0.0`), bei Änderungen nur an der App die vierte (z. B. `3.5.9.5` → `3.5.9.6`).
-3. **Repositories** im App Store neu laden (wie Installationsschritt 2).
-4. Auf der Seite der App erscheint **Aktualisieren** → ausführen. Home
-   Assistant baut die App neu, `/data` bleibt erhalten.
+1. Dateien in [diesem Ordner](.) ändern.
+2. In `config.yaml` die `version` anheben – bei neuer Dashboard-Version die ersten drei Stellen (z. B. `3.5.9.5` → `3.6.0.0`), bei Änderungen nur an der App die vierte (z. B. `3.5.9.5` → `3.5.9.6`). Ohne höhere `version` bietet Home Assistant kein Update an.
+3. `CHANGELOG.md` ergänzen und auf `main` pushen. Der Workflow
+   [HA-Apps spiegeln](https://github.com/surfer1264/Zendure-Stuff/blob/main/.github/workflows/mirror-ha-apps.yml)
+   überträgt den Ordner nach `ha-zendure-apps`. Danach bekommen alle Nutzer
+   das Update angeboten (siehe [Updates](#updates)).
 
-**Nicht** deinstallieren – das löscht `/data` und damit Shelly-IP sowie
-ThingSpeak- und ThingsBoard-Zugangsdaten.
+### Lokale Installation (zum Testen)
+
+Zum Ausprobieren von Änderungen vor dem Veröffentlichen lässt sich die App auch
+aus einem Ordner unter `/addons/` installieren (Zugriff per Samba-Freigabe
+`\\<ha-ip>\addons` oder SSH). Nicht gleichzeitig mit der App aus dem Repository
+nutzen – beide belegen Port 8000.
+
+1. Ordner `/addons/zendure_proxy/` mit den Dateien aus dem
+   [Aufbau der App](#aufbau-der-app) anlegen.
+2. In Home Assistant: **Einstellungen → Apps → App Store** → oben rechts die
+   drei Punkte → **Repositories** neu laden (ein voller HA-Neustart erzwingt
+   ebenfalls einen Rescan von `/addons/`). Siehe Bild 2.
+3. Die App erscheint im lokalen Bereich → auswählen → **Installieren**, weiter
+   wie unter [Installation](#installation) ab Schritt 3.
+
+Bei Änderungen: Dateien in `/addons/zendure_proxy/` ablegen, `version`
+anheben, **Repositories** neu laden, auf der Seite der App **Aktualisieren**.
+Nur der Austausch der Dateien im Ordner bewirkt gar nichts.
+
+**Bild 2: Lokale App vor der Installation**
+
+<img width="400" alt="image" src="https://github.com/user-attachments/assets/1f669708-a57e-4e73-a7d0-69d4192b50d7" />
 
 **Einmalig beim Umstieg von Version 1.0.x:** Dort lagen die Einstellungen
 noch im Container. Nach dem ersten Update auf 1.1.0 erscheint deshalb einmal
-die Einrichtungsseite – Schritt 6 wiederholen. Ab dann bleiben die
-Einstellungen erhalten.
+die Einrichtungsseite – Schritt 5 der Installation wiederholen. Ab dann
+bleiben die Einstellungen erhalten.
 
 ## ThingSpeak- und ThingsBoard-Upload
 
@@ -294,7 +339,9 @@ Für die App gilt zusätzlich:
 
 | Symptom | Ursache | Lösung |
 |---|---|---|
-| Lokale App taucht im App Store nicht auf | Store-Daten im Browser gecacht | Hard-Refresh (Strg+Shift+R) bzw. Inkognito-Fenster; Supervisor-Log zeigt bei erfolgreichem Scan `Loading apps from store: ... 1 new` |
+| App taucht nach dem Hinzufügen des Repositorys nicht auf | Store-Daten im Browser gecacht | im App Store über die drei Punkte **Nach Updates suchen**, dann Hard-Refresh (Strg+Shift+R) bzw. Inkognito-Fenster; Supervisor-Log zeigt bei erfolgreichem Scan `Loading apps from store: ... new` |
+| App steht zweimal im App Store | lokale App unter `/addons/` und App aus dem Repository | siehe [Umstieg von der lokalen App](#umstieg-von-der-lokalen-app) |
+| Kein Update angeboten, obwohl neue Version auf GitHub | `version` in `config.yaml` nicht angehoben, oder Home Assistant hat noch nicht nachgesehen | im App Store **Nach Updates suchen** |
 | `s6-overlay-suexec: fatal: can only run as pid 1` | Supervisor wrapt den Container standardmäßig zusätzlich mit Docker-Init, kollidiert mit s6-Overlay als PID 1 | `init: false` in `config.yaml` setzen **und App neu bauen** (nicht nur neu starten) |
 | `exec: fatal: unable to exec bashio` | `run.sh` nutzte `#!/usr/bin/with-contenv bashio`, obwohl das Skript keine bashio-Funktionen braucht | Shebang auf `#!/usr/bin/env bash` ändern |
 | `env: can't execute 'bash\r'` | `run.sh` mit Windows-Zeilenenden (CRLF) statt Unix (LF) gespeichert | Datei mit LF-Zeilenenden neu speichern (z. B. in VS Code unten rechts CRLF → LF umstellen) |

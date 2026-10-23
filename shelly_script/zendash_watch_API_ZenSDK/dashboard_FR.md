@@ -286,9 +286,11 @@ Si vous utilisez Home Assistant OS, vous pouvez y faire tourner le proxy comme a
 
 👉 **[Guide de l'app Home Assistant](HA_zendure_proxy/INSTALLATION.md)** (allemand)
 
-En bref : installer l'app depuis le dossier local, la démarrer, ouvrir `http://<IP-de-Home-Assistant>:8000/` et configurer comme à l'[étape 4](#le-tableau-de-bord-en-4-étapes).
+[![Ajouter le dépôt à Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
 
-> **Attention :** dans Home Assistant, les réglages se trouvent dans le conteneur de l'app. Si l'app est désinstallée puis réinstallée (p. ex. pour une nouvelle version du tableau de bord), la configuration est à refaire une fois.
+En bref : ajouter le dépôt `https://github.com/surfer1264/ha-zendure-apps` dans la boutique d'apps (bouton ci-dessus), installer l'app « Zendure Dashboard Proxy », la démarrer, ouvrir `http://<IP-de-Home-Assistant>:8000/` et configurer comme à l'[étape 4](#le-tableau-de-bord-en-4-étapes). Home Assistant propose ensuite lui-même les nouvelles versions comme mises à jour.
+
+> **Attention :** les réglages se trouvent dans le stockage permanent de l'app et survivent aux mises à jour. Installez donc toujours les nouvelles versions via **Mettre à jour** – si l'app est désinstallée puis réinstallée, la configuration est à refaire une fois.
 
 ---
 
