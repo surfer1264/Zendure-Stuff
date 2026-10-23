@@ -26,6 +26,10 @@ Empfohlen auf der Seite *Info* der App: **„Beim Booten starten“** und **„W
 
 Änderungen auf diesen Seiten wirken sofort – kein Neustart nötig.
 
+Über **„Web-UI öffnen“** erreichst du dieselben Seiten über die Links im Fuß des
+Dashboards: **„Dashboard-Shelly: IP / Script-ID ändern“** sowie
+**„Cloud-Upload einrichten: ThingSpeak · ThingsBoard“**.
+
 ## Cloud-Upload
 
 - **ThingSpeak:** ein Channel pro Speicher, Write-API-Key je Channel.

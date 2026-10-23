@@ -8,6 +8,7 @@
 - Kompatibel: Ein älteres Script ignoriert `bg` und verhält sich wie bisher; der neue Proxy funktioniert damit weiter
 - Dashboard: nur Versionsnummer 3.5.11
 - Home-Assistant-App-Version 3.5.11.0
+- Nachtrag Dashboard (beide Layouts): Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite öffnet die Einrichtungsseite `setup` – funktioniert auch in Home Assistant über „Web-UI öffnen“. Home-Assistant-App-Version 3.5.11.1
 
 ## Changelog 3.5.10
 

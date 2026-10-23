@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.11.1
+
+- Dashboard: Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite. Damit ist die Einrichtungsseite auch über „Web-UI öffnen“ erreichbar, z. B. nach einem Wechsel des Shelly
+
 ## 3.5.11.0
 
 - Weniger Last auf dem Shelly bei aktivem ThingSpeak-/ThingsBoard-Upload ohne offenes Dashboard: ein Poll-Durchlauf pro Minute statt drei bis vier

@@ -252,9 +252,11 @@ im Log der App. Einen Browser versucht der Proxy im Container nicht zu öffnen.
 ## Einstellungen ändern
 
 Ändert sich die IP des Shelly oder die Script-Nummer (z. B. wenn das Script neu
-angelegt wurde – beim Update über den Configurator bleibt sie gleich), einfach
+angelegt wurde – beim Update über den Configurator bleibt sie gleich), im Fuß
+des Dashboards auf **„Dashboard-Shelly: IP / Script-ID ändern“** klicken – das
+funktioniert auch über „Web-UI öffnen“ – oder direkt
 
-```
+```text
 http://<ha-ip>:8000/setup
 ```
 
