@@ -54,7 +54,7 @@ Alle Zahlen im Fazit sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wi
 
 ### Regelgüte (qualitativ)
 
-- **Stabil:** In keinem Lauf hat sich die Regelung aufgeschaukelt, bei keinem Damping-Wert von 0.4 bis 0.8. Der Controller rechnet vom Ist-Wert der Geräte aus, nicht vom alten Sollwert.
+- **Stabil bei aktueller Geräte-Meldung:** In keinem Matrix-Lauf hat sich die Regelung aufgeschaukelt, bei keinem Damping-Wert von 0.4 bis 0.8. Der Controller rechnet vom Ist-Wert der Geräte aus, nicht vom alten Sollwert. Meldet ein Gerät seine Ist-Leistung 2 s zu alt (`REPORT_AGE_S=2`), pendelt die Regelung auch bei ruhiger Last (siehe 4.3). In den echten Logs vom 11., 15. und 19.10. kommt so ein Dauerpendeln nicht vor.
 - **Ruhige Phasen:** Der Netzwert liegt meist eng um 0 W, Abweichungen über 50 W sind selten (0,7–1,1 % der Zyklen). Das gilt trotz eines bewusst unruhigen Haushalts.
 - **Damping verschiebt, statt zu verschlechtern:** Höheres Damping regelt schneller nach, verschiebt die Abweichung aber von Bezug zu Export und braucht mehr Schreibvorgänge.
 - **Reihenfolge der Damping-Werte stabil:** An jedem Testtag steigt der Anteil im Band von 0.4 bis 0.8, über den ganzen Tag und in ruhigen Phasen (54,6 → 57,8 → 61,5 → 63,1 %).
@@ -304,6 +304,7 @@ Gesetzt werden sie in den .cmd-Dateien mit `set NAME=Wert`.
 | `DEVICE_RATE_WPS` | Steigung der Rampe in W/s. Wenn gesetzt, dauert die Rampe \|neu − alt\| / Steigung und ersetzt die feste Dauer `DEVICE_DELAY_S`. Gilt für Abgabe, Laden und Richtungswechsel | 0 (aus) |
 | `START_DELAY_S` | Zusätzliche Sekunden, bevor ein Gerät aus dem Standby mit der Abgabe beginnt. Gilt nur für den Start der Abgabe, nicht für den Start des Ladens. Kommt während der Anlaufzeit ein neuer Befehl, läuft die Anlaufzeit weiter | 0 (aus) |
 | `START_THRESH_W` | Bis zu dieser Leistung gilt ein Gerät als Standby | 5 |
+| `REPORT_AGE_S` | Das Gerät meldet seine Ist-Leistung so viele Sekunden zu alt. Der Zähler zeigt weiter den aktuellen Stand. SoC, socLimit und die anderen Felder bleiben aktuell | 0 (aus) |
 
 Ohne diese Variablen setzt ein Gerät jede Vorgabe sofort um, und das Ergebnis ist identisch mit dem Mock ohne Verzögerung (geprüft).
 
@@ -326,6 +327,20 @@ set DEVICE_DELAY_S=
 | 1850 → 1050 W | 1062 W | 1050 W |
 
 Ohne `DEVICE_RATE_WPS` verhält sich der Mock genau wie vorher (geprüft).
+
+**Veraltete Geräte-Meldung (`REPORT_AGE_S`):** Bildet ab, dass ein Gerät beim Abfragen eine Ist-Leistung meldet, die schon einige Sekunden alt ist, während der Zähler bereits den neuen Stand zeigt. Netzwert und Ist passen dann nicht zusammen, und das Regelsignal springt. Kurztest mit dem gemessenen Gerätemodell: Bei `REPORT_AGE_S=4` erscheint jede Änderung einen Takt später in der Gerätemeldung, bei `8` zwei Takte später. Die Zählerwerte bleiben unverändert. Ohne `REPORT_AGE_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft). Die CSV-Spalten `gemeldet_sf800`/`gemeldet_sf2400` zeigen die gemeldete Leistung, `ist_*` die tatsächliche. Vergleichslauf (Damping 0.65, Seed 42, je 12.600 Zyklen):
+
+| Kennzahl | `REPORT_AGE_S=0` | `REPORT_AGE_S=2` |
+| --- | --- | --- |
+| Im Band ±13 W | 58,0 % | 54,1 % |
+| Abweichung > 50 W | 16,9 % | 22,6 % |
+| Netzbezug | 1,45 kWh | 1,60 kWh |
+| Einspeisung | 0,47 kWh | 0,49 kWh |
+| Schreibvorgänge | 4155 | 4896 |
+| Signalsprünge > 200 W | 659 | 1644 |
+| Pendel-Phasen (≥ 10 Takte, > 200 W) | 2 (nur während Induktion) | 11, davon 06:19–06:57 ohne aktives Gerät |
+
+Die Bandwerte stammen hier aus dem Log, ohne Abzug gesättigter Zyklen.
 
 **Anlauf aus Standby:** Im echten Log vom 15.10. zeigten die Geräte nach einem Start aus 0 W im nächsten Takt meist noch keine Leistung (11 von 13 Fällen), erst im übernächsten. Beim Senken der Leistung oder Erhöhen aus dem Betrieb war die Vorgabe meist schon im nächsten Takt erreicht. Mit `START_DELAY_S=4` bildet der Mock das nach: Schreiben im Takt n, im Takt n+1 noch 0 W, im Takt n+2 fast der volle Wert. Ohne `START_DELAY_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft).
 
@@ -636,6 +651,7 @@ Diese Abweichungen kann kein Regler beheben. Deshalb werden die Bänder ohne sie
 | `event` | aktive Ereignisse, z. B. `induktion+wasserkocher` |
 | `soc_*`, `socLimit_*`, `gridReverse_*` | Zustand je Gerät |
 | `ist_sf800`, `ist_sf2400` | tatsächliche AC-Leistung je Gerät am Zyklusende (+ Export, − Laden), bei Verzögerung abweichend von `out_*`/`in_*` |
+| `gemeldet_sf800`, `gemeldet_sf2400` | AC-Leistung, wie das Gerät sie meldet (ohne Messrauschen); bei `REPORT_AGE_S` älter als `ist_*` |
 | `acMode_*`, `out_*`, `in_*` | zuletzt geschriebene Vorgabe je Gerät |
 | `pv_*`, `ueberschuss_*`, `bypass_*`, `verworfen_*` | PV, Überschuss, durchgereichter und verworfener Überschuss |
 | `seed` | Seed des Laufs (leer ohne Rauschen) |
