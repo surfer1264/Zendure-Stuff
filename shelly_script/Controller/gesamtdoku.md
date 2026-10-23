@@ -104,6 +104,21 @@ Geräte.
 > bei gemischten Konfigurationen können dabei auch **gleichzeitig**
 manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effizienz der Einzelgeräte.
 
+**Die Regelschleife in vier Schritten** (Details: Kapitel 8.1 und Diagramm in Kapitel 9):
+
+1. **Netzsaldo lesen:** aktueller Bezug/Export in Watt – vom lokalen oder
+   entfernten Shelly Pro 3EM oder von einem beliebigen HTTP-JSON-Zähler
+   (z. B. Zendure Smart Meter 3CT), siehe Kapitel 5.
+2. **Ziel berechnen:** getrennt für Entladen und Laden, wie viel Leistung
+   nötig ist, um den Netzpunkt auf den Sollwert `setpoint` (meist 0 W) zu
+   bringen – gedämpft, siehe Kapitel 8.2.
+3. **Auf Geräte verteilen:** nach Ladestand (SOC), Gerätegrenzen
+   (`maxOutput`/`maxInputPower`, `minSoc`/`maxSoc`, `socLimit`) und den
+   Schwellen `concentrateBelow`/`spreadAbove`, siehe Kapitel 6 und 7.
+4. **Schreiben:** `acMode`, `outputLimit`, `inputLimit` und `smartMode` per
+   lokalem HTTP-POST an jedes Gerät – nur wenn sich der Wert um mindestens
+   `hysteresis` geändert hat.
+
 **Kernprinzipien**:
 
 - **Lokal & cloud-unabhängig:** Die Netzleistung wird lokal im Netzwerk
@@ -121,6 +136,11 @@ manche Geräte laden und andere entladen. Das ist gewollt und im Sinne der Effiz
   Geräte verteilt (**Verteilmodus** nach Prinzip "Wasserfüllung").
 - **Leistungsfähigkeit:** drei Geräte sind besser als eins, also stellt die Regelung sicher, dass alle Geräte gleichmässig
   geladen oder entladen werden, um so lange wie möglich die volle Power 💪 des Gesamtpakets zu erhalten.
+- **Shelly-gerecht und geräteschonend:** Das Script ist auf die Grenzen der
+  Shelly-Script-Engine ausgelegt (wenig Arbeitsspeicher, begrenzter
+  Call-Pool, siehe Kapitel 10) und vermeidet unnötige Schreibzugriffe und
+  Richtungswechsel an den Zendure-Geräten (Hysterese, Richtungswechsel-Bremse,
+  Sparmodus).
 
 ---
 
@@ -183,6 +203,41 @@ Was die Regelung kann:
 - **SOC-Kalibrierung wird respektiert:** Meldet ein Gerät eine laufende
   SOC-Kalibrierung (`socStatus = 1`), wird es aus der Verteilung genommen,
   bis die Firmware die Kalibrierung beendet hat. Siehe Kapitel 8.6.
+
+Regelgüte und Schonung von Geräten:
+
+- **Asymmetrische Dämpfung:** Das Regelsignal folgt gedämpft mit
+  `dampingFactor` (Standard 0,65). Nur bei einem Sprung größer
+  `JUMP_THRESHOLD` in Richtung „weniger Export“ greift die schnelle Flanke
+  `jumpFactor` (Standard 0,9), damit ungewollte Einspeisung kurz bleibt.
+  Siehe Kapitel 8.2.
+- **Hysterese statt Dauerschreiben:** Geschrieben wird erst ab einer
+  Änderung von `hysteresis` (Standard 12 W). An den SoC-Grenzen verhindern
+  `dischargeResetMargin`/`chargeResetMargin` das Flattern zwischen Standby
+  und Betrieb. Siehe Kapitel 8.9.
+- **Richtungswechsel-Bremse:** `directionChangeHoldCycles` hält beim Wechsel
+  zwischen Laden und Entladen einige Zyklen Standby. Siehe Kapitel 8.10.
+- **`smartMode` 0 erst nach längerem Standby (optional):** Mit
+  `standbySmartModeZero: true` wird `smartMode: 0` erst nach 15 Standby-Zyklen
+  in Folge geschrieben – kurze Nulldurchgänge lösen so keine Flash-Schreibvorgänge
+  im Gerät aus. Siehe Kapitel 8.11.
+- **Abfragereihenfolge:** Das regelnde Gerät wird zuletzt abgefragt, direkt
+  vor dem Smartmeter. So passen Ist-Leistung und Netzwert zeitlich zusammen.
+  Siehe Kapitel 8.1.
+
+Robustheit auf dem Shelly:
+
+- **Watchdog:** Bleibt ein Regelzyklus hängen, gibt der Watchdog
+  (`interval` × 2,5) die Zyklussperre frei und meldet den Fehler. Siehe
+  Kapitel 8.3.
+- **Fehlerzähler & Benachrichtigung:** Nach `errorThreshold` (Standard 6)
+  Fehlern in Folge meldet der Controller sich per Signal, WhatsApp
+  (CallMeBot) oder Webhook (z. B. Home Assistant). Siehe Kapitel 8.4/8.5.
+- **`safeCall()`:** Ist der Call-Pool des Shelly voll („Too many calls in
+  progress“), wird der Fehler abgefangen und der Zyklus endet sauber. Siehe
+  Kapitel 10.
+- **Sparsamer Speicher:** HTTP-Antworten werden direkt nach dem Parsen
+  freigegeben, Banner- und Start-Code nach dem Start. Siehe Kapitel 8.7 und 10.
 
 ---
 

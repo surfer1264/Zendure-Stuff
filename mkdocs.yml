@@ -47,6 +47,7 @@ nav:
       - Home-Assistant-App: Multiconfigurator/HA_zendure_installer/INSTALLATION.md
       - Änderungen: Multiconfigurator/CHANGELOG.md
   - Controller:
+      - Kernfunktionen: Controller/controller.md
       - Controller-Shelly: Controller/readme.md
       - Tech Details:
         - Gesamtdokumentation: Controller/gesamtdoku.md
