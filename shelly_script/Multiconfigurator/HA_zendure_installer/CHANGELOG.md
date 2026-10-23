@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 2.9.1.0
+
+- Multi-Configurator 2.9.1: Aussehen wie das Dashboard (Farben, Schrift, Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“) mit Tag-/Nachtsicht und Sprachwahl im Menü „Ansicht“
+
 ## 2.9.0.0
 
 - Erste Version der App: Multi-Configurator 2.9.0 mit Upload-Helfer in Home Assistant

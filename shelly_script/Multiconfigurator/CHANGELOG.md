@@ -1,5 +1,11 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.9.1
+
+- Configurator: Aussehen wie das Dashboard – gleiche Farben, Schrift (IBM Plex, eingebettet) und Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“
+- Configurator: Tag-/Nachtsicht im neuen Menü „Ansicht“. Ohne eigene Wahl folgt die Seite dem System, eine eigene Wahl wird gemerkt
+- Configurator: Sprache ebenfalls im Menü „Ansicht“ (DE → EN → FR) statt der drei Knöpfe
+
 ## 2.9.0
 
 - **Neu: Home-Assistant-App** „Zendure Multi-Configurator“ (Ordner `HA_zendure_installer`): Configurator und Helfer laufen in Home Assistant, Aufruf über „Web-UI öffnen“. Anleitung: [HA_zendure_installer/INSTALLATION.md](HA_zendure_installer/INSTALLATION.md)
