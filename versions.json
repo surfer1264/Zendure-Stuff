@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-22T19:21:19Z",
+  "generated": "2026-10-23T20:20:00Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -345,17 +345,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.9.0",
+      "version": "2.9.1",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/a47339591743e6b286c86f650d5cda7d51a446b2/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/62165c221fbe20f313f064c2c9b06e9003b47ffc/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "**Neu: Home-Assistant-App** „Zendure Multi-Configurator“ (Ordner `HA_zendure_installer`): Configurator und Helfer laufen in Home Assistant, Aufruf über „Web-UI öffnen“. Anleitung: [HA_zendure_installer/INSTALLATION.md](HA_zendure_installer/INSTALLATION.md)",
-        "Helfer: Adresse, Port, Ablageort der gemerkten IPs und das Öffnen des Browsers lassen sich über Umgebungsvariablen einstellen (`ZENDURE_HELPER_BIND`, `_PORT`, `_DATA_DIR`, `_NO_BROWSER`, `_TRUSTED_PEERS`). Ohne diese Variablen verhält sich die EXE wie bisher",
-        "Helfer: Lauscht er im Netz, sind auch Anfragen von der eigenen Seite zugelassen (gleicher Origin, nur mit IP-Adresse)"
+        "Configurator: Aussehen wie das Dashboard – gleiche Farben, Schrift (IBM Plex, eingebettet) und Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“",
+        "Configurator: Tag-/Nachtsicht im neuen Menü „Ansicht“. Ohne eigene Wahl folgt die Seite dem System, eine eigene Wahl wird gemerkt",
+        "Configurator: Sprache ebenfalls im Menü „Ansicht“ (DE → EN → FR) statt der drei Knöpfe"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.9.0",
+          "changes": [
+            "**Neu: Home-Assistant-App** „Zendure Multi-Configurator“ (Ordner `HA_zendure_installer`): Configurator und Helfer laufen in Home Assistant, Aufruf über „Web-UI öffnen“. Anleitung: [HA_zendure_installer/INSTALLATION.md](HA_zendure_installer/INSTALLATION.md)",
+            "Helfer: Adresse, Port, Ablageort der gemerkten IPs und das Öffnen des Browsers lassen sich über Umgebungsvariablen einstellen (`ZENDURE_HELPER_BIND`, `_PORT`, `_DATA_DIR`, `_NO_BROWSER`, `_TRUSTED_PEERS`). Ohne diese Variablen verhält sich die EXE wie bisher",
+            "Helfer: Lauscht er im Netz, sind auch Anfragen von der eigenen Seite zugelassen (gleicher Origin, nur mit IP-Adresse)"
+          ],
+          "notice": null
+        },
         {
           "version": "2.8.1",
           "changes": [
@@ -428,15 +437,6 @@
             "Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert",
             "Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start",
             "Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.0.3",
-          "changes": [
-            "Bestehende Config einlesen: neuer Button „📂 Datei laden…“ – lädt eine gespeicherte Datei (nur CONFIG-Block oder komplettes Script) ins Textfeld, übernommen wird wie bisher mit „Einlesen & übernehmen“",
-            "Komplettes Script speichern: Dateiname enthält jetzt die Script-Version (z. B. `zerooutput_multi_kvs_mini_v5.0.8.js`)",
-            "Link zur Anleitung (README) auf der Startseite, je nach Sprache auf die deutsche, englische oder französische Fassung"
           ],
           "notice": null
         }
