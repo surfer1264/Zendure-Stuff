@@ -1,0 +1,85 @@
+name: HA-Apps spiegeln
+
+# Spiegelt die beiden Home-Assistant-Apps (Dashboard-Proxy und
+# Multi-Configurator) in das schlanke App-Repository
+# https://github.com/surfer1264/ha-zendure-apps. Nutzer tragen nur dieses
+# Repo im HA-App-Store ein; der Supervisor muss dann nicht das komplette
+# Zendure-Stuff-Repo klonen.
+#
+# Gepflegt wird ausschliesslich hier - im Ziel-Repo werden die App-Ordner
+# bei jedem Lauf komplett ersetzt (rsync --delete). repository.yaml,
+# README.md und LICENSE im Ziel-Repo-Root bleiben unangetastet.
+#
+# Ausloeser: Push auf main, der einen der App-Ordner aendert - ODER
+# manuell ueber "Run workflow" im Actions-Tab (workflow_dispatch).
+#
+# Voraussetzung: Deploy-Key MIT Schreibrecht im Ziel-Repo, privater
+# Schluessel als Secret APPS_REPO_DEPLOY_KEY in diesem Repo.
+#
+# Anpassen: Quell-Ordner -> Ziel-Ordner in APPS unten. Der Ziel-Ordner
+# sollte dem slug aus der config.yaml der App entsprechen.
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - shelly_script/Multiconfigurator/HA_zendure_installer/**
+      - shelly_script/zendash_watch_API_ZenSDK/HA_zendure_proxy/**
+      - .github/workflows/mirror-ha-apps.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mirror-ha-apps
+  cancel-in-progress: false
+
+env:
+  TARGET_REPO: surfer1264/ha-zendure-apps
+  # Je Zeile: <Quell-Ordner> <Ziel-Ordner>
+  APPS: |
+    shelly_script/Multiconfigurator/HA_zendure_installer zendure_installer
+    shelly_script/zendash_watch_API_ZenSDK/HA_zendure_proxy zendure_proxy
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo auschecken
+        uses: actions/checkout@v7
+
+      - name: Ziel-Repo auschecken
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ env.TARGET_REPO }}
+          path: target
+          ssh-key: ${{ secrets.APPS_REPO_DEPLOY_KEY }}
+
+      - name: App-Ordner kopieren
+        run: |
+          echo "$APPS" | while read -r src dst; do
+            [ -z "$src" ] && continue
+            echo "$src -> $dst"
+            mkdir -p "target/$dst"
+            rsync -a --delete "$src/" "target/$dst/"
+            # Der App-Store zeigt nur README.md (Gross-/Kleinschreibung
+            # zaehlt auf Linux) - readme.md daher umbenennen.
+            if [ -f "target/$dst/readme.md" ] && [ ! -f "target/$dst/README.md" ]; then
+              mv "target/$dst/readme.md" "target/$dst/README.md"
+            fi
+          done
+
+      - name: Committen und pushen
+        working-directory: target
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Keine Aenderungen - nichts zu spiegeln."
+            exit 0
+          fi
+          git commit -m "Sync aus Zendure-Stuff@${GITHUB_SHA::7}" \
+                     -m "https://github.com/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
+          git push
