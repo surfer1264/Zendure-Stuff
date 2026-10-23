@@ -1,108 +1,77 @@
-Dieses JavaScript-Skript ist ein Steuerungsskript (mJS) für **Shelly-Geräte** (wie den Shelly Pro 3EM oder Shelly Plus/Pro Serie). Es dient zur dynamischen Nulleinspeiseregelung und Lastverteilung von **mehreren Zendure-Balkonkraftwerk-Speichersystemen** (z. B. Zendure SolarFlow / Hyper / SF2400).
+# Controller – Kernfunktionen
 
-Eine gründliche Analyse der Architektur, Kernfunktionen und Steuerungslogik des Skripts zeigt Folgendes:
+Der Controller ist ein Shelly-Script (JavaScript) für **Shelly Gen2/3/4-Geräte**. Er regelt den Netzbezug auf nahe 0 W (Nulleinspeisung) und verteilt die Lade- und Entladeleistung auf **einen oder mehrere Zendure-Speicher** mit zenSDK-Schnittstelle (SF800 und neuer, siehe [Kompatible Geräte](../kompatible_geraete.md)).
 
----
-
-### 1. Hauptzweck und Funktionsweise
-
-Das Skript bildet eine geschlossene Regelschleife:
-
-1. **Grid-Power lesen:** Es fragt fortlaufend den aktuellen Netzsaldo (Import/Export in Watt) ab (entweder von einem lokalen/entfernten Shelly Pro 3EM oder einem anderen HTTP-JSON-Zähler/Zendure 3CT).
-2. **Zielwert berechnen:** Es ermittelt, wie viel Leistung geladen oder entladen werden muss, um den Strombezug bzw. die Einspeisung am Netzverknüpfungspunkt auf nahe **0 Watt** (oder einen konfigurierbaren Sollwert `setpoint`) zu regeln.
-3. **Auf Geräte verteilen:** Basierend auf Akkustand (SOC), Kapazität, Prioritäten und Schwellenwerten verteilt es die Lade- bzw. Entladeleistung dynamisch auf die konfigurierten Zendure-Geräte.
-4. **Per HTTP-API steuern:** Die berechneten Sollwerte (`acMode`, `outputLimit`, `inputLimit`, `smartMode`) werden per lokalen HTTP-POST-Requests direkt an die Zendure-Geräte übertragen.
+Diese Seite gibt einen Überblick. Alle Details stehen in der [Gesamtdokumentation](gesamtdoku.md).
 
 ---
 
-### 2. Kernfunktionen und Features
+## 1. Hauptzweck und Funktionsweise
 
-#### A. Intelligente Lastverteilung (Discharge & Charge)
+Das Script bildet eine geschlossene Regelschleife:
 
-* **Single vs. Spread Mode:**
-* Bei geringem Leistungsbedarf (unter `concentrateBelow`, z. B. < 600 W) steuert das Skript bevorzugt **nur ein** Gerät an, um Wandlungsverluste zu minimieren und Geräte zu schonen.
-* Erst bei höherem Bedarf (über `spreadAbove`, z. B. > 800 W) oder wenn ein Gerät an seine Leistungsgrenze stößt, wird die Last auf mehrere/alle Geräte aufgeteilt (Water-Fill-Algorithmus).
-
-
-* **SOC-Balancing & Rebalancing:**
-* Geräte mit höherem Akkustand entladen bevorzugt.
-* Geräte mit niedrigerem Akkustand laden bevorzugt.
-* Unterscheiden sich die SOC-Werte zweier Geräte um mehr als `rebalance.socMargin` (z. B. 5 %), wechselt das Skript das primäre Gerät im Single-Modus.
-
-
-
-#### B. Regelungstechnik & Dämpfung
-
-* **Asymmetrische Dämpfung (`dampingFactor` / `jumpFactor`):**
-* Verhindert Überschwingen und Schwingungen im Regelkreis.
-* Standardverstärkung liegt bei `0.65`.
-* Bei plötzlichen Änderungen in Richtung weniger Einspeisung greift eine schnellere Flanke (`jumpFactor: 0.9`), sobald ein Schwellenwert (`JUMP_THRESHOLD`) überschritten wird, um Netzbezug oder ungewollte Einspeisung schnell abzufangen.
-
-
-* **Hysterese und Totzonen:**
-* Verhindert ständiges Nachregeln/Schreiben bei minimalen Schwankungen (`hysteresis: 12W`).
-* Schutz vor Zyklen-Flattern an den Grenzen von `minSoc` und `maxSoc` über Hysteresewerte (`dischargeResetMargin` / `chargeResetMargin`).
-
-
-
-#### C. Geräte- & System-Schutzmechanismen
-
-* **Richtungswechsel-Sperre (`directionChangeHoldCycles`):**
-* Erzwingt eine Pause (Standby) von einigen Zyklen beim Umschalten zwischen Laden und Entladen, um Relais und Leistungselektronik der Wechselrichter zu schonen.
-
-
-* **Standby SmartMode Zero Delay:**
-* Schaltet `smartMode` erst nach `15` aufeinanderfolgenden Standby-Zyklen auf `0`, um unnötige EEPROM/Flash-Schreibzugriffe bei kurzen Nulldurchgängen zu vermeiden.
-
-
-* **Watchdog & Fehler-Handling:**
-* Überwacht die Ausführungszeit eines Regeltakts. Bleibt ein Aufruf hängen, greift ein Watchdog-Timer, setzt den Zustand zurück und meldet den Fehler.
-* Nach `errorThreshold` (6) aufeinanderfolgenden Fehlern werden Benachrichtigungen verschickt.
-
-
-* **SafeCall Wrapper:**
-* Fängt Fehler beim Shelly-eigenen Call-Pool ab ("Too many calls in progress") und verhindert das Einfrieren der Skript-Schleife.
-
-
-
-#### D. Performance- und Speicheroptimierung (Shelly-Spezifisch)
-
-* **Adaptive Polling / Sparmodus (`idleSkip`):**
-* Bleibt die Netzsaldoregelung stabil innerhalb der Hysterese (`cyclesUnchanged: 4`), setzt das Skript das Abfragen der Zendure-Geräte für bis zu 44 Sekunden aus, um die Netzwerk- und HTTP-Last auf den Shelly und die Zendure-Hubs stark zu reduzieren.
-
-
-* **Speichermanagement (Garbage Collection & RAM):**
-* Banner-Texte, Initialisierungs- und Sync-Funktionen werden nach dem Skriptstart explizit im Speicher auf `null` gesetzt und freigegeben.
-* JSON-Strings von HTTP-Antworten werden sofort nach dem Parsen verworfen (`res = null`), um RAM-Peaks auf dem Mikrocontroller zu vermeiden.
-
-
-* **Echtzeit-Optimierung der Abfragereihenfolge (`buildPollOrder`):**
-* Zuerst werden inaktive Geräte abgefragt, als letztes das aktuell regelnde Gerät direkt vor dem Smartmeter. Dadurch liegen Messwert des Speichers und Netzmesswert zeitlich extrem nah beieinander.
-
-
-
-#### E. Schnittstellen & Integration
-
-* **Live-Overrides über Shelly KVS (Key-Value-Store):**
-* Parameter wie `setpoint`, `dischargeFixed`, `minSoc` oder `inputLimit` können zur Laufzeit über den Shelly KVS geändert werden, ohne das Skript neu starten zu müssen.
-* Das Skript reagiert eventbasiert auf Änderungen der `kvs_rev`.
-
-
-* **Benachrichtigungssystem (`signal`):**
-* Unterstützt Alarmierungen über Webhooks (z. B. Home Assistant), Signal oder WhatsApp (via CallMeBot) bei Verbindungsabbrüchen oder Fehlerzuständen.
-
-
+1. **Netzsaldo lesen:** Es fragt fortlaufend den aktuellen Netzsaldo (Bezug/Export in Watt) ab – vom lokalen oder entfernten Shelly Pro 3EM oder von einem HTTP-JSON-Zähler wie dem Zendure Smart Meter 3CT ([Kapitel 5](gesamtdoku.md#5-smartmeter-anbindung---die-drei-grid-quellen-im-überblick)).
+2. **Ziel berechnen:** Es ermittelt getrennt für Entladen und Laden, wie viel Leistung nötig ist, um den Netzpunkt auf den Sollwert `setpoint` (meist 0 W) zu bringen ([Kapitel 8.1](gesamtdoku.md#81-ablauf-eines-regelzyklus)).
+3. **Auf Geräte verteilen:** Nach Ladestand (SOC), Gerätegrenzen (`maxOutput`/`maxInputPower`, `minSoc`/`maxSoc`) und den Schwellen `concentrateBelow`/`spreadAbove` verteilt es die Leistung auf die Zendure-Geräte. Feste Prioritäten gibt es nicht.
+4. **Per HTTP-API steuern:** Die Sollwerte (`acMode`, `outputLimit`, `inputLimit`, `smartMode`) gehen per lokalem HTTP-POST direkt an die Geräte – ohne Cloud.
 
 ---
 
-### 3. Stärken & Ausfallkonzept
+## 2. Kernfunktionen
 
-| Feature | Umsetzung im Skript | Vorteil |
+### A. Lastverteilung beim Entladen und Laden
+
+- **Ein Gerät oder alle** ([Kapitel 7](gesamtdoku.md#7-lastaufteilung--wie-wirken-concentratebelow-und-spreadabove)):
+    - Bei kleinem Bedarf (unter `concentrateBelow`, Standard 600 W) arbeitet **nur ein** Gerät. Das spart Wandlungsverluste und Schreibzugriffe.
+    - Bei größerem Bedarf (über `spreadAbove`, Standard 800 W) oder wenn das aktive Gerät an seine Leistungsgrenze stößt, wird auf alle verfügbaren Geräte verteilt („Wasserfüllung“).
+- **Ausgleich der Ladestände** ([Kapitel 6c](gesamtdoku.md#6c-sanfter-ausgleich-rebalance)):
+    - Beim Entladen tragen Geräte mit höherem SOC mehr bei, beim Laden Geräte mit mehr freiem Platz.
+    - Hat ein anderes Gerät einen Vorsprung von mindestens `rebalance.socMargin` (Standard 5 Prozentpunkte), wechselt im Ein-Geräte-Betrieb das aktive Gerät.
+
+### B. Regelung und Dämpfung
+
+- **Asymmetrische Dämpfung** ([Kapitel 8.2](gesamtdoku.md#82-dämpfung-der-lade-entladesignale)):
+    - Das Regelsignal folgt gedämpft mit `dampingFactor` (Standard 0,65). Das verhindert Überschwingen.
+    - Nur bei einem Sprung größer `JUMP_THRESHOLD` in Richtung „weniger Export“ (z. B. Wasserkocher aus) greift die schnelle Flanke `jumpFactor` (Standard 0,9). So bleibt ungewollte Einspeisung kurz.
+- **Hysterese** ([Kapitel 8.9](gesamtdoku.md#89-startstop-hysterese-laden--entladen)):
+    - Geschrieben wird erst ab einer Änderung von `hysteresis` (Standard 12 W).
+    - An den SoC-Grenzen verhindern `dischargeResetMargin` und `chargeResetMargin` das Flattern zwischen Standby und Betrieb.
+
+### C. Schutz für Geräte und Script
+
+- **Richtungswechsel-Bremse** (`directionChangeHoldCycles`, [Kapitel 8.10](gesamtdoku.md#810-richtungswechsel-bremse-beispiel)): Beim Wechsel zwischen Laden und Entladen hält das Gerät einige Zyklen Standby. Das verhindert schnelles Hin- und Herschalten.
+- **`smartMode` 0 erst nach längerem Standby** (optional, [Kapitel 8.11](gesamtdoku.md#811-bedeutung-von-smartmode-0-vs-1)): Mit `standbySmartModeZero: true` schreibt das Script `smartMode: 0` erst nach 15 Standby-Zyklen in Folge. Kurze Nulldurchgänge lösen so keine Flash-Schreibvorgänge im Gerät aus. Standard ist `false`.
+- **Watchdog** ([Kapitel 8.3](gesamtdoku.md#83-watchdog--timer)): Bleibt ein Regelzyklus hängen, gibt der Watchdog (`interval` × 2,5) die Zyklussperre frei und meldet den Fehler.
+- **Fehlerzähler** ([Kapitel 8.4](gesamtdoku.md#84-fehlerzähler--benachrichtigung)): Nach `errorThreshold` (Standard 6) Fehlern in Folge wird eine Benachrichtigung verschickt.
+- **`safeCall()`** ([Kapitel 10](gesamtdoku.md#10-hinweis-performance-grenzen-und-status-prüfung-des-shelly)): Ist der Call-Pool des Shelly voll („Too many calls in progress“), wird der Fehler abgefangen und der Zyklus endet sauber.
+
+### D. Shelly-gerechte Performance und Speichernutzung
+
+- **Sparmodus** (`idleSkip`, [Kapitel 8.12](gesamtdoku.md#812-adaptives-polling--sparmodus-idleskip)): Bleibt der berechnete Output `cyclesUnchanged` (Standard 4) Zyklen lang innerhalb der Hysterese, setzt das Script die Abfrage der Zendure-Geräte für bis zu `maxSkipSeconds` (Standard 44 s) aus. Die Netzmessung läuft in jedem Zyklus weiter.
+- **Speicher** ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)):
+    - Banner-Texte und Start-Funktionen werden nach dem Start auf `null` gesetzt und freigegeben.
+    - HTTP-Antworten werden direkt nach dem Parsen verworfen (`res = null`). Das senkt Speicherspitzen.
+- **Abfragereihenfolge** (`buildPollOrder()`, [Kapitel 8.1](gesamtdoku.md#81-ablauf-eines-regelzyklus)): Zuerst werden die Geräte abgefragt, die gerade nicht regeln, zuletzt das regelnde Gerät, direkt vor dem Smartmeter. So passen Ist-Leistung und Netzwert zeitlich zusammen.
+
+### E. Schnittstellen
+
+- **Live-Einstellungen per KVS** ([Kapitel 13](gesamtdoku.md#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)):
+    - Werte wie `setpoint`, `dischargeFixed`, `minSoc` oder `inputLimit` lassen sich im laufenden Betrieb ändern, ohne Neustart des Scripts.
+    - Das Script reagiert ereignisgesteuert auf Änderungen von `kvs_rev`, statt den KVS zyklisch abzufragen.
+- **Benachrichtigungen** (`signal`, [Kapitel 8.5](gesamtdoku.md#85-signal-benachrichtigung-callmebot--inkl-whatsapp)): per Signal oder WhatsApp (über CallMeBot) oder per Webhook (z. B. Home Assistant).
+
+---
+
+## 3. Weitere Funktionen
+
+| Funktion | Umsetzung im Script | Wirkung |
 | --- | --- | --- |
-| **Bypass-Korrektur** | `applyBypassExcessCorrection` | Wenn ein Akku voll ist (`socLimit = 1`) und PV-Strom durchleitet, wird dieser Überschuss erkannt und von den Entlade-Sollwerten der anderen Geräte abgezogen. |
-| **Manuelles Laden** | `syncInputLimitDevice` | Erkennt manuelles AC-Laden aus der App/Dashboard und unterbricht die Automatik für das betreffende Gerät schadlos. |
-| **Dry-Run Modus** | `dryRun: true` in Dev-Config | Erlaubt das Testen und Loggen aller Berechnungen, ohne tatsächlich Steuerbefehle an die Zendure-Geräte zu senden. |
+| **Bypass-Korrektur** | `applyBypassExcessCorrection()` | Liefert ein ladegesperrtes Gerät (`socLimit = 1`, PV-Durchleitung) mehr Leistung als zugeteilt, wird der Überschuss von den übrigen Geräten abgezogen ([Kapitel 6e](gesamtdoku.md#6e-bypass-überschuss-korrektur-soclimit--1)). |
+| **Manuelles AC-Laden** | `syncInputLimitDevice()` | Ein per KVS gesetztes `inputLimit` erzwingt Laden aus dem Netz mit fester Leistung. Für dieses Gerät pausiert die Regelung so lange ([Kapitel 13.4](gesamtdoku.md#134-live-überschreibbare-werte)). |
+| **Testmodus** | `dryRun: true` pro Gerät | Das Script liest und rechnet mit echten Daten, schreibt aber nichts an das Gerät ([Kapitel 4c](gesamtdoku.md#4c-testmodus-dryrun)). |
 
-### Fazit
+---
 
-Das Skript ist ein **außerordentlich ausgereifter, robuster und extrem speicheroptimierter Regler** für Shelly-Geräte. Es berücksichtigt vorallem die technischen Einschränkungen von Shelly mJS (begrenzter Arbeitsspeicher, Call-Pool-Limits) sowie die Hardware-Schonung der Zendure-Akkus/Inverter (EEPROM-Schreibschutz, Umschaltpausen, Hysterese).
+## Fazit
+
+Der Controller ist auf die Grenzen der Shelly-Script-Engine ausgelegt (wenig Arbeitsspeicher, begrenzter Call-Pool). Gleichzeitig schont er die Zendure-Geräte: Hysterese, Richtungswechsel-Bremse und Sparmodus vermeiden unnötige Schreibzugriffe und Umschaltvorgänge.
