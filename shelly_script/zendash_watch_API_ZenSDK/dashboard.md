@@ -10,17 +10,23 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
 
 **Inhalt**
 
-- [Wie das zusammenhängt](#wie-das-zusammenhängt)
-- [Bedienung](#bedienung)
-- [Welche Variante passt zu dir?](#welche-variante-passt-zu-dir)
-- [Voraussetzungen](#voraussetzungen)
-- [In 4 Schritten zum Dashboard](#in-4-schritten-zum-dashboard)
-- [Als Programm unter Windows oder macOS](#als-programm-unter-windows-oder-macos)
-- [Dauerbetrieb auf einer Synology](#dauerbetrieb-auf-einer-synology)
-- [Als App in Home Assistant](#als-app-in-home-assistant)
-- [Startoptionen](#startoptionen)
-- [Gut zu wissen](#gut-zu-wissen)
-- [Wenn es nicht klappt](#wenn-es-nicht-klappt)
+- [Dashboard einrichten und bedienen](#dashboard-einrichten-und-bedienen)
+  - [Wie das zusammenhängt](#wie-das-zusammenhängt)
+  - [Bedienung](#bedienung)
+    - [Aufbau der Seite](#aufbau-der-seite)
+    - [Sperren und Entsperren](#sperren-und-entsperren)
+    - [Menü „Ansicht“](#menü-ansicht)
+    - [Was du einstellen kannst](#was-du-einstellen-kannst)
+    - [Was die Anzeige zeigt](#was-die-anzeige-zeigt)
+  - [Welche Variante passt zu dir?](#welche-variante-passt-zu-dir)
+  - [Voraussetzungen](#voraussetzungen)
+  - [In 4 Schritten zum Dashboard](#in-4-schritten-zum-dashboard)
+  - [Als Programm unter Windows oder macOS](#als-programm-unter-windows-oder-macos)
+  - [Dauerbetrieb auf einer Synology](#dauerbetrieb-auf-einer-synology)
+  - [Als App in Home Assistant](#als-app-in-home-assistant)
+  - [Startoptionen](#startoptionen)
+  - [Gut zu wissen](#gut-zu-wissen)
+  - [Wenn es nicht klappt](#wenn-es-nicht-klappt)
 
 ---
 
@@ -28,7 +34,7 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
 
 Der Browser darf die Daten nicht direkt beim Shelly abfragen – die Shelly-Firmware lehnt solche Zugriffe aus einer fremden Webseite ab. Deshalb läuft auf einem Rechner im Heimnetz ein kleiner **Proxy**: Er liefert die Dashboard-Seite aus und fragt den Shelly stellvertretend ab.
 
-```
+```text
 Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDash-API)  ──►  Controller-Shelly (KVS)
 ```
 
@@ -167,7 +173,7 @@ Der Proxy muss wissen, unter welcher IP-Adresse der Dashboard-Shelly erreichbar 
 
 Im Browser direkt aufrufen (IP und Nummer einsetzen):
 
-```
+```link
 http://<IP-des-Dashboard-Shelly>/script/<Script-Nummer>/status_api
 ```
 
@@ -185,7 +191,7 @@ Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fens
 
 Beim Start zeigt der Proxy eine kurze Übersicht:
 
-```
+```text
 Zendure Dashboard Proxy
   Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
   HTML:     /home/pi/zendure/zendure-dashboard.html
@@ -212,7 +218,7 @@ Ein Klick auf **„Speichern & testen“** prüft sofort, ob unter dieser Adress
 
 Die Einstellungen landen in der Datei `zendure_proxy_config.json` neben dem Proxy. Beim nächsten Start sind sie wieder da – die Einrichtung ist also nur einmal nötig. Ändern kannst du sie jederzeit unter:
 
-```
+```link
 http://<Proxy-Adresse>:8000/setup
 ```
 
