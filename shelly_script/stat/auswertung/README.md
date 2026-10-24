@@ -50,7 +50,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 |---|---|---|
 | `LOG_ORDNER` | `None` | Ordner mit den Logs; `None` = Ordner über dem Skript. Ein Aufrufparameter hat Vorrang. |
 | `LOG_MUSTER` | `shelly_debug_*.log` | Muster der Logdateinamen (`*` = beliebige Zeichen, `?` = ein Zeichen) |
-| `ZEITRAUM_VON` | `2026-10-06` | Beginn der Auswertung (einschließlich); `None` = ab erstem Log. Der Einzeltag 20.09. bleibt so außen vor. |
+| `ZEITRAUM_VON` | `2026-10-06` | Beginn der Auswertung (einschließlich); `None` = ab erstem Log. |
 | `ZEITRAUM_BIS` | `None` | Ende der Auswertung (einschließlich); `None` = bis zum Ende der Logs |
 | `GERAETE` | `SF2400`, `SF800` | Gerätenamen wie im Log; Reihenfolge = Reihenfolge im Bericht |
 | `TAKT_S` | 4 | übliche Taktlänge in Sekunden |
