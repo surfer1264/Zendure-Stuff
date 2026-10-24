@@ -6,7 +6,8 @@
 
 Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. Du kannst darüber auch Einstellungen des Controllers ändern und einen Speicher manuell aus dem Netz laden.
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/c4d6f53a-d9d9-4d4f-b597-8a069561e6ec" />
+<img width="800" height="1093" alt="image" src="https://github.com/user-attachments/assets/32ebf7a3-e4a3-46fe-b7fb-14e18a05d6f5" />
+
 
 **Inhalt**
 
