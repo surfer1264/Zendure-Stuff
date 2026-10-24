@@ -118,7 +118,7 @@ def einlesen(logdir):
                     continue
                 m = R_DEV.match(l)
                 if m:
-                    dev.append((m[1], m[2], None if m[3] == "n/a" else int(m[3]), int(m[6])))
+                    dev.append((m[1], m[2], None if m[3] == "n/a" else int(m[3]), int(m[6]), len(netz) - 1))  # letzte Zahl = Takt-Nr.
                     continue
                 m = R_SET.match(l)
                 if m:
@@ -138,8 +138,9 @@ def einlesen(logdir):
                         break
     print(f"{len(dateien)} Logs ({LOG_MUSTER}), {len(netz)} Takte gelesen")
     n = pd.DataFrame(netz, columns=["t", "netz", "ist"])
+    n["nr"] = range(len(n))
     n["t"] = pd.to_datetime(n.t)
-    d = pd.DataFrame(dev, columns=["t", "dev", "soc", "ist"])
+    d = pd.DataFrame(dev, columns=["t", "dev", "soc", "ist", "nr"])
     d["t"] = pd.to_datetime(d.t)
     e = pd.DataFrame(ev, columns=["t", "ev"])
     e["t"] = pd.to_datetime(e.t)
@@ -212,7 +213,10 @@ def main():
     n["einsp"] = (-n.netz).clip(lower=0) * n.dt / 1000
     n["b_leer"] = bezug.where(n.ist < LEER_SCHWELLE_W, 0)
     n["b_rest"] = bezug - n.b_leer
-    n["akt"] = n.dt.where(n.ist >= AKTIV_SCHWELLE_W, 0)
+    # Aktivzeit gesamt: Takte, in denen mindestens ein Gerät selbst >= AKTIV_SCHWELLE_W abgibt
+    # (nicht über die Ist-Summe: lädt ein anderes Gerät gleichzeitig, wäre die Summe zu klein)
+    aktiv_nr = d.nr[d.ist >= AKTIV_SCHWELLE_W].unique()
+    n["akt"] = n.dt.where(n.nr.isin(aktiv_nr), 0)
     day = n.groupby("tag").agg(netzbezug_kwh=("bezug", "sum"), einspeisung_kwh=("einsp", "sum"),
                                bezug_speicher_aus_kwh=("b_leer", "sum"), bezug_regelrest_kwh=("b_rest", "sum"),
                                aktiv_gesamt_h=("akt", "sum"), erfasst_h=("dt", "sum"))

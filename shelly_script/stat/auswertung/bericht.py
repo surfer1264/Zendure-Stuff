@@ -831,8 +831,9 @@ legende('lg-aktiv', G.map(function(g){ return [g.name, g.farbe]; }).concat(MEHR 
 legende('lg-befehle', G.map(function(g){ return [g.name, g.farbe]; }));
 legende('lg-fehler', [['Nicht erreichbar', S.s3], ['Takt übersprungen', S.s4], ['Watchdog', S.s5]]);
 legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteabfrage', S.mut]]);
-document.getElementById('txt-aktiv').textContent = 'Stunden je Tag, in denen ' + (MEHR ? 'ein Gerät' : 'das Gerät') + ' mindestens ' +
-  D.cfg.aktiv + ' W ins Haus abgegeben hat.' + (MEHR ? ' „Mindestens ein Gerät“ zählt jede Stunde nur einmal, auch wenn mehrere gleichzeitig liefern.' : '');
+document.getElementById('txt-aktiv').textContent = 'Summe aller Takte je Tag, in denen ' + (MEHR ? 'das jeweilige Gerät' : 'das Gerät') +
+  ' mindestens ' + D.cfg.aktiv + ' W ins Haus abgab, in Stunden (jeder Takt zählt mit seiner Dauer bis zum nächsten Takt).' +
+  (MEHR ? ' „Mindestens ein Gerät“: Takte, in denen wenigstens ein Gerät abgab – gleichzeitige Abgabe zählt nur einmal.' : '');
 document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo| ≤ ' + D.cfg.band + ' W, solange ein Speicher einspeist und nicht am Limit ist.';
 document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch ' + f0(D.cfg.takteTag) + ', also etwa alle ' + de(D.cfg.takt, D.cfg.takt % 1 ? 1 : 0) +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';

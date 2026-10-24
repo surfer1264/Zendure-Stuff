@@ -147,8 +147,10 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 - **Deckung**: Entladung ÷ (Entladung + Netzbezug).
 - **Regelgüte**: Anteil der Takte mit |Netzsaldo| ≤ `BAND_W`, solange die Ist-Summe zwischen
   `LEER_SCHWELLE_W` und `SATT_SCHWELLE_W` liegt. Tage ohne solche Takte haben keinen Wert (Lücke statt 0 %).
-- **Aktivzeit**: Stunden pro Tag, in denen ein Gerät mindestens `AKTIV_SCHWELLE_W` ins Haus abgibt
-  (positiver `Ist`-Wert). „Mindestens ein Gerät“ nutzt die Ist-Summe und zählt gleichzeitige Abgabe nur einmal.
+- **Aktivzeit**: Summe der Takte pro Tag, in denen ein Gerät mindestens `AKTIV_SCHWELLE_W` ins Haus abgibt
+  (positiver `Ist`-Wert), in Stunden. Jeder Takt zählt mit seiner Dauer bis zum nächsten Takt; Lücken über
+  `MAX_LUECKE_S` zählen nicht. „Mindestens ein Gerät“: Takte, in denen wenigstens ein Gerät selbst die Schwelle
+  erreicht – gleichzeitige Abgabe mehrerer Geräte zählt nur einmal.
 - **Voller Tag**: mindestens `VOLLER_TAG_H` Stunden erfasst. Nur volle Tage gehen in Tageswerte,
   Kennzahlen und Tagesprofil ein.
 - **Verteilung je Stunde (Tagesprofil)**: SOC über alle Takte dieser Stunde an allen vollen Tagen.
