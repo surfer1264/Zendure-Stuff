@@ -295,7 +295,6 @@ __SCHRIFTEN__
         <button type="button" data-w="0">Alles</button>
         <button type="button" data-w="10080">7 T</button>
         <button type="button" data-w="4320">3 T</button>
-        <button type="button" data-w="1440">1 T</button>
       </div>
       <div class="seg">
         <button type="button" id="pL" aria-label="Früher" title="Früher">‹</button>
