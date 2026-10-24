@@ -9,6 +9,7 @@
 - Dashboard: nur Versionsnummer 3.5.11
 - Home-Assistant-App-Version 3.5.11.0
 - Nachtrag Dashboard (beide Layouts): Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite öffnet die Einrichtungsseite `setup` – funktioniert auch in Home Assistant über „Web-UI öffnen“. Home-Assistant-App-Version 3.5.11.1
+- Nachtrag Dashboard (beide Layouts): Links zu ThingSpeak und ThingsBoard öffnen im selben Fenster statt in einem neuen Tab – in der Home-Assistant-Companion-App kam sonst „401: Unauthorized“. Home-Assistant-App-Version 3.5.11.2
 
 ## Changelog 3.5.10
 

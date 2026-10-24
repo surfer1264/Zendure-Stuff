@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.11.2
+
+- Dashboard: Die Links zu ThingSpeak und ThingsBoard öffnen die Einrichtungsseite im selben Fenster statt in einem neuen Tab. In der Home-Assistant-Companion-App (iPad/iPhone) kam sonst „401: Unauthorized“, weil der neue Tab die Anmeldung von Home Assistant nicht kennt
+
 ## 3.5.11.1
 
 - Dashboard: Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite. Damit ist die Einrichtungsseite auch über „Web-UI öffnen“ erreichbar, z. B. nach einem Wechsel des Shelly
