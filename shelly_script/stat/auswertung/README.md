@@ -42,9 +42,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
    Das schreibt die CSV-Dateien neu und erzeugt danach `bericht.html`.
 3. Nichts nachzupflegen: Mit `ZEITRAUM_BIS = None` geht die Auswertung bis zum Ende der Logs,
    Tageswerte und Tagesprofil nehmen automatisch nur volle Tage.
-4. Für das Dashboard: Claude bitten, „die Speicher-Statistik mit den neuen Logs fortzuschreiben“.
-   Claude lädt dann die drei CSV als neue Dateien ins Dashboard und trägt sie bei den Quellen
-   `verlauf`, `tage` und `profil` ein. Die Seite selbst muss dafür nicht geändert werden.
+
 
 ## Einstellungen (Block `EINSTELLUNGEN` oben in `analyse.py`)
 
