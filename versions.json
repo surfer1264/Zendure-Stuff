@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-23T20:20:00Z",
+  "generated": "2026-10-24T15:21:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.2.3",
+      "version": "5.2.4",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/16e72f31915ea49c1e75e632b5dd76012e1561eb/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 46632,
-      "codeHash": "sha256:6ad5392a4ab376f49873386bb53031e8638ca9cf68948a9b0b30144ec09d153f",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/52fc2a567b4d439b9bfeea41be003d0cb33ca6d3/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 47076,
+      "codeHash": "sha256:4be21bd3533425a5aaf97bce44af01c89bc72684ed87288288e8a2fe6694e7fe",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Sprungfaktor optional im CONFIG-Block:** Der Faktor der schnellen Flanke (`JUMP_FACTOR`, bisher fest 0,9) lässt sich jetzt mit `jumpFactor` im CONFIG-Block setzen. Der Eintrag ist optional: Fehlt er, gilt wie bisher 0,9.",
-        "Ein gesetzter Wert hat Vorrang vor dem Standard und wird auf 0,4 bis 0,9 begrenzt (nie über 0,9).",
-        "Ungültige Werte (keine Zahl) werden ignoriert, dann gilt 0,9."
+        "**Entlade-Hysterese per KVS änderbar:** `dischargeResetMargin` (Prozentpunkte über `minSoc`, ab denen ein bis zur Reserve entladenes Gerät wieder entladen darf) lässt sich jetzt live über `zdmc_dischargeResetMargin` ändern, systemweit für alle Geräte. Der Key wird beim Start mit dem CONFIG-Wert (Standard 3) angelegt, falls er fehlt.",
+        "Gültig sind ganze Zahlen von 3 bis 79, andere Werte werden ignoriert.",
+        "Untergrenze jetzt 3 statt 1. Ein im CONFIG-Block gesetzter Wert unter 3 wird beim Start auf 3 angehoben."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.3",
+          "schema": 1,
+          "codeHash": "sha256:6ad5392a4ab376f49873386bb53031e8638ca9cf68948a9b0b30144ec09d153f",
+          "changes": [
+            "**Sprungfaktor optional im CONFIG-Block:** Der Faktor der schnellen Flanke (`JUMP_FACTOR`, bisher fest 0,9) lässt sich jetzt mit `jumpFactor` im CONFIG-Block setzen. Der Eintrag ist optional: Fehlt er, gilt wie bisher 0,9.",
+            "Ein gesetzter Wert hat Vorrang vor dem Standard und wird auf 0,4 bis 0,9 begrenzt (nie über 0,9).",
+            "Ungültige Werte (keine Zahl) werden ignoriert, dann gilt 0,9."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.2",
           "schema": 1,
@@ -165,27 +176,16 @@
             "In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst"
           ],
           "notice": null
-        },
-        {
-          "version": "5.1.3",
-          "schema": 1,
-          "codeHash": "sha256:56dff32e5cf08d6248516f9ffed2af165ecf1e9034cb0228b08914ae1d08f3dd",
-          "changes": [
-            "**Neue Logzeile: übersprungener Takt**",
-            "Braucht ein Regelzyklus länger als das eingestellte `interval` (z. B. weil",
-            "ein Gerät langsam antwortet), wird der nächste Takt ausgelassen. Das passierte"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "3.5.11",
+      "version": "3.5.12",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c4dd429258d6a03cf185be355f16e015244f807c/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 40971,
-      "codeHash": "sha256:6f36544578f41829949f5d8225ec7ac7a2193d7ebb82ac15c3f868ba7b52a77f",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/52fc2a567b4d439b9bfeea41be003d0cb33ca6d3/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 41470,
+      "codeHash": "sha256:0a3e119e5674db6be87eb5d2d654f0bee5804fdd979dc4bf58a895aaa8728e27",
       "configKeys": [
         "api",
         "apiEvents",
@@ -232,14 +232,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs",
-        "`status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert",
-        "Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier"
+        "Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab",
+        "Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`",
+        "Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.5.11",
+          "schema": 1,
+          "codeHash": "sha256:6f36544578f41829949f5d8225ec7ac7a2193d7ebb82ac15c3f868ba7b52a77f",
+          "changes": [
+            "Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs",
+            "`status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert",
+            "Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier"
+          ],
+          "notice": null
+        },
         {
           "version": "3.5.10",
           "schema": 1,
@@ -327,17 +338,6 @@
             "Watchdog: faellt eine Zelle unter `minVoltWarn`, wird zusaetzlich zur bisherigen Meldung `zdmc_dev{i}_dischargeAllowed = 0` in die KVS geschrieben und gemeldet \"Entladen gesperrt wegen Unterschreitung minVol\". Freigabe nur von Hand ueber den Dashboard-Schalter",
             "Dashboard: Obergrenze des Reserve-Reglers (minSoc) = kleinere von maxSoc (Konfiguration) und socSet (am Geraet) minus 1 - die Reserve bleibt immer mindestens 1 % unter der tatsaechlichen Ladegrenze",
             "Dashboard: Versionsnummer 3.5.2"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.1",
-          "schema": 1,
-          "codeHash": "sha256:58015603f5a853b15095a59b592f49cff3a2871982035bf1f518f03d65f8d9ca",
-          "changes": [
-            "status_api liefert je Hub zusaetzlich `socSet`: die am Geraet tatsaechlich eingestellte obere Ladegrenze in % (Report `socSet` / 10), `null` = Feld fehlt bzw. Hub offline - ein `jsonNum`-Aufruf auf dem ohnehin geholten Report, keine zusaetzliche Abfrage",
-            "Dashboard: Hinweis an der Geraetekarte, wenn `socSet` am Geraet von `maxSoc` aus der Konfiguration abweicht (z. B. von aussen per App oder Home Assistant geaendert). Das Regel-Script gleicht den Wert nur beim Start ab. Kein Watchdog-Hinweis",
-            "Dashboard: Versionsnummer 3.5.1"
           ],
           "notice": null
         }
