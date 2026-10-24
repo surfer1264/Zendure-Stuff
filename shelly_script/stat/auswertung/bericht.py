@@ -322,13 +322,7 @@ __SCHRIFTEN__
       <div class="card chart"><h3>Stellbefehle je Gerät</h3>
         <p>Gesendete „Leistung gesetzt“-Befehle pro Tag.</p>
         <div class="legend" id="lg-befehle"></div><div id="c-befehle"></div></div>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="section-title">Störungen</h2>
-    <div class="grid">
-      <div class="card chart wide"><h3>Störungen pro Tag</h3>
+      <div class="card chart"><h3>Störungen pro Tag</h3>
         <p>Gerät nicht erreichbar, übersprungene Takte, Watchdog-Timeouts.</p>
         <div class="legend" id="lg-fehler"></div><div id="c-fehler"></div></div>
     </div>
@@ -548,7 +542,7 @@ function zeitLinien(id, o){
 function katRahmen(id, o, werte){
   var w = o.w || W, h = o.h || H, n = o.kat.length, band = (w - ML - MR) / n;
   var ya = yAchse(werte, o);
-  var schritt = o.tickSchritt || Math.max(1, Math.ceil(52 / band)), xt = [];
+  var schritt = o.tickSchritt || Math.max(1, Math.ceil(64 / band)), xt = [];
   for (var i = 0; i < n; i += schritt) xt.push([ML + band * (i + 0.5), o.katLabel(o.kat[i], i)]);
   var r = rahmen(w, h, ya, o.yfmt, xt);
   return {w: w, h: h, n: n, band: band, ya: ya, sy: r.sy, out: r.out};
@@ -724,7 +718,7 @@ function zeichne(){
   katLinie('c-fehler', mit({serien: [{name: 'Nicht erreichbar', werte: spalte('nicht_erreichbar', idx), farbe: S.s3},
       {name: 'Takt übersprungen', werte: spalte('takt_uebersprungen', idx), farbe: S.s4},
       {name: 'Watchdog', werte: spalte('watchdog', idx), farbe: S.s5}],
-    yfmt: f0, einheit: '', aria: 'Störungen pro Tag'}));
+    yfmt: f0, einheit: '', w: WH, aria: 'Störungen pro Tag'}));
   stapel('c-takte', mit({serien: [{name: 'Ohne Geräteabfrage', werte: spalte('takte_ohne_abfrage', idx), farbe: S.s1},
       {name: 'Mit Geräteabfrage', werte: spalte('takte_mit_abfrage', idx), farbe: S.mut}],
     yfmt: f0, einheit: '', w: WH, aria: 'Takte pro Tag'}));

@@ -49,7 +49,7 @@ GERAETE = ["SF2400", "SF800"]
 TAKT_S = 4                         # übliche Taktlänge in s (für den letzten Takt einer Reihe)
 MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen nicht als Energie
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
-LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
+LEER_SCHWELLE_W = 15               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
 SATT_SCHWELLE_W = 1500             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
 AKTIV_SCHWELLE_W = 10              # Gerät gilt als aktiv, wenn es >= 10 W ins Haus abgibt (Ist > 0 = Abgabe)
