@@ -7,7 +7,8 @@ Aufruf (aus beliebigem Verzeichnis):
 Erzeugt im Ordner dieses Skripts:
     verlauf_15min.csv  15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang, SOC und Ausgang je Gerät
     tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus
-    tagesprofil.csv    Je Uhrzeit-Stunde: mittlerer Netzsaldo/Speicher-Ausgang, SOC-Min/-Max je Gerät
+    tagesprofil.csv    Je Uhrzeit-Stunde: mittlerer Netzsaldo/Speicher-Ausgang, SOC-Verteilung je Gerät
+                       (Min, Perzentile 10/25/50/75/90, Max)
     bericht.html       Statischer Bericht (fertige SVG-Grafiken, kein JavaScript), erzeugt von bericht.py
 
 Benötigt: Python 3.9+ und pandas (pip install pandas).
@@ -49,9 +50,11 @@ GERAETE = ["SF2400", "SF800"]
 TAKT_S = 4                         # übliche Taktlänge in s (für den letzten Takt einer Reihe)
 MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen nicht als Energie
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
-LEER_SCHWELLE_W = 15               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
+LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
 SATT_SCHWELLE_W = 1500             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
+SOC_PERZENTILE = (10, 25, 50, 75, 90)   # Tagesprofil: SOC-Verteilung je Stunde. Der Bericht zeichnet 10/25/50/75/90
+                                        # (Bänder 10–90 und 25–75, Linie = 50) – diese fünf drin lassen, weitere nur ergänzen
 AKTIV_SCHWELLE_W = 10              # Gerät gilt als aktiv, wenn es >= 10 W ins Haus abgibt (Ist > 0 = Abgabe)
 
 # =============================================================================
@@ -230,6 +233,9 @@ def main():
         s = dd[dd.dev == g].groupby("stunde").soc
         H["soc_min_" + k] = s.min()
         H["soc_max_" + k] = s.max()
+        # Verteilung über alle Takte dieser Stunde an allen vollen Tagen (Geräte stehen in jedem Takt im Log)
+        for q in SOC_PERZENTILE:
+            H[f"soc_p{q}_" + k] = s.quantile(q / 100).round(1)
     H.reset_index().to_csv(os.path.join(HIER, "tagesprofil.csv"), index=False)
 
     print(day[["tag", "vollstaendig", "netzbezug_kwh", "entladung_gesamt_kwh", "nicht_erreichbar", "spar_anteil_pct"]].to_string(index=False))

@@ -10,7 +10,7 @@ Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellb
 | `analyse.py` | Liest alle Logs neu ein und schreibt die drei CSV-Dateien. Einzige Rechenquelle; alle Einstellungen stehen oben im Block `EINSTELLUNGEN`. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät |
 | `tage.csv` | Pro Tag: Energie (kWh), Aktivzeit (h), SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte |
-| `tagesprofil.csv` | Pro Uhrzeit-Stunde: mittlerer Netzsaldo und Speicher-Ausgang, SOC-Min/-Max je Gerät |
+| `tagesprofil.csv` | Pro Uhrzeit-Stunde: mittlerer Netzsaldo und Speicher-Ausgang; je Gerät SOC-Min/-Max und Perzentile 10/25/50/75/90 |
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. Wird am Ende von `analyse.py` automatisch aufgerufen, geht aber auch einzeln (`python bericht.py`). Hat keine eigenen Einstellungen. |
 | `bericht.html` | **Bericht** zum Öffnen im Browser, eine einzelne Datei ohne Internetverbindung (Daten, Schriften und Zeichen-Skript eingebettet). Design wie Dashboard/Konfigurator mit Tag/Nacht-Umschalter. Zeitlicher Zoom, Werte beim Darüberfahren. |
 | `zendure_fonts.css` | IBM-Plex-Schriften aus dem Dashboard; `bericht.py` bettet sie ein. Fehlt die Datei, nimmt der Bericht die Systemschrift. |
@@ -72,6 +72,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 | `LEER_SCHWELLE_W` | 30 | Ist-Summe darunter = Speicher liefert nichts |
 | `SATT_SCHWELLE_W` | 1500 | Ist-Summe ab hier = Speicher am Limit |
 | `BAND_W` | 25 | Regelgüte: Takt gilt als gut bei \|Netzsaldo\| bis zu diesem Wert |
+| `SOC_PERZENTILE` | 10, 25, 50, 75, 90 | Perzentile der SOC-Verteilung je Stunde im Tagesprofil. Der Bericht zeichnet 10/25/50/75/90 – diese fünf drin lassen, weitere nur ergänzen. |
 | `AKTIV_SCHWELLE_W` | 10 | Gerät gilt als aktiv, wenn es mindestens so viel ins Haus abgibt |
 
 `bericht.py` liest diese Werte für Titel und Beschriftungen mit. Der Bericht zeigt bei Tageswerten,
@@ -100,7 +101,8 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
 
 ## Festlegungen
 
-- SOC nach Uhrzeit wird als Min/Max dargestellt, nicht als Mittel.
+- SOC nach Uhrzeit wird als Verteilung je Gerät dargestellt: Median als Linie, Bänder für 25–75 % und 10–90 %.
+  Grundlage sind alle Takte der jeweiligen Stunde an allen vollen Tagen. Min/Max stehen nur noch im Hinweis beim Darüberfahren.
 - Energie pro Tag als gestapelte Balken: Entladung je Gerät,
   Bezug bei leerem Speicher, übriger Bezug.
 
@@ -128,3 +130,6 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
 - 24.10.2026: Bericht im Design von Dashboard/Konfigurator (Titel „ZENDURE // TAGESSTATISTIK“, Geräte darunter,
   Tag/Nacht-Umschalter, IBM Plex über `zendure_fonts.css`). Zeitlicher Zoom für Verlauf, Kennzahlen und Tageswerte;
   die Grafiken zeichnet jetzt ein eingebettetes Skript.
+- 24.10.2026: „SOC nach Uhrzeit“ als Verteilung (Median + Bänder 25–75 % und 10–90 %) je Gerät statt Min/Max;
+  `tagesprofil.csv` um Perzentil-Spalten `soc_p10_<gerät>` … `soc_p90_<gerät>` erweitert, Einstellung `SOC_PERZENTILE`.
+  „Störungen pro Tag“ in die Gruppe „Pro Tag“ verschoben.

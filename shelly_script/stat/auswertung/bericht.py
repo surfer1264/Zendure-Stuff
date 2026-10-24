@@ -343,13 +343,11 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Typischer Tagesverlauf · alle vollen Tage</h2>
     <div class="grid">
-      <div class="card chart"><h3>Leistung nach Uhrzeit</h3>
+      <div class="card chart wide"><h3>Leistung nach Uhrzeit</h3>
         <p id="txt-profil"></p>
         <div class="legend" id="lg-profil"></div><div id="c-profil"></div></div>
-      <div class="card chart"><h3>SOC nach Uhrzeit</h3>
-        <p>Niedrigster und höchster SOC, der in dieser Stunde an einem der Tage auftrat.</p>
-        <div class="legend" id="lg-profilsoc"></div><div id="c-profilsoc"></div></div>
     </div>
+    <div class="grid" id="profilsoc"></div>
   </section>
 
   <section class="method">
@@ -730,15 +728,40 @@ function profil(){
   var P = D.profil, std = P.stunde;
   var o = {kat: std, katLabel: function(h){ return h + ' Uhr'; }, tipLabel: function(h){ return h + ':00–' + h + ':59 Uhr'; },
            tickSchritt: 4, w: WH};
-  katLinie('c-profil', Object.assign({}, o, {serien: [{name: 'Netzsaldo', werte: P.netzsaldo_w, farbe: S.s3},
+  katLinie('c-profil', Object.assign({}, o, {w: W, tickSchritt: 2, serien: [{name: 'Netzsaldo', werte: P.netzsaldo_w, farbe: S.s3},
       {name: 'Speicher-Ausgang', werte: P.speicher_w, farbe: S.s1}], yfmt: f0, einheit: ' W', ref: 0, aria: 'Leistung nach Uhrzeit'}));
-  var ser = [];
+  var box = document.getElementById('profilsoc');
+  box.innerHTML = G.map(function(g){
+    return '<div class="card chart"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
+      '<p>Verteilung über alle vollen Tage: Linie = Median, kräftiges Band = mittlere Hälfte der Tage (25–75 %), ' +
+      'blasses Band = 10–90 %.</p><div class="legend" id="lg-band-' + g.key + '"></div><div id="c-band-' + g.key + '"></div></div>';
+  }).join('');
   G.forEach(function(g){
-    ser.push({name: g.name + ' Max', werte: P['soc_max_' + g.key], farbe: g.farbe});
-    ser.push({name: g.name + ' Min', werte: P['soc_min_' + g.key], farbe: g.farbe, strich: true});
+    var k = g.key, p = function(q){ return P['soc_p' + q + '_' + k]; };
+    if (!p(50)) return leer('c-band-' + k, 'Keine Perzentile in tagesprofil.csv – analyse.py neu laufen lassen.');
+    legende('lg-band-' + k, [['Median', g.farbe], ['25–75 %', 'color-mix(in srgb, ' + g.farbe + ' 45%, transparent)'],
+                             ['10–90 %', 'color-mix(in srgb, ' + g.farbe + ' 30%, transparent)']]);
+    katBand('c-band-' + k, Object.assign({}, o, {farbe: g.farbe, mitte: p(50),
+      baender: [[p(10), p(90), 0.16], [p(25), p(75), 0.38]],
+      tip: function(i){ return [['Median', f0(p(50)[i]) + ' %', g.farbe], ['25–75 %', f0(p(25)[i]) + '–' + f0(p(75)[i]) + ' %'],
+        ['10–90 %', f0(p(10)[i]) + '–' + f0(p(90)[i]) + ' %'],
+        ['Min–Max', f0(P['soc_min_' + k][i]) + '–' + f0(P['soc_max_' + k][i]) + ' %']]; },
+      ymin: 0, ymax: 100, yfmt: f0, aria: 'SOC-Verteilung nach Uhrzeit ' + g.name}));
   });
-  katLinie('c-profilsoc', Object.assign({}, o, {serien: ser, yfmt: f0, einheit: ' %', ymin: 0, ymax: 100, aria: 'SOC Min und Max nach Uhrzeit'}));
-  legende('lg-profilsoc', ser.map(function(s){ return [s.name, s.farbe, s.strich]; }));
+}
+function katBand(id, o){
+  var f = katRahmen(id, o, [0, 100]), sx = function(i){ return (ML + f.band * (i + 0.5)).toFixed(1); };
+  o.baender.forEach(function(b){
+    var oben = [], unten = [];
+    b[1].forEach(function(v, i){ if (v !== null) oben.push(sx(i) + ',' + f.sy(v).toFixed(1)); });
+    b[0].forEach(function(v, i){ if (v !== null) unten.unshift(sx(i) + ',' + f.sy(v).toFixed(1)); });
+    f.out.push('<polygon points="' + oben.concat(unten).join(' ') + '" style="fill:' + o.farbe + ';fill-opacity:' + b[2] + '"/>');
+  });
+  var pts = [];
+  o.mitte.forEach(function(v, i){ if (v !== null) pts.push(sx(i) + ',' + f.sy(v).toFixed(1)); });
+  f.out.push('<polyline points="' + pts.join(' ') + '" fill="none" style="stroke:' + o.farbe + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>');
+  o.mitte.forEach(function(v, i){ if (v !== null) f.out.push('<circle cx="' + sx(i) + '" cy="' + f.sy(v).toFixed(1) + '" r="2.6" style="fill:' + o.farbe + '"/>'); });
+  katFertig(id, o, f, o.tip);
 }
 
 /* ---------------- Start ---------------- */
