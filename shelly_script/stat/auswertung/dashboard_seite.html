@@ -1,0 +1,479 @@
+<style>
+#dash-root .sp { display: flex; flex-direction: column; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); max-width: 82rem; margin-inline: auto; }
+#dash-root .sp-head { display: flex; flex-direction: column; gap: var(--cds-gap-sm); }
+#dash-root .sp-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+#dash-root .sp-take { color: var(--color-fg-muted); font-size: var(--cds-font-size-body); max-width: 70ch; margin: 0; line-height: 1.5; }
+#dash-root .sp-take b { color: var(--color-fg); font-weight: 600; }
+#dash-root .sp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); }
+#dash-root .sp-kpi { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+#dash-root .sp-kpi .lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+#dash-root .sp-kpi .val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; }
+#dash-root .sp-kpi .unit { font-size: var(--cds-font-size-body); color: var(--color-fg-muted); margin-left: .25em; }
+#dash-root .sp-kpi .note { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+#dash-root .sp-sec { display: flex; flex-direction: column; gap: var(--cds-gap-md); }
+#dash-root .sp-sec h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+#dash-root .sp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--cds-gap-md); }
+#dash-root .sp-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: flex; flex-direction: column; gap: var(--cds-gap-sm); min-width: 0; }
+#dash-root .sp-card.wide { grid-column: 1 / -1; }
+#dash-root .sp-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+#dash-root .sp-card p { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: 0; line-height: 1.45; }
+#dash-root .sp-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+#dash-root .sp-legend span { display: inline-flex; align-items: center; gap: .4em; }
+#dash-root .sp-legend i { width: .9em; height: 3px; border-radius: 2px; display: inline-block; }
+#dash-root .sp-chart { position: relative; width: 100%; min-width: 0; height: 240px; overflow: hidden; }
+#dash-root .sp-chart.tall { height: 300px; }
+#dash-root .sp-chart svg { position: relative; z-index: 0; }
+#dash-root .sp-tip { position: absolute; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; white-space: nowrap; z-index: 2; font-variant-numeric: tabular-nums; }
+#dash-root .sp-tip .d { color: var(--cds-text-secondary); margin-bottom: 2px; }
+#dash-root .sp-tip .r { display: flex; align-items: center; gap: .45em; }
+#dash-root .sp-tip .r i { width: .6em; height: .6em; border-radius: 50%; display: inline-block; }
+#dash-root .sp-tip .r b { font-weight: 600; margin-left: auto; padding-left: 1em; }
+#dash-root .sp-fail { display: flex; align-items: center; justify-content: center; gap: .5em; min-height: 240px; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+#dash-root .sp-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+#dash-root .sp-tablewrap { overflow-x: auto; }
+#dash-root .sp-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-body); font-variant-numeric: tabular-nums; }
+#dash-root .sp-table th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+#dash-root .sp-table td { padding: var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); }
+#dash-root .sp-table .n { text-align: right; }
+#dash-root .sp-table td.good { color: var(--color-ok); font-weight: 600; }
+#dash-root .sp-table td.bad { color: var(--color-bad); font-weight: 600; }
+#dash-root .sp-method { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.55; max-width: 80ch; display: flex; flex-direction: column; gap: var(--cds-gap-xs); }
+#dash-root .sp-method p { margin: 0; }
+#dash-root [data-dash-source-state=empty] { color: transparent; }
+#dash-root [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="sp">
+  <header class="sp-head">
+    <h1 id="titel">Speicher-Statistik SF2400 + SF800</h1>
+    <p class="sp-take" id="fazit">In <b data-source="kpi" data-field="tage" data-row="0" class="dash-skeleton">—</b> vollen Tagen (7.–23. Oktober) kamen <b data-source="kpi" data-field="entladung_kwh" data-row="0" class="dash-skeleton">—</b> kWh aus den Speichern und <b data-source="kpi" data-field="netzbezug_kwh" data-row="0" class="dash-skeleton">—</b> kWh aus dem Netz. Die Regelung selbst sitzt gut; <b data-source="kpi" data-field="anteil_leer_pct" data-row="0" class="dash-skeleton">—</b> % des Netzbezugs fielen an, während beide Speicher nichts lieferten (leer bzw. an der Entladegrenze).</p>
+  </header>
+
+  <div class="sp-kpis" id="kennzahlen">
+    <div class="sp-kpi"><span class="lbl">Aus Speicher entladen</span><span class="val"><span data-source="kpi" data-field="entladung_kwh" data-row="0" class="dash-skeleton">—</span><span class="unit">kWh</span></span><span class="note">7.–23. Okt., beide Geräte</span></div>
+    <div class="sp-kpi"><span class="lbl">Netzbezug</span><span class="val"><span data-source="kpi" data-field="netzbezug_kwh" data-row="0" class="dash-skeleton">—</span><span class="unit">kWh</span></span><span class="note">7.–23. Okt., Netzsaldo &gt; 0</span></div>
+    <div class="sp-kpi"><span class="lbl">Deckung durch Speicher</span><span class="val"><span data-source="kpi" data-field="deckung_pct" data-row="0" class="dash-skeleton">—</span><span class="unit">%</span></span><span class="note">Entladung ÷ (Entladung + Bezug)</span></div>
+    <div class="sp-kpi"><span class="lbl">Regelung im ±25-W-Band</span><span class="val"><span data-source="kpi" data-field="band_pct" data-row="0" class="dash-skeleton">—</span><span class="unit">%</span></span><span class="note">Anteil Takte, solange ein Speicher einspeist</span></div>
+  </div>
+
+  <section class="sp-sec" id="verlauf">
+    <h2>Verlauf über die Zeit</h2>
+    <div class="sp-grid">
+      <div class="sp-card wide" id="karte-soc">
+        <h3>Ladezustand (SOC)</h3>
+        <p>15-Minuten-Mittel je Gerät. Steigt tagsüber durch PV, fällt abends durch Entladung; Boden bei der eingestellten Entladegrenze (meist 20–30 %).</p>
+        <div class="sp-legend" data-legend="soc"></div>
+        <div class="sp-chart dash-skeleton" id="c-soc" data-source="verlauf"></div>
+      </div>
+      <div class="sp-card wide" id="karte-leistung">
+        <h3>Netzsaldo und Speicher-Ausgang</h3>
+        <p>15-Minuten-Mittel in Watt. Netzsaldo &gt; 0 heißt Bezug. Liegt der Speicher-Ausgang bei 0 und der Netzsaldo hoch, ist der Speicher leer.</p>
+        <div class="sp-legend" data-legend="leistung"></div>
+        <div class="sp-chart tall dash-skeleton" id="c-leistung" data-source="verlauf"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-sec" id="tage">
+    <h2>Pro Tag</h2>
+    <div class="sp-grid">
+      <div class="sp-card wide" id="karte-energie">
+        <h3>Energie pro Tag, nach Herkunft</h3>
+        <p>kWh je vollem Tag, gestapelt: Entladung SF2400 und SF800, dann Netzbezug bei leerem Speicher und übriger Netzbezug. Die Gesamthöhe ist der Verbrauch, der nicht direkt aus PV kam.</p>
+        <div class="sp-legend" data-legend="energie"></div>
+        <div class="sp-chart tall dash-skeleton" id="c-energie" data-source="tage"></div>
+      </div>
+      <div class="sp-card" id="karte-deckung">
+        <h3>Deckung durch Speicher</h3>
+        <p>Prozent: Entladung ÷ (Entladung + Netzbezug). Folgt direkt dem PV-Ertrag des Vortags.</p>
+        <div class="sp-chart dash-skeleton" id="c-deckung" data-source="tage"></div>
+      </div>
+      <div class="sp-card" id="karte-regel">
+        <h3>Regelgüte</h3>
+        <p>Anteil der Takte mit |Netzsaldo| ≤ 25 W, solange ein Speicher einspeist und nicht am Limit ist.</p>
+        <div class="sp-chart dash-skeleton" id="c-regel" data-source="tage"></div>
+      </div>
+      <div class="sp-card" id="karte-befehle">
+        <h3>Stellbefehle je Gerät</h3>
+        <p>Gesendete „Leistung gesetzt“-Befehle pro Tag. Weniger heißt ruhigere Regelung und weniger Last auf den Geräten.</p>
+        <div class="sp-legend" data-legend="befehle"></div>
+        <div class="sp-chart dash-skeleton" id="c-befehle" data-source="tage"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-sec" id="stoerungen">
+    <h2>Störungen und Fritzbox-Wechsel</h2>
+    <div class="sp-grid">
+      <div class="sp-card" id="karte-fehler">
+        <h3>Störungen pro Tag</h3>
+        <p>Gerät nicht erreichbar, übersprungene Takte (Zyklus lief noch), Watchdog-Timeouts. Die gestrichelte Linie markiert den Wechsel von der Fritzbox 6590 auf die 6690 Pro am späten Abend des 14.10.</p>
+        <div class="sp-legend" data-legend="fehler"></div>
+        <div class="sp-chart dash-skeleton" id="c-fehler" data-source="tage"></div>
+      </div>
+      <div class="sp-card" id="karte-fritzbox">
+        <h3>Vorher und nachher</h3>
+        <p>Mittel pro Tag. Vorher: 7.–14.10. (6590). Nachher: 15.–23.10. (6690 Pro), ohne den 20.10.</p>
+        <div class="sp-tablewrap">
+          <table class="sp-table" id="t-fritzbox" data-source="fritzbox" data-row-key="kennzahl">
+            <thead><tr><th data-field="kennzahl">Störung</th><th data-field="vorher" class="n">6590</th><th data-field="nachher" class="n">6690 Pro</th><th data-field="aenderung_pct" class="n">Änderung</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-sec" id="sparmodus">
+    <h2>Sparmodus: eingesparte Takte</h2>
+    <div class="sp-grid">
+      <div class="sp-card" id="karte-spar-takte">
+        <h3>Takte mit und ohne Geräteabfrage</h3>
+        <p>Regeltakte pro vollem Tag (etwa 21.600 bei 4 s). Ohne Abfrage heißt: Der Sparmodus hat das Polling der Geräte ausgesetzt, weil die Leistung in der Hysterese lag.</p>
+        <div class="sp-legend" data-legend="spartakte"></div>
+        <div class="sp-chart dash-skeleton" id="c-spartakte" data-source="tage"></div>
+      </div>
+      <div class="sp-card" id="karte-spar-anteil">
+        <h3>Anteil Takte ohne Geräteabfrage</h3>
+        <p>Prozent der Takte pro Tag. Bei 12 ausgesetzten Takten je Pause liegt die Obergrenze bei gut 90 %. Ruhige Tage, an denen der Speicher leer ist, sparen am meisten.</p>
+        <div class="sp-chart dash-skeleton" id="c-sparanteil" data-source="tage"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-sec" id="profil">
+    <h2>Typischer Tagesverlauf</h2>
+    <div class="sp-grid">
+      <div class="sp-card" id="karte-profil-leistung">
+        <h3>Leistung nach Uhrzeit</h3>
+        <p>Mittel über 7.–23. Okt. je Stunde, in Watt. Der Bezug-Peak am Morgen (7–9 Uhr) trifft auf den niedrigsten SOC.</p>
+        <div class="sp-legend" data-legend="profil"></div>
+        <div class="sp-chart dash-skeleton" id="c-profil" data-source="profil"></div>
+      </div>
+      <div class="sp-card" id="karte-profil-soc">
+        <h3>SOC nach Uhrzeit</h3>
+        <p>Niedrigster und höchster SOC, der in dieser Stunde an einem der Tage 7.–23. Okt. auftrat. Der Boden liegt an der Entladegrenze, das Maximum zeigt die besten PV-Tage.</p>
+        <div class="sp-legend" data-legend="profilsoc"></div>
+        <div class="sp-chart dash-skeleton" id="c-profilsoc" data-source="profil"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-method" id="methode">
+    <h2 style="font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; color: var(--color-fg);">Wie gerechnet</h2>
+    <p>Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle 4 s). Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über 30 s zählen nicht. „Bezug bei leerem Speicher“ heißt: Netzsaldo &gt; 0, während die Ist-Summe beider Geräte unter 30 W lag.</p>
+    <p>Tageswerte zeigen nur volle Tage (7.–23. Oktober); der 6. und 24. Oktober sind angeschnitten, der Einzeltag 20. September steht für sich und ist hier nicht enthalten. PV-Ladung taucht im Log nicht direkt auf und ist nur am SOC-Anstieg zu sehen.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  const C = dash.colors;
+  const de1 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
+  const de0 = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
+  const fDT = d3.timeFormat('%d.%m. %H:%M');
+  const fD = d3.timeFormat('%a %d.%m.');
+  const parseT = d3.timeParse('%Y-%m-%dT%H:%M');
+  const parseD = d3.timeParse('%Y-%m-%d');
+
+  dash.calc('kpi', {
+    inputs: ['tage'],
+    title: 'Summen 7.–23. Oktober',
+    description: 'Summen und Anteile über die vollen Tage (vollstaendig = 1).',
+    fn: (tage) => {
+      const f = tage.filter(r => Number(r.vollstaendig) === 1);
+      const s = k => f.reduce((a, r) => a + Number(r[k]), 0);
+      const ent = s('entladung_gesamt_kwh'), bez = s('netzbezug_kwh'), leer = s('bezug_speicher_aus_kwh');
+      const band = s('regel_im_band_pct') / f.length;
+      return [{
+        tage: f.length,
+        entladung_kwh: Math.round(ent * 10) / 10,
+        netzbezug_kwh: Math.round(bez * 10) / 10,
+        anteil_leer_pct: Math.round(100 * leer / bez),
+        deckung_pct: Math.round(100 * ent / (ent + bez)),
+        band_pct: Math.round(band * 10) / 10
+      }];
+    }
+  });
+
+  dash.calc('fritzbox', {
+    inputs: ['tage'],
+    title: 'Störungen vor/nach Fritzbox-Wechsel',
+    description: 'Mittel pro Tag: 7.–14.10. gegen 15.–23.10. ohne den 20.10.',
+    fn: (tage) => {
+      const vor = tage.filter(r => r.tag >= '2026-10-07' && r.tag <= '2026-10-14');
+      const nach = tage.filter(r => r.tag >= '2026-10-15' && r.tag <= '2026-10-23' && r.tag !== '2026-10-20');
+      const m = (rs, k) => rs.reduce((a, r) => a + Number(r[k]), 0) / rs.length;
+      return [['Gerät nicht erreichbar', 'nicht_erreichbar'], ['Takt übersprungen', 'takt_uebersprungen'], ['Watchdog-Timeout', 'watchdog'], ['Neustart des Skripts', 'neustarts']]
+        .map(([name, k]) => {
+          const a = Math.round(m(vor, k) * 10) / 10, b = Math.round(m(nach, k) * 10) / 10;
+          return { kennzahl: name, vorher: a, nachher: b, aenderung_pct: a ? Math.round(100 * (b - a) / a) : null };
+        });
+    }
+  });
+
+  function legend(name, series) {
+    const el = document.querySelector(`#dash-root [data-legend="${name}"]`);
+    if (!el || el.childElementCount) return;
+    series.forEach(s => {
+      const sp = document.createElement('span');
+      const i = document.createElement('i');
+      i.style.background = s.dash ? `repeating-linear-gradient(90deg, ${s.color} 0 4px, transparent 4px 7px)` : s.color;
+      sp.appendChild(i); sp.appendChild(document.createTextNode(s.name));
+      el.appendChild(sp);
+    });
+  }
+
+  function fail(el) {
+    el.textContent = ''; el.classList.remove('dash-skeleton');
+    const d = document.createElement('div'); d.className = 'sp-fail'; d.textContent = 'Failed to load'; el.appendChild(d);
+  }
+
+  // Generic line chart
+  function lineChart(el, rows, o) {
+    el.classList.remove('dash-skeleton');
+    el.textContent = '';
+    const H = o.height || 240;
+    const bw = el.getBoundingClientRect().width || (el.parentElement && el.parentElement.getBoundingClientRect().width) || 600;
+    const W = Math.max(280, Math.floor(bw));
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('preserveAspectRatio', 'xMinYMin meet').style('display', 'block').style('max-height', H + 'px');
+    const xs = rows.map(o.x);
+    let yMin = o.yMin != null ? o.yMin : d3.min(o.series, s => d3.min(rows, r => r[s.key]));
+    let yMax = o.yMax != null ? o.yMax : d3.max(o.series, s => d3.max(rows, r => r[s.key]));
+    if (o.yMin == null) yMin = Math.min(0, yMin);
+    const y = d3.scaleLinear([yMin, yMax], [H - 26, 10]).nice();
+    // measure left margin
+    const ticksY = y.ticks(5);
+    const meas = svg.append('g').attr('font-size', 11);
+    let ml = 0;
+    ticksY.forEach(t => { const tx = meas.append('text').text(o.yFmt(t)); ml = Math.max(ml, tx.node().getComputedTextLength()); });
+    meas.remove();
+    ml = Math.ceil(ml) + 10;
+    const mr = 14;
+    const x = (o.xType === 'linear' ? d3.scaleLinear(d3.extent(xs), [ml, W - mr]) : d3.scaleTime(d3.extent(xs), [ml, W - mr]));
+
+    const g = svg.append('g');
+    g.selectAll('line.grid').data(ticksY).join('line')
+      .attr('x1', ml).attr('x2', W - mr).attr('y1', d => y(d)).attr('y2', d => y(d))
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    g.selectAll('text.yt').data(ticksY).join('text')
+      .attr('x', ml - 8).attr('y', d => y(d)).attr('dy', '0.32em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg-muted)').attr('font-size', 11).style('font-variant-numeric', 'tabular-nums').text(d => o.yFmt(d));
+    if (o.ref != null && o.ref >= y.domain()[0] && o.ref <= y.domain()[1]) {
+      g.append('line').attr('x1', ml).attr('x2', W - mr).attr('y1', y(o.ref)).attr('y2', y(o.ref))
+        .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+    }
+    const nT = Math.max(2, Math.floor((W - ml) / 90));
+    const xt = o.xType === 'linear' ? x.ticks(Math.min(nT, 12)) : x.ticks(nT);
+    const xa = svg.append('g').attr('transform', `translate(0,${H - 24})`);
+    xa.append('line').attr('x1', ml).attr('x2', W - mr).attr('stroke', 'var(--cds-chart-axis)');
+    xa.selectAll('text').data(xt).join('text').attr('x', d => x(d)).attr('y', 16)
+      .attr('text-anchor', d => x(d) < ml + 28 ? 'start' : (x(d) > W - mr - 28 ? 'end' : 'middle'))
+      .attr('fill', 'var(--color-fg-muted)').attr('font-size', 11).text(o.xTick);
+
+    const paths = o.series.map(s => {
+      const ln = d3.line().defined(r => r[s.key] != null && !isNaN(r[s.key]) && (!o.gap || !r._gap)).x(r => x(o.x(r))).y(r => y(r[s.key]));
+      return g.append('path').datum(rows).attr('fill', 'none').attr('stroke', s.color).attr('stroke-width', s.width || 2)
+        .attr('stroke-linecap', s.dash ? 'butt' : 'round').attr('stroke-linejoin', 'round').attr('stroke-dasharray', s.dash || null).attr('d', ln);
+    });
+    if (o.marker) {
+      const mx = x(o.marker.at);
+      g.append('line').attr('x1', mx).attr('x2', mx).attr('y1', 10).attr('y2', H - 24)
+        .attr('stroke', 'var(--cds-chart-reference)').attr('stroke-width', 1.5).attr('stroke-dasharray', '5 4');
+      g.append('text').attr('x', mx + 5).attr('y', 14).attr('fill', 'var(--color-fg-muted)').attr('font-size', 11)
+        .attr('text-anchor', mx > W * 0.75 ? 'end' : 'start').attr('dx', mx > W * 0.75 ? -10 : 0).text(o.marker.label);
+    }
+    if (o.dots) o.series.forEach(s => {
+      g.selectAll(null).data(rows.filter(r => r[s.key] != null)).join('circle')
+        .attr('cx', r => x(o.x(r))).attr('cy', r => y(r[s.key])).attr('r', 2.5).attr('fill', s.color);
+    });
+
+    // tooltip
+    const rule = g.append('line').attr('y1', 8).attr('y2', H - 24).attr('stroke', 'var(--cds-chart-axis)').style('opacity', 0);
+    const hdots = o.series.map(s => g.append('circle').attr('r', 4).attr('fill', s.color).attr('stroke', 'var(--color-panel)').attr('stroke-width', 1.5).style('opacity', 0));
+    const tip = d3.select(el).append('div').attr('class', 'sp-tip').style('opacity', 0);
+    const bis = d3.bisector(o.x).center;
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml - mr).attr('height', H - 24).attr('fill', 'transparent')
+      .on('pointermove', ev => {
+        const [px] = d3.pointer(ev);
+        const i = bis(rows, x.invert(px)); const r = rows[i]; if (!r) return;
+        const cx = x(o.x(r));
+        rule.attr('x1', cx).attr('x2', cx).style('opacity', 1);
+        hdots.forEach((d, k) => { const v = r[o.series[k].key]; d.attr('cx', cx).attr('cy', v == null ? -99 : y(v)).style('opacity', v == null ? 0 : 1); });
+        tip.text('');
+        tip.append('div').attr('class', 'd').text(o.xTip(o.x(r)));
+        o.series.forEach(s => {
+          const rw = tip.append('div').attr('class', 'r');
+          if (o.series.length > 1) rw.append('i').style('background', s.color);
+          rw.append('span').text(s.name);
+          rw.append('b').text(r[s.key] == null ? '–' : o.yFmt(r[s.key]) + (o.unit || ''));
+        });
+        const tw = tip.node().offsetWidth;
+        const scale = Math.min(1, el.clientWidth / W);
+        let left = cx * scale + 12; if (left + tw > el.clientWidth) left = cx * scale - tw - 12;
+        tip.style('left', Math.max(0, left) + 'px').style('top', '4px').style('opacity', 1);
+      })
+      .on('pointerleave', () => { rule.style('opacity', 0); hdots.forEach(d => d.style('opacity', 0)); tip.style('opacity', 0); });
+  }
+
+  // Stacked bar chart per day
+  function stackChart(el, rows, o) {
+    el.classList.remove('dash-skeleton');
+    el.textContent = '';
+    const H = o.height || 240;
+    const bw = el.getBoundingClientRect().width || (el.parentElement && el.parentElement.getBoundingClientRect().width) || 600;
+    const W = Math.max(280, Math.floor(bw));
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('preserveAspectRatio', 'xMinYMin meet').style('display', 'block').style('max-height', H + 'px');
+    const keys = o.series.map(s => s.key);
+    const stacked = d3.stack().keys(keys).value((r, k) => r[k] || 0)(rows);
+    const yMax = d3.max(rows, r => d3.sum(keys, k => r[k] || 0));
+    const y = d3.scaleLinear([0, yMax], [H - 26, 10]).nice();
+    const ticksY = y.ticks(5);
+    const meas = svg.append('g').attr('font-size', 11);
+    let ml = 0;
+    ticksY.forEach(t => { const tx = meas.append('text').text(o.yFmt(t)); ml = Math.max(ml, tx.node().getComputedTextLength()); });
+    meas.remove();
+    ml = Math.ceil(ml) + 10;
+    const mr = 6;
+    const x = d3.scaleBand(rows.map(r => r.tag), [ml, W - mr]).padding(0.25);
+    const g = svg.append('g');
+    g.selectAll('line.grid').data(ticksY).join('line')
+      .attr('x1', ml).attr('x2', W - mr).attr('y1', d => y(d)).attr('y2', d => y(d))
+      .attr('stroke', 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    g.selectAll('text.yt').data(ticksY).join('text')
+      .attr('x', ml - 8).attr('y', d => y(d)).attr('dy', '0.32em').attr('text-anchor', 'end')
+      .attr('fill', 'var(--color-fg-muted)').attr('font-size', 11).style('font-variant-numeric', 'tabular-nums').text(d => o.yFmt(d));
+    stacked.forEach((layer, li) => {
+      g.selectAll(null).data(layer).join('rect')
+        .attr('x', d => x(d.data.tag)).attr('width', x.bandwidth())
+        .attr('y', d => y(d[1])).attr('height', d => Math.max(0, y(d[0]) - y(d[1])))
+        .attr('fill', o.series[li].color);
+    });
+    // x labels: thin out so they never meet
+    const fmt = d3.timeFormat('%d.%m.');
+    const step = Math.max(1, Math.ceil(40 / x.step()));
+    const xa = svg.append('g').attr('transform', `translate(0,${H - 26})`);
+    xa.append('line').attr('x1', ml).attr('x2', W - mr).attr('stroke', 'var(--cds-chart-axis)');
+    xa.selectAll('text').data(rows.filter((r, i) => i % step === 0)).join('text')
+      .attr('x', r => x(r.tag) + x.bandwidth() / 2).attr('y', 16).attr('text-anchor', 'middle')
+      .attr('fill', 'var(--color-fg-muted)').attr('font-size', 11).text(r => fmt(r._t));
+    // tooltip
+    const tip = d3.select(el).append('div').attr('class', 'sp-tip').style('opacity', 0);
+    const hl = g.append('rect').attr('fill', 'none').attr('stroke', 'var(--color-fg)').attr('stroke-width', 1).attr('rx', 2).style('opacity', 0);
+    svg.append('rect').attr('x', ml).attr('y', 0).attr('width', W - ml - mr).attr('height', H - 26).attr('fill', 'transparent')
+      .on('pointermove', ev => {
+        const [px] = d3.pointer(ev);
+        const i = Math.max(0, Math.min(rows.length - 1, Math.floor((px - ml - x.step() * x.paddingOuter()) / x.step())));
+        const r = rows[i]; if (!r) return;
+        const tot = d3.sum(keys, k => r[k] || 0);
+        hl.attr('x', x(r.tag) - 1).attr('width', x.bandwidth() + 2).attr('y', y(tot) - 1).attr('height', y(0) - y(tot) + 2).style('opacity', .6);
+        tip.text('');
+        tip.append('div').attr('class', 'd').text(fD(r._t));
+        o.series.slice().reverse().forEach(s => {
+          const rw = tip.append('div').attr('class', 'r');
+          rw.append('i').style('background', s.color);
+          rw.append('span').text(s.name);
+          rw.append('b').text(o.yFmt(r[s.key] || 0) + o.unit);
+        });
+        const rw = tip.append('div').attr('class', 'r');
+        rw.append('span').text('Summe'); rw.append('b').text(o.yFmt(tot) + o.unit);
+        const cx = x(r.tag) + x.bandwidth() / 2;
+        const tw = tip.node().offsetWidth;
+        const scale = Math.min(1, el.clientWidth / W);
+        let left = cx * scale + 14; if (left + tw > el.clientWidth) left = cx * scale - tw - 14;
+        tip.style('left', Math.max(0, left) + 'px').style('top', '4px').style('opacity', 1);
+      })
+      .on('pointerleave', () => { hl.style('opacity', 0); tip.style('opacity', 0); });
+  }
+
+  function num(rows, keys) {
+    return rows.map(r => { const o = { ...r }; keys.forEach(k => { o[k] = (r[k] === '' || r[k] == null) ? null : Number(r[k]); }); return o; });
+  }
+  // mark gaps > 1h so lines break
+  function gaps(rows) {
+    for (let i = 1; i < rows.length; i++) if (rows[i]._t - rows[i - 1]._t > 3600e3) rows[i]._gap = true;
+    return rows;
+  }
+
+  const S = {
+    soc: [{ key: 'soc_sf2400', name: 'SF2400', color: C[0] }, { key: 'soc_sf800', name: 'SF800', color: C[1] }],
+    leistung: [{ key: 'netzsaldo_w', name: 'Netzsaldo', color: C[2] }, { key: 'speicher_w', name: 'Speicher-Ausgang (Summe)', color: C[0] }],
+    energie: [{ key: 'entladung_sf2400_kwh', name: 'Entladung SF2400', color: C[0] }, { key: 'entladung_sf800_kwh', name: 'Entladung SF800', color: C[1] }, { key: 'bezug_speicher_aus_kwh', name: 'Netzbezug bei leerem Speicher', color: C[2] }, { key: 'bezug_regelrest_kwh', name: 'Übriger Netzbezug', color: C[3] }],
+    befehle: [{ key: 'stellbefehle_sf2400', name: 'SF2400', color: C[0] }, { key: 'stellbefehle_sf800', name: 'SF800', color: C[1] }],
+    spartakte: [{ key: 'takte_ohne_abfrage', name: 'Ohne Geräteabfrage (eingespart)', color: C[0] }, { key: 'takte_mit_abfrage', name: 'Mit Geräteabfrage', color: 'var(--cds-chart-muted)' }],
+    fehler: [{ key: 'nicht_erreichbar', name: 'Nicht erreichbar', color: C[2] }, { key: 'takt_uebersprungen', name: 'Takt übersprungen', color: C[3] }, { key: 'watchdog', name: 'Watchdog', color: C[4] }],
+    profil: [{ key: 'netzsaldo_w', name: 'Netzsaldo', color: C[2] }, { key: 'speicher_w', name: 'Speicher-Ausgang', color: C[0] }],
+    profilsoc: [{ key: 'soc_max_sf2400', name: 'SF2400 Max', color: C[0] }, { key: 'soc_min_sf2400', name: 'SF2400 Min', color: C[0], dash: '5 4' },
+                { key: 'soc_max_sf800', name: 'SF800 Max', color: C[1] }, { key: 'soc_min_sf800', name: 'SF800 Min', color: C[1], dash: '5 4' }]
+  };
+  Object.keys(S).forEach(k => legend(k, S[k]));
+
+  const timeOpts = { x: r => r._t, xTick: d3.timeFormat('%d.%m.'), xTip: fDT, gap: true };
+  const dayOpts = { x: r => r._t, xTick: d3.timeFormat('%d.%m.'), xTip: fD, dots: true };
+  const hourOpts = { x: r => r.stunde, xType: 'linear', xTick: d => d + ' Uhr', xTip: d => d + ':00–' + d + ':59 Uhr' };
+
+  dash.onData(() => {
+    // verlauf
+    const v = dash.data('verlauf');
+    const cs = document.getElementById('c-soc'), cl = document.getElementById('c-leistung');
+    if (v.status === 'ok') {
+      const rows = gaps(num(v.data, ['netzsaldo_w', 'speicher_w', 'soc_sf2400', 'soc_sf800']).map(r => ({ ...r, _t: parseT(r.t) })).filter(r => r._t));
+      lineChart(cs, rows, { ...timeOpts, series: S.soc, yMin: 0, yMax: 100, yFmt: d => de0.format(d), unit: ' %' });
+      lineChart(cl, rows, { ...timeOpts, height: 300, series: S.leistung.map(s => ({ ...s, width: 1.5 })), yFmt: d => de0.format(d), unit: ' W', ref: 0 });
+    } else if (v.status === 'error') { fail(cs); fail(cl); }
+
+    // tage
+    const t = dash.data('tage');
+    const ids = { 'c-spartakte': 1, 'c-sparanteil': 1, 'c-energie': 'energie', 'c-deckung': null, 'c-regel': null, 'c-befehle': 'befehle', 'c-fehler': 'fehler' };
+    if (t.status === 'ok') {
+      const keys = ['vollstaendig', 'takte_ohne_abfrage', 'takte_mit_abfrage', 'spar_anteil_pct', 'netzbezug_kwh', 'bezug_speicher_aus_kwh', 'bezug_regelrest_kwh', 'entladung_gesamt_kwh', 'entladung_sf2400_kwh', 'entladung_sf800_kwh', 'deckung_pct', 'regel_im_band_pct', 'stellbefehle_sf2400', 'stellbefehle_sf800', 'nicht_erreichbar', 'takt_uebersprungen', 'watchdog'];
+      const rows = num(t.data, keys).filter(r => r.vollstaendig === 1).map(r => ({ ...r, _t: parseD(r.tag) }));
+      stackChart(document.getElementById('c-energie'), rows, { height: 300, series: S.energie, yFmt: d => de1.format(d), unit: ' kWh' });
+      lineChart(document.getElementById('c-deckung'), rows, { ...dayOpts, series: [{ key: 'deckung_pct', name: 'Deckung', color: C[0] }], yMin: 0, yMax: 100, yFmt: d => de0.format(d), unit: ' %' });
+      lineChart(document.getElementById('c-regel'), rows, { ...dayOpts, series: [{ key: 'regel_im_band_pct', name: 'Im ±25-W-Band', color: C[0] }], yMin: 80, yMax: 100, yFmt: d => de0.format(d), unit: ' %' });
+      lineChart(document.getElementById('c-befehle'), rows, { ...dayOpts, series: S.befehle, yFmt: d => de0.format(d), unit: '' });
+      lineChart(document.getElementById('c-fehler'), rows, { ...dayOpts, series: S.fehler, yFmt: d => de0.format(d), unit: '', marker: { at: new Date(2026, 9, 14, 22), label: 'Neue Fritzbox' } });
+      stackChart(document.getElementById('c-spartakte'), rows, { series: S.spartakte, yFmt: d => de0.format(d), unit: '' });
+      lineChart(document.getElementById('c-sparanteil'), rows, { ...dayOpts, series: [{ key: 'spar_anteil_pct', name: 'Ohne Abfrage', color: C[0] }], yMin: 50, yMax: 100, yFmt: d => de0.format(d), unit: ' %' });
+    } else if (t.status === 'error') Object.keys(ids).forEach(id => fail(document.getElementById(id)));
+
+    // profil
+    const p = dash.data('profil');
+    const cp = document.getElementById('c-profil'), cps = document.getElementById('c-profilsoc');
+    if (p.status === 'ok') {
+      const rows = num(p.data, ['stunde', 'netzsaldo_w', 'speicher_w', 'soc_min_sf2400', 'soc_max_sf2400', 'soc_min_sf800', 'soc_max_sf800']);
+      lineChart(cp, rows, { ...hourOpts, series: S.profil, yFmt: d => de0.format(d), unit: ' W', dots: true });
+      lineChart(cps, rows, { ...hourOpts, series: S.profilsoc, yMin: 0, yMax: 100, yFmt: d => de0.format(d), unit: ' %', dots: true });
+    } else if (p.status === 'error') { fail(cp); fail(cps); }
+
+    // fritzbox table
+    const fb = dash.data('fritzbox');
+    const tb = document.querySelector('#t-fritzbox tbody');
+    tb.textContent = '';
+    if (fb.status === 'ok' && Array.isArray(fb.data)) {
+      fb.data.forEach(r => {
+        const tr = document.createElement('tr');
+        const c0 = document.createElement('td'); c0.textContent = r.kennzahl; tr.appendChild(c0);
+        [r.vorher, r.nachher].forEach(v => { const td = document.createElement('td'); td.className = 'n'; td.textContent = de1.format(v); tr.appendChild(td); });
+        const td = document.createElement('td');
+        td.className = 'n ' + (r.aenderung_pct == null ? '' : (r.aenderung_pct < 0 ? 'good' : 'bad'));
+        td.textContent = r.aenderung_pct == null ? '–' : (r.aenderung_pct > 0 ? '+' : '−') + de0.format(Math.abs(r.aenderung_pct)) + ' %';
+        tr.appendChild(td);
+        tb.appendChild(tr);
+      });
+    }
+
+    // kpi
+    const k = dash.data('kpi');
+    document.querySelectorAll('#dash-root [data-source="kpi"]').forEach(el => {
+      if (k.status === 'ok' && k.data && k.data[0]) {
+        el.classList.remove('dash-skeleton');
+        const v = k.data[0][el.dataset.field];
+        el.textContent = de1.format(v);
+      } else if (k.status === 'error') { el.classList.remove('dash-skeleton'); el.textContent = '—'; }
+    });
+  });
+})();
+</script>
