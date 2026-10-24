@@ -100,9 +100,10 @@ let CONFIG = {
   api: {
     enabled: true,
 
-    // "local" = KVS auf DIESEM Geraet (Script laeuft neben dem Regler),
-    // "<IP>"  = KVS auf dem Regler-Shelly, Zugriff per RPC ueber HTTP.
-    // Voraussetzung: dort ist keine Authentifizierung aktiv.
+    // "<IP>"  = KVS auf dem Regler-Shelly, Zugriff per RPC ueber HTTP
+    //           (Normalfall - beide Scripte passen nicht auf einen Shelly).
+    //           Voraussetzung: dort ist keine Authentifizierung aktiv.
+    // "local" = KVS auf DIESEM Geraet (nur zum Testen ohne Regler).
     kvsHost: "192.168.178.117",
 
     // Reine Anzeige im Dashboard - 1:1 aus dem Regel-Script kopieren.

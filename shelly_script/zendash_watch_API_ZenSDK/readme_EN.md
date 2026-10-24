@@ -57,6 +57,7 @@ The script adjusts its pace depending on whether someone is watching:
 |---|---|
 | **Dashboard is open** | The grid meter and all batteries are queried every 8 seconds. The watchdog checks these values at the same time. |
 | **Manual charging is running** | Also every 8 seconds, even if the dashboard is closed. This way the script detects when the battery is full. |
+| **Cloud upload without dashboard** | The proxy has the script query the grid meter and all batteries once a minute – a single pass, not the 8-second cycle (see [History in ThingSpeak or ThingsBoard](#history-in-thingspeak-or-thingsboard)). |
 | **Nobody is watching** | Only the watchdog queries the monitored batteries every 120 seconds. The grid meter is not queried. |
 
 Queries, write operations and messages always run **one after another**, never simultaneously. This keeps memory usage on the Shelly low.
@@ -93,7 +94,7 @@ An overview appears in the script log (the script output is in German). Check th
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
+zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -170,9 +171,11 @@ api: {
 | `gridSource` | Where does the grid measurement come from? `"remote"`: a Shelly Pro 3EM on the network (usually the Controller Shelly), `"http_json"`: another meter with a JSON interface, `"local"`: only if this Shelly itself is a Pro 3EM. |
 | `gridSourceIp`, `gridSourceEmId` | for `"remote"`: IP of the meter and channel (usually 0) |
 | `gridSourceUrl`, `gridSourceField`, `gridSourceInvert` | for `"http_json"`: address, field name of the total power, invert sign yes/no |
-| `pollIntervalSec` | Query interval while the dashboard is open, in seconds. Default 8. |
+| `pollIntervalSec` | Query interval while the dashboard is open, in seconds. Default 8. The script replaces values below 4 with 8. |
 
 To be able to **change settings** in the dashboard as well, `kvsEnabled: true` and `kvsForceReseed: false` must be set in the Controller. Without KVS, the dashboard only displays values.
+
+`hysteresis` is the tolerance around the setpoint. The **discharge hysteresis** (`zdmc_dischargeResetMargin`, Controller 5.2.4 or newer) is something else: it is not in the CONFIG block but is set in the [dashboard](dashboard_EN.md#what-you-can-set).
 
 ### Watchdog (`watchdog`)
 
@@ -199,7 +202,7 @@ watchdog: {
 | `vollSchwelle` / `entladeReset` | "Full" message from this state of charge. The next message only comes after the battery has dropped below `entladeReset` in between. |
 | `minVoltWarn` / `minVoltReset` | Warning when a cell drops below this voltage (volts). Another warning only after it has been above `minVoltReset` again in between. In addition, the Watchdog then **blocks** discharging of this battery (see [Discharge lock on undervoltage](#discharge-lock-on-undervoltage)). |
 | `tempWarn` / `tempReset` | Warning when the device temperature exceeds `tempWarn` (°C). Another warning only after it has been below `tempReset` in between. |
-| `offlineAlarmMin` | Message when a battery has been unreachable for this many **minutes** |
+| `offlineAlarmMin` | Message when a battery has been unreachable for this many **minutes** (at least 1) |
 | `sunriseOffset` / `sunsetOffset` | Shift of the morning and evening update relative to sunrise and sunset in minutes, e.g. `30` = half an hour later |
 
 > For the sunrise and sunset times to be correct, the **location** must be set in the Shelly (Settings → Location or time zone).
@@ -250,7 +253,7 @@ The interface for your own integrations (e.g. Home Assistant, Node-RED) is docum
 
 ### History in ThingSpeak or ThingsBoard
 
-The proxy can additionally send the readings of your batteries to ThingSpeak and/or ThingsBoard every minute. There you get a permanent history with charts. The upload is optional and only needs one additional file next to the proxy. As long as a dashboard is open, the proxy only reads along with its queries. If the upload is switched off, it does not send a single request to the script.
+The proxy can additionally send the readings of your batteries to ThingSpeak and/or ThingsBoard every minute. There you get a permanent history with charts. The upload is optional and only needs one additional file next to the proxy. As long as a dashboard is open, the proxy only reads along with its queries. Without a dashboard, it has the script query everything once a minute (`status_api?bg=wake`) and fetches the result shortly afterwards (`?bg=read`) – a single pass, not the 8-second cycle. If the upload is switched off, it does not send a single request to the script.
 
 👉 **[Set up the ThingSpeak upload](thingspeak.md)** · **[Set up the ThingsBoard upload](thingsboard.md)** (German)
 
@@ -266,7 +269,7 @@ The script can send the following messages. The message texts are in German; the
 | 🔋 SF2400 voll (99%) | state of charge has reached `vollSchwelle` (full) |
 | 🔥 SF800 Temp hoch: 46.2C | device temperature above `tempWarn` (temperature high) |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | a cell below `minVoltWarn`, with the serial number of the battery pack |
-| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | right after that: discharging of this battery switched off in the Controller, see [discharge lock](#discharge-lock-on-undervoltage) |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | right after that: discharging of this battery switched off in the Controller, see [discharge lock](#discharge-lock-on-undervoltage). Not sent if discharging was already off. |
 | ❌ SF800: nicht erreichbar seit 10 min | battery no longer responds (unreachable for 10 min) |
 | ❌ SF800: Report unlesbar seit 10 min | battery responds, but with incomplete or unusable data (report unreadable) |
 | ✅ SF800: wieder erreichbar | after one of the two previous messages (reachable again) |
@@ -298,9 +301,9 @@ Good to know:
 
 ## Discharge lock on undervoltage
 
-If the weakest cell of a monitored battery (`watch: true`) drops below `minVoltWarn`, the Watchdog switches off discharging of this battery in the Controller (KVS `zdmc_dev{number}_dischargeAllowed = 0`) and reports "⛔ … Entladen gesperrt wegen Unterschreitung minVol". Charging remains possible.
+If the weakest cell of a monitored battery (`watch: true`) drops below `minVoltWarn`, the Watchdog switches off discharging of this battery in the Controller (KVS `zdmc_dev{number}_dischargeAllowed = 0`) and reports "⛔ … Entladen gesperrt wegen Unterschreitung minVol". Charging remains possible. If discharging was already switched off, the Watchdog writes nothing and no ⛔ message is sent – only the undervoltage warning.
 
-- Requirement: Watchdog **and** the dashboard part (`api.enabled`) are switched on, and the Controller has `kvsEnabled: true`.
+- Requirement: the Watchdog is switched on, `api.kvsHost` contains the IP of the Controller Shelly, and the Controller has `kvsEnabled: true`. The dashboard part (`api.enabled`) does not need to be switched on for this.
 - The lock is **not** lifted automatically. You can only release it by hand with the "Discharge allowed" switch in the [dashboard](dashboard_EN.md#operation) – ideally only once the battery has been recharged.
 - If manual charging is running, discharging stays locked after it ends instead of restoring the previous state.
 - For monitored batteries, the dashboard shows the lock threshold behind the weakest cell, e.g. "min 3,31 V (Sperre < 2,90 V)".

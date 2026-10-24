@@ -52,7 +52,7 @@ This describes the default layout at `http://<proxy-address>:8000/`.
 |---|---|
 | **Header** | connection status (e.g. "Live · polling every 4s"), time and date, the **padlock** and the **⚙ View** menu |
 | **Overview – Now** | readings: grid import/export and Solarflow power (sum of all batteries) with history curve |
-| **Overview – Control** | settings for all batteries: setpoint and fixed discharge |
+| **Overview – Control** | settings for all batteries: setpoint, discharge hysteresis and fixed discharge |
 | **Devices** | one card per battery with readings, status, "Controls" and "Manual charging" |
 | **Footer** | versions, time of the last update, **Help** link (this page), raw data and cloud upload |
 
@@ -86,6 +86,7 @@ All settings go to the Controller and take effect on its next control cycle. Aft
 | Control | Effect | Range |
 |---|---|---|
 | **Setpoint** | Target value for the grid draw. Negative = feed in a little, positive = draw a little. Below it is the tolerance (hysteresis): the grid draw may deviate this far before the Controller readjusts. | −40 to +40 W, in 5 W steps |
+| **Discharge hysteresis** | Once a battery has discharged down to the reserve, it only supplies power again from reserve + this value. Prevents constant switching on and off at the reserve. Type the value into the field and confirm with ↵ or "Done"; invalid values are rejected with a message. If the window (charge limit − reserve) of any battery is smaller than 14 points, the field is locked and 3 applies. Only takes effect with Controller 5.2.4 or newer – older versions ignore the value. | 3 to (smallest window charge limit − reserve of all batteries) − 11 %, whole numbers |
 | **Fixed discharge** | Fixed discharge power instead of control. Type the value into the field and confirm with ↵ or "Done". While it is active, the setpoint tile notes that the setpoint is currently not being regulated. | `0` = off, otherwise from `dischargeStartupPower` (e.g. 35 W) |
 
 **On each device card under "Controls":**
@@ -94,7 +95,7 @@ All settings go to the Controller and take effect on its next control cycle. Aft
 |---|---|---|
 | **Discharge allowed** | May this battery supply the house? If the watchdog has locked discharging because of undervoltage, the switch is off and has to be switched on again by hand ([discharge lock](readme_EN.md#discharge-lock-on-undervoltage)). | on/off |
 | **Charging from grid allowed** | May this battery absorb surplus from the grid? | on/off |
-| **Reserve (min. SoC)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. The upper limit is shown below the value ("max … %"). | 10 % up to 1 % below the lower of charge target (`maxSoc`) and the charge limit set on the device (`socSet`) |
+| **Reserve (min. SoC)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. The upper limit is shown below the value ("max … %"). An increase is not saved if the discharge hysteresis no longer fits afterwards (reserve at most charge limit − 11 − hysteresis) – a message appears and the slider jumps back. Lowering always works. | 10 % up to 5 percentage points below the charge limit, i.e. the lower of charge target (`maxSoc`) and the charge limit set on the device (`socSet`) |
 
 **On each device card under "Manual charging":**
 
@@ -107,7 +108,7 @@ On start, the dashboard asks for confirmation once and then switches "Discharge 
 
 After an input, the respective control is locked for 4 seconds so that nothing is triggered twice.
 
-Not changeable in the dashboard are the **hysteresis** (only shown below the setpoint) and the **charge target** (`maxSoc`). You set both in the Configurator or in the CONFIG block.
+Not changeable in the dashboard are the **hysteresis** (tolerance around the setpoint, only shown below it – not to be confused with the discharge hysteresis) and the **charge target** (`maxSoc`). You set both in the Configurator or in the CONFIG block.
 
 ### What the display shows
 
@@ -124,7 +125,7 @@ Not changeable in the dashboard are the **hysteresis** (only shown below the set
     - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
 - **Footer:** versions of page and script (yellow if they do not match), time of the last update, **Help** link to this guide. `config_api` and `status_api` open the raw data as JSON in a new tab. **ThingSpeak** and **ThingsBoard** lead to the setup pages for the cloud upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), German).
 
-**Explanations on tap:** Many labels and values have a dotted underline – setpoint, fixed discharge, the two overview tiles, power, operating window, extra line, lock threshold; the status tags too. Tapping (or hovering with the mouse) shows a short explanation.
+**Explanations on tap:** Many labels and values have a dotted underline – setpoint, discharge hysteresis, fixed discharge, the two overview tiles, power, operating window, extra line, lock threshold; the status tags too. Tapping (or hovering with the mouse) shows a short explanation.
 
 The page refreshes the measurements every 4 seconds. Settings changed by someone else (e.g. via Home Assistant) appear after about half a minute at the latest. While the tab is in the background or the window is minimised, polling pauses.
 

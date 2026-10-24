@@ -86,6 +86,7 @@ Das Script richtet sein Tempo danach, ob gerade jemand zuschaut:
 |---|---|
 | **Dashboard ist geöffnet** | Alle 8 Sekunden werden Netzmessung und alle Speicher abgefragt. Der Watchdog prüft diese Werte gleich mit. |
 | **Manuelles Laden läuft** | Ebenfalls alle 8 Sekunden, auch wenn das Dashboard geschlossen ist. So erkennt das Script, wann der Akku voll ist. |
+| **Cloud-Upload ohne Dashboard** | Der Proxy lässt das Script einmal pro Minute Netzmessung und alle Speicher abfragen – ein einzelner Durchlauf, kein 8-Sekunden-Takt (siehe [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)). |
 | **Niemand schaut zu** | Nur der Watchdog fragt alle 120 Sekunden die überwachten Speicher ab. Die Netzmessung ruht. |
 
 Abfragen, Schreibvorgänge und Nachrichten laufen immer **nacheinander**, nie gleichzeitig. Das hält den Speicherbedarf auf dem Shelly niedrig.
@@ -122,7 +123,7 @@ Im Log des Scripts erscheint eine Übersicht. Prüfe dort, ob alles so eingestel
 
 ```text
 --------------------------------
-zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
+zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -199,9 +200,11 @@ api: {
 | `gridSource` | Woher kommt die Netzmessung? `"remote"`: ein Shelly Pro 3EM im Netz (meist der Controller-Shelly), `"http_json"`: ein anderes Messgerät mit JSON-Schnittstelle, `"local"`: nur wenn dieser Shelly selbst ein Pro 3EM ist. |
 | `gridSourceIp`, `gridSourceEmId` | bei `"remote"`: IP des Messgeräts und Kanal (meist 0). `gridSourceEmId` gilt auch bei `"local"`. |
 | `gridSourceUrl`, `gridSourceField`, `gridSourceInvert` | bei `"http_json"`: Adresse, Feldname der Gesamtleistung, Vorzeichen umdrehen ja/nein. Verschachtelte Felder als Array, z. B. `["StatusSNS","SML","Watt_Summe"]`. |
-| `pollIntervalSec` | Abfragetakt bei geöffnetem Dashboard in Sekunden. Standard 8, mindestens 4. |
+| `pollIntervalSec` | Abfragetakt bei geöffnetem Dashboard in Sekunden. Standard 8. Werte unter 4 setzt das Script auf 8. |
 
 Damit du im Dashboard auch **einstellen** kannst, muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
+
+`hysteresis` ist die Toleranz um den Sollwert. Die **Entlade-Hysterese** (`zdmc_dischargeResetMargin`, ab Controller 5.2.4) ist etwas anderes: Sie steht nicht im CONFIG-Block, sondern wird im [Dashboard](dashboard.md#was-du-einstellen-kannst) eingestellt.
 
 ### Watchdog (`watchdog`)
 
@@ -228,7 +231,7 @@ watchdog: {
 | `vollSchwelle` / `entladeReset` | Meldung „voll“ ab diesem Ladestand. Die nächste Meldung kommt erst, wenn der Akku zwischendurch unter `entladeReset` gefallen ist. |
 | `minVoltWarn` / `minVoltReset` | Warnung, wenn eine Zelle unter diese Spannung (Volt) fällt. Erneute Warnung erst, wenn sie zwischendurch wieder über `minVoltReset` lag. Zusätzlich **sperrt** der Watchdog dann das Entladen dieses Speichers (siehe [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)). |
 | `tempWarn` / `tempReset` | Warnung bei Gerätetemperatur über `tempWarn` (°C). Erneute Warnung erst, wenn sie zwischendurch unter `tempReset` lag. |
-| `offlineAlarmMin` | Meldung, wenn ein Speicher so viele **Minuten** nicht erreichbar ist |
+| `offlineAlarmMin` | Meldung, wenn ein Speicher so viele **Minuten** nicht erreichbar ist (mindestens 1) |
 | `sunriseOffset` / `sunsetOffset` | Verschiebung des Morgen- und Abend-Updates gegenüber Sonnenauf- und -untergang in Minuten, z. B. `30` = eine halbe Stunde später |
 
 Liegt ein Reset-Wert auf der falschen Seite seiner Warnschwelle, korrigiert das Script ihn beim Start: `entladeReset` auf `vollSchwelle − 5`, `minVoltReset` auf `minVoltWarn + 0,1`, `tempReset` auf `tempWarn − 5`.
@@ -281,7 +284,7 @@ Die Schnittstelle für eigene Anbindungen (z. B. Home Assistant, Node-RED) ist i
 
 ### Verlauf in ThingSpeak oder ThingsBoard
 
-Der Proxy kann die Messwerte deiner Speicher zusätzlich jede Minute an ThingSpeak und/oder ThingsBoard senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen. Der Upload ist optional und braucht nur eine zusätzliche Datei neben dem Proxy. Solange ein Dashboard offen ist, liest der Proxy dessen Abfragen nur mit. Ist der Upload ausgeschaltet, stellt er keine einzige Anfrage an das Script.
+Der Proxy kann die Messwerte deiner Speicher zusätzlich jede Minute an ThingSpeak und/oder ThingsBoard senden. Dort bekommst du einen dauerhaften Verlauf mit Diagrammen. Der Upload ist optional und braucht nur eine zusätzliche Datei neben dem Proxy. Solange ein Dashboard offen ist, liest der Proxy dessen Abfragen nur mit. Ohne Dashboard lässt er das Script einmal pro Minute alles abfragen (`status_api?bg=wake`) und holt das Ergebnis kurz danach ab (`?bg=read`) – ein einzelner Durchlauf, kein 8-Sekunden-Takt. Ist der Upload ausgeschaltet, stellt er keine einzige Anfrage an das Script.
 
 👉 **[ThingSpeak-Upload einrichten](thingspeak.md)** · **[ThingsBoard-Upload einrichten](thingsboard.md)**
 
@@ -297,7 +300,7 @@ Diese Nachrichten kann das Script verschicken:
 | 🔋 SF2400 voll (99%) | Ladestand hat die `vollSchwelle` erreicht |
 | 🔥 SF800 Temp hoch: 46.2C | Gerätetemperatur über `tempWarn` |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | eine Zelle unter `minVoltWarn`, mit Seriennummer des Akkupacks |
-| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | direkt danach: Entladen für diesen Speicher im Controller abgeschaltet, siehe [Entladesperre](#entladesperre-bei-unterspannung) |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | direkt danach: Entladen für diesen Speicher im Controller abgeschaltet, siehe [Entladesperre](#entladesperre-bei-unterspannung). Kommt nicht, wenn das Entladen schon aus war. |
 | ❌ SF800: nicht erreichbar seit 10 min | Speicher antwortet nicht mehr |
 | ❌ SF800: Report unlesbar seit 10 min | Speicher antwortet, aber mit unvollständigen oder unbrauchbaren Daten |
 | ✅ SF800: wieder erreichbar | nach einer der beiden vorigen Meldungen |
@@ -331,7 +334,7 @@ Gut zu wissen:
 
 ## Entladesperre bei Unterspannung
 
-Fällt bei einem überwachten Speicher (`watch: true`) die schwächste Zelle unter `minVoltWarn`, schaltet der Watchdog im Controller das Entladen dieses Speichers ab (KVS `zdmc_dev{Nummer}_dischargeAllowed = 0`) und meldet „⛔ … Entladen gesperrt wegen Unterschreitung minVol“. Laden bleibt möglich.
+Fällt bei einem überwachten Speicher (`watch: true`) die schwächste Zelle unter `minVoltWarn`, schaltet der Watchdog im Controller das Entladen dieses Speichers ab (KVS `zdmc_dev{Nummer}_dischargeAllowed = 0`) und meldet „⛔ … Entladen gesperrt wegen Unterschreitung minVol“. Laden bleibt möglich. War das Entladen schon ausgeschaltet, schreibt der Watchdog nichts und es kommt keine ⛔-Meldung – nur die Unterspannungs-Warnung.
 
 - Voraussetzung: Der Watchdog ist eingeschaltet, `api.kvsHost` enthält die IP des Controller-Shelly, und der Controller hat `kvsEnabled: true`. Der Dashboard-Teil (`api.enabled`) muss dafür nicht eingeschaltet sein.
 - Die Sperre hebt sich **nicht** von selbst auf. Freigeben kannst du sie nur von Hand mit dem Schalter „Entladen erlaubt“ im [Dashboard](dashboard.md#bedienung) – am besten erst, wenn der Akku wieder nachgeladen ist.

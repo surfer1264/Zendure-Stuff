@@ -44,7 +44,7 @@ Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`.
 |---|---|
 | **Kopfzeile** | Verbindungsstatus (z. B. „Live · Poll alle 4s“), Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
 | **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
-| **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert und Fix-Entladung |
+| **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Hysterese und Fix-Entladung |
 | **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
 | **Fußzeile** | Versionen, Zeitpunkt der letzten Aktualisierung, Link **Hilfe** (diese Seite), Rohdaten und Cloud-Upload |
 
@@ -78,6 +78,7 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 | Bedienelement | Wirkung | Bereich |
 |---|---|---|
 | **Sollwert** | Zielwert für den Netzbezug. Negativ = etwas einspeisen, positiv = etwas beziehen. Darunter steht die Toleranz (Hysterese): so weit darf der Netzbezug abweichen, bevor der Controller nachregelt. | −40 bis +40 W, in 5-W-Schritten |
+| **Entlade-Hysterese** | Hat ein Speicher bis zur Reserve entladen, gibt er erst ab Reserve + diesem Wert wieder Strom ab. Verhindert ständiges Ein- und Ausschalten an der Reserve. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen; ungültige Werte werden mit Meldung verworfen. Ist bei einem Speicher das Fenster (Ladegrenze − Reserve) kleiner als 14 Punkte, ist das Feld gesperrt und es gilt 3. Wirkt erst ab Controller 5.2.4 – ältere Versionen ignorieren den Wert. | 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Speicher) − 11 %, ganze Zahlen |
 | **Fix-Entladung** | Feste Entladeleistung statt Regelung. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen. Solange sie aktiv ist, weist die Sollwert-Kachel darauf hin, dass der Sollwert gerade nicht ausgeregelt wird. | `0` = aus, sonst ab `dischargeStartupPower` (z. B. 35 W) |
 
 **Auf jeder Gerätekarte unter „Steuerung“:**
@@ -86,7 +87,7 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 |---|---|---|
 | **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
 | **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
-| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). | 10 % bis 1 % unter der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
+| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). Eine Erhöhung wird nicht gespeichert, wenn die Entlade-Hysterese danach nicht mehr passt (Reserve höchstens Ladegrenze − 11 − Hysterese) – es erscheint eine Meldung und der Regler springt zurück. Senken geht immer. | 10 % bis 5 Prozentpunkte unter der Ladegrenze, also der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
 
 **Auf jeder Gerätekarte unter „Manuelles Laden“:**
 
@@ -99,7 +100,7 @@ Beim Start fragt das Dashboard einmal nach und schaltet dann für diesen Speiche
 
 Nach einer Eingabe ist das jeweilige Bedienelement 4 Sekunden gesperrt, damit nichts doppelt ausgelöst wird.
 
-Nicht im Dashboard änderbar sind die **Hysterese** (wird nur unter dem Sollwert angezeigt) und das **Ladeziel** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
+Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, wird nur darunter angezeigt – nicht zu verwechseln mit der Entlade-Hysterese) und das **Ladeziel** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
 
 ### Was die Anzeige zeigt
 
@@ -116,7 +117,7 @@ Nicht im Dashboard änderbar sind die **Hysterese** (wird nur unter dem Sollwert
     - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
 - **Fußzeile:** Versionen von Seite und Script (gelb, wenn sie nicht zusammenpassen), Zeitpunkt der letzten Aktualisierung, Link **Hilfe** auf diese Anleitung. `config_api` und `status_api` öffnen die Rohdaten als JSON in einem neuen Tab. **ThingSpeak** und **ThingsBoard** führen zu den Einrichtungsseiten für den Cloud-Upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md)).
 
-**Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
+**Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Entlade-Hysterese, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
 
 Die Seite frischt die Messwerte alle 4 Sekunden auf. Einstellungen, die jemand anders geändert hat (z. B. über Home Assistant), erscheinen nach spätestens etwa einer halben Minute. Solange der Tab im Hintergrund liegt oder das Fenster minimiert ist, pausieren die Abfragen.
 

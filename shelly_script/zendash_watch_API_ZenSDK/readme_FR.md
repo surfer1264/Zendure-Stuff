@@ -57,6 +57,7 @@ Le script adapte son rythme selon que quelqu'un regarde ou non :
 |---|---|
 | **Le tableau de bord est ouvert** | Le compteur réseau et toutes les batteries sont interrogés toutes les 8 secondes. Le watchdog vérifie ces valeurs en même temps. |
 | **Une charge manuelle est en cours** | Également toutes les 8 secondes, même si le tableau de bord est fermé. Le script détecte ainsi quand la batterie est pleine. |
+| **Envoi cloud sans tableau de bord** | Le proxy fait interroger par le script le compteur réseau et toutes les batteries une fois par minute – un seul passage, pas le cycle de 8 secondes (voir [Historique dans ThingSpeak ou ThingsBoard](#historique-dans-thingspeak-ou-thingsboard)). |
 | **Personne ne regarde** | Seul le watchdog interroge les batteries surveillées toutes les 120 secondes. Le compteur réseau n'est pas interrogé. |
 
 Les requêtes, écritures et messages s'exécutent toujours **l'un après l'autre**, jamais simultanément. Cela maintient un faible besoin en mémoire sur le Shelly.
@@ -93,7 +94,7 @@ Un récapitulatif apparaît dans le journal du script (les sorties du script son
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.5.4 (Dashboard muss ebenfalls v3.5.4 sein)
+zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -170,9 +171,11 @@ api: {
 | `gridSource` | D'où vient la mesure réseau ? `"remote"` : un Shelly Pro 3EM sur le réseau (généralement le Shelly contrôleur), `"http_json"` : un autre compteur avec interface JSON, `"local"` : seulement si ce Shelly est lui-même un Pro 3EM. |
 | `gridSourceIp`, `gridSourceEmId` | pour `"remote"` : IP du compteur et canal (généralement 0) |
 | `gridSourceUrl`, `gridSourceField`, `gridSourceInvert` | pour `"http_json"` : adresse, nom du champ de la puissance totale, inverser le signe oui/non |
-| `pollIntervalSec` | Intervalle d'interrogation lorsque le tableau de bord est ouvert, en secondes. Par défaut 8. |
+| `pollIntervalSec` | Intervalle d'interrogation lorsque le tableau de bord est ouvert, en secondes. Par défaut 8. Le script remplace les valeurs inférieures à 4 par 8. |
 
 Pour pouvoir aussi **modifier des réglages** dans le tableau de bord, `kvsEnabled: true` et `kvsForceReseed: false` doivent être définis dans le Controller. Sans KVS, le tableau de bord ne fait qu'afficher.
+
+`hysteresis` est la tolérance autour de la consigne. L'**hystérésis de décharge** (`zdmc_dischargeResetMargin`, à partir du Controller 5.2.4) est autre chose : elle ne figure pas dans le bloc CONFIG, elle se règle dans le [tableau de bord](dashboard_FR.md#ce-que-vous-pouvez-régler).
 
 ### Watchdog (`watchdog`)
 
@@ -199,7 +202,7 @@ watchdog: {
 | `vollSchwelle` / `entladeReset` | Message « pleine » à partir de cet état de charge. Le message suivant ne vient qu'après que la batterie est passée entre-temps sous `entladeReset`. |
 | `minVoltWarn` / `minVoltReset` | Avertissement lorsqu'une cellule descend sous cette tension (volts). Nouvel avertissement seulement après être repassée au-dessus de `minVoltReset` entre-temps. En plus, le Watchdog **bloque** alors la décharge de cette batterie (voir [Blocage de la décharge en cas de sous-tension](#blocage-de-la-décharge-en-cas-de-sous-tension)). |
 | `tempWarn` / `tempReset` | Avertissement lorsque la température de l'appareil dépasse `tempWarn` (°C). Nouvel avertissement seulement après être repassée sous `tempReset` entre-temps. |
-| `offlineAlarmMin` | Message lorsqu'une batterie n'est plus joignable depuis ce nombre de **minutes** |
+| `offlineAlarmMin` | Message lorsqu'une batterie n'est plus joignable depuis ce nombre de **minutes** (au moins 1) |
 | `sunriseOffset` / `sunsetOffset` | Décalage du récapitulatif du matin et du soir par rapport au lever et au coucher du soleil, en minutes, p. ex. `30` = une demi-heure plus tard |
 
 > Pour que les heures de lever et de coucher du soleil soient justes, la **localisation** doit être réglée dans le Shelly (Paramètres → Localisation ou fuseau horaire).
@@ -250,7 +253,7 @@ L'interface pour vos propres intégrations (p. ex. Home Assistant, Node-RED) est
 
 ### Historique dans ThingSpeak ou ThingsBoard
 
-Le proxy peut en plus envoyer chaque minute les mesures de vos batteries à ThingSpeak et/ou ThingsBoard. Vous y obtenez un historique permanent avec des graphiques. L'envoi est facultatif et ne nécessite qu'un fichier supplémentaire à côté du proxy. Tant qu'un tableau de bord est ouvert, le proxy se contente de lire ses requêtes. Si l'envoi est désactivé, il n'adresse aucune requête au script.
+Le proxy peut en plus envoyer chaque minute les mesures de vos batteries à ThingSpeak et/ou ThingsBoard. Vous y obtenez un historique permanent avec des graphiques. L'envoi est facultatif et ne nécessite qu'un fichier supplémentaire à côté du proxy. Tant qu'un tableau de bord est ouvert, le proxy se contente de lire ses requêtes. Sans tableau de bord, il fait tout interroger par le script une fois par minute (`status_api?bg=wake`) et récupère le résultat peu après (`?bg=read`) – un seul passage, pas le cycle de 8 secondes. Si l'envoi est désactivé, il n'adresse aucune requête au script.
 
 👉 **[Configurer l'envoi vers ThingSpeak](thingspeak.md)** · **[Configurer l'envoi vers ThingsBoard](thingsboard.md)** (allemand)
 
@@ -266,7 +269,7 @@ Le script peut envoyer les messages suivants. Les textes des messages sont en al
 | 🔋 SF2400 voll (99%) | l'état de charge a atteint `vollSchwelle` (pleine) |
 | 🔥 SF800 Temp hoch: 46.2C | température de l'appareil au-dessus de `tempWarn` (température élevée) |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | une cellule sous `minVoltWarn`, avec le numéro de série du pack |
-| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | juste après : décharge de cette batterie désactivée dans le Controller, voir [blocage de la décharge](#blocage-de-la-décharge-en-cas-de-sous-tension) |
+| ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | juste après : décharge de cette batterie désactivée dans le Controller, voir [blocage de la décharge](#blocage-de-la-décharge-en-cas-de-sous-tension). N'est pas envoyé si la décharge était déjà désactivée. |
 | ❌ SF800: nicht erreichbar seit 10 min | la batterie ne répond plus (injoignable depuis 10 min) |
 | ❌ SF800: Report unlesbar seit 10 min | la batterie répond, mais avec des données incomplètes ou inutilisables (rapport illisible) |
 | ✅ SF800: wieder erreichbar | après l'un des deux messages précédents (de nouveau joignable) |
@@ -298,9 +301,9 @@ Bon à savoir :
 
 ## Blocage de la décharge en cas de sous-tension
 
-Si la cellule la plus faible d'une batterie surveillée (`watch: true`) descend sous `minVoltWarn`, le Watchdog désactive la décharge de cette batterie dans le Controller (KVS `zdmc_dev{numéro}_dischargeAllowed = 0`) et signale « ⛔ … Entladen gesperrt wegen Unterschreitung minVol ». La charge reste possible.
+Si la cellule la plus faible d'une batterie surveillée (`watch: true`) descend sous `minVoltWarn`, le Watchdog désactive la décharge de cette batterie dans le Controller (KVS `zdmc_dev{numéro}_dischargeAllowed = 0`) et signale « ⛔ … Entladen gesperrt wegen Unterschreitung minVol ». La charge reste possible. Si la décharge était déjà désactivée, le Watchdog n'écrit rien et aucun message ⛔ n'est envoyé – seulement l'avertissement de sous-tension.
 
-- Condition : le Watchdog **et** la partie tableau de bord (`api.enabled`) sont activés, et le Controller a `kvsEnabled: true`.
+- Condition : le Watchdog est activé, `api.kvsHost` contient l'IP du Shelly contrôleur, et le Controller a `kvsEnabled: true`. La partie tableau de bord (`api.enabled`) n'a pas besoin d'être activée pour cela.
 - Le blocage ne se lève **pas** tout seul. Vous ne pouvez le lever qu'à la main avec l'interrupteur « Décharge autorisée » du [tableau de bord](dashboard_FR.md#utilisation) – idéalement une fois la batterie rechargée.
 - Si une charge manuelle est en cours, la décharge reste bloquée après la fin de celle-ci au lieu de rétablir l'état précédent.
 - Pour les batteries surveillées, le tableau de bord affiche le seuil de blocage après la cellule la plus faible, p. ex. « min 3,31 V (Sperre < 2,90 V) ».
