@@ -15,5 +15,5 @@ thinkspeak
 Installer/
 __pycache__/
 site/
-*.json
 stat/*.gz
+stat/auswertung/*.json
