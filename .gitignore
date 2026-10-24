@@ -15,5 +15,5 @@ thinkspeak
 Installer/
 __pycache__/
 site/
-stat/*.gz
-stat/auswertung/*.json
+shelly_script/stat/*.gz
+shelly_script/stat/auswertung/cache/
