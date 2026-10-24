@@ -3,6 +3,9 @@
 Statistische Auswertung der Debug-Logs des Multi-Device-Controllers.
 Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellbar, siehe Einstellungen).
 
+**QUALITY-REPORT**
+Hier gehts weniger um die letzten Details, als einen Überblick "Wie läufts"
+
 ## Dateien
 
 | Datei | Inhalt |
