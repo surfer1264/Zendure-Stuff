@@ -65,6 +65,8 @@ nav:
       - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
   - Werkzeuge:
       - Script-Monitor: Script_poller/readme.md
+      - Easy Statistik: stat/auswertung/README.md
+      - Beispiel Statistik: stat/auswertung/bericht.html
   - Hintergrund:
       - Vergleich mit anderen Lösungen: Einordnung.md
   - Referenz:
