@@ -1,4 +1,4 @@
-# Auswertung Speicher SF2400 + SF800
+# statistische Langzeitauswertung Speicher
 
 Statistische Auswertung der Debug-Logs des Multi-Device-Controllers.
 Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellbar, siehe Einstellungen).
