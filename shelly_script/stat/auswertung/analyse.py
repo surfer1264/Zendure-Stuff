@@ -23,6 +23,9 @@ import sys
 
 import pandas as pd
 
+# Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
+VERSION = "1.0.0"
+
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
 # =============================================================================
@@ -167,6 +170,7 @@ def im_zeitraum(df):
 
 
 def main():
+    print(f"Auswertung Zendure-Speicher v{VERSION}")
     n, d, e, takte, gespart = einlesen(log_ordner())
     n, d, e = im_zeitraum(n), im_zeitraum(d), im_zeitraum(e)
     if n.empty:

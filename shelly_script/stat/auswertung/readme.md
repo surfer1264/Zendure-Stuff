@@ -4,6 +4,8 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
+Version: **1.0.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+
 ## Download
 
 Die Dateien liegen im Repository [surfer1264/Zendure-Stuff](https://github.com/surfer1264/Zendure-Stuff)

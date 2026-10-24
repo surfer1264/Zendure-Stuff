@@ -116,6 +116,7 @@ def erzeugen(hier=HIER):
              .replace("__TITEL__", html.escape(geraete_txt))
              .replace("__CHIPS__", chips)
              .replace("__STAND__", stand)
+             .replace("__VERSION__", html.escape(cfg.VERSION))
              .replace("__METHODE__", methode)
              .replace("__DATEN__", json.dumps(d, ensure_ascii=False, separators=(",", ":"))))
     ziel = os.path.join(hier, "bericht.html")
@@ -373,7 +374,7 @@ __SCHRIFTEN__
     <p>__METHODE__</p>
     <p>Der Zeitraum oben gilt für Kennzahlen, Verlauf und Tageswerte. Das Tagesprofil zeigt immer alle vollen Tage.</p>
   </section>
-  <footer>Eigenständige Datei · funktioniert ohne Internetverbindung · erzeugt von bericht.py</footer>
+  <footer>Eigenständige Datei · funktioniert ohne Internetverbindung · erzeugt von bericht.py · <span class="mono">v__VERSION__</span></footer>
 </div>
 </div>
 <div class="tip" id="tip" role="tooltip"></div>
