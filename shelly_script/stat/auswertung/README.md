@@ -1,8 +1,7 @@
 # Auswertung Speicher SF2400 + SF800
 
-Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (`../shelly_debug_*.log`).
-
-
+Statistische Auswertung der Debug-Logs des Multi-Device-Controllers.
+Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellbar, siehe Einstellungen).
 
 ## Dateien
 
@@ -14,7 +13,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (`../shelly_
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde: mittlerer Netzsaldo und Speicher-Ausgang, SOC-Min/-Max je Gerät |
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. Wird am Ende von `analyse.py` automatisch aufgerufen, geht aber auch einzeln (`python bericht.py`). Hat keine eigenen Einstellungen. |
 | `bericht.html` | **Statischer Bericht** zum Öffnen im Browser: alle Grafiken als fertige SVG, kein JavaScript, keine Internetverbindung nötig. Werte erscheinen beim Darüberfahren über Punkte und Balken. |
-| `dashboard_seite.html` | Quelltext der Online-Dashboard-Seite (Grafiken, Berechnungen `kpi` und `fritzbox`) |
+| `dashboard_seite.html` | Quelltext der Online-Dashboard-Seite (Grafiken, Berechnungen `kpi` und `fritzbox`). Eigenständig, von den Skripten nicht berührt. |
 
 ## Einmalig: pandas installieren
 
@@ -36,30 +35,14 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 
 ## Fortschreiben
 
-1. Neue Logs wie bisher in `D:\Uspace\git\stat` ablegen.
-2. `python D:\Uspace\git\stat\auswertung\analyse.py` ausführen.
+1. Neue Logs wie bisher in `D:\Uspace\git\Zendure-Stuff\shelly_script\stat` ablegen.
+2. `python D:\Uspace\git\Zendure-Stuff\shelly_script\stat\auswertung\analyse.py` ausführen.
    Das schreibt die CSV-Dateien neu und erzeugt danach `bericht.html`.
 3. Nichts nachzupflegen: Mit `ZEITRAUM_BIS = None` geht die Auswertung bis zum Ende der Logs,
    Tageswerte und Tagesprofil nehmen automatisch nur volle Tage.
 4. Für das Dashboard: Claude bitten, „die Speicher-Statistik mit den neuen Logs fortzuschreiben“.
    Claude lädt dann die drei CSV als neue Dateien ins Dashboard und trägt sie bei den Quellen
    `verlauf`, `tage` und `profil` ein. Die Seite selbst muss dafür nicht geändert werden.
-
-## Definitionen
-
-- **Takt**: eine Zeile `Netzsaldo: …` im Log, etwa alle 4 s (ca. 21.600 pro Tag).
-- **Energie**: Leistung × Zeit bis zum nächsten Takt; Lücken über 30 s zählen nicht.
-- **Netzbezug / Einspeisung**: Netzsaldo > 0 bzw. < 0. Setpoint ist 0 W.
-- **Entladung je Gerät**: positiver `Ist`-Wert des Geräts. Netzladen: negativer `Ist`-Wert.
-  PV-Ladung steht nicht im Log, sie zeigt sich nur am SOC-Anstieg.
-- **Bezug bei leerem Speicher**: Netzsaldo > 0, während die Ist-Summe beider Geräte unter 30 W liegt.
-- **Deckung**: Entladung ÷ (Entladung + Netzbezug).
-- **Regelgüte**: Anteil der Takte mit |Netzsaldo| ≤ 25 W, solange die Ist-Summe zwischen 30 und 1500 W liegt.
-- **Voller Tag**: mindestens 22 h erfasst.
-- **Takt ohne Geräteabfrage (Sparmodus)**: Nach `Sparmodus an: 12 Zyklen ohne Geraete-Poll`
-  zählen die nächsten 12 Takte als eingespart, außer `Sparmodus aus` / `beendet` / Neustart kommt vorher.
-  Ältere Logs (bis 08.10.) melden das als `setze Polling fuer 12 Zyklen aus`.
-  Wie viele Einzelanfragen an die Geräte das spart, lässt sich aus dem Log nicht ablesen.
 
 ## Einstellungen (Block `EINSTELLUNGEN` oben in `analyse.py`)
 
@@ -80,18 +63,30 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 `bericht.py` liest diese Werte für Titel und Beschriftungen mit. Der Bericht zeigt bei Tageswerten,
 Kennzahlen und Tagesprofil alle vollen Tage im Zeitraum.
 
+## Definitionen
+
+Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
+
+- **Takt**: eine Zeile `Netzsaldo: …` im Log, etwa alle `TAKT_S` (4 s, ca. 21.600 pro Tag).
+- **Energie**: Leistung × Zeit bis zum nächsten Takt; Lücken über `MAX_LUECKE_S` (30 s) zählen nicht.
+- **Netzbezug / Einspeisung**: Netzsaldo > 0 bzw. < 0. Setpoint ist 0 W.
+- **Entladung je Gerät**: positiver `Ist`-Wert des Geräts. Netzladen: negativer `Ist`-Wert.
+  PV-Ladung steht nicht im Log, sie zeigt sich nur am SOC-Anstieg.
+- **Bezug bei leerem Speicher**: Netzsaldo > 0, während die Ist-Summe aller Geräte unter `LEER_SCHWELLE_W` (30 W) liegt.
+- **Deckung**: Entladung ÷ (Entladung + Netzbezug).
+- **Regelgüte**: Anteil der Takte mit |Netzsaldo| ≤ `BAND_W` (25 W), solange die Ist-Summe zwischen `LEER_SCHWELLE_W` und `SATT_SCHWELLE_W` (30 bis 1500 W) liegt.
+- **Voller Tag**: mindestens `VOLLER_TAG_H` (22 h) erfasst. Nur volle Tage gehen in Tageswerte, Kennzahlen und Tagesprofil des Berichts ein.
+- **Takt ohne Geräteabfrage (Sparmodus)**: Nach `Sparmodus an: 12 Zyklen ohne Geraete-Poll`
+  zählen die nächsten 12 Takte als eingespart, außer `Sparmodus aus` / `beendet` / Neustart kommt vorher.
+  Ältere Logs (bis 08.10.) melden das als `setze Polling fuer 12 Zyklen aus`.
+  Wie viele Einzelanfragen an die Geräte das spart, lässt sich aus dem Log nicht ablesen.
+
 ## Festlegungen
 
 - SOC nach Uhrzeit wird als Min/Max dargestellt, nicht als Mittel.
 - Energie pro Tag als gestapelte Balken: Entladung je Gerät,
   Bezug bei leerem Speicher, übriger Bezug.
 
-## Ergebnisse bis 23.10.2026
-
-- Regelung: rund 94 % der Takte im ±25-W-Band, typische Abweichung 4–6 W.
-- Rund 90 % des Netzbezugs fallen bei leerem Speicher an (Kapazität/PV-Ertrag, nicht Regelung).
-- Morgens 7–9 Uhr höchster Bezug bei niedrigstem SOC.
-- Sparmodus: 65–80 % der Takte ohne Geräteabfrage, am meisten an ruhigen Tagen.
 
 ## Änderungsprotokoll
 
@@ -104,4 +99,4 @@ Kennzahlen und Tagesprofil alle vollen Tage im Zeitraum.
   Ein Zeitraum `ZEITRAUM_VON`/`ZEITRAUM_BIS` statt `VERLAUF_AB`/`PROFIL_VON`/`PROFIL_BIS`;
   Tagesprofil über alle vollen Tage. Logdateimuster einstellbar (`LOG_MUSTER`).
   `bericht.py` ohne eigene Einstellungen, Geräte und Schwellwerte aus `analyse.py`.
-  Fritzbox-Markierung und Vorher/Nachher-Vergleich entfernt.
+  Fritzbox-Markierung und Vorher/Nachher-Vergleich aus dem Bericht entfernt. README angepasst.
