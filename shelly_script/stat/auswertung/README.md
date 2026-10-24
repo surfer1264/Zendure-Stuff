@@ -20,6 +20,8 @@ Hier gehts weniger um die letzten Details, als einen Überblick "Wie läufts"
 
 ## Einmalig: pandas installieren
 
+pandas ist eine Python-Bibliothek für Tabellendaten, also so etwas wie Excel für Python. Die zentrale Struktur ist der DataFrame: eine Tabelle mit benannten Spalten, die du filtern, gruppieren, summieren und als CSV speichern kannst.
+
 Das Skript braucht Python 3.9+ und das Paket `pandas`. Fehlt es, bricht es ab mit
 `ModuleNotFoundError: No module named 'pandas'`. Installation in cmd oder PowerShell:
 
