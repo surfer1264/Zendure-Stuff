@@ -7,8 +7,8 @@ Aufruf (aus beliebigem Verzeichnis):
 Erzeugt im Ordner dieses Skripts:
     verlauf_15min.csv  15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang, SOC und Ausgang je Gerät
     tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus
-    tagesprofil.csv    Je Uhrzeit-Stunde: mittlerer Netzsaldo/Speicher-Ausgang, SOC-Verteilung je Gerät
-                       (Min, Perzentile 10/25/50/75/90, Max)
+    tagesprofil.csv    Je Uhrzeit-Stunde: Netzsaldo und Speicher-Ausgang (Mittel und Verteilung über die Tage),
+                       SOC-Verteilung je Gerät (Min, Perzentile, Max)
     geraete.csv        Ausgewertete Geräte (Name wie im Log, Spaltenschlüssel) – für bericht.py
     bericht.html       Bericht zum Öffnen im Browser, erzeugt von bericht.py
 
@@ -57,8 +57,9 @@ VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag
 LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
 SATT_SCHWELLE_W = 1500             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
-SOC_PERZENTILE = (10, 25, 50, 75, 90)   # Tagesprofil: SOC-Verteilung je Stunde. Der Bericht zeichnet 10/25/50/75/90
-                                        # (Bänder 10–90 und 25–75, Linie = 50) – diese fünf drin lassen, weitere nur ergänzen
+PROFIL_PERZENTILE = (10, 25, 50, 75, 90)  # Tagesprofil: Verteilung je Stunde für SOC, Netzsaldo und Speicher-Ausgang.
+                                          # Der Bericht zeichnet 10/25/50/75/90 (Bänder 10–90 und 25–75, Linie = 50)
+                                          # – diese fünf drin lassen, weitere nur ergänzen
 AKTIV_SCHWELLE_W = 10              # Gerät gilt als aktiv, wenn es >= 10 W ins Haus abgibt (Ist > 0 = Abgabe)
 
 # =============================================================================
@@ -255,6 +256,13 @@ def main():
     h = n[n.tag.isin(voll_tage)].copy()
     h["stunde"] = h.t.dt.hour
     H = h.groupby("stunde").agg(netzsaldo_w=("netz", "mean"), speicher_w=("ist", "mean")).round(1)
+    # Leistung: erst Stundenmittel je Tag, dann Verteilung über die Tage (Rohwerte wären von kurzen Lastspitzen geprägt)
+    td = h.groupby(["tag", "stunde"])[["netz", "ist"]].mean()
+    for spalte, name in (("netz", "netzsaldo"), ("ist", "speicher")):
+        g = td[spalte].groupby(level="stunde")
+        for q in PROFIL_PERZENTILE:
+            H[f"{name}_p{q}_w"] = g.quantile(q / 100).round(1)
+    H["tage"] = td.groupby(level="stunde").size()
     dd = d[d.t.dt.strftime("%Y-%m-%d").isin(voll_tage)].copy()
     dd["stunde"] = dd.t.dt.hour
     for g, k in zip(geraete, keys):
@@ -262,7 +270,7 @@ def main():
         H["soc_min_" + k] = s.min()
         H["soc_max_" + k] = s.max()
         # Verteilung über alle Takte dieser Stunde an allen vollen Tagen (Geräte stehen in jedem Takt im Log)
-        for q in SOC_PERZENTILE:
+        for q in PROFIL_PERZENTILE:
             H[f"soc_p{q}_" + k] = s.quantile(q / 100).round(1)
     H.reset_index().to_csv(os.path.join(HIER, "tagesprofil.csv"), index=False)
 

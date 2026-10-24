@@ -95,7 +95,7 @@ und die Geräte aus `geraete.csv`.
 | `LEER_SCHWELLE_W` | Ist-Summe darunter = kein Speicher liefert. |
 | `SATT_SCHWELLE_W` | Ist-Summe ab hier = Speicher am Limit; solche Takte zählen nicht für die Regelgüte. |
 | `BAND_W` | Regelgüte: Ein Takt gilt als gut bei \|Netzsaldo\| bis zu diesem Wert. |
-| `SOC_PERZENTILE` | Perzentile der SOC-Verteilung je Stunde. Der Bericht zeichnet 10/25/50/75/90 – diese fünf drin lassen, weitere nur ergänzen. |
+| `PROFIL_PERZENTILE` | Perzentile der Verteilung je Stunde im Tagesprofil (SOC, Netzsaldo, Speicher-Ausgang). Der Bericht zeichnet 10/25/50/75/90 – diese fünf drin lassen, weitere nur ergänzen. |
 | `AKTIV_SCHWELLE_W` | Ein Gerät gilt als aktiv, solange es mindestens so viel ins Haus abgibt. |
 
 ## Erklärung
@@ -110,7 +110,7 @@ und die Geräte aus `geraete.csv`.
 | `zendure_fonts.css` | IBM-Plex-Schriften; werden in den Bericht eingebettet. Fehlt die Datei, nutzt der Bericht die Systemschrift. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
 | `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Kennzeichen „voller Tag“. |
-| `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: mittlerer Netzsaldo und Speicher-Ausgang; je Gerät SOC-Min/-Max und Perzentile. |
+| `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
 | `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). |
 | `bericht.html` | Der Bericht: eine einzelne Datei, die ohne Internetverbindung funktioniert (Daten, Schriften und Zeichen-Skript eingebettet). |
 
@@ -121,8 +121,8 @@ und die Geräte aus `geraete.csv`.
 - **Pro Tag**: Energie nach Herkunft (gestapelt), Aktivzeit je Gerät, Deckung, Regelgüte,
   Stellbefehle je Gerät, Störungen.
 - **Sparmodus**: Takte mit und ohne Geräteabfrage, Anteil eingesparter Takte.
-- **Typischer Tagesverlauf**: Leistung nach Uhrzeit; SOC nach Uhrzeit je Gerät als Verteilung
-  (Linie = Median, Bänder = 25–75 % und 10–90 %).
+- **Typischer Tagesverlauf**: Netzsaldo, Speicher-Ausgang und SOC je Gerät nach Uhrzeit, jeweils als Verteilung
+  über die vollen Tage (Linie = Median, Bänder = 25–75 % und 10–90 %).
 
 ### Ein oder mehrere Geräte
 
@@ -149,7 +149,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
   (positiver `Ist`-Wert). „Mindestens ein Gerät“ nutzt die Ist-Summe und zählt gleichzeitige Abgabe nur einmal.
 - **Voller Tag**: mindestens `VOLLER_TAG_H` Stunden erfasst. Nur volle Tage gehen in Tageswerte,
   Kennzahlen und Tagesprofil ein.
-- **SOC-Verteilung je Stunde**: über alle Takte dieser Stunde an allen vollen Tagen.
+- **Verteilung je Stunde (Tagesprofil)**: SOC über alle Takte dieser Stunde an allen vollen Tagen.
+  Netzsaldo und Speicher-Ausgang: erst das Stundenmittel je Tag, dann die Verteilung dieser Tageswerte –
+  so zeigen die Bänder, wie unterschiedlich die Tage sind, und nicht kurze Lastspitzen.
 - **Takt ohne Geräteabfrage (Sparmodus)**: Nach `Sparmodus an: N Zyklen ohne Geraete-Poll` (ältere Logs:
   `setze Polling fuer N Zyklen aus`) zählen die nächsten N Takte als eingespart, außer `Sparmodus aus`,
   `Sparmodus beendet` oder ein Neustart kommt vorher. Wie viele Einzelanfragen an die Geräte das spart,

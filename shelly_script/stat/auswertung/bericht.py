@@ -359,9 +359,12 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Typischer Tagesverlauf · alle vollen Tage</h2>
     <div class="grid">
-      <div class="card chart wide"><h3>Leistung nach Uhrzeit</h3>
-        <p id="txt-profil"></p>
-        <div class="legend" id="lg-profil"></div><div id="c-profil"></div></div>
+      <div class="card chart"><h3>Netzsaldo nach Uhrzeit</h3>
+        <p class="txt-pband"></p>
+        <div class="legend" id="lg-pnetz"></div><div id="c-pnetz"></div></div>
+      <div class="card chart"><h3 id="h-pspeicher">Speicher-Ausgang nach Uhrzeit</h3>
+        <p class="txt-pband"></p>
+        <div class="legend" id="lg-pspeicher"></div><div id="c-pspeicher"></div></div>
     </div>
     <div class="grid" id="profilsoc"></div>
   </section>
@@ -746,8 +749,26 @@ function profil(){
   var P = D.profil, std = P.stunde;
   var o = {kat: std, katLabel: function(h){ return h + ' Uhr'; }, tipLabel: function(h){ return h + ':00–' + h + ':59 Uhr'; },
            tickSchritt: 4, w: WH};
-  katLinie('c-profil', Object.assign({}, o, {w: W, tickSchritt: 2, serien: [{name: 'Netzsaldo', werte: P.netzsaldo_w, farbe: S.s3},
-      {name: 'Speicher-Ausgang', werte: P.speicher_w, farbe: S.s1}], yfmt: f0, einheit: ' W', ref: 0, aria: 'Leistung nach Uhrzeit'}));
+  function bandLegende(id, farbe){
+    legende(id, [['Median', farbe], ['25–75 %', 'color-mix(in srgb, ' + farbe + ' 45%, transparent)'],
+                 ['10–90 %', 'color-mix(in srgb, ' + farbe + ' 30%, transparent)']]);
+  }
+  [['netzsaldo', 'c-pnetz', 'lg-pnetz', S.s3, 'Netzsaldo'], ['speicher', 'c-pspeicher', 'lg-pspeicher', S.s1, 'Speicher-Ausgang']].forEach(function(x){
+    var p = function(q){ return P[x[0] + '_p' + q + '_w']; }, mittel = P[x[0] + '_w'];
+    if (!p(50)) return leer(x[1], 'Keine Perzentile in tagesprofil.csv – analyse.py neu laufen lassen.');
+    bandLegende(x[2], x[3]);
+    katBand(x[1], Object.assign({}, o, {farbe: x[3], mitte: p(50), ref: 0,
+      baender: [[p(10), p(90), 0.16], [p(25), p(75), 0.38]],
+      tip: function(i){ return [['Median', f0(p(50)[i]) + ' W', x[3]], ['25–75 %', f0(p(25)[i]) + ' bis ' + f0(p(75)[i]) + ' W'],
+        ['10–90 %', f0(p(10)[i]) + ' bis ' + f0(p(90)[i]) + ' W'], ['Mittel', f0(mittel[i]) + ' W'],
+        ['Tage', f0(P.tage ? P.tage[i] : null)]]; },
+      yfmt: f0, aria: x[4] + ' nach Uhrzeit, Verteilung über die Tage'}));
+  });
+  [].forEach.call(document.querySelectorAll('.txt-pband'), function(el){
+    el.textContent = 'Stundenmittel je Tag, verteilt über ' + dKurz(tagMin(D.profilVon)) + '–' + dKurz(tagMin(D.profilBis)) +
+      ': Linie = Median, kräftiges Band = mittlere Hälfte der Tage, blasses Band = 10–90 %.';
+  });
+  if (MEHR) document.getElementById('h-pspeicher').textContent = 'Speicher-Ausgang (Summe) nach Uhrzeit';
   var box = document.getElementById('profilsoc');
   box.innerHTML = G.map(function(g){
     return '<div class="card chart' + (MEHR ? '' : ' wide') + '"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
@@ -757,8 +778,7 @@ function profil(){
   G.forEach(function(g){
     var k = g.key, p = function(q){ return P['soc_p' + q + '_' + k]; };
     if (!p(50)) return leer('c-band-' + k, 'Keine Perzentile in tagesprofil.csv – analyse.py neu laufen lassen.');
-    legende('lg-band-' + k, [['Median', g.farbe], ['25–75 %', 'color-mix(in srgb, ' + g.farbe + ' 45%, transparent)'],
-                             ['10–90 %', 'color-mix(in srgb, ' + g.farbe + ' 30%, transparent)']]);
+    bandLegende('lg-band-' + k, g.farbe);
     katBand('c-band-' + k, Object.assign({}, o, {w: MEHR ? WH : W, tickSchritt: MEHR ? 4 : 2, farbe: g.farbe, mitte: p(50),
       baender: [[p(10), p(90), 0.16], [p(25), p(75), 0.38]],
       tip: function(i){ return [['Median', f0(p(50)[i]) + ' %', g.farbe], ['25–75 %', f0(p(25)[i]) + '–' + f0(p(75)[i]) + ' %'],
@@ -768,7 +788,11 @@ function profil(){
   });
 }
 function katBand(id, o){
-  var f = katRahmen(id, o, [0, 100]), sx = function(i){ return (ML + f.band * (i + 0.5)).toFixed(1); };
+  var werte = [];
+  o.baender.forEach(function(b){ werte = werte.concat(b[0], b[1]); });
+  var f = katRahmen(id, o, werte.concat(o.mitte)), sx = function(i){ return (ML + f.band * (i + 0.5)).toFixed(1); };
+  if (o.ref !== undefined && f.ya.lo <= o.ref && o.ref <= f.ya.hi)
+    f.out.push('<line x1="' + ML + '" x2="' + (f.w - MR) + '" y1="' + f.sy(o.ref).toFixed(1) + '" y2="' + f.sy(o.ref).toFixed(1) + '" class="ref"/>');
   o.baender.forEach(function(b){
     var oben = [], unten = [];
     b[1].forEach(function(v, i){ if (v !== null) oben.push(sx(i) + ',' + f.sy(v).toFixed(1)); });
@@ -791,13 +815,11 @@ legende('lg-aktiv', G.map(function(g){ return [g.name, g.farbe]; }).concat(MEHR 
 legende('lg-befehle', G.map(function(g){ return [g.name, g.farbe]; }));
 legende('lg-fehler', [['Nicht erreichbar', S.s3], ['Takt übersprungen', S.s4], ['Watchdog', S.s5]]);
 legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteabfrage', S.mut]]);
-legende('lg-profil', [['Netzsaldo', S.s3], ['Speicher-Ausgang', S.s1]]);
 document.getElementById('txt-aktiv').textContent = 'Stunden je Tag, in denen ' + (MEHR ? 'ein Gerät' : 'das Gerät') + ' mindestens ' +
   D.cfg.aktiv + ' W ins Haus abgegeben hat.' + (MEHR ? ' „Mindestens ein Gerät“ zählt jede Stunde nur einmal, auch wenn mehrere gleichzeitig liefern.' : '');
 document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo| ≤ ' + D.cfg.band + ' W, solange ein Speicher einspeist und nicht am Limit ist.';
 document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch ' + f0(D.cfg.takteTag) + ', also etwa alle ' + de(D.cfg.takt, D.cfg.takt % 1 ? 1 : 0) +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
-document.getElementById('txt-profil').textContent = 'Mittel je Stunde über ' + dKurz(tagMin(D.profilVon)) + '–' + dKurz(tagMin(D.profilBis)) + ', in Watt.';
 
 [].forEach.call(document.querySelectorAll('#presets button'), function(btn){ btn.addEventListener('click', function(){ preset(+btn.dataset.w); }); });
 document.getElementById('zIn').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = (range.b - range.a) / 4; setze(m - s, m + s); });
