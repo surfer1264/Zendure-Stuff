@@ -35,8 +35,10 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 
 ## Fortschreiben
 
-1. Neue Logs wie bisher in `D:\Uspace\git\Zendure-Stuff\shelly_script\stat` ablegen.
-2. `python D:\Uspace\git\Zendure-Stuff\shelly_script\stat\auswertung\analyse.py` ausführen.
+1. Neue Logs in den Log-Ordner legen (Standard: der Ordner über `auswertung`, also `../`).
+2. `python <Pfad zu>/auswertung/analyse.py` ausführen – geht aus jedem Verzeichnis.
+   Liegen die Logs woanders: `LOG_ORDNER` setzen oder den Ordner mitgeben
+   (`python analyse.py <logordner>`).
    Das schreibt die CSV-Dateien neu und erzeugt danach `bericht.html`.
 3. Nichts nachzupflegen: Mit `ZEITRAUM_BIS = None` geht die Auswertung bis zum Ende der Logs,
    Tageswerte und Tagesprofil nehmen automatisch nur volle Tage.
@@ -87,6 +89,12 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
 - Energie pro Tag als gestapelte Balken: Entladung je Gerät,
   Bezug bei leerem Speicher, übriger Bezug.
 
+## Ergebnisse bis 23.10.2026
+
+- Regelung: rund 94 % der Takte im ±25-W-Band, typische Abweichung 4–6 W.
+- Rund 90 % des Netzbezugs fallen bei leerem Speicher an (Kapazität/PV-Ertrag, nicht Regelung).
+- Morgens 7–9 Uhr höchster Bezug bei niedrigstem SOC.
+- Sparmodus: 65–80 % der Takte ohne Geräteabfrage, am meisten an ruhigen Tagen.
 
 ## Änderungsprotokoll
 
