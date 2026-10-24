@@ -50,7 +50,8 @@ ZEITRAUM_BIS = None                # None = bis zum Ende der Logs
 GERAETE = None
 
 # --- Rechenregeln --------------------------------------------------------------
-TAKT_S = 4                         # übliche Taktlänge in s (für den letzten Takt einer Reihe)
+TAKT_S = None                      # Taktlänge in s; None = automatisch aus dem Log (Median der Abstände).
+                                   # Wird nur für den letzten Takt einer Reihe gebraucht, sonst zählen die echten Abstände.
 MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen nicht als Energie
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
 LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
@@ -141,9 +142,18 @@ def einlesen(logdir):
     return n.sort_values("t", kind="stable"), d.sort_values("t", kind="stable"), e, takte, gespart
 
 
-def dauer_h(t):
-    """Stunden bis zum nächsten Takt, Lücken gekappt."""
-    return t.diff().shift(-1).dt.total_seconds().clip(upper=MAX_LUECKE_S).fillna(TAKT_S) / 3600
+def taktlaenge(t):
+    """TAKT_S oder, wenn None, der übliche Abstand zweier Takte im Log (Median, Lücken ausgenommen)."""
+    if TAKT_S:
+        return TAKT_S
+    d = t.diff().dt.total_seconds()
+    d = d[(d > 0) & (d <= MAX_LUECKE_S)]
+    return round(float(d.median()), 1) if len(d) else 4.0
+
+
+def dauer_h(t, takt):
+    """Stunden bis zum nächsten Takt, Lücken gekappt; der letzte Takt einer Reihe zählt mit der Taktlänge."""
+    return t.diff().shift(-1).dt.total_seconds().clip(upper=MAX_LUECKE_S).fillna(takt) / 3600
 
 
 def im_zeitraum(df):
@@ -188,7 +198,9 @@ def main():
     r.to_csv(os.path.join(HIER, "verlauf_15min.csv"), index=False)
 
     # ------------------------------------------------ tage.csv
-    n["dt"] = dauer_h(n.t)
+    takt = taktlaenge(n.t)
+    print(f"Takt: {takt} s" + ("" if TAKT_S else " (aus dem Log)"))
+    n["dt"] = dauer_h(n.t, takt)
     n["tag"] = n.t.dt.strftime("%Y-%m-%d")
     bezug = n.netz.clip(lower=0) * n.dt / 1000
     n["bezug"] = bezug
@@ -202,7 +214,7 @@ def main():
     lad = 0
     for g, k in zip(geraete, keys):
         x = d[d.dev == g].copy()
-        x["dt"] = dauer_h(x.t)
+        x["dt"] = dauer_h(x.t, takt)
         x["tag"] = x.t.dt.strftime("%Y-%m-%d")
         x["ent"] = x.ist.clip(lower=0) * x.dt / 1000
         x["lad"] = (-x.ist).clip(lower=0) * x.dt / 1000

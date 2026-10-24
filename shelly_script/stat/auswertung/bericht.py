@@ -66,6 +66,9 @@ def daten(hier):
     voll = t[t.vollstaendig == 1].reset_index(drop=True)
     if voll.empty:
         sys.exit("Keine vollen Tage in tage.csv – Zeitraum in analyse.py prüfen")
+    # Takt: Einstellung aus analyse.py oder gemessen (Median der Takte je vollem Tag)
+    takte_tag = int(voll.takte_gesamt.median())
+    takt = cfg.TAKT_S or round(86400 / takte_tag, 1)
     geraete = [{"name": g, "key": k, "farbe": FARBEN_GERAETE[i % len(FARBEN_GERAETE)]}
                for i, (g, k) in enumerate(geraeteliste(hier, v))]
     # Zeit als Minuten seit 1970 ohne Zeitzone (Logzeit = Ortszeit, keine Sommerzeit-Sprünge)
@@ -78,7 +81,7 @@ def daten(hier):
     return {
         "geraete": geraete,
         "cfg": {"band": cfg.BAND_W, "leer": cfg.LEER_SCHWELLE_W, "aktiv": cfg.AKTIV_SCHWELLE_W,
-                "takt": cfg.TAKT_S, "luecke": cfg.MAX_LUECKE_S, "vollH": cfg.VOLLER_TAG_H},
+                "takt": takt, "takteTag": takte_tag, "luecke": cfg.MAX_LUECKE_S, "vollH": cfg.VOLLER_TAG_H},
         "mehr": len(geraete) > 1,
         "verlauf": verlauf, "tage": tage, "profil": profil,
         "profilVon": voll.tag.iloc[0], "profilBis": voll.tag.iloc[-1],
@@ -101,7 +104,7 @@ def erzeugen(hier=HIER):
                     for g in d["geraete"])
     c = d["cfg"]
     methode = (
-        f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {c['takt']} s). "
+        f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {str(c['takt']).replace('.', ',').removesuffix(',0')} s). "
         f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s zählen nicht. "
         f"„Netzbezug bei {'leeren Speichern' if d['mehr'] else 'leerem Speicher'}“: Netzsaldo &gt; 0, während "
         f"{'die Ist-Summe aller Geräte' if d['mehr'] else 'der Ist-Wert des Geräts'} unter {c['leer']} W lag. "
@@ -792,7 +795,7 @@ legende('lg-profil', [['Netzsaldo', S.s3], ['Speicher-Ausgang', S.s1]]);
 document.getElementById('txt-aktiv').textContent = 'Stunden je Tag, in denen ' + (MEHR ? 'ein Gerät' : 'das Gerät') + ' mindestens ' +
   D.cfg.aktiv + ' W ins Haus abgegeben hat.' + (MEHR ? ' „Mindestens ein Gerät“ zählt jede Stunde nur einmal, auch wenn mehrere gleichzeitig liefern.' : '');
 document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo| ≤ ' + D.cfg.band + ' W, solange ein Speicher einspeist und nicht am Limit ist.';
-document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (etwa ' + f0(86400 / D.cfg.takt) + ' bei ' + D.cfg.takt +
+document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch ' + f0(D.cfg.takteTag) + ', also etwa alle ' + de(D.cfg.takt, D.cfg.takt % 1 ? 1 : 0) +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
 document.getElementById('txt-profil').textContent = 'Mittel je Stunde über ' + dKurz(tagMin(D.profilVon)) + '–' + dKurz(tagMin(D.profilBis)) + ', in Watt.';
 
