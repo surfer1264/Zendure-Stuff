@@ -110,7 +110,6 @@ zendure_proxy/
     ├── zendure_proxy.py
     ├── ts_bridge.py
     ├── zendure-dashboard.html
-    ├── zendure-dashboard-b.html
     ├── README.md
     ├── DOCS.md
     ├── CHANGELOG.md
@@ -119,7 +118,7 @@ zendure_proxy/
         └── en.yaml
 ```
 
-Die ersten acht Dateien braucht der Bau der App. Die übrigen zeigt Home Assistant
+Die ersten sieben Dateien braucht der Bau der App. Die übrigen zeigt Home Assistant
 nur an und sind optional:
 
 | Datei | Wo sie erscheint |
@@ -128,9 +127,6 @@ nur an und sind optional:
 | `DOCS.md` | Reiter **Dokumentation** der App |
 | `CHANGELOG.md` | Änderungen, die Home Assistant beim Update anzeigt |
 | `translations/de.yaml`, `translations/en.yaml` | Beschreibung des Ports 8000 im Reiter **Konfiguration** (Netzwerk). Home Assistant liest sie nur aus dem Unterordner `translations/`. |
-
-`zendure-dashboard.html` ist das (neue) Standard-Layout, `zendure-dashboard-b.html` das bisherige
-Layout des Dashboards (gleiche Funktionen), erreichbar unter `http://<ha-ip>:8000/b`.
 
 `ts_bridge.py` ist nur für den [ThingSpeak- bzw. ThingsBoard-Upload](#thingspeak--und-thingsboard-upload) nötig.
 Fehlt die Datei, läuft der Proxy ganz normal, nur ohne ThingSpeak und ThingsBoard. Die
@@ -213,7 +209,6 @@ RUN apk add --no-cache python3
 COPY zendure_proxy.py /zendure_proxy.py
 COPY ts_bridge.py /ts_bridge.py
 COPY zendure-dashboard.html /zendure-dashboard.html
-COPY zendure-dashboard-b.html /zendure-dashboard-b.html
 
 COPY run.sh /etc/services.d/zendure_proxy/run
 RUN chmod a+x /etc/services.d/zendure_proxy/run

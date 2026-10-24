@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.3";
+let VERSION = "5.2.4";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -182,8 +182,10 @@ CONFIG.dischargeFixed=0;
 // entladen hat, darf erst ab minSoc + dischargeResetMargin wieder entladen -
 // unabhaengig davon, dass die Firmware socLimit=2 bereits bei minSoc+1 aufhebt.
 // Verhindert Flattern an der minSoc-Grenze (PV laedt nach -> sofort wieder
-// Entladen -> minSoc -> Standby ...). Mindestens 1 (= Firmware-Verhalten).
-CONFIG.dischargeResetMargin = Math.max(1, CONFIG.dischargeResetMargin || 3);
+// Entladen -> minSoc -> Standby ...). Bereich 3..79 (KVS-live-overridable).
+// Wirksam ist je Geraet hoechstens maxSoc - minSoc - 11, siehe
+// dischargeResetMarginFor().
+CONFIG.dischargeResetMargin = Math.max(3, Math.min(79, CONFIG.dischargeResetMargin || 3));
 
 // Mindestanzahl aufeinanderfolgender Standby-Zyklen (acMode 1, output=0,
 // input=0 - egal ob natuerlich in der Totzone oder durch
@@ -538,6 +540,12 @@ function readKvsOverrides(callback) {
       function (v) { CONFIG.setpoint = v; });
     }
 
+    if (items["zdmc_dischargeResetMargin"]) {
+      applyKvsValue("zdmc_dischargeResetMargin", items["zdmc_dischargeResetMargin"].value, CONFIG.dischargeResetMargin,
+      function (v) { return v >= 3 && v <= 79 && Math.round(v) === v; },
+      function (v) { CONFIG.dischargeResetMargin = v; });
+    }
+
     if (items["zdmc_dischargeFixed"]) {
       applyKvsValue("zdmc_dischargeFixed", items["zdmc_dischargeFixed"].value, CONFIG.dischargeFixed,
       function (v) { return v === 0 || v >= CONFIG.dischargeStartupPower; },
@@ -640,6 +648,7 @@ function seedKvsDefaults(callback) {
 
     addPair("zdmc_setpoint", CONFIG.setpoint);
     addPair("zdmc_dischargeFixed", CONFIG.dischargeFixed);
+    addPair("zdmc_dischargeResetMargin", CONFIG.dischargeResetMargin);
 
     for (let i = 0; i < CONFIG.devices.length; i++) {
       addPair("zdmc_dev" + i + "_dischargeAllowed",
@@ -1301,6 +1310,12 @@ function pickStickyDevice(weight, active, selector) {
   return selector.active;
 }
 
+// Wirksame Entlade-Hysterese eines Geraets: hoechstens maxSoc - minSoc - 11
+// (Margin < maxSoc - minSoc - 10). Ist das Fenster dafuer zu klein, gilt 3.
+function dischargeResetMarginFor(cfg) {
+  return Math.max(3, Math.min(CONFIG.dischargeResetMargin, cfg.maxSoc - cfg.minSoc - 11));
+}
+
 function computeDischargeWeights(exclude) {
   let n = CONFIG.devices.length;
   let weight = [];
@@ -1313,7 +1328,7 @@ function computeDischargeWeights(exclude) {
     // Entlade-Hysterese pflegen: Sperre ab minSoc, Freigabe erst ab minSoc + Margin
     if (ds.available) {
       if (ds.socLimit === 2 || ds.soc <= cfg.minSoc) ds.dischargeLocked = true;
-      else if (ds.soc >= cfg.minSoc + CONFIG.dischargeResetMargin) ds.dischargeLocked = false;
+      else if (ds.soc >= cfg.minSoc + dischargeResetMarginFor(cfg)) ds.dischargeLocked = false;
     }
 
     if (!ds.available || cfg.dischargeAllowed === false || ds.socLimit === 2 ||

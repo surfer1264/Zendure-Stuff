@@ -377,7 +377,7 @@ optional und mit sinnvollen Standardwerten vorbelegt.
 | `dischargeFixed` | `0` | Fix-Entladeleistung. Wird nach dem CONFIG-Block fest auf `0` gesetzt und ist **nur per KVS** (`zdmc_dischargeFixed`) wirksam, siehe Kapitel 13.4 |
 | `standbyHoldCycles` | `15` | Mindestanzahl Standby-Zyklen in Folge, bevor `smartMode 0` geschrieben wird (nur bei `standbySmartModeZero: true`), siehe Kapitel 8.11 |
 | `SPREAD_TRIGGER_CYCLES` | `1` | Entprellung `single` → `spread`: gewechselt wird erst, wenn die Bedingung **zwei Zyklen in Folge** erfüllt ist, siehe Kapitel 7 |
-| `dischargeResetMargin` | `3` | Entlade-Hysterese in Prozentpunkten: Ein Gerät, das bis `minSoc` entladen hat, darf erst ab `minSoc + dischargeResetMargin` wieder entladen (seit 5.1.4), siehe Kapitel 8.6. Steht hinter dem CONFIG-Block; wer einen anderen Wert will, kann den Key zusätzlich im CONFIG-Block setzen. Mindestens `1` (= Verhalten der Firmware) |
+| `dischargeResetMargin` | `3` | Entlade-Hysterese in Prozentpunkten: Ein Gerät, das bis `minSoc` entladen hat, darf erst ab `minSoc + dischargeResetMargin` wieder entladen (seit 5.1.4), siehe Kapitel 8.6. Steht hinter dem CONFIG-Block; wer einen anderen Wert will, kann den Key zusätzlich im CONFIG-Block setzen oder ab 5.2.4 live per KVS (`zdmc_dischargeResetMargin`) ändern. Bereich `3` … `79`; wirksam je Gerät höchstens `maxSoc − minSoc − 11`, bei kleinerem Fenster `3` |
 
 ### 4a) Plausibilitätsprüfungen (CONFIG-Validierung beim Start)
 
@@ -2530,6 +2530,7 @@ Geschrieben werden immer genau diese Keys – insgesamt `2 + 4 × Geräteanzahl`
 | --- | --- | --- |
 | `zdmc_setpoint` | `CONFIG.setpoint` | −40 … 40 W |
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` W |
+| `zdmc_dischargeResetMargin` | `CONFIG.dischargeResetMargin` | 3 … 79 % (ganzzahlig) |
 | `zdmc_devN_dischargeAllowed` | `1`, außer `dischargeAllowed: false` → `0` | `0` / `1` |
 | `zdmc_devN_reverse` | `1` bei `reverse: true`, sonst `0` | `0` / `1` |
 | `zdmc_devN_minSoc` | `CONFIG.devices[N].minSoc` | 10 … `maxSoc − 5` % |

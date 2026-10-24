@@ -1,5 +1,14 @@
 # Changelog Controller
 
+## v5.2.4
+
+- **Entlade-Hysterese per KVS änderbar:** `dischargeResetMargin` (Prozentpunkte über `minSoc`, ab denen ein bis zur Reserve entladenes Gerät wieder entladen darf) lässt sich jetzt live über `zdmc_dischargeResetMargin` ändern, systemweit für alle Geräte. Der Key wird beim Start mit dem CONFIG-Wert (Standard 3) angelegt, falls er fehlt.
+  - Gültig sind ganze Zahlen von 3 bis 79, andere Werte werden ignoriert.
+  - Untergrenze jetzt 3 statt 1. Ein im CONFIG-Block gesetzter Wert unter 3 wird beim Start auf 3 angehoben.
+  - Wirksam ist je Gerät höchstens `maxSoc − minSoc − 11`. Ist das Fenster eines Geräts dafür zu klein (unter 14 Punkte), gilt für dieses Gerät 3.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.3
 
 - **Sprungfaktor optional im CONFIG-Block:** Der Faktor der schnellen Flanke (`JUMP_FACTOR`, bisher fest 0,9) lässt sich jetzt mit `jumpFactor` im CONFIG-Block setzen. Der Eintrag ist optional: Fehlt er, gilt wie bisher 0,9.

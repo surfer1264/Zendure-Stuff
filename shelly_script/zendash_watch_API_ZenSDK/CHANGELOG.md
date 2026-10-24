@@ -1,5 +1,15 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 3.5.12
+
+- Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab
+- Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`
+- Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile
+- Dashboard: Eine Erhöhung der Reserve wird nicht gespeichert, wenn die eingestellte Entlade-Hysterese danach nicht mehr passt (Reserve höchstens Ladegrenze − 11 − Hysterese). Es erscheint eine Meldung, der Reserve-Regler springt zurück. Senken geht immer
+- Mit älterem Regel-Script: Der Key wird geschrieben, aber nicht ausgewertet
+- Bisheriges Layout `zendure-dashboard-b.html` entfernt. Proxy, exe und Home-Assistant-App enthalten es nicht mehr; `/b` leitet auf das Dashboard weiter
+- Home-Assistant-App-Version 3.5.12.0
+
 ## Changelog 3.5.11
 
 - Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs

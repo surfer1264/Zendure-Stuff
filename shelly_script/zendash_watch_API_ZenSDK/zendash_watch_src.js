@@ -22,7 +22,8 @@
 //
 // Endpunkte (nur bei api.enabled, alle mit CORS):
 //   GET config_api  -> { version, setpoint, hysteresis, dischargeFixed,
-//                        dischargeStartupPower, devices:[{..., lastFull}] }
+//                        dischargeStartupPower, dischargeResetMargin,
+//                        devices:[{..., lastFull}] }
 //   GET status_api  -> { grid:{power,online},
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
@@ -58,7 +59,7 @@
 // Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "3.5.11";
+let VERSION = "3.5.12";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1555,7 +1556,7 @@ function configFail(res, where, e) {
 //      frei - und erst dann devices bauen, stringify, senden.
 // Der Ueberlappungsschutz bleibt ueber BEIDE Schritte belegt: dazwischen
 // kann weder geschrieben (kvs_set_api wartet) noch gepollt werden.
-// kv: [setpoint, dischargeFixed, je Geraet da, rv, minSoc, il]; null = fehlt
+// kv: [setpoint, dischargeFixed, dischargeResetMargin, je Geraet da, rv, minSoc, il]; null = fehlt
 function serveConfig(res, attempt) {
   if (attempt === 0) {
     if (configPending) { configWaiters[configWaiters.length] = res; return; }
@@ -1574,7 +1575,8 @@ function serveConfig(res, attempt) {
     let kvsOk = (store !== null);
     try {
       if (DBG) memLog("config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")));
-      kv = [kvsNumOrNull(store, "zdmc_setpoint"), kvsNumOrNull(store, "zdmc_dischargeFixed")];
+      kv = [kvsNumOrNull(store, "zdmc_setpoint"), kvsNumOrNull(store, "zdmc_dischargeFixed"),
+        kvsNumOrNull(store, "zdmc_dischargeResetMargin")];
       for (let i = 0; i < CONFIG.devices.length; i++) {
         let pre = "zdmc_dev" + i + "_";
         kv[kv.length] = kvsNumOrNull(store, pre + "dischargeAllowed");
@@ -1607,7 +1609,7 @@ function configRespond(res, kv, kvsOk) {
   if (DBG) memLog("config_api Callback verlassen");
   let devices = buildDeviceDefaults();
   for (let i = 0; i < devices.length; i++) {
-    let k = 2 + i * 4;
+    let k = 3 + i * 4;
     if (kv[k] !== null) devices[i].dischargeAllowed = (kv[k] !== 0);
     if (kv[k + 1] !== null) devices[i].reverse = (kv[k + 1] !== 0);
     // KVS-Reserve auf den Bereich begrenzen, den das Regel-Script annimmt
@@ -1619,6 +1621,8 @@ function configRespond(res, kv, kvsOk) {
   }
   let setpoint = (kv[0] !== null) ? kv[0] : 0;
   let dischargeFixed = (kv[1] !== null) ? kv[1] : 0;
+  // Bereich wie im Regel-Script (3..79), fehlt der Key: 3
+  let dischargeResetMargin = (kv[2] !== null) ? Math.max(3, Math.min(79, kv[2])) : 3;
   kv = null;
 
   let body = JSON.stringify({
@@ -1627,6 +1631,7 @@ function configRespond(res, kv, kvsOk) {
     hysteresis: CONFIG.api.hysteresis,
     dischargeFixed: dischargeFixed,
     dischargeStartupPower: CONFIG.api.dischargeStartupPower,
+    dischargeResetMargin: dischargeResetMargin,
     // Schwellen der Zellspannungs-Ueberwachung - nur zur Anzeige im
     // Dashboard; sie gelten nur fuer Geraete mit watch: true
     watchdog: { enabled: WD_ON, minVoltWarn: W.minVoltWarn, minVoltReset: W.minVoltReset },
@@ -1636,7 +1641,7 @@ function configRespond(res, kv, kvsOk) {
 
   if (DBG) {
     let line = "config_api: Antwort" + (!kvsOk ? " (KVS NICHT lesbar - CONFIG-Vorgaben)" : "") +
-      " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed;
+      " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed + " drm=" + dischargeResetMargin;
     for (let j = 0; j < devices.length; j++) {
       line += " | dev" + j + " da=" + (devices[j].dischargeAllowed ? 1 : 0) + " rv=" + (devices[j].reverse ? 1 : 0) +
         " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit;
@@ -1726,6 +1731,20 @@ function handleKvsSet(req, res) {
         sendJson(res, 400, JSON.stringify({
           success: false,
           error: "dischargeFixed muss 0 oder >= " + CONFIG.api.dischargeStartupPower + " sein"
+        }));
+        return;
+      }
+    }
+    // Entlade-Hysterese: ganze Zahl 3..79 wie im Regler. Die Obergrenze je
+    // Geraet (socSet - minSoc - 11) prueft das Dashboard, der Regler
+    // begrenzt zusaetzlich beim Anwenden.
+    if (keys[i] === "zdmc_dischargeResetMargin") {
+      let mv = Number(data[keys[i]]);
+      if (!(mv >= 3 && mv <= 79 && Math.round(mv) === mv)) {
+        if (DBG) logDebug("kvs_set_api: abgelehnt - zdmc_dischargeResetMargin=" + mv + " (erlaubt 3..79)");
+        sendJson(res, 400, JSON.stringify({
+          success: false,
+          error: "dischargeResetMargin muss 3..79 sein"
         }));
         return;
       }

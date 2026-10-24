@@ -3,6 +3,11 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.12.0
+
+- Dashboard: neues Eingabefeld „Entlade-Hysterese“ (`zdmc_dischargeResetMargin`) neben dem Sollwert, die 5 Kacheln der Übersicht stehen nebeneinander; braucht Shelly-Script 3.5.12 und Regel-Script 5.2.4. Eine Erhöhung der Reserve, mit der die Hysterese nicht mehr passt, wird mit einer Meldung abgelehnt
+- Bisheriges Layout unter `/b` entfernt, die Adresse leitet auf das Dashboard weiter
+
 ## 3.5.11.2
 
 - Dashboard: Die Links zu ThingSpeak und ThingsBoard öffnen die Einrichtungsseite im selben Fenster statt in einem neuen Tab. In der Home-Assistant-Companion-App (iPad/iPhone) kam sonst „401: Unauthorized“, weil der neue Tab die Anmeldung von Home Assistant nicht kennt

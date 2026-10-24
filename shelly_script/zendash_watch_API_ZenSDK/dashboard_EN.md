@@ -44,7 +44,7 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard Shelly (zenDas
 
 ## Operation
 
-This describes the default layout at `http://<proxy-address>:8000/`. The previous layout at `/b` has the same functions, just arranged differently.
+This describes the default layout at `http://<proxy-address>:8000/`.
 
 ### Page layout
 
@@ -317,7 +317,7 @@ Port (`PORT`, default 8000) and network interface (`BIND_ADDRESS`) can be change
 
 - **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup`. So **never** expose the proxy to the internet via port forwarding.
 - **Script number:** When **updating** via the Configurator, the number stays the same. If the script is **created anew** (first installation, "delete others", Shelly replacement or manual upload), it gets a new number. If the dashboard stops working after that, enter the new number under `http://<proxy-address>:8000/setup`. Restarting the proxy is not necessary.
-- **New layout, previous one at `/b`:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The previous layout with the same functions is still available at `http://<proxy-address>:8000/b`. This needs `zendure-dashboard-b.html` next to `zendure-dashboard.html`; the ready-made program and the Home Assistant app include it.
+- **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former layout at `/b` was removed in 3.5.12; the address redirects to the dashboard.
 - **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.
 
 ---

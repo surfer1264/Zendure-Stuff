@@ -36,7 +36,7 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDas
 
 ## Bedienung
 
-Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`. Das bisherige Layout unter `/b` hat dieselben Funktionen, nur anders angeordnet.
+Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`.
 
 ### Aufbau der Seite
 
@@ -308,7 +308,7 @@ Port (`PORT`, Standard 8000) und Netzwerk-Schnittstelle (`BIND_ADDRESS`) stehen 
 
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup`. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Script-Nummer:** Beim **Update** über den Configurator bleibt die Nummer gleich. Wird das Script **neu angelegt** (erste Installation, „andere löschen“, Shelly-Wechsel oder Upload von Hand), bekommt es eine neue Nummer. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
-- **Neues Layout, bisheriges unter `/b`:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das bisherige Layout mit denselben Funktionen gibt es weiterhin unter `http://<Proxy-Adresse>:8000/b`. Dafür muss `zendure-dashboard-b.html` neben `zendure-dashboard.html` liegen; im fertigen Programm und in der Home-Assistant-App ist sie enthalten.
+- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das frühere Layout unter `/b` ist seit 3.5.12 entfernt, die Adresse leitet auf das Dashboard weiter.
 - **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
 
 ---

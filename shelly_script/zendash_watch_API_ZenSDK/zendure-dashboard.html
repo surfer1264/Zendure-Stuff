@@ -115,10 +115,9 @@
   .shell{ max-width:1180px; margin:0 auto; }
 
   /* =================================================================
-     Standard-Layout (entstanden als "Variante B"). Das bisherige Layout
-     liegt in zendure-dashboard-b.html und ist im Proxy unter /b
-     erreichbar. Logik, API-Aufrufe und Sperren sind in beiden gleich -
-     geaendert sind nur Aufbau, Darstellung und Texte:
+     Standard-Layout (entstanden als "Variante B"). Das fruehere Layout
+     (zendure-dashboard-b.html, im Proxy unter /b) ist seit 3.5.12 entfernt.
+     Gegenueber dem frueheren Layout geaendert:
        - Kopfzeile: Sperre als beschrifteter Knopf mit Restzeit,
          Ansicht/Sprache/Theme im Menue "Ansicht"
        - Uebersicht getrennt in "Jetzt" (Messwerte) und "Regelung"
@@ -266,6 +265,19 @@
   @media (min-width:1300px){
     html[data-fontsize="xlarge"] .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
   }
+  /* Uebersicht mit 5 Kacheln: "Jetzt" (2) und "Regelung" (3) nebeneinander,
+     Spaltenbreite im Verhaeltnis 2:3, damit alle Kacheln gleich breit sind. */
+  @media (min-width:640px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .tiles.tiles-3{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+  }
+  @media (min-width:1000px){
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov{ grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); }
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov .tile{ padding:1.125rem 1rem 1rem; }
+  }
+  @media (min-width:1300px){
+    html[data-fontsize="xlarge"] .ov{ grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); }
+    html[data-fontsize="xlarge"] .tiles.tiles-3{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+  }
   .group-title{
     display:flex; align-items:baseline; gap:.5rem; margin:0 .25rem .625rem;
     font-size:1rem; font-weight:600;
@@ -292,7 +304,7 @@
   }
   @media (min-width:1000px){
     html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-value,
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-input{ font-size:clamp(1.6rem, 3.2vw, 2.6rem); }
+    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-input{ font-size:clamp(1.4rem, 2.4vw, 2.4rem); }
   }
   .hero-value .unit{ font-size:1rem; font-weight:500; color:var(--text-muted); }
   .dir{
@@ -310,8 +322,10 @@
   .spark canvas{ display:block; width:100%; height:100%; }
 
   .param-key{ font-size:.66rem; color:var(--text-muted); }
+  /* KVS-Schluessel unter dem Titel, lange Namen (zdmc_dischargeResetMargin) brechen um */
+  .hero-label .param-key{ display:block; word-break:break-all; }
   .setpoint-card input[type="range"]{ margin:auto 0 .125rem; }
-  .discharge-fixed-card .hero-state{ margin-top:auto; }
+  .discharge-fixed-card .hero-state, .reset-margin-card .hero-state{ margin-top:auto; }
 
   .fixed-note{ display:none; font-size:.8rem; color:var(--amber-text); margin-top:.5rem; line-height:1.4; }
   .ov.fixed-on .fixed-note{ display:block; }
@@ -623,13 +637,19 @@
 
       <section class="ov-group" aria-labelledby="ctlTitle">
         <h2 class="group-title" id="ctlTitle"><span data-i18n="controlTitle">Regelung</span><span class="tag" data-i18n="controlTag">Einstellungen</span></h2>
-        <div class="tiles">
+        <div class="tiles tiles-3">
           <div class="card tile setpoint-card setpoint-main">
             <div class="hero-label"><span id="setpointLbl" data-i18n="setpoint" class="help-mark" data-help="helpSetpoint" tabindex="0">Sollwert</span> <span class="param-key mono">zdmc_setpoint</span></div>
             <div class="hero-value"><span id="setpointValue">0</span><span class="unit">W</span></div>
             <input type="range" id="setpointSlider" min="-40" max="40" step="5" value="0" aria-labelledby="setpointLbl" aria-describedby="setpointState">
             <div class="hero-state" id="setpointState" data-i18n="setpointInit">Ziel für den Netzsaldo, −40 bis +40 W</div>
             <div class="fixed-note" data-i18n="fixedActive">Fix-Entladung aktiv – der Sollwert wird derzeit nicht ausgeregelt.</div>
+          </div>
+          <div class="card tile setpoint-card reset-margin-card">
+            <div class="hero-label"><span id="resetMarginLbl" data-i18n="resetMargin" class="help-mark" data-help="helpResetMargin" tabindex="0">Entlade-Hysterese</span> <span class="param-key mono">zdmc_dischargeResetMargin</span></div>
+            <div class="hero-value"><input type="number" id="resetMarginInput" class="hero-input" min="3" max="3" step="1" value="3" inputmode="numeric" enterkeyhint="done" aria-labelledby="resetMarginLbl" aria-describedby="resetMarginState"><span class="unit">%</span></div>
+            <div class="hero-state" id="resetMarginState"></div>
+            <div class="hero-sub" data-i18n="fixedEnter">Wert eingeben, mit ↵ bzw. „Fertig“ übernehmen</div>
           </div>
           <div class="card tile setpoint-card discharge-fixed-card">
             <div class="hero-label"><span id="dischargeFixedLbl" data-i18n="dischargeFixed" class="help-mark" data-help="helpDischargeFixed" tabindex="0">Fix-Entladung</span> <span class="param-key mono">zdmc_dischargeFixed</span></div>
@@ -685,7 +705,7 @@
   // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
   // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
   // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
-  const VERSION = "3.5.11";
+  const VERSION = "3.5.12";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -765,6 +785,12 @@
       setpointState: 'Toleranz ±{h} W · einstellbar −40 bis +40 W',
       dischargeFixedState: '0 = aus · sonst ≥ {p} W',
       invalidDischarge: 'Ungültig: 0 W oder ≥ {p} W',
+      resetMargin: 'Entlade-Hysterese',
+      helpResetMargin: 'Gilt für alle Geräte. Hat ein Gerät bis zur Reserve entladen, gibt es erst ab Reserve + diesem Wert wieder Strom ab. Verhindert ständiges Ein- und Ausschalten an der Reserve. Höchstens Ladegrenze − Reserve − 11 – maßgeblich ist das Gerät mit dem kleinsten Fenster.',
+      resetMarginState: 'Wieder entladen ab Reserve + Wert · 3 bis {max} %',
+      resetMarginLocked: 'Gesperrt: Fenster zu klein (Ladegrenze − Reserve unter 14 %) · es gilt 3 %',
+      invalidResetMargin: 'Ungültig: 3 bis {max} %',
+      minSocBlocked: 'Reserve {v} % nicht gespeichert: mit Entlade-Hysterese {m} % höchstens {max} %',
       socWindow: 'Arbeitsfenster des Geräts: entlädt nicht unter die Reserve (min. SoC) und lädt nicht über das Ladeziel. Das Ladeziel kommt aus der Konfiguration.',
       helpPower: 'Leistung am Wechselstrom-Anschluss des Geräts: + = gibt ins Hausnetz ab (Akku und PV zusammen), − = nimmt zum Laden aus dem Hausnetz auf. 0 = Bereitschaft.',
       lockStatus: 'Entladen: {a} · Netzladen: {b}',
@@ -868,6 +894,12 @@
       setpointState: 'Tolerance ±{h} W · adjustable −40 to +40 W',
       dischargeFixedState: '0 = off · otherwise ≥ {p} W',
       invalidDischarge: 'Invalid: 0 W or ≥ {p} W',
+      resetMargin: 'Discharge hysteresis',
+      helpResetMargin: 'Applies to all devices. Once a device has discharged down to the reserve, it only supplies power again from reserve + this value. Prevents constant switching at the reserve. At most charge limit − reserve − 11 – the device with the smallest window counts.',
+      resetMarginState: 'Discharges again from reserve + value · 3 to {max} %',
+      resetMarginLocked: 'Locked: window too small (charge limit − reserve below 14 %) · 3 % applies',
+      invalidResetMargin: 'Invalid: 3 to {max} %',
+      minSocBlocked: 'Reserve {v} % not saved: with discharge hysteresis {m} % at most {max} %',
       socWindow: 'Operating window of the device: does not discharge below the reserve (min. SoC) and does not charge above the charge target. The charge target comes from the configuration.',
       helpPower: 'Power at the device’s AC connection: + = delivering to the house grid (battery and PV combined), − = drawing from the house grid to charge. 0 = standby.',
       lockStatus: 'Discharge: {a} · Grid charging: {b}',
@@ -971,6 +1003,12 @@
       setpointState: 'Tolérance ±{h} W · réglable de −40 à +40 W',
       dischargeFixedState: '0 = arrêt · sinon ≥ {p} W',
       invalidDischarge: 'Invalide\u00a0: 0 W ou ≥ {p} W',
+      resetMargin: 'Hystérésis de décharge',
+      helpResetMargin: 'S’applique à tous les appareils. Un appareil déchargé jusqu’à la réserve ne fournit à nouveau de l’énergie qu’à partir de réserve + cette valeur. Évite les commutations permanentes à la réserve. Au maximum limite de charge − réserve − 11 – l’appareil ayant la plus petite plage est déterminant.',
+      resetMarginState: 'Décharge à nouveau à partir de réserve + valeur · 3 à {max}\u00a0%',
+      resetMarginLocked: 'Verrouillé\u00a0: plage trop petite (limite de charge − réserve sous 14\u00a0%) · 3\u00a0% s’applique',
+      invalidResetMargin: 'Invalide : 3 à {max} %',
+      minSocBlocked: 'Réserve {v}\u00a0% non enregistrée\u00a0: avec une hystérésis de décharge de {m}\u00a0%, au maximum {max}\u00a0%',
       socWindow: 'Plage de travail de l’appareil\u00a0: ne se décharge pas sous la réserve (SoC min.) et ne charge pas au-delà de l’objectif de charge. L’objectif de charge provient de la configuration.',
       helpPower: 'Puissance au raccordement AC de l’appareil\u00a0: + = fournit au réseau domestique (batterie et PV ensemble), − = prélève sur le réseau domestique pour charger. 0 = veille.',
       lockStatus: 'Décharge\u00a0: {a} · Charge réseau\u00a0: {b}',
@@ -1290,6 +1328,7 @@
     if (appEl.classList.contains('expert')) return key;
     if (key === 'zdmc_setpoint') return t('setpoint');
     if (key === 'zdmc_dischargeFixed') return t('dischargeFixed');
+    if (key === 'zdmc_dischargeResetMargin') return t('resetMargin');
     const m = /^zdmc_dev(\d+)_(\w+)$/.exec(key);
     if (!m) return key;
     const names = { dischargeAllowed: 'dischargeAllowed', reverse: 'reverseAllowed', minSoc: 'reserve', inputLimit: 'inputLimitLbl' };
@@ -1299,7 +1338,7 @@
   function friendlyVal(key, value){
     if (appEl.classList.contains('expert')) return String(value);
     if (/_(dischargeAllowed|reverse)$/.test(key)) return t(Number(value) ? 'valOn' : 'valOff');
-    if (/_minSoc$/.test(key)) return value + ' %';
+    if (/_(minSoc|dischargeResetMargin)$/.test(key)) return value + ' %';
     return value + ' W';
   }
 
@@ -1378,10 +1417,19 @@
 
   function socGateActive(){ return !!(coarseQuery && coarseQuery.matches); }
 
+  // true = Fenster fuer die Entlade-Hysterese zu klein, Regler gesperrt
+  // (siehe showResetMargin). Bis zum ersten config_api unbekannt -> gesperrt.
+  let resetMarginBlocked = true;
+
   // true = dieser Reserve-Regler ist durch Stufe 2 gesperrt
   function isSocGated(el){
     return !!el && el.classList.contains('soc-range') && socGateActive() &&
       socOpenId !== el.getAttribute('data-dev');
+  }
+
+  // Zusaetzliche Sperren ueber dem globalen Schloss
+  function isGated(el){
+    return isSocGated(el) || (!!el && el.id === 'resetMarginInput' && resetMarginBlocked);
   }
 
   function armSocTimer(){
@@ -1453,7 +1501,7 @@
         // Nicht pauschal freigeben: ein Element, das gerade seinen Wert
         // schreibt, bleibt bis zum Ablauf seiner eigenen Sperre gesperrt.
         // Reserve-Regler am Touchgeraet zusaetzlich nur, wenn freigegeben.
-        el.disabled = isSocGated(el);
+        el.disabled = isGated(el);
       }
     }
     applySocGateVisuals();
@@ -1509,7 +1557,7 @@
       if (Date.now() >= (lockedUntil[el.id] || 0)) {
         delete lockedUntil[el.id];
         // Nicht blind freigeben - die globale Sperre hat Vorrang.
-        el.disabled = uiLocked || isSocGated(el);
+        el.disabled = uiLocked || isGated(el);
       }
     }, LOCK_MS);
   }
@@ -1519,7 +1567,7 @@
   function unlockControl(el){
     if (!el) return;
     delete lockedUntil[el.id];
-    el.disabled = uiLocked || isSocGated(el);
+    el.disabled = uiLocked || isGated(el);
   }
 
   // "In Bearbeitung": entweder gerade gesperrt oder gerade im Fokus.
@@ -1555,6 +1603,59 @@
     lockControl(e.target);
     kvsSet('zdmc_setpoint', Number(e.target.value)).then(function(ok){
       if (!ok) unlockControl(e.target);
+    });
+  });
+
+  /* ---------------- Entlade-Hysterese (zdmc_dischargeResetMargin) ----------------
+     Gilt fuer alle Geraete. Gueltig: 3 bis min(Ladegrenze - Reserve) - 11
+     ueber alle Geraete (Margin < Ladegrenze - Reserve - 10). Ist das
+     kleinste Fenster unter 14 Punkten, bleibt der Regler gesperrt und es
+     gilt 3 - der Regler begrenzt im Regel-Script ebenso. */
+  const resetMarginInput = document.getElementById('resetMarginInput');
+  const resetMarginStateEl = document.getElementById('resetMarginState');
+  let liveResetMargin = 3;
+
+  // Hoechste zulaessige Hysterese ueber alle Geraete (ohne Geraete: 79)
+  function resetMarginMax(){
+    let m = 79;
+    hubs.forEach(function(d){
+      if (d.minSoc === undefined || d.minSoc === null) return;
+      m = Math.min(m, socTop(d) - Number(d.minSoc) - 11);
+    });
+    return m;
+  }
+
+  function showResetMargin(){
+    const max = resetMarginMax();
+    resetMarginBlocked = max < 3;
+    resetMarginInput.max = resetMarginBlocked ? 3 : max;
+    // Waehrend der Eingabe (Fokus) den Wert nicht ueberschreiben
+    if (document.activeElement !== resetMarginInput) {
+      resetMarginInput.value = resetMarginBlocked ? 3 : Math.min(liveResetMargin, max);
+      resetMarginInput.classList.remove('invalid');
+    }
+    resetMarginStateEl.textContent = resetMarginBlocked ? t('resetMarginLocked') : t('resetMarginState', { max: max });
+    if (!isTempLocked(resetMarginInput)) resetMarginInput.disabled = uiLocked || resetMarginBlocked;
+  }
+
+  resetMarginInput.addEventListener('input', function(){
+    resetMarginInput.classList.remove('invalid');
+  });
+  resetMarginInput.addEventListener('change', function(e){
+    const v = Math.round(Number(e.target.value));
+    const max = resetMarginMax();
+    if (!(Number.isFinite(v) && v >= 3 && v <= max)) {
+      resetMarginInput.classList.add('invalid');
+      showToast(t('invalidResetMargin', { max: max }));
+      e.target.value = Math.min(liveResetMargin, max);
+      return;
+    }
+    e.target.value = v;
+    lockControl(e.target);
+    kvsSet('zdmc_dischargeResetMargin', v).then(function(ok){
+      if (ok) liveResetMargin = v;
+      else unlockControl(e.target);
+      showResetMargin();
     });
   });
 
@@ -1753,10 +1854,13 @@
   // Geraet tatsaechlich eingestellte Grenze. Wurde socSet von aussen
   // gesenkt, darf die Reserve trotzdem nie die echte Ladegrenze erreichen.
   // Ohne socSet (aelteres Script, Hub offline) gilt allein maxSoc.
-  function minSocCeiling(d){
+  function socTop(d){
     const cfgMax = Number(d.maxSoc) > 0 ? Number(d.maxSoc) : 100;
     const devMax = (d.socSet !== null && d.socSet !== undefined && Number(d.socSet) > 0) ? Number(d.socSet) : 100;
-    return Math.max(10, Math.min(95, Math.min(cfgMax, devMax) - 5));
+    return Math.min(cfgMax, devMax);
+  }
+  function minSocCeiling(d){
+    return Math.max(10, Math.min(95, socTop(d) - 5));
   }
 
   // Regler-Obergrenze und Beschriftung "max X %" nachfuehren - nach jedem
@@ -1900,9 +2004,19 @@
       });
       minSocEl.addEventListener('change', function(e){
         if (socReject) { socReject = false; socRestore(); return; }
+        const nv = Number(e.target.value);
+        const nvMax = socTop(d) - 11 - liveResetMargin;
+        if (nv > Number(d.minSoc) && nv > nvMax) {
+          showToast(t('minSocBlocked', { v: nv, m: liveResetMargin, max: nvMax }));
+          minSocEl.value = d.minSoc;
+          minSocValEl.textContent = d.minSoc + ' %';
+          if (socGateActive()) closeSocGate();
+          return;
+        }
         lockControl(e.target);
-        kvsSet('zdmc_dev' + d.id + '_minSoc', Number(e.target.value)).then(function(ok){
-          if (!ok) unlockControl(e.target);
+        kvsSet('zdmc_dev' + d.id + '_minSoc', nv).then(function(ok){
+          if (ok) { d.minSoc = nv; showResetMargin(); }
+          else unlockControl(e.target);
         });
         // Direkt nach dem Speichern wieder sperren.
         if (socGateActive()) closeSocGate();
@@ -2099,6 +2213,7 @@
     liveDischargeFixed = Number(cfg.dischargeFixed || 0);
     dischargeFixedInput.value = liveDischargeFixed;
     showDischargeFixedState();
+    liveResetMargin = Number(cfg.dischargeResetMargin || 3);
 
     showVersion(cfg.version);
 
@@ -2119,6 +2234,7 @@
     });
 
     buildHubCards();
+    showResetMargin();
   }
 
   // Gleicht Schalter und Regler mit den KVS-Werten ab, ohne die Karten neu
@@ -2221,6 +2337,8 @@
           if (c.lastFull !== undefined) d.lastFull = Number(c.lastFull || 0);
           d.watch = c.watch === true;
         });
+        liveResetMargin = Number(cfg.dischargeResetMargin || 3);
+        showResetMargin();
       }
 
       gridOnline = !!(status.grid && status.grid.online);
@@ -2247,6 +2365,7 @@
           d.online = false;
         }
       });
+      showResetMargin();
 
       // Verlauf lokal fortschreiben. Nur bei erreichbarer Quelle, sonst
       // zeichnet die Kurve bei einem Ausfall eine falsche Null.
@@ -2642,6 +2761,7 @@
     applyLockState();
     showSetpointState();
     showDischargeFixedState();
+    showResetMargin();
     updateOverviewSummary();
     if (lastApiVersion !== null) showVersion(lastApiVersion);
     if (lastStatusErrors !== null) updateStatusPill(lastStatusErrors);

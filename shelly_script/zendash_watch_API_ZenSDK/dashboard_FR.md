@@ -44,7 +44,7 @@ Navigateur  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Shelly tableau de bor
 
 ## Utilisation
 
-Ce qui suit décrit la mise en page par défaut à l'adresse `http://<adresse-du-proxy>:8000/`. L'ancienne mise en page sous `/b` offre les mêmes fonctions, simplement disposées autrement.
+Ce qui suit décrit la mise en page par défaut à l'adresse `http://<adresse-du-proxy>:8000/`.
 
 ### Organisation de la page
 
@@ -317,7 +317,7 @@ Le port (`PORT`, 8000 par défaut) et l'interface réseau (`BIND_ADDRESS`) se r�
 
 - **Pas de mot de passe :** toute personne du réseau domestique connaissant l'adresse peut ouvrir le tableau de bord et modifier les réglages – y compris l'adresse du Shelly sous `/setup`. Ne **jamais** exposer le proxy sur Internet par une redirection de port.
 - **Numéro du script :** lors d'une **mise à jour** via le Configurator, le numéro reste le même. Si le script est **recréé** (première installation, « supprimer les autres », changement de Shelly ou téléversement manuel), il reçoit un nouveau numéro. Si le tableau de bord ne fonctionne plus ensuite, saisir le nouveau numéro sous `http://<adresse-du-proxy>:8000/setup`. Pas besoin de redémarrer le proxy.
-- **Nouvelle mise en page, l'ancienne sous `/b` :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page, avec les mêmes fonctions, reste disponible à l'adresse `http://<adresse-du-proxy>:8000/b`. Il faut pour cela `zendure-dashboard-b.html` à côté de `zendure-dashboard.html` ; le programme prêt à l'emploi et l'app Home Assistant l'incluent.
+- **Mise en page :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page sous `/b` a été supprimée en 3.5.12 ; l'adresse redirige vers le tableau de bord.
 - **Nouvelle version du tableau de bord :** avec le script Python et sur le Synology, il suffit de remplacer `zendure-dashboard.html` et de recharger la page dans le navigateur – le proxy relit le fichier à chaque requête. Dans le programme prêt à l'emploi, la page est intégrée ; elle arrive avec un nouveau téléchargement. Dans Home Assistant, l'app doit être reconstruite.
 
 ---

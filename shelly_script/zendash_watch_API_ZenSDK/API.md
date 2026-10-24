@@ -131,6 +131,7 @@ eigenen Eingabe zusätzlich sofort.
   "hysteresis": 12,
   "dischargeFixed": 0,
   "dischargeStartupPower": 35,
+  "dischargeResetMargin": 3,
   "watchdog": { "enabled": true, "minVoltWarn": 2.9, "minVoltReset": 3.1 },
   "devices": [
     {
@@ -158,6 +159,7 @@ eigenen Eingabe zusätzlich sofort.
 | `hysteresis` | `CONFIG`, **nicht** über die KVS änderbar. Nur zur Anzeige — muss mit dem Wert im Regel-Script übereinstimmen |
 | `dischargeFixed` | KVS, globaler Fix-Sollwert für die Entladeleistung in W. `0` = aus |
 | `dischargeStartupPower` | `CONFIG`, **nicht** über die KVS änderbar. Untere Grenze für `dischargeFixed` — muss mit dem Wert im Regel-Script übereinstimmen |
+| `dischargeResetMargin` | KVS (`zdmc_dischargeResetMargin`), Entlade-Hysterese in Prozentpunkten, auf 3 … 79 begrenzt. Fehlt der Key: `3`. Seit 3.5.12 |
 | `ip`, `label`, `maxSoc`, `maxOutput`, `maxInputPower` | `CONFIG`, zur Laufzeit unveränderlich |
 | `minSoc`, `inputLimit`, `dischargeAllowed`, `reverse` | KVS, mit den Vorgaben aus `CONFIG` als Rückfallwert |
 | `watch` | `CONFIG`, ob der Watchdog dieses Gerät überwacht. Seit 3.5.3 |
@@ -198,6 +200,7 @@ entsprechend rund eine Sekunde.
 | `200` mit `written: 0` | kein Schlüssel mit Präfix `zdmc_` dabei, nichts geschrieben |
 | `400` | `data` fehlt oder ist kein gültiges JSON-Objekt |
 | `400` | `zdmc_dischargeFixed` ist weder `0` noch ≥ `dischargeStartupPower` – dann wird **kein** Schlüssel geschrieben |
+| `400` | `zdmc_dischargeResetMargin` ist keine ganze Zahl von 3 bis 79 – dann wird **kein** Schlüssel geschrieben (seit 3.5.12) |
 | `500` mit `success: false` | mindestens ein Schreibvorgang fehlgeschlagen bzw. interner Fehler |
 
 Fehlerantworten enthalten zusätzlich ein Feld `error` mit einem kurzen Text, z. B.
@@ -222,6 +225,7 @@ die Regelung ignoriert sie.
 |---|---|---|
 | `zdmc_setpoint` | −40 … 40 | Zielwert für den Netzsaldo in W |
 | `zdmc_dischargeFixed` | `0` oder ≥ `dischargeStartupPower` | Feste Entladeleistung in W statt Netzsaldo-Regelung. `0` schaltet zurück auf die normale Regelung. Werte zwischen `1` und der unteren Grenze lehnt `kvs_set_api` mit `400` ab (das Regel-Script würde sie verwerfen) |
+| `zdmc_dischargeResetMargin` | 3 … 79, ganzzahlig | Entlade-Hysterese für alle Geräte: Ein bis zur Reserve entladenes Gerät entlädt erst ab Reserve + Wert wieder. Das Regel-Script (ab 5.2.4) wendet je Gerät höchstens `maxSoc − minSoc − 11` an, bei kleinerem Fenster `3`. Das Dashboard begrenzt zusätzlich auf das kleinste Fenster (mit `socSet`) |
 | `zdmc_dev{id}_dischargeAllowed` | `0` / `1` | Entladen erlaubt |
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
 | `zdmc_dev{id}_minSoc` | 10 … `maxSoc − 5` | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
