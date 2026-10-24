@@ -52,6 +52,7 @@ VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag
 LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
 SATT_SCHWELLE_W = 1500             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
+AKTIV_SCHWELLE_W = 10              # Gerät gilt als aktiv, wenn es >= 10 W ins Haus abgibt (Ist > 0 = Abgabe)
 
 # =============================================================================
 # Ende der Einstellungen
@@ -175,9 +176,10 @@ def main():
     n["einsp"] = (-n.netz).clip(lower=0) * n.dt / 1000
     n["b_leer"] = bezug.where(n.ist < LEER_SCHWELLE_W, 0)
     n["b_rest"] = bezug - n.b_leer
+    n["akt"] = n.dt.where(n.ist >= AKTIV_SCHWELLE_W, 0)
     day = n.groupby("tag").agg(netzbezug_kwh=("bezug", "sum"), einspeisung_kwh=("einsp", "sum"),
                                bezug_speicher_aus_kwh=("b_leer", "sum"), bezug_regelrest_kwh=("b_rest", "sum"),
-                               erfasst_h=("dt", "sum"))
+                               aktiv_gesamt_h=("akt", "sum"), erfasst_h=("dt", "sum"))
     lad = 0
     for g, k in zip(GERAETE, keys):
         x = d[d.dev == g].copy()
@@ -185,10 +187,13 @@ def main():
         x["tag"] = x.t.dt.strftime("%Y-%m-%d")
         x["ent"] = x.ist.clip(lower=0) * x.dt / 1000
         x["lad"] = (-x.ist).clip(lower=0) * x.dt / 1000
-        a = x.groupby("tag").agg(ent=("ent", "sum"), lad=("lad", "sum"), smin=("soc", "min"), smax=("soc", "max"))
+        x["akt"] = x.dt.where(x.ist >= AKTIV_SCHWELLE_W, 0)
+        a = x.groupby("tag").agg(ent=("ent", "sum"), lad=("lad", "sum"), akt=("akt", "sum"),
+                                 smin=("soc", "min"), smax=("soc", "max"))
         day["entladung_" + k + "_kwh"] = a.ent
         day["soc_min_" + k] = a.smin
         day["soc_max_" + k] = a.smax
+        day["aktiv_" + k + "_h"] = a.akt
         lad = lad + a.lad.reindex(day.index, fill_value=0)
     day["netzladen_kwh"] = lad
     akt = n[(n.ist > LEER_SCHWELLE_W) & (n.ist < SATT_SCHWELLE_W)]
@@ -199,7 +204,7 @@ def main():
     zaehler = ["stellbefehle_" + k for k in keys] + [k for k, _ in EREIGNISSE]
     for c in zaehler:
         day[c] = ec[c] if c in ec else 0
-    day = day.fillna({"entladung_" + k + "_kwh": 0 for k in keys})
+    day = day.fillna({c + k + s: 0 for k in keys for c, s in (("entladung_", "_kwh"), ("aktiv_", "_h"))})
     day["entladung_gesamt_kwh"] = sum(day["entladung_" + k + "_kwh"] for k in keys)
     day["deckung_pct"] = 100 * day.entladung_gesamt_kwh / (day.entladung_gesamt_kwh + day.netzbezug_kwh)
     day["takte_gesamt"] = pd.Series(takte).reindex(day.index).fillna(0).astype(int)

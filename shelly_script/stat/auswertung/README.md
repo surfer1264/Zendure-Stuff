@@ -1,10 +1,7 @@
-# statistische Langzeitauswertung Speicher
+# Auswertung Speicher SF2400 + SF800
 
 Statistische Auswertung der Debug-Logs des Multi-Device-Controllers.
 Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellbar, siehe Einstellungen).
-
-**QUALITY-REPORT**
-Hier gehts weniger um die letzten Details, als einen Überblick "Wie läufts"
 
 ## Dateien
 
@@ -12,15 +9,14 @@ Hier gehts weniger um die letzten Details, als einen Überblick "Wie läufts"
 |---|---|
 | `analyse.py` | Liest alle Logs neu ein und schreibt die drei CSV-Dateien. Einzige Rechenquelle; alle Einstellungen stehen oben im Block `EINSTELLUNGEN`. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät |
-| `tage.csv` | Pro Tag: Energie (kWh), SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte |
+| `tage.csv` | Pro Tag: Energie (kWh), Aktivzeit (h), SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde: mittlerer Netzsaldo und Speicher-Ausgang, SOC-Min/-Max je Gerät |
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. Wird am Ende von `analyse.py` automatisch aufgerufen, geht aber auch einzeln (`python bericht.py`). Hat keine eigenen Einstellungen. |
-| `bericht.html` | **Statischer Bericht** zum Öffnen im Browser: alle Grafiken als fertige SVG, kein JavaScript, keine Internetverbindung nötig. Werte erscheinen beim Darüberfahren über Punkte und Balken. |
+| `bericht.html` | **Bericht** zum Öffnen im Browser, eine einzelne Datei ohne Internetverbindung (Daten, Schriften und Zeichen-Skript eingebettet). Design wie Dashboard/Konfigurator mit Tag/Nacht-Umschalter. Zeitlicher Zoom, Werte beim Darüberfahren. |
+| `zendure_fonts.css` | IBM-Plex-Schriften aus dem Dashboard; `bericht.py` bettet sie ein. Fehlt die Datei, nimmt der Bericht die Systemschrift. |
 | `dashboard_seite.html` | Quelltext der Online-Dashboard-Seite (Grafiken, Berechnungen `kpi` und `fritzbox`). Eigenständig, von den Skripten nicht berührt. |
 
 ## Einmalig: pandas installieren
-
-pandas ist eine Python-Bibliothek für Tabellendaten, also so etwas wie Excel für Python. Die zentrale Struktur ist der DataFrame: eine Tabelle mit benannten Spalten, die du filtern, gruppieren, summieren und als CSV speichern kannst.
 
 Das Skript braucht Python 3.9+ und das Paket `pandas`. Fehlt es, bricht es ab mit
 `ModuleNotFoundError: No module named 'pandas'`. Installation in cmd oder PowerShell:
@@ -47,7 +43,19 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
    Das schreibt die CSV-Dateien neu und erzeugt danach `bericht.html`.
 3. Nichts nachzupflegen: Mit `ZEITRAUM_BIS = None` geht die Auswertung bis zum Ende der Logs,
    Tageswerte und Tagesprofil nehmen automatisch nur volle Tage.
+4. Für das Dashboard: Claude bitten, „die Speicher-Statistik mit den neuen Logs fortzuschreiben“.
+   Claude lädt dann die drei CSV als neue Dateien ins Dashboard und trägt sie bei den Quellen
+   `verlauf`, `tage` und `profil` ein. Die Seite selbst muss dafür nicht geändert werden.
 
+## Bericht bedienen
+
+- **Zeitraum-Leiste** (bleibt beim Scrollen oben): `Alles`, `7 T`, `3 T`, `1 T`; `−`/`+` zoomen heraus/hinein,
+  `‹`/`›` verschieben um einen halben Ausschnitt. Kleinster Ausschnitt: 2 Stunden.
+- **Verlauf-Grafiken**: mit der Maus einen Bereich aufziehen = hineinzoomen, Doppelklick = alles.
+- **Tages-Grafiken**: Klick auf einen Tag zoomt auf diesen Tag.
+- Der Zeitraum gilt für Kennzahlen, Verlauf und Tageswerte (alle vollen Tage, die den Ausschnitt berühren).
+  Das Tagesprofil zeigt immer alle vollen Tage.
+- **☾ / ☀** oben rechts schaltet Tag/Nacht um; die Wahl merkt sich der Browser, sonst gilt die Systemeinstellung.
 
 ## Einstellungen (Block `EINSTELLUNGEN` oben in `analyse.py`)
 
@@ -55,7 +63,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 |---|---|---|
 | `LOG_ORDNER` | `None` | Ordner mit den Logs; `None` = Ordner über dem Skript. Ein Aufrufparameter hat Vorrang. |
 | `LOG_MUSTER` | `shelly_debug_*.log` | Muster der Logdateinamen (`*` = beliebige Zeichen, `?` = ein Zeichen) |
-| `ZEITRAUM_VON` | `2026-10-06` | Beginn der Auswertung (einschließlich); `None` = ab erstem Log. |
+| `ZEITRAUM_VON` | `2026-10-06` | Beginn der Auswertung (einschließlich); `None` = ab erstem Log. Der Einzeltag 20.09. bleibt so außen vor. |
 | `ZEITRAUM_BIS` | `None` | Ende der Auswertung (einschließlich); `None` = bis zum Ende der Logs |
 | `GERAETE` | `SF2400`, `SF800` | Gerätenamen wie im Log; Reihenfolge = Reihenfolge im Bericht |
 | `TAKT_S` | 4 | übliche Taktlänge in Sekunden |
@@ -64,6 +72,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 | `LEER_SCHWELLE_W` | 30 | Ist-Summe darunter = Speicher liefert nichts |
 | `SATT_SCHWELLE_W` | 1500 | Ist-Summe ab hier = Speicher am Limit |
 | `BAND_W` | 25 | Regelgüte: Takt gilt als gut bei \|Netzsaldo\| bis zu diesem Wert |
+| `AKTIV_SCHWELLE_W` | 10 | Gerät gilt als aktiv, wenn es mindestens so viel ins Haus abgibt |
 
 `bericht.py` liest diese Werte für Titel und Beschriftungen mit. Der Bericht zeigt bei Tageswerten,
 Kennzahlen und Tagesprofil alle vollen Tage im Zeitraum.
@@ -78,6 +87,9 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
 - **Entladung je Gerät**: positiver `Ist`-Wert des Geräts. Netzladen: negativer `Ist`-Wert.
   PV-Ladung steht nicht im Log, sie zeigt sich nur am SOC-Anstieg.
 - **Bezug bei leerem Speicher**: Netzsaldo > 0, während die Ist-Summe aller Geräte unter `LEER_SCHWELLE_W` (30 W) liegt.
+- **Aktivzeit**: Stunden pro Tag, in denen ein Gerät mindestens `AKTIV_SCHWELLE_W` (10 W) ins Haus abgibt
+  (positiver `Ist`-Wert; ein eigenes Feld `outputHomePower` steht nicht im Log). „Mindestens ein Gerät“
+  nutzt die Ist-Summe und zählt gleichzeitige Abgabe nur einmal. Lücken über `MAX_LUECKE_S` zählen nicht.
 - **Deckung**: Entladung ÷ (Entladung + Netzbezug).
 - **Regelgüte**: Anteil der Takte mit |Netzsaldo| ≤ `BAND_W` (25 W), solange die Ist-Summe zwischen `LEER_SCHWELLE_W` und `SATT_SCHWELLE_W` (30 bis 1500 W) liegt.
 - **Voller Tag**: mindestens `VOLLER_TAG_H` (22 h) erfasst. Nur volle Tage gehen in Tageswerte, Kennzahlen und Tagesprofil des Berichts ein.
@@ -111,3 +123,8 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
   Tagesprofil über alle vollen Tage. Logdateimuster einstellbar (`LOG_MUSTER`).
   `bericht.py` ohne eigene Einstellungen, Geräte und Schwellwerte aus `analyse.py`.
   Fritzbox-Markierung und Vorher/Nachher-Vergleich aus dem Bericht entfernt. README angepasst.
+- 24.10.2026: Aktivzeit pro Tag ergänzt (Spalten `aktiv_<gerät>_h`, `aktiv_gesamt_h` in `tage.csv`,
+  gruppierte Balkengrafik im Bericht), Einstellung `AKTIV_SCHWELLE_W`.
+- 24.10.2026: Bericht im Design von Dashboard/Konfigurator (Titel „ZENDURE // TAGESSTATISTIK“, Geräte darunter,
+  Tag/Nacht-Umschalter, IBM Plex über `zendure_fonts.css`). Zeitlicher Zoom für Verlauf, Kennzahlen und Tageswerte;
+  die Grafiken zeichnet jetzt ein eingebettetes Skript.
