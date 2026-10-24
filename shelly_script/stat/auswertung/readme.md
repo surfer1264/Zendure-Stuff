@@ -17,7 +17,7 @@ Benötigt werden `analyse.py`, `bericht.py` und `zendure_fonts.css`, unter Windo
 
 ## Installation
 
-Benötigt werden Python 3.9 oder neuer und das Paket `pandas`. Installation in cmd oder PowerShell:
+Benötigt werden **Python 3.9** oder neuer und das Paket `pandas`. Installation in cmd oder PowerShell:
 
 ```
 py -m pip install pandas
@@ -28,6 +28,8 @@ Wird `py` nicht gefunden:
 ```
 python -m pip install pandas
 ```
+
+**Pandas** ist eine beliebte Open-Source-Programmbibliothek für die Programmiersprache Python, die speziell für die Analyse, Bearbeitung und Verwaltung von tabellarischen Daten sowie Zeitreihen entwickelt wurde
 
 Meldet das Skript danach weiterhin `ModuleNotFoundError: No module named 'pandas'`, gehören `pip`
 und `python` zu verschiedenen Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
