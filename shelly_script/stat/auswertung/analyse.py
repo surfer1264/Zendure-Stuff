@@ -1,4 +1,4 @@
-"""Statistische Auswertung der Multi-Device-Controller-Logs (SF2400 + SF800).
+"""Statistische Auswertung der Multi-Device-Controller-Logs (ein oder mehrere Zendure-Speicher).
 
 Aufruf (aus beliebigem Verzeichnis):
     python analyse.py              # Logs aus LOG_ORDNER (Standard: Ordner über diesem Skript)
@@ -9,7 +9,8 @@ Erzeugt im Ordner dieses Skripts:
     tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus
     tagesprofil.csv    Je Uhrzeit-Stunde: mittlerer Netzsaldo/Speicher-Ausgang, SOC-Verteilung je Gerät
                        (Min, Perzentile 10/25/50/75/90, Max)
-    bericht.html       Statischer Bericht (fertige SVG-Grafiken, kein JavaScript), erzeugt von bericht.py
+    geraete.csv        Ausgewertete Geräte (Name wie im Log, Spaltenschlüssel) – für bericht.py
+    bericht.html       Bericht zum Öffnen im Browser, erzeugt von bericht.py
 
 Benötigt: Python 3.9+ und pandas (pip install pandas).
 Alle Einstellungen stehen im Block EINSTELLUNGEN direkt unter den Imports.
@@ -43,8 +44,10 @@ ZEITRAUM_VON = "2026-10-06"        # 20.09. ist ein Einzeltag 16 Tage davor und 
 ZEITRAUM_BIS = None                # None = bis zum Ende der Logs
 
 # --- Geräte ------------------------------------------------------------------
-# Gerätenamen wie im Log ("  SF2400: SOC ..."). Reihenfolge = Reihenfolge im Bericht.
-GERAETE = ["SF2400", "SF800"]
+# None = alle Geräte, die im Log vorkommen, in der Reihenfolge ihres ersten Auftretens.
+# Oder eine Liste mit Namen wie im Log ("  SF2400: SOC ..."), z. B. ["SF2400", "SF800"]:
+# dann nur diese Geräte, in dieser Reihenfolge. Ein, zwei, drei oder mehr Geräte gehen.
+GERAETE = None
 
 # --- Rechenregeln --------------------------------------------------------------
 TAKT_S = 4                         # übliche Taktlänge in s (für den letzten Takt einer Reihe)
@@ -65,8 +68,8 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 
 TS = r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\] \[Script \d+\] "
 R_NETZ = re.compile(TS + r"Netzsaldo: (-?\d+) W \| Ist-Summe: (-?\d+) W \| Regelsignal: (-?\d+) W(?: \[FIX\])? \| Ladekorrektur: (-?\d+) W")
-R_DEV = re.compile(TS + r"  (SF\d+): SOC (\d+|n/a)%? \| socL (\S+) \| gridR (\S+) \| Ist (-?\d+) W \| Soll (-?\d+) W \| acMode (\d)")
-R_SET = re.compile(TS + r"(SF\d+): Leistung gesetzt")
+R_DEV = re.compile(TS + r"  ([A-Za-z0-9_.-]+): SOC (\d+|n/a)%? \| socL (\S+) \| gridR (\S+) \| Ist (-?\d+) W \| Soll (-?\d+) W \| acMode (\d)")
+R_SET = re.compile(TS + r"([A-Za-z0-9_.-]+): Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
 EREIGNISSE = [
     ("nicht_erreichbar", "Geraet nicht erreichbar"),
@@ -135,7 +138,7 @@ def einlesen(logdir):
     d["t"] = pd.to_datetime(d.t)
     e = pd.DataFrame(ev, columns=["t", "ev"])
     e["t"] = pd.to_datetime(e.t)
-    return n.sort_values("t"), d.sort_values("t"), e, takte, gespart
+    return n.sort_values("t", kind="stable"), d.sort_values("t", kind="stable"), e, takte, gespart
 
 
 def dauer_h(t):
@@ -157,13 +160,26 @@ def main():
     n, d, e = im_zeitraum(n), im_zeitraum(d), im_zeitraum(e)
     if n.empty:
         sys.exit(f"Keine Takte im Zeitraum {ZEITRAUM_VON or 'Anfang'} bis {ZEITRAUM_BIS or 'Ende'}")
-    keys = [g.lower() for g in GERAETE]
+    im_log = list(pd.unique(d.dev))
+    if GERAETE:
+        fehlt = [g for g in GERAETE if g not in im_log]
+        if fehlt:
+            print("Hinweis: nicht im Log/Zeitraum gefunden:", ", ".join(fehlt))
+        geraete = list(GERAETE)
+    else:
+        geraete = im_log
+    if not geraete:
+        sys.exit("Keine Gerätezeilen im Log gefunden")
+    d = d[d.dev.isin(geraete)]
+    keys = [g.lower() for g in geraete]
+    print("Geräte:", ", ".join(geraete))
+    pd.DataFrame({"name": geraete, "key": keys}).to_csv(os.path.join(HIER, "geraete.csv"), index=False)
 
     # ------------------------------------------------ verlauf_15min.csv
     ni = n.set_index("t")
     r = pd.DataFrame({"netzsaldo_w": ni.netz.resample("15min").mean(),
                       "speicher_w": ni.ist.resample("15min").mean()})
-    for g, k in zip(GERAETE, keys):
+    for g, k in zip(geraete, keys):
         gi = d[d.dev == g].set_index("t")
         r["soc_" + k] = gi.soc.resample("15min").mean()
         r["ausgang_" + k + "_w"] = gi.ist.resample("15min").mean()
@@ -184,7 +200,7 @@ def main():
                                bezug_speicher_aus_kwh=("b_leer", "sum"), bezug_regelrest_kwh=("b_rest", "sum"),
                                aktiv_gesamt_h=("akt", "sum"), erfasst_h=("dt", "sum"))
     lad = 0
-    for g, k in zip(GERAETE, keys):
+    for g, k in zip(geraete, keys):
         x = d[d.dev == g].copy()
         x["dt"] = dauer_h(x.t)
         x["tag"] = x.t.dt.strftime("%Y-%m-%d")
@@ -229,7 +245,7 @@ def main():
     H = h.groupby("stunde").agg(netzsaldo_w=("netz", "mean"), speicher_w=("ist", "mean")).round(1)
     dd = d[d.t.dt.strftime("%Y-%m-%d").isin(voll_tage)].copy()
     dd["stunde"] = dd.t.dt.hour
-    for g, k in zip(GERAETE, keys):
+    for g, k in zip(geraete, keys):
         s = dd[dd.dev == g].groupby("stunde").soc
         H["soc_min_" + k] = s.min()
         H["soc_max_" + k] = s.max()

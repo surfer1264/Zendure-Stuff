@@ -1,4 +1,4 @@
-# Auswertung Speicher SF2400 + SF800
+# Auswertung Zendure-Speicher (Multi-Device-Controller)
 
 Statistische Auswertung der Debug-Logs des Multi-Device-Controllers.
 Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellbar, siehe Einstellungen).
@@ -10,6 +10,7 @@ Standard: alle Logs `shelly_debug_*.log` im Ordner über `auswertung` (einstellb
 | `analyse.py` | Liest alle Logs neu ein und schreibt die drei CSV-Dateien. Einzige Rechenquelle; alle Einstellungen stehen oben im Block `EINSTELLUNGEN`. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät |
 | `tage.csv` | Pro Tag: Energie (kWh), Aktivzeit (h), SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte |
+| `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). Schreibt `analyse.py`, liest `bericht.py`. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde: mittlerer Netzsaldo und Speicher-Ausgang; je Gerät SOC-Min/-Max und Perzentile 10/25/50/75/90 |
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. Wird am Ende von `analyse.py` automatisch aufgerufen, geht aber auch einzeln (`python bericht.py`). Hat keine eigenen Einstellungen. |
 | `bericht.html` | **Bericht** zum Öffnen im Browser, eine einzelne Datei ohne Internetverbindung (Daten, Schriften und Zeichen-Skript eingebettet). Design wie Dashboard/Konfigurator mit Tag/Nacht-Umschalter. Zeitlicher Zoom, Werte beim Darüberfahren. |
@@ -65,7 +66,7 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 | `LOG_MUSTER` | `shelly_debug_*.log` | Muster der Logdateinamen (`*` = beliebige Zeichen, `?` = ein Zeichen) |
 | `ZEITRAUM_VON` | `2026-10-06` | Beginn der Auswertung (einschließlich); `None` = ab erstem Log. Der Einzeltag 20.09. bleibt so außen vor. |
 | `ZEITRAUM_BIS` | `None` | Ende der Auswertung (einschließlich); `None` = bis zum Ende der Logs |
-| `GERAETE` | `SF2400`, `SF800` | Gerätenamen wie im Log; Reihenfolge = Reihenfolge im Bericht |
+| `GERAETE` | `None` | `None` = alle Geräte aus dem Log, in der Reihenfolge ihres ersten Auftretens. Oder eine Liste wie `["SF2400", "SF800"]`: nur diese, in dieser Reihenfolge. Ein, zwei, drei oder mehr Geräte. |
 | `TAKT_S` | 4 | übliche Taktlänge in Sekunden |
 | `MAX_LUECKE_S` | 30 | Lücken darüber zählen nicht als Energie |
 | `VOLLER_TAG_H` | 22 | ab so vielen erfassten Stunden gilt ein Tag als voll |
@@ -77,6 +78,14 @@ Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
 
 `bericht.py` liest diese Werte für Titel und Beschriftungen mit. Der Bericht zeigt bei Tageswerten,
 Kennzahlen und Tagesprofil alle vollen Tage im Zeitraum.
+
+## Mehrere oder einzelne Geräte
+
+Der Bericht passt sich der Anzahl der Geräte an: Farben je Gerät (vier eigene, danach wiederholt),
+eine SOC-Verteilung je Gerät, und die Texte stehen in Einzahl oder Mehrzahl („aus dem Speicher“ /
+„aus den Speichern“). Bei nur einem Gerät entfallen „Mindestens ein Gerät“ und „(Summe)“.
+Netzsaldo und Ist-Summe kommen aus der Summenzeile des Logs; sie enthalten also alle Geräte, die der
+Controller regelt, auch wenn `GERAETE` nur einen Teil davon auswählt.
 
 ## Definitionen
 
@@ -133,3 +142,5 @@ Zahlen in Klammern sind die Standardwerte aus dem Block `EINSTELLUNGEN`.
 - 24.10.2026: „SOC nach Uhrzeit“ als Verteilung (Median + Bänder 25–75 % und 10–90 %) je Gerät statt Min/Max;
   `tagesprofil.csv` um Perzentil-Spalten `soc_p10_<gerät>` … `soc_p90_<gerät>` erweitert, Einstellung `SOC_PERZENTILE`.
   „Störungen pro Tag“ in die Gruppe „Pro Tag“ verschoben.
+- 24.10.2026: Beliebig viele Geräte: `GERAETE = None` erkennt sie automatisch (Namen nicht mehr auf `SF…` beschränkt),
+  `geraete.csv` neu, Texte im Bericht in Einzahl/Mehrzahl, zwei weitere Gerätefarben.

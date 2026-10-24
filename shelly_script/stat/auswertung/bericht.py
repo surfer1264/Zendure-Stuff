@@ -27,7 +27,8 @@ sys.path.insert(0, HIER)
 import analyse as cfg  # noqa: E402  nur Einstellungen; die Auswertung startet dabei nicht
 
 SCHRIFTEN = "zendure_fonts.css"
-FARBEN_GERAETE = ["var(--s1)", "var(--s2)", "var(--s5)", "var(--s4)"]
+# Gerätefarben in Reihenfolge; ab dem fünften Gerät wiederholen sie sich
+FARBEN_GERAETE = ["var(--s1)", "var(--s2)", "var(--s6)", "var(--s7)"]
 
 
 def _sauber(x):
@@ -48,6 +49,16 @@ def _liste(serie, nk=None):
     return out
 
 
+def geraeteliste(hier, verlauf):
+    """[(Name, Spaltenschlüssel)] – aus geraete.csv (von analyse.py), sonst aus den CSV-Spalten."""
+    pfad = os.path.join(hier, "geraete.csv")
+    if os.path.exists(pfad):
+        g = pd.read_csv(pfad, dtype=str)
+        return list(zip(g.name, g.key))
+    keys = [c[4:] for c in verlauf.columns if c.startswith("soc_")]
+    return [(k.upper(), k) for k in keys]
+
+
 def daten(hier):
     v = pd.read_csv(os.path.join(hier, "verlauf_15min.csv"))
     t = pd.read_csv(os.path.join(hier, "tage.csv"))
@@ -55,8 +66,8 @@ def daten(hier):
     voll = t[t.vollstaendig == 1].reset_index(drop=True)
     if voll.empty:
         sys.exit("Keine vollen Tage in tage.csv – Zeitraum in analyse.py prüfen")
-    geraete = [{"name": g, "key": g.lower(), "farbe": FARBEN_GERAETE[i % len(FARBEN_GERAETE)]}
-               for i, g in enumerate(cfg.GERAETE)]
+    geraete = [{"name": g, "key": k, "farbe": FARBEN_GERAETE[i % len(FARBEN_GERAETE)]}
+               for i, (g, k) in enumerate(geraeteliste(hier, v))]
     # Zeit als Minuten seit 1970 ohne Zeitzone (Logzeit = Ortszeit, keine Sommerzeit-Sprünge)
     minuten = ((pd.to_datetime(v.t) - pd.Timestamp("1970-01-01")) // pd.Timedelta(minutes=1)).astype(int)
     verlauf = {"t": [int(x) for x in minuten], "netz": _liste(v.netzsaldo_w), "speicher": _liste(v.speicher_w)}
@@ -68,6 +79,7 @@ def daten(hier):
         "geraete": geraete,
         "cfg": {"band": cfg.BAND_W, "leer": cfg.LEER_SCHWELLE_W, "aktiv": cfg.AKTIV_SCHWELLE_W,
                 "takt": cfg.TAKT_S, "luecke": cfg.MAX_LUECKE_S, "vollH": cfg.VOLLER_TAG_H},
+        "mehr": len(geraete) > 1,
         "verlauf": verlauf, "tage": tage, "profil": profil,
         "profilVon": voll.tag.iloc[0], "profilBis": voll.tag.iloc[-1],
     }
@@ -91,8 +103,9 @@ def erzeugen(hier=HIER):
     methode = (
         f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {c['takt']} s). "
         f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s zählen nicht. "
-        f"„Bezug bei leerem Speicher“: Netzsaldo &gt; 0, während die Ist-Summe aller Geräte unter {c['leer']} W lag. "
-        f"„Aktiv“: Ein Gerät gibt mindestens {c['aktiv']} W ins Haus ab. Tageswerte und Kennzahlen zeigen nur volle Tage "
+        f"„Netzbezug bei {'leeren Speichern' if d['mehr'] else 'leerem Speicher'}“: Netzsaldo &gt; 0, während "
+        f"{'die Ist-Summe aller Geräte' if d['mehr'] else 'der Ist-Wert des Geräts'} unter {c['leer']} W lag. "
+        f"„Aktiv“: Ein Gerät gilt als aktiv, solange es mindestens {c['aktiv']} W ins Haus abgibt. Tageswerte und Kennzahlen zeigen nur volle Tage "
         f"(mindestens {c['vollH']} h erfasst). PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen."
     )
     seite = (VORLAGE
@@ -140,7 +153,7 @@ __SCHRIFTEN__
     --shadow:0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
     --teal-text:#4FD1C5; --amber-text:#F2A93B; --alert-text:#E2574C;
     --grid:rgba(255,255,255,0.06); --axis:rgba(255,255,255,0.22); --ref:#5B6B85;
-    --s1:#4FD1C5; --s2:#F2A93B; --s3:#E2574C; --s4:#8F9BFF; --s5:#5CCB76; --muted-series:#34445F;
+    --s1:#4FD1C5; --s2:#F2A93B; --s3:#E2574C; --s4:#8F9BFF; --s5:#5CCB76; --s6:#E77BD0; --s7:#6CB6FF; --muted-series:#34445F;
     --sel:rgba(79,209,197,0.16);
   }
   html[data-theme="light"]{
@@ -153,7 +166,7 @@ __SCHRIFTEN__
     --shadow:0 10px 24px rgba(20,30,45,0.10), 0 2px 6px rgba(20,30,45,0.06);
     --teal-text:#207B73; --amber-text:#99600A; --alert-text:#CF2E22;
     --grid:rgba(15,23,32,0.07); --axis:rgba(15,23,32,0.25); --ref:#8A97A8;
-    --s1:#1FA394; --s2:#D08418; --s3:#CF2E22; --s4:#5B63D6; --s5:#2F8A46; --muted-series:#C9D3DD;
+    --s1:#1FA394; --s2:#D08418; --s3:#CF2E22; --s4:#5B63D6; --s5:#2F8A46; --s6:#B4479C; --s7:#2F6FC4; --muted-series:#C9D3DD;
     --sel:rgba(31,163,148,0.14);
   }
   *{box-sizing:border-box;}
@@ -369,7 +382,8 @@ var NS = 'http://www.w3.org/2000/svg';
 var W = 960, WH = 560, H = 260, HT = 320, ML = 52, MR = 16, MT = 14, MB = 30;
 var TAG = 1440, MIN_SPAN = 120;
 var WT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
-var G = D.geraete, V = D.verlauf, T = D.tage;
+var G = D.geraete, V = D.verlauf, T = D.tage, MEHR = D.mehr;
+var LEER_TXT = MEHR ? 'Netzbezug bei leeren Speichern' : 'Netzbezug bei leerem Speicher';
 var NT = V.t.length;
 var LO = Math.floor(V.t[0] / TAG) * TAG, HI = Math.ceil((V.t[NT - 1] + 15) / TAG) * TAG;
 var range = {a: LO, b: HI};
@@ -588,7 +602,7 @@ function gruppe(id, o){
   if (!o.kat.length) return leer(id, 'Keine vollen Tage im gewählten Zeitraum.');
   var alle = [0]; o.serien.forEach(function(s){ alle = alle.concat(s.werte); });
   o.ymin = 0;
-  var f = katRahmen(id, o, alle), m = o.serien.length, gw = f.band * 0.78, bw = gw / m;
+  var f = katRahmen(id, o, alle), m = o.serien.length, bw = Math.min(f.band * 0.78 / m, 44), gw = bw * m;
   for (var i = 0; i < f.n; i++){
     var x0 = ML + f.band * i + (f.band - gw) / 2;
     o.serien.forEach(function(s, j){
@@ -657,11 +671,11 @@ function kennzahlen(idx){
   var spar = 100 * summe('takte_ohne_abfrage', idx) / summe('takte_gesamt', idx), akt = summe('aktiv_gesamt_h', idx) / idx.length;
   var von = dKurz(TMIN[idx[0]]), bis = dKurz(TMIN[idx[idx.length - 1]]), zr = von === bis ? von : von + '–' + bis;
   var k = [
-    ['Aus Speicher entladen', f1(ent), 'kWh', zr + ', alle Geräte'],
+    [MEHR ? 'Aus Speichern entladen' : 'Aus Speicher entladen', f1(ent), 'kWh', zr + (MEHR ? ', alle Geräte' : ', ' + G[0].name)],
     ['Netzbezug', f1(bez), 'kWh', zr + ', Netzsaldo > 0'],
     ['Deckung durch Speicher', f0(deck), '%', 'Entladung ÷ (Entladung + Bezug)'],
     ['Regelung im ±' + D.cfg.band + '-W-Band', f1(band), '%', 'solange ein Speicher einspeist'],
-    ['Aktiv je Tag', f1(akt), 'h', 'mindestens ein Gerät gibt ab'],
+    ['Aktiv je Tag', f1(akt), 'h', MEHR ? 'mindestens ein Gerät gibt ab' : G[0].name + ' gibt ab'],
     ['Takte ohne Geräteabfrage', f0(spar), '%', 'durch Sparmodus eingespart']
   ];
   el.innerHTML = k.map(function(x){
@@ -669,8 +683,9 @@ function kennzahlen(idx){
            '</span></span><span class="note">' + esc(x[3]) + '</span></div>';
   }).join('');
   take.innerHTML = 'In <b>' + idx.length + '</b> ' + (idx.length === 1 ? 'vollen Tag' : 'vollen Tagen') + ' (' + zr + ') kamen <b>' + f1(ent) +
-    ' kWh</b> aus den Speichern und <b>' + f1(bez) + ' kWh</b> aus dem Netz. <b>' + f0(anteil) +
-    ' %</b> des Netzbezugs fielen an, während die Speicher nichts lieferten (leer bzw. an der Entladegrenze).';
+    ' kWh</b> aus ' + (MEHR ? 'den Speichern' : 'dem Speicher') + ' und <b>' + f1(bez) + ' kWh</b> aus dem Netz. <b>' + f0(anteil) +
+    ' %</b> des Netzbezugs fielen an, während ' + (MEHR ? 'kein Speicher etwas lieferte' : 'der Speicher nichts lieferte') +
+    ' (leer bzw. an der Entladegrenze).';
 }
 
 function zeichne(){
@@ -690,7 +705,7 @@ function zeichne(){
 
   zeitLinien('c-soc', {serien: G.map(function(g){ return {name: g.name, werte: V['soc_' + g.key], farbe: g.farbe}; }),
     yfmt: f0, einheit: ' %', ymin: 0, ymax: 100, aria: 'Ladezustand über die Zeit'});
-  zeitLinien('c-leistung', {serien: [{name: 'Netzsaldo', werte: V.netz, farbe: S.s3}, {name: 'Speicher-Ausgang', werte: V.speicher, farbe: S.s1}],
+  zeitLinien('c-leistung', {serien: [{name: 'Netzsaldo', werte: V.netz, farbe: S.s3}, {name: MEHR ? 'Speicher-Ausgang (Summe)' : 'Speicher-Ausgang', werte: V.speicher, farbe: S.s1}],
     yfmt: f0, einheit: ' W', ref: 0, h: HT, aria: 'Netzsaldo und Speicher-Ausgang'});
 
   var idx = tageImAusschnitt(), kat = idx.map(function(i){ return TMIN[i]; });
@@ -700,11 +715,11 @@ function zeichne(){
   function mit(o){ var r = {}; Object.keys(basis).forEach(function(k){ r[k] = basis[k]; }); Object.keys(o).forEach(function(k){ r[k] = o[k]; }); return r; }
 
   stapel('c-energie', mit({serien: G.map(function(g){ return {name: 'Entladung ' + g.name, werte: spalte('entladung_' + g.key + '_kwh', idx), farbe: g.farbe}; })
-      .concat([{name: 'Netzbezug bei leerem Speicher', werte: spalte('bezug_speicher_aus_kwh', idx), farbe: S.s3},
+      .concat([{name: LEER_TXT, werte: spalte('bezug_speicher_aus_kwh', idx), farbe: S.s3},
                {name: 'Übriger Netzbezug', werte: spalte('bezug_regelrest_kwh', idx), farbe: S.s4}]),
     yfmt: f1, einheit: ' kWh', h: HT, aria: 'Energie pro Tag gestapelt'}));
   gruppe('c-aktiv', mit({serien: G.map(function(g){ return {name: g.name, werte: spalte('aktiv_' + g.key + '_h', idx), farbe: g.farbe}; })
-      .concat([{name: 'Mindestens ein Gerät', werte: spalte('aktiv_gesamt_h', idx), farbe: S.mut}]),
+      .concat(MEHR ? [{name: 'Mindestens ein Gerät', werte: spalte('aktiv_gesamt_h', idx), farbe: S.mut}] : []),
     yfmt: f1, einheit: ' h', ymax: 24, yticks: [0, 6, 12, 18, 24], aria: 'Aktivzeit pro Tag'}));
   katLinie('c-deckung', mit({serien: [{name: 'Deckung', werte: spalte('deckung_pct', idx), farbe: S.s1}],
     yfmt: f0, einheit: ' %', ymin: 0, ymax: 100, w: WH, aria: 'Deckung pro Tag'}));
@@ -732,7 +747,7 @@ function profil(){
       {name: 'Speicher-Ausgang', werte: P.speicher_w, farbe: S.s1}], yfmt: f0, einheit: ' W', ref: 0, aria: 'Leistung nach Uhrzeit'}));
   var box = document.getElementById('profilsoc');
   box.innerHTML = G.map(function(g){
-    return '<div class="card chart"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
+    return '<div class="card chart' + (MEHR ? '' : ' wide') + '"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
       '<p>Verteilung über alle vollen Tage: Linie = Median, kräftiges Band = mittlere Hälfte der Tage (25–75 %), ' +
       'blasses Band = 10–90 %.</p><div class="legend" id="lg-band-' + g.key + '"></div><div id="c-band-' + g.key + '"></div></div>';
   }).join('');
@@ -741,7 +756,7 @@ function profil(){
     if (!p(50)) return leer('c-band-' + k, 'Keine Perzentile in tagesprofil.csv – analyse.py neu laufen lassen.');
     legende('lg-band-' + k, [['Median', g.farbe], ['25–75 %', 'color-mix(in srgb, ' + g.farbe + ' 45%, transparent)'],
                              ['10–90 %', 'color-mix(in srgb, ' + g.farbe + ' 30%, transparent)']]);
-    katBand('c-band-' + k, Object.assign({}, o, {farbe: g.farbe, mitte: p(50),
+    katBand('c-band-' + k, Object.assign({}, o, {w: MEHR ? WH : W, tickSchritt: MEHR ? 4 : 2, farbe: g.farbe, mitte: p(50),
       baender: [[p(10), p(90), 0.16], [p(25), p(75), 0.38]],
       tip: function(i){ return [['Median', f0(p(50)[i]) + ' %', g.farbe], ['25–75 %', f0(p(25)[i]) + '–' + f0(p(75)[i]) + ' %'],
         ['10–90 %', f0(p(10)[i]) + '–' + f0(p(90)[i]) + ' %'],
@@ -766,16 +781,16 @@ function katBand(id, o){
 
 /* ---------------- Start ---------------- */
 legende('lg-soc', G.map(function(g){ return [g.name, g.farbe]; }));
-legende('lg-leistung', [['Netzsaldo', S.s3], ['Speicher-Ausgang (Summe)', S.s1]]);
+legende('lg-leistung', [['Netzsaldo', S.s3], [MEHR ? 'Speicher-Ausgang (Summe aller Geräte)' : 'Speicher-Ausgang', S.s1]]);
 legende('lg-energie', G.map(function(g){ return ['Entladung ' + g.name, g.farbe]; })
-  .concat([['Netzbezug bei leerem Speicher', S.s3], ['Übriger Netzbezug', S.s4]]));
-legende('lg-aktiv', G.map(function(g){ return [g.name, g.farbe]; }).concat([['Mindestens ein Gerät', S.mut]]));
+  .concat([[LEER_TXT, S.s3], ['Übriger Netzbezug', S.s4]]));
+legende('lg-aktiv', G.map(function(g){ return [g.name, g.farbe]; }).concat(MEHR ? [['Mindestens ein Gerät', S.mut]] : []));
 legende('lg-befehle', G.map(function(g){ return [g.name, g.farbe]; }));
 legende('lg-fehler', [['Nicht erreichbar', S.s3], ['Takt übersprungen', S.s4], ['Watchdog', S.s5]]);
 legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteabfrage', S.mut]]);
 legende('lg-profil', [['Netzsaldo', S.s3], ['Speicher-Ausgang', S.s1]]);
-document.getElementById('txt-aktiv').textContent = 'Stunden je Tag, in denen ein Gerät mindestens ' + D.cfg.aktiv +
-  ' W ins Haus abgegeben hat. „Mindestens ein Gerät“ zählt jede Stunde nur einmal.';
+document.getElementById('txt-aktiv').textContent = 'Stunden je Tag, in denen ' + (MEHR ? 'ein Gerät' : 'das Gerät') + ' mindestens ' +
+  D.cfg.aktiv + ' W ins Haus abgegeben hat.' + (MEHR ? ' „Mindestens ein Gerät“ zählt jede Stunde nur einmal, auch wenn mehrere gleichzeitig liefern.' : '');
 document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo| ≤ ' + D.cfg.band + ' W, solange ein Speicher einspeist und nicht am Limit ist.';
 document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (etwa ' + f0(86400 / D.cfg.takt) + ' bei ' + D.cfg.takt +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
