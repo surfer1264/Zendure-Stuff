@@ -625,10 +625,16 @@ function katLinie(id, o){
   if (o.ref !== undefined && f.ya.lo <= o.ref && o.ref <= f.ya.hi)
     f.out.push('<line x1="' + ML + '" x2="' + (f.w - MR) + '" y1="' + f.sy(o.ref).toFixed(1) + '" y2="' + f.sy(o.ref).toFixed(1) + '" class="ref"/>');
   o.serien.forEach(function(s){
-    var pts = [];
-    s.werte.forEach(function(v, i){ if (v !== null && !isNaN(v)) pts.push(sx(i).toFixed(1) + ',' + f.sy(v).toFixed(1)); });
-    if (pts.length > 1) f.out.push('<polyline points="' + pts.join(' ') + '" fill="none" style="stroke:' + s.farbe + '" stroke-width="2" stroke-linejoin="round"' +
-                                   (s.strich ? ' stroke-dasharray="5 4"' : ' stroke-linecap="round"') + '/>');
+    /* Linie bei fehlenden Werten unterbrechen statt durchzuziehen */
+    var teile = [[]];
+    s.werte.forEach(function(v, i){
+      if (v !== null && !isNaN(v)) teile[teile.length - 1].push(sx(i).toFixed(1) + ',' + f.sy(v).toFixed(1));
+      else if (teile[teile.length - 1].length) teile.push([]);
+    });
+    teile.forEach(function(pts){
+      if (pts.length > 1) f.out.push('<polyline points="' + pts.join(' ') + '" fill="none" style="stroke:' + s.farbe + '" stroke-width="2" stroke-linejoin="round"' +
+                                     (s.strich ? ' stroke-dasharray="5 4"' : ' stroke-linecap="round"') + '/>');
+    });
     if (f.n <= 62) s.werte.forEach(function(v, i){
       if (v !== null && !isNaN(v)) f.out.push('<circle cx="' + sx(i).toFixed(1) + '" cy="' + f.sy(v).toFixed(1) + '" r="3" style="fill:' + s.farbe + '"/>');
     });
@@ -661,6 +667,11 @@ function tageImAusschnitt(){
 
 /* ---------------- Zeichnen ---------------- */
 var S = {s1:'var(--s1)', s2:'var(--s2)', s3:'var(--s3)', s4:'var(--s4)', s5:'var(--s5)', mut:'var(--muted-series)'};
+/* Prozent-Achse: beginnt bei 'standard', reicht aber tiefer (auf 10 % abgerundet), wenn ein Wert darunter liegt */
+function unten(werte, standard){
+  var w = werte.filter(function(v){ return v !== null && !isNaN(v); });
+  return w.length ? Math.max(0, Math.min(standard, Math.floor(Math.min.apply(null, w) / 10) * 10)) : standard;
+}
 function spalte(name, idx){ var c = T[name] || []; return idx.map(function(i){ var v = c[i]; return v === undefined ? null : v; }); }
 function summe(name, idx){ return spalte(name, idx).reduce(function(s, v){ return s + (v || 0); }, 0); }
 
@@ -672,7 +683,8 @@ function kennzahlen(idx){
     return;
   }
   var ent = summe('entladung_gesamt_kwh', idx), bez = summe('netzbezug_kwh', idx), leerB = summe('bezug_speicher_aus_kwh', idx);
-  var band = summe('regel_im_band_pct', idx) / idx.length, deck = 100 * ent / (ent + bez), anteil = bez ? 100 * leerB / bez : null;
+  var rgw = spalte('regel_im_band_pct', idx).filter(function(v){ return v !== null; });
+  var band = rgw.length ? rgw.reduce(function(s, v){ return s + v; }, 0) / rgw.length : null, deck = 100 * ent / (ent + bez), anteil = bez ? 100 * leerB / bez : null;
   var spar = 100 * summe('takte_ohne_abfrage', idx) / summe('takte_gesamt', idx), akt = summe('aktiv_gesamt_h', idx) / idx.length;
   var von = dKurz(TMIN[idx[0]]), bis = dKurz(TMIN[idx[idx.length - 1]]), zr = von === bis ? von : von + '–' + bis;
   var k = [
@@ -723,14 +735,18 @@ function zeichne(){
       .concat([{name: LEER_TXT, werte: spalte('bezug_speicher_aus_kwh', idx), farbe: S.s3},
                {name: 'Übriger Netzbezug', werte: spalte('bezug_regelrest_kwh', idx), farbe: S.s4}]),
     yfmt: f1, einheit: ' kWh', h: HT, aria: 'Energie pro Tag gestapelt'}));
+  var hMax = 24;
+  G.map(function(g){ return 'aktiv_' + g.key + '_h'; }).concat(['aktiv_gesamt_h']).forEach(function(c){
+    spalte(c, idx).forEach(function(v){ if (v !== null && v > hMax) hMax = Math.ceil(v); });
+  });
   gruppe('c-aktiv', mit({serien: G.map(function(g){ return {name: g.name, werte: spalte('aktiv_' + g.key + '_h', idx), farbe: g.farbe}; })
       .concat(MEHR ? [{name: 'Mindestens ein Gerät', werte: spalte('aktiv_gesamt_h', idx), farbe: S.mut}] : []),
-    yfmt: f1, einheit: ' h', ymax: 24, yticks: [0, 6, 12, 18, 24], aria: 'Aktivzeit pro Tag'}));
+    yfmt: f1, einheit: ' h', ymax: hMax, yticks: hMax > 24 ? undefined : [0, 6, 12, 18, 24], aria: 'Aktivzeit pro Tag'}));
   katLinie('c-deckung', mit({serien: [{name: 'Deckung', werte: spalte('deckung_pct', idx), farbe: S.s1}],
     yfmt: f0, einheit: ' %', ymin: 0, ymax: 100, w: WH, aria: 'Deckung pro Tag'}));
-  var rg = spalte('regel_im_band_pct', idx), rmin = Math.min.apply(null, rg.filter(function(v){ return v !== null; }).concat([80]));
+  var rg = spalte('regel_im_band_pct', idx), sp = spalte('spar_anteil_pct', idx);
   katLinie('c-regel', mit({serien: [{name: 'Im ±' + D.cfg.band + '-W-Band', werte: rg, farbe: S.s1}],
-    yfmt: f0, einheit: ' %', ymin: Math.floor(rmin / 10) * 10, ymax: 100, w: WH, aria: 'Regelgüte pro Tag'}));
+    yfmt: f0, einheit: ' %', ymin: unten(rg, 80), ymax: 100, w: WH, aria: 'Regelgüte pro Tag'}));
   katLinie('c-befehle', mit({serien: G.map(function(g){ return {name: g.name, werte: spalte('stellbefehle_' + g.key, idx), farbe: g.farbe}; }),
     yfmt: f0, einheit: '', w: WH, aria: 'Stellbefehle pro Tag'}));
   katLinie('c-fehler', mit({serien: [{name: 'Nicht erreichbar', werte: spalte('nicht_erreichbar', idx), farbe: S.s3},
@@ -741,7 +757,7 @@ function zeichne(){
       {name: 'Mit Geräteabfrage', werte: spalte('takte_mit_abfrage', idx), farbe: S.mut}],
     yfmt: f0, einheit: '', w: WH, aria: 'Takte pro Tag'}));
   katLinie('c-spar', mit({serien: [{name: 'Ohne Abfrage', werte: spalte('spar_anteil_pct', idx), farbe: S.s1}],
-    yfmt: f0, einheit: ' %', ymin: 50, ymax: 100, w: WH, aria: 'Anteil eingesparter Takte'}));
+    yfmt: f0, einheit: ' %', ymin: unten(sp, 50), ymax: 100, w: WH, aria: 'Anteil eingesparter Takte'}));
 }
 
 function profil(){

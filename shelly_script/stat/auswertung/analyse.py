@@ -246,7 +246,10 @@ def main():
     # voller Tag = mindestens VOLLER_TAG_H Stunden erfasst (kurze Ausfälle zählen nicht)
     day["vollstaendig"] = (day.erfasst_h >= VOLLER_TAG_H).astype(int)
     voll_tage = set(day.index[day.vollstaendig == 1])
-    day = day.drop(columns="erfasst_h").fillna(0)
+    # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus)
+    regel = ["regel_im_band_pct", "regel_median_abw_w"]
+    day = day.drop(columns="erfasst_h")
+    day[day.columns.difference(regel)] = day[day.columns.difference(regel)].fillna(0)
     day[zaehler] = day[zaehler].astype(int)
     cols = ["vollstaendig"] + [c for c in day.columns if c != "vollstaendig"]
     day = day[cols].round(2).reset_index()
