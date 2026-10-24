@@ -107,14 +107,14 @@ Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, w
 - **Netzbezug / Einspeisung:** aktueller Netzsaldo mit Richtung („Bezug“ bzw. „Einspeisung“) und Vergleich zum Sollwert, dazu eine Verlaufskurve der letzten 2 Minuten.
 - **Solarflow-Leistung:** Summe aller Speicher (+ = geben ab, − = laden), darunter der durchschnittliche Ladestand („Ø Ladestand … %“), ebenfalls mit Verlaufskurve. Beide Kurven haben unterschiedliche Maßstäbe und beginnen nach einem Neuladen der Seite wieder von vorn.
 - **Je Speicher eine Karte** mit:
-    - Name und Statuspunkt (grün = erreichbar); mit „Technische Details“ zusätzlich `[devN]` und IP-Adresse
-    - Ladestand als Batteriesymbol und Zahl, daneben die Leistung mit Richtung („gibt ab“, „lädt“, „Bereitschaft“)
-    - darunter das Arbeitsfenster, z. B. `Bereich 15–100 %` (Reserve bis Ladeziel)
-    - PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächste Zelle („Zelle min 3,28 V“) – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „Sperre < 2,90 V“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
-    - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war; Antippen zeigt das Datum ([mehr dazu](readme.md#letzte-vollladung))
-    - Status in Klartext, z. B. „speist ein“, „voll, Laden gesperrt“, „leer, Entladen gesperrt“, „Export verboten“. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle. Mit „Technische Details“ steht der Rohcode davor (`socLimit 1`, `gridReverse 2` …).
-    - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration, z. B. „Ladegrenze 90 % · abweichend, Konfiguration 100 %“ (`socSet` ≠ `maxSoc`) oder „Reserve am Gerät 15 % · abweichend, KVS 20 %“. Meist wurde der Wert von außen geändert (App, Home Assistant).
-    - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
+  - Name und Statuspunkt (grün = erreichbar); mit „Technische Details“ zusätzlich `[devN]` und IP-Adresse
+  - Ladestand als Batteriesymbol und Zahl, daneben die Leistung mit Richtung („gibt ab“, „lädt“, „Bereitschaft“)
+  - darunter das Arbeitsfenster, z. B. `Bereich 15–100 %` (Reserve bis Ladeziel)
+  - PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächste Zelle („Zelle min 3,28 V“) – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „Sperre < 2,90 V“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
+  - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war; Antippen zeigt das Datum ([mehr dazu](readme.md#letzte-vollladung))
+  - Status in Klartext, z. B. „speist ein“, „voll, Laden gesperrt“, „leer, Entladen gesperrt“, „Export verboten“. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle. Mit „Technische Details“ steht der Rohcode davor (`socLimit 1`, `gridReverse 2` …).
+  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration, z. B. „Ladegrenze 90 % · abweichend, Konfiguration 100 %“ (`socSet` ≠ `maxSoc`) oder „Reserve am Gerät 15 % · abweichend, KVS 20 %“. Meist wurde der Wert von außen geändert (App, Home Assistant).
+  - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
 - **Fußzeile:** Versionen von Seite und Script (gelb, wenn sie nicht zusammenpassen), Zeitpunkt der letzten Aktualisierung, Link **Hilfe** auf diese Anleitung. `config_api` und `status_api` öffnen die Rohdaten als JSON in einem neuen Tab. **ThingSpeak** und **ThingsBoard** führen zu den Einrichtungsseiten für den Cloud-Upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md)).
 
 **Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Entlade-Hysterese, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
@@ -148,8 +148,8 @@ Für die Anzeige nebenbei reicht jeder Rechner. Soll das Dashboard **immer** err
 - Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles Laden …), muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
 - Für das Python-Script und die Synology: **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden.
 - Außer beim fertigen Programm die zwei Dateien aus [diesem Ordner](.):
-    - [`zendure_proxy.py`](zendure_proxy.py) – der Proxy
-    - [`zendure-dashboard.html`](zendure-dashboard.html) – die Dashboard-Seite
+  - [`zendure_proxy.py`](zendure_proxy.py) – der Proxy
+  - [`zendure-dashboard.html`](zendure-dashboard.html) – die Dashboard-Seite
 
   Die HTML-Datei darf **im selben Ordner** wie der Proxy liegen oder **eine Ebene höher**. Liegt an beiden Stellen eine, gewinnt die im selben Ordner.
 

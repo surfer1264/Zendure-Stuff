@@ -42,8 +42,8 @@ La version actuelle et toutes les modifications figurent dans le [changelog](CHA
 - **Des batteries Zendure avec interface locale** (zenSDK), joignables à l'adresse `http://<IP-de-la-batterie>/properties/report`. Testé avec SolarFlow 2400 Pro et SolarFlow 800.
 - **Le [Controller](../Controller/readme_FR.md)** sur votre Shelly contrôleur si vous voulez utiliser le tableau de bord. Le tableau de bord lit et écrit ses réglages. Si vous n'utilisez que le watchdog, vous n'en avez pas besoin.
 - **Pour les messages** (facultatif) :
-    - Signal ou WhatsApp : une clé API gratuite de [CallMeBot](https://www.callmebot.com)
-    - ou un webhook, par exemple dans Home Assistant
+  - Signal ou WhatsApp : une clé API gratuite de [CallMeBot](https://www.callmebot.com)
+  - ou un webhook, par exemple dans Home Assistant
 
 > **Remarque :** **aucune protection par mot de passe** ne doit être active sur le Shelly contrôleur. Sinon, ce script ne peut pas y lire ni écrire les réglages.
 

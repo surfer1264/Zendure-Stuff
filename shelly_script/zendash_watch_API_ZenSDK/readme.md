@@ -34,34 +34,34 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 ## Inhalt
 
 - [Dashboard-Shelly - API + Watchdog](#dashboard-shelly---api--watchdog)
-    - [Was macht der AkkuWatchDog?](#was-macht-der-akkuwatchdog)
-    - [Inhalt](#inhalt)
-    - [Was du brauchst](#was-du-brauchst)
-    - [So arbeitet das Script](#so-arbeitet-das-script)
-    - [Installation](#installation)
-        - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
-        - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
-        - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
-        - [Nach dem Start](#nach-dem-start)
-    - [Konfiguration](#konfiguration)
-        - [Geräte (`devices`)](#geräte-devices)
-        - [Dashboard-Teil (`api`)](#dashboard-teil-api)
-        - [Watchdog (`watchdog`)](#watchdog-watchdog)
-        - [Nachrichten (`notify`)](#nachrichten-notify)
-        - [Allgemein](#allgemein)
-    - [Dashboard](#dashboard)
-        - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
-    - [Nachrichten](#nachrichten)
-    - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
-    - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
-    - [Letzte Vollladung](#letzte-vollladung)
-    - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
-    - [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen)
-    - [Speicherbedarf](#speicherbedarf)
-    - [Fehlersuche](#fehlersuche)
-        - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
-        - [Häufige Probleme](#häufige-probleme)
-    - [Download](#download)
+  - [Was macht der AkkuWatchDog?](#was-macht-der-akkuwatchdog)
+  - [Inhalt](#inhalt)
+  - [Was du brauchst](#was-du-brauchst)
+  - [So arbeitet das Script](#so-arbeitet-das-script)
+  - [Installation](#installation)
+    - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
+    - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
+    - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
+    - [Nach dem Start](#nach-dem-start)
+  - [Konfiguration](#konfiguration)
+    - [Geräte (`devices`)](#geräte-devices)
+    - [Dashboard-Teil (`api`)](#dashboard-teil-api)
+    - [Watchdog (`watchdog`)](#watchdog-watchdog)
+    - [Nachrichten (`notify`)](#nachrichten-notify)
+    - [Allgemein](#allgemein)
+  - [Dashboard](#dashboard)
+    - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
+  - [Nachrichten](#nachrichten)
+  - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
+  - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
+  - [Letzte Vollladung](#letzte-vollladung)
+  - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
+  - [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen)
+  - [Speicherbedarf](#speicherbedarf)
+  - [Fehlersuche](#fehlersuche)
+    - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
+    - [Häufige Probleme](#häufige-probleme)
+  - [Download](#download)
 
 ---
 
@@ -71,8 +71,8 @@ Die aktuelle Version und alle Änderungen stehen im [Changelog](CHANGELOG.md).
 - **Zendure-Speicher mit lokaler Schnittstelle** (zenSDK), erreichbar unter `http://<IP-des-Speichers>/properties/report`. Getestet mit SolarFlow 2400 Pro und SolarFlow 800.
 - **Den [Controller](../Controller/readme.md)** auf deinem Controller-Shelly, wenn du das Dashboard nutzen willst. Das Dashboard liest und schreibt dessen Einstellungen. Nutzt du nur den Watchdog, brauchst du ihn nicht.
 - **Für Nachrichten** (optional):
-    - Signal oder WhatsApp: einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com)
-    - oder einen Webhook, zum Beispiel in Home Assistant
+  - Signal oder WhatsApp: einen kostenlosen API-Key von [CallMeBot](https://www.callmebot.com)
+  - oder einen Webhook, zum Beispiel in Home Assistant
 
 > **Hinweis:** Auf dem Controller-Shelly darf **kein Passwortschutz** aktiv sein. Sonst kann dieses Script die Einstellungen dort nicht lesen und schreiben.
 

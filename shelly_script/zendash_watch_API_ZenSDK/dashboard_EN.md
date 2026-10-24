@@ -11,22 +11,22 @@ The dashboard shows you live grid draw, state of charge and power of your batter
 **Contents**
 
 - [Setting up and using the dashboard](#setting-up-and-using-the-dashboard)
-    - [How it fits together](#how-it-fits-together)
-    - [Operation](#operation)
-        - [Page layout](#page-layout)
-        - [Locking and unlocking](#locking-and-unlocking)
-        - ["View" menu](#view-menu)
-        - [What you can set](#what-you-can-set)
-        - [What the display shows](#what-the-display-shows)
-    - [Which option suits you?](#which-option-suits-you)
-    - [Requirements](#requirements)
-    - [Dashboard in 4 steps](#dashboard-in-4-steps)
-    - [As a program on Windows or macOS](#as-a-program-on-windows-or-macos)
-    - [Continuous operation on a Synology](#continuous-operation-on-a-synology)
-    - [As an app in Home Assistant](#as-an-app-in-home-assistant)
-    - [Start options](#start-options)
-    - [Good to know](#good-to-know)
-    - [If it does not work](#if-it-does-not-work)
+  - [How it fits together](#how-it-fits-together)
+  - [Operation](#operation)
+    - [Page layout](#page-layout)
+    - [Locking and unlocking](#locking-and-unlocking)
+    - ["View" menu](#view-menu)
+    - [What you can set](#what-you-can-set)
+    - [What the display shows](#what-the-display-shows)
+  - [Which option suits you?](#which-option-suits-you)
+  - [Requirements](#requirements)
+  - [Dashboard in 4 steps](#dashboard-in-4-steps)
+  - [As a program on Windows or macOS](#as-a-program-on-windows-or-macos)
+  - [Continuous operation on a Synology](#continuous-operation-on-a-synology)
+  - [As an app in Home Assistant](#as-an-app-in-home-assistant)
+  - [Start options](#start-options)
+  - [Good to know](#good-to-know)
+  - [If it does not work](#if-it-does-not-work)
 
 > The proxy's console output and its setup page are in German. The dashboard page itself can be switched to English (button DE/EN/FR at the top right).
 
@@ -115,14 +115,14 @@ Not changeable in the dashboard are the **hysteresis** (tolerance around the set
 - **Grid import / export:** current grid balance with direction ("import" or "export") and comparison with the setpoint, plus a history curve of the last 2 minutes.
 - **Solarflow power:** sum of all batteries (+ = supplying, − = charging), below it the average state of charge ("Avg. charge … %"), also with a history curve. The two curves have different scales and start from scratch after reloading the page.
 - **One card per battery** with:
-    - name and status dot (green = reachable); with "Technical details" also `[devN]` and IP address
-    - state of charge as battery icon and number, next to it the power with direction ("supplying", "charging", "standby")
-    - below it the operating window, e.g. `Range 15–100 %` (reserve to charge target)
-    - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
-    - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
-    - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
-    - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
-    - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
+  - name and status dot (green = reachable); with "Technical details" also `[devN]` and IP address
+  - state of charge as battery icon and number, next to it the power with direction ("supplying", "charging", "standby")
+  - below it the operating window, e.g. `Range 15–100 %` (reserve to charge target)
+  - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
+  - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
+  - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
+  - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
+  - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
 - **Footer:** versions of page and script (yellow if they do not match), time of the last update, **Help** link to this guide. `config_api` and `status_api` open the raw data as JSON in a new tab. **ThingSpeak** and **ThingsBoard** lead to the setup pages for the cloud upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), German).
 
 **Explanations on tap:** Many labels and values have a dotted underline – setpoint, discharge hysteresis, fixed discharge, the two overview tiles, power, operating window, extra line, lock threshold; the status tags too. Tapping (or hovering with the mouse) shows a short explanation.
@@ -156,8 +156,8 @@ Any computer will do for occasional viewing. If the dashboard should **always** 
 - To also **change settings** in the dashboard (setpoint, reserve, manual charging …), `kvsEnabled: true` and `kvsForceReseed: false` must be set in the Controller. Without KVS the dashboard only displays.
 - For the Python script and the Synology: **Python 3.7 or newer** ([python.org](https://www.python.org/downloads/)). Nothing else needs to be installed.
 - Except for the ready-made program, the two files from [this folder](.):
-    - [`zendure_proxy.py`](zendure_proxy.py) – the proxy
-    - [`zendure-dashboard.html`](zendure-dashboard.html) – the dashboard page
+  - [`zendure_proxy.py`](zendure_proxy.py) – the proxy
+  - [`zendure-dashboard.html`](zendure-dashboard.html) – the dashboard page
 
   The HTML file may be **in the same folder** as the proxy or **one level up**. If there is one in both places, the one in the same folder wins.
 
