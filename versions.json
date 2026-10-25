@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-25T07:33:16Z",
+  "generated": "2026-10-25T10:30:11Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -344,17 +344,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.9.1",
+      "version": "2.9.2",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/62165c221fbe20f313f064c2c9b06e9003b47ffc/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/122e0a81dd6acc3a2fced0ff664191a263b7ff1f/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Configurator: Aussehen wie das Dashboard – gleiche Farben, Schrift (IBM Plex, eingebettet) und Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“",
-        "Configurator: Tag-/Nachtsicht im neuen Menü „Ansicht“. Ohne eigene Wahl folgt die Seite dem System, eine eigene Wahl wird gemerkt",
-        "Configurator: Sprache ebenfalls im Menü „Ansicht“ (DE → EN → FR) statt der drei Knöpfe"
+        "Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt",
+        "Configurator: Weicht beim Update oder Einlesen der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Empfehlung übernehmen, bisherigen Wert beibehalten oder eigenen Wert ab 3000 ms eintragen. Ohne Auswahl bleibt der bisherige Wert",
+        "Configurator: Zusammenfassung zeigt das Regel-Intervall (mit Empfehlung, falls abweichend)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.9.1",
+          "changes": [
+            "Configurator: Aussehen wie das Dashboard – gleiche Farben, Schrift (IBM Plex, eingebettet) und Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“",
+            "Configurator: Tag-/Nachtsicht im neuen Menü „Ansicht“. Ohne eigene Wahl folgt die Seite dem System, eine eigene Wahl wird gemerkt",
+            "Configurator: Sprache ebenfalls im Menü „Ansicht“ (DE → EN → FR) statt der drei Knöpfe"
+          ],
+          "notice": null
+        },
         {
           "version": "2.9.0",
           "changes": [
@@ -427,15 +436,6 @@
             "Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung",
             "Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)",
             "Controller: errorThreshold-Standard auf 10"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.1.0",
-          "changes": [
-            "Neu im Startdialog: „Log aufzeichnen“ (nur mit Helfer) – stoppt ein Script, startet es neu und zeichnet 140 oder 600 Sekunden lang seine Meldungen auf; das Log wird als Datei gespeichert",
-            "Standard ist gefiltert (nur Ausgaben des gewählten Scripts), optional ungefiltert inkl. Systemmeldungen zum Script-Start",
-            "Sensible Daten im Log werden maskiert (Webhook-IDs, Tokens, API-Keys, Passwörter, Telefonnummern; Seriennummern bis auf die letzten 4 Zeichen)"
           ],
           "notice": null
         }
