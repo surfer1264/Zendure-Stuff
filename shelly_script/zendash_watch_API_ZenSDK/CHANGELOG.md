@@ -9,6 +9,7 @@
 - Mit älterem Regel-Script: Der Key wird geschrieben, aber nicht ausgewertet
 - Bisheriges Layout `zendure-dashboard-b.html` entfernt. Proxy, exe und Home-Assistant-App enthalten es nicht mehr; `/b` leitet auf das Dashboard weiter
 - Home-Assistant-App-Version 3.5.12.0
+- Nachtrag Dashboard: Hilfetexte überarbeitet. „Entlade-Hysterese“ heißt jetzt „Entlade-Sperre“, der Regler „Reserve (minSoc)“; Ladegrenze und Reserve tragen den Konfigurationsschlüssel (`maxSoc`, `minSoc`). Home-Assistant-App-Version 3.5.12.1
 
 ## Changelog 3.5.11
 

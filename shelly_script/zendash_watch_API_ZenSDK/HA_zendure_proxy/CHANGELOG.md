@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.12.1
+
+- Dashboard: Hilfetexte überarbeitet. Das Feld „Entlade-Hysterese“ heißt jetzt „Entlade-Sperre“, der Regler „Reserve (minSoc)“; Ladegrenze und Reserve tragen in den Hilfetexten den Konfigurationsschlüssel (`maxSoc`, `minSoc`)
+
 ## 3.5.12.0
 
 - Dashboard: neues Eingabefeld „Entlade-Hysterese“ (`zdmc_dischargeResetMargin`) neben dem Sollwert, die 5 Kacheln der Übersicht stehen nebeneinander; braucht Shelly-Script 3.5.12 und Regel-Script 5.2.4. Eine Erhöhung der Reserve, mit der die Hysterese nicht mehr passt, wird mit einer Meldung abgelehnt
