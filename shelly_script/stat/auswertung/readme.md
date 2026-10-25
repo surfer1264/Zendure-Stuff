@@ -126,7 +126,7 @@ und die Geräte aus `geraete.csv`.
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. |
 | `zendure_fonts.css` | IBM-Plex-Schriften; werden in den Bericht eingebettet. Fehlt die Datei, nutzt der Bericht die Systemschrift. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
-| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
+| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
 | `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |
@@ -137,7 +137,7 @@ und die Geräte aus `geraete.csv`.
 - **Kennzahlen** für den gewählten Zeitraum: Entladung, Netzbezug, Deckung, Regelgüte, Aktivzeit, Sparmodus.
 - **Verlauf über die Zeit**: SOC je Gerät, Netzsaldo und Speicher-Ausgang (15-Minuten-Mittel).
 - **Pro Tag**: Energie nach Herkunft (gestapelt), Aktivzeit je Gerät, Deckung, Regelgüte,
-  Stellbefehle je Gerät, Störungen.
+  Stellbefehle je Gerät, Störungen, Zyklusdauer (Ø, max und Intervall; nur mit Logs ab Controller 5.2.6).
 - **Sparmodus**: Takte mit und ohne Geräteabfrage, Anteil eingesparter Takte.
 - **Typischer Tagesverlauf**: Netzsaldo, Speicher-Ausgang und SOC je Gerät nach Uhrzeit, jeweils als Verteilung
   über die vollen Tage (Linie = Median, Bänder = 25–75 % und 10–90 %).

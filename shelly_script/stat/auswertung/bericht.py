@@ -341,6 +341,9 @@ __SCHRIFTEN__
       <div class="card chart"><h3>Störungen pro Tag</h3>
         <p>Gerät nicht erreichbar, übersprungene Takte, Watchdog-Timeouts.</p>
         <div class="legend" id="lg-fehler"></div><div id="c-fehler"></div></div>
+      <div class="card chart" id="card-zyklus" style="display:none"><h3>Zyklusdauer pro Tag</h3>
+        <p>Dauer eines Regelzyklus mit Geräteabfrage, aus der Stundenzeile des Controllers (ab 5.2.6): Mittel und längster Zyklus des Tages. Nähert sich „max“ der gestrichelten Linie (eingestelltes Intervall), wird es knapp; einzelne Werte knapp unter 4000 ms sind meist ein HTTP-Timeout.</p>
+        <div class="legend" id="lg-zyklus"></div><div id="c-zyklus"></div></div>
     </div>
   </section>
 
@@ -391,6 +394,8 @@ var WT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
 var G = D.geraete, V = D.verlauf, T = D.tage, MEHR = D.mehr;
 var LEER_TXT = MEHR ? 'Netzbezug bei leeren Speichern' : 'Netzbezug bei leerem Speicher';
 var NT = V.t.length;
+/* Zyklusdauer gibt es erst ab Controller 5.2.6 - ohne Daten bleibt die Karte ausgeblendet */
+var HAT_ZYK = (T.zyklus_max_ms || []).some(function(v){ return v !== null; });
 var LO = Math.floor(V.t[0] / TAG) * TAG, HI = Math.ceil((V.t[NT - 1] + 15) / TAG) * TAG;
 var range = {a: LO, b: HI};
 
@@ -754,6 +759,14 @@ function zeichne(){
       {name: 'Takt übersprungen', werte: spalte('takt_uebersprungen', idx), farbe: S.s4},
       {name: 'Watchdog', werte: spalte('watchdog', idx), farbe: S.s5}],
     yfmt: f0, einheit: '', w: WH, aria: 'Störungen pro Tag'}));
+  if (HAT_ZYK){
+    var zmax = spalte('zyklus_max_ms', idx);
+    if (idx.length && !zmax.some(function(v){ return v !== null; })) leer('c-zyklus', 'Keine Zyklusdaten im Ausschnitt (erst ab Controller 5.2.6).');
+    else katLinie('c-zyklus', mit({serien: [{name: 'Ø', werte: spalte('zyklus_avg_ms', idx), farbe: S.s1},
+        {name: 'max', werte: zmax, farbe: S.s3},
+        {name: 'Intervall', werte: spalte('zyklus_interval_ms', idx), farbe: S.mut, strich: true}],
+      yfmt: f0, einheit: ' ms', ymin: 0, w: WH, aria: 'Zyklusdauer pro Tag'}));
+  }
   stapel('c-takte', mit({serien: [{name: 'Ohne Geräteabfrage', werte: spalte('takte_ohne_abfrage', idx), farbe: S.s1},
       {name: 'Mit Geräteabfrage', werte: spalte('takte_mit_abfrage', idx), farbe: S.mut}],
     yfmt: f0, einheit: '', w: WH, aria: 'Takte pro Tag'}));
@@ -830,6 +843,10 @@ legende('lg-energie', G.map(function(g){ return ['Entladung ' + g.name, g.farbe]
 legende('lg-aktiv', G.map(function(g){ return [g.name, g.farbe]; }).concat(MEHR ? [['Mindestens ein Gerät', S.mut]] : []));
 legende('lg-befehle', G.map(function(g){ return [g.name, g.farbe]; }));
 legende('lg-fehler', [['Nicht erreichbar', S.s3], ['Takt übersprungen', S.s4], ['Watchdog', S.s5]]);
+if (HAT_ZYK){
+  document.getElementById('card-zyklus').style.display = '';
+  legende('lg-zyklus', [['Ø Zyklusdauer', S.s1], ['längster Zyklus (max)', S.s3], ['Intervall', S.mut, true]]);
+}
 legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteabfrage', S.mut]]);
 document.getElementById('txt-aktiv').textContent = 'Summe aller Takte je Tag, in denen ' + (MEHR ? 'das jeweilige Gerät' : 'das Gerät') +
   ' mindestens ' + D.cfg.aktiv + ' W ins Haus abgab, in Stunden (jeder Takt zählt mit seiner Dauer bis zum nächsten Takt).' +

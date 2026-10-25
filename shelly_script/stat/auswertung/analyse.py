@@ -95,7 +95,7 @@ R_DEV = re.compile(TS + r"  ([A-Za-z0-9_.-]+): SOC (\d+|n/a)%? \| socL (\S+) \| 
 R_SET = re.compile(TS + r"([A-Za-z0-9_.-]+): Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
 # Stundenzeile ab Controller 5.2.6
-R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms")
+R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms(?: \| uebersprungen \d+ \| interval (\d+) ms)?")
 EREIGNISSE = [
     ("nicht_erreichbar", "Geraet nicht erreichbar"),
     ("watchdog", "Watchdog-Timeout"),
@@ -181,12 +181,15 @@ def lesen(pfad, pause):
                 continue
             m = R_ZYK.match(l)
             if m:
-                # je Tag: Anzahl, Summe der Dauern, längster Zyklus (Fenster zählt zum Tag seiner Zeile)
-                z = zyklen.setdefault(m[1][:10], [0, 0, 0])
+                # je Tag: Anzahl, Summe der Dauern, längster Zyklus, größtes Intervall
+                # (Fenster zählt zum Tag seiner Zeile)
+                z = zyklen.setdefault(m[1][:10], [0, 0, 0, None])
                 n = int(m[2])
                 z[0] += n
                 z[1] += n * int(m[3])
                 z[2] = max(z[2], int(m[4]))
+                if m[5]:
+                    z[3] = max(z[3] or 0, int(m[5]))
                 continue
             if "Sparmodus" in l:
                 s = R_SPAR.search(l)
@@ -460,6 +463,7 @@ def zusammensetzen(ergebnisse):
         zy = x.get("zyklen")
         z["zyklus_avg_ms"] = round(zy[1] / zy[0]) if zy and zy[0] else None
         z["zyklus_max_ms"] = zy[2] if zy and zy[0] else None
+        z["zyklus_interval_ms"] = zy[3] if zy and zy[0] and len(zy) > 3 else None
         z["takte_gesamt"] = x["takte"]
         z["takte_ohne_abfrage"] = x["gespart"]
         zeilen.append(z)
@@ -478,7 +482,7 @@ def zusammensetzen(ergebnisse):
     voll_tage = set(day.index[day.vollstaendig == 1])
     # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus);
     # Zyklusdauer bleibt leer bei Logs ohne Stundenzeile (Controller vor 5.2.6)
-    regel = ["regel_im_band_pct", "regel_median_abw_w", "zyklus_avg_ms", "zyklus_max_ms"]
+    regel = ["regel_im_band_pct", "regel_median_abw_w", "zyklus_avg_ms", "zyklus_max_ms", "zyklus_interval_ms"]
     day = day.drop(columns="erfasst_h")
     day[day.columns.difference(regel)] = day[day.columns.difference(regel)].fillna(0)
     day[zaehler] = day[zaehler].astype(int)
