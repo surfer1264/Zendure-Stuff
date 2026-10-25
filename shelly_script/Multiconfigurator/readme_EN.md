@@ -142,7 +142,7 @@ On Windows the command is often `python` or `py` instead of `python3`. The windo
 On start, the proxy shows a short overview (the helper's output is in German):
 
 ```text
-Zendure Multi-Configurator 2.9.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Zendure Multi-Configurator 2.9.2 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
 Oeffne den Configurator automatisch im Browser...
 Dieses Fenster offen lassen, solange hochgeladen wird.
 Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).
@@ -241,6 +241,8 @@ When a new version of a script is available, you can bring your Shellys up to da
 ### What happens to your settings during an update
 
 Everything is carried over – including values the wizard doesn't ask for (e.g. `dampingFactor`, `interval` or the Watchdog's warning thresholds). New settings that didn't exist in your old version get their default value.
+
+**Control interval (`interval`):** The recommendation is 3000 ms + 500 ms per device, i.e. 3500 ms for one, 4000 ms for two and 4500 ms for three devices. For a new setup the wizard uses this value. If the carried-over value differs, the result page shows a notice: you can use the recommendation, keep the previous value or enter your own value of at least 3000 ms.
 
 ### Update without the helper
 

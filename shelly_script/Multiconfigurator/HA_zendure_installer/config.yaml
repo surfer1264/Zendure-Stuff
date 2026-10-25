@@ -1,5 +1,5 @@
 name: "Zendure Multi-Configurator"
-version: "2.9.1.0"
+version: "2.9.2.0"
 slug: "zendure_installer"
 description: "Configurator und Upload-Helfer für die Zendure-Shelly-Scripte (Controller, zenDash-API + Watchdog)"
 url: "https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/Multiconfigurator"

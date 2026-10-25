@@ -142,7 +142,7 @@ Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fens
 Beim Start zeigt der Proxy eine kurze Übersicht:
 
 ```text
-Zendure Multi-Configurator 2.9.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Zendure Multi-Configurator 2.9.2 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
 Oeffne den Configurator automatisch im Browser...
 Dieses Fenster offen lassen, solange hochgeladen wird.
 Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).
@@ -241,6 +241,8 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 ### Was beim Update mit deinen Einstellungen passiert
 
 Übernommen wird alles – auch Werte, die der Assistent gar nicht abfragt (z. B. `dampingFactor`, `interval` oder die Warnschwellen des Watchdog). Neue Einstellungen, die es in deiner alten Version noch nicht gab, bekommen ihren Standardwert.
+
+**Regel-Intervall (`interval`):** Empfohlen sind 3000 ms + 500 ms je Gerät, also 3500 ms bei einem, 4000 ms bei zwei und 4500 ms bei drei Geräten. Bei einer neuen Einrichtung setzt der Assistent diesen Wert. Weicht der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Du kannst die Empfehlung übernehmen, den bisherigen Wert behalten oder einen eigenen Wert ab 3000 ms eintragen.
 
 ### Update ohne Helfer
 

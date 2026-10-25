@@ -1,5 +1,11 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.9.2
+
+- Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt
+- Configurator: Weicht beim Update oder Einlesen der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Empfehlung übernehmen, bisherigen Wert beibehalten oder eigenen Wert ab 3000 ms eintragen. Ohne Auswahl bleibt der bisherige Wert
+- Configurator: Zusammenfassung zeigt das Regel-Intervall (mit Empfehlung, falls abweichend)
+
 ## 2.9.1
 
 - Configurator: Aussehen wie das Dashboard – gleiche Farben, Schrift (IBM Plex, eingebettet) und Kopfzeile „ZENDURE // SHELLY MULTI DEVICE SUITE“

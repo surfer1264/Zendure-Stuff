@@ -250,7 +250,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.9.1";
+const APP_VERSION = "2.9.2";
 
 const I18N = {
 de: {
@@ -402,6 +402,14 @@ de: {
   result_grm_always1: "Export immer erlauben",
   result_grm_always2: "Export immer sperren",
   result_kvs: "KVS-Fernsteuerung (Controller):",
+  result_interval: "Regel-Intervall (Controller):",
+  result_interval_rec: "{v} ms (Empfehlung bei {n} Gerät(en): {r} ms)",
+  int_warn: "Das Regel-Intervall (interval) steht auf {v} ms. Bei {n} Gerät(en) empfehlen wir {r} ms (3000 ms + 500 ms je Gerät): Die Geräte werden nacheinander abgefragt, mit jedem Gerät dauert ein Regeltakt länger.",
+  int_take_rec: "Empfehlung übernehmen ({r} ms)",
+  int_keep: "Beibehalten ({v} ms)",
+  int_own: "Anderer Wert (ms):",
+  int_own_btn: "Übernehmen",
+  int_own_err: "Bitte eine ganze Zahl ab 3000 eingeben.",
   result_rest: "Alles Übrige:",
   result_rest_value: "bleibt auf dem jeweiligen empfohlenen Standardwert.",
 
@@ -786,6 +794,14 @@ en: {
   result_grm_always1: "Always allow export",
   result_grm_always2: "Always block export",
   result_kvs: "KVS remote control (Controller):",
+  result_interval: "Control interval (Controller):",
+  result_interval_rec: "{v} ms (recommended for {n} device(s): {r} ms)",
+  int_warn: "The control interval (interval) is set to {v} ms. For {n} device(s) we recommend {r} ms (3000 ms + 500 ms per device): the devices are queried one after the other, so each device makes a control cycle take longer.",
+  int_take_rec: "Use recommendation ({r} ms)",
+  int_keep: "Keep ({v} ms)",
+  int_own: "Other value (ms):",
+  int_own_btn: "Apply",
+  int_own_err: "Please enter a whole number of at least 3000.",
   result_rest: "Everything else:",
   result_rest_value: "stays at its recommended default value.",
 
@@ -1170,6 +1186,14 @@ fr: {
   result_grm_always1: "Toujours autoriser l'export",
   result_grm_always2: "Toujours bloquer l'export",
   result_kvs: "Pilotage KVS à distance (Controller) :",
+  result_interval: "Intervalle de régulation (Controller) :",
+  result_interval_rec: "{v} ms (recommandé pour {n} appareil(s) : {r} ms)",
+  int_warn: "L’intervalle de régulation (interval) est réglé sur {v} ms. Pour {n} appareil(s), nous recommandons {r} ms (3000 ms + 500 ms par appareil) : les appareils sont interrogés l’un après l’autre, chaque appareil allonge donc le cycle de régulation.",
+  int_take_rec: "Reprendre la recommandation ({r} ms)",
+  int_keep: "Conserver ({v} ms)",
+  int_own: "Autre valeur (ms) :",
+  int_own_btn: "Appliquer",
+  int_own_err: "Saisis un nombre entier d’au moins 3000.",
   result_rest: "Tout le reste :",
   result_rest_value: "reste à la valeur par défaut recommandée.",
 
@@ -1461,6 +1485,11 @@ const state = {
   // nicht belegt; wird beim ersten Zugriff aus der importierten Config bzw.
   // aus der Geraeteliste berechnet und danach NICHT automatisch nachgefuehrt.
   regel: null,
+
+  // Regel-Intervall: null = Wert aus der eingelesenen Config, sonst Empfehlung;
+  // 'rec' = Empfehlung (folgt der Geraeteanzahl); Zahl = fester Wert.
+  intervalChoice: null,
+  intervalErr: false,
 
   // Loesung A: beim Import roh gespeicherte Configs. Nicht abgefragte Werte
   // kommen beim Bauen per ?? aus diesen Objekten, sonst gilt der Standard.
@@ -1758,6 +1787,7 @@ function applyRuntime(rt){
 
 function applyControllerImport(obj){
   state.controllerAdvanced = obj;
+  state.intervalChoice = null; state.intervalErr = false;
   state.regel = null;   // Regelparameter neu aus dieser Config vorbelegen
   (obj.devices||[]).forEach(dev=>{
     mergeImportedDevice(dev.ip, dev.label, fullDeviceFields(dev));
@@ -2692,6 +2722,42 @@ ${indent}apiKey: "${cb ? q(state.signalApiKey||'YOUR_API_KEY') : 'YOUR_API_KEY'}
 ${indent}webhookUrl: "${wh ? q(state.signalWebhookUrl||'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>') : 'http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>'}"`;
 }
 
+// Regel-Intervall: 3000 ms + 500 ms je Geraet (die Abfragen laufen nacheinander).
+function recommendedInterval(){ return 3000 + 500 * Math.max(1, state.devices.length); }
+// Wert aus der eingelesenen Config, undefined = keiner oder ungueltig
+function importedInterval(){ return coerceNum((state.controllerAdvanced || {}).interval); }
+function ctrlInterval(){
+  if(state.intervalChoice === 'rec') return recommendedInterval();
+  if(typeof state.intervalChoice === 'number') return state.intervalChoice;
+  const v = importedInterval();
+  return v === undefined ? recommendedInterval() : v;
+}
+// Hinweis offen: eingelesener Wert weicht ab und es wurde noch nicht entschieden
+function intervalOpen(){
+  const v = importedInterval();
+  return state.intervalChoice === null && v !== undefined && v !== recommendedInterval();
+}
+function setIntervalChoice(v){ state.intervalChoice = v; state.intervalErr = false; render(); }
+function setOwnInterval(){
+  const el = document.getElementById('intervalOwn');
+  const n = Number(el ? el.value : NaN);
+  if(!Number.isInteger(n) || n < 3000){ state.intervalErr = true; render(); return; }
+  setIntervalChoice(n);
+}
+function intervalWarnBlock(){
+  const v = importedInterval(), r = recommendedInterval(), n = state.devices.length;
+  return `<div class="panel"><div class="note" style="margin-top:0;">${t('int_warn', {v: v, n: n, r: r})}</div>
+    <div class="copy-row" style="justify-content:flex-start; margin-top:10px; flex-wrap:wrap; gap:8px;">
+      <button class="btn btn-primary" onclick="setIntervalChoice('rec')">${t('int_take_rec', {r: r})}</button>
+      <button class="btn" onclick="setIntervalChoice(${v})">${t('int_keep', {v: v})}</button>
+      <span class="hint" style="margin:0;">${t('int_own')}</span>
+      <input type="number" id="intervalOwn" min="3000" step="500" value="${r}" style="width:110px;">
+      <button class="btn" onclick="setOwnInterval()">${t('int_own_btn')}</button>
+    </div>
+    ${state.intervalErr ? `<p class="error">${t('int_own_err')}</p>` : ''}
+  </div>`;
+}
+
 function buildControllerConfig(){
   resetCfgReport('ctrl');
   const ca = state.controllerAdvanced || {};
@@ -2771,7 +2837,7 @@ ${gridBlock}
   dischargeStopPower: ${pv('ctrl', 'dischargeStopPower', ca.dischargeStopPower, 15)},
 
   // ------------------------------------------------------------------
-  interval: ${pv('ctrl', 'interval', ca.interval, 4000)},
+  interval: ${state.intervalChoice !== null ? ctrlInterval() : pv('ctrl', 'interval', ca.interval, recommendedInterval())},
   errorThreshold: ${pv('ctrl', 'errorThreshold', ca.errorThreshold, 10)},
   directionChangeHoldCycles: ${pv('ctrl', 'directionChangeHoldCycles', ca.directionChangeHoldCycles, 4)},
   standbySmartModeZero: ${pv('ctrl', 'standbySmartModeZero', ca.standbySmartModeZero, false)},
@@ -3744,6 +3810,7 @@ async function startUpdate(){
   // Frischer Stand: nur die gewaehlten Scripte landen im Ergebnis
   state.products = { controller: false, api: false, watchdog: false };
   state.controllerAdvanced = {}; state.zdwAdvanced = {};
+  state.intervalChoice = null; state.intervalErr = false;
   state.devices = [];
   let current = 0;
   try{
@@ -3966,6 +4033,7 @@ function renderResult(){
   const row = (label, value) => `<div><b>${label}</b> ${value}</div>`;
 
   let html = state.updateReady ? `<div class="panel"><p class="note" style="margin:0;">${t('result_update_hint')}</p></div>` : '';
+  if(p.controller && intervalOpen()) html += intervalWarnBlock();
   html += `
   <div class="panel">
     <h2>${t('result_h2')}</h2>
@@ -3996,6 +4064,8 @@ function renderResult(){
     const grmMap = {dynamic:t('result_grm_dynamic'), always1:t('result_grm_always1'), always2:t('result_grm_always2')};
     html += row(t('result_grm'), grmMap[state.gridReverseMode] || '—');
     html += row(t('result_kvs'), state.kvsEnabled===true ? t('result_yes') : t('result_no'));
+    const iv = ctrlInterval(), ir = recommendedInterval();
+    html += row(t('result_interval'), iv === ir ? iv + ' ms' : t('result_interval_rec', {v: iv, n: state.devices.length, r: ir}));
     const r = regel();
     html += row(t('result_regel'), t('result_regel_value', {sp: r.setpoint, hy: r.hysteresis, dc: r.dConc, ds: r.dSpread, cc: r.cConc, cs: r.cSpread}));
   }
