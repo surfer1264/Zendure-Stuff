@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-25T10:30:11Z",
+  "generated": "2026-10-25T10:38:30Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.2.5",
+      "version": "5.2.6",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c00cb97d03b5e389de062ab97c2a32a726842eb7/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 47062,
-      "codeHash": "sha256:d2cae36e750d576cd7381bd6a59b5dd44b89b3b5d0962e2e504d7c5a0f185f91",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d47962b73039b64a7e005f28ba1b4257e4dc40e2/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 47662,
+      "codeHash": "sha256:6b739c1a7a5d773512f59a63f89d0ee6d4c3d211e22d7b47626b2528cb815c4c",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,12 +62,22 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Log zeigt, welcher KVS-Wert übernommen wurde:** Bei jeder Änderung steht jetzt der Key mit altem und neuem Wert im Log, z. B. `KVS zdmc_dev0_minSoc: Wert uebernommen (15 -> 20)`. Bisher stand das nur mit `debug: true` im Log, sonst nur „KVS-Overrides aktualisiert“. Beim Start erscheint die Zeile für jeden KVS-Wert, der vom CONFIG-Block abweicht. Ungültige Werte werden weiterhin nur mit `debug: true` gemeldet."
+        "**Zyklusdauer im Log:** Einmal pro Stunde steht eine Zeile wie `Zyklen 1h: n 830 | avg 1840 ms | max 3620 ms | uebersprungen 0 | interval 4000 ms` im Log, auch ohne `debug`. `n`, `avg` und `max` zählen nur Zyklen mit Geräteabfrage (Sparmodus-Zyklen sind kürzer), `uebersprungen` zählt die verworfenen Takte. Liegt `max` regelmäßig nahe am Intervall oder gibt es verworfene Takte, ist `interval` zu knapp.",
+        "Kein Puffer: Es werden nur fünf Zahlen mitgeführt, kein zusätzlicher Timer, kein Schreiben in den KVS."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.5",
+          "schema": 1,
+          "codeHash": "sha256:d2cae36e750d576cd7381bd6a59b5dd44b89b3b5d0962e2e504d7c5a0f185f91",
+          "changes": [
+            "**Log zeigt, welcher KVS-Wert übernommen wurde:** Bei jeder Änderung steht jetzt der Key mit altem und neuem Wert im Log, z. B. `KVS zdmc_dev0_minSoc: Wert uebernommen (15 -> 20)`. Bisher stand das nur mit `debug: true` im Log, sonst nur „KVS-Overrides aktualisiert“. Beim Start erscheint die Zeile für jeden KVS-Wert, der vom CONFIG-Block abweicht. Ungültige Werte werden weiterhin nur mit `debug: true` gemeldet."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.4",
           "schema": 1,
@@ -162,17 +172,6 @@
           "changes": [
             "kvs-lesen im Controleller robuster gestalten",
             "https://github.com/surfer1264/Zendure-Stuff/issues/128"
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.1.5",
-          "schema": 1,
-          "codeHash": "sha256:fb34ff4c4db4cfa901ca60809fcfbd335a8d13cd409c15217948a06741e64bb4",
-          "changes": [
-            "https://github.com/surfer1264/Zendure-Stuff/issues/125",
-            "Startmeldung ergänzt",
-            "gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird."
           ],
           "notice": null
         }
