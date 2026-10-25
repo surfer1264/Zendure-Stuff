@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.4";
+let VERSION = "5.2.5";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -493,7 +493,9 @@ function applyKvsValue(key, raw, currentValue, validate, apply) {
     return;
   }
 
-  if (CONFIG.debug && n !== currentValue) {
+  // Uebernommene Aenderungen immer loggen, damit sichtbar ist, welcher Key
+  // den Override ausgeloest hat (ungueltige Werte weiterhin nur mit debug).
+  if (n !== currentValue) {
     print("KVS " + key + ": Wert uebernommen (" + currentValue + " -> " + n + ")");
   }
 

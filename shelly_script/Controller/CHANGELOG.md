@@ -1,5 +1,11 @@
 # Changelog Controller
 
+## v5.2.5
+
+- **Log zeigt, welcher KVS-Wert übernommen wurde:** Bei jeder Änderung steht jetzt der Key mit altem und neuem Wert im Log, z. B. `KVS zdmc_dev0_minSoc: Wert uebernommen (15 -> 20)`. Bisher stand das nur mit `debug: true` im Log, sonst nur „KVS-Overrides aktualisiert“. Beim Start erscheint die Zeile für jeden KVS-Wert, der vom CONFIG-Block abweicht. Ungültige Werte werden weiterhin nur mit `debug: true` gemeldet.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.4
 
 - **Entlade-Hysterese per KVS änderbar:** `dischargeResetMargin` (Prozentpunkte über `minSoc`, ab denen ein bis zur Reserve entladenes Gerät wieder entladen darf) lässt sich jetzt live über `zdmc_dischargeResetMargin` ändern, systemweit für alle Geräte. Der Key wird beim Start mit dem CONFIG-Wert (Standard 3) angelegt, falls er fehlt.
