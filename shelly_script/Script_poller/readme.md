@@ -59,6 +59,8 @@ Keine externen Abhängigkeiten (nur Python-Standardbibliothek).
 }
 ```
 
+> **Hinweis:** Die mitgelieferte `config_status_poller.json` enthält andere Beispielwerte (IPs, Script-IDs, Labels). Passe `host` und `script_id` immer an deine eigenen Geräte an – die Script-ID siehst du in der Shelly-Weboberfläche unter *Scripts*.
+
 ### Script ausführen
 
 ```bash

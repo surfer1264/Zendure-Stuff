@@ -6,7 +6,7 @@ Verbindet sich per WebSocket mit dem Live-Debug-Log eines Shelly (Gen2+)
 über den Pfad ws://<HOST>/debug/log und filtert/schreibt die Logs.
 
 Konfiguration erfolgt ueber eine JSON-Datei (Standard: config.json im
-selben Verzeichnis), siehe shelly_log_grabber_config.json als Beispiel.
+selben Verzeichnis), siehe config_log_grabber.json als Beispiel.
 
 Aufruf:
     python3 shelly_log_grabber.py [--config PATH]

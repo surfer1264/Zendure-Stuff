@@ -7,6 +7,7 @@
   "log_to_file": true,
   "log_file_path": "shelly_debug.log",
   "separate_log_files": false,
+  "daily_log_rotation": true,
   "show_script_prefix": true,
 
   "auto_reconnect": true,
