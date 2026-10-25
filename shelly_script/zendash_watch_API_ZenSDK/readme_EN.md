@@ -175,7 +175,7 @@ api: {
 
 To be able to **change settings** in the dashboard as well, `kvsEnabled: true` and `kvsForceReseed: false` must be set in the Controller. Without KVS, the dashboard only displays values.
 
-`hysteresis` is the tolerance around the setpoint. The **discharge hysteresis** (`zdmc_dischargeResetMargin`, Controller 5.2.4 or newer) is something else: it is not in the CONFIG block but is set in the [dashboard](dashboard_EN.md#what-you-can-set).
+`hysteresis` is the tolerance around the setpoint. The **discharge lock** (`zdmc_dischargeResetMargin`, Controller 5.2.4 or newer) is something else: it is not in the CONFIG block but is set in the [dashboard](dashboard_EN.md#what-you-can-set).
 
 ### Watchdog (`watchdog`)
 

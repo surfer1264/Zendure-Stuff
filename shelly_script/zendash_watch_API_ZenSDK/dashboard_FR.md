@@ -52,7 +52,7 @@ Ce qui suit décrit la mise en page par défaut à l'adresse `http://<adresse-du
 |---|---|
 | **En-tête** | état de la connexion (p. ex. « En direct · relevé toutes les 4 s »), heure et date, le **cadenas** et le menu **⚙ Affichage** |
 | **Vue d'ensemble – Maintenant** | mesures : soutirage/injection réseau et puissance Solarflow (somme de toutes les batteries) avec courbe d'historique |
-| **Vue d'ensemble – Régulation** | réglages communs à toutes les batteries : consigne, hystérésis de décharge et décharge fixe |
+| **Vue d'ensemble – Régulation** | réglages communs à toutes les batteries : consigne, blocage de décharge et décharge fixe |
 | **Appareils** | une carte par batterie avec mesures, état, « Commandes » et « Charge manuelle » |
 | **Pied de page** | versions, heure de la dernière actualisation, lien **Aide** (cette page), données brutes et envoi cloud |
 
@@ -62,7 +62,7 @@ Toucher la ligne **« ▾ Vue d'ensemble »** replie la vue d'ensemble. Repliée
 
 La page démarre **verrouillée** – elle ne fait alors qu'afficher, avec la mention « Affichage seul » sous la régulation. Toucher le **cadenas** dans l'en-tête déverrouille les commandes ; l'icône passe à un cadenas ouvert. Après 60 secondes sans saisie, la page se reverrouille d'elle-même, de même après chaque rechargement. C'est prévu pour les tableaux de bord affichés en permanence sur une tablette ou un second écran.
 
-Sur les appareils tactiles, le curseur **Réserve (SoC min.)** a en plus son propre petit cadenas à côté de la valeur. Il ne libère que ce seul curseur et le reverrouille après 5 secondes sans contact, après l'enregistrement ou lors d'un défilement. La valeur ne change qu'en faisant glisser le point – un appui ou un balayage sur la barre est annulé.
+Sur les appareils tactiles, le curseur **Réserve (`minSoc`)** a en plus son propre petit cadenas à côté de la valeur. Il ne libère que ce seul curseur et le reverrouille après 5 secondes sans contact, après l'enregistrement ou lors d'un défilement. La valeur ne change qu'en faisant glisser le point – un appui ou un balayage sur la barre est annulé.
 
 ### Menu « Affichage »
 
@@ -79,14 +79,14 @@ Toutes les entrées sont mémorisées **par navigateur** – une tablette murale
 
 ### Ce que vous pouvez régler
 
-Tous les réglages sont envoyés au Controller et prennent effet à son prochain cycle de régulation. Après l'enregistrement, une brève confirmation s'affiche, p. ex. « Enregistré : Batterie 1 · Réserve (SoC min.) 20 % ».
+Tous les réglages sont envoyés au Controller et prennent effet à son prochain cycle de régulation. Après l'enregistrement, une brève confirmation s'affiche, p. ex. « Enregistré : Batterie 1 · Réserve (minSoc) 20 % ».
 
 **Dans la vue d'ensemble, sous « Régulation »** (pour toutes les batteries ensemble) :
 
 | Commande | Effet | Plage |
 |---|---|---|
 | **Consigne** | Valeur cible pour le soutirage réseau. Négatif = injecter un peu, positif = soutirer un peu. En dessous figure la tolérance (hystérésis) : l'écart de soutirage toléré avant que le Controller ne corrige. | −40 à +40 W, par pas de 5 W |
-| **Hystérésis de décharge** | Un appareil déchargé jusqu'à la réserve (`minSoc`) ne fournit à nouveau de l'énergie qu'à partir de réserve (`minSoc`) + cette valeur. Évite les commutations permanentes à la réserve (`minSoc`). Après un redémarrage du Controller, l'hystérésis n'agit qu'une fois la batterie de nouveau déchargée jusqu'à la réserve (`minSoc`) – si l'état de charge se situe entre les deux au démarrage, elle peut d'abord se décharger. Saisir la valeur dans le champ et valider avec ↵ ou « OK » ; les valeurs invalides sont rejetées avec un message. Si la plage limite de charge (`maxSoc`) − réserve (`minSoc`) d'une batterie est inférieure à 14 points, le champ est verrouillé et 3 s'applique. N'agit qu'à partir du Controller 5.2.4 – les versions plus anciennes ignorent la valeur. | 3 à (plus petite plage limite de charge (`maxSoc`) − réserve (`minSoc`) de toutes les batteries) − 11 %, nombres entiers |
+| **Blocage de décharge** | Un appareil déchargé jusqu'à la réserve (`minSoc`) ne fournit à nouveau de l'énergie qu'à partir de réserve (`minSoc`) + cette valeur. Évite les commutations permanentes à la réserve (`minSoc`). Après un redémarrage du Controller, le blocage de décharge n'agit qu'une fois la batterie de nouveau déchargée jusqu'à la réserve (`minSoc`) – si l'état de charge se situe entre les deux au démarrage, elle peut d'abord se décharger. Saisir la valeur dans le champ et valider avec ↵ ou « OK » ; les valeurs invalides sont rejetées avec un message. Si la plage limite de charge (`maxSoc`) − réserve (`minSoc`) d'une batterie est inférieure à 14 points, le champ est verrouillé et 3 s'applique. N'agit qu'à partir du Controller 5.2.4 – les versions plus anciennes ignorent la valeur. | 3 à (plus petite plage limite de charge (`maxSoc`) − réserve (`minSoc`) de toutes les batteries) − 11 %, nombres entiers |
 | **Décharge fixe** | Puissance de décharge fixe au lieu de la régulation. Saisir la valeur dans le champ et valider avec ↵ ou « OK ». Tant qu'elle est active, la tuile de consigne indique que la consigne n'est pas régulée pour l'instant. | `0` = arrêt, sinon à partir de `dischargeStartupPower` (p. ex. 35 W) |
 
 **Sur chaque carte d'appareil, sous « Commandes » :**
@@ -95,7 +95,7 @@ Tous les réglages sont envoyés au Controller et prennent effet à son prochain
 |---|---|---|
 | **Décharge autorisée** | Cette batterie peut-elle alimenter la maison ? Si le watchdog a bloqué la décharge pour sous-tension, l'interrupteur est sur arrêt et doit être réactivé à la main ([blocage de la décharge](readme_FR.md#blocage-de-la-décharge-en-cas-de-sous-tension)). | marche/arrêt |
 | **Charge depuis le réseau autorisée** | Cette batterie peut-elle absorber un surplus venant du réseau ? | marche/arrêt |
-| **Réserve (SoC min.)** | En dessous de cet état de charge, pas de décharge. Est également réglée dans la batterie elle-même. La limite haute est indiquée sous la valeur (« max … % »). Une hausse n'est pas enregistrée si l'hystérésis de décharge ne convient plus ensuite (réserve (`minSoc`) au maximum limite de charge (`maxSoc`) − 11 − hystérésis) – un message apparaît et le curseur revient en arrière. Baisser fonctionne toujours. | 10 % jusqu'à 5 points sous la limite de charge, c.-à-d. la plus petite des deux limites : objectif de charge (`maxSoc`) et limite de charge réglée sur l'appareil (`socSet`) |
+| **Réserve (`minSoc`)** | En dessous de cet état de charge, pas de décharge. Est également réglée dans la batterie elle-même. La limite haute est indiquée sous la valeur (« max … % »). Une hausse n'est pas enregistrée si le blocage de décharge ne convient plus ensuite (réserve (`minSoc`) au maximum limite de charge (`maxSoc`) − 11 − blocage de décharge) – un message apparaît et le curseur revient en arrière. Baisser fonctionne toujours. | 10 % jusqu'à 5 points sous la limite de charge effective, c.-à-d. la plus petite des deux limites : limite de charge (`maxSoc`) et limite de charge réglée sur l'appareil (`socSet`) |
 
 **Sur chaque carte d'appareil, sous « Charge manuelle » :**
 
@@ -108,7 +108,7 @@ Au démarrage, le tableau de bord demande une confirmation, puis désactive « D
 
 Après une saisie, la commande concernée est bloquée 4 secondes pour éviter un double déclenchement.
 
-Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (tolérance autour de la consigne, seulement affichée en dessous – à ne pas confondre avec l'hystérésis de décharge) et l'**objectif de charge** (`maxSoc`). Les deux se règlent dans le Configurator ou dans le bloc CONFIG.
+Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (tolérance autour de la consigne, seulement affichée en dessous – à ne pas confondre avec le blocage de décharge) et la **limite de charge** (`maxSoc`). Les deux se règlent dans le Configurator ou dans le bloc CONFIG.
 
 ### Ce qu'affiche l'écran
 
@@ -117,7 +117,7 @@ Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (tolérance
 - **Une carte par batterie** avec :
   - le nom et un point d'état (vert = joignable) ; avec « Détails techniques », en plus `[devN]` et l'adresse IP
   - l'état de charge sous forme d'icône de batterie et de nombre, à côté la puissance avec le sens (« fournit », « charge », « veille »)
-  - en dessous la plage de travail, p. ex. `Plage 15–100 %` (de la réserve à l'objectif de charge)
+  - en dessous la plage de travail, p. ex. `Plage 15–100 %` (de la réserve (`minSoc`) à la limite de charge (`maxSoc`))
   - l'entrée PV, la puissance hors réseau (uniquement sur les appareils avec prise hors réseau), la température de l'appareil en °C et la cellule la plus faible (« Cellule min 3,28 V ») – significative seulement sous charge. Pour les batteries surveillées par le watchdog, le seuil de blocage suit, p. ex. « blocage < 2,90 V », et la couleur dépend des seuils du watchdog : jaune sous `minVoltReset`, rouge sous `minVoltWarn`. Sinon : jaune sous 3,0 V, rouge sous 2,8 V.
   - « 100 % : il y a N jours » – quand la batterie a été pleine pour la dernière fois ; un appui affiche la date ([en savoir plus](readme_FR.md#dernière-charge-complète))
   - l'état en clair, p. ex. « injecte », « pleine, charge bloquée », « vide, décharge bloquée », « export interdit ». Il explique les cas les plus fréquents de « Pourquoi la batterie ne fait-elle rien ? ». Avec « Détails techniques », le code brut est affiché devant (`socLimit 1`, `gridReverse 2` …).
@@ -125,7 +125,7 @@ Ne sont pas modifiables dans le tableau de bord : l'**hystérésis** (tolérance
   - en dessous « Décharge : autorisée · Charge réseau : bloquée », résumé des deux interrupteurs
 - **Pied de page :** versions de la page et du script (jaune si elles ne correspondent pas), heure de la dernière actualisation, lien **Aide** vers ce guide. `config_api` et `status_api` ouvrent les données brutes en JSON dans un nouvel onglet. **ThingSpeak** et **ThingsBoard** mènent aux pages de configuration de l'envoi cloud ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), en allemand).
 
-**Explications au toucher :** de nombreux libellés et valeurs sont soulignés en pointillés – consigne, hystérésis de décharge, décharge fixe, les deux tuiles de la vue d'ensemble, puissance, plage de travail, ligne complémentaire, seuil de blocage ; les étiquettes d'état aussi. Un appui (ou le survol à la souris) affiche une courte explication.
+**Explications au toucher :** de nombreux libellés et valeurs sont soulignés en pointillés – consigne, blocage de décharge, décharge fixe, les deux tuiles de la vue d'ensemble, puissance, plage de travail, ligne complémentaire, seuil de blocage ; les étiquettes d'état aussi. Un appui (ou le survol à la souris) affiche une courte explication.
 
 La page actualise les mesures toutes les 4 secondes. Les réglages modifiés par quelqu'un d'autre (p. ex. via Home Assistant) apparaissent au plus tard après environ une demi-minute. Tant que l'onglet est en arrière-plan ou la fenêtre réduite, les relevés sont suspendus.
 

@@ -175,7 +175,7 @@ api: {
 
 Pour pouvoir aussi **modifier des réglages** dans le tableau de bord, `kvsEnabled: true` et `kvsForceReseed: false` doivent être définis dans le Controller. Sans KVS, le tableau de bord ne fait qu'afficher.
 
-`hysteresis` est la tolérance autour de la consigne. L'**hystérésis de décharge** (`zdmc_dischargeResetMargin`, à partir du Controller 5.2.4) est autre chose : elle ne figure pas dans le bloc CONFIG, elle se règle dans le [tableau de bord](dashboard_FR.md#ce-que-vous-pouvez-régler).
+`hysteresis` est la tolérance autour de la consigne. Le **blocage de décharge** (`zdmc_dischargeResetMargin`, à partir du Controller 5.2.4) est autre chose : il ne figure pas dans le bloc CONFIG, il se règle dans le [tableau de bord](dashboard_FR.md#ce-que-vous-pouvez-régler).
 
 ### Watchdog (`watchdog`)
 

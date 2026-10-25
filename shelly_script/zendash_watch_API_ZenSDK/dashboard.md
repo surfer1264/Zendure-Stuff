@@ -51,7 +51,7 @@ Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`.
 |---|---|
 | **Kopfzeile** | Verbindungsstatus (z. B. „Live · Poll alle 4s“), Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
 | **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
-| **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Hysterese und Fix-Entladung |
+| **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Sperre und Fix-Entladung |
 | **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
 | **Fußzeile** | Versionen, Zeitpunkt der letzten Aktualisierung, Link **Hilfe** (diese Seite), Rohdaten und Cloud-Upload |
 
@@ -61,7 +61,7 @@ Ein Tipp auf die Zeile **„▾ Übersicht“** klappt die Übersicht ein. Einge
 
 Die Seite startet **gesperrt** – sie zeigt dann nur an, Hinweis „Nur Anzeige“ unter der Regelung. Ein Tipp auf das **Schloss** in der Kopfzeile gibt die Bedienung frei, das Symbol wechselt auf ein offenes Schloss. Nach 60 Sekunden ohne Eingabe sperrt sich die Seite von selbst wieder, ebenso nach jedem Neuladen. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
 
-Auf Touch-Geräten hat der Regler **Reserve (min. SoC)** zusätzlich ein eigenes kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
+Auf Touch-Geräten hat der Regler **Reserve (`minSoc`)** zusätzlich ein eigenes kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
 
 ### Menü „Ansicht“
 
@@ -78,14 +78,14 @@ Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach ei
 
 ### Was du einstellen kannst
 
-Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regeltakt. Nach dem Speichern erscheint kurz eine Bestätigung, z. B. „Gespeichert: Akku 1 · Reserve (min. SoC) 20 %“.
+Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regeltakt. Nach dem Speichern erscheint kurz eine Bestätigung, z. B. „Gespeichert: Akku 1 · Reserve (minSoc) 20 %“.
 
 **In der Übersicht unter „Regelung“** (für alle Speicher gemeinsam):
 
 | Bedienelement | Wirkung | Bereich |
 |---|---|---|
 | **Sollwert** | Zielwert für den Netzbezug. Negativ = etwas einspeisen, positiv = etwas beziehen. Darunter steht die Toleranz (Hysterese): so weit darf der Netzbezug abweichen, bevor der Controller nachregelt. | −40 bis +40 W, in 5-W-Schritten |
-| **Entlade-Hysterese** | Hat ein Speicher bis zur Reserve (`minSoc`) entladen, gibt er erst ab Reserve (`minSoc`) + diesem Wert wieder Strom ab. Verhindert ständiges Ein- und Ausschalten an der Reserve (`minSoc`). Nach einem Neustart des Controllers wirkt die Hysterese erst, wenn der Speicher wieder bis zur Reserve (`minSoc`) entladen hat – liegt der Ladestand beim Start dazwischen, darf er zunächst entladen. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen; ungültige Werte werden mit Meldung verworfen. Ist bei einem Speicher das Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) kleiner als 14 Punkte, ist das Feld gesperrt und es gilt 3. Wirkt erst ab Controller 5.2.4 – ältere Versionen ignorieren den Wert. | 3 bis (kleinstes Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) aller Speicher) − 11 %, ganze Zahlen |
+| **Entlade-Sperre** | Hat ein Speicher bis zur Reserve (`minSoc`) entladen, gibt er erst ab Reserve (`minSoc`) + diesem Wert wieder Energie ab. Verhindert ständiges Ein- und Ausschalten an der Reserve (`minSoc`). Nach einem Neustart des Controllers wirkt die Entlade-Sperre erst, wenn der Speicher wieder bis zur Reserve (`minSoc`) entladen hat – liegt der Ladestand beim Start dazwischen, darf er zunächst entladen. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen; ungültige Werte werden mit Meldung verworfen. Ist bei einem Speicher das Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) kleiner als 14 Punkte, ist das Feld gesperrt und es gilt 3. Wirkt erst ab Controller 5.2.4 – ältere Versionen ignorieren den Wert. | 3 bis (kleinstes Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) aller Speicher) − 11 %, ganze Zahlen |
 | **Fix-Entladung** | Feste Entladeleistung statt Regelung. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen. Solange sie aktiv ist, weist die Sollwert-Kachel darauf hin, dass der Sollwert gerade nicht ausgeregelt wird. | `0` = aus, sonst ab `dischargeStartupPower` (z. B. 35 W) |
 
 **Auf jeder Gerätekarte unter „Steuerung“:**
@@ -94,7 +94,7 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 |---|---|---|
 | **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
 | **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
-| **Reserve (min. SoC)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). Eine Erhöhung wird nicht gespeichert, wenn die Entlade-Hysterese danach nicht mehr passt (Reserve (`minSoc`) höchstens Ladegrenze (`maxSoc`) − 11 − Hysterese) – es erscheint eine Meldung und der Regler springt zurück. Senken geht immer. | 10 % bis 5 Prozentpunkte unter der Ladegrenze, also der kleineren Grenze aus Ladeziel (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
+| **Reserve (`minSoc`)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). Eine Erhöhung wird nicht gespeichert, wenn die Entlade-Sperre danach nicht mehr passt (Reserve (`minSoc`) höchstens Ladegrenze (`maxSoc`) − 11 − Entlade-Sperre) – es erscheint eine Meldung und der Regler springt zurück. Senken geht immer. | 10 % bis 5 Prozentpunkte unter der wirksamen Ladegrenze, also dem kleineren Wert aus Ladegrenze (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
 
 **Auf jeder Gerätekarte unter „Manuelles Laden“:**
 
@@ -107,7 +107,7 @@ Beim Start fragt das Dashboard einmal nach und schaltet dann für diesen Speiche
 
 Nach einer Eingabe ist das jeweilige Bedienelement 4 Sekunden gesperrt, damit nichts doppelt ausgelöst wird.
 
-Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, wird nur darunter angezeigt – nicht zu verwechseln mit der Entlade-Hysterese) und das **Ladeziel** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
+Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, wird nur darunter angezeigt – nicht zu verwechseln mit der Entlade-Sperre) und die **Ladegrenze** (`maxSoc`). Beides stellst du im Configurator bzw. im CONFIG-Block ein.
 
 ### Was die Anzeige zeigt
 
@@ -116,7 +116,7 @@ Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, w
 - **Je Speicher eine Karte** mit:
   - Name und Statuspunkt (grün = erreichbar); mit „Technische Details“ zusätzlich `[devN]` und IP-Adresse
   - Ladestand als Batteriesymbol und Zahl, daneben die Leistung mit Richtung („gibt ab“, „lädt“, „Bereitschaft“)
-  - darunter das Arbeitsfenster, z. B. `Bereich 15–100 %` (Reserve bis Ladeziel)
+  - darunter das Arbeitsfenster, z. B. `Bereich 15–100 %` (Reserve (`minSoc`) bis Ladegrenze (`maxSoc`))
   - PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächste Zelle („Zelle min 3,28 V“) – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „Sperre < 2,90 V“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
   - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war; Antippen zeigt das Datum ([mehr dazu](readme.md#letzte-vollladung))
   - Status in Klartext, z. B. „speist ein“, „voll, Laden gesperrt“, „leer, Entladen gesperrt“, „Export verboten“. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle. Mit „Technische Details“ steht der Rohcode davor (`socLimit 1`, `gridReverse 2` …).
@@ -124,7 +124,7 @@ Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, w
   - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
 - **Fußzeile:** Versionen von Seite und Script (gelb, wenn sie nicht zusammenpassen), Zeitpunkt der letzten Aktualisierung, Link **Hilfe** auf diese Anleitung. `config_api` und `status_api` öffnen die Rohdaten als JSON in einem neuen Tab. **ThingSpeak** und **ThingsBoard** führen zu den Einrichtungsseiten für den Cloud-Upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md)).
 
-**Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Entlade-Hysterese, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
+**Erklärungen per Antippen:** Viele Beschriftungen und Werte sind gepunktet unterstrichen – Sollwert, Entlade-Sperre, Fix-Entladung, die beiden Übersichtskacheln, Leistung, Arbeitsfenster, Zusatzzeile, Sperrschwelle; dazu die Status-Marken. Antippen (oder mit der Maus darauf zeigen) blendet eine kurze Erklärung ein.
 
 Die Seite frischt die Messwerte alle 4 Sekunden auf. Einstellungen, die jemand anders geändert hat (z. B. über Home Assistant), erscheinen nach spätestens etwa einer halben Minute. Solange der Tab im Hintergrund liegt oder das Fenster minimiert ist, pausieren die Abfragen.
 

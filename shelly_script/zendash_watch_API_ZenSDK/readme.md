@@ -204,7 +204,7 @@ api: {
 
 Damit du im Dashboard auch **einstellen** kannst, muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
 
-`hysteresis` ist die Toleranz um den Sollwert. Die **Entlade-Hysterese** (`zdmc_dischargeResetMargin`, ab Controller 5.2.4) ist etwas anderes: Sie steht nicht im CONFIG-Block, sondern wird im [Dashboard](dashboard.md#was-du-einstellen-kannst) eingestellt.
+`hysteresis` ist die Toleranz um den Sollwert. Die **Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Controller 5.2.4) ist etwas anderes: Sie steht nicht im CONFIG-Block, sondern wird im [Dashboard](dashboard.md#was-du-einstellen-kannst) eingestellt.
 
 ### Watchdog (`watchdog`)
 

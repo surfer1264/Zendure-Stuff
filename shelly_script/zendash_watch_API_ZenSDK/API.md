@@ -159,7 +159,7 @@ eigenen Eingabe zusätzlich sofort.
 | `hysteresis` | `CONFIG`, **nicht** über die KVS änderbar. Nur zur Anzeige — muss mit dem Wert im Regel-Script übereinstimmen |
 | `dischargeFixed` | KVS, globaler Fix-Sollwert für die Entladeleistung in W. `0` = aus |
 | `dischargeStartupPower` | `CONFIG`, **nicht** über die KVS änderbar. Untere Grenze für `dischargeFixed` — muss mit dem Wert im Regel-Script übereinstimmen |
-| `dischargeResetMargin` | KVS (`zdmc_dischargeResetMargin`), Entlade-Hysterese in Prozentpunkten, auf 3 … 79 begrenzt. Fehlt der Key: `3`. Seit 3.5.12 |
+| `dischargeResetMargin` | KVS (`zdmc_dischargeResetMargin`), Entlade-Sperre in Prozentpunkten, auf 3 … 79 begrenzt. Fehlt der Key: `3`. Seit 3.5.12 |
 | `ip`, `label`, `maxSoc`, `maxOutput`, `maxInputPower` | `CONFIG`, zur Laufzeit unveränderlich |
 | `minSoc`, `inputLimit`, `dischargeAllowed`, `reverse` | KVS, mit den Vorgaben aus `CONFIG` als Rückfallwert |
 | `watch` | `CONFIG`, ob der Watchdog dieses Gerät überwacht. Seit 3.5.3 |
@@ -225,7 +225,7 @@ die Regelung ignoriert sie.
 |---|---|---|
 | `zdmc_setpoint` | −40 … 40 | Zielwert für den Netzsaldo in W |
 | `zdmc_dischargeFixed` | `0` oder ≥ `dischargeStartupPower` | Feste Entladeleistung in W statt Netzsaldo-Regelung. `0` schaltet zurück auf die normale Regelung. Werte zwischen `1` und der unteren Grenze lehnt `kvs_set_api` mit `400` ab (das Regel-Script würde sie verwerfen) |
-| `zdmc_dischargeResetMargin` | 3 … 79, ganzzahlig | Entlade-Hysterese für alle Geräte: Ein bis zur Reserve entladenes Gerät entlädt erst ab Reserve + Wert wieder. Das Regel-Script (ab 5.2.4) wendet je Gerät höchstens `maxSoc − minSoc − 11` an, bei kleinerem Fenster `3`. Das Dashboard begrenzt zusätzlich auf das kleinste Fenster (mit `socSet`) |
+| `zdmc_dischargeResetMargin` | 3 … 79, ganzzahlig | Entlade-Sperre für alle Geräte: Ein bis zur Reserve (`minSoc`) entladenes Gerät entlädt erst ab Reserve + Wert wieder. Das Regel-Script (ab 5.2.4) wendet je Gerät höchstens `maxSoc − minSoc − 11` an, bei kleinerem Fenster `3`. Das Dashboard begrenzt zusätzlich auf das kleinste Fenster (mit `socSet`) |
 | `zdmc_dev{id}_dischargeAllowed` | `0` / `1` | Entladen erlaubt |
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
 | `zdmc_dev{id}_minSoc` | 10 … `maxSoc − 5` | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
