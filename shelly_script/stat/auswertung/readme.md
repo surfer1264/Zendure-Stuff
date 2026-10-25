@@ -4,7 +4,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.1.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.2.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -126,7 +126,7 @@ und die Geräte aus `geraete.csv`.
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. |
 | `zendure_fonts.css` | IBM-Plex-Schriften; werden in den Bericht eingebettet. Fehlt die Datei, nutzt der Bericht die Systemschrift. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
-| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Kennzeichen „voller Tag“. |
+| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
 | `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |

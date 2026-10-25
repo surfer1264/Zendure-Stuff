@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.5";
+let VERSION = "5.2.6";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -222,6 +222,13 @@ let state = {
   cycleId: 0,
   cycleStartedAt: 0,
 
+  // Zyklusdauer, stuendlich ins Log (cycleStatsLog). Nur Summen, kein Puffer.
+  cyFrom: Date.now(),
+  cyN: 0,
+  cySum: 0,
+  cyMax: 0,
+  cySkip: 0,
+
   errors: { em: 0, watchdog: 0, kvs: 0 },
   notified: { em: false, watchdog: false, kvs: false },
 
@@ -436,15 +443,43 @@ function lock() {
   return state.cycleId;
 }
 
+// Schreibt die Zyklus-Statistik der letzten Stunde und beginnt ein neues Fenster.
+// avg/max nur aus Zyklen mit Geraeteabfrage (Sparmodus-Zyklen sind kuerzer).
+function cycleStatsLog(now) {
+  print("Zyklen 1h: n " + state.cyN +
+    " | avg " + (state.cyN > 0 ? Math.round(state.cySum / state.cyN) : 0) + " ms" +
+    " | max " + Math.round(state.cyMax) + " ms" +
+    " | uebersprungen " + state.cySkip +
+    " | interval " + CONFIG.interval + " ms");
+
+  state.cyFrom = now;
+  state.cyN = 0;
+  state.cySum = 0;
+  state.cyMax = 0;
+  state.cySkip = 0;
+}
+
 function unlock(myCycle) {
   if (myCycle !== state.cycleId) {
     debugStale("unlock", myCycle);
     return;
   }
 
+  let now = Date.now();
+  let d = now - state.cycleStartedAt;
+
+  if (!state.idleSkipActiveThisCycle) {
+    state.cyN = state.cyN + 1;
+    state.cySum = state.cySum + d;
+    if (d > state.cyMax) state.cyMax = d;
+  }
+
+  // Uhr zurueckgesprungen (z.B. Zeitsync nach Start): Fenster neu beginnen
+  if (now < state.cyFrom) state.cyFrom = now;
+  if (now - state.cyFrom >= 3600000) cycleStatsLog(now);
+
   if (CONFIG.debug) {
-    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " +
-      (Date.now() - state.cycleStartedAt) + " ms");
+    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " + d + " ms");
     memLog("Zyklusende");
   }
 
@@ -1970,6 +2005,7 @@ function update() {
     // Haengt der Zyklus dauerhaft, loest spaeter der Watchdog aus.
     print("Takt uebersprungen - Zyklus " + state.cycleId + " laeuft noch seit " +
       (Date.now() - state.cycleStartedAt) + " ms");
+    state.cySkip = state.cySkip + 1;
     return;
   }
 

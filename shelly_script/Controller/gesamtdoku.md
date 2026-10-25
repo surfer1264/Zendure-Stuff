@@ -2365,6 +2365,16 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   `interval` für die Anzahl der Geräte zu knapp (Kapitel 4b). Bleibt der
   Zyklus ganz hängen, folgt nach `interval × 2.5` die Watchdog-Fehlermeldung
   (Kapitel 12.6).
+- `Zyklen 1h: n N | avg X ms | max Y ms | uebersprungen S | interval I ms`
+  (seit 5.2.6) — einmal pro Stunde, auch ohne `debug`. `n`, `avg` und `max`
+  beziehen sich auf die Zyklen mit Geräteabfrage der letzten Stunde
+  (Sparmodus-Zyklen sind kürzer und zählen nicht), gemessen von `lock()` bis
+  `unlock()` – also praktisch die Wartezeit auf Zähler und Geräte.
+  `uebersprungen` zählt die verworfenen Takte (Zeile oben). Liegt `max`
+  regelmäßig nahe an `interval` oder ist `uebersprungen` oft größer 0, ist
+  `interval` zu knapp. Ein einzelnes `max` knapp unter 4000 ms ist meist ein
+  HTTP-Timeout (4 s, Kapitel 8.3), also ein Netzwerk-Hänger. Der Controller
+  führt dafür nur fünf Zahlen mit (kein Puffer, kein zusätzlicher Timer).
 
 **Start- und Benachrichtigungs-Meldungen**
 
@@ -2384,6 +2394,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
 - `KVS-Seed: <key> konnte nicht geschrieben werden (...)`
 - `Lade initiale KVS-Overrides...` / `KVS Event-Listener aktiv.`
 - `KVS-Aenderung erkannt (Rev: N) - Lade Overrides...` / `KVS-Overrides aktualisiert.`
+- `KVS <key>: Wert uebernommen (alt -> neu)` (seit 5.2.5 immer, vorher nur mit `debug`) — welcher Key mit welchem Wert übernommen wurde. Erscheint auch beim Start für jeden KVS-Wert, der vom CONFIG-Block abweicht.
 - `<Geraet>: minSoc auf Geraet synchronisiert (X%)` bzw. `<Geraet>: minSoc-Sync fehlgeschlagen beim Schreiben` — Folge eines `zdmc_devN_minSoc`-Overrides (Kapitel 13.4).
 - `<Geraet>: manuelles Laden erzwungen (acMode 1), inputLimit gesetzt: X W` bzw. `<Geraet>: inputLimit-Sync fehlgeschlagen` — Folge eines `zdmc_devN_inputLimit`-Overrides (Kapitel 13.4).
 

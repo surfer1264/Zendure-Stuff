@@ -12,7 +12,8 @@ werden genauso gelesen. Ändern sich Einstellungen oder Version, wird automatisc
 
 Erzeugt im Ordner dieses Skripts:
     verlauf_15min.csv  15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang, SOC und Ausgang je Gerät
-    tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus
+    tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus,
+                       Zyklusdauer (ab Controller 5.2.6)
     tagesprofil.csv    Je Uhrzeit-Stunde: Netzsaldo und Speicher-Ausgang (Mittel und Verteilung über die Tage),
                        SOC-Verteilung je Gerät (Min, Perzentile, Max)
     geraete.csv        Ausgewertete Geräte (Name wie im Log, Spaltenschlüssel) – für bericht.py
@@ -37,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -93,6 +94,8 @@ R_NETZ = re.compile(TS + r"Netzsaldo: (-?\d+) W \| Ist-Summe: (-?\d+) W \| Regel
 R_DEV = re.compile(TS + r"  ([A-Za-z0-9_.-]+): SOC (\d+|n/a)%? \| socL (\S+) \| gridR (\S+) \| Ist (-?\d+) W \| Soll (-?\d+) W \| acMode (\d)")
 R_SET = re.compile(TS + r"([A-Za-z0-9_.-]+): Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
+# Stundenzeile ab Controller 5.2.6
+R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms")
 EREIGNISSE = [
     ("nicht_erreichbar", "Geraet nicht erreichbar"),
     ("watchdog", "Watchdog-Timeout"),
@@ -156,7 +159,7 @@ def im_zeitraum(tag):
 def lesen(pfad, pause):
     """Liest ein Log. pause = noch offene Sparmodus-Takte vom Vortag. Liefert Rohdaten und offene Pause."""
     netz, dev, ev = [], [], []
-    takte, gespart = {}, {}
+    takte, gespart, zyklen = {}, {}, {}
     with oeffnen(pfad) as fh:
         for l in fh:
             m = R_NETZ.match(l)
@@ -176,6 +179,15 @@ def lesen(pfad, pause):
             if m:
                 ev.append((m[1], "stellbefehle_" + m[2].lower()))
                 continue
+            m = R_ZYK.match(l)
+            if m:
+                # je Tag: Anzahl, Summe der Dauern, längster Zyklus (Fenster zählt zum Tag seiner Zeile)
+                z = zyklen.setdefault(m[1][:10], [0, 0, 0])
+                n = int(m[2])
+                z[0] += n
+                z[1] += n * int(m[3])
+                z[2] = max(z[2], int(m[4]))
+                continue
             if "Sparmodus" in l:
                 s = R_SPAR.search(l)
                 if s:
@@ -188,12 +200,12 @@ def lesen(pfad, pause):
                     if key == "neustarts":
                         pause = 0
                     break
-    return netz, dev, ev, takte, gespart, pause
+    return netz, dev, ev, takte, gespart, zyklen, pause
 
 
 def auswerten(pfad, pause):
     """Wertet ein Log aus. Ergebnis enthält nur Summen/Zählungen je Tag, aus denen sich alles exakt zusammensetzen lässt."""
-    netz, dev, ev, takte, gespart, pause_ende = lesen(pfad, pause)
+    netz, dev, ev, takte, gespart, zyklen, pause_ende = lesen(pfad, pause)
     erg = {"pause_ende": pause_ende, "geraete": [], "takt": None, "tage": {}, "verlauf": None, "profil": [], "soc_hist": {}}
     if not netz:
         return erg
@@ -259,6 +271,7 @@ def auswerten(pfad, pause):
         eintrag = {c: json_wert(z[c]) for c in day.columns}
         eintrag["takte"] = takte.get(tag, 0)
         eintrag["gespart"] = gespart.get(tag, 0)
+        eintrag["zyklen"] = zyklen.get(tag)
         eintrag["ereignisse"] = {k: int(v) for (t, k), v in ec.items() if t == tag}
         eintrag["geraete"] = {}
         for g, a in geraet_tag.items():
@@ -444,6 +457,9 @@ def zusammensetzen(ergebnisse):
         z["regel_median_abw_w"] = x.get("regel_median_abw_w")
         for c in zaehler:
             z[c] = x["ereignisse"].get(c, 0)
+        zy = x.get("zyklen")
+        z["zyklus_avg_ms"] = round(zy[1] / zy[0]) if zy and zy[0] else None
+        z["zyklus_max_ms"] = zy[2] if zy and zy[0] else None
         z["takte_gesamt"] = x["takte"]
         z["takte_ohne_abfrage"] = x["gespart"]
         zeilen.append(z)
@@ -460,8 +476,9 @@ def zusammensetzen(ergebnisse):
     # voller Tag = mindestens VOLLER_TAG_H Stunden erfasst (kurze Ausfälle zählen nicht)
     day["vollstaendig"] = (day.erfasst_h >= VOLLER_TAG_H).astype(int)
     voll_tage = set(day.index[day.vollstaendig == 1])
-    # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus)
-    regel = ["regel_im_band_pct", "regel_median_abw_w"]
+    # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus);
+    # Zyklusdauer bleibt leer bei Logs ohne Stundenzeile (Controller vor 5.2.6)
+    regel = ["regel_im_band_pct", "regel_median_abw_w", "zyklus_avg_ms", "zyklus_max_ms"]
     day = day.drop(columns="erfasst_h")
     day[day.columns.difference(regel)] = day[day.columns.difference(regel)].fillna(0)
     day[zaehler] = day[zaehler].astype(int)

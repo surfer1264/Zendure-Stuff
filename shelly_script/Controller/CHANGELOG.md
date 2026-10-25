@@ -1,5 +1,12 @@
 # Changelog Controller
 
+## v5.2.6
+
+- **Zyklusdauer im Log:** Einmal pro Stunde steht eine Zeile wie `Zyklen 1h: n 830 | avg 1840 ms | max 3620 ms | uebersprungen 0 | interval 4000 ms` im Log, auch ohne `debug`. `n`, `avg` und `max` zählen nur Zyklen mit Geräteabfrage (Sparmodus-Zyklen sind kürzer), `uebersprungen` zählt die verworfenen Takte. Liegt `max` regelmäßig nahe am Intervall oder gibt es verworfene Takte, ist `interval` zu knapp.
+  - Kein Puffer: Es werden nur fünf Zahlen mitgeführt, kein zusätzlicher Timer, kein Schreiben in den KVS.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.5
 
 - **Log zeigt, welcher KVS-Wert übernommen wurde:** Bei jeder Änderung steht jetzt der Key mit altem und neuem Wert im Log, z. B. `KVS zdmc_dev0_minSoc: Wert uebernommen (15 -> 20)`. Bisher stand das nur mit `debug: true` im Log, sonst nur „KVS-Overrides aktualisiert“. Beim Start erscheint die Zeile für jeden KVS-Wert, der vom CONFIG-Block abweicht. Ungültige Werte werden weiterhin nur mit `debug: true` gemeldet.
