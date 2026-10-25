@@ -10,33 +10,35 @@ Mit wenigen Klicks zur lokalen Steuerung deiner Zendure-Flotte – einrichten, a
 
 **Inhalt**
 
-1. [Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
-2. [Wo finde ich den Configurator?](#2-wo-finde-ich-den-configurator)
-    * [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
-    * [Alternative: als Home-Assistant-App](#alternative-als-home-assistant-app)
-    * [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
-3. [Ersteinrichtung](#3-ersteinrichtung)
-    * [Der Ablauf](#der-ablauf)
-    * [Die Funktionen im Ergebnis-Schritt](#die-funktionen-im-ergebnis-schritt)
-4. [Update](#4-update)
-    * [So geht's](#so-gehts)
-    * [Was beim Update mit deinen Einstellungen passiert](#was-beim-update-mit-deinen-einstellungen-passiert)
-    * [Update ohne Helfer](#update-ohne-helfer)
-    * [Umstieg von den alten Einzelscripten](#umstieg-von-den-alten-einzelscripten)
-5. [Wechsel eines Shelly](#5-wechsel-eines-shelly)
-6. [Fehlermeldungen und Problemsituationen](#6-fehlermeldungen-und-problemsituationen)
-    * [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly)
-    * [Meldungen im Überblick](#meldungen-im-überblick)
-    * [Probleme mit dem Helfer](#probleme-mit-dem-helfer)
-7. [How-Tos](#7-how-tos)
-    * [Bestehende Konfiguration einlesen](#bestehende-konfiguration-einlesen)
-    * [Script von Hand hochladen](#script-von-hand-hochladen)
-    * [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
-    * [Konfiguration sichern](#konfiguration-sichern)
-    * [Log aufzeichnen](#log-aufzeichnen)
-    * [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
-    * [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
-8. [Download](#8-download)
+- [Der Configurator](#der-configurator)
+  - [1. Was richtet der Configurator ein?](#1-was-richtet-der-configurator-ein)
+  - [2. Wie richte ich den Configurator ein?](#2-wie-richte-ich-den-configurator-ein)
+    - [Empfohlen: der lokale Helfer (Exe-Installer)](#empfohlen-der-lokale-helfer-exe-installer)
+    - [Alternative: als Home-Assistant-App](#alternative-als-home-assistant-app)
+    - [Alternative: nur der Web-Configurator](#alternative-nur-der-web-configurator)
+    - [Alternative: Aufruf als Python Prozess](#alternative-aufruf-als-python-prozess)
+  - [3. Ersteinrichtung](#3-ersteinrichtung)
+    - [Der Ablauf](#der-ablauf)
+    - [Die Funktionen im Ergebnis-Schritt](#die-funktionen-im-ergebnis-schritt)
+  - [4. Update](#4-update)
+    - [So geht's](#so-gehts)
+    - [Was beim Update mit deinen Einstellungen passiert](#was-beim-update-mit-deinen-einstellungen-passiert)
+    - [Update ohne Helfer](#update-ohne-helfer)
+    - [Umstieg von den alten Einzelscripten](#umstieg-von-den-alten-einzelscripten)
+  - [5. Wechsel eines Shelly](#5-wechsel-eines-shelly)
+  - [6. Fehlermeldungen und Problemsituationen](#6-fehlermeldungen-und-problemsituationen)
+    - [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly)
+    - [Meldungen im Überblick](#meldungen-im-überblick)
+    - [Probleme mit dem Helfer](#probleme-mit-dem-helfer)
+  - [7. How-Tos](#7-how-tos)
+    - [Bestehende Konfiguration einlesen](#bestehende-konfiguration-einlesen)
+    - [Script von Hand hochladen](#script-von-hand-hochladen)
+    - [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen)
+    - [Konfiguration sichern](#konfiguration-sichern)
+    - [Log aufzeichnen](#log-aufzeichnen)
+    - [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)
+    - [Integrität des Downloads prüfen](#integrität-des-downloads-prüfen)
+  - [8. Download](#8-download)
 
 Was sich zuletzt geändert hat, steht im [Changelog](CHANGELOG.md).
 
@@ -67,9 +69,18 @@ Der Configurator ist auf **Deutsch, Englisch und Französisch** verfügbar.
 
 ---
 
-## 2. Wo finde ich den Configurator?
+## 2. Wie richte ich den Configurator ein?
 
-Es gibt zwei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update, Speicherprüfung und Log-Aufzeichnung.
+Es gibt drei Wege. Empfohlen ist der **lokale Helfer** (=EXE-Datei), denn nur damit funktionieren Direkt-Upload, Update, Speicherprüfung und Log-Aufzeichnung.
+
+Es gibt **einen** Proxy (`zendure_local_helper.py`), der überall gleich funktioniert. Nur die Art, wie du ihn startest, unterscheidet sich:
+
+| Variante | Geeignet für | Start | Browser öffnet sich von selbst |
+|---|---|---|---|
+| **Fertiges Programm** | Windows oder Mac mit Apple Silicon, ohne Python | Doppelklick | ja |
+| **Home Assistant** | wer ohnehin Home Assistant OS betreibt | als eigene App | nein |
+| **Python-Script** | PC, Laptop, Raspberry Pi | `python3 zendure_local_helper.py` | ja (nur mit Bildschirm) |
+
 
 ### Empfohlen: der lokale Helfer (Exe-Installer)
 
@@ -113,6 +124,29 @@ Läuft direkt im Browser, ohne Download:
 Damit kannst du alles konfigurieren und das fertige Script herunterladen – **hochladen musst du es dann aber selbst** über die Weboberfläche des Shelly ([Anleitung](#script-von-hand-hochladen)). Update und Speicherprüfung stehen ohne Helfer nicht zur Verfügung.
 
 > Tipp: Läuft der Helfer im Hintergrund, erkennt ihn auch der Web-Configurator und schaltet die zusätzlichen Funktionen frei.
+
+### Alternative: Aufruf als Python Prozess
+
+Python ist auf jeder Plattform (Windows, Mac, Linux) verfügbar oder nachinstallierbar 
+
+Beim Python-Script: im Ordner mit den Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
+
+```bash
+python3 zendure_local_helper.py
+```
+
+Unter Windows heißt der Befehl oft `python` oder `py` statt `python3`. Das Fenster muss offen bleiben, solange das Dashboard genutzt wird; beenden mit `Strg+C`.
+
+Beim Start zeigt der Proxy eine kurze Übersicht:
+
+```text
+Zendure Multi-Configurator 2.9.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Oeffne den Configurator automatisch im Browser...
+Dieses Fenster offen lassen, solange hochgeladen wird.
+Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).
+```
+
+Auf einem Rechner mit Bildschirm öffnet sich der Browser automatisch.
 
 ---
 
