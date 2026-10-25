@@ -13,9 +13,11 @@ A few clicks to local control of your Zendure fleet – set up, update, done.
 **Contents**
 
 1. [What does the configurator set up?](#1-what-does-the-configurator-set-up)
-2. [Where do I find the configurator?](#2-where-do-i-find-the-configurator)
+2. [How do I set up the configurator?](#2-how-do-i-set-up-the-configurator)
     * [Recommended: the local helper (EXE installer)](#recommended-the-local-helper-exe-installer)
+    * [Alternative: as a Home Assistant app](#alternative-as-a-home-assistant-app)
     * [Alternative: web configurator only](#alternative-web-configurator-only)
+    * [Alternative: running it as a Python process](#alternative-running-it-as-a-python-process)
 3. [Initial setup](#3-initial-setup)
     * [The process](#the-process)
     * [Functions in the result step](#functions-in-the-result-step)
@@ -68,9 +70,17 @@ The configurator is available in **German, English and French**.
 
 ---
 
-## 2. Where do I find the configurator?
+## 2. How do I set up the configurator?
 
-There are two ways. The **local helper** (EXE file) is recommended, because direct upload, update, memory check and log recording only work with it.
+There are three ways. The **local helper** (= EXE file) is recommended, because direct upload, update, memory check and log recording only work with it.
+
+There is **one** proxy (`zendure_local_helper.py`) that works the same everywhere. Only the way you start it differs:
+
+| Variant | Suitable for | Start | Browser opens by itself |
+|---|---|---|---|
+| **Ready-made program** | Windows or Mac with Apple Silicon, without Python | double-click | yes |
+| **Home Assistant** | anyone already running Home Assistant OS | as its own app | no |
+| **Python script** | PC, laptop, Raspberry Pi | `python3 zendure_local_helper.py` | yes (only with a screen) |
 
 ### Recommended: the local helper (EXE installer)
 
@@ -95,6 +105,16 @@ If you want to make sure the file is unmodified, you can [verify it](#verifying-
 
 **What the helper does – and what it doesn't:** It runs only on your own computer (`http://127.0.0.1:8787`) and cannot be reached from your network. After a successful upload it only remembers the **IP addresses** of your two Shellys – no configuration, no passwords. If a Shelly is password-protected, the configurator asks for the password; the helper keeps it only in memory until you close it.
 
+### Alternative: as a Home Assistant app
+
+If you use Home Assistant OS, you can also install the configurator together with the helper as an app – no EXE on your PC, and usable from a tablet or phone too. All functions of the helper are available.
+
+[![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
+
+In short: add the repository `https://github.com/surfer1264/ha-zendure-apps` in the app store (button above), install the app "Zendure Multi-Configurator", start it and choose "Open web UI".
+
+👉 **[Guide for the Home Assistant app](HA_zendure_installer/INSTALLATION.md)** (German)
+
 ### Alternative: web configurator only
 
 Runs directly in the browser, no download:
@@ -104,6 +124,31 @@ Runs directly in the browser, no download:
 With it you can configure everything and download the finished script – **but you then have to upload it yourself** via the Shelly's web interface ([instructions](#uploading-a-script-manually)). Update and memory check are not available without the helper.
 
 > Tip: If the helper is running in the background, the web configurator detects it as well and unlocks the additional functions.
+
+### Alternative: running it as a Python process
+
+Python is available or can be installed on every platform (Windows, Mac, Linux).
+
+Step 1: download the required files into one folder, see [8. Download](#8-download)
+
+For the Python script: open a terminal (Windows: Command Prompt) in the folder containing the files and start:
+
+```bash
+python3 zendure_local_helper.py
+```
+
+On Windows the command is often `python` or `py` instead of `python3`. The window must stay open while the dashboard is in use; quit with `Ctrl+C`.
+
+On start, the proxy shows a short overview (the helper's output is in German):
+
+```text
+Zendure Multi-Configurator 2.9.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Oeffne den Configurator automatisch im Browser...
+Dieses Fenster offen lassen, solange hochgeladen wird.
+Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).
+```
+
+On a computer with a screen, the browser opens automatically.
 
 ---
 
@@ -278,7 +323,7 @@ For the same reason, Controller and zenDash-API + Watchdog **never** run togethe
 |---|---|
 | The helper window closes immediately or reports that it could not listen on 127.0.0.1:8787 | The helper is already running (another window, possibly minimised) – use that one, or close it and restart. |
 | The browser doesn't open | Open `http://127.0.0.1:8787` in your browser. |
-| Windows/macOS blocks the start | see [Where do I find the configurator?](#recommended-the-local-helper-exe-installer) |
+| Windows/macOS blocks the start | see [Recommended: the local helper](#recommended-the-local-helper-exe-installer) |
 | The configurator suggests wrong Shelly IPs | Simply overwrite the IP in the field – or [reset](#resetting-remembered-ips) the remembered IPs. |
 
 ---

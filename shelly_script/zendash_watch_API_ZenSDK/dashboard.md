@@ -19,13 +19,13 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
     - [Menü „Ansicht“](#menü-ansicht)
     - [Was du einstellen kannst](#was-du-einstellen-kannst)
     - [Was die Anzeige zeigt](#was-die-anzeige-zeigt)
-  - [Welche Variante passt zu dir?](#welche-variante-passt-zu-dir)
-  - [Voraussetzungen](#voraussetzungen)
-  - [In 4 Schritten zum Dashboard](#in-4-schritten-zum-dashboard)
-  - [Als Programm unter Windows oder macOS](#als-programm-unter-windows-oder-macos)
-  - [Dauerbetrieb auf einer Synology](#dauerbetrieb-auf-einer-synology)
-  - [Als App in Home Assistant](#als-app-in-home-assistant)
-  - [Startoptionen](#startoptionen)
+  - [Installation: Welche Variante passt zu dir?](#installation-welche-variante-passt-zu-dir)
+    - [Voraussetzungen](#voraussetzungen)
+    - [Als Python Prozess starten](#als-python-prozess-starten)
+    - [Als Programm unter Windows oder macOS](#als-programm-unter-windows-oder-macos)
+    - [Dauerbetrieb auf einer Synology](#dauerbetrieb-auf-einer-synology)
+    - [Als App in Home Assistant](#als-app-in-home-assistant)
+    - [Startoptionen](#startoptionen)
   - [Gut zu wissen](#gut-zu-wissen)
   - [Wenn es nicht klappt](#wenn-es-nicht-klappt)
 
@@ -132,7 +132,7 @@ Technische Details zu Abfragetakt, Schnittstelle und Wertebereichen stehen in de
 
 ---
 
-## Welche Variante passt zu dir?
+## Installation Welche Variante passt zu dir?
 
 Es gibt **einen** Proxy (`zendure_proxy.py`), der überall gleich funktioniert. Nur die Art, wie du ihn startest, unterscheidet sich:
 
@@ -149,7 +149,7 @@ Für die Anzeige nebenbei reicht jeder Rechner. Soll das Dashboard **immer** err
 
 ---
 
-## Voraussetzungen
+### Voraussetzungen
 
 - Das Script [zenDash-API + Watchdog](readme.md) läuft auf deinem Dashboard-Shelly, mit **`api.enabled: true`**.
 - Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles Laden …), muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
@@ -164,7 +164,7 @@ Für die Anzeige nebenbei reicht jeder Rechner. Soll das Dashboard **immer** err
 
 ---
 
-## In 4 Schritten zum Dashboard
+### Als Python Prozess starten
 
 **1. Script-Nummer nachsehen**
 
@@ -182,7 +182,7 @@ Es sollte eine Zeile mit Daten erscheinen. Kommt ein Fehler, läuft das Script n
 
 **3. Proxy starten**
 
-Beim fertigen Programm: Doppelklick (siehe [unten](#als-programm-unter-windows-oder-macos)). Beim Python-Script: im Ordner mit den Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
+Im Ordner mit den Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
 
 ```bash
 python3 zendure_proxy.py
@@ -231,7 +231,7 @@ Danach ist das Dashboard auch von jedem anderen Gerät im Heimnetz erreichbar �
 
 ---
 
-## Als Programm unter Windows oder macOS
+### Als Programm unter Windows oder macOS
 
 Für Rechner ohne Python gibt es den Proxy als fertiges Programm. Die Dashboard-Seite ist darin bereits eingebaut – du brauchst nur diese eine Datei:
 
@@ -242,7 +242,7 @@ Für Rechner ohne Python gibt es den Proxy als fertiges Programm. Die Dashboard-
 2. Per **Doppelklick** starten. Ein Konsolenfenster öffnet sich (offen lassen), dazu der Browser mit der Einrichtungsseite.
 3. Warnt Windows SmartScreen vor einer unbekannten App: **„Weitere Informationen“ → „Trotzdem ausführen“**. Unter macOS gelten dieselben Schritte wie beim Helfer – siehe [macOS-Anleitung](../Multiconfigurator/local_helper/mcos_helper.md) (dort den Dateinamen `zendure_proxy-macos` einsetzen).
 4. Fragt die Windows-Firewall nach: **„Zugriff zulassen“** (privates Netzwerk), sonst ist das Dashboard vom Handy aus nicht erreichbar.
-5. Einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard) beschrieben. Die Datei `zendure_proxy_config.json` entsteht neben dem Programm.
+5. Einrichten wie in [Schritt 4](#als-python-prozess-starten) beschrieben. Die Datei `zendure_proxy_config.json` entsteht neben dem Programm.
 
 Beenden: Konsolenfenster schließen oder `Strg+C`.
 
@@ -250,7 +250,7 @@ Zu jeder Datei liegt auf der [Releases-Seite](https://github.com/surfer1264/Zend
 
 ---
 
-## Dauerbetrieb auf einer Synology
+### Dauerbetrieb auf einer Synology
 
 1. **Python prüfen.** DSM bringt meist schon eines mit:
 
@@ -269,7 +269,7 @@ Zu jeder Datei liegt auf der [Releases-Seite](https://github.com/surfer1264/Zend
 
 4. **Sofort starten**, ohne Neustart: Aufgabe markieren → **Ausführen**.
 5. **Firewall.** Ist sie unter Systemsteuerung → Sicherheit → Firewall aktiv, eine Regel für TCP **8000** anlegen. Port 8000 kollidiert nicht mit DSM selbst (5000/5001).
-6. **Einrichten.** Von einem PC oder Handy aus `http://<IP-der-Synology>:8000/` aufrufen und wie in [Schritt 4](#in-4-schritten-zum-dashboard) IP und Script-Nummer eintragen.
+6. **Einrichten.** Von einem PC oder Handy aus `http://<IP-der-Synology>:8000/` aufrufen und wie in [Schritt 4](#als-python-prozess-starten) IP und Script-Nummer eintragen.
 
 Die Aufgabe bleibt dauerhaft als „läuft“ stehen, weil der Proxy nicht endet. Das ist richtig so.
 
@@ -279,7 +279,7 @@ Der Aufgabenplaner startet die Aufgabe beim Hochfahren, aber **nicht neu, wenn d
 
 ---
 
-## Als App in Home Assistant
+### Als App in Home Assistant
 
 Wer Home Assistant OS betreibt, kann den Proxy dort als eigene App laufen lassen. Er startet dann mit Home Assistant und wird bei einem Absturz automatisch neu gestartet.
 
@@ -287,13 +287,13 @@ Wer Home Assistant OS betreibt, kann den Proxy dort als eigene App laufen lassen
 
 [![Repository zu Home Assistant hinzufügen](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
 
-Kurz gesagt: das Repository `https://github.com/surfer1264/ha-zendure-apps` im App Store hinzufügen (Knopf oben), die App „Zendure Dashboard Proxy“ installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#in-4-schritten-zum-dashboard). Neue Versionen bietet Home Assistant dann selbst als Update an.
+Kurz gesagt: das Repository `https://github.com/surfer1264/ha-zendure-apps` im App Store hinzufügen (Knopf oben), die App „Zendure Dashboard Proxy“ installieren, starten, `http://<IP-von-Home-Assistant>:8000/` aufrufen und einrichten wie in [Schritt 4](#als-python-prozess-starten). Neue Versionen bietet Home Assistant dann selbst als Update an.
 
 > **Achtung:** Die Einstellungen liegen im dauerhaften Speicher der App und überstehen Updates. Neue Versionen deshalb immer per **Aktualisieren** einspielen – wird die App deinstalliert und neu installiert, ist die Einrichtung einmal zu wiederholen.
 
 ---
 
-## Startoptionen
+### Startoptionen
 
 Gilt für das Python-Script (und das Programm, wenn du es aus einer Konsole startest):
 
@@ -327,7 +327,7 @@ Port (`PORT`, Standard 8000) und Netzwerk-Schnittstelle (`BIND_ADDRESS`) stehen 
 |---|---|
 | Seite leer, „Failed to fetch“ | Die HTML-Datei wurde per Doppelklick geöffnet. Immer über `http://localhost:8000/` öffnen. |
 | Statt des Dashboards erscheint die Einrichtungsseite | Der Proxy ist noch nicht eingerichtet, oder `zendure_proxy_config.json` fehlt bzw. ist beschädigt. Einfach neu einrichten. |
-| „Speichern & testen“ meldet einen Fehler | IP oder Script-Nummer stimmen nicht – mit dem Test aus [Schritt 2](#in-4-schritten-zum-dashboard) prüfen. Die IP muss die des **Dashboard-Shelly** sein. |
+| „Speichern & testen“ meldet einen Fehler | IP oder Script-Nummer stimmen nicht – mit dem Test aus [Schritt 2](#als-python-prozess-starten) prüfen. Die IP muss die des **Dashboard-Shelly** sein. |
 | Roter Hinweis „Fehler beim Laden der Konfiguration“ | Der Shelly ist nicht (mehr) erreichbar oder die Script-Nummer hat sich geändert – unter `/setup` prüfen. |
 | Versionshinweis in der Fußzeile ist gelb | Dashboard-Seite und Script haben unterschiedliche Versionen. Passende `zendure-dashboard.html` bzw. das neue Programm holen. |
 | 404 unter `http://localhost:8000/` | `zendure-dashboard.html` liegt weder neben dem Proxy noch eine Ebene höher. Beim Start listet der Proxy alle Orte auf, an denen er gesucht hat. |

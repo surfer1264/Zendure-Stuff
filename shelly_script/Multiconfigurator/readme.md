@@ -127,7 +127,9 @@ Damit kannst du alles konfigurieren und das fertige Script herunterladen – **h
 
 ### Alternative: Aufruf als Python Prozess
 
-Python ist auf jeder Plattform (Windows, Mac, Linux) verfügbar oder nachinstallierbar 
+Python ist auf jeder Plattform (Windows, Mac, Linux) verfügbar oder nachinstallierbar.
+
+Schritt 1: Download der nötigen Dateien in einen Ordner, siehe [8. Download](#8-download)
 
 Beim Python-Script: im Ordner mit den Dateien ein Terminal (Windows: Eingabeaufforderung) öffnen und starten:
 

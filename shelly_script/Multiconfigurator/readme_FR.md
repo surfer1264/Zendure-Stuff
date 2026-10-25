@@ -13,9 +13,11 @@ Quelques clics pour piloter localement ta flotte Zendure – configurer, mettre 
 **Sommaire**
 
 1. [Ce que le configurateur met en place](#1-ce-que-le-configurateur-met-en-place)
-2. [Où trouver le configurateur](#2-où-trouver-le-configurateur)
+2. [Comment installer le configurateur](#2-comment-installer-le-configurateur)
     * [Recommandé : l'assistant local (installateur EXE)](#recommandé--lassistant-local-installateur-exe)
+    * [Alternative : en tant qu'app Home Assistant](#alternative--en-tant-quapp-home-assistant)
     * [Alternative : le configurateur web seul](#alternative--le-configurateur-web-seul)
+    * [Alternative : lancement en tant que processus Python](#alternative--lancement-en-tant-que-processus-python)
 3. [Première configuration](#3-première-configuration)
     * [Déroulement](#déroulement)
     * [Les fonctions de l'étape Résultat](#les-fonctions-de-létape-résultat)
@@ -68,9 +70,17 @@ Le configurateur est disponible en **allemand, anglais et français**.
 
 ---
 
-## 2. Où trouver le configurateur
+## 2. Comment installer le configurateur
 
-Il existe deux possibilités. L'**assistant local** (fichier EXE) est recommandé, car le chargement direct, la mise à jour, la vérification de la mémoire et l'enregistrement du journal ne fonctionnent qu'avec lui.
+Il existe trois possibilités. L'**assistant local** (= fichier EXE) est recommandé, car le chargement direct, la mise à jour, la vérification de la mémoire et l'enregistrement du journal ne fonctionnent qu'avec lui.
+
+Il n'existe qu'**un seul** proxy (`zendure_local_helper.py`), qui fonctionne partout de la même façon. Seule la manière de le lancer diffère :
+
+| Variante | Adapté pour | Lancement | Le navigateur s'ouvre tout seul |
+|---|---|---|---|
+| **Programme prêt à l'emploi** | Windows ou Mac avec Apple Silicon, sans Python | double-clic | oui |
+| **Home Assistant** | ceux qui utilisent déjà Home Assistant OS | en tant qu'app dédiée | non |
+| **Script Python** | PC, portable, Raspberry Pi | `python3 zendure_local_helper.py` | oui (uniquement avec un écran) |
 
 ### Recommandé : l'assistant local (installateur EXE)
 
@@ -95,6 +105,16 @@ Si tu veux t'assurer que le fichier n'a pas été modifié, tu peux le [vérifie
 
 **Ce que fait l'assistant local – et ce qu'il ne fait pas :** il tourne uniquement sur ton propre ordinateur (`http://127.0.0.1:8787`) et n'est pas accessible depuis ton réseau. Après un chargement réussi, il mémorise seulement les **adresses IP** de tes deux Shelly – aucune configuration, aucun mot de passe. Si un Shelly est protégé par mot de passe, le configurateur le demande ; l'assistant local le garde uniquement en mémoire jusqu'à sa fermeture.
 
+### Alternative : en tant qu'app Home Assistant
+
+Si tu utilises Home Assistant OS, tu peux aussi installer le configurateur avec l'assistant local en tant qu'app – sans EXE sur le PC, et même depuis une tablette ou un téléphone. Toutes les fonctions de l'assistant local sont disponibles.
+
+[![Ajouter le dépôt à Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fsurfer1264%2Fha-zendure-apps)
+
+En bref : ajoute le dépôt `https://github.com/surfer1264/ha-zendure-apps` dans la boutique d'apps (bouton ci-dessus), installe l'app « Zendure Multi-Configurator », démarre-la et choisis « Ouvrir l'interface web ».
+
+👉 **[Guide de l'app Home Assistant](HA_zendure_installer/INSTALLATION.md)** (allemand)
+
 ### Alternative : le configurateur web seul
 
 Fonctionne directement dans le navigateur, sans téléchargement :
@@ -104,6 +124,31 @@ Fonctionne directement dans le navigateur, sans téléchargement :
 Il te permet de tout configurer et de télécharger le script terminé – **mais tu dois ensuite le charger toi-même** via l'interface web du Shelly ([instructions](#charger-un-script-manuellement)). La mise à jour et la vérification de la mémoire ne sont pas disponibles sans l'assistant local.
 
 > Astuce : si l'assistant local tourne en arrière-plan, le configurateur web le détecte aussi et débloque les fonctions supplémentaires.
+
+### Alternative : lancement en tant que processus Python
+
+Python est disponible ou installable sur toutes les plateformes (Windows, Mac, Linux).
+
+Étape 1 : télécharge les fichiers nécessaires dans un même dossier, voir [8. Téléchargement](#8-téléchargement)
+
+Pour le script Python : ouvre un terminal (Windows : invite de commandes) dans le dossier contenant les fichiers et lance :
+
+```bash
+python3 zendure_local_helper.py
+```
+
+Sous Windows, la commande s'appelle souvent `python` ou `py` au lieu de `python3`. La fenêtre doit rester ouverte tant que le tableau de bord est utilisé ; quitter avec `Ctrl+C`.
+
+Au démarrage, le proxy affiche un bref aperçu (les messages de l'assistant local sont en allemand) :
+
+```text
+Zendure Multi-Configurator 2.9.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Oeffne den Configurator automatisch im Browser...
+Dieses Fenster offen lassen, solange hochgeladen wird.
+Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).
+```
+
+Sur un ordinateur avec écran, le navigateur s'ouvre automatiquement.
 
 ---
 
@@ -278,7 +323,7 @@ Pour la même raison, le Controller et zenDash-API + Watchdog ne tournent **jama
 |---|---|
 | La fenêtre de l'assistant local se ferme aussitôt ou indique qu'elle n'a pas pu écouter sur 127.0.0.1:8787 | L'assistant local tourne déjà (autre fenêtre, peut-être réduite) – utilise-la, ou ferme-la et relance. |
 | Le navigateur ne s'ouvre pas | Ouvre `http://127.0.0.1:8787` dans ton navigateur. |
-| Windows/macOS bloque le lancement | voir [Où trouver le configurateur](#recommandé--lassistant-local-installateur-exe) |
+| Windows/macOS bloque le lancement | voir [Recommandé : l'assistant local](#recommandé--lassistant-local-installateur-exe) |
 | Le configurateur propose de mauvaises IP de Shelly | Écrase simplement l'IP dans le champ – ou [réinitialise](#réinitialiser-les-ip-mémorisées) les IP mémorisées. |
 
 ---
