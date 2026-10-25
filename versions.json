@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-24T15:21:14Z",
+  "generated": "2026-10-25T07:33:16Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.2.4",
+      "version": "5.2.5",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/52fc2a567b4d439b9bfeea41be003d0cb33ca6d3/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 47076,
-      "codeHash": "sha256:4be21bd3533425a5aaf97bce44af01c89bc72684ed87288288e8a2fe6694e7fe",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c00cb97d03b5e389de062ab97c2a32a726842eb7/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 47062,
+      "codeHash": "sha256:d2cae36e750d576cd7381bd6a59b5dd44b89b3b5d0962e2e504d7c5a0f185f91",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,23 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Entlade-Hysterese per KVS änderbar:** `dischargeResetMargin` (Prozentpunkte über `minSoc`, ab denen ein bis zur Reserve entladenes Gerät wieder entladen darf) lässt sich jetzt live über `zdmc_dischargeResetMargin` ändern, systemweit für alle Geräte. Der Key wird beim Start mit dem CONFIG-Wert (Standard 3) angelegt, falls er fehlt.",
-        "Gültig sind ganze Zahlen von 3 bis 79, andere Werte werden ignoriert.",
-        "Untergrenze jetzt 3 statt 1. Ein im CONFIG-Block gesetzter Wert unter 3 wird beim Start auf 3 angehoben."
+        "**Log zeigt, welcher KVS-Wert übernommen wurde:** Bei jeder Änderung steht jetzt der Key mit altem und neuem Wert im Log, z. B. `KVS zdmc_dev0_minSoc: Wert uebernommen (15 -> 20)`. Bisher stand das nur mit `debug: true` im Log, sonst nur „KVS-Overrides aktualisiert“. Beim Start erscheint die Zeile für jeden KVS-Wert, der vom CONFIG-Block abweicht. Ungültige Werte werden weiterhin nur mit `debug: true` gemeldet."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.4",
+          "schema": 1,
+          "codeHash": "sha256:4be21bd3533425a5aaf97bce44af01c89bc72684ed87288288e8a2fe6694e7fe",
+          "changes": [
+            "**Entlade-Hysterese per KVS änderbar:** `dischargeResetMargin` (Prozentpunkte über `minSoc`, ab denen ein bis zur Reserve entladenes Gerät wieder entladen darf) lässt sich jetzt live über `zdmc_dischargeResetMargin` ändern, systemweit für alle Geräte. Der Key wird beim Start mit dem CONFIG-Wert (Standard 3) angelegt, falls er fehlt.",
+            "Gültig sind ganze Zahlen von 3 bis 79, andere Werte werden ignoriert.",
+            "Untergrenze jetzt 3 statt 1. Ein im CONFIG-Block gesetzter Wert unter 3 wird beim Start auf 3 angehoben."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.3",
           "schema": 1,
@@ -164,16 +173,6 @@
             "https://github.com/surfer1264/Zendure-Stuff/issues/125",
             "Startmeldung ergänzt",
             "gridReverse=2 (Export verboten) soll nicht gesetzt werden, wenn ein Gerät nicht erreicht wird."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.1.4",
-          "schema": 1,
-          "codeHash": "sha256:6554b22c431fcb75e4d4438e4a83598d101ae4e52ae965c9c36d40d840a236bc",
-          "changes": [
-            "Deutlich weniger Schaltvorgänge an der unteren Akkugrenze. Im Testlauf",
-            "In dieser Phase etwas mehr Netzbezug, weil das fast leere Gerät erst"
           ],
           "notice": null
         }
