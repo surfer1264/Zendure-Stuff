@@ -2647,7 +2647,8 @@
         : (volt < 2.8 ? 'crit' : (volt < 3.0 ? 'low' : ''));
       const txt = t('cellMin') + ' ' + fmtVolt(volt) + ' V';
       let part = cls ? '<span class="' + cls + '">' + txt + '</span>' : txt;
-      if (thr) part += ' <span class="help-mark" data-help="helpCellLock">(' + t('cellLock', { v: fmtVolt(thr.warn) }) + ')</span>';
+      // Sperrschwelle nur mit "Technische Details" (.raw)
+      if (thr) part += '<span class="raw"> <span class="help-mark" data-help="helpCellLock">(' + t('cellLock', { v: fmtVolt(thr.warn) }) + ')</span></span>';
       cellPart = '<span class="cell-line">' + part + '</span>';
     }
 
