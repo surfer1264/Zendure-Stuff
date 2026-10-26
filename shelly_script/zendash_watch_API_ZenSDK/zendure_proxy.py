@@ -98,6 +98,12 @@ CONFIG_FILENAME = "zendure_proxy_config.json"
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
 TIMEOUT = 5
+# kvs_set_api schreibt im Shelly-Script mehrere Keys nacheinander (je bis zu
+# 5 s HTTP-Timeout, 0,5 s Pause dazwischen, vorher bis 2 s Warten auf den
+# eigenen Poll). Mit 5 s brach der Proxy das Beenden des manuellen Ladens
+# regelmaessig ab, obwohl alle Keys geschrieben wurden (Dashboard meldete
+# "konnte nicht beendet werden").
+KVS_SET_TIMEOUT = 25
 SETUP_TEST_TIMEOUT = 4
 
 IP_PATTERN = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
@@ -556,7 +562,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             url += "?" + query
 
         try:
-            with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
+            wait = KVS_SET_TIMEOUT if endpoint == "kvs_set_api" else TIMEOUT
+            with urllib.request.urlopen(url, timeout=wait) as resp:
                 body = resp.read()
                 status = resp.status
                 content_type = resp.headers.get("Content-Type", "application/json")

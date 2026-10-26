@@ -30,14 +30,8 @@ class RpcError(Exception):
 
 
 def rpc(ip, method, params=None, timeout=15):
-    # ensure_ascii=False ist wichtig: sonst kodiert json.dumps Emojis
-    # (Zeichen ausserhalb der BMP, z.B. Akku-/Feuer-Symbole) als
-    # \uXXXX-Surrogatpaare. Der schlanke JSON-Parser der Shelly-Firmware
-    # (frozen/mjson) kann Surrogatpaare nicht zusammensetzen und lehnt
-    # den Wert dann mit "Missing or bad argument 'code'" ab, sobald ein
-    # Chunk so ein Zeichen enthaelt. Mit ensure_ascii=False werden die
-    # Zeichen direkt als UTF-8-Bytes gesendet, was der Shelly problemlos
-    # versteht.
+    # ensure_ascii=False: Nicht-ASCII-Zeichen als echtes UTF-8 senden statt als
+    # \uXXXX-Escapes, mit denen der JSON-Parser des Shelly nicht zurechtkommt.
     payload = json.dumps(
         {"id": 1, "method": method, "params": params or {}},
         ensure_ascii=False,
@@ -45,7 +39,7 @@ def rpc(ip, method, params=None, timeout=15):
     req = urllib.request.Request(
         "http://%s/rpc" % ip,
         data=payload,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json; charset=utf-8"},
         method="POST",
     )
     try:
@@ -106,28 +100,60 @@ def list_scripts(ip):
               % (s.get("id"), s.get("name"), s.get("enable"), s.get("running")))
 
 
+def report_non_ascii(code, limit=10):
+    """Zeigt Nicht-ASCII-Zeichen im Skript an (nur Hinweis, kein Abbruch)."""
+    hits = [(i, c) for i, c in enumerate(code) if ord(c) > 127]
+    if not hits:
+        return
+    print("Hinweis: %d Nicht-ASCII-Zeichen im Skript, z.B.:" % len(hits))
+    for i, c in hits[:limit]:
+        line = code.count("\n", 0, i) + 1
+        print("  Zeile %-5d %r (U+%04X)" % (line, c, ord(c)))
+    if len(hits) > limit:
+        print("  ... und %d weitere" % (len(hits) - limit))
+
+
+def split_chunks(code, chunk_size):
+    """Teilt nach UTF-8-Bytes, ohne ein Zeichen zu zerschneiden."""
+    chunks, cur, cur_len = [], [], 0
+    for ch in code:
+        n = len(ch.encode("utf-8"))
+        if cur_len + n > chunk_size and cur:
+            chunks.append("".join(cur))
+            cur, cur_len = [], 0
+        cur.append(ch)
+        cur_len += n
+    if cur:
+        chunks.append("".join(cur))
+    return chunks
+
+
 def put_code(ip, sid, code, chunk_size, dry_run):
-    total = len(code)
-    chunks = [code[i:i + chunk_size] for i in range(0, total, chunk_size)]
-    print("Uebertrage %d Zeichen in %d Bloecken (%d Zeichen pro Block)..."
+    total = len(code.encode("utf-8"))
+    chunks = split_chunks(code, chunk_size)
+    print("Uebertrage %d Bytes in %d Bloecken (max. %d Bytes pro Block)..."
           % (total, len(chunks), chunk_size))
     if dry_run:
         print("  [DRY-RUN] nichts uebertragen")
         return
-    for n, chunk in enumerate(chunks):
-        for attempt in range(3):
-            try:
+    # Bei einem Fehler die GANZE Uebertragung neu beginnen (Block 1 ohne
+    # append ueberschreibt den Code). Einen einzelnen Block zu wiederholen
+    # waere unsicher: Bricht die Verbindung erst nach dem Speichern ab
+    # (z. B. ConnectionResetError), stuende der Block doppelt im Code.
+    for attempt in range(3):
+        try:
+            for n, chunk in enumerate(chunks):
                 rpc(ip, "Script.PutCode",
                     {"id": sid, "code": chunk, "append": n > 0})
-                break
-            except RpcError as err:
-                if attempt == 2:
-                    raise
-                print("  Block %d/%d fehlgeschlagen (%s), neuer Versuch..."
-                      % (n + 1, len(chunks), err))
-                time.sleep(1)
-        sys.stdout.write("\r  Block %d/%d" % (n + 1, len(chunks)))
-        sys.stdout.flush()
+                sys.stdout.write("\r  Block %d/%d" % (n + 1, len(chunks)))
+                sys.stdout.flush()
+            break
+        except (RpcError, OSError) as err:
+            if attempt == 2:
+                raise
+            print("\n  Block %d/%d fehlgeschlagen (%s) - Uebertragung beginnt neu..."
+                  % (n + 1, len(chunks), err))
+            time.sleep(2)
     print("\r  %d/%d Bloecke uebertragen." % (len(chunks), len(chunks)))
 
 
@@ -144,7 +170,7 @@ def main():
                    help="Vorhandenes Skript mit dieser ID ersetzen "
                         "(ID und Name bleiben erhalten, statt loeschen+neu anlegen)")
     p.add_argument("--chunk-size", type=int, default=1024,
-                   help="Zeichen pro PutCode-Aufruf (Standard 1024)")
+                   help="Bytes pro PutCode-Aufruf (Standard 1024)")
     p.add_argument("--no-start", action="store_true",
                    help="Skript nur hochladen, nicht starten")
     p.add_argument("--no-enable", action="store_true",
@@ -168,7 +194,8 @@ def main():
         print("Fehler: Datei nicht gefunden: %s" % args.file, file=sys.stderr)
         return 1
 
-    with open(args.file, "r", encoding="utf-8", newline="") as fh:
+    # utf-8-sig entfernt ein eventuelles BOM am Dateianfang.
+    with open(args.file, "r", encoding="utf-8-sig", newline="") as fh:
         code = fh.read()
 
     name = args.name or os.path.splitext(os.path.basename(args.file))[0]
@@ -180,6 +207,7 @@ def main():
     print("Datei      : %s (%d Zeichen)" % (args.file, len(code)))
     print("Skriptname : %s" % name)
     print("-" * 40)
+    report_non_ascii(code)
 
     try:
         info = rpc(args.ip, "Shelly.GetDeviceInfo")

@@ -1,7 +1,13 @@
-# Changelog – Zendure Dashboard Proxy (Home-Assistant-App)
+# Changelog – Zendure D
 
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
+
+## 3.5.12.2
+
+- Dashboard: Schon beim Klick auf Start oder Ende des manuellen Ladens erscheint oben eine Leiste („… wird gestartet/beendet …“, „warte auf Bestätigung“), und die Bedienung ist gesperrt. Nach der Antwort zeigt die Leiste das Ergebnis und die Restzeit. 10 s lang ist die ganze Bedienung gesperrt, auch das Schloss. So ist klar, ob der Vorgang geklappt hat, und kein zweiter Klick trifft auf den Regler, während er die Änderung noch übernimmt. Danach lädt das Dashboard den echten Stand neu
+- Dashboard: Bleibt die Bestätigung aus, erscheint nicht mehr sofort „konnte nicht beendet werden“. Stattdessen steht in der Leiste „keine Bestätigung erhalten – der Stand wird nach Ablauf geprüft“. Nach den 10 s vergleicht das Dashboard den echten Stand: Hat es geklappt, kommt die normale Erfolgsmeldung, sonst der Hinweis
+- Proxy: `kvs_set_api` darf bis 25 s dauern (bisher 5 s wie alle Endpunkte). Das Shelly-Script schreibt beim Start und Ende des manuellen Ladens drei Keys nacheinander, mit Pausen und vorherigem Warten auf den eigenen Poll. Das dauerte oft länger als 5 s, der Proxy brach ab und das Dashboard meldete einen Fehler, obwohl alle Werte geschrieben waren
 
 ## 3.5.12.1
 

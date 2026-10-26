@@ -232,6 +232,13 @@
     padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.85rem; line-height:1.45;
   }
   .diag b{ color:var(--alert-text); }
+  /* Haltezeit nach Start/Ende des manuellen Ladens: Bedienung gesperrt */
+  .hold{
+    background:var(--surface-2, rgba(127,127,127,0.12)); border:1px solid var(--border);
+    color:var(--text); border-radius:var(--radius-md);
+    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.85rem; line-height:1.45;
+  }
+  .hold b{ font-weight:600; }
 
   /* ---------- Abschnitte ---------- */
   .section-title{
@@ -612,6 +619,7 @@
     </header>
 
     <div class="diag" id="diag" role="alert" hidden></div>
+    <div class="hold" id="hold" role="status" aria-live="polite" hidden></div>
 
     <button type="button" class="section-title section-toggle" id="overviewToggle" aria-expanded="true" aria-controls="overviewRow" data-i18n-title="overviewAria" title="Übersicht ein-/ausklappen"><span class="chev" aria-hidden="true">▾</span><span data-i18n="overview">Übersicht</span><span class="ov-summary mono" id="overviewSummary"></span></button>
     <div class="ov" id="overviewRow">
@@ -809,6 +817,11 @@
       manualToast: '{d}: manuelles Laden mit {w} W',
       manualStartFail: 'Manuelles Laden für {d} konnte nicht gesetzt werden. Bitte Schalter und Ladeleistung auf der Karte prüfen.',
       backInControl: '{d}: zurück in der Regelung',
+      holdLeft: 'Bedienung gesperrt – noch {s} s',
+      holdWait: 'Bedienung gesperrt – warte auf Bestätigung …',
+      manualStarting: '{d}: manuelles Laden wird gestartet …',
+      manualStopping: '{d}: manuelles Laden wird beendet …',
+      manualCheck: '{d}: keine Bestätigung erhalten – der Stand wird nach Ablauf geprüft',
       manualStopFail: 'Manuelles Laden für {d} konnte nicht beendet werden. Bitte Schalter und Ladeleistung auf der Karte prüfen.',
       manualActiveHint: 'Aktiv mit {w} W. Das Gerät ist aus der Regelung genommen.',
       manualIdleHint: 'Nimmt das Gerät aus der Regelung (beide Schalter aus) und setzt die gewählte Ladeleistung.',
@@ -918,6 +931,11 @@
       manualToast: '{d}: manual charging at {w} W',
       manualStartFail: 'Manual charging for {d} could not be set. Please check the switches and charging power on the card.',
       backInControl: '{d}: back in the control loop',
+      holdLeft: 'Controls locked – {s} s left',
+      holdWait: 'Controls locked – waiting for confirmation …',
+      manualStarting: '{d}: starting manual charging …',
+      manualStopping: '{d}: stopping manual charging …',
+      manualCheck: '{d}: no confirmation received – the state will be checked afterwards',
       manualStopFail: 'Manual charging for {d} could not be stopped. Please check the switches and charging power on the card.',
       manualActiveHint: 'Active at {w} W. The device has been taken out of the control loop.',
       manualIdleHint: 'Takes the device out of the control loop (both switches off) and applies the selected charging power.',
@@ -1027,6 +1045,11 @@
       manualToast: '{d}\u00a0: charge manuelle à {w} W',
       manualStartFail: 'Impossible d’activer la charge manuelle pour {d}. Vérifiez les interrupteurs et la puissance de charge sur la carte.',
       backInControl: '{d}\u00a0: de retour en régulation',
+      holdLeft: 'Commandes verrouillées – encore {s}\u00a0s',
+      holdWait: 'Commandes verrouillées – en attente de confirmation…',
+      manualStarting: '{d}\u00a0: démarrage de la charge manuelle…',
+      manualStopping: '{d}\u00a0: arrêt de la charge manuelle…',
+      manualCheck: '{d}\u00a0: pas de confirmation – l’état sera vérifié ensuite',
       manualStopFail: 'Impossible d’arrêter la charge manuelle pour {d}. Vérifiez les interrupteurs et la puissance de charge sur la carte.',
       manualActiveHint: 'Active à {w} W. L’appareil est retiré de la régulation.',
       manualIdleHint: 'Retire l’appareil de la régulation (les deux interrupteurs désactivés) et applique la puissance de charge choisie.',
@@ -1351,7 +1374,7 @@
       if (!quiet) showToast(t('kvsSet') + ' ' + friendlyKey(key) + ' = ' + friendlyVal(key, value));
       return true;
     } catch (err) {
-      showDiag(t('setFail', { key: key, err: err.message }));
+      if (quiet !== 'silent') showDiag(t('setFail', { key: key, err: err.message }));
       return false;
     }
   }
@@ -1363,7 +1386,7 @@
       if (!quiet) showToast(t('kvsSet') + ' ' + Object.keys(obj).map(function(k){ return friendlyKey(k); }).join(', '));
       return true;
     } catch (err) {
-      showDiag(t('setMultiFail', { err: err.message }));
+      if (quiet !== 'silent') showDiag(t('setMultiFail', { err: err.message }));
       return false;
     }
   }
@@ -1377,6 +1400,26 @@
   const RELOCK_MS = 60000;
   let uiLocked = true;
   let relockTimer = null;
+
+  /* Haltezeit nach Start/Ende des manuellen Ladens: HOLD_MS lang ist die
+     ganze Bedienung gesperrt und eine Leiste zeigt Ergebnis und Restzeit.
+     So sieht man klar, was passiert ist, und kein zweiter Klick trifft auf
+     ein Regel-Script, das die Aenderung gerade erst uebernimmt. */
+  const HOLD_MS = 10000;
+  let holdUntil = 0;
+  let holdMsg = '';
+  let holdTick = null;
+
+  // Kam keine Bestaetigung, prueft das Dashboard nach der Haltezeit den
+  // echten Stand: holdCheck = { ok: function(){...}, okMsg, failMsg }.
+  // Ausgewertet in pollAll(), sobald config_api frisch geladen ist.
+  let holdCheck = null;
+  let holdCheckArmed = false;
+
+  let holdWaiting = false;   // Schreibvorgang laeuft, noch keine Antwort
+
+  function holdActive(){ return holdWaiting || Date.now() < holdUntil; }
+  function uiBlocked(){ return uiLocked || holdActive(); }
 
   const lockToggle = document.getElementById('lockToggle');
   const appEl = document.getElementById('app');
@@ -1493,9 +1536,10 @@
 
   function applyLockState(){
     const els = controlElements();
+    const blocked = uiBlocked();
     for (let i = 0; i < els.length; i++) {
       const el = els[i];
-      if (uiLocked) {
+      if (blocked) {
         el.disabled = true;
       } else if (!isTempLocked(el)) {
         // Nicht pauschal freigeben: ein Element, das gerade seinen Wert
@@ -1512,6 +1556,60 @@
     setLockIcon(lockIconEl, !uiLocked);
     lockToggle.classList.toggle('locked', uiLocked);
     lockToggle.title = t(uiLocked ? 'unlock' : 'lock');
+    lockToggle.disabled = holdActive();
+  }
+
+  // Sofort beim Klick: Leiste zeigen und alles sperren, ohne Countdown -
+  // die HOLD_MS zaehlen erst ab der Antwort (startHold), weil der Regler die
+  // Aenderung erst dann uebernimmt.
+  function beginHoldWait(msg){
+    holdWaiting = true;
+    holdUntil = 0;
+    holdCheck = null;
+    holdCheckArmed = false;
+    clearInterval(holdTick);
+    holdTick = null;
+    showHoldBar(msg, t('holdWait'));
+    applyLockState();
+  }
+
+  function showHoldBar(msg, line2){
+    const el = document.getElementById('hold');
+    if (!el) return;
+    el.innerHTML = '<b></b><br>';
+    el.firstChild.textContent = msg;
+    el.appendChild(document.createTextNode(line2));
+    el.hidden = false;
+  }
+
+  function startHold(msg, check){
+    holdWaiting = false;
+    holdMsg = msg;
+    holdCheck = check || null;
+    holdCheckArmed = false;
+    holdUntil = Date.now() + HOLD_MS;
+    clearInterval(holdTick);
+    holdTick = setInterval(updateHold, 250);
+    updateHold();
+    applyLockState();
+  }
+
+  function updateHold(){
+    const el = document.getElementById('hold');
+    const left = Math.ceil((holdUntil - Date.now()) / 1000);
+    if (left <= 0) {
+      clearInterval(holdTick);
+      holdTick = null;
+      if (el) el.hidden = true;
+      // Danach den echten KVS-Stand holen und alles neu zeichnen - dabei
+      // gelten wieder die normalen Sperren (Schloss, Einzelsperren).
+      forceConfigNext = true;
+      holdCheckArmed = !!holdCheck;
+      render();
+      applyLockState();
+      return;
+    }
+    showHoldBar(holdMsg, t('holdLeft', { s: left }));
   }
 
   function setLocked(next){
@@ -1529,7 +1627,7 @@
     relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS);
   }
 
-  lockToggle.addEventListener('click', function(){ setLocked(!uiLocked); });
+  lockToggle.addEventListener('click', function(){ if (!holdActive()) setLocked(!uiLocked); });
 
   // Startzustand herstellen, bevor die Hub-Karten existieren - der
   // Sollwert-Regler ist bereits da und muss ebenfalls gesperrt sein.
@@ -1557,7 +1655,7 @@
       if (Date.now() >= (lockedUntil[el.id] || 0)) {
         delete lockedUntil[el.id];
         // Nicht blind freigeben - die globale Sperre hat Vorrang.
-        el.disabled = uiLocked || isGated(el);
+        el.disabled = uiBlocked() || isGated(el);
       }
     }, LOCK_MS);
   }
@@ -1567,7 +1665,7 @@
   function unlockControl(el){
     if (!el) return;
     delete lockedUntil[el.id];
-    el.disabled = uiLocked || isGated(el);
+    el.disabled = uiBlocked() || isGated(el);
   }
 
   // "In Bearbeitung": entweder gerade gesperrt oder gerade im Fokus.
@@ -1635,7 +1733,7 @@
       resetMarginInput.classList.remove('invalid');
     }
     resetMarginStateEl.textContent = resetMarginBlocked ? t('resetMarginLocked') : t('resetMarginState', { max: max });
-    if (!isTempLocked(resetMarginInput)) resetMarginInput.disabled = uiLocked || resetMarginBlocked;
+    if (!isTempLocked(resetMarginInput)) resetMarginInput.disabled = uiBlocked() || resetMarginBlocked;
   }
 
   resetMarginInput.addEventListener('input', function(){
@@ -1966,7 +2064,7 @@
       const minSocValEl = document.getElementById('minSocValue-' + d.id);
       // Stufe 2: Schloss neben dem Wert gibt nur diesen Regler frei.
       document.getElementById('minSocLock-' + d.id).addEventListener('click', function(){
-        if (uiLocked) return;
+        if (uiBlocked()) return;
         if (socOpenId === String(d.id)) closeSocGate(); else openSocGate(d.id);
       });
 
@@ -2073,7 +2171,7 @@
   function setManualBusy(id, busy, label){
     const btn = document.getElementById('manualBtn-' + id);
     if (!btn) return;
-    btn.disabled = busy || uiLocked;
+    btn.disabled = busy || uiBlocked();
     if (label) btn.textContent = label;
   }
 
@@ -2088,6 +2186,7 @@
     if (!window.confirm(t('confirmManual', { d: d.label, w: watt }))) return;
 
     setManualBusy(d.id, true, t('starting'));
+    beginHoldWait(t('manualStarting', { d: d.label }));
 
     // Waehrend der Kette nicht pollen: sonst laufen status_api/config_api
     // parallel zu den Schreibvorgaengen auf denselben Shelly.
@@ -2104,13 +2203,17 @@
     payload['zdmc_dev' + d.id + '_dischargeAllowed'] = 0;
     payload['zdmc_dev' + d.id + '_reverse'] = 0;
     payload['zdmc_dev' + d.id + '_inputLimit'] = watt;
-    const ok = await kvsSetMulti(payload, true);
+    const ok = await kvsSetMulti(payload, 'silent');
 
     if (ok) {
       d.dischargeAllowed = false; d.reverse = false; d.inputLimit = watt;
-      showToast(t('manualToast', { d: d.label, w: watt }));
+      startHold(t('manualToast', { d: d.label, w: watt }));
     } else {
-      showDiag(t('manualStartFail', { d: d.label }));
+      startHold(t('manualCheck', { d: d.label }), {
+        ok: function(){ return isManualActive(d) && Number(d.inputLimit) === watt; },
+        okMsg: t('manualToast', { d: d.label, w: watt }),
+        failMsg: t('manualStartFail', { d: d.label })
+      });
     }
 
     setManualBusy(d.id, false);
@@ -2127,18 +2230,23 @@
     // wiederhergestellten Werte zeigt erst die naechste config_api-Antwort
     // zuverlaessig an - bis dahin optimistisch true/true anzeigen.
     setManualBusy(d.id, true, t('stopping'));
+    beginHoldWait(t('manualStopping', { d: d.label }));
 
     stopPolling();
 
-    let ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', 0, true);
+    let ok = await kvsSet('zdmc_dev' + d.id + '_inputLimit', 0, 'silent');
 
     if (ok) {
       d.inputLimit = 0;
       d.dischargeAllowed = true;
       d.reverse = true;
-      showToast(t('backInControl', { d: d.label }));
+      startHold(t('backInControl', { d: d.label }));
     } else {
-      showDiag(t('manualStopFail', { d: d.label }));
+      startHold(t('manualCheck', { d: d.label }), {
+        ok: function(){ return !isManualActive(d); },
+        okMsg: t('backInControl', { d: d.label }),
+        failMsg: t('manualStopFail', { d: d.label })
+      });
     }
 
     setManualBusy(d.id, false);
@@ -2166,7 +2274,7 @@
       if (slider) slider.disabled = true;
     } else {
       hint.textContent = t('manualIdleHint');
-      if (slider && !isTempLocked(slider)) slider.disabled = uiLocked;
+      if (slider && !isTempLocked(slider)) slider.disabled = uiBlocked();
     }
   }
 
@@ -2300,8 +2408,10 @@
 
       // 1 s Toleranz fuer Timer-Jitter, damit der Abgleich im 32-s-Durchlauf
       // kommt und nicht erst einen Durchlauf spaeter.
+      let configFresh = false;
       if (forceConfigNext || (Date.now() - lastConfigAt) >= CONFIG_SEC * 1000 - 1000) {
         forceConfigNext = false;
+        configFresh = true;
         const cfg = await fetchJ('config_api');
         readWdVolt(cfg);
         lastConfigAt = Date.now();
@@ -2382,6 +2492,12 @@
       }
 
       document.getElementById('diag').hidden = true;
+      if (holdCheckArmed && configFresh) {
+        const c = holdCheck;
+        holdCheck = null;
+        holdCheckArmed = false;
+        if (c.ok()) showToast(c.okMsg); else showDiag(c.failMsg);
+      }
       updateStatusPill(false);
     } catch (err) {
       showDiag(t('pollFail', { err: err.message }));
