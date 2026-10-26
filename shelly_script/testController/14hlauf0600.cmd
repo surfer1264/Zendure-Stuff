@@ -1,16 +1,16 @@
 set LOGFILE=14tageslauf.log
-set RELEASE=513
+set RELEASE=522
 
 del %LOGFILE%
 del closed_loop_result.csv
 del report.html
 
 set START_MIN=360
-set CYCLES=16800
+set CYCLES=12600
 
-set SPEED_FACTOR=150
-set STEP_MIN=0.05
-set INTERVAL_MS=3000
+set SPEED_FACTOR=120
+set STEP_MIN=0.0666667
+set INTERVAL_MS=4000
 set START_SOC=30
 set LOAD_SCALE=0.5
 

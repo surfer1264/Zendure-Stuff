@@ -1,0 +1,25 @@
+{
+  "name": "werktag",
+  "grundrauschenW": 20,
+  "grundrauschenPeriodeS": 60,
+  "lastzitternW": 5,
+  "messrauschenW": 2,
+  "geraeteMessrauschenW": 2,
+  "kuehlschrank": { "leistungW": 100, "anMin": 15, "ausMin": 30 },
+  "events": [
+    { "typ": "wasserkocher",  "start": "07:10", "dauer": 3,  "leistungW": 2000 },
+    { "typ": "waschmaschine", "start": "10:00", "dauer": 60, "heizW": 2000 },
+    { "typ": "induktion",     "start": "12:15", "dauer": 30, "leistungW": 1900,
+      "stufen": [ { "abMin": 0, "stufe": 1.0 },
+                  { "abMin": 6, "stufe": 0.6, "periodeS": 12 } ] },
+    { "typ": "induktion",     "start": "18:30", "dauer": 15, "leistungW": 1900,
+      "stufen": [ { "abMin": 0, "stufe": 1.0 },
+                  { "abMin": 5, "stufe": 0.5, "periodeS": 8 },
+                  { "abMin": 10, "stufe": 0.3, "periodeS": 20 } ] }
+  ],
+  "zufallsEvents": [
+    { "typ": "wasserkocher", "anzahlProTag": 2, "von": "14:00", "bis": "20:00", "dauer": 3, "leistungW": 2000 },
+    { "typ": "block",        "anzahlProTag": 1, "von": "08:00", "bis": "20:00", "dauer": 20, "leistungW": 800 },
+    { "typ": "kaffeevollautomat", "anzahlProTag": 12, "von": "06:30", "bis": "16:30", "dauer": 1, "leistungW": 1500 }
+  ]
+}
