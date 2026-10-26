@@ -102,7 +102,8 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Start: laeuft noch ein alter Helfer-Prozess (oder eine alte exe mit dem
 # Configurator per githack), kennt er neue Optionen nicht. Der Configurator
 # bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
-HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture", "shelly_auth"]
+HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture", "shelly_auth",
+                   "upload_progress"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -523,23 +524,71 @@ def read_config(ip, key):
     return dict(matching[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]])
 
 
-def _put_code(ip, sid, code, first_append):
-    for n, i in enumerate(range(0, len(code), CHUNK_SIZE)):
-        chunk = code[i:i + CHUNK_SIZE]
-        for attempt in range(3):
-            try:
+# Fortschritt laufender Uploads fuer GET /api/upload_status?id=...
+# Schluessel ist eine vom Browser mitgeschickte Kennung (progress_id), damit
+# eine Abfrage nie den Stand eines frueheren Uploads auf denselben Shelly
+# sieht. Der Upload-Thread setzt seine Kennung in _progress_tls; die
+# Upload-Funktionen melden ihre Phase ueber _progress(), ohne dass die
+# Kennung durch alle Aufrufe gereicht werden muss.
+UPLOAD_PROGRESS = {}
+UPLOAD_PROGRESS_LOCK = threading.Lock()
+UPLOAD_PROGRESS_KEEP_S = 600
+_progress_tls = threading.local()
+
+
+def _progress(phase, **info):
+    pid = getattr(_progress_tls, "pid", None)
+    if not pid:
+        return
+    now = time.time()
+    with UPLOAD_PROGRESS_LOCK:
+        for k in [k for k, v in UPLOAD_PROGRESS.items() if now - v["ts"] > UPLOAD_PROGRESS_KEEP_S]:
+            del UPLOAD_PROGRESS[k]
+        UPLOAD_PROGRESS[pid] = dict(info, phase=phase, ts=now)
+
+
+def upload_progress(pid):
+    with UPLOAD_PROGRESS_LOCK:
+        st = UPLOAD_PROGRESS.get(pid)
+        return dict(st) if st else None
+
+
+def _put_code(ip, sid, code):
+    # Bei einem Fehler die GANZE Uebertragung neu beginnen (Block 1 ohne
+    # append ueberschreibt den Code), wie upload_shelly.py. Einen einzelnen
+    # Block zu wiederholen waere unsicher: Bricht die Verbindung erst nach
+    # dem Speichern ab (z. B. ConnectionResetError), stuende der Block
+    # doppelt im Code. Ein solcher Abbruch kam bisher ausserdem als roher
+    # OSError am RpcError vorbei.
+    chunks = [code[i:i + CHUNK_SIZE] for i in range(0, len(code), CHUNK_SIZE)]
+    touched = False   # Code auf dem Shelly moeglicherweise schon veraendert
+    last = None
+    for attempt in range(3):
+        try:
+            for n, chunk in enumerate(chunks):
+                _progress("transfer", block=n + 1, blocks=len(chunks), attempt=attempt + 1)
                 rpc(ip, "Script.PutCode",
-                    {"id": sid, "code": chunk, "append": first_append or n > 0})
-                break
-            except RpcError as err:
-                if attempt == 2:
-                    if n > 0:
-                        raise UploadIncomplete(str(err))
-                    raise
-                time.sleep(1)
+                    {"id": sid, "code": chunk, "append": n > 0})
+                touched = True
+            return
+        except AuthRequired:
+            raise
+        except (RpcError, OSError) as err:
+            # OSError: Abbruch evtl. erst nach dem Senden - Block 1 kann
+            # den alten Code dann schon ersetzt haben.
+            if isinstance(err, OSError):
+                touched = True
+            last = err
+            if attempt < 2:
+                time.sleep(2)
+    msg = str(last) if isinstance(last, RpcError) else "Script.PutCode: Verbindung abgebrochen (%s)" % last
+    if touched:
+        raise UploadIncomplete(msg)
+    raise RpcError(msg)
 
 
 def _start(ip, sid, name):
+    _progress("start")
     rpc(ip, "Script.SetConfig", {"id": sid, "config": {"name": name, "enable": True}})
     rpc(ip, "Script.Start", {"id": sid})
     time.sleep(1.5)
@@ -551,9 +600,10 @@ def _update_in_place(ip, script, code, name):
     sid = script["id"]
     was_running = script["running"]
     if was_running:
+        _progress("stop", id=sid)
         rpc(ip, "Script.Stop", {"id": sid})
     try:
-        _put_code(ip, sid, code, first_append=False)
+        _put_code(ip, sid, code)
     except UploadIncomplete:
         raise
     except RpcError:
@@ -569,12 +619,14 @@ def _update_in_place(ip, script, code, name):
 
 
 def _install_new(ip, code, name, action="installed"):
+    _progress("create")
     sid = rpc(ip, "Script.Create", {"name": name})["id"]
-    _put_code(ip, sid, code, first_append=False)
+    _put_code(ip, sid, code)
     return {"action": action, "id": sid, "running": _start(ip, sid, name)}
 
 
 def _delete(ip, script):
+    _progress("delete", id=script["id"])
     if script["running"]:
         try:
             rpc(ip, "Script.Stop", {"id": script["id"]})
@@ -607,6 +659,7 @@ def upload_script(ip, name, code, key=None, force=False, confirm_ids=None,
     if not expected:
         raise RpcError("Script-Typ des hochzuladenden Codes unbekannt")
 
+    _progress("check")
     scripts = inspect_scripts(ip)
     matching = [s for s in scripts if s["type"] == expected]
     others = [s for s in scripts if s["type"] != expected]
@@ -1146,6 +1199,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     self._json(200, dict({"ok": True}, **st))
             except RpcError as err:
                 self._err(err)
+        elif parsed.path == "/api/upload_status":
+            params = urllib.parse.parse_qs(parsed.query)
+            st = upload_progress((params.get("id") or [""])[0])
+            self._json(200, dict({"ok": True}, **st) if st else {"ok": True, "phase": None})
         elif parsed.path == "/api/inspect":
             self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
         elif parsed.path == "/api/config":
@@ -1235,6 +1292,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             force = bool(data.get("force"))
             confirm_ids = data.get("confirm_ids") or []
             delete_others = data.get("delete_others", True) is not False
+            pid = str(data.get("progress_id") or "")[:40]
+            _progress_tls.pid = pid or None
             if not ip or not code:
                 raise RpcError("ip und code sind Pflichtfelder")
             print("Upload: %d Zeichen -> %s (Name: %s%s)"
@@ -1243,6 +1302,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                                            else ", andere Scripte behalten")))
             result = upload_script(ip, name, code, key=key, force=force,
                                    confirm_ids=confirm_ids, delete_others=delete_others)
+            _progress("confirm" if result.get("needs_confirm") else "done")
             if result.get("needs_confirm"):
                 print("  -> Bestaetigung noetig (%s), nichts veraendert" % result["reason"])
                 self._json(200, dict({"ok": False}, **result))
@@ -1257,14 +1317,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         print("  -> IP gemerkt in %s" % saved)
                 self._json(200, dict({"ok": True}, **result))
         except UploadIncomplete as err:
+            _progress("error")
             self._json(200, {"ok": False, "error_code": "incomplete", "error": str(err)})
         except RpcError as err:
             # Kein Serverfehler, sondern ein erwartbarer Fall (falsche IP,
             # Shelly nicht erreichbar etc.) - der Browser zeigt err als
             # normale Fehlermeldung an, kein HTTP-500 noetig.
+            _progress("error")
             self._err(err)
         except Exception as err:
+            _progress("error")
             self._json(500, {"ok": False, "error": str(err)})
+        finally:
+            # Der Thread kann fuer die naechste Anfrage wiederverwendet werden
+            _progress_tls.pid = None
 
 
     def _handle_logcapture(self):

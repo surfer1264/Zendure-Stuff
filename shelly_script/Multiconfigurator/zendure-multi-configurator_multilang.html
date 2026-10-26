@@ -137,6 +137,9 @@
   @keyframes spin{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){ .spinner{animation-duration:2.4s;} }
   .hint{color:var(--muted); font-size:.88rem; margin-top:-6px; margin-bottom:16px;}
+  /* Fortschritt beim Direkt-Upload (Helfer ab "upload_progress") */
+  .upl-bar{height:6px; margin-top:10px; border-radius:3px; background:var(--panel-2); border:1px solid var(--border); overflow:hidden;}
+  .upl-bar > div{height:100%; width:0; background:var(--accent); transition:width .3s ease;}
   label{display:block; font-size:.85rem; font-weight:600; margin-bottom:5px; margin-top:14px;}
   label.first{margin-top:0;}
   input[type=text], input[type=number]{
@@ -442,6 +445,13 @@ de: {
   upload_target_label: "Ziel-Shelly (IP-Adresse)",
   btn_direct_upload: "⚡ Direkt hochladen",
   upload_loading: "Übertrage an {ip}...",
+  upl_check: "Prüfe vorhandene Scripte auf {ip} …",
+  upl_stop: "Stoppe Script #{id} …",
+  upl_delete: "Entferne Script #{id} …",
+  upl_create: "Lege neues Script an …",
+  upl_transfer: "Übertrage Block {i} von {n} …",
+  upl_retry: "Verbindung unterbrochen – Übertragung neu gestartet (Versuch {a} von 3), Block {i} von {n} …",
+  upl_start: "Starte Script …",
   upload_success: "✓ Erfolgreich auf {ip} hochgeladen und gestartet.",
   upload_error: "Fehler: {msg}",
   upload_err_ip: "Bitte zuerst eine gültige IP-Adresse für das Ziel-Gerät eintragen.",
@@ -834,6 +844,13 @@ en: {
   upload_target_label: "Target Shelly (IP address)",
   btn_direct_upload: "⚡ Upload directly",
   upload_loading: "Uploading to {ip}...",
+  upl_check: "Checking existing scripts on {ip} …",
+  upl_stop: "Stopping script #{id} …",
+  upl_delete: "Removing script #{id} …",
+  upl_create: "Creating new script …",
+  upl_transfer: "Transferring block {i} of {n} …",
+  upl_retry: "Connection interrupted – transfer restarted (attempt {a} of 3), block {i} of {n} …",
+  upl_start: "Starting script …",
   upload_success: "✓ Successfully uploaded to {ip} and started.",
   upload_error: "Error: {msg}",
   upload_err_ip: "Please enter a valid IP address for the target device first.",
@@ -1226,6 +1243,13 @@ fr: {
   upload_target_label: "Shelly cible (adresse IP)",
   btn_direct_upload: "⚡ Charger directement",
   upload_loading: "Transfert vers {ip}...",
+  upl_check: "Vérification des scripts existants sur {ip} …",
+  upl_stop: "Arrêt du script #{id} …",
+  upl_delete: "Suppression du script #{id} …",
+  upl_create: "Création d’un nouveau script …",
+  upl_transfer: "Transfert du bloc {i} sur {n} …",
+  upl_retry: "Connexion interrompue – transfert relancé (essai {a} sur 3), bloc {i} sur {n} …",
+  upl_start: "Démarrage du script …",
   upload_success: "✓ Chargé avec succès sur {ip} et démarré.",
   upload_error: "Erreur : {msg}",
   upload_err_ip: "Indique d'abord une adresse IP valide pour l'appareil cible.",
@@ -3046,6 +3070,7 @@ function resultBlock(title, key, cfg, hintKey){
         <button class="btn btn-primary" id="uploadBtn_${key}" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
         <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
       </div>
+      <div class="upl-bar" id="uploadBar_${key}" hidden><div></div></div>
       <div id="uploadConfirm_${key}"></div>
     </div>
   </div>`;
@@ -3882,6 +3907,53 @@ async function loadHelperSettings(){
 const SCRIPT_TYPE_LABELS = { 'zdmc-controller': 'type_ctrl', 'zdmc-zendash-watch': 'type_zdw' };
 function scriptTypeLabel(type){ return type && SCRIPT_TYPE_LABELS[type] ? t(SCRIPT_TYPE_LABELS[type]) : t('type_unknown'); }
 
+// Fortschritt eines laufenden Uploads (Helfer ab Feature "upload_progress").
+// Fragt alle 400 ms /api/upload_status ab und zeigt Phase und Block in
+// statusEl sowie den Balken. Gibt eine Stopp-Funktion zurueck.
+function watchUploadProgress(key, pid, ip, statusEl){
+  const bar = document.getElementById('uploadBar_' + key);
+  const fill = bar ? bar.firstElementChild : null;
+  if(!helperHas('upload_progress') || !bar) return function(){};
+  let stopped = false;
+  fill.style.width = '0%';
+  bar.hidden = false;
+  function show(st){
+    let pct = null, text = null;
+    if(st.phase === 'check'){ pct = 3; text = t('upl_check', {ip: ip}); }
+    else if(st.phase === 'stop'){ pct = 6; text = t('upl_stop', {id: st.id}); }
+    else if(st.phase === 'delete'){ pct = 6; text = t('upl_delete', {id: st.id}); }
+    else if(st.phase === 'create'){ pct = 8; text = t('upl_create'); }
+    else if(st.phase === 'transfer' && st.blocks){
+      pct = 10 + Math.round(85 * (st.block - 1) / st.blocks);
+      text = t(st.attempt > 1 ? 'upl_retry' : 'upl_transfer', {i: st.block, n: st.blocks, a: st.attempt});
+    }
+    else if(st.phase === 'start'){ pct = 97; text = t('upl_start'); }
+    if(pct === null || stopped) return;
+    fill.style.width = pct + '%';
+    statusEl.textContent = text;
+    statusEl.className = 'hint';
+  }
+  async function poll(){
+    while(!stopped){
+      try{
+        const res = await fetch(HELPER_URL + '/api/upload_status?id=' + encodeURIComponent(pid), { cache: 'no-store' });
+        if(res.ok) show(await res.json());
+      } catch(e){ /* naechster Versuch */ }
+      await new Promise(function(r){ setTimeout(r, 400); });
+    }
+  }
+  poll();
+  return function(ok){
+    stopped = true;
+    if(ok){
+      fill.style.width = '100%';
+      setTimeout(function(){ bar.hidden = true; }, 1500);
+    } else {
+      bar.hidden = true;
+    }
+  };
+}
+
 async function directUpload(key, confirmIds, deleteOthers){
   const ip = (targetIp(key) || '').trim();
   const statusEl = document.getElementById('uploadStatus_' + key);
@@ -3896,18 +3968,24 @@ async function directUpload(key, confirmIds, deleteOthers){
   statusEl.textContent = t('upload_loading', {ip: ip});
   statusEl.className = 'hint';
   if(btn) btn.disabled = true;
+  let stopProgress = function(){};
+  let uploadOk = false;
   try{
     const merged = await fetchMergedScript(key);
     // Sicherheitsnetz: ein aelterer Helfer kennt "behalten" nicht und
     // wuerde stattdessen alle Scripte loeschen - dann gar nicht erst senden.
     if(confirmIds && deleteOthers === false && !helperHas('keep_others')) throw new Error(t('helper_outdated'));
-    const payload = { ip: ip, name: UPLOAD_NAMES[key], code: merged, key: key };
+    const pid = key + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    const payload = { ip: ip, name: UPLOAD_NAMES[key], code: merged, key: key, progress_id: pid };
     if(confirmIds){ payload.force = true; payload.confirm_ids = confirmIds; payload.delete_others = deleteOthers !== false; }
+    stopProgress = watchUploadProgress(key, pid, ip, statusEl);
     const { res, data } = await helperFetch('/api/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
+    uploadOk = !!(res.ok && data.ok && data.running);
+    stopProgress(uploadOk);
     if(data.needs_confirm){
       statusEl.textContent = '';
       showUploadConfirm(key, ip, data);
@@ -3930,6 +4008,7 @@ async function directUpload(key, confirmIds, deleteOthers){
     statusEl.textContent = t('upload_error', {msg: e.message});
     statusEl.className = 'error';
   } finally {
+    stopProgress(uploadOk);
     if(btn) btn.disabled = false;
   }
 }

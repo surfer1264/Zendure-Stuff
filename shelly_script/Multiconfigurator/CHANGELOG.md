@@ -5,6 +5,10 @@
 - Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt
 - Configurator: Weicht beim Update oder Einlesen der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Empfehlung übernehmen, bisherigen Wert beibehalten oder eigenen Wert ab 3000 ms eintragen. Ohne Auswahl bleibt der bisherige Wert
 - Configurator: Zusammenfassung zeigt das Regel-Intervall (mit Empfehlung, falls abweichend)
+- Nachtrag Helfer (EXE und Home-Assistant-App 2.9.2.1): Upload robuster, gleiches Verfahren wie `upload_shelly.py`. Schlägt ein Block fehl, beginnt die ganze Übertragung neu (höchstens dreimal, 2 s Pause). Bisher wurde nur der fehlgeschlagene Block wiederholt: Brach die Verbindung erst nach dem Speichern ab, stand er doppelt im Code. Ein Verbindungsabbruch (`ConnectionResetError`) wurde außerdem gar nicht wiederholt und kam als unerwarteter Fehler im Browser an. Jetzt meldet der Configurator in diesem Fall „Upload unvollständig“, weil der alte Code dann schon überschrieben sein kann. Ein fehlendes Passwort wird nicht wiederholt
+- Nachtrag Configurator und Helfer: **Fortschrittsanzeige beim Direkt-Upload.** Unter dem Knopf „Direkt hochladen“ zeigen ein Balken und ein Text die aktuelle Phase: vorhandene Scripte prüfen, Script stoppen bzw. entfernen bzw. anlegen, „Übertrage Block 23 von 46 …“, Script starten. Wird die Übertragung nach einem Verbindungsabbruch neu begonnen, springt der Balken zurück, und der Text nennt den Versuch („… neu gestartet (Versuch 2 von 3) …“)
+  - Neuer Endpunkt `GET /api/upload_status?id=…` im Helfer, Feature `upload_progress` in `/api/health`. Der Browser schickt beim Upload eine eigene Kennung (`progress_id`) mit und fragt damit alle 400 ms den Stand ab
+  - Mit einem älteren Helfer ohne dieses Feature erscheint wie bisher nur „Übertrage an … “
 
 ## 2.9.1
 
