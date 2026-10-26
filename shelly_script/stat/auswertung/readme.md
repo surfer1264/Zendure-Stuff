@@ -4,7 +4,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.3.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.4.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -94,9 +94,34 @@ Die Auswertung reicht bis zum Ende der Logs, Tageswerte nutzen automatisch nur v
 
 ## Einstellungen
 
-Alle Einstellungen stehen im Block `EINSTELLUNGEN` oben in `analyse.py`. `bericht.py` hat keine
+Die Standardwerte stehen im Block `EINSTELLUNGEN` oben in `analyse.py`. `bericht.py` hat keine
 eigenen Einstellungen; es übernimmt Schwellwerte und Taktlänge für seine Beschriftungen von dort
 und die Geräte aus `geraete.csv`.
+
+### Eigene Einstellungen: `analyse_config.json`
+
+Damit eigene Werte ein Update überstehen, gehören sie nicht in `analyse.py`, sondern in die Datei
+`analyse_config.json` neben dem Skript. Sie wird nicht ins Git übernommen und bei einem Update
+nicht überschrieben.
+
+- Gibt es die Datei, gelten ihre Werte; alles, was darin fehlt, behält den Standardwert.
+- Gibt es sie nicht, gelten die Standardwerte aus `analyse.py`.
+- Schlüssel wie die Variablen in der Tabelle unten. JSON-Schreibweise: `null` statt `None`,
+  `true`/`false` statt `True`/`False`, Texte in doppelten Anführungszeichen, Listen in `[ ]`.
+  Kommentare sind in JSON nicht erlaubt.
+- Unbekannte Schlüssel (z. B. Tippfehler) meldet das Skript als Warnung und ignoriert sie.
+
+Beispiel:
+
+```json
+{
+  "ZEITRAUM_VON": "2026-10-06",
+  "ZEITRAUM_BIS": null,
+  "GERAETE": ["SF2400", "SF800"],
+  "BAND_W": 25,
+  "LOGS_PACKEN": true
+}
+```
 
 | Variable | Bedeutung |
 |---|---|
@@ -105,7 +130,7 @@ und die Geräte aus `geraete.csv`.
 | `LOGS_PACKEN` | `True` = abgeschlossene Logs nach der Auswertung packen (`.log` → `.log.gz`); `False` = Logs unverändert lassen. |
 | `ZEITRAUM_VON` | Beginn der Auswertung als `JJJJ-MM-TT` (einschließlich); `None` = ab erstem Log. |
 | `ZEITRAUM_BIS` | Ende der Auswertung (einschließlich); `None` = bis zum Ende der Logs. |
-| `GERAETE` | `None` = alle Geräte aus dem Log, in der Reihenfolge ihres ersten Auftretens. Oder eine Liste wie `["SF2400", "SF800"]`: nur diese, in dieser Reihenfolge. |
+| `GERAETE` | `None` = alle Geräte aus dem Log, in der Reihenfolge ihres ersten Auftretens. Oder eine Liste wie `["SF2400", "SF800"]`: nur diese, in dieser Reihenfolge. Namen genau wie im Log schreiben; Leerzeichen und Umlaute sind erlaubt (`["Keller Süd", "SF800"]`). |
 | `TAKT_S` | Taktlänge in Sekunden; `None` = automatisch aus dem Log (Median der Abstände). |
 | `MAX_LUECKE_S` | Lücken zwischen zwei Takten über diesem Wert zählen nicht als Energie bzw. Aktivzeit. |
 | `VOLLER_TAG_H` | Ab so vielen erfassten Stunden gilt ein Tag als voll. |
@@ -130,7 +155,7 @@ und die Geräte aus `geraete.csv`.
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
 | `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte (gegen den gültigen Sollwert), Sollwert (`sollwert_min_w`, `sollwert_max_w`), Versatz (`regel_versatz_w`), Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
-| `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). |
+| `geraete.csv` | Die ausgewerteten Geräte: Name wie im Log und Spaltenschlüssel (z. B. `Keller Süd` → `keller_sued`). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |
 | `bericht.html` | Der Bericht: eine einzelne Datei, die ohne Internetverbindung funktioniert (Daten, Schriften und Zeichen-Skript eingebettet). |
 
@@ -145,6 +170,12 @@ und die Geräte aus `geraete.csv`.
   über die vollen Tage (Linie = Median, Bänder = 25–75 % und 10–90 %).
 
 ### Ein oder mehrere Geräte
+
+Gerätename ist alles, was im Log vor `: SOC …` steht, also auch mit Leerzeichen oder Umlauten
+(`  Keller Süd: SOC 45% | …`). Für die Spalten der CSV-Dateien bildet das Skript daraus einen Schlüssel:
+klein geschrieben, Umlaute umschrieben, alle anderen Zeichen als `_` – aus „Keller Süd“ wird `keller_sued`,
+die Spalten heißen dann z. B. `soc_keller_sued` und `entladung_keller_sued_kwh`. Ergäben zwei Namen denselben
+Schlüssel, bekommt der zweite eine Nummer (`_2`). Im Bericht steht immer der Name wie im Log.
 
 Der Bericht passt sich der Anzahl der Geräte an: eigene Farbe je Gerät (vier Farben, danach wiederholt),
 eine SOC-Verteilung je Gerät, Texte in Einzahl oder Mehrzahl. Bei nur einem Gerät entfallen
@@ -193,6 +224,8 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.4.0**: Gerätenamen mit Leerzeichen und Umlauten werden erkannt; Spaltenschlüssel werden daraus
+  gebildet (`geraete.csv`). Vorher fehlten solche Geräte ohne Meldung in der Auswertung.
 - **1.3.0**: Regelgüte misst gegen den jeweils gültigen Sollwert statt gegen 0 W; neue Spalten
   `sollwert_min_w`, `sollwert_max_w`, `regel_versatz_w` mit Plausibilitätshinweis. Neustarts werden am ganzen
   Startblock erkannt (vorher nur an „gestartet“, verschluckte Zeilen fehlten dann).

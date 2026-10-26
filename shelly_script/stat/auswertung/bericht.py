@@ -119,7 +119,7 @@ def erzeugen(hier=HIER):
              .replace("__STAND__", stand)
              .replace("__VERSION__", html.escape(cfg.VERSION))
              .replace("__METHODE__", methode)
-             .replace("__DATEN__", json.dumps(d, ensure_ascii=False, separators=(",", ":"))))
+             .replace("__DATEN__", json.dumps(d, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")))
     ziel = os.path.join(hier, "bericht.html")
     with open(ziel, "w", encoding="utf-8") as fh:
         fh.write(seite)

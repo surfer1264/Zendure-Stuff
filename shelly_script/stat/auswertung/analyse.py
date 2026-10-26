@@ -21,7 +21,8 @@ Erzeugt im Ordner dieses Skripts:
     cache/             Zwischenspeicher, eine Datei je Logdatei
 
 Benötigt: Python 3.9+ und pandas (pip install pandas).
-Alle Einstellungen stehen im Block EINSTELLUNGEN direkt unter den Imports.
+Alle Einstellungen stehen im Block EINSTELLUNGEN direkt unter den Imports (Standardwerte).
+Eigene Werte gehören in analyse_config.json neben diesem Skript – die bleibt bei Updates erhalten.
 bericht.py hat keine eigenen Einstellungen, es übernimmt alles von hier.
 """
 import glob
@@ -33,12 +34,13 @@ import re
 import shutil
 import sys
 import time
+import unicodedata
 
 import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -65,7 +67,8 @@ ZEITRAUM_BIS = None                # None = bis zum Ende der Logs
 
 # --- Geräte ------------------------------------------------------------------
 # None = alle Geräte, die im Log vorkommen, in der Reihenfolge ihres ersten Auftretens.
-# Oder eine Liste mit Namen wie im Log ("  SF2400: SOC ..."), z. B. ["SF2400", "SF800"]:
+# Oder eine Liste mit Namen wie im Log ("  SF2400: SOC ..."), z. B. ["SF2400", "SF800"] oder ["Keller Süd", "SF800"]:
+# Leerzeichen und Umlaute im Namen sind erlaubt, genau so schreiben wie im Log.
 # dann nur diese Geräte, in dieser Reihenfolge. Ein, zwei, drei oder mehr Geräte gehen.
 GERAETE = None
 
@@ -75,7 +78,7 @@ TAKT_S = None                      # Taktlänge in s; None = automatisch aus dem
 MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen nicht als Energie
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
 LEER_SCHWELLE_W = 15               # Ist-Summe < 15 W  = Speicher liefert nichts (leer/Entladegrenze)
-SATT_SCHWELLE_W = 1580             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
+SATT_SCHWELLE_W = 1580             # Ist-Summe >= 1580 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
 PROFIL_PERZENTILE = (10, 25, 50, 75, 90)  # Tagesprofil: Verteilung je Stunde für SOC, Netzsaldo und Speicher-Ausgang.
                                           # Der Bericht zeichnet 10/25/50/75/90 (Bänder 10–90 und 25–75, Linie = 50)
@@ -94,10 +97,45 @@ NEUSTART_ABSTAND_S = 10            # Startzeilen, die näher als 10 s beieinande
 HIER = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HIER, "cache")
 
+# Eigene Einstellungen: analyse_config.json neben diesem Skript (wird nicht ins Git übernommen,
+# übersteht also jedes Update). Fehlt die Datei, gelten die Standardwerte oben. In der Datei stehen
+# nur die Werte, die abweichen sollen, Schlüssel wie die Variablen oben, null = None:
+#     {"ZEITRAUM_VON": "2026-10-06", "GERAETE": ["SF2400", "SF800"], "BAND_W": 30}
+CONFIG = os.path.join(HIER, "analyse_config.json")
+EINSTELLUNGEN = ["LOG_ORDNER", "LOG_MUSTER", "LOGS_PACKEN", "ZEITRAUM_VON", "ZEITRAUM_BIS", "GERAETE",
+                 "TAKT_S", "MAX_LUECKE_S", "VOLLER_TAG_H", "LEER_SCHWELLE_W", "SATT_SCHWELLE_W", "BAND_W",
+                 "PROFIL_PERZENTILE", "AKTIV_SCHWELLE_W", "SOLLWERT_START_W", "NEUSTART_ABSTAND_S"]
+
+
+def config_laden():
+    if not os.path.exists(CONFIG):
+        return
+    try:
+        with open(CONFIG, encoding="utf-8-sig") as f:
+            werte = json.load(f)
+    except (OSError, ValueError) as e:
+        sys.exit(f"Fehler in {os.path.basename(CONFIG)}: {e}")
+    if not isinstance(werte, dict):
+        sys.exit(f"Fehler in {os.path.basename(CONFIG)}: erwartet wird ein Objekt {{\"NAME\": Wert, ...}}")
+    melden = __name__ == "__main__"                      # beim Import durch bericht.py nicht doppelt ausgeben
+    for k, v in werte.items():
+        if k not in EINSTELLUNGEN:
+            if melden:
+                print(f"Warnung: unbekannte Einstellung {k!r} in {os.path.basename(CONFIG)} – ignoriert")
+            continue
+        globals()[k] = tuple(v) if k == "PROFIL_PERZENTILE" else v
+    if melden:
+        print(f"Einstellungen aus {os.path.basename(CONFIG)}: {', '.join(k for k in werte if k in EINSTELLUNGEN) or '–'}")
+
+
+config_laden()
+
 TS = r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\] \[Script \d+\] "
 R_NETZ = re.compile(TS + r"Netzsaldo: (-?\d+) W \| Ist-Summe: (-?\d+) W \| Regelsignal: (-?\d+) W(?: \[FIX\])? \| Ladekorrektur: (-?\d+) W")
-R_DEV = re.compile(TS + r"  ([A-Za-z0-9_.-]+): SOC (\d+|n/a)%? \| socL (\S+) \| gridR (\S+) \| Ist (-?\d+) W \| Soll (-?\d+) W \| acMode (\d)")
-R_SET = re.compile(TS + r"([A-Za-z0-9_.-]+): Leistung gesetzt")
+# Gerätename: alles bis zum Doppelpunkt (auch Leerzeichen, Umlaute), aber ohne | [ ] und ohne führendes Leerzeichen
+NAME = r"([^\s:|\[\]][^:|\[\]]*?)"
+R_DEV = re.compile(TS + r"  " + NAME + r": SOC (\d+|n/a)%? \| socL (\S+) \| gridR (\S+) \| Ist (-?\d+) W \| Soll (-?\d+) W \| acMode (\d)")
+R_SET = re.compile(TS + NAME + r": Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
 # Stundenzeile ab Controller 5.2.6
 R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms(?: \| uebersprungen \d+ \| interval (\d+) ms)?")
@@ -126,6 +164,23 @@ def fingerabdruck():
     teile = [VERSION, TAKT_S, MAX_LUECKE_S, LEER_SCHWELLE_W, SATT_SCHWELLE_W, BAND_W, AKTIV_SCHWELLE_W,
              SOLLWERT_START_W, NEUSTART_ABSTAND_S, list(GERAETE) if GERAETE else None]
     return hashlib.sha256(json.dumps(teile).encode()).hexdigest()[:16]
+
+
+def schluessel(namen):
+    """Spaltenschlüssel je Gerätename: klein, Umlaute umschrieben, sonst nur a–z, 0–9 und _.
+    "Keller Süd" -> "keller_sued". Gleiche Schlüssel bekommen eine Nummer (_2, _3 ...)."""
+    keys = []
+    for name in namen:
+        k = name.lower()
+        for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+            k = k.replace(a, b)
+        k = unicodedata.normalize("NFKD", k).encode("ascii", "ignore").decode()
+        k = re.sub(r"[^a-z0-9]+", "_", k).strip("_") or "geraet"
+        basis, i = k, 2
+        while k in keys:
+            k, i = f"{basis}_{i}", i + 1
+        keys.append(k)
+    return keys
 
 
 def stamm(pfad):
@@ -196,7 +251,7 @@ def lesen(pfad, zustand):
                 continue
             m = R_SET.match(l)
             if m:
-                ev.append((m[1], "stellbefehle_" + m[2].lower()))
+                ev.append((m[1], "stell:" + m[2]))     # Gerätename unverändert; Spaltenschlüssel erst beim Zusammensetzen
                 continue
             m = R_ZYK.match(l)
             if m:
@@ -265,8 +320,8 @@ def auswerten(pfad, zustand):
     r = pd.DataFrame({"netzsaldo_w": ni.netz.resample("15min").mean(), "speicher_w": ni.ist.resample("15min").mean()})
     for g in geraete:
         gi = d[d.dev == g].set_index("t")
-        r["soc_" + g.lower()] = gi.soc.resample("15min").mean()
-        r["ausgang_" + g.lower() + "_w"] = gi.ist.resample("15min").mean()
+        r["soc:" + g] = gi.soc.resample("15min").mean()          # Gerätename unverändert, siehe oben
+        r["ausgang:" + g] = gi.ist.resample("15min").mean()
     r = r.dropna(how="all")
     erg["verlauf"] = {"t": list(r.index.strftime("%Y-%m-%dT%H:%M"))}
     erg["verlauf"].update({c: [json_wert(x) for x in r[c]] for c in r.columns})
@@ -462,14 +517,16 @@ def zusammensetzen(ergebnisse):
         geraete = im_log
     if not geraete:
         sys.exit("Keine Gerätezeilen im Log gefunden")
-    keys = [g.lower() for g in geraete]
-    print("Geräte:", ", ".join(geraete))
+    keys = schluessel(geraete)
+    print("Geräte:", ", ".join(f"{g} ({k})" if g != k else g for g, k in zip(geraete, keys)))
     if not TAKT_S:
         print(f"Takt: {float(np.median(takte_s)):.1f} s (aus dem Log)")
     pd.DataFrame({"name": geraete, "key": keys}).to_csv(os.path.join(HIER, "geraete.csv"), index=False)
 
     # ------------------------------------------------ verlauf_15min.csv
     r = pd.concat(verlauf, ignore_index=True)
+    r = r.rename(columns={**{"soc:" + g: "soc_" + k for g, k in zip(geraete, keys)},
+                          **{"ausgang:" + g: "ausgang_" + k + "_w" for g, k in zip(geraete, keys)}})
     spalten = ["t", "netzsaldo_w", "speicher_w"] + [c for k in keys for c in ("soc_" + k, "ausgang_" + k + "_w")]
     r = r.reindex(columns=spalten)
     r = r.dropna(how="all", subset=spalten[1:]).round(1)
@@ -498,7 +555,9 @@ def zusammensetzen(ergebnisse):
         z["regel_versatz_w"] = x.get("regel_versatz_w")
         z["sollwert_min_w"] = x.get("sollwert_min_w")
         z["sollwert_max_w"] = x.get("sollwert_max_w")
-        for c in zaehler:
+        for g, k in zip(geraete, keys):
+            z["stellbefehle_" + k] = x["ereignisse"].get("stell:" + g, 0)
+        for c in EREIGNIS_SPALTEN:
             z[c] = x["ereignisse"].get(c, 0)
         zy = x.get("zyklen")
         z["zyklus_avg_ms"] = round(zy[1] / zy[0]) if zy and zy[0] else None
