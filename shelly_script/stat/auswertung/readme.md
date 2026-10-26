@@ -105,7 +105,7 @@ und die Geräte aus `geraete.csv`.
 | `LOGS_PACKEN` | `True` = abgeschlossene Logs nach der Auswertung packen (`.log` → `.log.gz`); `False` = Logs unverändert lassen. |
 | `ZEITRAUM_VON` | Beginn der Auswertung als `JJJJ-MM-TT` (einschließlich); `None` = ab erstem Log. |
 | `ZEITRAUM_BIS` | Ende der Auswertung (einschließlich); `None` = bis zum Ende der Logs. |
-| `GERAETE` | `None` = alle Geräte aus dem Log, in der Reihenfolge ihres ersten Auftretens. Oder eine Liste wie `["SF2400", "SF800"]`: nur diese, in dieser Reihenfolge. |
+| `GERAETE` | `None` = alle Geräte aus dem Log, in der Reihenfolge ihres ersten Auftretens. Oder eine Liste wie `["SF2400", "SF800"]`: nur diese, in dieser Reihenfolge. keine Leerzeichen, keine Sonderzeichen |
 | `TAKT_S` | Taktlänge in Sekunden; `None` = automatisch aus dem Log (Median der Abstände). |
 | `MAX_LUECKE_S` | Lücken zwischen zwei Takten über diesem Wert zählen nicht als Energie bzw. Aktivzeit. |
 | `VOLLER_TAG_H` | Ab so vielen erfassten Stunden gilt ein Tag als voll. |
