@@ -106,11 +106,22 @@ Beispiel:
 
 ```json
 {
+  "LOG_ORDNER": null,
+  "LOG_MUSTER": "shelly_debug_*.log",
+  "LOGS_PACKEN": true,
   "ZEITRAUM_VON": "2026-10-06",
   "ZEITRAUM_BIS": null,
-  "GERAETE": ["SF2400", "SF800"],
+  "GERAETE": null,
+  "TAKT_S": null,
+  "MAX_LUECKE_S": 30,
+  "VOLLER_TAG_H": 22,
+  "LEER_SCHWELLE_W": 15,
+  "SATT_SCHWELLE_W": 1580,
   "BAND_W": 25,
-  "LOGS_PACKEN": true
+  "PROFIL_PERZENTILE": [10, 25, 50, 75, 90],
+  "AKTIV_SCHWELLE_W": 10,
+  "SOLLWERT_START_W": 0,
+  "NEUSTART_ABSTAND_S": 10
 }
 ```
 
