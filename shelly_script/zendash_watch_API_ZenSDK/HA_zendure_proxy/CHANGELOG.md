@@ -1,4 +1,4 @@
-# Changelog – Zendure D
+# Changelog – Zendure Dashboard Proxy (Home-Assistant-App)
 
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
