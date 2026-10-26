@@ -41,6 +41,7 @@ nav:
       - Was die Suite kann: szscs.md
       - Controller im Alltag: Controller/benutzerdoku.md
       - Kompatible Geräte: kompatible_geraete.md
+      - Speicherbedarf: zendash_speichermodell.md
   - Einrichten & Updaten:
       - Configurator: Multiconfigurator/readme.md
       - Helfer/Proxy auf Mac: Multiconfigurator/local_helper/mcos_helper.md
@@ -57,7 +58,6 @@ nav:
       - Dashboard-Shelly: zendash_watch_API_ZenSDK/readme.md
       - Live-Dashboard: zendash_watch_API_ZenSDK/dashboard.md
       - Tech Details:
-        - Speicherbedarf: zendash_speichermodell.md
         - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
         - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
         - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/INSTALLATION.md
