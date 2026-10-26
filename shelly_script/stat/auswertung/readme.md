@@ -14,15 +14,6 @@ im Ordner [`shelly_script/stat/auswertung`](https://github.com/surfer1264/Zendur
 Benötigt werden `analyse.py`, `bericht.py` und `zendure_fonts.css`, unter Windows optional `analyse.cmd`.
 
 - **Einzelne Dateien:** Datei im Ordner anklicken, dann oben rechts „Download raw file“.
-- **Ganzes Repository als ZIP:** [main.zip](https://github.com/surfer1264/Zendure-Stuff/archive/refs/heads/main.zip)
-  herunterladen und den Ordner `shelly_script/stat/auswertung` entpacken.
-- **Mit Git, nur dieser Ordner:**
-
-  ```
-  git clone --depth 1 --filter=blob:none --sparse https://github.com/surfer1264/Zendure-Stuff
-  cd Zendure-Stuff
-  git sparse-checkout set shelly_script/stat/auswertung
-  ```
 
 ## Installation
 
