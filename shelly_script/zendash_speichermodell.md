@@ -10,6 +10,8 @@ Die Tabelle schätzt den Speicherbedarf des zenDash-Scripts auf dem Shelly. Sie 
 - **3 SolarFlow:** ✅ bis 3 Akkus am Gerät mit den meisten Akkus, ⚠️ bei 4–7, ❌ ab 8
 - **4 SolarFlow:** mit v3.5.8 **nicht unterstützt**, zu wenig Reserve
 
+**Fazit für 4 Geräte:** Der Regler kommt ab 5.3.5 mit 4 Geräten und wenigen Akkus je Gerät aus (bis A = 1 ✅, bis A = 4 ⚠️). Begrenzend bleibt das zenDash-Script (oben: 4 Geräte ❌).
+
 ## Grundlagen
 
 | Begriff | Bedeutung |
@@ -19,7 +21,9 @@ Die Tabelle schätzt den Speicherbedarf des zenDash-Scripts auf dem Shelly. Sie 
 | Spitze | höchster Speicherbedarf (`mem_peak`), entsteht beim Lesen eines Hub-Reports |
 | Reserve | 25,2 kB − Spitze |
 
-## Formel
+## Watchdog-Script
+
+### Formel
 
 Eingaben:
 
@@ -51,7 +55,7 @@ Reserve:   =25,2-C2
 Bewertung: =WENN(D2>=3;"✅";WENN(D2>=1,5;"⚠️";"❌"))
 ```
 
-## Tabelle
+### Tabelle
 
 Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Geräte verteilt sind.
 
@@ -76,7 +80,7 @@ Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Gerä
 
 **Ungleiche Verteilung:** Bei 4 Geräten mit 8 Akkus in der Verteilung 5/1/1/1 kämen 3 × 0,35 kB dazu. Die Spitze läge dann bei etwa 25,3 kB, und das Script würde abstürzen.
 
-## Was Geräte und Akkus kosten
+### Was Geräte und Akkus kosten
 
 | | Grundlast | Spitze |
 |---|---|---|
@@ -86,7 +90,7 @@ Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Gerä
 
 Die Gesamtzahl der Akkus ist nicht entscheidend. Die Hub-Reports werden nacheinander gelesen, und der größte Report setzt die Spitze. Ein Report wächst mit der Zahl der Akkus am Gerät, weil `packData` einen Eintrag pro Akku enthält. Im RAM belegt ein Report etwa das Doppelte seiner Größe.
 
-## Messpunkte
+### Messpunkte
 
 | Anlage | Geräte | Grundlast | `mem_peak` | Modell | Abweichung |
 |---|---|---|---|---|---|
@@ -108,7 +112,7 @@ Alle Messungen mit v3.5.8 und Debug aus. Das Modell trifft alle Messwerte auf �
 
 Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Modell setzt 0,35 kB an und hat damit einen kleinen Sicherheitszuschlag.
 
-## Belastbarkeit
+### Belastbarkeit
 
 - **Gerätekosten (2,4 kB):** gut belegt durch 5 Messpunkte an 4 Anlagen.
 - **Akkukosten (0,35 kB):** bestätigt durch drei Anlagen mit bekannter Verteilung (B, C, D), die jeweils ~0,28–0,29 kB ergeben.
@@ -175,19 +179,7 @@ Das dritte Gerät im zweiten Messpunkt liefert keinen Report. Es zeigt deshalb n
 - **Noch offen:** Messpunkte mit mehr Akkus an einem Gerät und mit 3 bis 4 echten Geräten.
 - **Weitere Spitze beim Übernehmen von KVS-Änderungen:** Pro Key kostet sie etwa 0,21 kB, und es gibt 3 + 4 × G Keys. Bei 4 Geräten sind das etwa 4 kB über der Grundlast, ungefähr so viel wie ein Report. Seit 5.3.5 laufen beide nie gleichzeitig, weil KVS-Änderungen nur zwischen zwei Regelzyklen übernommen werden.
 
-### Frühere Werte (vor 5.3.0)
-
-| Geräte | Regler `mem_peak` |
-|---|---|
-| 1 | 17 934 |
-| 2 | 19 642 |
-| 3 | 22 372 |
-
-Diese Werte wurden ohne Versionsangabe erfasst, vermutlich mit 5.2.x. Mit 5.3.5 liegt die Spitze bei 2 Geräten etwa 0,6–0,8 kB niedriger. Die 3-Geräte-Werte sind nicht direkt vergleichbar: Dort waren drei echte Geräte angeschlossen, im Test zu 5.3.5 nur ein nicht erreichbares drittes.
-
-**Fazit für 4 Geräte:** Der Regler kommt ab 5.3.5 mit 4 Geräten und wenigen Akkus je Gerät aus (bis A = 1 ✅, bis A = 4 ⚠️). Begrenzend bleibt das zenDash-Script (oben: 4 Geräte ❌).
-
-## Änderungen, die den Speicher betreffen
+### Änderungen, die den Speicher betreffen
 
 | Version | Änderung | Wirkung |
 |---|---|---|
