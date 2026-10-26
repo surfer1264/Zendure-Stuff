@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-25T10:38:30Z",
+  "generated": "2026-10-26T10:42:12Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.2.6",
+      "version": "5.3.5",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d47962b73039b64a7e005f28ba1b4257e4dc40e2/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 47662,
-      "codeHash": "sha256:6b739c1a7a5d773512f59a63f89d0ee6d4c3d211e22d7b47626b2528cb815c4c",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5d862dbb5d4a54e45d7cf8cd8568b94826a9e313/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 47944,
+      "codeHash": "sha256:50ac931db2a5ff5008ec96422b7249145d922fe70d0722a6855bf95e457fbe33",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,13 +62,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Zyklusdauer im Log:** Einmal pro Stunde steht eine Zeile wie `Zyklen 1h: n 830 | avg 1840 ms | max 3620 ms | uebersprungen 0 | interval 4000 ms` im Log, auch ohne `debug`. `n`, `avg` und `max` zählen nur Zyklen mit Geräteabfrage (Sparmodus-Zyklen sind kürzer), `uebersprungen` zählt die verworfenen Takte. Liegt `max` regelmäßig nahe am Intervall oder gibt es verworfene Takte, ist `interval` zu knapp.",
-        "Kein Puffer: Es werden nur fünf Zahlen mitgeführt, kein zusätzlicher Timer, kein Schreiben in den KVS."
+        "**Speicherspitze gesenkt:** Abläufe, die gleichzeitig größere Antworten im Speicher hielten, laufen jetzt nacheinander.",
+        "Die SoC-Grenzen werden beim Start erst geschrieben, wenn die Antwort des Geräts wieder freigegeben ist.",
+        "Die Netzmessung läuft erst nach der Antwort des letzten Geräts."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.6",
+          "schema": 1,
+          "codeHash": "sha256:6b739c1a7a5d773512f59a63f89d0ee6d4c3d211e22d7b47626b2528cb815c4c",
+          "changes": [
+            "**Zyklusdauer im Log:** Einmal pro Stunde steht eine Zeile wie `Zyklen 1h: n 830 | avg 1840 ms | max 3620 ms | uebersprungen 0 | interval 4000 ms` im Log, auch ohne `debug`. `n`, `avg` und `max` zählen nur Zyklen mit Geräteabfrage (Sparmodus-Zyklen sind kürzer), `uebersprungen` zählt die verworfenen Takte. Liegt `max` regelmäßig nahe am Intervall oder gibt es verworfene Takte, ist `interval` zu knapp.",
+            "Kein Puffer: Es werden nur fünf Zahlen mitgeführt, kein zusätzlicher Timer, kein Schreiben in den KVS."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.5",
           "schema": 1,
@@ -162,16 +173,6 @@
             "socLimit-Wechsel: drei Meldungen zu einer zusammengefasst,",
             "socStatus-Wechsel: eine Meldung,",
             "maxSoc: \"maxSoc erreicht (soc/maxSoc%)\" bzw. \"unter maxSoc (soc/maxSoc%)\""
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.1.6",
-          "schema": 1,
-          "codeHash": "sha256:4719c1510d1e90c5492dde9d36e84a31318234abb0ce2c56f7a46de386a0b0e7",
-          "changes": [
-            "kvs-lesen im Controleller robuster gestalten",
-            "https://github.com/surfer1264/Zendure-Stuff/issues/128"
           ],
           "notice": null
         }
