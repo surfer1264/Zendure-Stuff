@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.2.6";
+let VERSION = "5.3.5";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -99,7 +99,7 @@ let CONFIG = {
   directionChangeHoldCycles: 4,
   // true->smartMode 0, false->1
   standbySmartModeZero: false,
-  // KVS-Live-Override an/aus (false = CONFIG fix, kein GetMany)
+  // KVS-Live-Override an/aus (false = CONFIG fix, kein KVS-Zugriff)
   // ------------------------------------------------------------------
   kvsEnabled: false,
   // true = Start ueberschreibt KVS mit CONFIG, danach false
@@ -218,6 +218,12 @@ let state = {
   smoothedCharge: null,
   busy: false,
   watchdogTimer: null,
+
+  // v5.3.4: KVS-Uebernahme nach kvs_rev (kvsTrigger). pending = Aenderung
+  // gemeldet, noch nicht gelesen; kvsBusy = Lesen/Geraete-Sync laeuft.
+  kvsPending: false,
+  kvsBusy: false,
+  kvsBusySince: 0,
 
   cycleId: 0,
   cycleStartedAt: 0,
@@ -433,10 +439,11 @@ function lock() {
     function () {
       reportError(state.errors, state.notified, "watchdog", "System",
         "Zyklus haengengeblieben (Watchdog-Timeout, " +
-        (Date.now() - state.cycleStartedAt) + " ms)");
+        Math.round(Date.now() - state.cycleStartedAt) + " ms)");
 
       state.busy = false;
       state.watchdogTimer = null;
+      if (state.kvsPending) Timer.set(0, false, kvsTrigger);
     }
   );
 
@@ -479,7 +486,7 @@ function unlock(myCycle) {
   if (now - state.cyFrom >= 3600000) cycleStatsLog(now);
 
   if (CONFIG.debug) {
-    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " + d + " ms");
+    print("DEBUG Zyklus " + myCycle + " abgeschlossen nach " + Math.round(d) + " ms");
     memLog("Zyklusende");
   }
 
@@ -491,29 +498,31 @@ function unlock(myCycle) {
     Timer.clear(state.watchdogTimer);
     state.watchdogTimer = null;
   }
+
+  if (state.kvsPending) Timer.set(0, false, kvsTrigger);
 }
 
-// Normalisiert KVS.GetMany "items" zu {key:{value,etag}}
-function kvsItemsToMap(rawItems) {
-  let map = {};
+// v5.3.4: KVS-Aenderungen nur ZWISCHEN zwei Regelzyklen uebernehmen und nie
+// mehrere Durchlaeufe gleichzeitig. Vorher startete jedes kvs_rev-Ereignis
+// sofort einen eigenen Lesedurchlauf - beim manuellen Laden (3 Keys kurz
+// nacheinander) liefen drei davon parallel zum Zyklus, dazu der Geraete-Write
+// (peak bis 21126). Jetzt: Ereignis merkt nur vor; gelesen wird, wenn kein
+// Zyklus laeuft (sonst ab unlock()). Waehrenddessen setzt update() aus.
+// Kommt waehrend des Lesens eine weitere Aenderung, folgt genau ein
+// weiterer Durchlauf.
+function kvsTrigger() {
+  if (!state.kvsPending || state.kvsBusy || state.busy) return;
 
-  if (!rawItems) return map;
+  state.kvsPending = false;
+  state.kvsBusy = true;
+  state.kvsBusySince = Date.now();
 
-  if (Array.isArray(rawItems)) {
-    for (let idx = 0; idx < rawItems.length; idx++) {
-      let entry = rawItems[idx];
-      if (entry && entry.key !== undefined) {
-        map[entry.key] = entry;
-      }
-    }
-  } else {
-    // already an object keyed by KVS key name
-    map = rawItems;
-  }
-
-  return map;
+  readKvsOverrides(function () {
+    state.kvsBusy = false;
+    print("KVS-Overrides aktualisiert.");
+    if (state.kvsPending) Timer.set(0, false, kvsTrigger);
+  });
 }
-
 
 function applyKvsValue(key, raw, currentValue, validate, apply) {
   let n = Number(raw);
@@ -537,182 +546,217 @@ function applyKvsValue(key, raw, currentValue, validate, apply) {
   apply(n);
 }
 
-// v5.1.6: KEIN cycleId-Stale-Check mehr. Der KVS-Read laeuft event-getrieben
-// (kvs_rev) und ist nicht Teil des Regelzyklus. Vorher wurde die GetMany-
-// Antwort still verworfen, sobald zwischen Aufruf und Antwort ein neuer
-// Regeltakt (lock()) gestartet war - die Aenderung ging dann ohne Retry
-// verloren (kein Apply, kein minSoc-/inputLimit-Sync) bis zum Neustart.
-// KVS-Werte gelten zyklusunabhaengig und werden ohnehin erst im naechsten
-// calculate() gelesen - Uebernahme zu jedem Zeitpunkt ist daher sicher.
-function readKvsOverrides(callback) {
+// v5.3.2: Jeder Key wird einzeln per KVS.Get gelesen statt alle auf einmal
+// per KVS.GetMany. GetMany legt alle Keys samt etag gleichzeitig in den Heap
+// (~2,3 kB) - das war die hoechste Speicherspitze beim Start. Beim Start
+// (seed) wird ein fehlender Key (-105 "not found") direkt mit dem CONFIG-Wert
+// angelegt; der eigene Seed-Durchlauf mit zweitem GetMany entfaellt.
+// Kein cycleId-Stale-Check (v5.1.6): KVS-Werte gelten zyklusunabhaengig.
+function readKvsOverrides(callback, seed) {
   if (!CONFIG.kvsEnabled) {
     callback();
     return;
   }
 
+  // v5.3.5: Nach einer Aenderung von aussen EIN KVS.GetMany statt 11
+  // Einzelabfragen. Seit 5.3.4 laeuft das nur zwischen zwei Zyklen - dann
+  // liegt kein Report im Speicher und die GetMany-Antwort (~2,3 kB) bleibt
+  // unter der Zyklus-Spitze. 11 RPCs dagegen bremsten den Shelly genau dann,
+  // wenn das Dashboard schreibt (KVS.Set des Watch-Scripts lief in Timeouts).
+  // Beim Start (seed) bleibt es bei Einzelabfragen: Grundstand dort hoeher.
+  if (!seed) {
+    kvsReadAll(callback);
+    return;
+  }
+
+  if (seed && CONFIG.kvsForceReseed) {
+    print("KVS-Seed: kvsForceReseed aktiv - schreibe alle Werte aus CONFIG " +
+      "(bestehende Live-Overrides werden ueberschrieben!)");
+  }
+
+  kvsStep(0, seed, [], 0, callback);
+}
+
+// Alle Keys mit einem KVS.GetMany lesen und uebernehmen (nie schreiben).
+function kvsReadAll(callback) {
   safeCall("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
+    let todo = [];
+
     if (err_code !== 0 || !res || !res.items) {
       reportError(state.errors, state.notified, "kvs", "KVS",
         "GetMany fehlgeschlagen (" + err_msg + ") - CONFIG unveraendert");
-
-      callback();
-      return;
-    }
-
-    reportSuccess(state.errors, state.notified, "kvs", "KVS");
-
-    if (CONFIG.debug && res.total !== undefined &&
-        Array.isArray(res.items) && res.total > res.items.length) {
-      print("DEBUG KVS.GetMany: nur " + res.items.length + " von " +
-        res.total + " passenden Eintraegen erhalten (Pagination?) - " +
-        "ggf. Offset-Handling ergaenzen");
-    }
-
-    let items = kvsItemsToMap(res.items);
-    let always = function () { return true; };
-
-    if (items["zdmc_setpoint"]) {
-      applyKvsValue("zdmc_setpoint", items["zdmc_setpoint"].value, CONFIG.setpoint,
-      function (v) { return v >= -40 && v <= 40; },
-      function (v) { CONFIG.setpoint = v; });
-    }
-
-    if (items["zdmc_dischargeResetMargin"]) {
-      applyKvsValue("zdmc_dischargeResetMargin", items["zdmc_dischargeResetMargin"].value, CONFIG.dischargeResetMargin,
-      function (v) { return v >= 3 && v <= 79 && Math.round(v) === v; },
-      function (v) { CONFIG.dischargeResetMargin = v; });
-    }
-
-    if (items["zdmc_dischargeFixed"]) {
-      applyKvsValue("zdmc_dischargeFixed", items["zdmc_dischargeFixed"].value, CONFIG.dischargeFixed,
-      function (v) { return v === 0 || v >= CONFIG.dischargeStartupPower; },
-      function (v) { CONFIG.dischargeFixed = v; });
-    }
-
-    for (let i = 0; i < CONFIG.devices.length; i++) {
-      let dev = CONFIG.devices[i];
-
-      let dischargeKey = "zdmc_dev" + i + "_dischargeAllowed";
-      if (items[dischargeKey]) {
-        applyKvsValue(dischargeKey, items[dischargeKey].value,
-          (dev.dischargeAllowed === false ? 0 : 1),
-          function (v) { return v === 0 || v === 1; },
-          function (v) { dev.dischargeAllowed = (v !== 0); });
-      }
-
-      let reverseKey = "zdmc_dev" + i + "_reverse";
-      if (items[reverseKey]) {
-        applyKvsValue(reverseKey, items[reverseKey].value,
-          (dev.reverse ? 1 : 0),
-          function (v) { return v === 0 || v === 1; },
-          function (v) { dev.reverse = (v !== 0); });
-      }
-
-      let minSocKey = "zdmc_dev" + i + "_minSoc";
-      if (items[minSocKey]) {
-        let oldMinSoc = dev.minSoc;
-
-        applyKvsValue(minSocKey, items[minSocKey].value, dev.minSoc,
-          function (v) { return v >= 10 && v <= dev.maxSoc - SOC_GAP; },
-          function (v) { dev.minSoc = v; });
-
-        if (dev.minSoc !== oldMinSoc) {
-          syncMinSocDevice(i, function () {});
-        }
-      }
-
-      let inputLimitKey = "zdmc_dev" + i + "_inputLimit";
-      if (items[inputLimitKey]) {
-        let oldInputLimit = dev.inputLimit;
-
-        applyKvsValue(inputLimitKey, items[inputLimitKey].value, dev.inputLimit,
-          function (v) { return v >= 0 && v <= dev.maxInputPower; },
-          function (v) { dev.inputLimit = v; });
-
-        if (dev.inputLimit !== oldInputLimit) {
-          syncInputLimitDevice(i, function () {});
-        }
-      }
-    }
-
-    callback();
-  });
-}
-
-// Writes ONE missing default into KVS, then moves to the next pair.
-function seedKvsDefaultsStep(pairs, index, callback) {
-  if (index >= pairs.length) {
-    callback();
-    return;
-  }
-
-  let pair = pairs[index];
-
-  safeCall("KVS.Set", { key: pair.key, value: pair.value }, function (res, err_code, err_msg) {
-    if (err_code !== 0) {
-      print("KVS-Seed: " + pair.key + " konnte nicht geschrieben werden (" + err_msg + ")");
-    } else if (CONFIG.debug) {
-      print("KVS-Seed: " + pair.key + " = " + pair.value + " initial gesetzt");
-    }
-
-    seedKvsDefaultsStep(pairs, index + 1, callback);
-  });
-}
-
-// Runs ONCE at startup (not per cycle
-function seedKvsDefaults(callback) {
-  if (!CONFIG.kvsEnabled) {
-    print("KVS-Seed uebersprungen - kvsEnabled: false");
-    callback();
-    return;
-  }
-
-  safeCall("KVS.GetMany", { match: KVS_MATCH }, function (res, err_code, err_msg) {
-    if (err_code !== 0 || !res || !res.items) {
-      print("KVS-Seed uebersprungen - KVS.GetMany nicht verfuegbar");
-      callback();
-      return;
-    }
-
-    let items = kvsItemsToMap(res.items);
-    let pairs = [];
-
-    function addPair(key, value) {
-      if (CONFIG.kvsForceReseed || !items[key]) {
-        pairs.push({ key: key, value: value });
-      }
-    }
-
-    addPair("zdmc_setpoint", CONFIG.setpoint);
-    addPair("zdmc_dischargeFixed", CONFIG.dischargeFixed);
-    addPair("zdmc_dischargeResetMargin", CONFIG.dischargeResetMargin);
-
-    for (let i = 0; i < CONFIG.devices.length; i++) {
-      addPair("zdmc_dev" + i + "_dischargeAllowed",
-        CONFIG.devices[i].dischargeAllowed === false ? 0 : 1);
-      addPair("zdmc_dev" + i + "_reverse",
-        CONFIG.devices[i].reverse ? 1 : 0);
-      addPair("zdmc_dev" + i + "_minSoc",
-        CONFIG.devices[i].minSoc);
-      addPair("zdmc_dev" + i + "_inputLimit",
-        CONFIG.devices[i].inputLimit);
-    }
-
-    if (pairs.length === 0) {
-      if (CONFIG.debug) print("KVS-Seed: alle Keys bereits vorhanden, nichts zu tun");
-      callback();
-      return;
-    }
-
-    if (CONFIG.kvsForceReseed) {
-      print("KVS-Seed: kvsForceReseed aktiv - schreibe " + pairs.length +
-        " Wert(e) aus CONFIG (bestehende Live-Overrides werden ueberschrieben!)");
     } else {
-      print("KVS-Seed: schreibe " + pairs.length + " fehlende(n) Default-Wert(e)...");
+      reportSuccess(state.errors, state.notified, "kvs", "KVS");
+      if (CONFIG.debug) memLog("KVS GetMany");
+
+      let items = res.items;
+      let arr = Array.isArray(items);
+
+      for (let n = 0; kvsKey(n) !== null; n++) {
+        let key = kvsKey(n);
+        let raw;
+
+        if (arr) {
+          for (let j = 0; j < items.length; j++) {
+            if (items[j] && items[j].key === key) { raw = items[j].value; break; }
+          }
+        } else if (items[key]) {
+          // aeltere Firmware: Objekt {key: {value, etag}}
+          raw = items[key].value;
+        }
+
+        if (raw === undefined) continue;
+
+        let f = kvsField(n);
+        applyKvsValue(key, raw, f.c, f.ok, f.set);
+        if (f.s !== undefined && kvsField(n).c !== f.c) todo.push(f.s);
+      }
+      items = null;
     }
 
-    seedKvsDefaultsStep(pairs, 0, callback);
+    res = null;
+    // Geraete-Syncs erst nach diesem Callback - die Firmware haelt die
+    // GetMany-Antwort bis dahin fest.
+    Timer.set(0, false, function () {
+      runKvsSyncs(todo, 0, callback);
+    });
   });
+}
+
+// Name von Key n: 0-2 global, danach je Geraet 4 Keys. null = kein Key mehr.
+function kvsKey(n) {
+  if (n < 3) return ["zdmc_setpoint", "zdmc_dischargeResetMargin", "zdmc_dischargeFixed"][n];
+  n = n - 3;
+  let i = (n - n % 4) / 4;
+  if (i >= CONFIG.devices.length) return null;
+  return "zdmc_dev" + i + "_" + ["dischargeAllowed", "reverse", "minSoc", "inputLimit"][n % 4];
+}
+
+// Zu Key n: aktueller Wert (c), Pruefung (ok), Uebernahme (set) und ggf. der
+// Geraete-Sync fuer runKvsSyncs (s: gerade = minSoc, ungerade = inputLimit).
+function kvsField(n) {
+  if (n === 0) return { c: CONFIG.setpoint,
+    ok: function (v) { return v >= -40 && v <= 40; },
+    set: function (v) { CONFIG.setpoint = v; } };
+  if (n === 1) return { c: CONFIG.dischargeResetMargin,
+    ok: function (v) { return v >= 3 && v <= 79 && Math.round(v) === v; },
+    set: function (v) { CONFIG.dischargeResetMargin = v; } };
+  if (n === 2) return { c: CONFIG.dischargeFixed,
+    ok: function (v) { return v === 0 || v >= CONFIG.dischargeStartupPower; },
+    set: function (v) { CONFIG.dischargeFixed = v; } };
+
+  n = n - 3;
+  let i = (n - n % 4) / 4;
+  let f = n % 4;
+  let dev = CONFIG.devices[i];
+  let bin = function (v) { return v === 0 || v === 1; };
+
+  if (f === 0) return { c: (dev.dischargeAllowed === false ? 0 : 1), ok: bin,
+    set: function (v) { dev.dischargeAllowed = (v !== 0); } };
+  if (f === 1) return { c: (dev.reverse ? 1 : 0), ok: bin,
+    set: function (v) { dev.reverse = (v !== 0); } };
+  if (f === 2) return { c: dev.minSoc, s: i * 2,
+    ok: function (v) { return v >= 10 && v <= dev.maxSoc - SOC_GAP; },
+    set: function (v) { dev.minSoc = v; } };
+  return { c: dev.inputLimit, s: i * 2 + 1,
+    ok: function (v) { return v >= 0 && v <= dev.maxInputPower; },
+    set: function (v) { dev.inputLimit = v; } };
+}
+
+// Liest Key n, uebernimmt ihn bzw. legt ihn an (seed), dann Key n + 1.
+// Nicht lesbare Keys (ausser "fehlt") werden gezaehlt und am Ende gemeldet.
+function kvsStep(n, seed, todo, fails, callback) {
+  let key = kvsKey(n);
+
+  if (key === null) {
+    if (fails > 0) {
+      reportError(state.errors, state.notified, "kvs", "KVS",
+        fails + " Key(s) nicht lesbar - CONFIG dafuer unveraendert");
+    } else {
+      reportSuccess(state.errors, state.notified, "kvs", "KVS");
+    }
+    if (CONFIG.debug) memLog("KVS gelesen");
+    runKvsSyncs(todo, 0, callback);
+    return;
+  }
+
+  safeCall("KVS.Get", { key: key }, function (res, err_code, err_msg) {
+    let f = kvsField(n);
+    let write = false;
+
+    if (err_code === 0 && res) {
+      if (seed && CONFIG.kvsForceReseed) {
+        write = true;
+      } else {
+        applyKvsValue(key, res.value, f.c, f.ok, f.set);
+        if (f.s !== undefined && kvsField(n).c !== f.c) todo.push(f.s);
+      }
+    } else if (err_code === -105) {
+      write = seed;
+    } else {
+      fails = fails + 1;
+      if (CONFIG.debug) print("DEBUG KVS.Get " + key + " fehlgeschlagen (" + err_msg + ")");
+    }
+
+    res = null;
+    let next = function () {
+      kvsStep(n + 1, seed, todo, fails, callback);
+    };
+
+    if (!write) {
+      next();
+      return;
+    }
+
+    safeCall("KVS.Set", { key: key, value: f.c }, function (r, e, m) {
+      if (e !== 0) print("KVS-Seed: " + key + " konnte nicht geschrieben werden (" + m + ")");
+      else print("KVS-Seed: " + key + " = " + f.c + " gesetzt");
+      next();
+    });
+  });
+}
+
+// Fuehrt die Geraete-Syncs nach dem KVS-Lesen nacheinander aus (v5.3.1).
+function runKvsSyncs(todo, k, callback) {
+  if (k >= todo.length) {
+    callback();
+    return;
+  }
+
+  let n = todo[k];
+  let idx = (n - n % 2) / 2;
+  let next = function () {
+    if (CONFIG.debug) memLog("nach KVS-Sync " + CONFIG.devices[idx].label);
+    runKvsSyncs(todo, k + 1, callback);
+  };
+
+  if (n % 2) syncInputLimitDevice(idx, next);
+  else syncMinSocDevice(idx, next);
+}
+
+// v5.3.0: Wert hinter "k": aus dem JSON-Rohtext lesen, OHNE JSON.parse (spart
+// ~2,4 kB Heap je Report). Suche in [a, b), b < 0 = bis Textende. Zahl oder
+// null; mit q String oder null. Zendure liefert kompaktes JSON ("k":Wert) -
+// aendert sich das Format, gibt es null statt eines geratenen Werts.
+function jv(s, k, a, b, q) {
+  let i = s.indexOf('"' + k + '":', a);
+  if (i < 0 || (b >= 0 && i >= b)) return null;
+  i = i + k.length + 3;
+  if (q) {
+    let e = s.indexOf('"', i + 1);
+    return (s.charAt(i) === '"' && e > 0) ? s.slice(i + 1, e) : null;
+  }
+  let j = i;
+  while (j < s.length && "0123456789-+.eE".indexOf(s.charAt(j)) >= 0) j++;
+  let v = Number(s.slice(i, j));
+  return (j === i || v !== v) ? null : v;
+}
+
+// Beginn von "properties", -1 = Report unbrauchbar (leer oder abgeschnitten).
+// Die Seriennummer steht davor; die Werte zwischen "properties" und
+// "packData" (dort stehen sn, heatState usw. je Akkupack noch einmal).
+function propsPos(r) {
+  return (r && r.lastIndexOf("}") >= r.length - 3) ? r.indexOf('"properties"') : -1;
 }
 
 function httpGet(url, callback) {
@@ -920,75 +964,66 @@ function readDevice(index, myCycle, callback) {
         memLog("vor parse " + cfg.label);
       }
 
-      let data;
+      // v5.3.0: Werte direkt aus dem Rohtext lesen (kein JSON.parse)
+      let body = res.body;
+      res = null;
+      let a = propsPos(body);
+      let b = a > 0 ? body.indexOf('"packData"', a) : -1;
+      let soc = a > 0 ? jv(body, "electricLevel", a, b) : null;
 
-      try {
-        data = JSON.parse(res.body);
-      }
-
-      catch (e) {
+      if (soc === null) {
+        body = null;
         reportError(ds.errors, ds.notified, "json", cfg.label, "Fehler beim Parsen der Antwort");
         callback();
         return;
       }
 
-
-      // Roh-Antwort sofort freigeben: der JSON-String (mehrere kB)
-      // muss nicht parallel zum geparsten Objekt im Heap liegen.
-      res = null;
-      if (CONFIG.debug) memLog("nach parse " + cfg.label);
       reportSuccess(ds.errors, ds.notified, "json", cfg.label);
 
-      if (data.sn) {
-        ds.serial = data.sn;
+      let sn = jv(body, "sn", 0, a, 1);
+      if (sn) {
+        ds.serial = sn;
       }
 
       if (!ds.serial) {
+        body = null;
         reportError(ds.errors, ds.notified, "serial", cfg.label, "Keine Seriennummer gefunden");
-        data = null;
         callback();
         return;
       }
 
       reportSuccess(ds.errors, ds.notified, "serial", cfg.label);
 
-      ds.soc = data.properties.electricLevel;
+      ds.soc = soc;
 
-      let newSocLimit = data.properties.socLimit;
+      let newSocLimit = jv(body, "socLimit", a, b);
       if (ds.socLimit !== null && newSocLimit !== ds.socLimit) {
         print(cfg.label + ": socLimit " + ds.socLimit + "->" + newSocLimit +
           (newSocLimit === 1 ? " (Ladesperre)" : newSocLimit === 2 ? " (Entladesperre)" : " (normal)"));
       }
       ds.socLimit = newSocLimit;
 
-      let newSocStatus = (data.properties.socStatus !== undefined) ?
-        data.properties.socStatus : null;
+      let newSocStatus = jv(body, "socStatus", a, b);
       if (ds.socStatus !== null && newSocStatus !== ds.socStatus) {
         print(cfg.label + ": socStatus " + newSocStatus +
           (newSocStatus === 1 ? " (Kalibrierung, aus Verteilung)" : " (Kalibrierung beendet)"));
       }
       ds.socStatus = newSocStatus;
 
-      ds.gridReverse = (data.properties.gridReverse !== undefined) ?
-        data.properties.gridReverse : null;
+      ds.gridReverse = jv(body, "gridReverse", a, b);
 
       // v5.1.9: Offgrid-Leistung nur mit debug fuer die Logzeile merken -
       // ohne debug kein zusaetzliches Feld im Geraetezustand. Geraete ohne
-      // Offgrid-Ausgang liefern kein gridOffPower (undefined -> nicht geloggt).
-      if (CONFIG.debug) ds.offGrid = data.properties.gridOffPower;
+      // Offgrid-Ausgang liefern kein gridOffPower (null -> nicht geloggt).
+      if (CONFIG.debug) ds.offGrid = jv(body, "gridOffPower", a, b);
 
-      let acMode = data.properties.acMode;
+      let acMode = jv(body, "acMode", a, b);
+      ds.zenPower = acMode === 2 ? (jv(body, "outputHomePower", a, b) || 0) :
+        acMode === 1 ? -(jv(body, "gridInputPower", a, b) || 0) : 0;
 
-      if (acMode === 2) {
-        ds.zenPower = data.properties.outputHomePower;
-      } else if (acMode === 1) {
-        ds.zenPower = (data.properties.gridInputPower || 0) * -1;
-      } else {
-        ds.zenPower = 0;
-      }
-
+      body = null; // Rohtext freigeben, BEVOR callback() synchron das naechste Geraet anstoesst
+      if (CONFIG.debug) memLog("nach parse " + cfg.label);
       ds.available = true;
-      data = null; // geparstes Objekt freigeben, BEVOR callback() synchron das naechste Geraet anstoesst
       callback();
     }
   );
@@ -1077,6 +1112,8 @@ function calculate(myCycle) {
     debugStale("calculate", myCycle);
     return;
   }
+
+  if (CONFIG.debug) memLog("nach Netz");
 
   let n = CONFIG.devices.length;
   let sumZen = 0;
@@ -1920,6 +1957,8 @@ function writeDevice(index, plans, myCycle, callback) {
   let smartMode = plan.smartMode;
   let signedPower = planSignedPower(plan);
 
+  if (CONFIG.debug) memLog("vor write " + cfg.label);
+
   httpPost(
 
     "http://" + cfg.ip + "/properties/write",
@@ -1940,6 +1979,8 @@ function writeDevice(index, plans, myCycle, callback) {
         debugStale("writeDevice(" + cfg.label + ") Antwort", myCycle);
         return;
       }
+
+      if (CONFIG.debug) memLog("write-Antwort " + cfg.label);
 
       if (res && res.code === 200) {
         updateRealDirection(ds, acMode, outputLimit, inputLimit);
@@ -2000,11 +2041,22 @@ function writeAllDevices(indices, plans, myCycle, pos, callback) {
 // weil die nicht regelnden Geraete dazwischen abgefragt wurden.
 function update() {
 
+  if (state.kvsBusy) {
+    // Haengt die KVS-Uebernahme (sollte nie passieren), nach der Watchdog-
+    // Zeit trotzdem weiterregeln.
+    if (Date.now() - state.kvsBusySince < CONFIG.watchdog) {
+      if (CONFIG.debug) print("DEBUG Takt ausgesetzt - KVS-Uebernahme laeuft");
+      return;
+    }
+    print("KVS-Uebernahme haengt seit " + Math.round(Date.now() - state.kvsBusySince) + " ms - Regelung laeuft weiter");
+    state.kvsBusy = false;
+  }
+
   if (state.busy) {
     // Vorheriger Zyklus laeuft noch (z.B. langsames Geraet) - Takt verwerfen.
     // Haengt der Zyklus dauerhaft, loest spaeter der Watchdog aus.
     print("Takt uebersprungen - Zyklus " + state.cycleId + " laeuft noch seit " +
-      (Date.now() - state.cycleStartedAt) + " ms");
+      Math.round(Date.now() - state.cycleStartedAt) + " ms");
     state.cySkip = state.cySkip + 1;
     return;
   }
@@ -2038,8 +2090,17 @@ function update() {
       state.devices[i].available = false;
     }
 
+    // v5.3.3: Netz erst lesen, wenn der HTTP-Callback des letzten Geraets
+    // zurueck ist - sonst liegen dessen Antwort und das em-Statusobjekt
+    // (~22 Felder) gleichzeitig im Heap. Verzoegerung nur wenige ms.
     readAllDevices(buildPollOrder(), 0, myCycle, function () {
-    readGridPower(myCycle, afterGrid);
+    Timer.set(0, false, function () {
+      if (myCycle !== state.cycleId) {
+        debugStale("readGridPower", myCycle);
+        return;
+      }
+      readGridPower(myCycle, afterGrid);
+    });
   });
 }
 
@@ -2179,47 +2240,27 @@ function syncSocLimitsDevice(index, callback) {
     return;
   }
 
-  httpGet(
-
-    "http://" + cfg.ip + "/properties/report",
-
-    function (res) {
-      if (!res || res.code !== 200) {
-        print("  " + cfg.label + ": SoC-Sync uebersprungen - Geraet nicht erreichbar");
+  // v5.3.0: Seriennummer und gridReverse liefert der normale Geraete-Abruf
+  // (readDevice) - kein eigener Report-Abruf mehr. Ist das Geraet nicht
+  // erreichbar oder die Antwort unlesbar, meldet readDevice das selbst.
+  readDevice(index, state.cycleId, function () {
+      if (!ds.serial) {
+        print("  " + cfg.label + ": SoC-Sync uebersprungen - keine Seriennummer");
         callback();
         return;
       }
 
-      let data;
-
-      try {
-        data = JSON.parse(res.body);
-      } catch (e) {
-        print("  " + cfg.label + ": SoC-Sync uebersprungen - Fehler beim Parsen der Antwort");
-        callback();
-        return;
-      }
-
-
-      // Roh-Antwort sofort freigeben: der JSON-String (mehrere kB)
-      // muss nicht parallel zum geparsten Objekt im Heap liegen.
-      res = null;
-      if (!data.sn) {
-        print("  " + cfg.label + ": SoC-Sync uebersprungen - keine Seriennummer gefunden");
-        callback();
-        return;
-      }
-
-      ds.serial = data.sn;
       let minSocRaw = Math.round(cfg.minSoc * 10);
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
-      if (data.properties && data.properties.gridReverse === 2) {state.allMaxedLogged = true;}
-	  data = null;
+      if (ds.gridReverse === 2) {state.allMaxedLogged = true;}
 
       let props = { minSoc: minSocRaw, socSet: maxSocRaw };
       if (CONFIG.gridReverseMode === "always1") props.gridReverse = 1;
       if (CONFIG.gridReverseMode === "always2") props.gridReverse = 2;
 
+      // v5.3.2: Erst schreiben, wenn der Report-Callback zurueck ist - sonst
+      // liegen Report-Antwort und POST gleichzeitig im Heap (~1,2 kB Spitze).
+      Timer.set(0, false, function () {
       httpPost(
 
         "http://" + cfg.ip + "/properties/write",
@@ -2247,8 +2288,8 @@ function syncSocLimitsDevice(index, callback) {
           callback();
         }
       );
-    }
-  );
+      });
+  });
 }
 
 function syncSocLimitsAll(index, callback) {
@@ -2258,6 +2299,7 @@ function syncSocLimitsAll(index, callback) {
   }
 
   syncSocLimitsDevice(index, function () {
+    if (CONFIG.debug) memLog("nach SoC-Sync " + CONFIG.devices[index].label);
     syncSocLimitsAll(index + 1, callback);
   });
 }
@@ -2384,6 +2426,7 @@ printBannerLine(function () {
       CONFIG.devices.length + " Geraete).");
   }
   print("--------------------------------");
+  if (CONFIG.debug) memLog("nach Banner");
   print("Synchronisiere SoC-Grenzwerte einmalig... ");
   syncSocLimitsAll(0, function () {
 
@@ -2399,15 +2442,17 @@ printBannerLine(function () {
           bannerLine = null;
           syncSocLimitsDevice = null;
           syncSocLimitsAll = null;
-          seedKvsDefaults = null;
-          seedKvsDefaultsStep = null;
           checkBand = null;
 
           // Nur Funktionen, deren einzige Aufrufstellen durch die jeweilige
           // (nicht KVS-aenderbare) CONFIG-Einstellung nie erreicht werden.
           if (!CONFIG.kvsEnabled) {
             readKvsOverrides = null;
-            kvsItemsToMap = null;
+            kvsKey = null;
+            kvsField = null;
+            kvsStep = null;
+            kvsReadAll = null;
+            runKvsSyncs = null;
             applyKvsValue = null;
             syncMinSocDevice = null;
             syncInputLimitDevice = null;
@@ -2426,6 +2471,7 @@ printBannerLine(function () {
         if (CONFIG.debug) memLog("nach Freigabe Startcode");
       });
 
+      if (CONFIG.debug) memLog("vor Regelbetrieb");
       print("Starte Regelbetrieb.");
       print("--------------------------------");
 
@@ -2440,29 +2486,23 @@ printBannerLine(function () {
 
     } else {
 
-      print("Pruefe KVS auf fehlende Werte (einmalig)...");
-
-      seedKvsDefaults(function () {
-
-        print("KVS-Seed abgeschlossen.");
-        print("Lade initiale KVS-Overrides...");
+      print("Lade KVS-Overrides (fehlende Keys werden angelegt)...");
 
         readKvsOverrides(function () {
 
           // StatusHandler nur registrieren, wenn KVS aktiv ist
           Shelly.addStatusHandler(function (e) {
             if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
-              print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ") - Lade Overrides...");
-              readKvsOverrides(function () {
-                print("KVS-Overrides aktualisiert.");
-              });
+              print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ")" +
+                (state.kvsBusy || state.busy ? " - vorgemerkt" : " - Lade Overrides..."));
+              state.kvsPending = true;
+              kvsTrigger();
             }
           });
 
           print("KVS Event-Listener aktiv.");
           startController();
-        });
-      });
+        }, true);
     }
   });
 });

@@ -136,20 +136,24 @@ def put_code(ip, sid, code, chunk_size, dry_run):
     if dry_run:
         print("  [DRY-RUN] nichts uebertragen")
         return
-    for n, chunk in enumerate(chunks):
-        for attempt in range(3):
-            try:
+    # Bei einem Fehler die GANZE Uebertragung neu beginnen (Block 1 ohne
+    # append ueberschreibt den Code). Einen einzelnen Block zu wiederholen
+    # waere unsicher: Bricht die Verbindung erst nach dem Speichern ab
+    # (z. B. ConnectionResetError), stuende der Block doppelt im Code.
+    for attempt in range(3):
+        try:
+            for n, chunk in enumerate(chunks):
                 rpc(ip, "Script.PutCode",
                     {"id": sid, "code": chunk, "append": n > 0})
-                break
-            except RpcError as err:
-                if attempt == 2:
-                    raise
-                print("  Block %d/%d fehlgeschlagen (%s), neuer Versuch..."
-                      % (n + 1, len(chunks), err))
-                time.sleep(1)
-        sys.stdout.write("\r  Block %d/%d" % (n + 1, len(chunks)))
-        sys.stdout.flush()
+                sys.stdout.write("\r  Block %d/%d" % (n + 1, len(chunks)))
+                sys.stdout.flush()
+            break
+        except (RpcError, OSError) as err:
+            if attempt == 2:
+                raise
+            print("\n  Block %d/%d fehlgeschlagen (%s) - Uebertragung beginnt neu..."
+                  % (n + 1, len(chunks), err))
+            time.sleep(2)
     print("\r  %d/%d Bloecke uebertragen." % (len(chunks), len(chunks)))
 
 

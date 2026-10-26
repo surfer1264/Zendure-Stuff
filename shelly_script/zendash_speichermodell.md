@@ -120,9 +120,62 @@ Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Model
 
 **Noch offen:** Messpunkte mit 5 oder mehr Akkus an einem Gerät und mit 4 Geräten.
 
-## Hinweis Regler-Script
+## Regler-Script (Controller)
 
-Das Regler-Script zeigt dasselbe Muster mit eigener Grenze von ~25,2 kB:
+Stand: 26.10.2026 · gilt für das Regler-Script `zerooutput_multi_kvs` **v5.3.5** mit **Debug aus** · 3 Messpunkte, Rest abgeleitet
+
+Das Regler-Script läuft auf einem eigenen Shelly mit eigener Grenze von ~25,2 kB. Es folgt demselben Muster: Die Geräte werden nacheinander abgefragt, und der größte Report setzt die Spitze. Seit 5.3.0 zerlegt der Regler den Report nicht mehr mit `JSON.parse`. Die Akkus kosten deshalb nur noch über die Größe des Reports Speicher, nicht über geparste Objekte.
+
+### Formel
+
+Gleiche Eingaben wie oben: **G** = Anzahl SolarFlow-Geräte, **A** = Akkus am Gerät mit den meisten Akkus (bei Pro-Modellen mit integriertem Akku).
+
+```
+Spitze    ≈ 15,3 + 1,55 × G + 0,5 × A    [kB]
+Reserve   = 25,2 − Spitze                [kB]
+Grundlast ≈ 12,3 + 1,55 × G              [kB]   (optional)
+```
+
+Bewertung wie oben: ✅ Reserve ≥ 3 kB · ⚠️ 1,5–3 kB · ❌ < 1,5 kB
+
+**Herleitung:**
+
+- **Report im Speicher:** Ein Report von B Byte belegt beim Empfang kurzzeitig etwa 2,9 × B (Antworttext, Header, Antwortobjekt und Zuschlag beim Empfang; aus den Debug-Messpunkten von 5.3.3).
+- **Größe eines Reports:** etwa 0,87 kB (SF800) bzw. 1,02 kB (SF2400 Pro) plus 0,17 kB je Akku in `packData`.
+- **Akku-Zuschlag:** 0,5 kB je Akku = 2,9 × 0,17 kB. Gerechnet ist mit dem größeren SF2400-Pro-Report, das Modell schätzt also eher zu hoch.
+- **Kosten je Gerät:** Die 1,55 kB stammen aus dem Vergleich von 2 und 3 eingetragenen Geräten.
+
+### Tabelle
+
+| Geräte | A = 1 | A = 2 | A = 4 | A = 6 |
+|---|---|---|---|---|
+| 1 | 17,4 kB · 7,8 ✅ | 17,9 · 7,3 ✅ | 18,9 · 6,3 ✅ | 19,9 · 5,3 ✅ |
+| 2 | **18,9 kB · 6,3 ✅** (gemessen) | 19,4 · 5,8 ✅ | 20,4 · 4,8 ✅ | 21,4 · 3,8 ✅ |
+| 3 | **20,4 kB · 4,8 ✅** (gemessen) | 21,0 · 4,2 ✅ | 22,0 · 3,2 ✅ | 23,0 · 2,2 ⚠️ |
+| 4 | 22,0 kB · 3,2 ✅ | 22,5 · 2,7 ⚠️ | 23,5 · 1,7 ⚠️ | 24,5 · 0,7 ❌ |
+
+Angaben: Spitze · Reserve (kB) · Bewertung.
+
+### Messpunkte
+
+| Anlage | Geräte | Grundlast | `mem_peak` | Modell |
+|---|---|---|---|---|
+| A | SF2400 Pro (1) + SF800 (2) | ~15 300 | 18 844 – 19 068 | 18,9 kB |
+| A | wie oben + drittes Gerät nur eingetragen (`dryRun`, nicht erreichbar) | ~16 400 | 20 440 | 20,4 kB |
+| A | SF2400 Pro (1) + SF800 (2), manuelles Laden gestartet und beendet | ~15 050 | 19 474 | 18,9 kB + KVS-Übernahme |
+
+Beim manuellen Laden schreibt das Dashboard drei KVS-Keys. Der Regler übernimmt sie mit einem `KVS.GetMany` zwischen zwei Regelzyklen. Das hob `mem_peak` um etwa 0,45 kB (19 026 → 19 474). Mit 5.3.3, als die Übernahme noch parallel zum Zyklus lief, waren es +2,4 kB bis 21 126.
+
+Das dritte Gerät im zweiten Messpunkt liefert keinen Report. Es zeigt deshalb nur die Kosten eines weiteren Geräts, nicht die eines weiteren Reports. Für die Spitze ist das unerheblich, weil der größte Report gleich bleibt.
+
+### Belastbarkeit
+
+- **Kosten je Gerät (1,55 kB):** aus nur zwei Messpunkten an einer Anlage.
+- **Akku-Zuschlag (0,5 kB):** abgeleitet aus der Report-Größe, für den Regler nicht gemessen.
+- **Noch offen:** Messpunkte mit mehr Akkus an einem Gerät und mit 3 bis 4 echten Geräten.
+- **Weitere Spitze beim Übernehmen von KVS-Änderungen:** Pro Key kostet sie etwa 0,21 kB, und es gibt 3 + 4 × G Keys. Bei 4 Geräten sind das etwa 4 kB über der Grundlast, ungefähr so viel wie ein Report. Seit 5.3.5 laufen beide nie gleichzeitig, weil KVS-Änderungen nur zwischen zwei Regelzyklen übernommen werden.
+
+### Frühere Werte (vor 5.3.0)
 
 | Geräte | Regler `mem_peak` |
 |---|---|
@@ -130,7 +183,9 @@ Das Regler-Script zeigt dasselbe Muster mit eigener Grenze von ~25,2 kB:
 | 2 | 19 642 |
 | 3 | 22 372 |
 
-Für 4 Geräte müssten **beide** Scripts sparsamer werden.
+Diese Werte wurden ohne Versionsangabe erfasst, vermutlich mit 5.2.x. Mit 5.3.5 liegt die Spitze bei 2 Geräten etwa 0,6–0,8 kB niedriger. Die 3-Geräte-Werte sind nicht direkt vergleichbar: Dort waren drei echte Geräte angeschlossen, im Test zu 5.3.5 nur ein nicht erreichbares drittes.
+
+**Fazit für 4 Geräte:** Der Regler kommt ab 5.3.5 mit 4 Geräten und wenigen Akkus je Gerät aus (bis A = 1 ✅, bis A = 4 ⚠️). Begrenzend bleibt das zenDash-Script (oben: 4 Geräte ❌).
 
 ## Änderungen, die den Speicher betreffen
 

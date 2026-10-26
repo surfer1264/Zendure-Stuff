@@ -1304,7 +1304,7 @@ gemeinsamen Zähler-Objekt lagen, sind die Zähler hier in **global** und
 | --- | --- | --- |
 | Global (`state.errors`) | `em` | Netzmesswert nicht verfügbar (`local`: `em:0` fehlt; `remote`: Pro 3EM nicht erreichbar/Antwort ungültig; `http_json`: Meter nicht erreichbar, Antwort nicht als JSON parsbar, oder konfiguriertes `gridSourceField` fehlt) |
 | Global (`state.errors`) | `watchdog` | Zyklus durch Watchdog abgebrochen (siehe 8.3) |
-| Global (`state.errors`) | `kvs` | `KVS.GetMany` fehlgeschlagen (nur relevant bei `kvsEnabled: true`, siehe Kapitel 13) |
+| Global (`state.errors`) | `kvs` | Beim Start: mindestens ein KVS-Key nicht lesbar (`KVS.Get` mit einem anderen Fehler als „Key fehlt“). Nach einer Änderung von außen: `KVS.GetMany` fehlgeschlagen. Nur relevant bei `kvsEnabled: true`, siehe Kapitel 13 |
 | Pro Gerät (`ds.errors`) | `connect` | Gerät nicht erreichbar (HTTP-Fehler) |
 | Pro Gerät (`ds.errors`) | `json` | Antwort des Geräts nicht als JSON parsbar |
 | Pro Gerät (`ds.errors`) | `serial` | Keine Seriennummer in der Geräte-Antwort |
@@ -1414,7 +1414,9 @@ mode: single
 `interval`-Timer) startet, und schreibt für **jedes** konfigurierte Gerät
 (außer `dryRun`-Einträge, die dabei nur geloggt werden) die konfigurierten
 `minSoc`/`maxSoc`-Werte direkt in die Firmware-eigenen SoC-Grenzwert-
-Properties des Zendure-Geräts:
+Properties des Zendure-Geräts. Die dafür nötige Seriennummer holt seit 5.3.0
+der normale Geräte-Abruf (`readDevice()`), vorher gab es dafür einen
+eigenen Report-Abruf:
 
 - `minSoc` (Script) → `minSoc`-Property (Zendure, ×10, z. B. 15 % → `150`)
 - `maxSoc` (Script) → `socSet`-Property (Zendure, ×10, z. B. 100 % →
@@ -1523,15 +1525,17 @@ Reihenfolge beim Start:
 2. Ist `signal.enabled` aktiv, wird eine Start-Nachricht verschickt
    ("... gestartet (N Geräte).").
 3. `syncSocLimitsAll()` läuft einmalig über alle Geräte (siehe 8.6).
-4. Nur bei `kvsEnabled: true`: KVS-Seeding, initiales Einlesen der Overrides
-   und Registrierung des Status-Handlers (siehe Kapitel 13).
+4. Nur bei `kvsEnabled: true`: Einlesen der Overrides, fehlende Keys werden
+   dabei angelegt (seit 5.3.2 ein gemeinsamer Durchlauf), danach
+   Registrierung des Status-Handlers (siehe Kapitel 13).
 5. Erst danach startet der reguläre `interval`-Timer und damit der
    eigentliche Regelbetrieb.
 6. **Freigabe des Einmal-Codes (seit 4.3.0):** Unmittelbar nach dem Start
    werden – verzögert über `Timer.set(0, ...)`, damit keine dieser Funktionen
    mehr auf dem Aufruf-Stack liegt – die nur beim Start benötigten Funktionen
    (`printBannerLine`, `bannerLine`, `syncSocLimitsDevice`,
-   `syncSocLimitsAll`, `seedKvsDefaults`, `seedKvsDefaultsStep`, `checkBand`)
+   `syncSocLimitsAll`, `checkBand`; bis 5.3.1 zusätzlich `seedKvsDefaults` und
+   `seedKvsDefaultsStep`)
    auf `null` gesetzt und damit zur Garbage Collection freigegeben. Der
    Vorgang läuft in einem `try/catch` – erlaubt die mJS-Laufzeit das
    Überschreiben nicht, wird es stillschweigend ignoriert und das Script
@@ -1543,7 +1547,7 @@ Reihenfolge beim Start:
 
 | Bedingung | zusätzlich freigegeben |
 | --- | --- |
-| `kvsEnabled: false` | `readKvsOverrides`, `kvsItemsToMap`, `applyKvsValue`, `syncMinSocDevice`, `syncInputLimitDevice` |
+| `kvsEnabled: false` | `readKvsOverrides`, `kvsKey`, `kvsField`, `kvsStep`, `runKvsSyncs`, `applyKvsValue`, `syncMinSocDevice`, `syncInputLimitDevice` |
 | Signal aus oder `typ` ≠ `"WEBHOOK"` | `sendWebhookMessage` |
 | Signal aus oder `typ` = `"WEBHOOK"` | `simpleEncode` |
 | `gridSource: "local"` | `handleGenericGridResponse` |
@@ -2097,7 +2101,12 @@ flowchart TD
   Laden liegen Quelltext und Bytecode kurzzeitig gleichzeitig im Heap, was
   den Speicher-Peak der Startphase bestimmt. Seit 4.3.0 gibt das Script
   zusätzlich die Roh-Antworten (`res = null` nach `JSON.parse`) und den
-  Einmal-Code der Startphase aktiv wieder frei (siehe Kapitel 8.7).
+  Einmal-Code der Startphase aktiv wieder frei (siehe Kapitel 8.7). Seit
+  5.3.0 wird die Geräteantwort (`/properties/report`) gar nicht mehr mit
+  `JSON.parse` zerlegt: Die benötigten Werte werden direkt aus dem Text
+  gelesen (Funktion `jv`, Prinzip wie in zendash_watch), das spart pro
+  Abfrage rund 2,4 kB Heap. Die Start-Synchronisierung (Kapitel 8.6) nutzt
+  dafür den normalen Geräte-Abruf und hat keinen eigenen mehr.
 - Kein Echtzeitverhalten garantiert – WLAN-Aussetzer, Netzwerklatenz und
   reale Rampzeiten der Wechselrichter können zu spürbaren Verzögerungen
   führen.
@@ -2376,24 +2385,65 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   HTTP-Timeout (4 s, Kapitel 8.3), also ein Netzwerk-Hänger. Der Controller
   führt dafür nur fünf Zahlen mit (kein Puffer, kein zusätzlicher Timer).
 
+**So liest du die Stundenzeile `Zyklen 1h`**
+
+Jede Zeile fasst die letzte Stunde zusammen. Beispiel aus einem echten Log
+(zwei Geräte):
+
+```
+Zyklen 1h: n 288 | avg 2746 ms | max 5451 ms | uebersprungen 23 | interval 3500 ms
+```
+
+| Feld | Bedeutung | im Beispiel |
+| --- | --- | --- |
+| `n` | Zyklen **mit Geräteabfrage** in dieser Stunde. Sparmodus-Zyklen, in denen nur das Netz gelesen wird, zählen nicht mit. | 288 |
+| `avg` | Mittlere Dauer eines solchen Zyklus, vom Start bis alle Writes fertig sind | 2,7 s |
+| `max` | Längster Zyklus der Stunde | 5,5 s |
+| `uebersprungen` | Takte, die verworfen wurden, weil der vorige Zyklus noch lief (`Takt uebersprungen`) | 23 |
+| `interval` | Eingestellter Takt (`interval`) | 3,5 s |
+
+So bewertest du die Zeile:
+
+- **`max` deutlich unter `interval` und `uebersprungen 0`:** Alles in
+  Ordnung. Beispiel: `n 231 | avg 1565 ms | max 3116 ms | uebersprungen 0 | interval 4000 ms`.
+- **Einzelnes `max` über `interval`, `uebersprungen` 1 oder 2:** Meist ein
+  langsames Gerät oder ein HTTP-Timeout, unkritisch. Beispiel:
+  `n 181 | avg 1514 ms | max 5504 ms | uebersprungen 1 | interval 4000 ms`.
+- **`uebersprungen` jede Stunde deutlich größer 0** (wie im Beispiel oben mit
+  23): Der Takt ist zu knapp für die tatsächliche Zyklusdauer. Der Regler
+  reagiert im Schnitt seltener, als `interval` verspricht. `interval`
+  erhöhen (Kapitel 4b). Vorher prüfen, ob `debug: true` an ist: Die
+  zusätzlichen Logzeilen verlängern jeden Zyklus.
+
+Zum Verhältnis von `n` und Sparmodus: Bei `interval 4000 ms` gibt es 900
+Takte pro Stunde. `n 181` heißt, dass nur in etwa jedem fünften Takt die
+Geräte abgefragt wurden. Die übrigen waren Sparmodus-Takte, in denen sich
+nichts geändert hat. Ein kleines `n` ist also kein Fehler.
+
+Nach einem Neustart des Scripts beginnt das Stundenfenster neu. Die Zeile
+fehlt dann für die angefangene Stunde.
+
 **Start- und Benachrichtigungs-Meldungen**
 
 - `Sende Webhook-Benachrichtigung...` / `Webhook-Benachrichtigung erfolgreich gesendet.` — Versand externer Benachrichtigungen (nur bei `signal.enabled: true`). Analog `Sende Signal-Nachricht...` bei `typ: "SIGNAL"`/`"WHATSAPP"`.
 - `Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.` — bekannter Sonderfall; der Versand ist meist trotzdem erfolgreich.
 - `Synchronisiere SoC-Grenzwerte einmalig...` / `SoC-Sync abgeschlossen.` — Klammern um den einmaligen Start-Sync.
 - `<Geraet>: SoC-Grenzwerte synchronisiert (minSoc X%, maxSoc Y%)` — einmalig beim Start, Übertragung der konfigurierten SOC-Grenzen an das Gerät. Bei `gridReverseMode: "always1"`/`"always2"` ergänzt um `, gridReverse=N`.
-- `<Geraet>: SoC-Sync uebersprungen - ...` — SOC-Grenzwert-Synchronisierung beim Start fehlgeschlagen (Gerät nicht erreichbar, Parse-Fehler oder fehlende Seriennummer).
+- `<Geraet>: SoC-Sync uebersprungen - keine Seriennummer` (seit 5.3.0) — SOC-Grenzwert-Synchronisierung beim Start nicht möglich, weil der Geräte-Abruf keine Seriennummer lieferte. Die Ursache steht in der FEHLER-Zeile direkt davor (`Geraet nicht erreichbar` oder `Fehler beim Parsen der Antwort`). Bis 5.2.6 lauteten die Meldungen `... - Geraet nicht erreichbar`, `... - Fehler beim Parsen der Antwort` bzw. `... - keine Seriennummer gefunden`.
 - `<Geraet>: SoC-Sync fehlgeschlagen beim Schreiben` — das Gerät war erreichbar, hat den Schreibvorgang aber nicht mit `200` quittiert.
 - `Starte Regelbetrieb.` — ab hier läuft der `interval`-Timer.
 
 **KVS-Meldungen** (nur bei `kvsEnabled: true`, siehe Kapitel 13)
 
-- `KVS-Funktion ist deaktiviert - KVS wird ignoriert.` bzw. `KVS-Seed uebersprungen - kvsEnabled: false` — bei `kvsEnabled: false`.
-- `Pruefe KVS auf fehlende Werte (einmalig)...` / `KVS-Seed: schreibe N fehlende(n) Default-Wert(e)...` / `KVS-Seed abgeschlossen.`
-- `KVS-Seed: kvsForceReseed aktiv - schreibe N Wert(e) aus CONFIG (bestehende Live-Overrides werden ueberschrieben!)`
+- `KVS-Funktion ist deaktiviert - KVS wird ignoriert.` — bei `kvsEnabled: false`.
+- `Lade KVS-Overrides (fehlende Keys werden angelegt)...` / `KVS Event-Listener aktiv.` (seit 5.3.2; vorher `Pruefe KVS auf fehlende Werte (einmalig)...`, `KVS-Seed abgeschlossen.` und `Lade initiale KVS-Overrides...`)
+- `KVS-Seed: <key> = <wert> gesetzt` — ein fehlender Key wurde beim Start mit dem CONFIG-Wert angelegt (seit 5.3.2 je Key, auch ohne `debug`).
+- `KVS-Seed: kvsForceReseed aktiv - schreibe alle Werte aus CONFIG (bestehende Live-Overrides werden ueberschrieben!)`
 - `KVS-Seed: <key> konnte nicht geschrieben werden (...)`
-- `Lade initiale KVS-Overrides...` / `KVS Event-Listener aktiv.`
-- `KVS-Aenderung erkannt (Rev: N) - Lade Overrides...` / `KVS-Overrides aktualisiert.`
+- `FEHLER (KVS/kvs): N Key(s) nicht lesbar - CONFIG dafuer unveraendert` — für diese Keys bleibt der bisherige Wert; sie werden auch nicht angelegt.
+- `KVS-Aenderung erkannt (Rev: N) - Lade Overrides...` / `KVS-Overrides aktualisiert.` — bzw. `KVS-Aenderung erkannt (Rev: N) - vorgemerkt` (seit 5.3.4), wenn gerade ein Regelzyklus oder eine andere KVS-Übernahme läuft. Übernommen wird dann direkt danach.
+- `DEBUG Takt ausgesetzt - KVS-Uebernahme laeuft` (seit 5.3.4, nur mit `debug`) — ein Regeltakt fiel in die KVS-Übernahme und wurde ausgelassen. Zählt nicht als `uebersprungen` in der Stundenzeile.
+- `KVS-Uebernahme haengt seit X ms - Regelung laeuft weiter` (seit 5.3.4) — Sicherung: Nach der Watchdog-Zeit regelt das Script weiter, auch wenn die KVS-Übernahme nicht fertig wurde.
 - `KVS <key>: Wert uebernommen (alt -> neu)` (seit 5.2.5 immer, vorher nur mit `debug`) — welcher Key mit welchem Wert übernommen wurde. Erscheint auch beim Start für jeden KVS-Wert, der vom CONFIG-Block abweicht.
 - `<Geraet>: minSoc auf Geraet synchronisiert (X%)` bzw. `<Geraet>: minSoc-Sync fehlgeschlagen beim Schreiben` — Folge eines `zdmc_devN_minSoc`-Overrides (Kapitel 13.4).
 - `<Geraet>: manuelles Laden erzwungen (acMode 1), inputLimit gesetzt: X W` bzw. `<Geraet>: inputLimit-Sync fehlgeschlagen` — Folge eines `zdmc_devN_inputLimit`-Overrides (Kapitel 13.4).
@@ -2509,13 +2559,29 @@ laufenden Betriebs schreibt das Script **nie** von sich aus in den KVS.
 Jeder weitere Schreibvorgang kommt ausschließlich von außen (dein
 curl-Aufruf, deine Home-Assistant-Automation).
 
-**Lesen (`KVS.GetMany`):** Das Script liest **nicht** in jedem
+**Lesen (`KVS.Get` / `KVS.GetMany`):** Das Script liest **nicht** in jedem
 Regelzyklus neu. Es liest nur:
 
-- zweimal beim Start (einmal für das Seeding, einmal für die Overrides), und
+- einmal beim Start (Overrides lesen und fehlende Keys anlegen in einem
+  Durchlauf), und
 - danach **ereignisgesteuert**: Der Shelly meldet über einen
   `Shelly.addStatusHandler` jede Änderung am KVS (`sys.kvs_rev`). Erst dann
-  liest das Script per `KVS.GetMany` neu ein.
+  liest das Script die Keys neu ein.
+
+Wie gelesen wird, hängt vom Zeitpunkt ab:
+
+- **Beim Start** liest das Script jeden Key einzeln per `KVS.Get`,
+  nacheinander (seit 5.3.2; bei zwei Geräten 11 kurze Abfragen). Die
+  `KVS.GetMany`-Antwort mit allen Keys und etags belegt etwa 2,3 kB auf
+  einmal. Beim Start liegt der Grundstand noch höher als im Betrieb, das war
+  bis 5.3.1 die höchste Speicherspitze.
+- **Nach einer Änderung von außen** liest das Script alles mit einem
+  einzigen `KVS.GetMany` (seit 5.3.5). Das passiert nur zwischen zwei
+  Regelzyklen (seit 5.3.4), wenn kein Report im Speicher liegt, und bleibt
+  so unter der Spitze des Regelzyklus. Elf Einzelabfragen hätten den Shelly
+  genau in dem Moment belastet, in dem das Dashboard dort schreibt: Beim
+  manuellen Laden lief das `KVS.Set` des Watch-Scripts dadurch in Timeouts
+  (5.3.2 bis 5.3.4).
 
 Es wird also **kein Polling** betrieben – wie oft gelesen wird, hängt
 allein davon ab, wie oft sich wirklich ein Wert ändert, nicht vom
@@ -2529,13 +2595,13 @@ Maßgeblich sind die beiden CONFIG-Schalter `kvsEnabled` und
 
 | Zeitpunkt | `kvsEnabled: false` | `kvsEnabled: true`, `kvsForceReseed: false` (Standard) | `kvsEnabled: true`, `kvsForceReseed: true` |
 | --- | --- | --- | --- |
-| Start, vor dem Regelbetrieb | **kein KVS-Zugriff**, weder lesend noch schreibend. Log: `KVS-Seed uebersprungen - kvsEnabled: false` / `KVS-Funktion ist deaktiviert - KVS wird ignoriert.` | 1× `KVS.GetMany`, danach `KVS.Set` **nur für fehlende Keys** – bestehende Live-Overrides bleiben erhalten | 1× `KVS.GetMany`, danach `KVS.Set` für **alle** Keys – bestehende Live-Overrides werden überschrieben |
+| Start, vor dem Regelbetrieb | **kein KVS-Zugriff**, weder lesend noch schreibend. Log: `KVS-Funktion ist deaktiviert - KVS wird ignoriert.` | je Key 1× `KVS.Get`, `KVS.Set` **nur für fehlende Keys** – bestehende Live-Overrides bleiben erhalten | je Key 1× `KVS.Get`, danach `KVS.Set` für **alle** Keys – bestehende Live-Overrides werden überschrieben |
 | Laufender Regelbetrieb | – | **nie** | **nie** |
-| Bei KVS-Änderung von außen | – | nur **Lesen** (`KVS.GetMany`) | nur **Lesen** (`KVS.GetMany`) |
+| Bei KVS-Änderung von außen | – | nur **Lesen** (1× `KVS.GetMany`) | nur **Lesen** (1× `KVS.GetMany`) |
 | Bei Skript-Neustart | – | erneut nur fehlende Keys (im Normalfall: keine) | erneut **alle** Keys |
 
-Geschrieben werden immer genau diese Keys – insgesamt `2 + 4 × Geräteanzahl`
-(bei zwei Geräten also 10):
+Geschrieben werden immer genau diese Keys – insgesamt `3 + 4 × Geräteanzahl`
+(bei zwei Geräten also 11):
 
 | Key | geschriebener Wert | Wertebereich der Quelle |
 | --- | --- | --- |
@@ -2552,39 +2618,43 @@ Geschrieben werden immer genau diese Keys – insgesamt `2 + 4 × Geräteanzahl`
 > wörtlich im CONFIG-Block steht. Beispiel: `setpoint: -60` im CONFIG landet
 > als `-40` im KVS.
 
-> ℹ️ Schlägt das einleitende `KVS.GetMany` fehl, wird das Seeding komplett
-> übersprungen (`KVS-Seed uebersprungen - KVS.GetMany nicht verfuegbar`) –
-> es wird dann **kein einziger** Key geschrieben. Das anschließende Einlesen
-> der Overrides läuft trotzdem.
+> ℹ️ Angelegt wird ein Key nur, wenn `KVS.Get` ausdrücklich „Key fehlt“
+> meldet (Fehlercode `-105`, „not found“). Bei jedem anderen Lesefehler bleibt
+> der Key unangetastet. So überschreibt ein kurzzeitig nicht lesbarer KVS
+> keinen bestehenden Live-Override. Am Ende steht dann
+> `FEHLER (KVS/kvs): N Key(s) nicht lesbar - CONFIG dafuer unveraendert`.
 
-Nach dem Start sind `seedKvsDefaults()` und `seedKvsDefaultsStep()` auf
-`null` gesetzt und damit freigegeben (Kapitel 8.7, Schritt 6) – ein
-nachträgliches Seeding zur Laufzeit ist konstruktiv ausgeschlossen.
+Angelegt wird nur beim Start. Das Nachlesen nach einer KVS-Änderung von
+außen schreibt nie (bis 5.3.1 war dafür eine eigene Seed-Funktion
+zuständig, die nach dem Start freigegeben wurde).
 
 #### 13.3.2) Wann liest das Script?
 
 | Auslöser | `kvsEnabled: false` | `kvsEnabled: true` |
 | --- | --- | --- |
-| Seeding beim Start | – | 1× `KVS.GetMany` |
-| Initiales Einlesen beim Start | – | 1× `KVS.GetMany` (`Lade initiale KVS-Overrides...`) |
-| Änderung an einem beliebigen KVS-Key | – | 1× `KVS.GetMany` je Änderung, ausgelöst über `sys.kvs_rev` |
+| Einlesen beim Start (inkl. Anlegen fehlender Keys) | – | 1× `KVS.Get` je Key (`Lade KVS-Overrides (fehlende Keys werden angelegt)...`) |
+| Änderung an einem beliebigen KVS-Key | – | 1× `KVS.GetMany`, ausgelöst über `sys.kvs_rev`; mehrere Änderungen kurz nacheinander ergeben höchstens einen weiteren Durchlauf |
 | Regelzyklus | – | **kein** Zugriff |
 
 Der Status-Handler wird nur bei `kvsEnabled: true` überhaupt registriert
 (`KVS Event-Listener aktiv.`).
 
-> ⚠️ **Der Status-Handler läuft asynchron zum Regelzyklus.** Startet zwischen
-> dem `KVS.GetMany` und dessen Antwort ein neuer Regelzyklus, verwirft das
-> Skript die Antwort als veraltet (`cycleId`-Prüfung, mit `debug: true`
-> sichtbar als `DEBUG readKvsOverrides -> verworfen`). Der Override wird dann
-> **stillschweigend nicht übernommen** und erst beim nächsten KVS-Ereignis
-> nachgezogen. Bleibt eine Änderung wirkungslos: denselben Wert noch einmal
-> setzen.
-
-> ⚠️ Die von `minSoc`/`inputLimit` ausgelösten Geräte-Schreibvorgänge
-> (siehe 13.4) laufen ebenfalls außerhalb des Zyklus und können mit den
-> POSTs aus `writeAllDevices()` zusammentreffen. Deshalb: KVS-Werte
-> bedienen, nicht takten.
+> ℹ️ **KVS-Übernahme zwischen zwei Regelzyklen (seit 5.3.4).** Eine
+> KVS-Änderung wird nur vorgemerkt. Gelesen wird, sobald kein Regelzyklus
+> läuft, also sofort oder direkt nach dem Ende des laufenden Zyklus. Während
+> der Übernahme (Lesen aller Keys und gegebenenfalls Schreiben von
+> `minSoc`/`inputLimit` aufs Gerät, siehe 13.4) setzt der Regeltakt aus. Es
+> läuft nie mehr als eine Übernahme gleichzeitig. Kommen mehrere Änderungen
+> kurz nacheinander, etwa die drei Keys beim manuellen Laden aus dem
+> Dashboard, folgt höchstens ein weiterer Durchlauf.
+>
+> Grund: Bis 5.3.3 startete jedes Ereignis sofort einen eigenen
+> Lesedurchlauf, parallel zum Regelzyklus. Beim manuellen Laden liefen so
+> drei Durchläufe plus der Geräte-Write gleichzeitig mit einem Report-Abruf.
+> Die Speicherspitze stieg dabei von etwa 18,8 kB auf über 21 kB.
+>
+> Der neue Wert gilt ab dem nächsten Zyklus, spätestens etwa einen Zyklus
+> nach der Änderung. Trotzdem: KVS-Werte bedienen, nicht takten.
 
 ### 13.4) Live-überschreibbare Werte
 
@@ -2701,7 +2771,8 @@ curl "http://<shelly-ip>/rpc/KVS.Get?key=zdmc_setpoint"
 
 Der neue Wert wird **sofort** übernommen: Der Shelly meldet die KVS-Änderung
 über den Status-Handler, das Script liest daraufhin neu ein – unabhängig vom
-Regelintervall. Im Shelly-Log erscheint dazu
+Regelintervall. Läuft gerade ein Regelzyklus, wartet das Einlesen bis zu
+dessen Ende (seit 5.3.4, siehe 13.3.2). Im Shelly-Log erscheint dazu
 `KVS-Aenderung erkannt (Rev: N) - Lade Overrides...`.
 
 ### 13.6) Nutzung über Home Assistant

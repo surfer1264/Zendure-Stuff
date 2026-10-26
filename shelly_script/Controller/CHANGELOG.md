@@ -1,5 +1,35 @@
 # Changelog Controller
 
+## v5.3.5
+
+Fasst die Zwischenstände 5.3.1 bis 5.3.4 zusammen. **Ziel:** weniger Speicherspitze und ein ruhigerer Ablauf, wenn KVS-Werte von außen geändert werden, etwa beim manuellen Laden aus dem Dashboard.
+
+- **Speicherspitze gesenkt:** Abläufe, die gleichzeitig größere Antworten im Speicher hielten, laufen jetzt nacheinander.
+  - Die SoC-Grenzen werden beim Start erst geschrieben, wenn die Antwort des Geräts wieder freigegeben ist.
+  - Die Netzmessung läuft erst nach der Antwort des letzten Geräts.
+  - Die KVS-Werte werden beim Start einzeln gelesen; fehlende Keys werden dabei angelegt, aber nur, wenn der Shelly ausdrücklich „Key fehlt“ meldet.
+  - Ergebnis bei zwei Geräten: `peak` etwa 18,8–19,1 kB statt 20,5 kB (5.3.0), auch beim manuellen Laden (vorher über 21 kB).
+- **KVS-Änderungen von außen nur zwischen zwei Regelzyklen:** Mehrere Änderungen kurz hintereinander werden zusammengefasst und mit einem `KVS.GetMany` übernommen. Während der Übernahme setzt der Regeltakt kurz aus. Vorher liefen beim manuellen Laden mehrere Lesedurchläufe parallel zum Zyklus. Der Shelly antwortete dann so langsam, dass das Dashboard „konnte nicht beendet werden“ meldete und ein Zyklus bis zum Watchdog hängen blieb.
+- **Geräte-Writes nach einer KVS-Änderung** (`minSoc`, `inputLimit`) gehen nacheinander raus statt gleichzeitig.
+- **Log:**
+  - Laufzeiten in ganzen Millisekunden.
+  - Neue Meldung `KVS-Aenderung erkannt (Rev: N) - vorgemerkt`.
+  - Mit `debug` Speicher-Messpunkte (`DEBUG MEM …`) beim Start, rund um die Netzmessung und die Writes.
+- **Regelverhalten unverändert:** In der Simulation sind die Stellbefehle identisch mit 5.2.6.
+
+Keine Änderung am CONFIG-Block nötig.
+
+## v5.3.0
+
+- **Weniger Speicherbedarf beim Geräte-Abruf:** Die Antwort von `/properties/report` wird nicht mehr mit `JSON.parse` in Objekte zerlegt, sondern die benötigten Werte werden direkt aus dem Text gelesen (Prinzip wie im Script zendash_watch). Das spart pro Abfrage rund 2,4 kB Heap an der engsten Stelle des Zyklus (bisher etwa 5,5 kB frei bei zwei Geräten).
+  - Gelesen werden die Seriennummer (vor `properties`) und `electricLevel`, `socLimit`, `socStatus`, `gridReverse`, `acMode`, `outputHomePower`, `gridInputPower` sowie mit `debug` `gridOffPower` – nur zwischen `properties` und `packData`, damit gleichnamige Felder der Akkupacks nicht stören.
+  - Eine abgeschnittene Antwort oder ein fehlender SoC (`electricLevel`) zählt als „Fehler beim Parsen der Antwort“. Bisher lief ein fehlender SoC unbemerkt durch.
+- **Start-Synchronisierung der SoC-Grenzen ohne eigenen Report-Abruf:** Seriennummer und `gridReverse` kommen jetzt aus dem normalen Geräte-Abruf. Ist ein Gerät beim Start nicht erreichbar, steht im Log die übliche Zeile `FEHLER (<Gerät>/connect): Geraet nicht erreichbar`, danach `SoC-Sync uebersprungen - keine Seriennummer`. Mit `debug` erscheinen beim Start zusätzlich die Zeilen „report … Bytes“ und „MEM vor/nach parse“.
+- **Startspitze steigt nicht:** Das minifizierte Script ist etwas kleiner als 5.2.6, und beim Start liegt während der Synchronisierung nur noch der Antworttext im Speicher statt zusätzlich der geparsten Objekte.
+- Regelverhalten unverändert: geprüft mit Antworten von SF2400 Pro und SF800 sowie einem Simulationslauf, dessen Log (inklusive aller Stellbefehle) bis auf die Version mit 5.2.6 übereinstimmt.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.2.6
 
 - **Zyklusdauer im Log:** Einmal pro Stunde steht eine Zeile wie `Zyklen 1h: n 830 | avg 1840 ms | max 3620 ms | uebersprungen 0 | interval 4000 ms` im Log, auch ohne `debug`. `n`, `avg` und `max` zählen nur Zyklen mit Geräteabfrage (Sparmodus-Zyklen sind kürzer), `uebersprungen` zählt die verworfenen Takte. Liegt `max` regelmäßig nahe am Intervall oder gibt es verworfene Takte, ist `interval` zu knapp.
