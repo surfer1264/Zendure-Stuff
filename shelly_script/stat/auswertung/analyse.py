@@ -12,8 +12,8 @@ werden genauso gelesen. Ändern sich Einstellungen oder Version, wird automatisc
 
 Erzeugt im Ordner dieses Skripts:
     verlauf_15min.csv  15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang, SOC und Ausgang je Gerät
-    tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte, Stellbefehle, Störungen, Sparmodus,
-                       Zyklusdauer (ab Controller 5.2.6)
+    tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte (gegen den jeweils gültigen Sollwert),
+                       Sollwert, Stellbefehle, Störungen, Sparmodus, Zyklusdauer (ab Controller 5.2.6)
     tagesprofil.csv    Je Uhrzeit-Stunde: Netzsaldo und Speicher-Ausgang (Mittel und Verteilung über die Tage),
                        SOC-Verteilung je Gerät (Min, Perzentile, Max)
     geraete.csv        Ausgewertete Geräte (Name wie im Log, Spaltenschlüssel) – für bericht.py
@@ -38,7 +38,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -74,13 +74,18 @@ TAKT_S = None                      # Taktlänge in s; None = automatisch aus dem
                                    # Wird nur für den letzten Takt eines Logs gebraucht, sonst zählen die echten Abstände.
 MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen nicht als Energie
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
-LEER_SCHWELLE_W = 30               # Ist-Summe < 30 W  = Speicher liefert nichts (leer/Entladegrenze)
-SATT_SCHWELLE_W = 1500             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
+LEER_SCHWELLE_W = 15               # Ist-Summe < 15 W  = Speicher liefert nichts (leer/Entladegrenze)
+SATT_SCHWELLE_W = 1580             # Ist-Summe >= 1500 W = Speicher am Leistungslimit
 BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
 PROFIL_PERZENTILE = (10, 25, 50, 75, 90)  # Tagesprofil: Verteilung je Stunde für SOC, Netzsaldo und Speicher-Ausgang.
                                           # Der Bericht zeichnet 10/25/50/75/90 (Bänder 10–90 und 25–75, Linie = 50)
                                           # – diese fünf drin lassen, weitere nur ergänzen
 AKTIV_SCHWELLE_W = 10              # Gerät gilt als aktiv, wenn es >= 10 W ins Haus abgibt (Ist > 0 = Abgabe)
+SOLLWERT_START_W = 0               # Sollwert, bis das Log einen meldet ("Setpoint   : N W" beim Start oder
+                                   # "KVS zdmc_setpoint: Wert uebernommen (a -> b)"). Danach gilt der Wert aus dem Log,
+                                   # auch über Mitternacht ins nächste Log hinein.
+NEUSTART_ABSTAND_S = 10            # Startzeilen, die näher als 10 s beieinander liegen, gehören zu einem Neustart
+                                   # (ein Startblock dauert etwa 2 s; echte Neustarts lagen schon 21 s auseinander)
 
 # =============================================================================
 # Ende der Einstellungen
@@ -96,12 +101,18 @@ R_SET = re.compile(TS + r"([A-Za-z0-9_.-]+): Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
 # Stundenzeile ab Controller 5.2.6
 R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms(?: \| uebersprungen \d+ \| interval (\d+) ms)?")
+# Sollwert: Startblock und Änderung per KVS
+R_SOLL_START = re.compile(r"\] Setpoint   : (-?\d+) W")
+R_SOLL_KVS = re.compile(r"KVS zdmc_setpoint: Wert uebernommen \((-?\d+) -> (-?\d+)\)")
+# Neustart: jede Zeile des Startblocks zählt – so wird ein Neustart auch erkannt, wenn einzelne
+# Zeilen (z. B. "gestartet") im Log fehlen. Zeilen innerhalb NEUSTART_ABSTAND_S = ein Neustart.
+R_START = re.compile(r"\] (Multi-Device Controller gestartet|Version \d|Geraete    :|Interval   :|Watchdog   :|Setpoint   :)")
 EREIGNISSE = [
     ("nicht_erreichbar", "Geraet nicht erreichbar"),
     ("watchdog", "Watchdog-Timeout"),
     ("takt_uebersprungen", "Takt uebersprungen"),
-    ("neustarts", "Multi-Device Controller gestartet"),
 ]
+EREIGNIS_SPALTEN = ["nicht_erreichbar", "watchdog", "takt_uebersprungen", "neustarts"]
 
 
 # ============================================================================ Hilfen
@@ -113,7 +124,7 @@ def argumente():
 def fingerabdruck():
     """Alles, was das Ergebnis eines einzelnen Tages beeinflusst. Ändert es sich, wird neu gerechnet."""
     teile = [VERSION, TAKT_S, MAX_LUECKE_S, LEER_SCHWELLE_W, SATT_SCHWELLE_W, BAND_W, AKTIV_SCHWELLE_W,
-             list(GERAETE) if GERAETE else None]
+             SOLLWERT_START_W, NEUSTART_ABSTAND_S, list(GERAETE) if GERAETE else None]
     return hashlib.sha256(json.dumps(teile).encode()).hexdigest()[:16]
 
 
@@ -156,15 +167,23 @@ def im_zeitraum(tag):
 
 
 # ============================================================================ Ein Log auswerten
-def lesen(pfad, pause):
-    """Liest ein Log. pause = noch offene Sparmodus-Takte vom Vortag. Liefert Rohdaten und offene Pause."""
+def zustand_anfang():
+    """Zustand, der von einem Log ins nächste weiterläuft."""
+    return {"pause": 0, "soll": SOLLWERT_START_W, "start": None}
+
+
+def lesen(pfad, zustand):
+    """Liest ein Log. zustand = vom Vortag offene Sparmodus-Takte, gültiger Sollwert, letzte Startzeile.
+    Liefert Rohdaten und den Zustand am Ende des Logs."""
     netz, dev, ev = [], [], []
     takte, gespart, zyklen = {}, {}, {}
+    pause, soll, start = zustand["pause"], zustand["soll"], zustand["start"]
+    start_t = pd.Timestamp(start) if start else None
     with oeffnen(pfad) as fh:
         for l in fh:
             m = R_NETZ.match(l)
             if m:
-                netz.append((m[1], int(m[2]), int(m[3])))
+                netz.append((m[1], int(m[2]), int(m[3]), soll))
                 tag = m[1][:10]
                 takte[tag] = takte.get(tag, 0) + 1
                 if pause > 0:
@@ -191,6 +210,21 @@ def lesen(pfad, pause):
                 if m[5]:
                     z[3] = max(z[3] or 0, int(m[5]))
                 continue
+            m = R_START.search(l)
+            if m:
+                t = pd.Timestamp(l[1:20])
+                if start_t is None or abs((t - start_t).total_seconds()) > NEUSTART_ABSTAND_S:
+                    ev.append((l[1:20], "neustarts"))
+                    pause = 0
+                start_t = t
+                s = R_SOLL_START.search(l)
+                if s:
+                    soll = int(s[1])
+                continue
+            m = R_SOLL_KVS.search(l)
+            if m:
+                soll = int(m[2])
+                continue
             if "Sparmodus" in l:
                 s = R_SPAR.search(l)
                 if s:
@@ -200,19 +234,18 @@ def lesen(pfad, pause):
             for key, text in EREIGNISSE:
                 if text in l:
                     ev.append((l[1:20], key))
-                    if key == "neustarts":
-                        pause = 0
                     break
-    return netz, dev, ev, takte, gespart, zyklen, pause
+    ende = {"pause": pause, "soll": soll, "start": start_t.strftime("%Y-%m-%d %H:%M:%S") if start_t is not None else None}
+    return netz, dev, ev, takte, gespart, zyklen, ende
 
 
-def auswerten(pfad, pause):
+def auswerten(pfad, zustand):
     """Wertet ein Log aus. Ergebnis enthält nur Summen/Zählungen je Tag, aus denen sich alles exakt zusammensetzen lässt."""
-    netz, dev, ev, takte, gespart, zyklen, pause_ende = lesen(pfad, pause)
-    erg = {"pause_ende": pause_ende, "geraete": [], "takt": None, "tage": {}, "verlauf": None, "profil": [], "soc_hist": {}}
+    netz, dev, ev, takte, gespart, zyklen, zustand_ende = lesen(pfad, zustand)
+    erg = {"zustand_ende": zustand_ende, "geraete": [], "takt": None, "tage": {}, "verlauf": None, "profil": [], "soc_hist": {}}
     if not netz:
         return erg
-    n = pd.DataFrame(netz, columns=["t", "netz", "ist"])
+    n = pd.DataFrame(netz, columns=["t", "netz", "ist", "soll"])
     n["nr"] = range(len(n))
     n["t"] = pd.to_datetime(n.t)
     n = n.sort_values("t", kind="stable")
@@ -248,16 +281,20 @@ def auswerten(pfad, pause):
     n["einsp"] = (-n.netz).clip(lower=0) * n.dt / 1000
     n["b_leer"] = bezug.where(n.ist < LEER_SCHWELLE_W, 0)
     n["b_rest"] = bezug - n.b_leer
+    n["abw"] = n.netz - n.soll                       # Abweichung vom gültigen Sollwert
     # Aktivzeit gesamt: Takte, in denen mindestens ein Gerät selbst >= AKTIV_SCHWELLE_W abgibt
     # (nicht über die Ist-Summe: lädt ein anderes Gerät gleichzeitig, wäre die Summe zu klein)
     aktiv_nr = d.nr[d.ist >= AKTIV_SCHWELLE_W].unique()
     n["akt"] = n.dt.where(n.nr.isin(aktiv_nr), 0)
     day = n.groupby("tag").agg(netzbezug_kwh=("bezug", "sum"), einspeisung_kwh=("einsp", "sum"),
                                bezug_speicher_aus_kwh=("b_leer", "sum"), bezug_regelrest_kwh=("b_rest", "sum"),
-                               aktiv_gesamt_h=("akt", "sum"), erfasst_h=("dt", "sum"))
+                               aktiv_gesamt_h=("akt", "sum"), erfasst_h=("dt", "sum"),
+                               sollwert_min_w=("soll", "min"), sollwert_max_w=("soll", "max"))
+    # Regelgüte gegen den in jedem Takt gültigen Sollwert
     akt = n[(n.ist > LEER_SCHWELLE_W) & (n.ist < SATT_SCHWELLE_W)]
-    q = akt.groupby("tag").netz.agg(regel_im_band_pct=lambda s: (s.abs() <= BAND_W).mean() * 100,
-                                    regel_median_abw_w=lambda s: s.abs().median())
+    q = akt.groupby("tag").abw.agg(regel_im_band_pct=lambda s: (s.abs() <= BAND_W).mean() * 100,
+                                   regel_median_abw_w=lambda s: s.abs().median(),
+                                   regel_versatz_w="median")
     day = day.join(q)
     geraet_tag = {}
     for g in geraete:
@@ -334,19 +371,19 @@ def alle_auswerten(dateien, neu):
     if neu and os.path.isdir(CACHE):
         shutil.rmtree(CACHE)
         print("Zwischenspeicher verworfen – alles wird neu ausgewertet")
-    ergebnisse, gelesen, pause = [], 0, 0
+    ergebnisse, gelesen, zustand = [], 0, zustand_anfang()
     for f in dateien:
         st, info = stamm(f), quelle_info(f)
         c = cache_lesen(st)
-        gueltig = (c is not None and c.get("fingerabdruck") == fa and c.get("pause_start") == pause
+        gueltig = (c is not None and c.get("fingerabdruck") == fa and c.get("zustand_start") == zustand
                    and c.get("quelle") == info)
         if not gueltig:
-            erg = auswerten(f, pause)
-            c = {"fingerabdruck": fa, "pause_start": pause, "quelle": info, **erg}
+            erg = auswerten(f, zustand)
+            c = {"fingerabdruck": fa, "zustand_start": zustand, "quelle": info, **erg}
             cache_schreiben(st, c)
             gelesen += 1
         ergebnisse.append((f, c))
-        pause = c["pause_ende"]
+        zustand = c["zustand_ende"]
     print(f"{len(dateien)} Logs: {gelesen} neu ausgewertet, {len(dateien) - gelesen} aus dem Zwischenspeicher")
     return ergebnisse
 
@@ -439,7 +476,7 @@ def zusammensetzen(ergebnisse):
     r.to_csv(os.path.join(HIER, "verlauf_15min.csv"), index=False)
 
     # ------------------------------------------------ tage.csv
-    zaehler = ["stellbefehle_" + k for k in keys] + [k for k, _ in EREIGNISSE]
+    zaehler = ["stellbefehle_" + k for k in keys] + EREIGNIS_SPALTEN
     zeilen = []
     for t in sorted(tage_roh):
         x = tage_roh[t]
@@ -458,6 +495,9 @@ def zusammensetzen(ergebnisse):
         z["netzladen_kwh"] = lad
         z["regel_im_band_pct"] = x.get("regel_im_band_pct")
         z["regel_median_abw_w"] = x.get("regel_median_abw_w")
+        z["regel_versatz_w"] = x.get("regel_versatz_w")
+        z["sollwert_min_w"] = x.get("sollwert_min_w")
+        z["sollwert_max_w"] = x.get("sollwert_max_w")
         for c in zaehler:
             z[c] = x["ereignisse"].get(c, 0)
         zy = x.get("zyklen")
@@ -482,7 +522,8 @@ def zusammensetzen(ergebnisse):
     voll_tage = set(day.index[day.vollstaendig == 1])
     # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus);
     # Zyklusdauer bleibt leer bei Logs ohne Stundenzeile (Controller vor 5.2.6)
-    regel = ["regel_im_band_pct", "regel_median_abw_w", "zyklus_avg_ms", "zyklus_max_ms", "zyklus_interval_ms"]
+    regel = ["regel_im_band_pct", "regel_median_abw_w", "regel_versatz_w", "zyklus_avg_ms", "zyklus_max_ms",
+             "zyklus_interval_ms"]
     day = day.drop(columns="erfasst_h")
     day[day.columns.difference(regel)] = day[day.columns.difference(regel)].fillna(0)
     day[zaehler] = day[zaehler].astype(int)
@@ -526,7 +567,14 @@ def zusammensetzen(ergebnisse):
     H.index.name = "stunde"
     H.reset_index().to_csv(os.path.join(HIER, "tagesprofil.csv"), index=False)
 
-    print(day[["tag", "vollstaendig", "netzbezug_kwh", "entladung_gesamt_kwh", "nicht_erreichbar", "spar_anteil_pct"]].to_string(index=False))
+    print(day[["tag", "vollstaendig", "netzbezug_kwh", "entladung_gesamt_kwh", "sollwert_max_w", "regel_im_band_pct",
+               "nicht_erreichbar", "neustarts", "spar_anteil_pct"]].to_string(index=False))
+    # Plausibilität: Im Regelbetrieb sollte der Netzsaldo im Median nahe am Sollwert liegen.
+    # Weicht er stark ab, wurde womöglich eine Sollwert-Änderung im Log verschluckt.
+    auff = day[day.regel_versatz_w.abs() > BAND_W / 2]
+    for _, z in auff.iterrows():
+        print(f"Hinweis {z.tag}: Netzsaldo liegt im Regelbetrieb im Median {z.regel_versatz_w:+.0f} W neben dem Sollwert "
+              f"({z.sollwert_min_w:.0f}–{z.sollwert_max_w:.0f} W) – Sollwert-Änderung im Log verschluckt?")
     if voll_tage:
         print(f"Volle Tage im Zeitraum: {min(voll_tage)} bis {max(voll_tage)} ({len(voll_tage)})")
     print("Geschrieben nach", HIER)

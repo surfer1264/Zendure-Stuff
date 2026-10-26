@@ -4,7 +4,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.2.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.3.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -114,6 +114,8 @@ und die Geräte aus `geraete.csv`.
 | `BAND_W` | Regelgüte: Ein Takt gilt als gut bei \|Netzsaldo\| bis zu diesem Wert. |
 | `PROFIL_PERZENTILE` | Perzentile der Verteilung je Stunde im Tagesprofil (SOC, Netzsaldo, Speicher-Ausgang). Der Bericht zeichnet 10/25/50/75/90 – diese fünf drin lassen, weitere nur ergänzen. |
 | `AKTIV_SCHWELLE_W` | Ein Gerät gilt als aktiv, solange es mindestens so viel ins Haus abgibt. |
+| `SOLLWERT_START_W` | Sollwert, solange das Log noch keinen gemeldet hat (nur am Anfang des ersten Logs relevant). Danach gilt der Wert aus dem Log. |
+| `NEUSTART_ABSTAND_S` | Startzeilen des Controllers, die näher als dieser Abstand beieinander liegen, zählen als ein Neustart. |
 
 ## Erklärung
 
@@ -126,7 +128,7 @@ und die Geräte aus `geraete.csv`.
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. |
 | `zendure_fonts.css` | IBM-Plex-Schriften; werden in den Bericht eingebettet. Fehlt die Datei, nutzt der Bericht die Systemschrift. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
-| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte, Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
+| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte (gegen den gültigen Sollwert), Sollwert (`sollwert_min_w`, `sollwert_max_w`), Versatz (`regel_versatz_w`), Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
 | `geraete.csv` | Die ausgewerteten Geräte (Name wie im Log, Spaltenschlüssel). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |
@@ -154,15 +156,23 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 - **Takt**: eine Zeile `Netzsaldo: …` im Log.
 - **Energie**: Leistung × Zeit bis zum nächsten Takt; Lücken über `MAX_LUECKE_S` zählen nicht.
   Der letzte Takt eines Logs zählt mit der Taktlänge `TAKT_S`.
-- **Netzbezug / Einspeisung**: Netzsaldo > 0 bzw. < 0. Die Regelgüte misst gegen 0 W;
-  ein anderer Sollwert am Controller wird nicht berücksichtigt.
+- **Netzbezug / Einspeisung**: Netzsaldo > 0 bzw. < 0. Der Netzsaldo im Log ist der tatsächliche Wert am
+  Netzanschluss; Energie, Bezug und Einspeisung hängen nicht am Sollwert.
+- **Sollwert**: der Wert, auf den der Controller regelt. Das Skript liest ihn aus dem Startblock
+  (`Setpoint   : 0 W`) und aus jeder Änderung `KVS zdmc_setpoint: Wert uebernommen (a -> b)`; ab dort gilt er
+  für jeden folgenden Takt, auch über Mitternacht ins nächste Log. Der Controller übernimmt den KVS-Wert vor
+  „Starte Regelbetrieb“, es gibt also keine Regeltakte mit dem vorläufigen Wert aus dem Startblock.
 - **Entladung je Gerät**: positiver `Ist`-Wert des Geräts. **Netzladen**: negativer `Ist`-Wert.
   PV-Ladung steht nicht im Log, sie zeigt sich nur am SOC-Anstieg.
 - **Netzbezug bei leerem Speicher** (bei mehreren Geräten: „bei leeren Speichern“): Netzsaldo > 0,
   während die Ist-Summe unter `LEER_SCHWELLE_W` liegt.
 - **Deckung**: Entladung ÷ (Entladung + Netzbezug).
-- **Regelgüte**: Anteil der Takte mit |Netzsaldo| ≤ `BAND_W`, solange die Ist-Summe zwischen
+- **Regelgüte**: Anteil der Takte mit |Netzsaldo − Sollwert| ≤ `BAND_W`, solange die Ist-Summe zwischen
   `LEER_SCHWELLE_W` und `SATT_SCHWELLE_W` liegt. Tage ohne solche Takte haben keinen Wert (Lücke statt 0 %).
+  `regel_median_abw_w` ist der Median von |Netzsaldo − Sollwert| in diesen Takten.
+- **Versatz** (`regel_versatz_w`): Median von Netzsaldo − Sollwert im Regelbetrieb, mit Vorzeichen. Er sollte
+  nahe 0 liegen. Weicht er an einem Tag um mehr als `BAND_W`/2 ab, meldet das Skript einen Hinweis:
+  Dann ist womöglich eine Sollwert-Änderung im Log verschluckt worden.
 - **Aktivzeit**: Summe der Takte pro Tag, in denen ein Gerät mindestens `AKTIV_SCHWELLE_W` ins Haus abgibt
   (positiver `Ist`-Wert), in Stunden. Jeder Takt zählt mit seiner Dauer bis zum nächsten Takt; Lücken über
   `MAX_LUECKE_S` zählen nicht. „Mindestens ein Gerät“: Takte, in denen wenigstens ein Gerät selbst die Schwelle
@@ -176,5 +186,13 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
   `setze Polling fuer N Zyklen aus`) zählen die nächsten N Takte als eingespart, außer `Sparmodus aus`,
   `Sparmodus beendet` oder ein Neustart kommt vorher. Wie viele Einzelanfragen an die Geräte das spart,
   lässt sich aus dem Log nicht ablesen.
-- **Störungen**: Zeilen mit `Geraet nicht erreichbar`, `Takt uebersprungen`, `Watchdog-Timeout`;
-  Neustarts über `Multi-Device Controller gestartet`.
+- **Störungen**: Zeilen mit `Geraet nicht erreichbar`, `Takt uebersprungen`, `Watchdog-Timeout`.
+- **Neustart**: erkannt am Startblock des Controllers. Jede seiner Zeilen zählt (`Version …`,
+  `Multi-Device Controller gestartet`, `Geraete    :`, `Interval   :`, `Watchdog   :`, `Setpoint   :`), so wird ein
+  Neustart auch dann gezählt, wenn einzelne Zeilen im Log fehlen. Zeilen innerhalb `NEUSTART_ABSTAND_S` gelten als ein Neustart.
+
+## Änderungen
+
+- **1.3.0**: Regelgüte misst gegen den jeweils gültigen Sollwert statt gegen 0 W; neue Spalten
+  `sollwert_min_w`, `sollwert_max_w`, `regel_versatz_w` mit Plausibilitätshinweis. Neustarts werden am ganzen
+  Startblock erkannt (vorher nur an „gestartet“, verschluckte Zeilen fehlten dann).

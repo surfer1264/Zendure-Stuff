@@ -109,7 +109,8 @@ def erzeugen(hier=HIER):
         f"„Netzbezug bei {'leeren Speichern' if d['mehr'] else 'leerem Speicher'}“: Netzsaldo &gt; 0, während "
         f"{'die Ist-Summe aller Geräte' if d['mehr'] else 'der Ist-Wert des Geräts'} unter {c['leer']} W lag. "
         f"„Aktiv“: Ein Gerät gilt als aktiv, solange es mindestens {c['aktiv']} W ins Haus abgibt. Tageswerte und Kennzahlen zeigen nur volle Tage "
-        f"(mindestens {c['vollH']} h erfasst). PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen."
+        f"(mindestens {c['vollH']} h erfasst). Die Regelgüte misst gegen den Sollwert, der im jeweiligen Takt galt – aus dem "
+        f"Startblock des Controllers und späteren KVS-Änderungen im Log. PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen."
     )
     seite = (VORLAGE
              .replace("__SCHRIFTEN__", schriften(hier))
@@ -851,7 +852,15 @@ legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteab
 document.getElementById('txt-aktiv').textContent = 'Summe aller Takte je Tag, in denen ' + (MEHR ? 'das jeweilige Gerät' : 'das Gerät') +
   ' mindestens ' + D.cfg.aktiv + ' W ins Haus abgab, in Stunden (jeder Takt zählt mit seiner Dauer bis zum nächsten Takt).' +
   (MEHR ? ' „Mindestens ein Gerät“: Takte, in denen wenigstens ein Gerät abgab – gleichzeitige Abgabe zählt nur einmal.' : '');
-document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo| ≤ ' + D.cfg.band + ' W, solange ein Speicher einspeist und nicht am Limit ist.';
+(function(){
+  var lo = (T.sollwert_min_w || []).filter(function(v){ return v !== null; }),
+      hi = (T.sollwert_max_w || []).filter(function(v){ return v !== null; });
+  var a = lo.length ? Math.min.apply(null, lo) : 0, b = hi.length ? Math.max.apply(null, hi) : 0;
+  var soll = a === b ? f0(a) + ' W' : f0(a) + ' bis ' + f0(b) + ' W';
+  document.getElementById('txt-regel').textContent = 'Anteil der Takte mit |Netzsaldo − Sollwert| ≤ ' + D.cfg.band +
+    ' W, solange ein Speicher einspeist und nicht am Limit ist. Gemessen wird gegen den jeweils gültigen Sollwert (im Zeitraum ' +
+    soll + ').';
+})();
 document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch ' + f0(D.cfg.takteTag) + ', also etwa alle ' + de(D.cfg.takt, D.cfg.takt % 1 ? 1 : 0) +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
 
