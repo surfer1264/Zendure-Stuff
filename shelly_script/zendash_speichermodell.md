@@ -126,7 +126,7 @@ Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Model
 
 ## Regler-Script (Controller)
 
-Stand: 26.10.2026 · gilt für das Regler-Script `zerooutput_multi_kvs` **v5.3.5** mit **Debug aus** · 3 Messpunkte, Rest abgeleitet
+Stand: 27.10.2026 · gilt für das Regler-Script `zerooutput_multi_kvs` **v5.3.5** mit **Debug aus** · 4 Messpunkte an 2 Anlagen, Rest abgeleitet
 
 Das Regler-Script läuft auf einem eigenen Shelly mit eigener Grenze von ~25,2 kB. Es folgt demselben Muster: Die Geräte werden nacheinander abgefragt, und der größte Report setzt die Spitze. Seit 5.3.0 zerlegt der Regler den Report nicht mehr mit `JSON.parse`. Die Akkus kosten deshalb nur noch über die Größe des Reports Speicher, nicht über geparste Objekte.
 
@@ -154,8 +154,8 @@ Bewertung wie oben: ✅ Reserve ≥ 3 kB · ⚠️ 1,5–3 kB · ❌ < 1,5 kB
 | Geräte | A = 1 | A = 2 | A = 4 | A = 6 |
 |---|---|---|---|---|
 | 1 | 17,4 kB · 7,8 ✅ | 17,9 · 7,3 ✅ | 18,9 · 6,3 ✅ | 19,9 · 5,3 ✅ |
-| 2 | **18,9 kB · 6,3 ✅** (gemessen) | 19,4 · 5,8 ✅ | 20,4 · 4,8 ✅ | 21,4 · 3,8 ✅ |
-| 3 | **20,4 kB · 4,8 ✅** (gemessen) | 21,0 · 4,2 ✅ | 22,0 · 3,2 ✅ | 23,0 · 2,2 ⚠️ |
+| 2 | 18,9 kB · 6,3 ✅ | **19,4 · 5,8 ✅** (gemessen) | 20,4 · 4,8 ✅ | 21,4 · 3,8 ✅ |
+| 3 | 20,4 kB · 4,8 ✅ | **21,0 · 4,2 ✅** (gemessen) | 22,0 · 3,2 ✅ | 23,0 · 2,2 ⚠️ |
 | 4 | 22,0 kB · 3,2 ✅ | 22,5 · 2,7 ⚠️ | 23,5 · 1,7 ⚠️ | 24,5 · 0,7 ❌ |
 
 Angaben: Spitze · Reserve (kB) · Bewertung.
@@ -164,19 +164,25 @@ Angaben: Spitze · Reserve (kB) · Bewertung.
 
 | Anlage | Geräte | Grundlast | `mem_peak` | Modell |
 |---|---|---|---|---|
-| A | SF2400 Pro (1) + SF800 (2) | ~15 300 | 18 844 – 19 068 | 18,9 kB |
-| A | wie oben + drittes Gerät nur eingetragen (`dryRun`, nicht erreichbar) | ~16 400 | 20 440 | 20,4 kB |
-| A | SF2400 Pro (1) + SF800 (2), manuelles Laden gestartet und beendet | ~15 050 | 19 474 | 18,9 kB + KVS-Übernahme |
+| A | SF2400 Pro (1) + SF800 (2), A = 2 | ~15 300 | 18 844 – 19 068 | 19,4 kB |
+| A | wie oben + drittes Gerät nur eingetragen (`dryRun`, nicht erreichbar) | ~16 400 | 20 440 | 21,0 kB |
+| A | SF2400 Pro (1) + SF800 (2), manuelles Laden gestartet und beendet | ~15 050 | 19 474 | 19,4 kB + KVS-Übernahme |
+| E | 3 Geräte, 7 Akkus (3/3/1), A = 3 · Shelly Pro 3EM, Firmware 2.1.0 | 16 184 (kurz bis 16 870) | 20 608 nach Neustart · ~20 790 nach 8 h | 21,5 kB |
+
+**Anlage E** ist der erste Messpunkt mit 3 echten Geräten und mehr als 2 Akkus an einem Gerät. Gemessen wurde 20 Minuten lang alle 30 s per `Script.GetStatus`, nach einem Neustart und mit gestopptem zweitem Script. `mem_peak` war nach etwa 38 s (Startphase) erreicht und blieb danach konstant. Nach 8 h Normalbetrieb lag er bei ~20 790, also nur ~0,2 kB höher. Das Modell liegt bei der Spitze 0,7–0,8 kB und bei der Grundlast ~0,8 kB über den Messwerten, rechnet also vorsichtig. Reserve gemessen: 25 186 − 20 608 = 4,6 kB (Modell 3,7 kB) → ✅.
 
 Beim manuellen Laden schreibt das Dashboard drei KVS-Keys. Der Regler übernimmt sie mit einem `KVS.GetMany` zwischen zwei Regelzyklen. Das hob `mem_peak` um etwa 0,45 kB (19 026 → 19 474). Mit 5.3.3, als die Übernahme noch parallel zum Zyklus lief, waren es +2,4 kB bis 21 126.
+
+Bei Anlage A ist A = 2, weil der SF800 zwei Akkus hat. Das Modell liegt dort 0,3–0,6 kB über den Messwerten.
 
 Das dritte Gerät im zweiten Messpunkt liefert keinen Report. Es zeigt deshalb nur die Kosten eines weiteren Geräts, nicht die eines weiteren Reports. Für die Spitze ist das unerheblich, weil der größte Report gleich bleibt.
 
 ### Belastbarkeit
 
-- **Kosten je Gerät (1,55 kB):** aus nur zwei Messpunkten an einer Anlage.
-- **Akku-Zuschlag (0,5 kB):** abgeleitet aus der Report-Größe, für den Regler nicht gemessen.
-- **Noch offen:** Messpunkte mit mehr Akkus an einem Gerät und mit 3 bis 4 echten Geräten.
+- **Kosten je Gerät (1,55 kB):** aus zwei Messpunkten an Anlage A; Anlage E (3 echte Geräte) bestätigt sie, das Modell liegt dort 0,7–0,8 kB zu hoch.
+- **Akku-Zuschlag (0,5 kB):** abgeleitet aus der Report-Größe. Einzeln nicht gemessen; Anlage E (A = 3) liegt unter dem Modell, der Zuschlag ist also eher zu hoch als zu niedrig.
+- **`mem_free`** gilt für alle Scripte auf dem Shelly gemeinsam. Läuft ein zweites Script, ist `mem_free` entsprechend kleiner. Für das Modell zählt `mem_peak` des Regler-Scripts.
+- **Noch offen:** Messpunkte mit 4 oder mehr Akkus an einem Gerät und mit 4 echten Geräten.
 - **Weitere Spitze beim Übernehmen von KVS-Änderungen:** Pro Key kostet sie etwa 0,21 kB, und es gibt 3 + 4 × G Keys. Bei 4 Geräten sind das etwa 4 kB über der Grundlast, ungefähr so viel wie ein Report. Seit 5.3.5 laufen beide nie gleichzeitig, weil KVS-Änderungen nur zwischen zwei Regelzyklen übernommen werden.
 
 ### Änderungen, die den Speicher betreffen
