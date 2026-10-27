@@ -33,6 +33,12 @@ Start:
     python3 zendure_proxy.py         normal, mit Zugriffsprotokoll
     python3 zendure_proxy.py -q      leise: Startmeldung ja, Zugriffe nein
     python3 zendure_proxy.py -s      still: gar keine Ausgabe (Fehler nach stderr)
+    python3 zendure_proxy.py --bericht=PFAD
+                                     bericht.html der Log-Auswertung (stat/auswertung)
+                                     unter /bericht_zendure ausliefern; PFAD = Datei
+                                     oder Ordner. Ohne Angabe: Umgebungsvariable
+                                     ZENDURE_BERICHT, sonst Suche, siehe
+                                     bericht_candidates()
 
 Das Zugriffsprotokoll ist im Normalbetrieb recht gespraechig - die Seite
 fragt alle 4 Sekunden an. Zum Einrichten ist es hilfreich, im Dauerbetrieb
@@ -94,6 +100,10 @@ SILENT = False
 OPEN_BROWSER = None
 
 HTML_FILENAME = "zendure-dashboard.html"
+# Bericht der Log-Auswertung (stat/auswertung/analyse.py), Adresse /bericht_zendure.
+# BERICHT_PATH: --bericht=PFAD, sonst Umgebungsvariable ZENDURE_BERICHT.
+BERICHT_FILENAME = "bericht.html"
+BERICHT_PATH = None
 CONFIG_FILENAME = "zendure_proxy_config.json"
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
@@ -180,6 +190,36 @@ def find_html(filename=HTML_FILENAME):
     Seitenaufruf neu ermittelt - eine nachtraeglich abgelegte oder
     verschobene HTML wirkt also ohne Neustart."""
     for path in html_candidates(filename):
+        if os.path.isfile(path):
+            return path
+    return None
+
+
+def bericht_candidates():
+    """Orte fuer bericht.html, die erste vorhandene gewinnt. Mit --bericht
+    bzw. ZENDURE_BERICHT nur dieser Ort (Datei oder Ordner). Sonst neben der
+    Konfiguration, neben exe/Script und im Repo-Ordner stat/auswertung."""
+    fest = BERICHT_PATH or os.environ.get("ZENDURE_BERICHT")
+    if fest:
+        if os.path.isdir(fest):
+            fest = os.path.join(fest, BERICHT_FILENAME)
+        return [os.path.normpath(fest)]
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    dirs = [data_dir(), app_dir(),
+            os.path.join(os.path.dirname(script_dir), "stat", "auswertung"),                      # Repo
+            os.path.join(os.path.dirname(os.path.dirname(script_dir)), "stat", "auswertung")]     # Repo, local_helper/
+    seen, result = set(), []
+    for d in dirs:
+        path = os.path.normpath(os.path.join(d, BERICHT_FILENAME))
+        if path not in seen:
+            seen.add(path)
+            result.append(path)
+    return result
+
+
+def find_bericht():
+    """Wie find_html(): bei jedem Aufruf neu, ein frisch erzeugter Bericht wirkt sofort."""
+    for path in bericht_candidates():
         if os.path.isfile(path):
             return path
     return None
@@ -409,6 +449,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self._html(ts_bridge.page_html_tb())
             return
 
+        if path in ("/bericht_zendure", "/bericht_zendure/"):
+            self.serve_bericht()
+            return
+
         if path == "/" or path == "":
             if is_configured():
                 self.serve_html()
@@ -526,6 +570,25 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def serve_bericht(self):
+        path = find_bericht()
+        if path is None:
+            self.send_error(404, BERICHT_FILENAME + " nicht gefunden. Gesucht in: " + " | ".join(bericht_candidates()))
+            return
+        try:
+            with open(path, "rb") as f:
+                body = f.read()
+        except OSError as e:
+            self.send_error(500, "Bericht nicht lesbar ({}): {}".format(path, e))
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        # Bericht wird regelmaessig neu erzeugt - immer die aktuelle Fassung laden
+        self.send_header("Cache-Control", "no-store, must-revalidate")
+        self.end_headers()
+        self.wfile.write(body)
+
     def serve_html(self, filename=HTML_FILENAME):
         path = find_html(filename)
         if path is None:
@@ -616,7 +679,7 @@ def get_lan_ip():
 
 
 def parse_args():
-    global QUIET, SILENT, OPEN_BROWSER
+    global QUIET, SILENT, OPEN_BROWSER, BERICHT_PATH
     for arg in sys.argv[1:]:
         if arg in ("-q", "--quiet"):
             QUIET = True
@@ -626,6 +689,8 @@ def parse_args():
             OPEN_BROWSER = True
         elif arg == "--no-browser":
             OPEN_BROWSER = False
+        elif arg.startswith("--bericht="):
+            BERICHT_PATH = arg.split("=", 1)[1] or None
         elif arg in ("-h", "--help"):
             print(__doc__)
             sys.exit(0)
@@ -670,6 +735,9 @@ def main():
         say("  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch")
     say("  HTML:     " + (html or "NICHT GEFUNDEN"))
     say("  Konfig:   " + config_path())
+    bericht = find_bericht()
+    say("  Bericht:  " + ("http://localhost:{}/bericht_zendure  ({})".format(PORT, bericht) if bericht
+                          else "keiner gefunden (optional, --bericht=PFAD)"))
     url = "http://localhost:{}/".format(PORT)
     say("  Lokal:    " + url)
     if BIND_ADDRESS == "0.0.0.0":

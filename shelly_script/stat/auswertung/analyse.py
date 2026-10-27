@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen

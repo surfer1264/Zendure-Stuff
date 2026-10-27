@@ -4,7 +4,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.4.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.5.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -82,6 +82,14 @@ Die Auswertung reicht bis zum Ende der Logs, Tageswerte nutzen automatisch nur v
   Ausschnitt berühren). Das Tagesprofil zeigt immer alle vollen Tage.
 - **☾ / ☀** oben rechts schaltet Tag/Nacht um. Die Wahl merkt sich der Browser, sonst gilt die Systemeinstellung.
 - Werte zu Punkten, Balken und Stunden erscheinen beim Darüberfahren.
+
+### Bericht über den Dashboard-Proxy abrufen
+
+Der Dashboard-Proxy (`zendure_proxy.py`, auch als Home-Assistant-App) liefert `bericht.html` unter
+`http://<IP>:8000/bericht_zendure` aus. Er sucht die Datei an dem Ort, den `--bericht=PFAD` (Datei oder Ordner)
+bzw. die Umgebungsvariable `ZENDURE_BERICHT` nennt, sonst neben seiner Konfiguration, neben sich selbst und im
+Repo-Ordner `stat/auswertung`. In der Home-Assistant-App: `/share/zendure/bericht.html`. Ein neu erzeugter
+Bericht erscheint beim nächsten Aufruf, ohne Neustart des Proxys.
 
 ## Einstellungen
 
@@ -164,6 +172,8 @@ Beispiel:
 ### Inhalt des Berichts
 
 - **Kennzahlen** für den gewählten Zeitraum: Entladung, Netzbezug, Deckung, Regelgüte, Aktivzeit, Sparmodus.
+- **So gerechnet**: Jede Diagrammkarte lässt sich unten aufklappen und zeigt, aus welcher Logzeile und mit welcher
+  Formel der Wert entsteht – mit den Schwellwerten aus den aktuellen Einstellungen.
 - **Verlauf über die Zeit**: SOC je Gerät, Netzsaldo und Speicher-Ausgang (15-Minuten-Mittel).
 - **Pro Tag**: Energie nach Herkunft (gestapelt), Aktivzeit je Gerät, Deckung, Regelgüte,
   Stellbefehle je Gerät, Störungen, Zyklusdauer (Ø, max und Intervall; nur mit Logs ab Controller 5.2.6).
@@ -226,6 +236,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.5.0**: Jede Diagrammkarte im Bericht hat ein aufklappbares „So gerechnet“ mit Logzeile, Formel und den
+  eingestellten Schwellwerten. Eigene Einstellungen in `analyse_config.json` (bleibt bei Updates erhalten).
+  `analyse.cmd` läuft auch auf Netzlaufwerken. Die neue Version rechnet einmal alle Logs neu.
 - **1.4.0**: Gerätenamen mit Leerzeichen und Umlauten werden erkannt; Spaltenschlüssel werden daraus
   gebildet (`geraete.csv`). Vorher fehlten solche Geräte ohne Meldung in der Auswertung.
 - **1.3.0**: Regelgüte misst gegen den jeweils gültigen Sollwert statt gegen 0 W; neue Spalten

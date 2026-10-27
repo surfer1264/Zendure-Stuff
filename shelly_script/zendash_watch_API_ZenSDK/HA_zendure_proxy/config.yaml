@@ -1,5 +1,5 @@
 name: "Zendure Dashboard Proxy"
-version: "3.5.12.2"
+version: "3.5.12.3"
 slug: "zendure_proxy"
 description: "Lokaler Proxy für das Zendure-Dashboard (löst CORS-Problem der Shelly-Firmware)"
 url: "https://github.com/surfer1264/Zendure-Stuff/tree/main/shelly_script/zendash_watch_API_ZenSDK"
@@ -13,6 +13,8 @@ arch:
 startup: application
 boot: auto
 init: false
+map:
+  - share:ro
 ports:
   8000/tcp: 8000
 ports_description:

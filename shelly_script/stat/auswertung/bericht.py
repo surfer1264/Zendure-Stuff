@@ -80,11 +80,65 @@ def daten(hier):
     profil = {c: _liste(p[c]) for c in p.columns}
     return {
         "geraete": geraete,
-        "cfg": {"band": cfg.BAND_W, "leer": cfg.LEER_SCHWELLE_W, "aktiv": cfg.AKTIV_SCHWELLE_W,
+        "cfg": {"band": cfg.BAND_W, "leer": cfg.LEER_SCHWELLE_W, "satt": cfg.SATT_SCHWELLE_W, "aktiv": cfg.AKTIV_SCHWELLE_W,
                 "takt": takt, "takteTag": takte_tag, "luecke": cfg.MAX_LUECKE_S, "vollH": cfg.VOLLER_TAG_H},
         "mehr": len(geraete) > 1,
         "verlauf": verlauf, "tage": tage, "profil": profil,
         "profilVon": voll.tag.iloc[0], "profilBis": voll.tag.iloc[-1],
+    }
+
+
+def rechenweg(d):
+    """„So gerechnet“ je Diagramm (HTML), Schwellwerte aus den Einstellungen. Schlüssel = data-rw der Karte."""
+    c, mehr = d["cfg"], d["mehr"]
+    takt = str(c["takt"]).replace(".", ",").removesuffix(",0")
+    dauer = (f"Dauer eines Takts = Zeit bis zum nächsten Takt, höchstens {c['luecke']} s (längere Lücken werden gekappt; "
+             f"der letzte Takt eines Logs zählt mit {takt} s).")
+    summe = "Ist-Summe" if mehr else "Ist-Wert"
+    profil = ("Je voller Tag und Stunde: Mittel aller Takte dieser Stunde. Danach je Stunde über alle Tage: "
+              "Median (Linie), 25.–75. Perzentil (kräftiges Band), 10.–90. Perzentil (blasses Band). "
+              "„Mittel“ im Tooltip: Mittel über alle Takte dieser Stunde an allen Tagen.")
+    return {
+        "soc": "Logzeile je Gerät: <code>&lt;Gerät&gt;: SOC 45% | … | Ist 120 W | …</code>. Je Gerät der Mittelwert aller "
+               "SOC-Angaben in einem 15-Minuten-Fenster. Zeilen mit <code>SOC n/a</code> zählen nicht.",
+        "leistung": "Logzeile je Takt: <code>Netzsaldo: 35 W | Ist-Summe: 410 W | …</code>. Netzsaldo = Wert am Netzanschluss "
+                    "(&gt; 0 Bezug, &lt; 0 Einspeisung). Speicher-Ausgang = Ist-Summe aller Geräte (&gt; 0 Abgabe ins Haus, "
+                    "&lt; 0 Laden). Beide als Mittelwert aller Takte im 15-Minuten-Fenster.",
+        "energie": "Energie je Takt = Leistung × Dauer des Takts. " + dauer + "<br>"
+                   "<b>Entladung je Gerät</b> = Σ max(Ist des Geräts, 0) × Dauer.<br>"
+                   f"<b>Netzbezug</b> = Σ max(Netzsaldo, 0) × Dauer, aufgeteilt nach der {summe} im selben Takt: "
+                   f"unter {c['leer']} W → „{'bei leeren Speichern' if mehr else 'bei leerem Speicher'}“, sonst „Übriger Netzbezug“.<br>"
+                   "Einspeisung und Laden aus dem Netz stehen in <code>tage.csv</code>, nicht im Diagramm. "
+                   "PV-Ladung steht nicht im Log.",
+        "aktiv": f"Je Gerät: Σ Dauer der Gerätezeilen mit Ist ≥ {c['aktiv']} W (Abgabe ins Haus), in Stunden. "
+                 f"Dauer = Zeit bis zur nächsten Zeile desselben Geräts, höchstens {c['luecke']} s."
+                 + (f" „Mindestens ein Gerät“: Σ Dauer der Takte, in denen wenigstens ein Gerät ≥ {c['aktiv']} W abgab – "
+                    "nicht über die Ist-Summe, weil ein gleichzeitig ladendes Gerät die Summe drücken würde." if mehr else ""),
+        "deckung": "Je Tag: 100 × Entladung ÷ (Entladung + Netzbezug), beides in kWh wie im Diagramm „Energie pro Tag“. "
+                   "Entladung = Summe aller Geräte.",
+        "regel": f"Es zählen nur Takte mit {c['leer']} W &lt; {summe} &lt; {c['satt']} W: Speicher liefert, ist aber weder leer "
+                 "noch am Leistungslimit. Je Takt: Abweichung = Netzsaldo − Sollwert, der in diesem Takt galt. "
+                 f"Tageswert = Anteil dieser Takte mit |Abweichung| ≤ {c['band']} W. Tage ohne solche Takte bleiben leer.<br>"
+                 "Sollwert aus dem Log: Startblock <code>Setpoint   : N W</code> und jede Änderung "
+                 "<code>KVS zdmc_setpoint: Wert uebernommen (a -&gt; b)</code>; er gilt bis zur nächsten Änderung, auch über "
+                 "Mitternacht. Kennzahl oben: Mittel der Tageswerte.",
+        "befehle": "Je Gerät und Tag die Anzahl der Logzeilen <code>&lt;Gerät&gt;: Leistung gesetzt</code>.",
+        "fehler": "Je Tag die Anzahl der Logzeilen mit <code>Geraet nicht erreichbar</code>, <code>Takt uebersprungen</code> "
+                  "bzw. <code>Watchdog-Timeout</code>. Neustarts stehen in <code>tage.csv</code> (Spalte "
+                  "<code>neustarts</code>).",
+        "zyklus": "Aus der Stundenzeile <code>Zyklen 1h: n N | avg A ms | max M ms | … | interval I ms</code>; jede Zeile "
+                  "zählt zum Tag, an dem sie steht. Ø = Σ (N × A) ÷ Σ N über den Tag, max = größter M, Intervall = größter I.",
+        "takte": "Takte = Anzahl der <code>Netzsaldo:</code>-Zeilen je Tag. Nach <code>Sparmodus an: N</code> "
+                 "(ältere Logs: <code>setze Polling fuer N Zyklen</code>) zählen die nächsten N Takte als „ohne Geräteabfrage“, "
+                 "außer <code>Sparmodus aus</code>, <code>Sparmodus beendet</code> oder ein Neustart kommt vorher.",
+        "spar": "Je Tag: 100 × Takte ohne Geräteabfrage ÷ alle Takte (Zählweise wie im Diagramm links).",
+        "pnetz": "Netzsaldo aus <code>Netzsaldo: … W</code>. " + profil + " Nur volle Tage "
+                 f"(mindestens {c['vollH']} h erfasst).",
+        "pspeicher": f"Speicher-Ausgang = {summe} aus der Taktzeile. " + profil + " Nur volle Tage "
+                     f"(mindestens {c['vollH']} h erfasst).",
+        "socband": "Alle SOC-Angaben dieses Geräts in dieser Uhrzeit-Stunde an allen vollen Tagen, als eine Verteilung: "
+                   "Median (Linie), 25.–75. Perzentil (kräftiges Band), 10.–90. Perzentil (blasses Band), "
+                   "Min–Max im Tooltip. Jeder Takt zählt einzeln, Tage mit mehr Takten wiegen also etwas mehr.",
     }
 
 
@@ -103,14 +157,12 @@ def erzeugen(hier=HIER):
     chips = "".join(f'<span class="chip"><i style="background:{g["farbe"]}"></i>{html.escape(g["name"])}</span>'
                     for g in d["geraete"])
     c = d["cfg"]
+    d["rw"] = rechenweg(d)
     methode = (
         f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {str(c['takt']).replace('.', ',').removesuffix(',0')} s). "
-        f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s zählen nicht. "
-        f"„Netzbezug bei {'leeren Speichern' if d['mehr'] else 'leerem Speicher'}“: Netzsaldo &gt; 0, während "
-        f"{'die Ist-Summe aller Geräte' if d['mehr'] else 'der Ist-Wert des Geräts'} unter {c['leer']} W lag. "
-        f"„Aktiv“: Ein Gerät gilt als aktiv, solange es mindestens {c['aktiv']} W ins Haus abgibt. Tageswerte und Kennzahlen zeigen nur volle Tage "
-        f"(mindestens {c['vollH']} h erfasst). Die Regelgüte misst gegen den Sollwert, der im jeweiligen Takt galt – aus dem "
-        f"Startblock des Controllers und späteren KVS-Änderungen im Log. PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen."
+        f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s werden gekappt. Tageswerte und Kennzahlen zeigen nur volle Tage "
+        f"(mindestens {c['vollH']} h erfasst). PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen. "
+        f"Wie jedes Diagramm im Einzelnen gerechnet ist, steht in der Karte unter „So gerechnet“."
     )
     seite = (VORLAGE
              .replace("__SCHRIFTEN__", schriften(hier))
@@ -247,6 +299,11 @@ __SCHRIFTEN__
   .legend span{display:inline-flex; align-items:center; gap:.4em;}
   .legend i{width:14px; height:3px; border-radius:2px; display:inline-block;}
   .leer{font-size:.85rem; color:var(--text-muted); padding:2rem 0; text-align:center;}
+  .rw{font-size:.76rem; color:var(--text-muted); line-height:1.5; border-top:1px dashed var(--border); padding-top:.5rem; margin-top:.25rem;}
+  .rw summary{cursor:pointer; width:max-content; max-width:100%;}
+  .rw summary:hover{color:var(--teal-text);}
+  .rw div{margin-top:.4rem; max-width:80ch;}
+  .rw code{font-family:var(--mono); font-feature-settings:'ss04' 1; font-size:.95em; background:var(--surface-2); border-radius:4px; padding:0 .25em;}
 
   svg{display:block; overflow:visible; user-select:none; -webkit-user-select:none;}
   svg .gl{stroke:var(--grid); stroke-width:1;}
@@ -314,10 +371,10 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Verlauf über die Zeit</h2>
     <div class="grid">
-      <div class="card chart wide"><h3>Ladezustand (SOC)</h3>
+      <div class="card chart wide" data-rw="soc"><h3>Ladezustand (SOC)</h3>
         <p>15-Minuten-Mittel je Gerät. Bereich mit der Maus aufziehen = hineinzoomen, Doppelklick = alles.</p>
         <div class="legend" id="lg-soc"></div><div id="c-soc"></div></div>
-      <div class="card chart wide"><h3>Netzsaldo und Speicher-Ausgang</h3>
+      <div class="card chart wide" data-rw="leistung"><h3>Netzsaldo und Speicher-Ausgang</h3>
         <p>15-Minuten-Mittel in Watt. Netzsaldo &gt; 0 heißt Bezug. Speicher-Ausgang bei 0 und hoher Netzsaldo: Speicher leer.</p>
         <div class="legend" id="lg-leistung"></div><div id="c-leistung"></div></div>
     </div>
@@ -326,23 +383,23 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Pro Tag · volle Tage im Ausschnitt</h2>
     <div class="grid">
-      <div class="card chart wide"><h3>Energie pro Tag, nach Herkunft</h3>
+      <div class="card chart wide" data-rw="energie"><h3>Energie pro Tag, nach Herkunft</h3>
         <p>kWh je Tag, gestapelt. Die Gesamthöhe ist der Verbrauch, der nicht direkt aus PV kam. Klick auf einen Tag zoomt dorthin.</p>
         <div class="legend" id="lg-energie"></div><div id="c-energie"></div></div>
-      <div class="card chart wide"><h3>Aktivzeit pro Tag</h3>
+      <div class="card chart wide" data-rw="aktiv"><h3>Aktivzeit pro Tag</h3>
         <p id="txt-aktiv"></p>
         <div class="legend" id="lg-aktiv"></div><div id="c-aktiv"></div></div>
-      <div class="card chart"><h3>Deckung durch Speicher</h3>
+      <div class="card chart" data-rw="deckung"><h3>Deckung durch Speicher</h3>
         <p>Prozent: Entladung ÷ (Entladung + Netzbezug).</p><div id="c-deckung"></div></div>
-      <div class="card chart"><h3>Regelgüte</h3>
+      <div class="card chart" data-rw="regel"><h3>Regelgüte</h3>
         <p id="txt-regel"></p><div id="c-regel"></div></div>
-      <div class="card chart"><h3>Stellbefehle je Gerät</h3>
+      <div class="card chart" data-rw="befehle"><h3>Stellbefehle je Gerät</h3>
         <p>Gesendete „Leistung gesetzt“-Befehle pro Tag.</p>
         <div class="legend" id="lg-befehle"></div><div id="c-befehle"></div></div>
-      <div class="card chart"><h3>Störungen pro Tag</h3>
+      <div class="card chart" data-rw="fehler"><h3>Störungen pro Tag</h3>
         <p>Gerät nicht erreichbar, übersprungene Takte, Watchdog-Timeouts.</p>
         <div class="legend" id="lg-fehler"></div><div id="c-fehler"></div></div>
-      <div class="card chart" id="card-zyklus" style="display:none"><h3>Zyklusdauer pro Tag</h3>
+      <div class="card chart" id="card-zyklus" data-rw="zyklus" style="display:none"><h3>Zyklusdauer pro Tag</h3>
         <p>Dauer eines Regelzyklus mit Geräteabfrage, aus der Stundenzeile des Controllers (ab 5.2.6): Mittel und längster Zyklus des Tages. Nähert sich „max“ der gestrichelten Linie (eingestelltes Intervall), wird es knapp; einzelne Werte knapp unter 4000 ms sind meist ein HTTP-Timeout.</p>
         <div class="legend" id="lg-zyklus"></div><div id="c-zyklus"></div></div>
     </div>
@@ -351,10 +408,10 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Sparmodus · eingesparte Takte</h2>
     <div class="grid">
-      <div class="card chart"><h3>Takte mit und ohne Geräteabfrage</h3>
+      <div class="card chart" data-rw="takte"><h3>Takte mit und ohne Geräteabfrage</h3>
         <p id="txt-takte"></p>
         <div class="legend" id="lg-takte"></div><div id="c-takte"></div></div>
-      <div class="card chart"><h3>Anteil Takte ohne Geräteabfrage</h3>
+      <div class="card chart" data-rw="spar"><h3>Anteil Takte ohne Geräteabfrage</h3>
         <p>Prozent der Takte pro Tag. Bei 12 ausgesetzten Takten je Pause liegt die Obergrenze bei gut 90 %.</p>
         <div id="c-spar"></div></div>
     </div>
@@ -363,10 +420,10 @@ __SCHRIFTEN__
   <section>
     <h2 class="section-title">Typischer Tagesverlauf · alle vollen Tage</h2>
     <div class="grid">
-      <div class="card chart"><h3>Netzsaldo nach Uhrzeit</h3>
+      <div class="card chart" data-rw="pnetz"><h3>Netzsaldo nach Uhrzeit</h3>
         <p class="txt-pband"></p>
         <div class="legend" id="lg-pnetz"></div><div id="c-pnetz"></div></div>
-      <div class="card chart"><h3 id="h-pspeicher">Speicher-Ausgang nach Uhrzeit</h3>
+      <div class="card chart" data-rw="pspeicher"><h3 id="h-pspeicher">Speicher-Ausgang nach Uhrzeit</h3>
         <p class="txt-pband"></p>
         <div class="legend" id="lg-pspeicher"></div><div id="c-pspeicher"></div></div>
     </div>
@@ -801,8 +858,8 @@ function profil(){
   if (MEHR) document.getElementById('h-pspeicher').textContent = 'Speicher-Ausgang (Summe) nach Uhrzeit';
   var box = document.getElementById('profilsoc');
   box.innerHTML = G.map(function(g){
-    return '<div class="card chart' + (MEHR ? '' : ' wide') + '"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
-      '<p>Verteilung über alle vollen Tage: Linie = Median, kräftiges Band = mittlere Hälfte der Tage (25–75 %), ' +
+    return '<div class="card chart' + (MEHR ? '' : ' wide') + '" data-rw="socband"><h3>SOC nach Uhrzeit · ' + esc(g.name) + '</h3>' +
+      '<p>Verteilung über alle Takte der vollen Tage: Linie = Median, kräftiges Band = mittlere Hälfte der Werte (25–75 %), ' +
       'blasses Band = 10–90 %.</p><div class="legend" id="lg-band-' + g.key + '"></div><div id="c-band-' + g.key + '"></div></div>';
   }).join('');
   G.forEach(function(g){
@@ -883,6 +940,15 @@ window.addEventListener('scroll', versteckeTip, {passive: true});
 
 zeichne();
 profil();
+/* „So gerechnet“ ans Ende jeder Karte mit data-rw (Text aus bericht.py, Schwellwerte aus den Einstellungen) */
+[].forEach.call(document.querySelectorAll('[data-rw]'), function(card){
+  var txt = (D.rw || {})[card.dataset.rw];
+  if (!txt) return;
+  var d = document.createElement('details');
+  d.className = 'rw';
+  d.innerHTML = '<summary>So gerechnet</summary><div>' + txt + '</div>';
+  card.appendChild(d);
+});
 })();
 </script>
 </body>

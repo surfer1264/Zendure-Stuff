@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.12.3
+
+- Proxy: neue Seite `/bericht_zendure` zeigt den Bericht der Log-Auswertung (`bericht.html` aus `stat/auswertung/analyse.py`). In der App wird er unter `/share/zendure/bericht.html` gesucht; die App liest dafür den Ordner `share` (nur lesen). Dashboard und Einstellungen unverändert
+
 ## 3.5.12.2
 
 - Dashboard: Schon beim Klick auf Start oder Ende des manuellen Ladens erscheint oben eine Leiste („… wird gestartet/beendet …“, „warte auf Bestätigung“), und die Bedienung ist gesperrt. Nach der Antwort zeigt die Leiste das Ergebnis und die Restzeit. 10 s lang ist die ganze Bedienung gesperrt, auch das Schloss. So ist klar, ob der Vorgang geklappt hat, und kein zweiter Klick trifft auf den Regler, während er die Änderung noch übernimmt. Danach lädt das Dashboard den echten Stand neu

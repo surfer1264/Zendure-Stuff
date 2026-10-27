@@ -22,6 +22,7 @@ Empfohlen auf der Seite *Info* der App: **„Beim Booten starten“** und **„W
 | `http://<ha-ip>:8000/setup` | Shelly-IP und Script-ID ändern |
 | `http://<ha-ip>:8000/thingspeak` | ThingSpeak-Upload einrichten |
 | `http://<ha-ip>:8000/thingsboard` | ThingsBoard-Upload einrichten, Werte auswählen, Speicherverbrauch abschätzen |
+| `http://<ha-ip>:8000/bericht_zendure` | Bericht der Log-Auswertung (`bericht.html` aus `analyse.py`), siehe unten |
 
 Änderungen auf diesen Seiten wirken sofort – kein Neustart nötig.
 
@@ -38,6 +39,13 @@ Dashboards: **„Dashboard-Shelly: IP / Script-ID ändern“** sowie
   Anleitung: [ThingsBoard-Upload](https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/thingsboard/)
 
 Die App braucht dafür Internetzugang zum jeweiligen Dienst, der Shelly nicht.
+
+## Bericht der Log-Auswertung
+
+Die App zeigt den Bericht von `analyse.py` (Ordner `stat/auswertung`) unter `/bericht_zendure` an.
+Die Auswertung selbst läuft nicht in der App. Lege die fertige `bericht.html` nach
+`/share/zendure/bericht.html` (z. B. über die Samba-Freigabe „share“). Ein neuer Bericht
+erscheint beim nächsten Aufruf, ohne Neustart. Fehlt die Datei, meldet die Seite „nicht gefunden“.
 
 ## Wo die Einstellungen liegen
 
