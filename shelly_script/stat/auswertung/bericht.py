@@ -88,10 +88,16 @@ def daten(hier):
     }
 
 
+def _de(x):
+    """Zahl mit Komma, ohne ",0" (str.removesuffix gibt es erst ab Python 3.9)."""
+    s = str(x).replace(".", ",")
+    return s[:-2] if s.endswith(",0") else s
+
+
 def rechenweg(d):
     """„So gerechnet“ je Diagramm (HTML), Schwellwerte aus den Einstellungen. Schlüssel = data-rw der Karte."""
     c, mehr = d["cfg"], d["mehr"]
-    takt = str(c["takt"]).replace(".", ",").removesuffix(",0")
+    takt = _de(c["takt"])
     dauer = (f"Dauer eines Takts = Zeit bis zum nächsten Takt, höchstens {c['luecke']} s (längere Lücken werden gekappt; "
              f"der letzte Takt eines Logs zählt mit {takt} s).")
     summe = "Ist-Summe" if mehr else "Ist-Wert"
@@ -159,7 +165,7 @@ def erzeugen(hier=HIER):
     c = d["cfg"]
     d["rw"] = rechenweg(d)
     methode = (
-        f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {str(c['takt']).replace('.', ',').removesuffix(',0')} s). "
+        f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {_de(c['takt'])} s). "
         f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s werden gekappt. Tageswerte und Kennzahlen zeigen nur volle Tage "
         f"(mindestens {c['vollH']} h erfasst). PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen. "
         f"Wie jedes Diagramm im Einzelnen gerechnet ist, steht in der Karte unter „So gerechnet“."

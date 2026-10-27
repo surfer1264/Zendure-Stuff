@@ -17,7 +17,7 @@ Benötigt werden `analyse.py`, `bericht.py` und `zendure_fonts.css`, unter Windo
 
 ## Installation
 
-Benötigt werden Python 3.9 oder neuer und das Paket `pandas`. Installation in cmd oder PowerShell:
+Benötigt werden Python 3.8 oder neuer und das Paket `pandas`. Installation in cmd oder PowerShell:
 
 ```
 py -m pip install pandas
@@ -31,6 +31,39 @@ python -m pip install pandas
 
 Meldet das Skript danach weiterhin `ModuleNotFoundError: No module named 'pandas'`, gehören `pip`
 und `python` zu verschiedenen Python-Installationen. `py -0p` listet alle installierten Versionen mit Pfad.
+
+### Synology (täglich per Aufgabenplaner)
+
+DSM bringt Python 3 mit, aber ohne `pandas` und `numpy`. Ohne sie bricht der Lauf mit
+`ModuleNotFoundError: No module named 'numpy'` ab. Einmalig per SSH einrichten (Systemsteuerung →
+Terminal & SNMP → SSH aktivieren), in einer eigenen Python-Umgebung im Ordner `auswertung`:
+
+```sh
+cd /volume1/homes/<user>/<pfad>/auswertung
+python3 --version                  # 3.8 oder neuer
+uname -m                           # x86_64 oder aarch64: pandas lässt sich installieren
+python3 -m venv venv
+venv/bin/python -m pip install --upgrade pip
+venv/bin/python -m pip install pandas
+venv/bin/python analyse.py         # Probelauf
+```
+
+Im Aufgabenplaner (Systemsteuerung → Aufgabenplaner → Erstellen → Geplante Aufgabe →
+Benutzerdefiniertes Skript) dann diese Python-Umgebung aufrufen:
+
+```sh
+cd /volume1/homes/<user>/<pfad>/auswertung && venv/bin/python analyse.py
+```
+
+Die Umgebung `venv` gilt für jeden Benutzer, unter dem die Aufgabe läuft.
+
+- **`python3 -m venv` meldet „ensurepip is not available“:** pip direkt installieren und `pandas` für den
+  Benutzer installieren, unter dem auch die Aufgabe läuft (im Aufgabenplaner unter „Benutzer“):
+  `curl -sSL https://bootstrap.pypa.io/pip/3.8/get-pip.py -o get-pip.py && python3 get-pip.py --user`,
+  danach `python3 -m pip install --user pandas`. Bei Python 3.9 oder neuer die Adresse ohne `pip/3.8/` nehmen.
+- **`uname -m` zeigt `armv7l` o. Ä.:** Für diese älteren ARM-Prozessoren gibt es kein fertiges `pandas`;
+  die Installation versucht dann zu kompilieren und scheitert meist. Dann die Auswertung auf dem PC laufen
+  lassen (geht auch direkt auf der Freigabe, siehe `analyse.cmd`) oder den Container Manager nutzen.
 
 Die Dateien `analyse.py`, `bericht.py` und `zendure_fonts.css` liegen gemeinsam in einem Ordner
 (hier `auswertung`). Standardmäßig erwartet das Skript die Logs im Ordner darüber.

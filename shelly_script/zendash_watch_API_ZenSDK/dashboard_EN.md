@@ -306,17 +306,33 @@ Applies to the Python script (and to the program if you start it from a console)
 | `-s` | silent: no output at all (errors still appear) |
 | `--browser` | always open the browser on start |
 | `--no-browser` | never open the browser on start |
+| `--bericht=PATH` | location of `bericht.html` (file or folder) for `/bericht_zendure`, see below |
 | `-h` | show help |
 
 Without `--browser`/`--no-browser` the proxy decides by itself: on Windows, macOS and a Linux desktop it opens the browser; on a Synology, in Home Assistant or in an SSH session it does not.
 
 Port (`PORT`, default 8000) and network interface (`BIND_ADDRESS`) can be changed at the top of the Python script if needed.
 
+### Log analysis report
+
+The proxy also shows the report of the [log analysis](../stat/auswertung/readme.md) (`bericht.html` from `analyse.py`):
+
+```
+http://<proxy-address>:8000/bericht_zendure
+```
+
+The analysis itself does not run in the proxy. It looks for the finished `bericht.html`:
+
+1. at the location given by `--bericht=PATH` or the environment variable `ZENDURE_BERICHT` (file or folder) – then only there,
+2. otherwise next to its configuration, next to the script or program, and in the repo folder `stat/auswertung`.
+
+In the Home Assistant app, put the file at `/share/zendure/bericht.html`. A newly generated report appears on the next request, without a restart. The proxy's start overview shows which file it found.
+
 ---
 
 ## Good to know
 
-- **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup`. So **never** expose the proxy to the internet via port forwarding.
+- **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup` – and read the report under `/bericht_zendure`. So **never** expose the proxy to the internet via port forwarding.
 - **Script number:** When **updating** via the Configurator, the number stays the same. If the script is **created anew** (first installation, "delete others", Shelly replacement or manual upload), it gets a new number. If the dashboard stops working after that, enter the new number under `http://<proxy-address>:8000/setup`. Restarting the proxy is not necessary.
 - **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former layout at `/b` was removed in 3.5.12; the address redirects to the dashboard.
 - **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.

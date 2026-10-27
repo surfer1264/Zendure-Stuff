@@ -20,7 +20,7 @@ Erzeugt im Ordner dieses Skripts:
     bericht.html       Bericht zum Öffnen im Browser, erzeugt von bericht.py
     cache/             Zwischenspeicher, eine Datei je Logdatei
 
-Benötigt: Python 3.9+ und pandas (pip install pandas).
+Benötigt: Python 3.8+ und pandas (pip install pandas).
 Alle Einstellungen stehen im Block EINSTELLUNGEN direkt unter den Imports (Standardwerte).
 Eigene Werte gehören in analyse_config.json neben diesem Skript – die bleibt bei Updates erhalten.
 bericht.py hat keine eigenen Einstellungen, es übernimmt alles von hier.

@@ -306,17 +306,33 @@ Valable pour le script Python (et pour le programme si vous le lancez depuis une
 | `-s` | silencieux : aucune sortie (les erreurs s'affichent quand même) |
 | `--browser` | toujours ouvrir le navigateur au démarrage |
 | `--no-browser` | ne jamais ouvrir le navigateur au démarrage |
+| `--bericht=CHEMIN` | emplacement de `bericht.html` (fichier ou dossier) pour `/bericht_zendure`, voir ci-dessous |
 | `-h` | afficher l'aide |
 
 Sans `--browser`/`--no-browser`, le proxy décide lui-même : sous Windows, macOS et sur un bureau Linux, il ouvre le navigateur ; sur un Synology, dans Home Assistant ou dans une session SSH, non.
 
 Le port (`PORT`, 8000 par défaut) et l'interface réseau (`BIND_ADDRESS`) se règlent si besoin en haut du script Python.
 
+### Rapport de l'analyse des journaux
+
+Le proxy affiche aussi le rapport de l'[analyse des journaux](../stat/auswertung/readme.md) (`bericht.html` produit par `analyse.py`) :
+
+```
+http://<adresse-du-proxy>:8000/bericht_zendure
+```
+
+L'analyse elle-même ne tourne pas dans le proxy. Il cherche le fichier `bericht.html` déjà généré :
+
+1. à l'emplacement indiqué par `--bericht=CHEMIN` ou la variable d'environnement `ZENDURE_BERICHT` (fichier ou dossier) – alors uniquement là,
+2. sinon à côté de sa configuration, à côté du script ou du programme, et dans le dossier `stat/auswertung` du dépôt.
+
+Dans l'app Home Assistant, placez le fichier sous `/share/zendure/bericht.html`. Un rapport nouvellement généré s'affiche au prochain appel, sans redémarrage. Le résumé de démarrage du proxy indique quel fichier il a trouvé.
+
 ---
 
 ## Bon à savoir
 
-- **Pas de mot de passe :** toute personne du réseau domestique connaissant l'adresse peut ouvrir le tableau de bord et modifier les réglages – y compris l'adresse du Shelly sous `/setup`. Ne **jamais** exposer le proxy sur Internet par une redirection de port.
+- **Pas de mot de passe :** toute personne du réseau domestique connaissant l'adresse peut ouvrir le tableau de bord et modifier les réglages – y compris l'adresse du Shelly sous `/setup` – et lire le rapport sous `/bericht_zendure`. Ne **jamais** exposer le proxy sur Internet par une redirection de port.
 - **Numéro du script :** lors d'une **mise à jour** via le Configurator, le numéro reste le même. Si le script est **recréé** (première installation, « supprimer les autres », changement de Shelly ou téléversement manuel), il reçoit un nouveau numéro. Si le tableau de bord ne fonctionne plus ensuite, saisir le nouveau numéro sous `http://<adresse-du-proxy>:8000/setup`. Pas besoin de redémarrer le proxy.
 - **Mise en page :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page sous `/b` a été supprimée en 3.5.12 ; l'adresse redirige vers le tableau de bord.
 - **Nouvelle version du tableau de bord :** avec le script Python et sur le Synology, il suffit de remplacer `zendure-dashboard.html` et de recharger la page dans le navigateur – le proxy relit le fichier à chaque requête. Dans le programme prêt à l'emploi, la page est intégrée ; elle arrive avec un nouveau téléchargement. Dans Home Assistant, l'app doit être reconstruite.
