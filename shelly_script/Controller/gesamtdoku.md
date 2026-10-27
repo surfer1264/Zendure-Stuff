@@ -2661,6 +2661,7 @@ Der Status-Handler wird nur bei `kvsEnabled: true` überhaupt registriert
 | KVS-Key | überschreibt | Gültigkeitsbereich | Besonderheit |
 | --- | --- | --- | --- |
 | `zdmc_setpoint` | `CONFIG.setpoint` | -40…40 (W) | – |
+| `zdmc_dischargeResetMargin` | `CONFIG.dischargeResetMargin` | 3…79 (Prozentpunkte, ganzzahlig) | **Seit 5.2.4.** Entlade-Sperre: Ein Gerät, das bis `minSoc` entladen hat, entlädt erst ab `minSoc + Wert` wieder (Kapitel 8.6). Wirksam je Gerät höchstens `maxSoc − minSoc − 11`, bei kleinerem Fenster `3`. Gilt für alle Geräte. |
 | `zdmc_dischargeFixed` | `CONFIG.dischargeFixed` | `0` oder `≥ dischargeStartupPower` (W), keine Obergrenze | Globaler Fix-Sollwert für die Entladung. `0` = aus (normale Netzsaldo-Regelung). Ist der Wert aktiv (`> 0`), ersetzt er im Entladepfad die Netzsaldo-basierte Berechnung **komplett** – der Ladepfad (`chargeTarget`) bleibt unberührt. Löst **keinen** Schreibvorgang am Zendure-Gerät aus, reiner Software-Override der Regelung. In der Zyklus-Kopfzeile (Kapitel 12.2) am Suffix `[FIX]` hinter dem Regelsignal erkennbar. |
 | `zdmc_devN_dischargeAllowed` | `CONFIG.devices[N].dischargeAllowed` | `0` / `1` | – |
 | `zdmc_devN_reverse` | `CONFIG.devices[N].reverse` | `0` / `1` | `1` = Laden aus dem Netz erlaubt |
@@ -2728,6 +2729,9 @@ Direkt im LAN gegen die Shelly-eigene RPC-API, ganz ohne Home Assistant:
 # Sollwert setzen
 curl -X POST "http://<shelly-ip>/rpc/KVS.Set" -H "Content-Type: application/json" \
   -d '{"key":"zdmc_setpoint","value":-50}'
+
+# Entlade-Sperre: nach Entladen bis minSoc erst ab minSoc + 10 % wieder entladen (seit 5.2.4)
+curl -X POST "http://<shelly-ip>/rpc/KVS.Set" -H "Content-Type: application/json"   -d '{"key":"zdmc_dischargeResetMargin","value":10}'
 
 # Fix-Entladeleistung aktivieren (ersetzt die Netzsaldo-Regelung im Entladepfad)
 curl -X POST "http://<shelly-ip>/rpc/KVS.Set" -H "Content-Type: application/json" \
@@ -2801,7 +2805,7 @@ einmal; darunter ein `sensor:`-Eintrag pro Key, der seinen Wert per Jinja
 teilen sich denselben Poll – nicht ein HTTP-Request je Parameter:
 
 ```yaml
-- resource: "http://192.168.178.117/rpc/KVS.GetMany?match=zdmc_*"
+- resource: "http://<shelly-ip>/rpc/KVS.GetMany?match=zdmc_*"
   scan_interval: 600
   timeout: 10
   sensor:
@@ -2812,7 +2816,7 @@ teilen sich denselben Poll – nicht ein HTTP-Request je Parameter:
         {% set m = value_json['items'] | selectattr('key','eq','zdmc_dischargeFixed') | list %}
         {{ m[0].value if m else none }}
     # ... je ein weiterer sensor:-Eintrag für setpoint, devN_minSoc,
-    #     devN_inputLimit, devN_dischargeAllowed, devN_reverse
+    #     dischargeResetMargin, devN_inputLimit, devN_dischargeAllowed, devN_reverse
 ```
 
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/yaml/rest.yaml
@@ -2823,7 +2827,7 @@ eigenen `rest_command` zu pflegen:
 
 ```yaml
 zdmc_kvs_set:
-  url: "http://192.168.178.117/rpc/KVS.Set"
+  url: "http://<shelly-ip>/rpc/KVS.Set"
   method: POST
   content_type: "application/json"
   payload: '{"key":"{{ key }}","value":{{ value }}}'
@@ -2836,7 +2840,7 @@ liest direkt den zugehörigen Sensor aus 1); `set_value`/`turn_on`/`turn_off`
 ruft den generischen `rest_command` aus 2) mit dem passenden Key auf, wartet
 1 s und stößt danach per `homeassistant.update_entity` einen Re-Poll des
 betroffenen Sensors an. Da alle Sensoren denselben `resource:`-Block teilen,
-aktualisiert dieser eine Aufruf **alle** zehn Werte neu, nicht nur den
+aktualisiert dieser eine Aufruf **alle** elf Werte neu, nicht nur den
 geänderten:
 
 ```yaml
@@ -2857,7 +2861,7 @@ geänderten:
         target: { entity_id: sensor.zdmc_dischargefixed }
 ```
 
-https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/yaml/template/kvs.yaml
+https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/yaml/templates/kvs.yaml
 
 Schalter (`switch`) folgen demselben Muster, nur mit `turn_on`/`turn_off`
 statt `set_value` und Werten `1`/`0`.
@@ -2868,6 +2872,7 @@ statt `set_value` und Werten `1`/`0`.
 | --- | --- | --- | --- | --- |
 | Sollwert | `zdmc_setpoint` | `zdmc_setpoint` | `number` | −40…40 W, Schritt 5 |
 | Fix-Entladeleistung | `zdmc_dischargeFixed` | `zdmc_dischargefixed` | `number` | 0…1600 W, Schritt 20 |
+| Entlade-Sperre | `zdmc_dischargeResetMargin` | `zdmc_dischargeresetmargin` | `number` | 3…79 %, Schritt 1 (seit Regler 5.2.4) |
 | dev0 minSoc | `zdmc_dev0_minSoc` | `zdmc_dev0_minsoc` | `number` | 10…90 %, Schritt 1 |
 | dev1 minSoc | `zdmc_dev1_minSoc` | `zdmc_dev1_minsoc` | `number` | 10…90 %, Schritt 1 |
 | dev0 AC-Laden (inputLimit) | `zdmc_dev0_inputLimit` | `zdmc_dev0_inputlimit` | `number` | 0…1000 W, Schritt 50 |
@@ -2883,7 +2888,7 @@ statt `set_value` und Werten `1`/`0`.
 > curl oder sonstwo kommt. Die **Anzeige** in Home Assistant hinkt dagegen
 > dem `scan_interval` von 600 s (10 min) hinterher, außer der Wert wurde
 > über genau diese `number`/`switch`-Entity gesetzt (dann erzwingt der
-> `homeassistant.update_entity`-Schritt einen sofortigen Re-Poll aller zehn
+> `homeassistant.update_entity`-Schritt einen sofortigen Re-Poll aller elf
 > Sensoren). Wird ein Key extern (curl, ein anderes KVS-Tool) geändert,
 > zeigt HA bis zu 10 Minuten den alten Wert.
 

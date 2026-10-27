@@ -18,6 +18,27 @@
         target:
           entity_id: sensor.zdmc_setpoint
 
+  # Entlade-Sperre (seit Regler 5.2.4): nach Entladen bis minSoc erst ab minSoc + Wert wieder entladen.
+  # Script begrenzt je Geraet auf hoechstens maxSoc - minSoc - 11.
+  - name: "Zendure Entlade-Sperre"
+    unique_id: zdmc_dischargeresetmargin
+    state: "{{ states('sensor.zdmc_dischargeresetmargin') | float(0) }}"
+    availability: "{{ states('sensor.zdmc_dischargeresetmargin') not in ['unknown','unavailable'] }}"
+    min: 3
+    max: 79
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:battery-lock
+    set_value:
+      - action: rest_command.zdmc_kvs_set
+        data:
+          key: zdmc_dischargeResetMargin
+          value: "{{ value | int }}"
+      - delay: "00:00:01"
+      - action: homeassistant.update_entity
+        target:
+          entity_id: sensor.zdmc_dischargeresetmargin
+
   - name: "Zendure Fixed"
     unique_id: zdmc_dischargefixed
     state: "{{ states('sensor.zdmc_dischargefixed') | float(0) }}"

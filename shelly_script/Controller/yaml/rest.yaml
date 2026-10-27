@@ -1,4 +1,4 @@
-- resource: "http://192.168.178.117/rpc/KVS.GetMany?match=zdmc_*"
+- resource: "http://<shelly-ip>/rpc/KVS.GetMany?match=zdmc_*"
   scan_interval: 600
   timeout: 10
   sensor:
@@ -16,6 +16,14 @@
       icon: mdi:transmission-tower
       value_template: >
         {% set m = value_json['items'] | selectattr('key','eq','zdmc_setpoint') | list %}
+        {{ m[0].value if m else none }}
+
+    - name: "ZDMC dischargeResetMargin"
+      unique_id: zdmc_kvs_dischargeresetmargin
+      unit_of_measurement: "%"
+      icon: mdi:battery-lock
+      value_template: >
+        {% set m = value_json['items'] | selectattr('key','eq','zdmc_dischargeResetMargin') | list %}
         {{ m[0].value if m else none }}
 
     - name: "ZDMC dev0 minSoc"
