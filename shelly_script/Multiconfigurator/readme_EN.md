@@ -235,6 +235,7 @@ When a new version of a script is available, you can bring your Shellys up to da
 
 4. Tick the scripts you want → **"Update now"**. The configurator reads your current configuration directly from the Shelly and jumps to the result.
 5. There, click **"⚡ Upload directly"**. The new script replaces the old one in the same slot (the script number stays the same – important e.g. for the dashboard proxy) and is started again.
+6. For the script "zenDash API + Watchdog", also update the **dashboard proxy** afterwards: dashboard and script carry the same version; with an old proxy the dashboard shows "script version mismatch". The configurator points this out in the update table and after uploading, with the download links (or the way in Home Assistant).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/fb19b123-4555-4be9-bc5d-39c16310bf12" />
 
@@ -416,11 +417,15 @@ shasum -a 256 -c zendure_local_helper-macos.sha256
 
 ## 8. Download
 
+In the configurator itself: start dialog → **"Downloads"** – helper and dashboard proxy in the latest version, your own operating system highlighted, plus the apps for Home Assistant.
+
 | What | Links |
 |---|---|
 | Helper Windows (64 bit) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe.sha256) |
 | Helper Windows (32 bit) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe.sha256) |
 | Helper macOS (Apple Silicon) | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos.sha256) |
+| Dashboard proxy Windows | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe.sha256) |
+| Dashboard proxy macOS | [Download](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos) · [SHA-256](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos.sha256) |
 | All versions | [Releases page](https://github.com/surfer1264/Zendure-Stuff/releases/latest) |
 | Web configurator | [open in browser](https://raw.githack.com/surfer1264/Zendure-Stuff/main/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html) |
 

@@ -4,6 +4,11 @@
 
 - Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg
 - Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)
+- Configurator: Neue Auswahl **„Downloads“** im Startdialog (auch ohne Helfer). Direkte Links auf das neueste Release für den Dashboard-Proxy (Windows, macOS) und den Helfer (Windows 64/32 Bit, macOS); das eigene Betriebssystem ist hervorgehoben. Dazu je die aktuelle Version aus dem Manifest, das App-Repository für Home Assistant, die Anleitungen und die Release-Seite mit den Prüfsummen
+- Configurator: Dashboard-Proxy beim Script „zenDash-API + Watchdog“. Dashboard und Script tragen dieselbe Version, ein neues Script braucht deshalb auch einen neuen Proxy
+  - Update-Tabelle: Bei „Update verfügbar“ steht der Hinweis mit den Download-Links bzw. dem Weg in Home Assistant
+  - Nach erfolgreichem Direkt-Upload erscheint eine Box „Jetzt noch den Dashboard-Proxy aktualisieren“ (nur mit zenDash-API)
+  - Ergebnis-Schritt: Zeile „Passender Dashboard-Proxy“ mit denselben Links, auch für das Hochladen von Hand
 - Helfer: Neue Umgebungsvariable `ZENDURE_HELPER_HA_APP`. Gesetzt kennzeichnet der Helfer die ausgelieferte Seite als Home-Assistant-App; die App setzt sie in `run.sh`. Die EXE ist unverändert
 
 ## 2.9.2

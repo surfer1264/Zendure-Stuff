@@ -6,6 +6,7 @@ https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigu
 ## 2.9.3.0
 
 - Multi-Configurator 2.9.3: Eine neue Version wird gleich beim Öffnen oben auf der Seite angezeigt, mit dem Weg zum Update in Home Assistant statt eines Download-Links für die EXE
+- Neue Auswahl „Downloads“ im Startdialog (Dashboard-Proxy und Helfer, Apps für Home Assistant). Nach einem Update des Scripts „zenDash-API + Watchdog“ weist der Configurator darauf hin, auch den Dashboard-Proxy zu aktualisieren
 
 ## 2.9.2.1
 
