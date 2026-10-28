@@ -178,6 +178,10 @@ Jede Zeile wird mit Zeitstempel im Terminal ausgegeben und (bei `log_to_file`) i
 [2026-09-27 13:43:31] [Script 1] Netzsaldo: -30 W | Ist-Summe: 18 W | Regelsignal: -11 W | Ladekorrektur: 0 W
 ```
 
+### Auswerten
+
+Die Logs des Controllers lassen sich mit der [statistischen Auswertung](../stat/auswertung/readme.md) (`stat/auswertung/analyse.py`) auswerten: Tageswerte, Regelgüte, Tagesprofil und ein Bericht im Browser. Dafür müssen **`show_script_prefix: true`** und **`daily_log_rotation: true`** gesetzt sein (Standard), und der Grabber muss dauerhaft laufen. Einzelheiten unter [Logs aufzeichnen](../stat/auswertung/readme.md#logs-aufzeichnen).
+
 ### Testen
 
 Schau dir die geschriebenen Log-Dateien unbedingt einmal an – jede Shelly-Firmware hat ihre Eigenheiten.

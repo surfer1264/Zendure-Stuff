@@ -176,7 +176,7 @@ def erzeugen(hier=HIER):
     c = d["cfg"]
     d["rw"] = rechenweg(d)
     methode = (
-        f"Grundlage sind die Debug-Logs des Multi-Device-Controllers (ein Takt etwa alle {_de(c['takt'])} s). "
+        f"Grundlage ist die Konsolen-Ausgabe des Multi-Device-Controllers, mitgeschrieben vom Log-Grabber (ein Takt etwa alle {_de(c['takt'])} s). "
         f"Energie ist Leistung × Zeit bis zum nächsten Takt, Lücken über {c['luecke']} s werden gekappt. Tageswerte und Kennzahlen zeigen nur volle Tage "
         f"(mindestens {c['vollH']} h erfasst). PV-Ladung steht nicht im Log und ist nur am SOC-Anstieg zu sehen. "
         f"Wie jedes Diagramm im Einzelnen gerechnet ist, steht in der Karte unter „So gerechnet“."
@@ -357,7 +357,7 @@ __SCHRIFTEN__
     <div class="brand">
       <h1 class="word">ZENDURE <span>// TAGESSTATISTIK</span></h1>
       <div class="chips" aria-label="Geräte">__CHIPS__</div>
-      <div class="sub">Auswertung der Debug-Logs des Multi-Device-Controllers</div>
+      <div class="sub">Auswertung der Logs des Multi-Device-Controllers</div>
     </div>
     <div class="head-right">
       <div class="pill">Stand <b>__STAND__</b></div>

@@ -1,4 +1,5 @@
 """Statistische Auswertung der Multi-Device-Controller-Logs (ein oder mehrere Zendure-Speicher).
+Die Logs schreibt Script_poller/shelly_log_grabber.py mit (show_script_prefix und daily_log_rotation an).
 
 Aufruf (aus beliebigem Verzeichnis):
     python analyse.py              # Logs aus LOG_ORDNER (Standard: Ordner über diesem Skript)

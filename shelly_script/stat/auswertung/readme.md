@@ -1,7 +1,8 @@
 # Auswertung Zendure-Speicher
 
-Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skript) für einen
-oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
+Statistische Auswertung der Logs des Multi-Device-Controllers (Shelly-Skript) für einen
+oder mehrere Zendure-Speicher. Die Logs zeichnet der [Log-Grabber](../../Script_poller/readme.md#2-shelly-websocket-log-grabber)
+auf, siehe [Logs aufzeichnen](#logs-aufzeichnen). `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
 Version: **1.6.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
@@ -14,6 +15,59 @@ im Ordner [`shelly_script/stat/auswertung`](https://github.com/surfer1264/Zendur
 Benötigt werden `analyse.py`, `bericht.py` und `zendure_fonts.css`, unter Windows optional `analyse.cmd`.
 
 - **Einzelne Dateien:** Datei im Ordner anklicken, dann oben rechts „Download raw file“.
+
+## Logs aufzeichnen
+
+`analyse.py` wertet die Konsolen-Ausgabe des Controller-Scripts aus, also das, was im Shelly unter
+„Scripts → Konsole“ durchläuft. Der Shelly speichert sie nicht. Sie muss von außen mitgeschrieben werden, und
+zwar mit dem **[Log-Grabber](../../Script_poller/readme.md#2-shelly-websocket-log-grabber)**
+(`Script_poller/shelly_log_grabber.py`). Nur sein Format kann `analyse.py` lesen.
+
+**Einstellungen in `config_log_grabber.json`** (die markierten Werte sind Pflicht):
+
+```json
+{
+  "shelly_ip": "<IP-Controller-Shelly>",
+  "target_script_ids": [1],
+  "only_script_logs": true,
+  "log_to_file": true,
+  "log_file_path": "shelly_debug.log",
+  "separate_log_files": false,
+  "daily_log_rotation": true,
+  "show_script_prefix": true
+}
+```
+
+- **`show_script_prefix: true`** – Pflicht. Ohne `[Script N]` am Zeilenanfang erkennt `analyse.py` keine Zeile
+  und meldet „Keine Takte“.
+- **`daily_log_rotation: true`** – Pflicht. Je Tag eine Datei `shelly_debug_JJMMTT.log`; das passt zum Muster
+  `LOG_MUSTER` und ergibt nach Namen sortiert die richtige Reihenfolge. Mit `separate_log_files: true` heißen die
+  Dateien `shelly_debug_script<ID>_JJMMTT.log`, das passt ebenfalls.
+- **`target_script_ids`** mit der ID des Controller-Scripts statt `1` (steht im Shelly unter „Scripts“) und
+  **`only_script_logs: true`**, damit keine Systemmeldungen und keine anderen Scripte in der Datei landen.
+- `debug` im Controller ist **nicht** nötig: Alle ausgewerteten Zeilen gibt der Controller immer aus.
+
+So sehen passende Zeilen aus:
+
+```text
+[2026-09-27 13:43:27] [Script 1] Netzsaldo: 27 W | Ist-Summe: 0 W | Regelsignal: 18 W | Ladekorrektur: 0 W
+[2026-09-27 13:43:27] [Script 1]   SF2400: SOC 45% | socL 0 | gridR 1 | Ist 0 W | Soll 18 W | acMode 2
+[2026-09-27 13:43:27] [Script 1] SF2400: Leistung gesetzt: 18 W (Export, smartMode 1)
+```
+
+Ausgewertet werden die Zeilen `Netzsaldo: …` (ein Takt), die Gerätezeilen `<Gerät>: SOC …`, `Leistung gesetzt`,
+`Sparmodus an: …`, `Zyklen 1h: …` (ab Controller 5.2.6), der Startblock (Sollwert, Neustarts), `KVS zdmc_setpoint:
+Wert uebernommen …` und die Störungsmeldungen. Alle anderen Zeilen werden übersprungen.
+
+**Gut zu wissen:**
+
+- **Dauerhaft laufen lassen.** Der Log-Grabber muss rund um die Uhr laufen, z. B. auf einem PC, der nicht schläft,
+  oder auf einer Synology. Ein Tag zählt erst ab `VOLLER_TAG_H` (22) erfassten Stunden; Lücken fehlen in der
+  Auswertung.
+- **Ablage:** Die Logs gehören in den Ordner über `auswertung` (Standard), oder `LOG_ORDNER` zeigt auf ihren Ordner.
+- **Nicht geeignet** ist der Log-Mitschnitt im Multi-Configurator. Er schreibt die Uhrzeit ohne Datum
+  (`[13:43:27.123]`); solche Dateien findet `analyse.py` zwar, wertet aber keine Zeile aus.
+- Logs von Hand aus der Shelly-Konsole kopieren geht nur, wenn jede Zeile das Format oben hat.
 
 ## Installation
 
