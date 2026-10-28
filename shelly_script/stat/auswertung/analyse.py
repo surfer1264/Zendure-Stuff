@@ -40,7 +40,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.5.0"
+VERSION = "1.6.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -521,7 +521,15 @@ def zusammensetzen(ergebnisse):
     print("Geräte:", ", ".join(f"{g} ({k})" if g != k else g for g, k in zip(geraete, keys)))
     if not TAKT_S:
         print(f"Takt: {float(np.median(takte_s)):.1f} s (aus dem Log)")
-    pd.DataFrame({"name": geraete, "key": keys}).to_csv(os.path.join(HIER, "geraete.csv"), index=False)
+    # Zeitraum je Gerät: erster und letzter Tag mit Gerätezeilen (für den Hinweis im Bericht)
+    da = {g: sorted(t for t, x in tage_roh.items() if g in x["geraete"]) for g in geraete}
+    pd.DataFrame({"name": geraete, "key": keys,
+                  "von": [da[g][0] if da[g] else "" for g in geraete],
+                  "bis": [da[g][-1] if da[g] else "" for g in geraete]}).to_csv(os.path.join(HIER, "geraete.csv"), index=False)
+    alle_tage = sorted(tage_roh)
+    for g in geraete:
+        if da[g] and (da[g][0] != alle_tage[0] or da[g][-1] != alle_tage[-1]):
+            print(f"Hinweis: {g} kommt nur von {da[g][0]} bis {da[g][-1]} im Log vor – an den anderen Tagen bleiben seine Spalten leer")
 
     # ------------------------------------------------ verlauf_15min.csv
     r = pd.concat(verlauf, ignore_index=True)
@@ -556,7 +564,8 @@ def zusammensetzen(ergebnisse):
         z["sollwert_min_w"] = x.get("sollwert_min_w")
         z["sollwert_max_w"] = x.get("sollwert_max_w")
         for g, k in zip(geraete, keys):
-            z["stellbefehle_" + k] = x["ereignisse"].get("stell:" + g, 0)
+            # Gerät an diesem Tag nicht im Log (noch nicht oder nicht mehr da): leer statt 0
+            z["stellbefehle_" + k] = x["ereignisse"].get("stell:" + g, 0) if g in x["geraete"] else None
         for c in EREIGNIS_SPALTEN:
             z[c] = x["ereignisse"].get(c, 0)
         zy = x.get("zyklen")
@@ -568,9 +577,11 @@ def zusammensetzen(ergebnisse):
         zeilen.append(z)
     day = pd.DataFrame(zeilen).set_index("tag")
     day = day.astype(float)
-    day = day.fillna({c + k + s: 0 for k in keys for c, s in (("entladung_", "_kwh"), ("aktiv_", "_h"))})
+    # Spalten der Einzelgeräte bleiben leer, wenn das Gerät an dem Tag nicht im Log war
+    geraet_spalten = [c for k in keys for c in ("entladung_" + k + "_kwh", "soc_min_" + k, "soc_max_" + k,
+                                                 "aktiv_" + k + "_h", "stellbefehle_" + k)]
     takte_gesamt, takte_ohne = day.pop("takte_gesamt").astype(int), day.pop("takte_ohne_abfrage").astype(int)
-    day["entladung_gesamt_kwh"] = sum(day["entladung_" + k + "_kwh"] for k in keys)
+    day["entladung_gesamt_kwh"] = sum(day["entladung_" + k + "_kwh"].fillna(0) for k in keys)   # nur vorhandene Geräte
     day["deckung_pct"] = 100 * day.entladung_gesamt_kwh / (day.entladung_gesamt_kwh + day.netzbezug_kwh)
     day["takte_gesamt"] = takte_gesamt
     day["takte_ohne_abfrage"] = takte_ohne
@@ -584,8 +595,11 @@ def zusammensetzen(ergebnisse):
     regel = ["regel_im_band_pct", "regel_median_abw_w", "regel_versatz_w", "zyklus_avg_ms", "zyklus_max_ms",
              "zyklus_interval_ms"]
     day = day.drop(columns="erfasst_h")
-    day[day.columns.difference(regel)] = day[day.columns.difference(regel)].fillna(0)
-    day[zaehler] = day[zaehler].astype(int)
+    offen = regel + geraet_spalten                     # diese Spalten dürfen leer bleiben
+    day[day.columns.difference(offen)] = day[day.columns.difference(offen)].fillna(0)
+    day[EREIGNIS_SPALTEN] = day[EREIGNIS_SPALTEN].astype(int)
+    stell = ["stellbefehle_" + k for k in keys]
+    day[stell] = day[stell].astype("Int64")            # ganze Zahl, leer wenn das Gerät fehlt
     cols = ["vollstaendig"] + [c for c in day.columns if c != "vollstaendig"]
     day = day[cols].round(2)
     day.index.name = "tag"

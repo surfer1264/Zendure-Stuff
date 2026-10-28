@@ -53,10 +53,12 @@ def geraeteliste(hier, verlauf):
     """[(Name, Spaltenschlüssel)] – aus geraete.csv (von analyse.py), sonst aus den CSV-Spalten."""
     pfad = os.path.join(hier, "geraete.csv")
     if os.path.exists(pfad):
-        g = pd.read_csv(pfad, dtype=str)
-        return list(zip(g.name, g.key))
+        g = pd.read_csv(pfad, dtype=str, keep_default_na=False)
+        von = g.von if "von" in g else [""] * len(g)
+        bis = g.bis if "bis" in g else [""] * len(g)
+        return list(zip(g.name, g.key, von, bis))
     keys = [c[4:] for c in verlauf.columns if c.startswith("soc_")]
-    return [(k.upper(), k) for k in keys]
+    return [(k.upper(), k, "", "") for k in keys]
 
 
 def daten(hier):
@@ -69,8 +71,16 @@ def daten(hier):
     # Takt: Einstellung aus analyse.py oder gemessen (Median der Takte je vollem Tag)
     takte_tag = int(voll.takte_gesamt.median())
     takt = cfg.TAKT_S or round(86400 / takte_tag, 1)
-    geraete = [{"name": g, "key": k, "farbe": FARBEN_GERAETE[i % len(FARBEN_GERAETE)]}
-               for i, (g, k) in enumerate(geraeteliste(hier, v))]
+    erster, letzter = t.tag.iloc[0], t.tag.iloc[-1]
+    kurz = lambda s: f"{s[8:10]}.{s[5:7]}."
+    def zeitraum(von, bis):
+        """Hinweis, wenn ein Gerät nicht über den ganzen Zeitraum im Log vorkommt (z. B. abgebaut)."""
+        ab, end = bool(von) and von > erster, bool(bis) and bis < letzter
+        if ab and end:
+            return f"{kurz(von)}–{kurz(bis)}"
+        return f"ab {kurz(von)}" if ab else (f"bis {kurz(bis)}" if end else "")
+    geraete = [{"name": g, "key": k, "farbe": FARBEN_GERAETE[i % len(FARBEN_GERAETE)], "zeitraum": zeitraum(von, bis)}
+               for i, (g, k, von, bis) in enumerate(geraeteliste(hier, v))]
     # Zeit als Minuten seit 1970 ohne Zeitzone (Logzeit = Ortszeit, keine Sommerzeit-Sprünge)
     minuten = ((pd.to_datetime(v.t) - pd.Timestamp("1970-01-01")) // pd.Timedelta(minutes=1)).astype(int)
     verlauf = {"t": [int(x) for x in minuten], "netz": _liste(v.netzsaldo_w), "speicher": _liste(v.speicher_w)}
@@ -160,7 +170,8 @@ def erzeugen(hier=HIER):
     d = daten(hier)
     stand = dt.datetime.now().strftime("%d.%m.%Y %H:%M")
     geraete_txt = " + ".join(g["name"] for g in d["geraete"])
-    chips = "".join(f'<span class="chip"><i style="background:{g["farbe"]}"></i>{html.escape(g["name"])}</span>'
+    chips = "".join(f'<span class="chip"><i style="background:{g["farbe"]}"></i>{html.escape(g["name"])}'
+                    + (f' · {html.escape(g["zeitraum"])}' if g["zeitraum"] else "") + '</span>'
                     for g in d["geraete"])
     c = d["cfg"]
     d["rw"] = rechenweg(d)

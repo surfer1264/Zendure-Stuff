@@ -4,7 +4,7 @@ Statistische Auswertung der Debug-Logs des Multi-Device-Controllers (Shelly-Skri
 oder mehrere Zendure-Speicher. `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.5.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.6.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -198,7 +198,7 @@ Beispiel:
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
 | `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte (gegen den gültigen Sollwert), Sollwert (`sollwert_min_w`, `sollwert_max_w`), Versatz (`regel_versatz_w`), Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
-| `geraete.csv` | Die ausgewerteten Geräte: Name wie im Log und Spaltenschlüssel (z. B. `Keller Süd` → `keller_sued`). |
+| `geraete.csv` | Die ausgewerteten Geräte: Name wie im Log, Spaltenschlüssel (z. B. `Keller Süd` → `keller_sued`), erster und letzter Tag im Log (`von`, `bis`). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |
 | `bericht.html` | Der Bericht: eine einzelne Datei, die ohne Internetverbindung funktioniert (Daten, Schriften und Zeichen-Skript eingebettet). |
 
@@ -215,6 +215,15 @@ Beispiel:
   über die vollen Tage (Linie = Median, Bänder = 25–75 % und 10–90 %).
 
 ### Ein oder mehrere Geräte
+
+**Gerät hinzugefügt oder abgebaut:** Mit `GERAETE = None` bleibt jedes Gerät in der Auswertung, das irgendwann im
+Zeitraum im Log vorkam – auch nach dem Abbau. An Tagen ohne seine Zeilen bleiben seine Spalten in `tage.csv` leer
+(Entladung, SOC-Min/-Max, Aktivzeit, Stellbefehle), statt 0 zu zeigen; im Bericht enden seine Linien dort.
+„Entladung gesamt“ zählt nur die an dem Tag vorhandenen Geräte. Netzsaldo, Ist-Summe, Deckung und Regelgüte kommen
+aus der Summenzeile des Controllers und enthalten immer genau die Geräte, die er an dem Tag geregelt hat. Im Kopf des
+Berichts steht beim Gerät „ab …“ oder „bis …“, wenn es nicht über den ganzen Zeitraum dabei war; `analyse.py` meldet
+das auch beim Lauf. Ein abgebautes Gerät aus `GERAETE` zu streichen ist meist nicht sinnvoll: Dann fehlt es auch an
+den früheren Tagen, an denen es in Netzsaldo und Ist-Summe noch enthalten ist.
 
 Gerätename ist alles, was im Log vor `: SOC …` steht, also auch mit Leerzeichen oder Umlauten
 (`  Keller Süd: SOC 45% | …`). Für die Spalten der CSV-Dateien bildet das Skript daraus einen Schlüssel:
@@ -269,6 +278,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.6.0**: Abgebaute oder neu hinzugekommene Geräte: An Tagen ohne Gerätezeilen bleiben dessen Spalten leer statt 0
+  (vorher z. B. SOC 0 % nach dem Abbau). `geraete.csv` hat `von`/`bis`, der Bericht zeigt „ab …“/„bis …“ beim Gerät.
+  Ohne Gerätewechsel sind alle Ergebnisse gleich wie in 1.5.0; die neue Version rechnet einmal alle Logs neu.
 - **1.5.0**: Jede Diagrammkarte im Bericht hat ein aufklappbares „So gerechnet“ mit Logzeile, Formel und den
   eingestellten Schwellwerten. Eigene Einstellungen in `analyse_config.json` (bleibt bei Updates erhalten).
   `analyse.cmd` läuft auch auf Netzlaufwerken. Die neue Version rechnet einmal alle Logs neu.
