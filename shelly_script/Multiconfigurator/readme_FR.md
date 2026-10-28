@@ -231,7 +231,7 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
     | **non installé** / **pas de script unique** | Mise à jour impossible, choisis [« Nouvelle configuration ou mise à jour manuelle »](#3-première-configuration). |
     | **Shelly injoignable** | voir [Messages d'erreur](#6-messages-derreur-et-situations-problématiques) |
 
-    En dessous, tu vois aussi s'il existe une nouvelle version du configurateur/de l'assistant local lui-même – avec un lien de téléchargement.
+    En dessous, tu vois aussi s'il existe une nouvelle version du configurateur/de l'assistant local lui-même – avec un lien de téléchargement, ou dans l'application Home Assistant avec le chemin de mise à jour dans Home Assistant. Une nouvelle version du configurateur s'affiche aussi en haut de la page dès l'ouverture, sans clic (il faut un accès à Internet ; sinon la remarque n'apparaît pas).
 
 4. Coche les scripts souhaités → **« Mettre à jour »**. Le configurateur lit ta configuration actuelle directement sur le Shelly et passe au résultat.
 5. Là, clique sur **« ⚡ Charger directement »**. Le nouveau script remplace l'ancien au même emplacement (le numéro de script reste identique – important par ex. pour le proxy du tableau de bord) et est redémarré.

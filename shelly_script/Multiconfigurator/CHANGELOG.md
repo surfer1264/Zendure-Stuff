@@ -1,5 +1,11 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.9.3
+
+- Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg
+- Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)
+- Helfer: Neue Umgebungsvariable `ZENDURE_HELPER_HA_APP`. Gesetzt kennzeichnet der Helfer die ausgelieferte Seite als Home-Assistant-App; die App setzt sie in `run.sh`. Die EXE ist unverändert
+
 ## 2.9.2
 
 - Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt

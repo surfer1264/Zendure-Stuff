@@ -29,9 +29,11 @@ nur die gemerkten IPs.
 
 ## Hinweis „neue Version verfügbar“
 
-Zeigt der Configurator eine neue Version des Configurators/Helfers mit
-Download-Link an, gilt der Link für die EXE. In Home Assistant stattdessen die
-App aktualisieren.
+Gibt es eine neue Version, zeigt der Configurator das gleich beim Öffnen oben
+auf der Seite an – mit dem Weg zum Update: **Einstellungen → Apps → Zendure
+Multi-Configurator → Aktualisieren**. Fehlt der Knopf noch, im App-Store oben
+rechts **⋮ → Nach Updates suchen**. Einen Download-Link gibt es in der App
+nicht (ab 2.9.3.0; ältere Versionen zeigten den Link für die EXE).
 
 ## Zugriff und Sicherheit
 

@@ -231,7 +231,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
     | **nicht installiert** / **kein eindeutiges Script** | Update nicht möglich, bitte [„Neu konfigurieren oder manuell updaten“](#3-ersteinrichtung). |
     | **Shelly nicht erreichbar** | siehe [Fehlermeldungen](#6-fehlermeldungen-und-problemsituationen) |
 
-    Darunter steht außerdem, ob es eine neue Version des Configurators/Helfers selbst gibt – mit Download-Link.
+    Darunter steht außerdem, ob es eine neue Version des Configurators/Helfers selbst gibt – mit Download-Link, in der Home-Assistant-App mit dem Weg zum Update in Home Assistant. Eine neue Version des Configurators zeigt er auch ohne Klick gleich beim Öffnen oben auf der Seite an (dafür braucht er Internet; ohne bleibt der Hinweis weg).
 
 4. Gewünschte Scripte anhaken → **„Jetzt updaten“**. Der Configurator liest deine aktuelle Konfiguration direkt vom Shelly und springt zum Ergebnis.
 5. Dort **„⚡ Direkt hochladen“** klicken. Das neue Script ersetzt das alte an derselben Stelle (die Script-Nummer bleibt gleich – wichtig z. B. für den Dashboard-Proxy) und wird wieder gestartet.

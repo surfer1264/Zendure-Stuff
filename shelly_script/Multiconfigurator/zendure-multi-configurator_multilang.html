@@ -227,6 +227,7 @@
       </details>
     </div>
   </header>
+  <p class="note" id="appUpdateNote" style="display:none; margin:0 0 12px;"></p>
   <p class="intro" id="pageSub"></p>
   <a id="introDocLink" href="https://surfer1264.github.io/Zendure-Stuff/" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin-bottom:4px;"></a>
   <a id="compatLink" href="https://surfer1264.github.io/Zendure-Stuff/kompatible_geraete/" target="_blank" rel="noopener" style="display:inline-block; font-size:.85rem; color:var(--accent-text); margin:0 0 4px 16px;"></a>
@@ -253,7 +254,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.9.2";
+const APP_VERSION = "2.9.3";
 
 const I18N = {
 de: {
@@ -525,6 +526,7 @@ de: {
   upd_app_new: "Neue Version {v} des Configurators/Helfers verfügbar (installiert: {cur}).",
   upd_app_download: "Herunterladen",
   upd_app_current: "Configurator/Helfer {cur} ist aktuell.",
+  upd_app_ha: "Das Update kommt über Home Assistant: Einstellungen → Apps → Zendure Multi-Configurator → Aktualisieren. Fehlt der Knopf noch, im App-Store oben rechts ⋮ → „Nach Updates suchen“.",
   upd_question: "Möchtest du jetzt updaten?",
   upd_btn_now: "Jetzt updaten",
   upd_none_selected: "Bitte mindestens ein Script auswählen.",
@@ -924,6 +926,7 @@ en: {
   upd_app_new: "New version {v} of the configurator/helper available (installed: {cur}).",
   upd_app_download: "Download",
   upd_app_current: "Configurator/helper {cur} is up to date.",
+  upd_app_ha: "The update comes through Home Assistant: Settings → Apps → Zendure Multi-Configurator → Update. If the button is not there yet, open the app store, ⋮ at the top right → “Check for updates”.",
   upd_question: "Would you like to update now?",
   upd_btn_now: "Update now",
   upd_none_selected: "Please select at least one script.",
@@ -1323,6 +1326,7 @@ fr: {
   upd_app_new: "Nouvelle version {v} du configurateur/de l'assistant disponible (installée : {cur}).",
   upd_app_download: "Télécharger",
   upd_app_current: "Configurateur/assistant {cur} à jour.",
+  upd_app_ha: "La mise à jour passe par Home Assistant : Paramètres → Applications → Zendure Multi-Configurator → Mettre à jour. Si le bouton n'apparaît pas encore, dans la boutique d'applications, ⋮ en haut à droite → « Rechercher des mises à jour ».",
   upd_question: "Veux-tu mettre à jour maintenant ?",
   upd_btn_now: "Mettre à jour",
   upd_none_selected: "Sélectionne au moins un script.",
@@ -1662,6 +1666,10 @@ function renderHeader(){
   footerSuite.textContent = t('footer_suite');
   footerSuite.href = introLink.href;
   document.getElementById('footerVersion').textContent = t('version_label') + ' ' + APP_VERSION;
+  const appNote = document.getElementById('appUpdateNote');
+  const appNewer = latestAppVersion && compareVersions(APP_VERSION, latestAppVersion) < 0;
+  appNote.style.display = appNewer ? 'block' : 'none';
+  appNote.innerHTML = appNewer ? appUpdateHtml(latestAppVersion) : '';
   document.getElementById('toast').textContent = t('toastCopied');
 }
 
@@ -3304,7 +3312,11 @@ async function downloadFullScript(key){
 // setzt er <meta name="zendure-helper">. Dann wird er relativ angesprochen -
 // das klappt auch hinter dem Pfad-Praefix des HA-Ingress und von einem
 // anderen Rechner aus. Sonst (Web-Configurator, githack) wie bisher.
-const HELPER_URL = document.querySelector('meta[name="zendure-helper"]') ? '.' : 'http://127.0.0.1:8787';
+// content="ha-app": Seite kommt aus der Home-Assistant-App - Updates des
+// Configurators dann ueber Home Assistant statt per Download.
+const HELPER_META = document.querySelector('meta[name="zendure-helper"]');
+const HELPER_URL = HELPER_META ? '.' : 'http://127.0.0.1:8787';
+const IS_HA_APP = !!HELPER_META && HELPER_META.getAttribute('content') === 'ha-app';
 let helperAvailable = false;
 
 // Faehigkeiten des laufenden Helfers (aus /api/health). Aeltere Helfer
@@ -3348,6 +3360,7 @@ const KEY_NAMES = { ctrl: 'Controller', zdw: 'zenDash-API + Watchdog' };
 let helperSettings = {};          // von /api/settings (zendure_helper_config.json)
 let manifestPromise = null;
 let manifestData = null;
+let latestAppVersion = null;      // Configurator-Version laut Manifest
 
 function loadManifest(){
   if(!manifestPromise){
@@ -3358,6 +3371,22 @@ function loadManifest(){
     manifestPromise.catch(function(){ manifestPromise = null; });
   }
   return manifestPromise;
+}
+
+// Eigene Version beim Start still pruefen. Offline oder ohne Antwort von
+// GitHub bleibt der Hinweis einfach weg.
+function checkAppVersion(){
+  loadManifest().then(function(m){
+    const s = m && m.scripts && m.scripts[APP_TYPE];
+    latestAppVersion = s ? s.version : null;
+    renderHeader();
+  }).catch(function(){});
+}
+
+function appUpdateHtml(v){
+  return t('upd_app_new', {v: escapeHtml(v), cur: APP_VERSION}) + ' ' + (IS_HA_APP
+    ? escapeHtml(t('upd_app_ha'))
+    : `<a href="${RELEASE_URL}" target="_blank" rel="noopener" style="color:var(--accent-text);">${t('upd_app_download')} ↗</a>`);
 }
 
 function compareVersions(a, b){
@@ -3733,7 +3762,7 @@ function renderUpdateTable(){
   }).join('');
   const app = u.app;
   const appLine = app ? (compareVersions(APP_VERSION, app) < 0
-      ? `<p class="note" style="margin-top:12px;">${t('upd_app_new', {v: escapeHtml(app), cur: APP_VERSION})} <a href="${RELEASE_URL}" target="_blank" rel="noopener" style="color:var(--accent-text);">${t('upd_app_download')} ↗</a></p>`
+      ? `<p class="note" style="margin-top:12px;">${appUpdateHtml(app)}</p>`
       : `<p class="hint" style="margin-top:12px;">${t('upd_app_current', {cur: APP_VERSION})}</p>`) : '';
   const any = Object.keys(u.selected).some(function(k){ return u.selected[k] && u.rows[k] && u.rows[k].selectable; });
   return `
@@ -3792,7 +3821,8 @@ async function checkUpdates(){
     u.selected[key] = r.status === 'outdated';
   }
   u.rows = rows;
-  u.app = manifest && manifest.scripts && manifest.scripts['zdmc-configurator'] ? manifest.scripts['zdmc-configurator'].version : null;
+  u.app = manifest && manifest.scripts && manifest.scripts[APP_TYPE] ? manifest.scripts[APP_TYPE].version : null;
+  if(u.app) latestAppVersion = u.app;
   u.checked = true; u.busy = false; u.checking = false;
   render();
 }
@@ -4265,6 +4295,7 @@ function render(){
 
 render();
 loadHelperSettings();
+checkAppVersion();
 </script>
 </body>
 </html>

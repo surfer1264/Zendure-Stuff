@@ -65,6 +65,9 @@ run.sh setzt nur Umgebungsvariablen:
                                   Origin-Pruefung gelten (App: 172.30.32.2,
                                   der Ingress-Proxy von Home Assistant - der
                                   hat den Nutzer bereits angemeldet)
+    ZENDURE_HELPER_HA_APP         gesetzt = Seite als HA-App kennzeichnen; der
+                                  Configurator verweist fuer eigene Updates
+                                  dann auf Home Assistant statt auf GitHub
 """
 
 import base64
@@ -90,6 +93,7 @@ PORT = int(os.environ.get("ZENDURE_HELPER_PORT") or 8787)
 # bewusst NUR dieser Rechner, nicht das ganze Netz - ausser als HA-App
 BIND_ADDRESS = os.environ.get("ZENDURE_HELPER_BIND") or "127.0.0.1"
 OPEN_BROWSER = not os.environ.get("ZENDURE_HELPER_NO_BROWSER")
+HA_APP = bool(os.environ.get("ZENDURE_HELPER_HA_APP"))
 TRUSTED_PEERS = {p.strip() for p in (os.environ.get("ZENDURE_HELPER_TRUSTED_PEERS") or "").split(",")
                  if p.strip()}
 CHUNK_SIZE = 1024            # Zeichen pro Script.PutCode-Aufruf
@@ -1255,7 +1259,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # Markierung "vom Helfer ausgeliefert": der Configurator spricht den
         # Helfer dann relativ an statt ueber http://127.0.0.1:8787 - noetig
         # hinter dem HA-Ingress (Pfad-Praefix) und von anderen Rechnern aus.
-        body = body.replace(b"<head>", b'<head><meta name="zendure-helper" content="same-origin">', 1)
+        # "ha-app": Updates des Configurators kommen ueber Home Assistant.
+        mode = b"ha-app" if HA_APP else b"same-origin"
+        body = body.replace(b"<head>", b'<head><meta name="zendure-helper" content="' + mode + b'">', 1)
         self.send_response(200)
         self._cors()
         self.send_header("Content-Type", "text/html; charset=utf-8")

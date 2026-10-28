@@ -231,7 +231,7 @@ When a new version of a script is available, you can bring your Shellys up to da
     | **not installed** / **no unique script** | Update not possible, please use ["Configure from scratch or update manually"](#3-initial-setup). |
     | **Shelly not reachable** | see [Error messages](#6-error-messages-and-problem-situations) |
 
-    Below the table you can also see whether there is a new version of the configurator/helper itself – with a download link.
+    Below the table you can also see whether there is a new version of the configurator/helper itself – with a download link, or in the Home Assistant app with the way to update it in Home Assistant. A new configurator version is also shown at the top of the page as soon as you open it, without a click (this needs internet access; without it the note does not appear).
 
 4. Tick the scripts you want → **"Update now"**. The configurator reads your current configuration directly from the Shelly and jumps to the result.
 5. There, click **"⚡ Upload directly"**. The new script replaces the old one in the same slot (the script number stays the same – important e.g. for the dashboard proxy) and is started again.
