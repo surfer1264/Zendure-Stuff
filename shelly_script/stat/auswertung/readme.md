@@ -23,7 +23,7 @@ Benötigt werden `analyse.py`, `bericht.py` und `zendure_fonts.css`, unter Windo
 zwar mit dem **[Log-Grabber](../../Script_poller/readme.md#2-shelly-websocket-log-grabber)**
 (`Script_poller/shelly_log_grabber.py`). Nur sein Format kann `analyse.py` lesen.
 
-**Einstellungen in `config_log_grabber.json`** (die markierten Werte sind Pflicht):
+**Einstellungen in `config_log_grabber.json`** (was davon Pflicht ist, steht darunter):
 
 ```json
 {
