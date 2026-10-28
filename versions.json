@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-28T22:21:43Z",
+  "generated": "2026-10-28T22:36:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -350,7 +350,7 @@
       "changes": [
         "Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg",
         "Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)",
-        "Helfer: Neue Umgebungsvariable `ZENDURE_HELPER_HA_APP`. Gesetzt kennzeichnet der Helfer die ausgelieferte Seite als Home-Assistant-App; die App setzt sie in `run.sh`. Die EXE ist unverändert"
+        "Configurator: Neue Auswahl **„Downloads“** im Startdialog (auch ohne Helfer). Direkte Links auf das neueste Release für den Dashboard-Proxy (Windows, macOS) und den Helfer (Windows 64/32 Bit, macOS); das eigene Betriebssystem ist hervorgehoben. Dazu je die aktuelle Version aus dem Manifest, das App-Repository für Home Assistant, die Anleitungen und die Release-Seite mit den Prüfsummen"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
@@ -440,6 +440,20 @@
           "notice": null
         }
       ]
+    },
+    "zdmc-dashboard": {
+      "kind": "app",
+      "version": "3.5.12",
+      "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4735fb1e313c9efacf1ecd443b3a9c03558efadc/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "changes": [
+        "Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab",
+        "Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`",
+        "Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile"
+      ],
+      "notice": null,
+      "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
+      "history": []
     }
   }
 }
