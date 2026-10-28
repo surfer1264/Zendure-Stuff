@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-26T10:42:12Z",
+  "generated": "2026-10-28T22:21:43Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -344,17 +344,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.9.2",
+      "version": "2.9.3",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/122e0a81dd6acc3a2fced0ff664191a263b7ff1f/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d2e0237913c705d6ab62a761a74325bf896f3326/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt",
-        "Configurator: Weicht beim Update oder Einlesen der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Empfehlung übernehmen, bisherigen Wert beibehalten oder eigenen Wert ab 3000 ms eintragen. Ohne Auswahl bleibt der bisherige Wert",
-        "Configurator: Zusammenfassung zeigt das Regel-Intervall (mit Empfehlung, falls abweichend)"
+        "Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg",
+        "Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)",
+        "Helfer: Neue Umgebungsvariable `ZENDURE_HELPER_HA_APP`. Gesetzt kennzeichnet der Helfer die ausgelieferte Seite als Home-Assistant-App; die App setzt sie in `run.sh`. Die EXE ist unverändert"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.9.2",
+          "changes": [
+            "Configurator: Regel-Intervall (`interval`) richtet sich nach der Geräteanzahl – empfohlen 3000 ms + 500 ms je Gerät (1 Gerät 3500 ms, 2 Geräte 4000 ms, 3 Geräte 4500 ms). Bei einer neuen Einrichtung wird die Empfehlung gesetzt",
+            "Configurator: Weicht beim Update oder Einlesen der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Empfehlung übernehmen, bisherigen Wert beibehalten oder eigenen Wert ab 3000 ms eintragen. Ohne Auswahl bleibt der bisherige Wert",
+            "Configurator: Zusammenfassung zeigt das Regel-Intervall (mit Empfehlung, falls abweichend)"
+          ],
+          "notice": null
+        },
         {
           "version": "2.9.1",
           "changes": [
@@ -427,15 +436,6 @@
             "Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers",
             "Bestehende Config einlesen: zusätzlich direkt vom Shelly (Controller- bzw. Dashboard-Shelly, nur mit Helfer) – landet wie beim Datei-Laden zuerst im Textfeld",
             "Geräte: Button „Testen“ neben jeder Speicher-IP öffnet den Report (/properties/report) in einem neuen Tab"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.2.0",
-          "changes": [
-            "Neuer Schritt „Watchdog-Schwellen“: Akku voll, Zellspannung und Temperatur mit Reset-Werten, vorbelegt aus der eingelesenen Config bzw. mit Standardwerten, inkl. Plausibilitätsprüfung",
-            "Ergebnis: Debug-Ausgaben je Script per Häkchen ein-/ausschalten (auch über Update)",
-            "Controller: errorThreshold-Standard auf 10"
           ],
           "notice": null
         }
