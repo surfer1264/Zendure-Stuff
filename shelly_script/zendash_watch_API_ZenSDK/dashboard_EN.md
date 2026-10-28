@@ -324,9 +324,11 @@ http://<proxy-address>:8000/bericht_zendure
 The analysis itself does not run in the proxy. It looks for the finished `bericht.html`:
 
 1. at the location given by `--bericht=PATH` or the environment variable `ZENDURE_BERICHT` (file or folder) – then only there,
-2. otherwise next to its configuration, next to the script or program, and in the repo folder `stat/auswertung`.
+2. otherwise next to `zendure-dashboard.html`, next to its configuration, next to the script or program, and in the repo folder `stat/auswertung`.
 
 In the Home Assistant app, put the file at `/share/zendure/bericht.html`. A newly generated report appears on the next request, without a restart. The proxy's start overview shows which file it found.
+
+If the proxy finds a report, the dashboard shows the link **"Analysis: log report"** in the page footer. Without a report the link is not shown.
 
 ---
 

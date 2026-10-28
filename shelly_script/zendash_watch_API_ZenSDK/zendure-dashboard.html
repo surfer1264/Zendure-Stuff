@@ -213,6 +213,7 @@
   }
   .lang-toggle{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.82rem; letter-spacing:.04em; }
   .fs-toggle[hidden]{ display:none; }
+  #berichtLine[hidden]{ display:none; }
   .fs-toggle.active{ color:var(--teal-text); border-color:var(--teal-text); }
   .sw-btn{
     position:relative; width:3.25rem; height:1.875rem; flex-shrink:0; padding:0; cursor:pointer;
@@ -690,6 +691,7 @@
         <span data-i18n="cloudSetup">Cloud-Upload einrichten:</span>
         <a href="thingspeak">ThingSpeak</a>
         <a href="thingsboard">ThingsBoard</a>
+        <span id="berichtLine" hidden><span data-i18n="berichtLbl">Auswertung:</span> <a href="bericht_zendure" data-i18n="berichtLink">Log-Bericht</a></span>
       </div>
     </footer>
 
@@ -773,6 +775,7 @@
       apiRawTitle: 'Rohdaten (JSON) im neuen Tab',
       cloudSetup: 'Cloud-Upload einrichten:',
       shellySetup: 'Dashboard-Shelly:', shellySetupLink: 'IP / Script-ID ändern',
+      berichtLbl: 'Auswertung:', berichtLink: 'Log-Bericht',
       chartBuilding: 'Verlauf wird aufgebaut',
       lastUpdateNone: 'zuletzt aktualisiert –',
       lastUpdate: 'zuletzt aktualisiert {time}',
@@ -887,6 +890,7 @@
       apiRawTitle: 'Raw data (JSON) in a new tab',
       cloudSetup: 'Set up cloud upload:',
       shellySetup: 'Dashboard Shelly:', shellySetupLink: 'change IP / script ID',
+      berichtLbl: 'Analysis:', berichtLink: 'log report',
       chartBuilding: 'Building history',
       lastUpdateNone: 'last updated –',
       lastUpdate: 'last updated {time}',
@@ -1001,6 +1005,7 @@
       apiRawTitle: 'Données brutes (JSON) dans un nouvel onglet',
       cloudSetup: 'Configurer l’envoi cloud :',
       shellySetup: 'Shelly du tableau de bord :', shellySetupLink: 'modifier IP / ID du script',
+      berichtLbl: 'Analyse :', berichtLink: 'rapport des journaux',
       chartBuilding: 'Historique en cours de constitution',
       lastUpdateNone: 'mis à jour –',
       lastUpdate: 'mis à jour à {time}',
@@ -2917,6 +2922,13 @@
     applyExpert();
   });
   applyExpert();
+
+  // Link zum Bericht der Log-Auswertung nur, wenn der Proxy eine bericht.html
+  // findet (HEAD-Anfrage, relativ - klappt auch hinter Home-Assistant-Ingress).
+  // Ohne Proxy (Datei direkt geoeffnet) schlaegt fetch fehl: Link bleibt aus.
+  fetch('bericht_zendure', { method: 'HEAD', cache: 'no-store' }).then(function(r){
+    if (r.ok) document.getElementById('berichtLine').hidden = false;
+  }).catch(function(){});
 
   // Alle gemerkten Ansichtseinstellungen auf Standard (Sprache bleibt):
   // Groesse A2, Tag/Nacht wieder nach System, Details aus, Uebersicht offen.

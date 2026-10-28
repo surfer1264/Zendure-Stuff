@@ -120,9 +120,10 @@ Die Auswertung reicht bis zum Ende der Logs, Tageswerte nutzen automatisch nur v
 
 Der Dashboard-Proxy (`zendure_proxy.py`, auch als Home-Assistant-App) liefert `bericht.html` unter
 `http://<IP>:8000/bericht_zendure` aus. Er sucht die Datei an dem Ort, den `--bericht=PFAD` (Datei oder Ordner)
-bzw. die Umgebungsvariable `ZENDURE_BERICHT` nennt, sonst neben seiner Konfiguration, neben sich selbst und im
-Repo-Ordner `stat/auswertung`. In der Home-Assistant-App: `/share/zendure/bericht.html`. Ein neu erzeugter
-Bericht erscheint beim nächsten Aufruf, ohne Neustart des Proxys.
+bzw. die Umgebungsvariable `ZENDURE_BERICHT` nennt, sonst neben der `zendure-dashboard.html`, neben seiner Konfiguration,
+neben sich selbst und im Repo-Ordner `stat/auswertung`. In der Home-Assistant-App: `/share/zendure/bericht.html`. Ein neu erzeugter
+Bericht erscheint beim nächsten Aufruf, ohne Neustart des Proxys. Findet der Proxy einen Bericht, zeigt das Dashboard
+im Fuß der Seite den Link „Auswertung: Log-Bericht“.
 
 ## Einstellungen
 

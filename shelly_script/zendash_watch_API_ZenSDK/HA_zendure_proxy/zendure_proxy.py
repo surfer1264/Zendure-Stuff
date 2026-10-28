@@ -198,14 +198,20 @@ def find_html(filename=HTML_FILENAME):
 def bericht_candidates():
     """Orte fuer bericht.html, die erste vorhandene gewinnt. Mit --bericht
     bzw. ZENDURE_BERICHT nur dieser Ort (Datei oder Ordner). Sonst neben der
-    Konfiguration, neben exe/Script und im Repo-Ordner stat/auswertung."""
+    Dashboard-HTML, neben der Konfiguration, neben exe/Script und im
+    Repo-Ordner stat/auswertung."""
     fest = BERICHT_PATH or os.environ.get("ZENDURE_BERICHT")
     if fest:
         if os.path.isdir(fest):
             fest = os.path.join(fest, BERICHT_FILENAME)
         return [os.path.normpath(fest)]
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    dirs = [data_dir(), app_dir(),
+    dirs = []
+    html = find_html()
+    meipass = getattr(sys, "_MEIPASS", None)
+    if html and not (meipass and html.startswith(os.path.abspath(meipass))):
+        dirs.append(os.path.dirname(html))         # neben der Dashboard-HTML (nicht im exe-Entpackordner)
+    dirs += [data_dir(), app_dir(),
             os.path.join(os.path.dirname(script_dir), "stat", "auswertung"),                      # Repo
             os.path.join(os.path.dirname(os.path.dirname(script_dir)), "stat", "auswertung")]     # Repo, local_helper/
     seen, result = set(), []
@@ -475,6 +481,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
 
         self.send_error(404, "Nicht gefunden: " + path)
+
+    def do_HEAD(self):
+        # Nur fuer den Bericht: das Dashboard fragt so ab, ob es den Link zeigen soll
+        path = self.path.split("?", 1)[0]
+        if path in ("/bericht_zendure", "/bericht_zendure/") and find_bericht():
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store, must-revalidate")
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def do_POST(self):
         if self.path in ("/thingspeak", "/thingsboard"):

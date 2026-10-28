@@ -322,9 +322,11 @@ http://<Proxy-Adresse>:8000/bericht_zendure
 Die Auswertung selbst läuft nicht im Proxy. Er sucht die fertige `bericht.html`:
 
 1. an dem Ort, den `--bericht=PFAD` oder die Umgebungsvariable `ZENDURE_BERICHT` nennt (Datei oder Ordner) – dann nur dort,
-2. sonst neben seiner Konfiguration, neben dem Script bzw. Programm und im Repo-Ordner `stat/auswertung`.
+2. sonst neben der `zendure-dashboard.html`, neben seiner Konfiguration, neben dem Script bzw. Programm und im Repo-Ordner `stat/auswertung`.
 
 In der Home-Assistant-App gehört die Datei nach `/share/zendure/bericht.html`. Ein neu erzeugter Bericht erscheint beim nächsten Aufruf, ohne Neustart. Welche Datei der Proxy gefunden hat, steht in seiner Startübersicht.
+
+Findet der Proxy einen Bericht, zeigt das Dashboard im Fuß der Seite den Link **„Auswertung: Log-Bericht“**. Ohne Bericht fehlt der Link.
 
 ---
 

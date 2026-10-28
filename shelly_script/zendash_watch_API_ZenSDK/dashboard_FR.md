@@ -324,9 +324,11 @@ http://<adresse-du-proxy>:8000/bericht_zendure
 L'analyse elle-même ne tourne pas dans le proxy. Il cherche le fichier `bericht.html` déjà généré :
 
 1. à l'emplacement indiqué par `--bericht=CHEMIN` ou la variable d'environnement `ZENDURE_BERICHT` (fichier ou dossier) – alors uniquement là,
-2. sinon à côté de sa configuration, à côté du script ou du programme, et dans le dossier `stat/auswertung` du dépôt.
+2. sinon à côté de `zendure-dashboard.html`, à côté de sa configuration, à côté du script ou du programme, et dans le dossier `stat/auswertung` du dépôt.
 
 Dans l'app Home Assistant, placez le fichier sous `/share/zendure/bericht.html`. Un rapport nouvellement généré s'affiche au prochain appel, sans redémarrage. Le résumé de démarrage du proxy indique quel fichier il a trouvé.
+
+Si le proxy trouve un rapport, le tableau de bord affiche le lien **« Analyse : rapport des journaux »** en bas de page. Sans rapport, le lien n'apparaît pas.
 
 ---
 

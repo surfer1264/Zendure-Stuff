@@ -5,7 +5,8 @@ https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watc
 
 ## 3.5.12.3
 
-- Proxy: neue Seite `/bericht_zendure` zeigt den Bericht der Log-Auswertung (`bericht.html` aus `stat/auswertung/analyse.py`). In der App wird er unter `/share/zendure/bericht.html` gesucht; die App liest dafür den Ordner `share` (nur lesen). Dashboard und Einstellungen unverändert
+- Proxy: neue Seite `/bericht_zendure` zeigt den Bericht der Log-Auswertung (`bericht.html` aus `stat/auswertung/analyse.py`). In der App wird er unter `/share/zendure/bericht.html` gesucht; die App liest dafür den Ordner `share` (nur lesen)
+- Dashboard: Link „Auswertung: Log-Bericht“ im Fuß der Seite, nur wenn ein Bericht vorhanden ist
 
 ## 3.5.12.2
 

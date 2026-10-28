@@ -45,7 +45,8 @@ Die App braucht dafür Internetzugang zum jeweiligen Dienst, der Shelly nicht.
 Die App zeigt den Bericht von `analyse.py` (Ordner `stat/auswertung`) unter `/bericht_zendure` an.
 Die Auswertung selbst läuft nicht in der App. Lege die fertige `bericht.html` nach
 `/share/zendure/bericht.html` (z. B. über die Samba-Freigabe „share“). Ein neuer Bericht
-erscheint beim nächsten Aufruf, ohne Neustart. Fehlt die Datei, meldet die Seite „nicht gefunden“.
+erscheint beim nächsten Aufruf, ohne Neustart. Liegt die Datei dort, zeigt das Dashboard im Fuß den Link
+„Auswertung: Log-Bericht“; fehlt sie, gibt es keinen Link.
 
 ## Wo die Einstellungen liegen
 
