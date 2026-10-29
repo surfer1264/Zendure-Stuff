@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.3.5";
+let VERSION = "5.3.6";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -234,6 +234,9 @@ let state = {
   cySum: 0,
   cyMax: 0,
   cySkip: 0,
+  // Klassen der Zyklusdauer in Vierteln des Intervalls: 0-25 %, 25-50 %, 50-75 %, 75-100 %,
+  // 100-125 %, 125-150 %, ueber 150 % (bei 4000 ms: 0-1 s ... ueber 6 s)
+  cyK: [0, 0, 0, 0, 0, 0, 0],
 
   errors: { em: 0, watchdog: 0, kvs: 0 },
   notified: { em: false, watchdog: false, kvs: false },
@@ -457,13 +460,22 @@ function cycleStatsLog(now) {
     " | avg " + (state.cyN > 0 ? Math.round(state.cySum / state.cyN) : 0) + " ms" +
     " | max " + Math.round(state.cyMax) + " ms" +
     " | uebersprungen " + state.cySkip +
-    " | interval " + CONFIG.interval + " ms");
+    " | interval " + CONFIG.interval + " ms" +
+    " | s " + cycleClassText());
 
   state.cyFrom = now;
   state.cyN = 0;
   state.cySum = 0;
   state.cyMax = 0;
   state.cySkip = 0;
+  for (let i = 0; i < 7; i++) state.cyK[i] = 0;
+}
+
+// Klassen als "a/b/c/d/e/f/g" (immer 7 Werte, feste Reihenfolge)
+function cycleClassText() {
+  let t = "" + state.cyK[0];
+  for (let i = 1; i < 7; i++) t = t + "/" + state.cyK[i];
+  return t;
 }
 
 function unlock(myCycle) {
@@ -479,6 +491,11 @@ function unlock(myCycle) {
     state.cyN = state.cyN + 1;
     state.cySum = state.cySum + d;
     if (d > state.cyMax) state.cyMax = d;
+    // Klasse = Viertel des Intervalls, ab 150 % alles in Klasse 6
+    let k = Math.floor((4 * d) / CONFIG.interval);
+    if (k < 0) k = 0;
+    if (k > 6) k = 6;
+    state.cyK[k] = state.cyK[k] + 1;
   }
 
   // Uhr zurueckgesprungen (z.B. Zeitsync nach Start): Fenster neu beginnen

@@ -2374,16 +2374,18 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   `interval` für die Anzahl der Geräte zu knapp (Kapitel 4b). Bleibt der
   Zyklus ganz hängen, folgt nach `interval × 2.5` die Watchdog-Fehlermeldung
   (Kapitel 12.6).
-- `Zyklen 1h: n N | avg X ms | max Y ms | uebersprungen S | interval I ms`
-  (seit 5.2.6) — einmal pro Stunde, auch ohne `debug`. `n`, `avg` und `max`
+- `Zyklen 1h: n N | avg X ms | max Y ms | uebersprungen S | interval I ms | s a/b/c/d/e/f/g`
+  (seit 5.2.6, Teil `s` seit 5.3.6) — einmal pro Stunde, auch ohne `debug`. `n`, `avg` und `max`
   beziehen sich auf die Zyklen mit Geräteabfrage der letzten Stunde
   (Sparmodus-Zyklen sind kürzer und zählen nicht), gemessen von `lock()` bis
   `unlock()` – also praktisch die Wartezeit auf Zähler und Geräte.
   `uebersprungen` zählt die verworfenen Takte (Zeile oben). Liegt `max`
   regelmäßig nahe an `interval` oder ist `uebersprungen` oft größer 0, ist
   `interval` zu knapp. Ein einzelnes `max` knapp unter 4000 ms ist meist ein
-  HTTP-Timeout (4 s, Kapitel 8.3), also ein Netzwerk-Hänger. Der Controller
-  führt dafür nur fünf Zahlen mit (kein Puffer, kein zusätzlicher Timer).
+  HTTP-Timeout (4 s, Kapitel 8.3), also ein Netzwerk-Hänger. `s` verteilt
+  dieselben `n` Zyklen auf sieben Klassen der Zyklusdauer (siehe unten). Der
+  Controller führt dafür nur zwölf Zahlen mit (kein Puffer, kein zusätzlicher
+  Timer).
 
 **So liest du die Stundenzeile `Zyklen 1h`**
 
@@ -2401,6 +2403,15 @@ Zyklen 1h: n 288 | avg 2746 ms | max 5451 ms | uebersprungen 23 | interval 3500 
 | `max` | Längster Zyklus der Stunde | 5,5 s |
 | `uebersprungen` | Takte, die verworfen wurden, weil der vorige Zyklus noch lief (`Takt uebersprungen`) | 23 |
 | `interval` | Eingestellter Takt (`interval`) | 3,5 s |
+| `s` (ab 5.3.6) | Anzahl der Zyklen je Klasse, immer sieben Werte. Die Klassen sind Viertel von `interval`: 0–25 %, 25–50 %, 50–75 %, 75–100 %, 100–125 %, 125–150 %, über 150 %. Bei `interval 4000 ms` also 0–1 s, 1–2 s, 2–3 s, 3–4 s, 4–5 s, 5–6 s, über 6 s. Die Summe ist `n`. | – (Log vor 5.3.6) |
+
+Die ersten vier Klassen passen in den Takt. Jeder Zyklus in den Klassen 5 bis 7
+hat den nächsten Takt blockiert; über 200 % (zwei Takte) und der Watchdog bei
+250 % fallen beide in die letzte Klasse, wie lang es genau war, zeigt `max`.
+Weil die Klassen am Intervall hängen, liegt die Grenze „passt noch / blockiert“
+immer zwischen dem vierten und fünften Wert, auch bei `interval 4500 ms` oder
+`5000 ms`. Beispiel: `| s 0/12/85/61/15/4/2` – 158 von 179 Zyklen passten in
+den Takt, 21 dauerten länger.
 
 So bewertest du die Zeile:
 

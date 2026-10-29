@@ -5,7 +5,7 @@ oder mehrere Zendure-Speicher. Die Logs zeichnet der [Log-Grabber](../../Script_
 auf, siehe [Logs aufzeichnen](#logs-aufzeichnen). `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.6.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.7.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -56,7 +56,7 @@ So sehen passende Zeilen aus:
 ```
 
 Ausgewertet werden die Zeilen `Netzsaldo: …` (ein Takt), die Gerätezeilen `<Gerät>: SOC …`, `Leistung gesetzt`,
-`Sparmodus an: …`, `Zyklen 1h: …` (ab Controller 5.2.6), der Startblock (Sollwert, Neustarts), `KVS zdmc_setpoint:
+`Sparmodus an: …`, `Zyklen 1h: …` (ab Controller 5.2.6, Klassen `| s …` ab 5.3.6), der Startblock (Sollwert, Neustarts), `KVS zdmc_setpoint:
 Wert uebernommen …` und die Störungsmeldungen. Alle anderen Zeilen werden übersprungen.
 
 **Gut zu wissen:**
@@ -251,7 +251,7 @@ Beispiel:
 | `bericht.py` | Erzeugt `bericht.html` aus den CSV-Dateien. |
 | `zendure_fonts.css` | IBM-Plex-Schriften; werden in den Bericht eingebettet. Fehlt die Datei, nutzt der Bericht die Systemschrift. |
 | `verlauf_15min.csv` | 15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang (Summe), SOC und Ausgang je Gerät. |
-| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte (gegen den gültigen Sollwert), Sollwert (`sollwert_min_w`, `sollwert_max_w`), Versatz (`regel_versatz_w`), Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Kennzeichen „voller Tag“. |
+| `tage.csv` | Pro Tag: Energie, Aktivzeit, SOC-Min/-Max, Regelgüte (gegen den gültigen Sollwert), Sollwert (`sollwert_min_w`, `sollwert_max_w`), Versatz (`regel_versatz_w`), Stellbefehle, Störungen, Sparmodus-Takte, Zyklusdauer (`zyklus_avg_ms`, `zyklus_max_ms`, `zyklus_interval_ms`, ab Controller 5.2.6, sonst leer), Klassen der Zyklusdauer (`zyklus_k0` … `zyklus_k6`, Anzahl Zyklen je Klasse, ab Controller 5.3.6, sonst leer), Kennzeichen „voller Tag“. |
 | `tagesprofil.csv` | Pro Uhrzeit-Stunde über alle vollen Tage: Netzsaldo und Speicher-Ausgang (Mittel und Perzentile über die Tage, Anzahl Tage); je Gerät SOC-Min/-Max und Perzentile. |
 | `geraete.csv` | Die ausgewerteten Geräte: Name wie im Log, Spaltenschlüssel (z. B. `Keller Süd` → `keller_sued`), erster und letzter Tag im Log (`von`, `bis`). |
 | `cache/` | Zwischenspeicher: Auswertung je Log. Kann gelöscht werden, wird neu aufgebaut. |
@@ -264,7 +264,8 @@ Beispiel:
   Formel der Wert entsteht – mit den Schwellwerten aus den aktuellen Einstellungen.
 - **Verlauf über die Zeit**: SOC je Gerät, Netzsaldo und Speicher-Ausgang (15-Minuten-Mittel).
 - **Pro Tag**: Energie nach Herkunft (gestapelt), Aktivzeit je Gerät, Deckung, Regelgüte,
-  Stellbefehle je Gerät, Störungen, Zyklusdauer (Ø, max und Intervall; nur mit Logs ab Controller 5.2.6).
+  Stellbefehle je Gerät, Störungen, Zyklusdauer (Ø, max und Intervall; nur mit Logs ab Controller 5.2.6),
+  Verteilung der Zyklusdauer (Anteil je Klasse als 100-%-Stapel; nur mit Logs ab Controller 5.3.6).
 - **Sparmodus**: Takte mit und ohne Geräteabfrage, Anteil eingesparter Takte.
 - **Typischer Tagesverlauf**: Netzsaldo, Speicher-Ausgang und SOC je Gerät nach Uhrzeit, jeweils als Verteilung
   über die vollen Tage (Linie = Median, Bänder = 25–75 % und 10–90 %).
@@ -326,6 +327,12 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
   `setze Polling fuer N Zyklen aus`) zählen die nächsten N Takte als eingespart, außer `Sparmodus aus`,
   `Sparmodus beendet` oder ein Neustart kommt vorher. Wie viele Einzelanfragen an die Geräte das spart,
   lässt sich aus dem Log nicht ablesen.
+- **Klassen der Zyklusdauer**: aus `| s a/b/c/d/e/f/g` am Ende der Stundenzeile (ab Controller 5.3.6), Anzahl der
+  Zyklen mit Geräteabfrage je Viertel des Intervalls: 0–25 %, 25–50 %, 50–75 %, 75–100 %, 100–125 %, 125–150 %,
+  über 150 %. Bei 4000 ms also 0–1 s bis über 6 s, bei 4500 oder 5000 ms entsprechend länger. Die Grenze zwischen
+  der vierten und fünften Klasse ist immer das Intervall: Zyklen ab dort haben den nächsten Takt blockiert. Je Tag
+  werden die Stundenzeilen addiert. Der Bericht beschriftet die Klassen in Sekunden, wenn an allen gezeigten Tagen
+  dasselbe Intervall galt, sonst in Prozent des Intervalls.
 - **Störungen**: Zeilen mit `Geraet nicht erreichbar`, `Takt uebersprungen`, `Watchdog-Timeout`.
 - **Neustart**: erkannt am Startblock des Controllers. Jede seiner Zeilen zählt (`Version …`,
   `Multi-Device Controller gestartet`, `Geraete    :`, `Interval   :`, `Watchdog   :`, `Setpoint   :`), so wird ein
@@ -333,6 +340,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.7.0**: Klassen der Zyklusdauer aus der Stundenzeile (Controller ab 5.3.6): neue Spalten `zyklus_k0` … `zyklus_k6`
+  und die Karte „Verteilung der Zyklusdauer“ (100-%-Stapel je Tag, warme Farben = länger als das Intervall).
+  Logs älterer Controller liefern weiter Ø und max; die neue Version rechnet einmal alle Logs neu.
 - **1.6.0**: Abgebaute oder neu hinzugekommene Geräte: An Tagen ohne Gerätezeilen bleiben dessen Spalten leer statt 0
   (vorher z. B. SOC 0 % nach dem Abbau). `geraete.csv` hat `von`/`bis`, der Bericht zeigt „ab …“/„bis …“ beim Gerät.
   Ohne Gerätewechsel sind alle Ergebnisse gleich wie in 1.5.0; die neue Version rechnet einmal alle Logs neu.

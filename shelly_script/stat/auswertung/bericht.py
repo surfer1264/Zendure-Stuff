@@ -144,6 +144,11 @@ def rechenweg(d):
                   "<code>neustarts</code>).",
         "zyklus": "Aus der Stundenzeile <code>Zyklen 1h: n N | avg A ms | max M ms | … | interval I ms</code>; jede Zeile "
                   "zählt zum Tag, an dem sie steht. Ø = Σ (N × A) ÷ Σ N über den Tag, max = größter M, Intervall = größter I.",
+        "zyklusk": "Aus dem Teil <code>| s a/b/c/d/e/f/g</code> der Stundenzeile (ab Controller 5.3.6): Anzahl der Zyklen mit "
+                   "Geräteabfrage je Klasse, Klasse = ⌊4 × Dauer ÷ Intervall⌋, höchstens 6. Je Tag werden die Stundenzeilen "
+                   "addiert; Anteil = Anzahl der Klasse ÷ Summe aller sieben. Klassen 4–6 (ab 100 % des Intervalls) "
+                   "haben den nächsten Takt blockiert. Gehen Stundenzeilen durch einen Neustart verloren, fehlen deren "
+                   "Zyklen, die Anteile beziehen sich auf die gezählten.",
         "takte": "Takte = Anzahl der <code>Netzsaldo:</code>-Zeilen je Tag. Nach <code>Sparmodus an: N</code> "
                  "(ältere Logs: <code>setze Polling fuer N Zyklen</code>) zählen die nächsten N Takte als „ohne Geräteabfrage“, "
                  "außer <code>Sparmodus aus</code>, <code>Sparmodus beendet</code> oder ein Neustart kommt vorher.",
@@ -228,6 +233,7 @@ __SCHRIFTEN__
     --teal-text:#4FD1C5; --amber-text:#F2A93B; --alert-text:#E2574C;
     --grid:rgba(255,255,255,0.06); --axis:rgba(255,255,255,0.22); --ref:#5B6B85;
     --s1:#4FD1C5; --s2:#F2A93B; --s3:#E2574C; --s4:#8F9BFF; --s5:#5CCB76; --s6:#E77BD0; --s7:#6CB6FF; --muted-series:#34445F;
+    --k0:#24485A; --k1:#2E6E77; --k2:#3A9C98; --k3:#4FD1C5; --k4:#F2C14E; --k5:#F08A3C; --k6:#E2574C;
     --sel:rgba(79,209,197,0.16);
   }
   html[data-theme="light"]{
@@ -241,6 +247,7 @@ __SCHRIFTEN__
     --teal-text:#207B73; --amber-text:#99600A; --alert-text:#CF2E22;
     --grid:rgba(15,23,32,0.07); --axis:rgba(15,23,32,0.25); --ref:#8A97A8;
     --s1:#1FA394; --s2:#D08418; --s3:#CF2E22; --s4:#5B63D6; --s5:#2F8A46; --s6:#B4479C; --s7:#2F6FC4; --muted-series:#C9D3DD;
+    --k0:#CFE9E5; --k1:#8FD0C6; --k2:#45AFA2; --k3:#1F8A7E; --k4:#E0A928; --k5:#D9731F; --k6:#CF2E22;
     --sel:rgba(31,163,148,0.14);
   }
   *{box-sizing:border-box;}
@@ -419,6 +426,9 @@ __SCHRIFTEN__
       <div class="card chart" id="card-zyklus" data-rw="zyklus" style="display:none"><h3>Zyklusdauer pro Tag</h3>
         <p>Dauer eines Regelzyklus mit Geräteabfrage, aus der Stundenzeile des Controllers (ab 5.2.6): Mittel und längster Zyklus des Tages. Nähert sich „max“ der gestrichelten Linie (eingestelltes Intervall), wird es knapp; einzelne Werte knapp unter 4000 ms sind meist ein HTTP-Timeout.</p>
         <div class="legend" id="lg-zyklus"></div><div id="c-zyklus"></div></div>
+      <div class="card chart" id="card-zyklusk" data-rw="zyklusk" style="display:none"><h3>Verteilung der Zyklusdauer</h3>
+        <p id="txt-zyklusk"></p>
+        <div class="legend" id="lg-zyklusk"></div><div id="c-zyklusk"></div></div>
     </div>
   </section>
 
@@ -471,6 +481,21 @@ var LEER_TXT = MEHR ? 'Netzbezug bei leeren Speichern' : 'Netzbezug bei leerem S
 var NT = V.t.length;
 /* Zyklusdauer gibt es erst ab Controller 5.2.6 - ohne Daten bleibt die Karte ausgeblendet */
 var HAT_ZYK = (T.zyklus_max_ms || []).some(function(v){ return v !== null; });
+/* Klassen der Zyklusdauer gibt es erst ab Controller 5.3.6 (| s a/b/c/d/e/f/g in der Stundenzeile) */
+var HAT_ZYKK = (T.zyklus_k0 || []).some(function(v){ return v !== null; });
+var ZK = (function(){
+  /* Namen der 7 Klassen: in Sekunden, wenn an allen Tagen mit Klassen dasselbe Intervall galt, sonst in % des Intervalls */
+  var iv = {}, k0 = T.zyklus_k0 || [], ivs = T.zyklus_interval_ms || [];
+  k0.forEach(function(v, i){ if (v !== null && ivs[i] !== null && ivs[i] !== undefined) iv[ivs[i]] = 1; });
+  var liste = Object.keys(iv), I = liste.length === 1 ? +liste[0] : null;
+  function s(x){ return de(x / 1000, (x / 1000) % 1 ? (((x / 100) % 1) ? 2 : 1) : 0); }
+  var namen = [];
+  for (var k = 0; k < 7; k++){
+    if (I) namen.push(k < 6 ? s(k * I / 4) + '–' + s((k + 1) * I / 4) + ' s' : 'über ' + s(6 * I / 4) + ' s');
+    else namen.push(k < 6 ? (k * 25) + '–' + ((k + 1) * 25) + ' %' : 'über 150 %');
+  }
+  return {namen: namen, intervall: I, farben: ['var(--k0)', 'var(--k1)', 'var(--k2)', 'var(--k3)', 'var(--k4)', 'var(--k5)', 'var(--k6)']};
+})();
 var LO = Math.floor(V.t[0] / TAG) * TAG, HI = Math.ceil((V.t[NT - 1] + 15) / TAG) * TAG;
 var range = {a: LO, b: HI};
 
@@ -678,7 +703,7 @@ function stapel(id, o){
       basis += v;
     });
   }
-  katFertig(id, o, f, function(i){
+  katFertig(id, o, f, o.tip || function(i){
     var z = o.serien.slice().reverse().map(function(s){ return [s.name, o.yfmt(s.werte[i]) + o.einheit, s.farbe]; });
     z.push(['Summe', o.yfmt(summen[i]) + o.einheit]);
     return z;
@@ -842,6 +867,24 @@ function zeichne(){
         {name: 'Intervall', werte: spalte('zyklus_interval_ms', idx), farbe: S.mut, strich: true}],
       yfmt: f0, einheit: ' ms', ymin: 0, w: WH, aria: 'Zyklusdauer pro Tag'}));
   }
+  if (HAT_ZYKK){
+    /* Je Tag 100 % = alle gezählten Zyklen mit Geräteabfrage; Tage ohne Klassen bleiben leer */
+    var kz = [0, 1, 2, 3, 4, 5, 6].map(function(k){ return spalte('zyklus_k' + k, idx); });
+    var kn = idx.map(function(_, j){ var s = 0, da = false; kz.forEach(function(c){ if (c[j] !== null){ s += c[j]; da = true; } }); return da ? s : null; });
+    if (idx.length && !kn.some(function(v){ return v; })) leer('c-zyklusk', 'Keine Klassen im Ausschnitt (erst ab Controller 5.3.6).');
+    else stapel('c-zyklusk', mit({serien: kz.map(function(c, k){
+        return {name: ZK.namen[k], farbe: ZK.farben[k], werte: c.map(function(v, j){ return v === null || !kn[j] ? null : 100 * v / kn[j]; })};
+      }), yfmt: f0, einheit: ' %', ymax: 100, yticks: [0, 25, 50, 75, 100], w: WH, aria: 'Verteilung der Zyklusdauer pro Tag',
+      tip: function(j){
+        if (!kn[j]) return [['Keine Klassen an diesem Tag', '']];
+        var z = [];
+        for (var k = 6; k >= 0; k--) z.push([ZK.namen[k], de(100 * kz[k][j] / kn[j], 1) + ' % · ' + f0(kz[k][j]), ZK.farben[k]]);
+        var ueber = kz[4][j] + kz[5][j] + kz[6][j];
+        z.push(['länger als Intervall', de(100 * ueber / kn[j], 1) + ' % · ' + f0(ueber)]);
+        z.push(['Zyklen gezählt', f0(kn[j])]);
+        return z;
+      }}));
+  }
   stapel('c-takte', mit({serien: [{name: 'Ohne Geräteabfrage', werte: spalte('takte_ohne_abfrage', idx), farbe: S.s1},
       {name: 'Mit Geräteabfrage', werte: spalte('takte_mit_abfrage', idx), farbe: S.mut}],
     yfmt: f0, einheit: '', w: WH, aria: 'Takte pro Tag'}));
@@ -921,6 +964,13 @@ legende('lg-fehler', [['Nicht erreichbar', S.s3], ['Takt übersprungen', S.s4], 
 if (HAT_ZYK){
   document.getElementById('card-zyklus').style.display = '';
   legende('lg-zyklus', [['Ø Zyklusdauer', S.s1], ['längster Zyklus (max)', S.s3], ['Intervall', S.mut, true]]);
+}
+if (HAT_ZYKK){
+  document.getElementById('card-zyklusk').style.display = '';
+  legende('lg-zyklusk', ZK.namen.map(function(n, k){ return [n, ZK.farben[k]]; }));
+  document.getElementById('txt-zyklusk').textContent = 'Anteil der Zyklen mit Geräteabfrage je Dauer, pro Tag (100 % = alle gezählten Zyklen). ' +
+    'Die Klassen sind Viertel des Intervalls' + (ZK.intervall ? ' (' + f0(ZK.intervall) + ' ms)' : '') +
+    '. Grüntöne passten in den Takt, warme Farben haben den nächsten Takt blockiert. Mittel und Maximum: Karte links.';
 }
 legende('lg-takte', [['Ohne Geräteabfrage (eingespart)', S.s1], ['Mit Geräteabfrage', S.mut]]);
 document.getElementById('txt-aktiv').textContent = 'Summe aller Takte je Tag, in denen ' + (MEHR ? 'das jeweilige Gerät' : 'das Gerät') +

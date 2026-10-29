@@ -14,7 +14,8 @@ werden genauso gelesen. Ändern sich Einstellungen oder Version, wird automatisc
 Erzeugt im Ordner dieses Skripts:
     verlauf_15min.csv  15-Minuten-Mittel: Netzsaldo, Speicher-Ausgang, SOC und Ausgang je Gerät
     tage.csv           Tageswerte: Energie, SOC-Spanne, Regelgüte (gegen den jeweils gültigen Sollwert),
-                       Sollwert, Stellbefehle, Störungen, Sparmodus, Zyklusdauer (ab Controller 5.2.6)
+                       Sollwert, Stellbefehle, Störungen, Sparmodus, Zyklusdauer (ab Controller 5.2.6),
+                       Klassen der Zyklusdauer zyklus_k0..k6 (ab Controller 5.3.6)
     tagesprofil.csv    Je Uhrzeit-Stunde: Netzsaldo und Speicher-Ausgang (Mittel und Verteilung über die Tage),
                        SOC-Verteilung je Gerät (Min, Perzentile, Max)
     geraete.csv        Ausgewertete Geräte (Name wie im Log, Spaltenschlüssel) – für bericht.py
@@ -41,7 +42,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -139,7 +140,10 @@ R_DEV = re.compile(TS + r"  " + NAME + r": SOC (\d+|n/a)%? \| socL (\S+) \| grid
 R_SET = re.compile(TS + NAME + r": Leistung gesetzt")
 R_SPAR = re.compile(r"Sparmodus an: (\d+)|setze Polling fuer (\d+) Zyklen")
 # Stundenzeile ab Controller 5.2.6
-R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms(?: \| uebersprungen \d+ \| interval (\d+) ms)?")
+# Klassen "| s a/b/c/d/e/f/g" ab Controller 5.3.6: Zyklen je Viertel des Intervalls (0-25 % ... über 150 %)
+R_ZYK = re.compile(TS + r"Zyklen 1h: n (\d+) \| avg (\d+) ms \| max (\d+) ms(?: \| uebersprungen \d+ \| interval (\d+) ms)?"
+                   r"(?: \| s (\d+(?:/\d+){6}))?")
+ZYK_KLASSEN = 7
 # Sollwert: Startblock und Änderung per KVS
 R_SOLL_START = re.compile(r"\] Setpoint   : (-?\d+) W")
 R_SOLL_KVS = re.compile(r"KVS zdmc_setpoint: Wert uebernommen \((-?\d+) -> (-?\d+)\)")
@@ -256,15 +260,18 @@ def lesen(pfad, zustand):
                 continue
             m = R_ZYK.match(l)
             if m:
-                # je Tag: Anzahl, Summe der Dauern, längster Zyklus, größtes Intervall
+                # je Tag: Anzahl, Summe der Dauern, längster Zyklus, größtes Intervall, Klassen (oder None)
                 # (Fenster zählt zum Tag seiner Zeile)
-                z = zyklen.setdefault(m[1][:10], [0, 0, 0, None])
+                z = zyklen.setdefault(m[1][:10], [0, 0, 0, None, None])
                 n = int(m[2])
                 z[0] += n
                 z[1] += n * int(m[3])
                 z[2] = max(z[2], int(m[4]))
                 if m[5]:
                     z[3] = max(z[3] or 0, int(m[5]))
+                if m[6]:
+                    k = [int(x) for x in m[6].split("/")]
+                    z[4] = [a + b for a, b in zip(z[4], k)] if z[4] else k
                 continue
             m = R_START.search(l)
             if m:
@@ -573,6 +580,9 @@ def zusammensetzen(ergebnisse):
         z["zyklus_avg_ms"] = round(zy[1] / zy[0]) if zy and zy[0] else None
         z["zyklus_max_ms"] = zy[2] if zy and zy[0] else None
         z["zyklus_interval_ms"] = zy[3] if zy and zy[0] and len(zy) > 3 else None
+        kl = zy[4] if zy and len(zy) > 4 else None
+        for i in range(ZYK_KLASSEN):
+            z[f"zyklus_k{i}"] = kl[i] if kl else None   # leer bei Logs vor Controller 5.3.6
         z["takte_gesamt"] = x["takte"]
         z["takte_ohne_abfrage"] = x["gespart"]
         zeilen.append(z)
@@ -594,13 +604,15 @@ def zusammensetzen(ergebnisse):
     # Regelgüte bleibt leer, wenn an dem Tag kein Speicher im Regelbereich war (sonst sähe es nach 0 % aus);
     # Zyklusdauer bleibt leer bei Logs ohne Stundenzeile (Controller vor 5.2.6)
     regel = ["regel_im_band_pct", "regel_median_abw_w", "regel_versatz_w", "zyklus_avg_ms", "zyklus_max_ms",
-             "zyklus_interval_ms"]
+             "zyklus_interval_ms"] + [f"zyklus_k{i}" for i in range(ZYK_KLASSEN)]
     day = day.drop(columns="erfasst_h")
     offen = regel + geraet_spalten                     # diese Spalten dürfen leer bleiben
     day[day.columns.difference(offen)] = day[day.columns.difference(offen)].fillna(0)
     day[EREIGNIS_SPALTEN] = day[EREIGNIS_SPALTEN].astype(int)
     stell = ["stellbefehle_" + k for k in keys]
     day[stell] = day[stell].astype("Int64")            # ganze Zahl, leer wenn das Gerät fehlt
+    kl = [f"zyklus_k{i}" for i in range(ZYK_KLASSEN)]
+    day[kl] = day[kl].astype("Int64")                  # ganze Zahl, leer ohne Klassen in der Stundenzeile
     cols = ["vollstaendig"] + [c for c in day.columns if c != "vollstaendig"]
     day = day[cols].round(2)
     day.index.name = "tag"

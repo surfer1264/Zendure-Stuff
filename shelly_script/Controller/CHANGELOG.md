@@ -1,5 +1,19 @@
 # Changelog Controller
 
+## v5.3.6
+
+**Ziel:** In der Stundenzeile sehen, wie sich die Zyklusdauer verteilt, nicht nur Mittel und Maximum.
+
+- **Neue Klassen in der Stundenzeile:** Am Ende von `Zyklen 1h: …` steht jetzt `| s a/b/c/d/e/f/g`, die Anzahl der Zyklen je Klasse.
+  - Die Klassen sind Viertel des Intervalls: 0–25 %, 25–50 %, 50–75 %, 75–100 %, 100–125 %, 125–150 %, über 150 %. Bei `interval 4000 ms` also 0–1 s bis über 6 s.
+  - Die Grenze „passt in den Takt / blockiert den nächsten“ liegt so immer zwischen dem vierten und fünften Wert, auch bei 4500 oder 5000 ms.
+  - Gezählt werden wie bei `n`, `avg` und `max` nur Zyklen mit Geräteabfrage; die Summe der sieben Werte ist `n`.
+- **Aufwand:** sieben Zähler mehr, kein Puffer, kein Timer. Mini-Script 266 Byte größer.
+- **Kompatibel:** Der neue Teil steht am Ende der Zeile; Auswertungen, die die alte Zeile lesen, funktionieren unverändert.
+- **Regelverhalten unverändert:** Simulationslauf (2400 Zyklen, Seed 42, Werktag-Szenario) mit 5.3.5 und 5.3.6: alle 4183 Stellbefehle und die Ergebnis-CSV identisch.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.3.5
 
 Fasst die Zwischenstände 5.3.1 bis 5.3.4 zusammen. **Ziel:** weniger Speicherspitze und ein ruhigerer Ablauf, wenn KVS-Werte von außen geändert werden, etwa beim manuellen Laden aus dem Dashboard.
