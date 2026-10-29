@@ -62,6 +62,8 @@ Das Dashboard ist eine Webseite, die über einen kleinen **Proxy** läuft – al
 
 ## Aufbau
 
+Wie die Teile zusammenspielen: [So arbeiten die Teile zusammen](architektur.md).
+
 ### Mit Shelly Pro 3EM
 
 Der Pro 3EM ist gleichzeitig der Controller-Shelly. Dazu kommt ein zweiter Shelly als Dashboard-Shelly.

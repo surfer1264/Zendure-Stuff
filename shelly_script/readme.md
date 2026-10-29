@@ -22,6 +22,10 @@ Zwei Shellys, ein Smartmeter und zenSDK-fähige Speicher – welche Geräte pass
 
 ## So ist das System aufgebaut
 
+![Architektur der Shelly Suite](img/architektur.svg)
+
+Ausführlich erklärt – Schicht für Schicht und was bei einem Ausfall passiert: **[So arbeiten die Teile zusammen](architektur.md)**.
+
 | Shelly | Script | Aufgabe |
 |---|---|---|
 | **Controller-Shelly** | [Controller](Controller/readme.md) | regelt Laden und Entladen deiner Speicher |

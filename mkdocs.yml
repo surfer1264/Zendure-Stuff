@@ -39,6 +39,7 @@ nav:
   - Start: readme.md
   - Überblick:
       - Was die Suite kann: szscs.md
+      - So arbeiten die Teile zusammen: architektur.md
       - Controller im Alltag: Controller/benutzerdoku.md
       - Kompatible Geräte: kompatible_geraete.md
       - Speicherbedarf: zendash_speichermodell.md

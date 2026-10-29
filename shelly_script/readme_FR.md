@@ -22,6 +22,10 @@ Deux Shelly, un compteur intelligent et des batteries compatibles zenSDK – les
 
 ## Structure du système
 
+![Architecture de la Shelly Suite](img/architektur_FR.svg)
+
+Expliqué en détail – couche par couche et ce qui se passe en cas de panne : **[Comment les éléments fonctionnent ensemble](architektur_FR.md)**.
+
 | Shelly | Script | Rôle |
 |---|---|---|
 | **Shelly contrôleur** | [Controller](Controller/readme_FR.md) | pilote la charge et la décharge de vos batteries |

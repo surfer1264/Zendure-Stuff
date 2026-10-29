@@ -62,6 +62,8 @@ Le tableau de bord est une page web qui passe par un petit **proxy** – sous fo
 
 ## Mise en place
 
+Comment les éléments interagissent : [Comment les éléments fonctionnent ensemble](architektur_FR.md).
+
 ### Avec un Shelly Pro 3EM
 
 Le Pro 3EM sert en même temps de Shelly Controller. On y ajoute un second Shelly comme Shelly Dashboard.

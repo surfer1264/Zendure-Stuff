@@ -62,6 +62,8 @@ The dashboard is a web page that runs through a small **proxy** – as a ready-m
 
 ## Setup
 
+How the parts interact: [How the parts work together](architektur_EN.md).
+
 ### With a Shelly Pro 3EM
 
 The Pro 3EM is also the controller Shelly. A second Shelly is added as the dashboard Shelly.
