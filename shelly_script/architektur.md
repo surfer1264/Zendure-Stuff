@@ -19,6 +19,16 @@ Für den laufenden Betrieb brauchen die Speicher kein Internet. Du kannst ihnen 
 
 Tipp: Gib Speichern und Shellys im Router feste IP-Adressen.
 
+### Zwei Varianten
+
+**Mit Shelly Pro 3EM** – Der Pro 3EM ist gleichzeitig der Controller-Shelly. Dazu kommt ein zweiter Shelly als Dashboard-Shelly.
+
+<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
+
+**Mit einem anderen Smartmeter** – Der Controller läuft auf einem beliebigen Shelly und liest das Smartmeter über das Netzwerk. Dazu kommt der Dashboard-Shelly – auch hier also zwei Shellys.
+
+<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
 ## Mitte: zwei Shellys
 
 **Shelly 1 – Controller** regelt. Er misst alle paar Sekunden den Netzbezug und verteilt Laden und Entladen auf deine Speicher, sodass möglichst nichts eingespeist und nichts bezogen wird. Er arbeitet völlig selbstständig.

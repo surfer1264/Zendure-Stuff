@@ -24,7 +24,7 @@ _Principe_ : **Installer** – **Lancer** – **Oublier**
 
 ## Trois fonctions sur deux Shelly – sans cloud
 
-Le **Shelly Controller** assure la régulation, le **Shelly Dashboard** l'API zenDash et le watchdog – chaque fonction pouvant y être désactivée séparément. Quel script va où : [Structure du système](readme_FR.md#structure-du-système).
+Le **Shelly Controller** assure la régulation, le **Shelly Dashboard** l'API zenDash et le watchdog – chaque fonction pouvant y être désactivée séparément. Quel script va où et comment les éléments interagissent : [Comment les éléments fonctionnent ensemble](architektur_FR.md).
 
 ### 1. Le Controller – la régulation
 
@@ -57,24 +57,6 @@ Le tableau de bord est une page web qui passe par un petit **proxy** – sous fo
 * envoi par **Signal**, **WhatsApp** ou **webhook** ; réglable pour chaque SolarFlow s'il doit être surveillé
 
 📖 [API zenDash + watchdog](zendash_watch_API_ZenSDK/readme_FR.md)
-
----
-
-## Mise en place
-
-Comment les éléments interagissent : [Comment les éléments fonctionnent ensemble](architektur_FR.md).
-
-### Avec un Shelly Pro 3EM
-
-Le Pro 3EM sert en même temps de Shelly Controller. On y ajoute un second Shelly comme Shelly Dashboard.
-
-<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
-
-### Avec un autre compteur intelligent
-
-Le Controller tourne sur n'importe quel Shelly et lit le compteur intelligent via le réseau. On y ajoute le Shelly Dashboard – là aussi, deux Shelly donc.
-
-<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
 
 ---
 

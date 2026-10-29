@@ -24,7 +24,7 @@ _Prinzip_: **Install** – **Run** – **Forget**
 
 ## Drei Funktionen auf zwei Shellys – ohne Cloud
 
-Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** zenDash-API und Watchdog – beide Funktionen dort einzeln abschaltbar. Welches Script wohin gehört: [So ist das System aufgebaut](readme.md#so-ist-das-system-aufgebaut).
+Auf dem **Controller-Shelly** läuft die Regelung, auf dem **Dashboard-Shelly** zenDash-API und Watchdog – beide Funktionen dort einzeln abschaltbar. Welches Script wohin gehört und wie die Teile zusammenspielen: [So arbeiten die Teile zusammen](architektur.md).
 
 ### 1. Der Controller – die Regelung
 
@@ -57,24 +57,6 @@ Das Dashboard ist eine Webseite, die über einen kleinen **Proxy** läuft – al
 * Versand per **Signal**, **WhatsApp** oder **Webhook**; je SolarFlow einstellbar, ob er überwacht wird
 
 📖 [zenDash-API + Watchdog](zendash_watch_API_ZenSDK/readme.md)
-
----
-
-## Aufbau
-
-Wie die Teile zusammenspielen: [So arbeiten die Teile zusammen](architektur.md).
-
-### Mit Shelly Pro 3EM
-
-Der Pro 3EM ist gleichzeitig der Controller-Shelly. Dazu kommt ein zweiter Shelly als Dashboard-Shelly.
-
-<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
-
-### Mit einem anderen Smartmeter
-
-Der Controller läuft auf einem beliebigen Shelly und liest das Smartmeter über das Netzwerk. Dazu kommt der Dashboard-Shelly – auch hier also zwei Shellys.
-
-<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
 
 ---
 

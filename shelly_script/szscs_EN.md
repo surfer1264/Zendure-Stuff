@@ -24,7 +24,7 @@ _Principle_: **Install** – **Run** – **Forget**
 
 ## Three functions on two Shellys – without the cloud
 
-The **Controller Shelly** runs the control, the **Dashboard Shelly** runs the zenDash API and watchdog – both functions there can be switched off individually. Which script goes where: [How the system is structured](readme_EN.md#how-the-system-is-structured).
+The **Controller Shelly** runs the control, the **Dashboard Shelly** runs the zenDash API and watchdog – both functions there can be switched off individually. Which script goes where and how the parts interact: [How the parts work together](architektur_EN.md).
 
 ### 1. The controller – the control
 
@@ -57,24 +57,6 @@ The dashboard is a web page that runs through a small **proxy** – as a ready-m
 * delivery via **Signal**, **WhatsApp** or **webhook**; configurable per SolarFlow whether it is monitored
 
 📖 [zenDash API + watchdog](zendash_watch_API_ZenSDK/readme_EN.md)
-
----
-
-## Setup
-
-How the parts interact: [How the parts work together](architektur_EN.md).
-
-### With a Shelly Pro 3EM
-
-The Pro 3EM is also the controller Shelly. A second Shelly is added as the dashboard Shelly.
-
-<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
-
-### With another smart meter
-
-The controller runs on any Shelly and reads the smart meter over the network. The dashboard Shelly is added – so here too, two Shellys.
-
-<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
 
 ---
 

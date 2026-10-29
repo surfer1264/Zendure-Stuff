@@ -19,6 +19,16 @@ Les batteries n'ont pas besoin d'Internet pour fonctionner. Vous pouvez leur blo
 
 Conseil : attribuez des adresses IP fixes aux batteries et aux Shelly dans votre routeur.
 
+### Deux variantes
+
+**Avec un Shelly Pro 3EM** – Le Pro 3EM sert en même temps de Shelly Controller. On y ajoute un second Shelly comme Shelly Dashboard.
+
+<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
+
+**Avec un autre compteur intelligent** – Le Controller tourne sur n'importe quel Shelly et lit le compteur intelligent via le réseau. On y ajoute le Shelly Dashboard – là aussi, deux Shelly donc.
+
+<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
 ## Au milieu : deux Shelly
 
 **Shelly 1 – Controller** régule. Toutes les quelques secondes, il mesure la puissance réseau et répartit charge et décharge entre vos batteries, de sorte que le moins possible soit injecté ou prélevé. Il fonctionne de manière totalement autonome.

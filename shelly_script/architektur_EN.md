@@ -19,6 +19,16 @@ The batteries do not need internet access for normal operation. You can block it
 
 Tip: give the batteries and Shellys fixed IP addresses in your router.
 
+### Two variants
+
+**With a Shelly Pro 3EM** – The Pro 3EM is also the controller Shelly. A second Shelly is added as the dashboard Shelly.
+
+<img width="350" alt="IMG_1246" src="https://github.com/user-attachments/assets/c8821089-7e87-437f-ad29-6715f1554cfb" />
+
+**With another smart meter** – The controller runs on any Shelly and reads the smart meter over the network. The dashboard Shelly is added – so here too, two Shellys.
+
+<img width="600" alt="IMG_1247" src="https://github.com/user-attachments/assets/4758a842-f361-47d7-8260-c23fc1ae1bde" />
+
 ## Middle: two Shellys
 
 **Shelly 1 – Controller** regulates. Every few seconds it measures the grid power and distributes charging and discharging across your batteries so that as little as possible is fed in or drawn. It works completely on its own.
