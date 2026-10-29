@@ -19,6 +19,7 @@ Ce qui compte, c’est la **mémoire script** : à partir de **25 000 octets**, 
 | Shelly Plus 1PM (PM1Plus) | ✅ testé |
 | Shelly Plus Plug S | ✅ testé |
 | Shelly Plug S Gen3 | ❌ mémoire insuffisante |
+| Shelly Plug M Gen3 | ✅ getestet |
 | Shelly 1PM Gen3 | ❌ mémoire insuffisante |
 | Shelly Mini Gen3 | ❌ mémoire insuffisante |
 

@@ -19,6 +19,7 @@ Entscheidend ist der **Script-Speicher**: Ab **25 000 Bytes** ist alles gut.
 | Shelly Plus 1PM (PM1Plus) | ✅ getestet |
 | Shelly Plus Plug S | ✅ getestet |
 | Shelly Plug S Gen3 | ❌ zu wenig Speicher |
+| Shelly Plug M Gen3 | ✅ getestet |
 | Shelly 1PM Gen3 | ❌ zu wenig Speicher |
 | Shelly Mini Gen3 | ❌ zu wenig Speicher |
 

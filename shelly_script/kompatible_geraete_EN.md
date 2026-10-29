@@ -19,6 +19,7 @@ What matters is the **script memory**: with **25,000 bytes** or more, everything
 | Shelly Plus 1PM (PM1Plus) | ✅ tested |
 | Shelly Plus Plug S | ✅ tested |
 | Shelly Plug S Gen3 | ❌ not enough memory |
+| Shelly Plug M Gen3 | ✅ getestet |
 | Shelly 1PM Gen3 | ❌ not enough memory |
 | Shelly Mini Gen3 | ❌ not enough memory |
 
