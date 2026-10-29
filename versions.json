@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-28T22:36:14Z",
+  "generated": "2026-10-29T16:55:54Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.3.5",
+      "version": "5.3.6",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5d862dbb5d4a54e45d7cf8cd8568b94826a9e313/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 47944,
-      "codeHash": "sha256:50ac931db2a5ff5008ec96422b7249145d922fe70d0722a6855bf95e457fbe33",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/42c8d554a9df04bfa982dde7e4a2fc988fb48c94/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 48210,
+      "codeHash": "sha256:98878dc774b6a6b71ffb71220f861ed1ee7048dfd059fbaef8fba774e98bf88b",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Speicherspitze gesenkt:** Abläufe, die gleichzeitig größere Antworten im Speicher hielten, laufen jetzt nacheinander.",
-        "Die SoC-Grenzen werden beim Start erst geschrieben, wenn die Antwort des Geräts wieder freigegeben ist.",
-        "Die Netzmessung läuft erst nach der Antwort des letzten Geräts."
+        "**Neue Klassen in der Stundenzeile:** Am Ende von `Zyklen 1h: …` steht jetzt `| s a/b/c/d/e/f/g`, die Anzahl der Zyklen je Klasse.",
+        "Die Klassen sind Viertel des Intervalls: 0–25 %, 25–50 %, 50–75 %, 75–100 %, 100–125 %, 125–150 %, über 150 %. Bei `interval 4000 ms` also 0–1 s bis über 6 s.",
+        "Die Grenze „passt in den Takt / blockiert den nächsten“ liegt so immer zwischen dem vierten und fünften Wert, auch bei 4500 oder 5000 ms."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.3.5",
+          "schema": 1,
+          "codeHash": "sha256:50ac931db2a5ff5008ec96422b7249145d922fe70d0722a6855bf95e457fbe33",
+          "changes": [
+            "**Speicherspitze gesenkt:** Abläufe, die gleichzeitig größere Antworten im Speicher hielten, laufen jetzt nacheinander.",
+            "Die SoC-Grenzen werden beim Start erst geschrieben, wenn die Antwort des Geräts wieder freigegeben ist.",
+            "Die Netzmessung läuft erst nach der Antwort des letzten Geräts."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.6",
           "schema": 1,
@@ -162,17 +173,6 @@
             "Entladen wird sofort zurückgenommen, wenn die Last sinkt.",
             "Laden wird sofort erhöht, wenn der PV-Überschuss steigt.",
             "Die Gegenrichtung (mehr entladen, weniger laden) bleibt wie bisher gedämpft. Dort gibt es kurz Netzbezug statt Einspeisung."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.1.7",
-          "schema": 1,
-          "codeHash": "sha256:a6f7c27e22224f1ab3c5a6d41f6a96ef0fba6dea197cfca90369a867ef9757df",
-          "changes": [
-            "socLimit-Wechsel: drei Meldungen zu einer zusammengefasst,",
-            "socStatus-Wechsel: eine Meldung,",
-            "maxSoc: \"maxSoc erreicht (soc/maxSoc%)\" bzw. \"unter maxSoc (soc/maxSoc%)\""
           ],
           "notice": null
         }
