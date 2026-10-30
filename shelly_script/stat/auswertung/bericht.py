@@ -284,7 +284,7 @@ __SCHRIFTEN__
   .icon-btn:active{transform:scale(.95);}
 
   /* Zeitraum-Leiste */
-  .zoombar{position:sticky; top:.5rem; z-index:30; padding:.5rem .625rem; border-radius:var(--radius-lg);
+  .zoombar{position:sticky; top:calc(env(safe-area-inset-top, 0px) + .5rem); z-index:30; padding:.5rem .625rem; border-radius:var(--radius-lg);
            background:color-mix(in srgb, var(--surface) 90%, transparent); border:1px solid var(--border);
            box-shadow:var(--shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);}
   .zoombar .in{display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem;}
@@ -296,6 +296,8 @@ __SCHRIFTEN__
               border-radius:999px; cursor:pointer;}
   .seg button:hover{background:var(--surface-2);}
   .seg button.on{background:var(--teal-deep); color:#fff;}
+  .seg.nav button{min-width:2.75rem; min-height:2.375rem; display:inline-flex; align-items:center; justify-content:center;}
+  .seg.nav svg{width:1.25rem; height:1.25rem; fill:none; stroke:currentColor; stroke-width:2.75; stroke-linecap:round; stroke-linejoin:round;}
   .seg button:disabled{opacity:.35; cursor:default; background:none;}
   .range-lbl{font-family:var(--mono); font-feature-settings:'ss04' 1; font-size:.85rem; font-weight:600;}
   .range-lbl small{display:block; font-family:var(--sans); font-weight:400; font-size:.72rem; color:var(--text-muted);}
@@ -379,11 +381,11 @@ __SCHRIFTEN__
         <button type="button" data-w="10080">7 T</button>
         <button type="button" data-w="4320">3 T</button>
       </div>
-      <div class="seg">
-        <button type="button" id="pL" aria-label="Früher" title="Früher">‹</button>
-        <button type="button" id="zOut" aria-label="Herauszoomen" title="Herauszoomen">−</button>
-        <button type="button" id="zIn" aria-label="Hineinzoomen" title="Hineinzoomen">+</button>
-        <button type="button" id="pR" aria-label="Später" title="Später">›</button>
+      <div class="seg nav">
+        <button type="button" id="pL" aria-label="Früher" title="Früher"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <button type="button" id="zOut" aria-label="Herauszoomen" title="Herauszoomen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+        <button type="button" id="zIn" aria-label="Hineinzoomen" title="Hineinzoomen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg></button>
+        <button type="button" id="pR" aria-label="Später" title="Später"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
       </div>
       <div class="range-lbl" id="rangeLbl" aria-live="polite"></div>
     </div>
@@ -1005,6 +1007,8 @@ themeBtn.addEventListener('click', function(){
 themeIcon();
 window.addEventListener('scroll', versteckeTip, {passive: true});
 
+/* Start: die letzten 7 vollen Tage (bei weniger Tagen alles) */
+(function(){ var e = Math.min(HI, TMIN[TMIN.length - 1] + TAG), w = 7 * TAG; if (e - w > LO){ range.a = e - w; range.b = e; } })();
 zeichne();
 profil();
 /* „So gerechnet“ ans Ende jeder Karte mit data-rw (Text aus bericht.py, Schwellwerte aus den Einstellungen) */

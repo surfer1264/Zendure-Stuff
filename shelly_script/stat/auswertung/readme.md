@@ -5,7 +5,7 @@ oder mehrere Zendure-Speicher. Die Logs zeichnet der [Log-Grabber](../../Script_
 auf, siehe [Logs aufzeichnen](#logs-aufzeichnen). `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.7.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.7.1** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -340,6 +340,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.7.1**: Bericht öffnet mit den letzten 7 vollen Tagen. Die Zeitraum-Leiste bleibt auf dem iPad unterhalb der
+  Statusleiste bedienbar; die Tasten ‹ − + › sind kräftiger. Nur der Bericht ändert sich, die Logs werden nicht neu gerechnet
+  (eigene `RECHEN_VERSION` in `analyse.py`).
 - **1.7.0**: Klassen der Zyklusdauer aus der Stundenzeile (Controller ab 5.3.6): neue Spalten `zyklus_k0` … `zyklus_k6`
   und die Karte „Verteilung der Zyklusdauer“ (100-%-Stapel je Tag, warme Farben = länger als das Intervall).
   Logs älterer Controller liefern weiter Ø und max; die neue Version rechnet einmal alle Logs neu.

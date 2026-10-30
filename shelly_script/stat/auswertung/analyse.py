@@ -42,7 +42,10 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.7.0"
+VERSION = "1.7.1"
+# Stand der Tagesberechnung. Nur erhöhen, wenn sich Ergebnisse einzelner Tage ändern: dann werden alle Logs neu gerechnet.
+# Reine Änderungen am Bericht (bericht.py) erhöhen nur VERSION.
+RECHEN_VERSION = "1.7.0"
 
 # =============================================================================
 # EINSTELLUNGEN – nur hier anpassen
@@ -166,7 +169,7 @@ def argumente():
 
 def fingerabdruck():
     """Alles, was das Ergebnis eines einzelnen Tages beeinflusst. Ändert es sich, wird neu gerechnet."""
-    teile = [VERSION, TAKT_S, MAX_LUECKE_S, LEER_SCHWELLE_W, SATT_SCHWELLE_W, BAND_W, AKTIV_SCHWELLE_W,
+    teile = [RECHEN_VERSION, TAKT_S, MAX_LUECKE_S, LEER_SCHWELLE_W, SATT_SCHWELLE_W, BAND_W, AKTIV_SCHWELLE_W,
              SOLLWERT_START_W, NEUSTART_ABSTAND_S, list(GERAETE) if GERAETE else None]
     return hashlib.sha256(json.dumps(teile).encode()).hexdigest()[:16]
 
