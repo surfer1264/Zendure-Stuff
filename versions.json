@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-29T16:55:54Z",
+  "generated": "2026-10-30T20:23:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -231,9 +231,9 @@
         "webhookUrl"
       ],
       "changes": [
-        "Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab",
-        "Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`",
-        "Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile"
+        "**Neu: Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Regel-Script 5.2.4): Eingabefeld im Dashboard neben dem Sollwert, erlaubt 3 bis (Ladegrenze − Reserve) − 11. Ist dieser Abstand zu klein, ist das Feld gesperrt und es gilt 3. Eine höhere Reserve, die nicht mehr zur Sperre passt, wird mit Meldung abgelehnt. Mit älterem Regel-Script wird der Wert gespeichert, aber nicht ausgewertet",
+        "**Manuelles Laden:** Eine Leiste oben zeigt Start, Ergebnis und Restzeit. Während der Regler die Änderung übernimmt (10 s), ist die Bedienung gesperrt; danach prüft das Dashboard den echten Stand. Behoben: „Manuelles Laden … konnte nicht beendet werden“, obwohl die Werte richtig geschrieben waren",
+        "**Neues Design** unter `/neu`, das klassische Dashboard bleibt unter `/`. Umschalten im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken, Hinweise nur bei Abweichungen, Ansicht „Energiefluss“ mit animierten Linien"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
@@ -447,9 +447,9 @@
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4735fb1e313c9efacf1ecd443b3a9c03558efadc/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab",
-        "Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`",
-        "Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile"
+        "**Neu: Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Regel-Script 5.2.4): Eingabefeld im Dashboard neben dem Sollwert, erlaubt 3 bis (Ladegrenze − Reserve) − 11. Ist dieser Abstand zu klein, ist das Feld gesperrt und es gilt 3. Eine höhere Reserve, die nicht mehr zur Sperre passt, wird mit Meldung abgelehnt. Mit älterem Regel-Script wird der Wert gespeichert, aber nicht ausgewertet",
+        "**Manuelles Laden:** Eine Leiste oben zeigt Start, Ergebnis und Restzeit. Während der Regler die Änderung übernimmt (10 s), ist die Bedienung gesperrt; danach prüft das Dashboard den echten Stand. Behoben: „Manuelles Laden … konnte nicht beendet werden“, obwohl die Werte richtig geschrieben waren",
+        "**Neues Design** unter `/neu`, das klassische Dashboard bleibt unter `/`. Umschalten im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken, Hinweise nur bei Abweichungen, Ansicht „Energiefluss“ mit animierten Linien"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
