@@ -614,6 +614,7 @@
             <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
             <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details und Übersicht auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
+            <div class="set-row"><span><span class="lbl" id="designLbl" data-i18n="setDesign">Design</span><span class="hint" data-i18n="setDesignToNew">Neues Design mit Energiefluss ausprobieren</span></span><a class="icon-btn" href="neu" aria-labelledby="designLbl" style="text-decoration:none;color:var(--text)">⇄</a></div>
           </div>
         </details>
       </div>
@@ -1135,6 +1136,11 @@
     setReset: 'Réinitialiser l’affichage', setResetHint: 'Taille, jour/nuit, détails et vue d’ensemble par défaut',
     resetDone: 'Affichage réinitialisé'
   });
+
+  // Link zum neuen Design (Adresse /neu)
+  Object.assign(STRINGS.de, { setDesign: 'Design', setDesignToNew: 'Neues Design mit Energiefluss ausprobieren' });
+  Object.assign(STRINGS.en, { setDesign: 'Design', setDesignToNew: 'Try the new design with energy flow' });
+  Object.assign(STRINGS.fr, { setDesign: 'Design', setDesignToNew: 'Essayer le nouveau design avec flux d’énergie' });
 
   // Gespeicherte Wahl hat Vorrang, sonst die erste passende Browsersprache.
   // Passt keine der drei, wird Englisch genommen.
@@ -2928,10 +2934,12 @@
   applyExpert();
 
   // Link zum Bericht der Log-Auswertung nur, wenn der Proxy eine bericht.html
-  // findet (HEAD-Anfrage, relativ - klappt auch hinter Home-Assistant-Ingress).
-  // Ohne Proxy (Datei direkt geoeffnet) schlaegt fetch fehl: Link bleibt aus.
-  fetch('bericht_zendure', { method: 'HEAD', cache: 'no-store' }).then(function(r){
-    if (r.ok) document.getElementById('berichtLine').hidden = false;
+  // findet. GET auf bericht_vorhanden (relativ), denn Home-Assistant-Ingress
+  // reicht HEAD-Anfragen nicht durch. Ohne Proxy schlaegt fetch fehl: Link bleibt aus.
+  fetch('bericht_vorhanden', { cache: 'no-store' }).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(j){
+    if (j && j.vorhanden) document.getElementById('berichtLine').hidden = false;
   }).catch(function(){});
 
   // Alle gemerkten Ansichtseinstellungen auf Standard (Sprache bleibt):

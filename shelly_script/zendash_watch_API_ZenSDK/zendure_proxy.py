@@ -100,6 +100,10 @@ SILENT = False
 OPEN_BROWSER = None
 
 HTML_FILENAME = "zendure-dashboard.html"
+# Alternatives Design (Geraetekarten neu, Energiefluss), Adresse /neu.
+# Gesucht an denselben Orten wie die klassische Seite; fehlt die Datei,
+# liefert /neu einen 404 mit den gesuchten Orten.
+HTML_FILENAME_NEU = "zendure-dashboard-neu.html"
 # Bericht der Log-Auswertung (stat/auswertung/analyse.py), Adresse /bericht_zendure.
 # BERICHT_PATH: --bericht=PFAD, sonst Umgebungsvariable ZENDURE_BERICHT.
 BERICHT_FILENAME = "bericht.html"
@@ -459,11 +463,39 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_bericht()
             return
 
+        if path == "/bericht_vorhanden":
+            # Abfrage des Dashboards, ob es den Link zum Bericht zeigen soll. Als GET,
+            # weil Home-Assistant-Ingress HEAD-Anfragen nicht durchreicht.
+            body = json.dumps({"vorhanden": find_bericht() is not None}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store, must-revalidate")
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         if path == "/" or path == "":
             if is_configured():
                 self.serve_html()
             else:
                 self.serve_setup()
+            return
+
+        # Alternatives Design. Relative Links und API-Aufrufe der Seite
+        # ("./", "status_api") stimmen nur ohne Schraegstrich am Ende -
+        # /neu/ leitet deshalb relativ auf ../neu weiter (auch hinter Ingress).
+        if path == "/neu":
+            if is_configured():
+                self.serve_html(HTML_FILENAME_NEU)
+            else:
+                self.serve_setup()
+            return
+        if path == "/neu/":
+            self.send_response(301)
+            self.send_header("Location", "../neu")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
             return
 
         # Das bisherige Layout unter /b ist entfernt (3.5.12) - alte
@@ -753,6 +785,9 @@ def main():
     else:
         say("  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch")
     say("  HTML:     " + (html or "NICHT GEFUNDEN"))
+    html_neu = find_html(HTML_FILENAME_NEU)
+    say("  Neu:      " + ("http://localhost:{}/neu  ({})".format(PORT, html_neu) if html_neu
+                          else HTML_FILENAME_NEU + " nicht gefunden (optional)"))
     say("  Konfig:   " + config_path())
     bericht = find_bericht()
     say("  Bericht:  " + ("http://localhost:{}/bericht_zendure  ({})".format(PORT, bericht) if bericht

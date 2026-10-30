@@ -74,8 +74,18 @@ Sur les appareils tactiles, le curseur **Réserve (`minSoc`)** a en plus son pro
 | **Plein écran** | masque les barres du navigateur ; n'apparaît que si le navigateur le permet |
 | **Détails techniques** | affiche les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`). Sans cet interrupteur, le tableau de bord n'affiche que du texte en clair. |
 | **Réinitialiser l'affichage** ↺ | taille, jour/nuit, détails techniques et vue d'ensemble par défaut. La langue est conservée. |
+| **Design** ⇄ | bascule entre le tableau de bord classique (`/`) et le nouveau design (`/neu`) |
 
 Toutes les entrées sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
+
+### Nouveau design (`/neu`)
+
+`http://<adresse-du-proxy>:8000/neu` propose une alternative au tableau de bord classique. En-tête, vue d'ensemble, régulation, verrouillage et toutes les écritures sont identiques – seule la zone des appareils change, avec en plus l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.
+
+- **Cartes des appareils :** état en toutes lettres, puissance en grand, barre de charge avec la réserve (sous `minSoc`) et la zone au-dessus de la limite de charge hachurées, PV · batterie · hors réseau (batterie = PV − sortie − hors réseau), température et cellule la plus faible sur une petite ligne.
+- **Remarques** uniquement en cas d'écart (plein/vide bloqué, `socSet`/`minSoc` différent, export interdit, décharge désactivée, charge manuelle active), sinon « Aucune remarque ».
+- **Réglages** (interrupteurs, réserve, puissance de charge, charge manuelle) visibles seulement quand les commandes sont déverrouillées ; chaque carte peut être repliée. Les **détails techniques** forment un bloc à part, affiché uniquement avec l'interrupteur du menu.
+- **Flux d'énergie :** PV, appareil, batterie, maison, réseau et hors réseau avec des lignes animées (sens, vitesse et épaisseur selon la puissance), pour tous les appareils ou un seul (choix mémorisé par navigateur). Réseau et maison couvrent toujours tous les appareils (maison = solde réseau + somme des sorties). Sur écran étroit, le schéma défile latéralement.
 
 ### Ce que vous pouvez régler
 

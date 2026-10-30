@@ -74,8 +74,18 @@ On touch devices the **Reserve (`minSoc`)** slider additionally has its own smal
 | **Full screen** | hides the browser bars; only shown if the browser supports it |
 | **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
 | **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
+| **Design** ⇄ | switches between the classic dashboard (`/`) and the new design (`/neu`) |
 
 All entries are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
+
+### New design (`/neu`)
+
+`http://<proxy-address>:8000/neu` offers an alternative to the classic dashboard. Header, overview, control, locking and all write paths are the same – only the device area differs, plus an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
+
+- **Device cards:** state in words, output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
+- **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
+- **Settings** (switches, reserve, charging power, manual charging) are only visible while the controls are unlocked; each card can be collapsed. **Technical details** are a separate block, shown only with the switch in the menu.
+- **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs). On narrow screens the diagram scrolls sideways.
 
 ### What you can set
 

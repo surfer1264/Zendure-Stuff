@@ -3,6 +3,14 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.12.4
+
+- Neues, alternatives Dashboard-Design unter der Adresse `neu` (in Home Assistant: „Web-UI öffnen“, dann im Menü „Ansicht“ → „Design“). Das klassische Dashboard bleibt unverändert die Startseite; beide Seiten verlinken sich gegenseitig im Menü „Ansicht“
+- Gerätekarten im neuen Design: Status in Worten, Ladebalken mit schraffierter Reserve und Ladegrenze, PV · Akku · Offgrid, Hinweise nur bei Abweichung, Einstellungen nur bei freigegebener Bedienung, Technische Details als eigener Block
+- Ansicht „Energiefluss“ als Alternative zu den Gerätekarten: PV, Akku, Haus, Netz und Offgrid mit animierten Flusslinien, für alle Geräte zusammen oder einzeln. Ansicht und Geräteauswahl merkt sich der Browser
+- Link „Auswertung: Log-Bericht“ fehlte in der App, obwohl `/share/zendure/bericht.html` vorhanden war: Die Abfrage per HEAD kam durch Ingress nicht an. Jetzt fragt das Dashboard per GET unter `bericht_vorhanden` nach
+- Neues Design: Hinweis „Laden aus dem Netz gesperrt“, wenn das Netzladen eines Geräts ausgeschaltet ist (fehlte bisher)
+
 ## 3.5.12.3
 
 - Proxy: neue Seite `/bericht_zendure` zeigt den Bericht der Log-Auswertung (`bericht.html` aus `stat/auswertung/analyse.py`). In der App wird er unter `/share/zendure/bericht.html` gesucht; die App liest dafür den Ordner `share` (nur lesen)

@@ -73,8 +73,25 @@ Auf Touch-Geräten hat der Regler **Reserve (`minSoc`)** zusätzlich ein eigenes
 | **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
 | **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
 | **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
+| **Design** ⇄ | wechselt zwischen dem klassischen Dashboard (`/`) und dem neuen Design (`/neu`) |
 
 Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
+
+### Neues Design (`/neu`)
+
+Unter `http://<Proxy-Adresse>:8000/neu` gibt es eine Alternative zum klassischen Dashboard. Kopfzeile, Übersicht, Regelung, Sperre und alle Schreibwege sind gleich – anders sind nur der Gerätebereich und die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
+
+| Bereich der Gerätekarte | Inhalt |
+|---|---|
+| **Kopf** | Name, Online-Punkt, Zustand in Worten („speist ein“, „lädt vom Netz“, „Standby“, „nicht erreichbar“) |
+| **Leistung** | Leistung am AC-Anschluss, groß |
+| **Ladebalken** | SOC; der Bereich unter der Reserve (`minSoc`) und über der Ladegrenze ist schraffiert. Darunter Bereich und nutzbarer Anteil, rechts „100 %: vor n Tagen“ |
+| **Werte** | PV, Akku und Offgrid; Akku = PV − Ausgang − Offgrid (+ lädt, − entlädt). Darunter klein Temperatur und schwächste Zelle |
+| **Hinweise** | nur Abweichungen: voll oder leer gesperrt, `socSet`/`minSoc` abweichend, Export verboten, Entladen gesperrt, manuelles Laden aktiv. Sonst „Keine Hinweise“ |
+| **Einstellungen** | Schalter, Reserve, Ladeleistung und manuelles Laden – nur sichtbar, solange die Bedienung freigegeben ist, einzeln zuklappbar |
+| **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
+
+Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
 
 ### Was du einstellen kannst
 

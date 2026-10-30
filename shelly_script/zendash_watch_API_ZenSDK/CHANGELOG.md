@@ -2,29 +2,20 @@
 
 ## Changelog 3.5.12
 
-- Entlade-Hysterese `zdmc_dischargeResetMargin` (ab Regel-Script 5.2.4): `config_api` liefert den Wert als `dischargeResetMargin` (fehlt der Key: 3). `kvs_set_api` lehnt Werte außerhalb 3–79 oder mit Nachkommastellen mit `400` ab
-- Dashboard: neues Eingabefeld „Entlade-Hysterese“ (Zahl, wie die Fix-Entladung) neben dem Sollwert. Bereich 3 bis (kleinstes Fenster Ladegrenze − Reserve aller Geräte) − 11, ungültige Eingaben werden mit Meldung verworfen. Ist das Fenster unter 14 Punkten, ist das Feld gesperrt und es gilt 3. Ladegrenze = kleinerer Wert aus `maxSoc` und `socSet`
-- Dashboard: Die 5 Kacheln der Übersicht stehen ab 1000 px Breite nebeneinander. KVS-Schlüssel unter dem Kacheltitel in eigener Zeile
-- Dashboard: Eine Erhöhung der Reserve wird nicht gespeichert, wenn die eingestellte Entlade-Hysterese danach nicht mehr passt (Reserve höchstens Ladegrenze − 11 − Hysterese). Es erscheint eine Meldung, der Reserve-Regler springt zurück. Senken geht immer
-- Mit älterem Regel-Script: Der Key wird geschrieben, aber nicht ausgewertet
-- Bisheriges Layout `zendure-dashboard-b.html` entfernt. Proxy, exe und Home-Assistant-App enthalten es nicht mehr; `/b` leitet auf das Dashboard weiter
-- Home-Assistant-App-Version 3.5.12.0
-- Nachtrag Dashboard: Hilfetexte überarbeitet. „Entlade-Hysterese“ heißt jetzt „Entlade-Sperre“, der Regler „Reserve (minSoc)“; Ladegrenze und Reserve tragen den Konfigurationsschlüssel (`maxSoc`, `minSoc`). Home-Assistant-App-Version 3.5.12.1
-- Nachtrag Dashboard: Schon beim Klick auf Start oder Ende des manuellen Ladens erscheint oben eine Leiste („SF2400: manuelles Laden wird gestartet …“ bzw. „… wird beendet …“, darunter „Bedienung gesperrt – warte auf Bestätigung …“), und die gesamte Bedienung ist gesperrt. Nach der Antwort zeigt die Leiste das Ergebnis („SF2400: manuelles Laden mit 1000 W“ bzw. „SF2400: zurück in der Regelung“ oder die Fehlermeldung) und die Restzeit. 10 s lang ist die gesamte Bedienung gesperrt, auch das Schloss. Danach holt das Dashboard den echten KVS-Stand. Bisher gab es nur einen kurzen Hinweis am unteren Rand (2,6 s), und die Bedienung war sofort wieder frei, während der Regler die Änderung noch übernahm. Bleibt die Bestätigung aus, zeigt die Leiste „keine Bestätigung erhalten – der Stand wird nach Ablauf geprüft“. Nach der Haltezeit vergleicht das Dashboard den echten Stand und meldet erst dann Erfolg oder Fehler. Home-Assistant-App-Version 3.5.12.2
-- Nachtrag Dashboard: Kennung `APP_TYPE = "zdmc-dashboard"` / `APP_VERSION` für das Versions-Manifest. Der Configurator zeigt damit unter „Downloads“ die aktuelle Version des Dashboard-Proxys. `VERSION` bleibt gleich, keine sichtbare Änderung
-- Nachtrag Proxy (`zendure_proxy.py`, auch in der Home-Assistant-App und im local_helper): `kvs_set_api` darf bis 25 s dauern, die übrigen Endpunkte bleiben bei 5 s. Ursache der Meldung „Manuelles Laden … konnte nicht beendet werden“ trotz korrekt geschriebener Werte: Das Script schreibt drei Keys nacheinander (je bis 5 s, 0,5 s Pause dazwischen, vorher bis 2 s Warten auf den eigenen Poll), und der Proxy brach nach 5 s mit `502` ab
-- Nachtrag Proxy (`zendure_proxy.py`, auch in der Home-Assistant-App und im local_helper): neue Seite `/bericht_zendure` liefert den Bericht der Log-Auswertung (`bericht.html` aus `stat/auswertung`) aus. Gesucht wird mit `--bericht=PFAD` (Datei oder Ordner) bzw. der Umgebungsvariable `ZENDURE_BERICHT` genau dort, sonst neben der Konfiguration, neben Script/exe und im Repo-Ordner `stat/auswertung`. Gesucht wird zuerst neben der Dashboard-HTML. Ein neu erzeugter Bericht wirkt ohne Neustart. Dashboard: Link „Auswertung: Log-Bericht“ im Fuß der Seite; er erscheint nur, wenn der Proxy einen Bericht findet (Abfrage per `HEAD /bericht_zendure` beim Laden). Home-Assistant-App: Datei unter `/share/zendure/bericht.html`, Version 3.5.12.3
+- **Neu: Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Regel-Script 5.2.4): Eingabefeld im Dashboard neben dem Sollwert, erlaubt 3 bis (Ladegrenze − Reserve) − 11. Ist dieser Abstand zu klein, ist das Feld gesperrt und es gilt 3. Eine höhere Reserve, die nicht mehr zur Sperre passt, wird mit Meldung abgelehnt. Mit älterem Regel-Script wird der Wert gespeichert, aber nicht ausgewertet
+- **Manuelles Laden:** Eine Leiste oben zeigt Start, Ergebnis und Restzeit. Während der Regler die Änderung übernimmt (10 s), ist die Bedienung gesperrt; danach prüft das Dashboard den echten Stand. Behoben: „Manuelles Laden … konnte nicht beendet werden“, obwohl die Werte richtig geschrieben waren
+- **Neues Design** unter `/neu`, das klassische Dashboard bleibt unter `/`. Umschalten im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken, Hinweise nur bei Abweichungen, Ansicht „Energiefluss“ mit animierten Linien
+- **Log-Bericht:** Liegt ein Bericht der Log-Auswertung (`bericht.html`) vor, zeigt der Proxy ihn unter `/bericht_zendure`, und im Fuß des Dashboards erscheint der Link „Auswertung: Log-Bericht“. Home Assistant: Datei nach `/share/zendure/bericht.html` legen. Details in der [Dashboard-Doku](dashboard.md)
+- Übersicht: die 5 Kacheln stehen ab 1000 px Breite nebeneinander. Hilfetexte überarbeitet, Ladegrenze und Reserve mit Konfigurationsschlüssel (`maxSoc`, `minSoc`). Die Sperrschwelle der Zellspannung steht nur noch bei „Technische Details“
+- Das alte Layout `zendure-dashboard-b.html` entfällt, `/b` leitet auf das Dashboard weiter
+- Home-Assistant-App bis Version 3.5.12.4
 
 ## Changelog 3.5.11
 
-- Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs
-- `status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert
-- Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier
-- Kompatibel: Ein älteres Script ignoriert `bg` und verhält sich wie bisher; der neue Proxy funktioniert damit weiter
-- Dashboard: nur Versionsnummer 3.5.11
-- Home-Assistant-App-Version 3.5.11.0
-- Nachtrag Dashboard (beide Layouts): Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite öffnet die Einrichtungsseite `setup` – funktioniert auch in Home Assistant über „Web-UI öffnen“. Home-Assistant-App-Version 3.5.11.1
-- Nachtrag Dashboard (beide Layouts): Links zu ThingSpeak und ThingsBoard öffnen im selben Fenster statt in einem neuen Tab – in der Home-Assistant-Companion-App kam sonst „401: Unauthorized“. Home-Assistant-App-Version 3.5.11.2
+- **Weniger Last bei Cloud-Upload** (ThingSpeak/ThingsBoard) ohne offenes Dashboard: ein Abruf pro Minute statt drei bis vier. Wirkt mit Script und Proxy ab 3.5.11; ältere Kombinationen laufen wie bisher weiter
+- Dashboard: Link „Dashboard-Shelly: IP / Script-ID ändern“ im Fuß der Seite, auch in Home Assistant
+- Home-Assistant-Companion-App: Links zu ThingSpeak und ThingsBoard öffnen im selben Fenster, vorher kam „401: Unauthorized“
+- Home-Assistant-App bis Version 3.5.11.2
 
 ## Changelog 3.5.10
 
