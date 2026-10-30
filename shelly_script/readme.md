@@ -24,7 +24,7 @@ Zwei Shellys, ein Smartmeter und zenSDK-fähige Speicher – welche Geräte pass
 
 ![Architektur der Shelly Suite](img/architektur.svg)
 
-Ausführlich erklärt – Schicht für Schicht und was bei einem Ausfall passiert: **[So arbeiten die Teile zusammen](architektur.md)**.
+Ausführlich erklärt – Bereich für Bereich und was bei einem Ausfall passiert: **[So arbeiten die Teile zusammen](architektur.md)**.
 
 | Shelly | Script | Aufgabe |
 |---|---|---|

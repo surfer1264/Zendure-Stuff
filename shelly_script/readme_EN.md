@@ -24,7 +24,7 @@ Two Shellys, a smart meter and zenSDK-capable batteries – which devices work i
 
 ![Shelly Suite architecture](img/architektur_EN.svg)
 
-Explained in detail – layer by layer and what happens if something fails: **[How the parts work together](architektur_EN.md)**.
+Explained in detail – area by area and what happens if something fails: **[How the parts work together](architektur_EN.md)**.
 
 | Shelly | Script | Task |
 |---|---|---|

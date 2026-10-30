@@ -24,7 +24,7 @@ Deux Shelly, un compteur intelligent et des batteries compatibles zenSDK – les
 
 ![Architecture de la Shelly Suite](img/architektur_FR.svg)
 
-Expliqué en détail – couche par couche et ce qui se passe en cas de panne : **[Comment les éléments fonctionnent ensemble](architektur_FR.md)**.
+Expliqué en détail – domaine par domaine et ce qui se passe en cas de panne : **[Comment les éléments fonctionnent ensemble](architektur_FR.md)**.
 
 | Shelly | Script | Rôle |
 |---|---|---|
