@@ -1,16 +1,38 @@
 # Skalierungsmodell - Wieviel Solarflows
 
-Stand: 15.10.2026 · gilt für `zendash_watch` v3.5.8 mit **Debug aus** · 5 Messpunkte
+Stand: 30.10.2026 · Watchdog-Script (`zendash_watch`) gemessen ab v3.5.8, Regler ab 5.3.5 · jeweils **Debug aus**
 
-Die Tabelle schätzt den Speicherbedarf des zenDash-Scripts auf dem Shelly. Sie zeigt, wie viel Reserve für welche Anzahl von SolarFlow-Geräten und Akkus bleibt.
+Wie viele SolarFlow-Geräte und Akkus verkraften die beiden Scripte, bevor ihnen auf dem Shelly der Speicher ausgeht?
 
-## Kurzfassung
+## Fazit: Was funktioniert
 
-- **1–2 SolarFlow:** unkritisch, auch mit vielen Akkus
-- **3 SolarFlow:** ✅ bis 3 Akkus am Gerät mit den meisten Akkus, ⚠️ bei 4–7, ❌ ab 8
-- **4 SolarFlow:** mit v3.5.8 **nicht unterstützt**, zu wenig Reserve
+Gezählt wird **A = die Akkus am Gerät mit den meisten Akkus**, nicht die Gesamtzahl. Bei Pro-Modellen zählt der eingebaute Akku mit. Beispiel: 3 Geräte mit 3 / 3 / 1 Akkus → A = 3.
 
-**Fazit für 4 Geräte:** Der Regler kommt ab 5.3.5 mit 4 Geräten und wenigen Akkus je Gerät aus (bis A = 1 ✅, bis A = 4 ⚠️). Begrenzend bleibt das zenDash-Script (oben: 4 Geräte ❌).
+| Geräte | ✅ Funktioniert | ⚠️ Grenzbereich | ❌ Nicht unterstützt |
+|---|---|---|---|
+| 1 | bis A = 10 | A = 11 bis 13 | ab A = 14 |
+| 2 | bis A = 7 | A = 8 bis 10 | ab A = 11 |
+| 3 | bis A = 3 | A = 4 bis 7 | ab A = 8 |
+| 4 | **nur Regler**, mit A = 1 | nur Regler, A = 2 bis 4 | **Watchdog-Script immer**; Regler ab A = 5 |
+
+- **✅ Funktioniert:** Reserve mindestens 3 kB in beiden Scripten. Bis A = 4 an echten Anlagen gemessen, darüber vom Modell abgeleitet (das Modell rechnet an allen Messpunkten eher zu hoch).
+- **⚠️ Grenzbereich:** 1,5 bis 3 kB Reserve. Läuft nach dem Modell, aber ohne viel Puffer und bisher nicht gemessen. Wer es einsetzt, prüft nach dem Start und nach einigen Stunden `mem_peak` (Shelly-Weboberfläche oder `Script.GetStatus`). Kein Debug einschalten, es kostet weitere 0,3–0,5 kB.
+- **❌ Nicht unterstützt:** weniger als 1,5 kB Reserve. Das Script kann beim Lesen eines Geräts abstürzen.
+
+**Welches Script begrenzt?**
+
+| Geräte | Watchdog-Script (Dashboard-Shelly) | Regler (Regel-Shelly) | Die ganze Suite |
+|---|---|---|---|
+| 1 | ✅ bis A = 16 · ⚠️ 17–21 | ✅ bis A = 10 · ⚠️ 11–13 | ✅ bis A = 10 · ⚠️ 11–13 |
+| 2 | ✅ bis A = 10 · ⚠️ 11–14 | ✅ bis A = 7 · ⚠️ 8–10 | ✅ bis A = 7 · ⚠️ 8–10 |
+| 3 | ✅ bis A = 3 · ⚠️ 4–7 · ❌ ab 8 | ✅ bis A = 4 · ⚠️ 5–7 · ❌ ab 8 | ✅ bis A = 3 · ⚠️ 4–7 · ❌ ab 8 |
+| 4 | ❌ immer | ✅ A = 1 · ⚠️ 2–4 · ❌ ab 5 | nur Regler, ohne Dashboard und Meldungen |
+
+Mit 4 Geräten läuft also nur der Regler allein. Dashboard, Watchdog-Meldungen und der Upload zu ThingSpeak/ThingsBoard entfallen dann, weil sie das Watchdog-Script brauchen.
+
+**Bestätigt durch Messung:** Watchdog-Script mit 1, 2 und 3 Geräten bis A = 4 (5 Messpunkte). Regler mit 2 Geräten (A = 2) und 3 Geräten (A = 3). Mit 4 Geräten und mit mehr als 4 Akkus an einem Gerät gibt es noch keine Messung.
+
+Die Herleitung, Formeln und Messpunkte folgen unten.
 
 ## Grundlagen
 
