@@ -3,6 +3,11 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 4.0.0.1
+
+- Energiefluss: zuschaltbarer Hintergrund nach Tageszeit (Aus · Bild · Bewegung), Schalter oben rechts in der Karte
+- Kontraste nach WCAG 2.2 angehoben (alle Texte mindestens 4,5:1), kräftigere Rahmen der Kacheln im Energiefluss
+
 ## 4.0.0.0
 
 - Das neue Design ist jetzt die Startseite der App („Web-UI öffnen“), das klassische Dashboard liegt unter `klassisch` (Menü „Ansicht“ → „Design“). Alte Lesezeichen auf `neu` leiten auf die Startseite weiter

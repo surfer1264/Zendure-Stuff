@@ -14,6 +14,8 @@ Ziel: Das neue Design wird die Startseite des Dashboards; dazu robustere Verbind
 - Neues Design: Gerätekarten schlanker – der Hinweisbereich reserviert keinen Platz mehr, die Einstellungen beginnen weiter in allen Karten auf gleicher Höhe
 - Shelly-Script `zendash_watch`: nur die Versionsnummer, inhaltlich unverändert (einmal neu hochladen, damit Konfigurator und Fußzeile 4.0.0 zeigen)
 - Home-Assistant-App 4.0.0.0 (die Punkte oben kamen teils schon mit 3.5.12.4 bis 3.5.12.6)
+- Nachtrag (Home-Assistant-App 4.0.0.1, Dashboard ohne neue Versionsnummer): **Hintergrund nach Tageszeit** im Energiefluss, Schalter in der Karte **Aus · Bild · Bewegung** (Standard Aus, pro Browser gemerkt). Sonne, Himmel, Mond, Sterne und Landschaft folgen Sonnenauf- und -untergang, gerechnet einmal pro Minute im Browser; ohne Standort am Shelly ausgeblendet. Shelly-Script und Proxy unverändert
+- Nachtrag (Home-Assistant-App 4.0.0.1): **Kontraste nach WCAG 2.2** geprüft und angehoben – alle Texte mindestens 4,5:1 in hell und dunkel, auch auf dem Hintergrundbild (Kacheln dort deckender). Aktive Schalter mit dunkler Schrift auf Türkis, Rot (dunkel) und Grün, Grau, Türkis, Orange (hell) etwas kräftiger, „Keine Hinweise“ besser lesbar. Kacheln im Energiefluss mit 2-px-Rahmen, Haus, Offgrid, Netz und Mitte jetzt farbig umrandet. Farbwerte gelten auch für das klassische Dashboard
 
 Keine Änderung am CONFIG-Block nötig.
 

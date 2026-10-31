@@ -61,7 +61,7 @@
     --amber-text:#F2A93B;
     --teal-text:#4FD1C5;
     --green-text:#5CCB76;
-    --alert-text:#E2574C;
+    --alert-text:#F0776B;
   }
   html[data-theme="light"]{
     --bg:#EEF3F1;
@@ -72,11 +72,11 @@
     --surface-2:#F3F7F6;
     --border:rgba(15,23,32,0.08);
     --text:#10192B;
-    --text-muted:#5A6B82;
+    --text-muted:#536379;
     --shadow:0 10px 24px rgba(20,30,45,0.10), 0 2px 6px rgba(20,30,45,0.06);
-    --amber-text:#99600A;
-    --teal-text:#207B73;
-    --green-text:#2F8A46;
+    --amber-text:#8A5608;
+    --teal-text:#1B6F68;
+    --green-text:#25733A;
     --alert-text:#CF2E22;
   }
 
@@ -552,7 +552,7 @@
     min-height:2.5rem; padding:0 1rem; border-radius:999px;
   }
   .seg button:hover{ color:var(--text); }
-  .seg button[aria-pressed="true"]{ background:var(--teal-deep); color:#fff; }
+  .seg button[aria-pressed="true"]{ background:var(--teal-deep); color:#06201D; }
   .seg button:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
 
   /* Karte: senkrechter Aufbau, Einstellungen in allen Karten auf gleicher Hoehe */
@@ -597,7 +597,7 @@
   /* Hinweise so hoch wie ihr Inhalt; die Einstellungen richtet margin-top:auto
      trotzdem in allen Karten auf gleiche Hoehe aus */
   .hub-flags{ align-content:flex-start; }
-  .no-hints{ font-size:.74rem; color:var(--idle); padding:.1875rem 0; }
+  .no-hints{ font-size:.74rem; color:var(--text-muted); padding:.1875rem 0; }
   .flag.info{ color:var(--blue-text); border-color:var(--blue-text); }
   #app .hub .lock-status, #app.hide-hub-controls .hub .lock-status{ display:none; }
 
@@ -653,7 +653,7 @@
   @media (prefers-reduced-motion: reduce){ .fdot.f, .fdot.r{ animation:none; } }
   .fnode{
     position:absolute; box-sizing:border-box; width:9.375em; min-height:6em; padding:.625em .75em;
-    border-radius:var(--radius-md); background:var(--surface-2); border:1px solid var(--border);
+    border-radius:var(--radius-md); background:var(--surface-2); border:2px solid color-mix(in srgb, var(--text-muted) 55%, transparent);
     display:flex; flex-direction:column; gap:.125em;
   }
   .fnode .nk{ font-size:.9em; letter-spacing:.04em; white-space:nowrap; text-transform:uppercase; }
@@ -661,15 +661,58 @@
   .fnode .ns{ font-size:.92em; color:var(--text-muted); }
   .fnode.pv{ left:30.3em; top:.875em; border-color:var(--amber-deep); } .fnode.pv .nk{ color:var(--amber-text); }
   .fnode.batt{ left:30.3em; top:24.6em; border-color:var(--teal-deep); } .fnode.batt .nk{ color:var(--teal-text); }
-  .fnode.house{ left:14.7em; top:12.625em; } .fnode.house .nk{ color:var(--blue-text); }
+  .fnode.house{ left:14.7em; top:12.625em; border-color:color-mix(in srgb, var(--blue-text) 70%, transparent); } .fnode.house .nk{ color:var(--blue-text); }
   .fnode.grid{ left:.95em; top:12.625em; }
-  .fnode.offg{ left:45.95em; top:12.625em; } .fnode.offg .nk{ color:var(--violet-text); }
-  .fnode.hubn{ left:29.7em; top:12em; width:10.625em; min-height:7.25em; align-items:center; justify-content:center; text-align:center; background:var(--surface); }
+  .fnode.offg{ left:45.95em; top:12.625em; border-color:color-mix(in srgb, var(--violet-text) 70%, transparent); } .fnode.offg .nk{ color:var(--violet-text); }
+  .fnode.hubn{ left:29.7em; top:12em; width:10.625em; min-height:7.25em; align-items:center; justify-content:center; text-align:center; background:var(--surface);
+    border-color:color-mix(in srgb, var(--text) 35%, transparent); }
   .fnode.hubn .nv{ color:var(--blue-text); font-size:1.4em; }
   .fnode.grid.in{ border-color:var(--alert); } .fnode.grid.in .nk{ color:var(--alert-text); }
   .fnode.grid.out{ border-color:var(--green-line); } .fnode.grid.out .nk{ color:var(--green-text); }
   .fnode .soc-mini{ height:.25em; border-radius:2px; background:var(--border); margin:.125em 0; }
   .fnode .soc-mini i{ display:block; height:100%; border-radius:2px; background:var(--teal-text); width:0; }
+
+  /* Hintergrund nach Tageszeit (Aus | Bild | Bewegung). Farben und Positionen
+     setzt updateSky() einmal pro Minute; bewegt werden nur Wolken (transform)
+     und Sterne (opacity) - beides ohne Neuzeichnen der Seite. */
+  .flow-wrap{ position:relative; overflow:hidden; }
+  .flow-head{ position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; gap:.5rem .75rem; }
+  .flow-wrap .flow-scroll{ position:relative; z-index:1; }
+  .flow-bg{ margin-left:auto; display:flex; align-items:center; gap:.375rem; }
+  .flow-bg[hidden]{ display:none; }
+  .flow-bg .lbl{ display:inline-flex; align-items:center; padding:0 .5rem 0 .625rem; font-size:.78rem; color:var(--text-muted); }
+  @media (max-width:560px){ .flow-bg .lbl{ display:none; } }
+  .flow-bg .seg3{ display:inline-flex; padding:.1875rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); }
+  .flow-bg .seg3 button{ appearance:none; cursor:pointer; border:0; background:none; color:var(--text-muted); min-height:2rem; padding:0 .75rem;
+    border-radius:999px; font-family:'IBM Plex Sans', sans-serif; font-size:.78rem; font-weight:500; }
+  .flow-bg .seg3 button[aria-pressed="true"]{ background:var(--teal-deep); color:#06201D; }
+  .flow-bg .seg3 button:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
+  .sky{ position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .sky[hidden]{ display:none; }
+  .sky > *{ position:absolute; }
+  .sky-glow, .sky-stars, .sky-scrim{ inset:0; }
+  .sky-star{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; opacity:.8; }
+  .sky-star.big{ width:3px; height:3px; }
+  .sky-moon{ width:40px; height:40px; border-radius:50%; box-shadow:inset -11px -4px 0 0 #E9E5D2; filter:drop-shadow(0 0 12px rgba(233,229,210,.35)); }
+  .sky-sun{ border-radius:50%; }
+  .sky-track{ left:0; width:100%; height:5.5rem; }
+  .sky-track .sky-cloud{ position:absolute; left:0; top:0; width:19rem; height:100%; }
+  .sky-track.c1{ top:9%; transform:translateX(18%); }
+  .sky-track.c2{ top:24%; transform:translateX(58%); }
+  .sky-track.c2 .sky-cloud{ width:14rem; height:75%; }
+  .sky-hills{ left:0; bottom:0; width:100%; height:34%; }
+  .flow-wrap.bg-move .sky-track.c1{ animation:skyDrift 190s linear infinite; animation-delay:-60s; }
+  .flow-wrap.bg-move .sky-track.c2{ animation:skyDrift 240s linear infinite; animation-delay:-170s; }
+  .flow-wrap.bg-move .sky-star{ animation:skyTwinkle 3.2s ease-in-out infinite; }
+  @keyframes skyDrift{ from{ transform:translateX(-30%); } to{ transform:translateX(100%); } }
+  @keyframes skyTwinkle{ 0%,100%{ opacity:.25; } 50%{ opacity:.95; } }
+  @media (prefers-reduced-motion: reduce){ .flow-wrap.bg-move .sky-track, .flow-wrap.bg-move .sky-star{ animation:none; } }
+  /* Kacheln und Linien auf dem Bild: deckend genug zum Lesen */
+  html[data-theme="dark"] .flow-wrap.bg-on .fnode{ background:rgba(27,39,64,.96); }
+  html[data-theme="dark"] .flow-wrap.bg-on .fnode.hubn{ background:rgba(15,26,45,.96); }
+  html[data-theme="light"] .flow-wrap.bg-on .fnode{ background:rgba(255,255,255,.97); }
+  html[data-theme="dark"] .flow-wrap.bg-on .ftrack{ stroke:rgba(255,255,255,.16); }
+  html[data-theme="light"] .flow-wrap.bg-on .ftrack{ stroke:rgba(16,25,43,.22); }
 
   /* Link zum anderen Design im Menue */
   a.icon-btn{ text-decoration:none; color:var(--text); }
@@ -835,7 +878,37 @@
     <div class="hubs-grid" id="hubsGrid"></div>
 
     <div class="flow-wrap" id="flowWrap" hidden>
-      <div class="flow-scopes" id="flowScopes" role="group" data-i18n-aria="flowScopeAria" aria-label="Geräte im Energiefluss"></div>
+      <div class="sky" id="flowSky" aria-hidden="true" hidden>
+        <div class="sky-glow" id="skyGlow"></div>
+        <div class="sky-stars" id="skyStars"></div>
+        <div class="sky-moon" id="skyMoon"></div>
+        <div class="sky-sun" id="skySun"></div>
+        <div class="sky-track c1"><div class="sky-cloud"></div></div>
+        <div class="sky-track c2"><div class="sky-cloud"></div></div>
+        <svg class="sky-hills" viewBox="0 0 1040 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+          <path id="skyFar" d="M0 70 C 140 40, 300 85, 480 62 S 820 30, 1040 66 L1040 170 L0 170 Z"></path>
+          <path id="skyMid" d="M0 100 C 200 76, 380 118, 600 96 S 900 80, 1040 104 L1040 170 L0 170 Z"></path>
+          <path id="skyTrees" d="M96 140 L110 102 L124 140 Z M300 138 L313 106 L326 138 Z M834 136 L849 96 L864 136 Z M870 138 L881 110 L892 138 Z"></path>
+          <path id="skyNear" d="M0 132 C 180 116, 360 150, 560 134 S 880 122, 1040 140 L1040 170 L0 170 Z"></path>
+          <rect id="skyHouse" x="176" y="104" width="68" height="30"></rect>
+          <path id="skyRoof" d="M168 106 L210 80 L252 106 Z"></path>
+          <path d="M184 102 L210 86 L236 102 Z" fill="#20375A"></path>
+          <path d="M197 94 L223 94 M210 86 L210 102" stroke="#3B5A86" stroke-width="1"></path>
+          <rect class="sky-win" x="185" y="112" width="12" height="10"></rect>
+          <rect class="sky-win" x="223" y="112" width="12" height="10"></rect>
+          <rect id="skyDoor" x="205" y="116" width="10" height="18"></rect>
+        </svg>
+        <div class="sky-scrim" id="skyScrim"></div>
+      </div>
+      <div class="flow-head">
+        <div class="flow-scopes" id="flowScopes" role="group" data-i18n-aria="flowScopeAria" aria-label="Geräte im Energiefluss"></div>
+        <div class="flow-bg" id="flowBg" hidden>
+          <span class="seg3" role="group" data-i18n-aria="bgAria" aria-label="Hintergrund des Energieflusses">
+            <span class="lbl" data-i18n="bgLbl">Hintergrund</span>
+            <button type="button" data-bg="off" data-i18n="bgOff">Aus</button><button type="button" data-bg="still" data-i18n="bgStill">Bild</button><button type="button" data-bg="move" data-i18n="bgMove">Bewegung</button>
+          </span>
+        </div>
+      </div>
       <div class="flow-scroll">
         <div class="flow" id="flow">
           <svg viewBox="0 0 1040 500" preserveAspectRatio="none" aria-hidden="true">
@@ -1335,13 +1408,14 @@
   Object.assign(STRINGS.de, {
     viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
     setDesign: 'Design', setDesignToOld: 'Zum klassischen Dashboard wechseln',
-    setResetHint: 'Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard',
+    setResetHint: 'Größe, Tag/Nacht, Details, Übersicht, Geräte/Energiefluss und Hintergrund auf Standard',
     flowTotal: 'Gesamt', flowPv: 'PV', flowBatt: 'Akku', flowHouse: 'Haus', flowGrid: 'Netz', flowOffgrid: 'Offgrid',
     fPvOn: 'Erzeugung', fPvOff: 'keine Erzeugung', fPvNone: 'kein PV-Eingang',
     fAcOut: 'Ausgang ins Haus', fAcIn: 'Laden vom Netz', fAcIdle: 'Bereitschaft',
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
+    bgLbl: 'Hintergrund', bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
     sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
@@ -1354,13 +1428,14 @@
   Object.assign(STRINGS.en, {
     viewDevices: 'Devices', viewFlow: 'Energy flow', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
     setDesign: 'Design', setDesignToOld: 'Switch to the classic dashboard',
-    setResetHint: 'Size, day/night, details, overview and devices/energy flow back to default',
+    setResetHint: 'Size, day/night, details, overview, devices/energy flow and background back to default',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Battery', flowHouse: 'Home', flowGrid: 'Grid', flowOffgrid: 'Off-grid',
     fPvOn: 'generation', fPvOff: 'no generation', fPvNone: 'no PV input',
     fAcOut: 'output to home', fAcIn: 'charging from grid', fAcIdle: 'standby',
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
+    bgLbl: 'Background', bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
     sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
@@ -1373,13 +1448,14 @@
   Object.assign(STRINGS.fr, {
     viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
     setDesign: 'Design', setDesignToOld: 'Passer au tableau de bord classique',
-    setResetHint: 'Taille, jour/nuit, détails, vue d’ensemble et appareils/flux par défaut',
+    setResetHint: 'Taille, jour/nuit, détails, vue d’ensemble, appareils/flux et arrière-plan par défaut',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Batterie', flowHouse: 'Maison', flowGrid: 'Réseau', flowOffgrid: 'Hors réseau',
     fPvOn: 'production', fPvOff: 'pas de production', fPvNone: 'pas d’entrée PV',
     fAcOut: 'sortie vers la maison', fAcIn: 'charge depuis le réseau', fAcIdle: 'veille',
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
+    bgLbl: 'Arrière-plan', bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
     sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
@@ -1478,6 +1554,7 @@
     if (meta) meta.setAttribute('content', theme === 'dark' ? '#0B1220' : '#EEF3F1');
     themeToggle.textContent = theme === 'dark' ? '☾' : '☀';
     themeToggle.title = t(theme === 'dark' ? 'toDay' : 'toNight');
+    if (typeof updateSky === 'function') updateSky();
   }
   applyTheme();
 
@@ -1635,13 +1712,163 @@
   fetch('standort', { cache: 'no-store' }).then(function(r){
     return r.ok ? r.json() : null;
   }).then(function(j){
-    if (j && typeof j.lat === 'number' && typeof j.lon === 'number') { sunLoc = j; showSun(); }
+    if (j && typeof j.lat === 'number' && typeof j.lon === 'number') { sunLoc = j; showSun(); updateSky(); }
   }).catch(function(){});
   // Neuer Tag: neu rechnen (Pruefung einmal pro Minute reicht)
   setInterval(function(){
     const n = new Date();
     if (sunLoc && sunDay !== n.getFullYear() + '-' + (n.getMonth() + 1) + '-' + n.getDate()) showSun();
+    updateSky();
   }, 60000);
+
+  /* ---------------- Hintergrund nach Tageszeit ----------------
+     Nur im Energiefluss, nur mit Standort (sonst ist der Schalter
+     ausgeblendet). Sonnenhoehe vereinfacht aus Sonnenauf-/-untergang:
+     tagsueber Sinusbogen bis 24 Grad, nachts bis -40 Grad. Daraus werden
+     Himmel, Horizontgluehen, Sterne, Mond, Licht der Landschaft und
+     Fensterlicht stufenlos berechnet. Aufwand: ein paar Rechenschritte pro
+     Minute; Bewegung (Wolken, Sterne) nur in der Stufe "Bewegung". */
+  // skyReady per var: applyTheme() laeuft beim Start vor diesem Block
+  var skyReady = false;
+  const BG_KEY = 'zendash_neu_bg';
+  let bgMode = 'off';
+  try { const v = localStorage.getItem(BG_KEY); if (v === 'still' || v === 'move') bgMode = v; } catch (e) {}
+  let skyStarsBuilt = false;
+  const SKY_KF = [
+    [-18, ['#03060F', '#07102A', '#0E1B38']],
+    [-12, ['#061026', '#0F2045', '#22335E']],
+    [-6, ['#11264F', '#2B4579', '#7E6488']],
+    [-2, ['#1B3463', '#55598A', '#E08657']],
+    [2, ['#2B4E85', '#8A9BBD', '#F2AE72']],
+    [8, ['#2E68A6', '#6CA0CE', '#BCD6E7']],
+    [20, ['#2A6BB5', '#5C9BD6', '#A9CDEA']]
+  ];
+  function skyHex(h){ return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]; }
+  function skyMix(a, b, k){ return a.map(function(v, i){ return Math.round(v + (b[i] - v) * k); }); }
+  function skyCss(c, al){ return al === undefined ? 'rgb(' + c.join(',') + ')' : 'rgba(' + c.join(',') + ',' + al + ')'; }
+  function skyClamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  function skyColors(e){
+    if (e <= SKY_KF[0][0]) return SKY_KF[0][1].map(skyHex);
+    for (let i = 1; i < SKY_KF.length; i++) {
+      if (e <= SKY_KF[i][0]) {
+        const k = (e - SKY_KF[i - 1][0]) / (SKY_KF[i][0] - SKY_KF[i - 1][0]);
+        return SKY_KF[i][1].map(function(h, j){ return skyMix(skyHex(SKY_KF[i - 1][1][j]), skyHex(h), k); });
+      }
+    }
+    return SKY_KF[SKY_KF.length - 1][1].map(skyHex);
+  }
+  function buildSkyStars(){
+    const box = document.getElementById('skyStars');
+    if (!box || skyStarsBuilt) return;
+    let r = 7;
+    const rnd = function(){ r = (r * 9301 + 49297) % 233280; return r / 233280; };
+    for (let i = 0; i < 30; i++) {
+      const st = document.createElement('i');
+      st.className = 'sky-star' + (rnd() < 0.2 ? ' big' : '');
+      st.style.left = (rnd() * 99).toFixed(1) + '%';
+      st.style.top = (rnd() * 68).toFixed(1) + '%';
+      st.style.animationDelay = '-' + (rnd() * 3).toFixed(1) + 's';
+      st.style.animationDuration = (2.4 + rnd() * 2.4).toFixed(1) + 's';
+      box.appendChild(st);
+    }
+    skyStarsBuilt = true;
+  }
+  function applyBgButtons(){
+    document.querySelectorAll('#flowBg button[data-bg]').forEach(function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-bg') === bgMode ? 'true' : 'false');
+    });
+  }
+  function updateSky(){
+    if (!skyReady) return;
+    const wrap = document.getElementById('flowWrap');
+    const sky = document.getElementById('flowSky');
+    const ctl = document.getElementById('flowBg');
+    if (!wrap || !sky || !ctl) return;
+    ctl.hidden = !sunLoc;
+    applyBgButtons();
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+    const up = sunLoc ? sunEventUtc(y, m, d, sunLoc.lat, sunLoc.lon, true) : null;
+    const down = sunLoc ? sunEventUtc(y, m, d, sunLoc.lat, sunLoc.lon, false) : null;
+    const on = bgMode !== 'off' && !!up && !!down;
+    wrap.classList.toggle('bg-on', on);
+    wrap.classList.toggle('bg-move', on && bgMode === 'move');
+    sky.hidden = !on;
+    if (!on || wrap.hidden || document.hidden) return;   // unsichtbar: nichts rechnen
+    buildSkyStars();
+    const SR = up.getHours() * 60 + up.getMinutes(), SS = down.getHours() * 60 + down.getMinutes();
+    const DAY = SS - SR, NIGHT = 1440 - DAY;
+    const tod = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+    const fDay = (tod - SR) / DAY;
+    const gNight = ((((tod - SS) % 1440) + 1440) % 1440) / NIGHT;
+    const isDay = fDay >= 0 && fDay <= 1;
+    const elev = isDay ? 24 * Math.sin(Math.PI * fDay) : -40 * Math.sin(Math.PI * gNight);
+    const light = skyClamp((elev + 10) / 30, 0, 1);
+    const golden = skyClamp(1 - Math.abs(elev - 1) / 9, 0, 1);
+    const nearHz = skyClamp(1 - Math.abs(elev) / 12, 0, 1);
+    const starOp = skyClamp((-elev - 5) / 9, 0, 1);
+    const hell = document.documentElement.getAttribute('data-theme') === 'light';
+    const c = skyColors(elev);
+    sky.style.background = 'linear-gradient(180deg, ' + skyCss(c[0]) + ' 0%, ' + skyCss(c[1]) + ' 55%, ' + skyCss(c[2]) + ' 80%)';
+    // Horizont bei 80 % der Kartenhoehe; Sonne im Bogen von links (Osten) nach rechts (Westen)
+    const sunF = skyClamp(fDay, -0.1, 1.1);
+    // Mittag bei 68 % statt 50 %: dort steht sonst die PV-Kachel vor der Sonne
+    const sunX = sunF <= 0.5 ? 7 + sunF * 2 * 61 : 68 + (sunF - 0.5) * 2 * 25;
+    const sunY = 80 - Math.sin(Math.PI * sunF) * 66;
+    const glowX = skyClamp(isDay ? sunX : (gNight < 0.5 ? 93 : 7), 4, 96);
+    document.getElementById('skyGlow').style.background = 'radial-gradient(ellipse 55% 42% at ' + glowX.toFixed(1) + '% 80%, rgba(255,150,80,' +
+      (elev > -9 ? 0.55 * nearHz : 0).toFixed(2) + '), rgba(255,150,80,0) 70%)';
+    document.getElementById('skyStars').style.opacity = starOp.toFixed(2);
+    const moon = document.getElementById('skyMoon');
+    const mF = skyClamp(gNight, 0, 1);
+    moon.style.left = 'calc(' + (5 + mF * 86).toFixed(1) + '% - 20px)';
+    moon.style.top = 'calc(' + (78 - Math.sin(Math.PI * mF) * 60).toFixed(1) + '% - 20px)';
+    moon.style.opacity = (starOp * 0.95).toFixed(2);
+    const sun = document.getElementById('skySun');
+    const r = Math.round(30 + 16 * nearHz), toRed = skyClamp(1 - elev / 14, 0, 1);
+    const core = skyMix(skyHex('#FFF6D8'), skyHex('#FF9A4D'), toRed), edge = skyMix(skyHex('#FFD66B'), skyHex('#E2574C'), toRed);
+    sun.style.width = sun.style.height = (2 * r) + 'px';
+    sun.style.left = 'calc(' + sunX.toFixed(1) + '% - ' + r + 'px)';
+    sun.style.top = 'calc(' + sunY.toFixed(1) + '% - ' + r + 'px)';
+    sun.style.background = 'radial-gradient(circle, ' + skyCss(core) + ' 0%, ' + skyCss(edge) + ' 100%)';
+    sun.style.boxShadow = '0 0 ' + Math.round(50 + 50 * nearHz) + 'px ' + Math.round(14 + 22 * nearHz) + 'px ' + skyCss(edge, (0.35 + 0.15 * nearHz).toFixed(2));
+    sun.style.opacity = (fDay > -0.1 && fDay < 1.1) ? '1' : '0';
+    // Wolken aus drei weichen Verlaeufen (kein Unschaerfe-Filter)
+    const cc = elev > 6 ? skyCss([255, 255, 255], 0.42)
+      : (elev > -6 ? skyCss(skyMix([255, 168, 140], [255, 255, 255], skyClamp(elev / 6, 0, 1)), 0.55) : skyCss([46, 58, 86], 0.55));
+    const blob = 'radial-gradient(ellipse 34% 46% at 30% 58%, ' + cc + ' 0%, transparent 72%), radial-gradient(ellipse 30% 58% at 52% 44%, ' + cc +
+      ' 0%, transparent 72%), radial-gradient(ellipse 32% 42% at 74% 60%, ' + cc + ' 0%, transparent 72%)';
+    document.querySelectorAll('#flowSky .sky-cloud').forEach(function(el){ el.style.background = blob; });
+    // Landschaft: Nacht- und Tagfarben nach Licht gemischt, im Morgen-/Abendrot waermer
+    const dayC = ['#4F7C8C', '#305B67', '#1C3B45', '#2A4B55', '#15262D'];
+    const nightC = ['#16233A', '#0E182C', '#070F1D', '#0F1A2B', '#060B14'];
+    const hc = dayC.map(function(h, i){ return skyCss(skyMix(skyMix(skyHex(nightC[i]), skyHex(h), light), skyHex('#8A5A5E'), golden * (i === 0 ? 0.45 : 0.25))); });
+    document.getElementById('skyFar').setAttribute('fill', hc[0]);
+    document.getElementById('skyMid').setAttribute('fill', hc[1]);
+    document.getElementById('skyTrees').setAttribute('fill', hc[2]);
+    document.getElementById('skyNear').setAttribute('fill', hc[2]);
+    document.getElementById('skyHouse').setAttribute('fill', hc[3]);
+    document.getElementById('skyRoof').setAttribute('fill', hc[4]);
+    document.getElementById('skyDoor').setAttribute('fill', hc[4]);
+    const winA = skyClamp((3 - elev) / 7, 0, 1);
+    document.querySelectorAll('#flowSky .sky-win').forEach(function(w){
+      w.setAttribute('fill', skyCss(skyMix(skyHex('#1A2C38'), skyHex('#FFC86B'), winA)));
+      w.style.filter = winA > 0.2 ? 'drop-shadow(0 0 4px rgba(255,200,107,' + (0.7 * winA).toFixed(2) + '))' : 'none';
+    });
+    document.getElementById('skyScrim').style.background = hell
+      ? 'rgba(255,255,255,' + (0.06 + 0.24 * light).toFixed(2) + ')'
+      : 'rgba(11,18,32,' + (0.1 + 0.2 * light).toFixed(2) + ')';
+  }
+  document.querySelectorAll('#flowBg button[data-bg]').forEach(function(b){
+    b.addEventListener('click', function(){
+      bgMode = b.getAttribute('data-bg');
+      try { localStorage.setItem(BG_KEY, bgMode); } catch (e) {}
+      updateSky();
+    });
+  });
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) updateSky(); });
+  skyReady = true;
+  updateSky();
 
   /* ---------------- API-Aufrufe ---------------- */
   async function fetchJ(path){
@@ -3313,6 +3540,7 @@
     title.setAttribute('data-i18n', flow ? 'viewFlow' : 'devices');
     title.textContent = t(flow ? 'viewFlow' : 'devices');
     if (flow) renderFlow();
+    if (typeof updateSky === 'function') updateSky();
   }
   function setView(v){
     view = v;
@@ -3381,7 +3609,6 @@
     const house = gridOnline ? gridPower + acAll : null;
     const socs = on.filter(function(h){ return h.soc !== null && h.soc !== undefined; });
     const soc = socs.length ? Math.round(sum(socs, function(h){ return Number(h.soc); }) / socs.length) : null;
-    const tagTotal = flowScope === 'all' ? '' : ' · ' + t('fTotalTag');
     const none = !on.length;
 
     setText('fnHubName', name);
@@ -3397,10 +3624,10 @@
     // Im Fluss nur Betraege; Richtung zeigt Text und Animation (setFlowLine nimmt das Vorzeichen)
     setText('fnOffSub', none || !hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : 'fOffNone')));
     setText('fnHouse', house === null ? '–' : fmtW(house));
-    setText('fnHouseSub', t('fHouse') + tagTotal);
+    setText('fnHouseSub', t('fHouse'));   // ohne „gesamt“ – das Haus ist immer das ganze Haus
     const g = gridOnline ? Math.round(gridPower) : null;
     setText('fnGrid', g === null ? 'n/a' : fmtW(g));
-    setText('fnGridSub', g === null ? t('meterUnreachable') : t(g > 5 ? 'fGridIn' : (g < -5 ? 'fGridOut' : 'fGridZero')) + tagTotal);
+    setText('fnGridSub', g === null ? t('meterUnreachable') : t(g > 5 ? 'fGridIn' : (g < -5 ? 'fGridOut' : 'fGridZero')));   // Netz und Haus gelten immer fuer alle Geraete
     const gb = document.getElementById('fnGridBox');
     if (gb) gb.className = 'fnode grid' + (g !== null && g > 5 ? ' in' : (g !== null && g < -5 ? ' out' : ''));
 
@@ -3556,8 +3783,9 @@
   // Groesse A2, Tag/Nacht wieder nach System, Details aus, Uebersicht offen.
   document.getElementById('viewReset').addEventListener('click', function(){
     try {
-      [THEME_KEY, FONT_KEY, EXPERT_KEY, OV_KEY, VIEW_KEY, SCOPE_KEY].forEach(function(k){ localStorage.removeItem(k); });
+      [THEME_KEY, FONT_KEY, EXPERT_KEY, OV_KEY, VIEW_KEY, SCOPE_KEY, BG_KEY].forEach(function(k){ localStorage.removeItem(k); });
     } catch (e) {}
+    bgMode = 'off';
     view = 'devices';
     flowScope = 'all';
     buildFlowScopes();

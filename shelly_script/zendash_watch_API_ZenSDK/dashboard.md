@@ -95,6 +95,8 @@ Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Pun
 
 Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
 
+Im Energiefluss lässt sich oben rechts ein **Hintergrund nach Tageszeit** zuschalten: **Aus · Bild · Bewegung** (Standard: Aus, wird pro Browser gemerkt). Die Sonne zieht von links (Osten) nach rechts (Westen), der Himmel wechselt stufenlos von Morgendämmerung über Tag und Abendrot bis zur Nacht mit Mond und Sternen; die Fenster des kleinen Hauses leuchten abends. Bei „Bewegung“ ziehen zwei Wolken und die Sterne funkeln. Gerechnet wird einmal pro Minute aus Sonnenauf- und -untergang; ohne Standort am Shelly fehlt der Schalter. „Ansicht zurücksetzen“ schaltet den Hintergrund wieder aus; bei „Bewegung reduzieren“ am Gerät steht alles still.
+
 ### Was du einstellen kannst
 
 Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regeltakt. Nach dem Speichern erscheint kurz eine Bestätigung, z. B. „Gespeichert: Akku 1 · Reserve (minSoc) 20 %“.
