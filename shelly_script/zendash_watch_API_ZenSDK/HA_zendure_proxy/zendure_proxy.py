@@ -102,9 +102,9 @@ SILENT = False
 OPEN_BROWSER = None
 
 HTML_FILENAME = "zendure-dashboard.html"
-# Alternatives Design (Geraetekarten neu, Energiefluss), Adresse /neu.
-# Gesucht an denselben Orten wie die klassische Seite; fehlt die Datei,
-# liefert /neu einen 404 mit den gesuchten Orten.
+# Ab 4.0.0 ist das neue Design (Geraetekarten, Energiefluss) die Startseite /,
+# das klassische Dashboard liegt unter /klassisch. Beide werden an denselben
+# Orten gesucht; fehlt die neue Datei, zeigt / das klassische Dashboard.
 HTML_FILENAME_NEU = "zendure-dashboard-neu.html"
 # Bericht der Log-Auswertung (stat/auswertung/analyse.py), Adresse /bericht_zendure.
 # BERICHT_PATH: --bericht=PFAD, sonst Umgebungsvariable ZENDURE_BERICHT.
@@ -133,6 +133,42 @@ def fehler_merken(art, endpoint, grund):
                              "endpoint": endpoint, "grund": grund}
     # Auch mit -q protokollieren (Home-Assistant-App), nur --silent schweigt
     say("[proxy] Fehler bei {}: {} ({})".format(endpoint, art, grund))
+
+
+# Standort des Dashboard-Shellys fuer Sonnenauf-/-untergang im neuen Design.
+# Gelesen ueber die Firmware-RPC Sys.GetConfig (nicht ueber das Script -
+# kostet dort keinen Speicher), einmal pro Tag; bei Fehler neuer Versuch
+# fruehestens nach 10 Minuten. Behalten werden nur Breite und Laenge.
+STANDORT_LOCK = threading.Lock()
+STANDORT = {"lat": None, "lon": None, "geholt": 0.0, "ok": False}
+STANDORT_TTL_OK = 24 * 3600
+STANDORT_TTL_FEHLER = 600
+
+
+def standort_holen():
+    now = time.time()
+    with STANDORT_LOCK:
+        alter = now - STANDORT["geholt"]
+        if STANDORT["geholt"] and alter < (STANDORT_TTL_OK if STANDORT["ok"] else STANDORT_TTL_FEHLER):
+            return {"lat": STANDORT["lat"], "lon": STANDORT["lon"]}
+        STANDORT["geholt"] = now   # auch bei Fehler: nicht bei jedem Aufruf neu fragen
+    lat = lon = None
+    ok = False
+    if is_configured():
+        try:
+            url = "http://{}/rpc/Sys.GetConfig".format(CONFIG["shelly_ip"])
+            with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
+                loc = (json.loads(resp.read().decode("utf-8")) or {}).get("location") or {}
+            lat, lon = loc.get("lat"), loc.get("lon")
+            if not (isinstance(lat, (int, float)) and isinstance(lon, (int, float))
+                    and -90 <= lat <= 90 and -180 <= lon <= 180):
+                lat = lon = None
+            ok = True   # Antwort da; Standort kann trotzdem fehlen (dann null)
+        except Exception as e:
+            say("[proxy] Standort nicht lesbar: {}".format(e))
+    with STANDORT_LOCK:
+        STANDORT.update({"lat": lat, "lon": lon, "ok": ok})
+    return {"lat": lat, "lon": lon}
 
 
 def fehler_stand():
@@ -503,6 +539,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_bericht()
             return
 
+        if path == "/standort":
+            # Breite/Laenge des Dashboard-Shellys (oder null) fuer die Sonnenzeiten
+            self._json(200, standort_holen())
+            return
+
         if path == "/proxy_fehler":
             # Fehlerzaehler des Tages fuer die Fusszeile des Dashboards
             self._json(200, fehler_stand())
@@ -520,27 +561,36 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
+        # Startseite: neues Design (ab 4.0.0), ohne dessen Datei das klassische
         if path == "/" or path == "":
+            if not is_configured():
+                self.serve_setup()
+            elif find_html(HTML_FILENAME_NEU):
+                self.serve_html(HTML_FILENAME_NEU)
+            else:
+                self.serve_html()
+            return
+
+        # Klassisches Dashboard. Relative Links und API-Aufrufe der Seite
+        # ("./", "status_api") stimmen nur ohne Schraegstrich am Ende -
+        # /klassisch/ leitet deshalb relativ weiter (auch hinter Ingress).
+        if path == "/klassisch":
             if is_configured():
                 self.serve_html()
             else:
                 self.serve_setup()
             return
+        if path == "/klassisch/":
+            self._redirect("../klassisch")
+            return
 
-        # Alternatives Design. Relative Links und API-Aufrufe der Seite
-        # ("./", "status_api") stimmen nur ohne Schraegstrich am Ende -
-        # /neu/ leitet deshalb relativ auf ../neu weiter (auch hinter Ingress).
+        # Alte Adresse des neuen Designs (3.5.12): Lesezeichen landen auf der
+        # Startseite. Relativ, damit es auch hinter Ingress stimmt.
         if path == "/neu":
-            if is_configured():
-                self.serve_html(HTML_FILENAME_NEU)
-            else:
-                self.serve_setup()
+            self._redirect("./")
             return
         if path == "/neu/":
-            self.send_response(301)
-            self.send_header("Location", "../neu")
-            self.send_header("Content-Length", "0")
-            self.end_headers()
+            self._redirect("../")
             return
 
         # Das bisherige Layout unter /b ist entfernt (3.5.12) - alte
@@ -632,6 +682,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(body)
+
+    def _redirect(self, location):
+        self.send_response(301)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _json(self, status, obj):
         body = json.dumps(obj).encode("utf-8")
@@ -837,10 +893,9 @@ def main():
         say("  Shelly:   " + shelly_base())
     else:
         say("  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch")
-    say("  HTML:     " + (html or "NICHT GEFUNDEN"))
     html_neu = find_html(HTML_FILENAME_NEU)
-    say("  Neu:      " + ("http://localhost:{}/neu  ({})".format(PORT, html_neu) if html_neu
-                          else HTML_FILENAME_NEU + " nicht gefunden (optional)"))
+    say("  HTML:     " + (html_neu or (HTML_FILENAME_NEU + " nicht gefunden - Startseite zeigt das klassische Dashboard")))
+    say("  Klassisch: http://localhost:{}/klassisch  ({})".format(PORT, html or "NICHT GEFUNDEN"))
     say("  Konfig:   " + config_path())
     bericht = find_bericht()
     say("  Bericht:  " + ("http://localhost:{}/bericht_zendure  ({})".format(PORT, bericht) if bericht

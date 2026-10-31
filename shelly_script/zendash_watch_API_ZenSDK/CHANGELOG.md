@@ -1,20 +1,30 @@
 # Changelog zendash API - WatchDog
 
+## Changelog 4.0.0
+
+Ziel: Das neue Design wird die Startseite des Dashboards; dazu robustere Verbindung zum Shelly und Fehlerzähler im Proxy.
+
+- **Neues Design ist die Startseite** `/`, das klassische Dashboard liegt unter `/klassisch`. Alte Lesezeichen auf `/neu` leiten auf die Startseite weiter. Umschalten weiter im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken (Reserve und Ladegrenze schraffiert), Hinweise nur bei Abweichungen, Einstellungen nur bei freigegebener Bedienung, Ansicht „Energiefluss“ mit animierten Linien
+- **Energiefluss:** In der Gesamtansicht steht in der Mitte „Solarflows“ statt der Liste aller Gerätenamen; Ansicht und Geräteauswahl merkt sich der Browser
+- **Offgrid mit Richtung:** positiv = Abgabe ans Haus („Ausgang“), negativ = Einspeisung ins Gerät („Eingang“, wie PV). Der Energiefluss zeigt nur Beträge, die Animation läuft in Flussrichtung; vorher stand bei Einspeisung „nicht belegt“ und die Linie stand still
+- **Sonnenaufgang und -untergang** neben der Uhr (nur neues Design). Der Proxy liest den Standort einmal am Tag aus `Sys.GetConfig` des Dashboard-Shellys (neue Adresse `/standort`), gerechnet wird im Browser
+- **Verbindungsprobleme (beide Designs):** Ein einzelner Abfrage-Aussetzer bleibt unsichtbar; erst nach zwei Fehlern in Folge erscheinen Hinweis (mit Grund, z. B. „Zeitüberschreitung“) und „Verbindungsproblem“, die Gerätekarten werden blass, im neuen Design „veraltet“, Animationen halten an. Läuft eine Abfrage noch, fällt der nächste Takt aus (vorher konnten sich Anfragen am Shelly stapeln)
+- **Proxy zählt Abfragefehler** je Tag nach Art (Zeitüberschreitung, nicht erreichbar, Fehler vom Shelly) mit letztem Zeitpunkt und Grund: neue Adresse `/proxy_fehler`, im Fuß des Dashboards „Abfragefehler heute: …“, jeder Fehler auch im Protokoll (auch mit `-q` und in der Home-Assistant-App). Die 502-Antwort enthält jetzt `art`
+- **Proxy:** `config_api` darf 10 s statt 5 s dauern (das Script wartet dort bis zu 2 s auf seine Geräteabfrage und liest die KVS vom Regler-Shelly); die Zeitüberschreitungen traten nur dort auf. Messwerte (`status_api`) bleiben bei 5 s
+- Neues Design: Gerätekarten schlanker – der Hinweisbereich reserviert keinen Platz mehr, die Einstellungen beginnen weiter in allen Karten auf gleicher Höhe
+- Shelly-Script `zendash_watch`: nur die Versionsnummer, inhaltlich unverändert (einmal neu hochladen, damit Konfigurator und Fußzeile 4.0.0 zeigen)
+- Home-Assistant-App 4.0.0.0 (die Punkte oben kamen teils schon mit 3.5.12.4 bis 3.5.12.6)
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 3.5.12
 
 - **Neu: Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Regel-Script 5.2.4): Eingabefeld im Dashboard neben dem Sollwert, erlaubt 3 bis (Ladegrenze − Reserve) − 11. Ist dieser Abstand zu klein, ist das Feld gesperrt und es gilt 3. Eine höhere Reserve, die nicht mehr zur Sperre passt, wird mit Meldung abgelehnt. Mit älterem Regel-Script wird der Wert gespeichert, aber nicht ausgewertet
 - **Manuelles Laden:** Eine Leiste oben zeigt Start, Ergebnis und Restzeit. Während der Regler die Änderung übernimmt (10 s), ist die Bedienung gesperrt; danach prüft das Dashboard den echten Stand. Behoben: „Manuelles Laden … konnte nicht beendet werden“, obwohl die Werte richtig geschrieben waren
-- **Neues Design** unter `/neu`, das klassische Dashboard bleibt unter `/`. Umschalten im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken, Hinweise nur bei Abweichungen, Ansicht „Energiefluss“ mit animierten Linien
 - **Log-Bericht:** Liegt ein Bericht der Log-Auswertung (`bericht.html`) vor, zeigt der Proxy ihn unter `/bericht_zendure`, und im Fuß des Dashboards erscheint der Link „Auswertung: Log-Bericht“. Home Assistant: Datei nach `/share/zendure/bericht.html` legen. Details in der [Dashboard-Doku](dashboard.md)
 - Übersicht: die 5 Kacheln stehen ab 1000 px Breite nebeneinander. Hilfetexte überarbeitet, Ladegrenze und Reserve mit Konfigurationsschlüssel (`maxSoc`, `minSoc`). Die Sperrschwelle der Zellspannung steht nur noch bei „Technische Details“
 - Das alte Layout `zendure-dashboard-b.html` entfällt, `/b` leitet auf das Dashboard weiter
-- Neues Design: Offgrid mit Richtung – positiv = Abgabe ans Haus („Ausgang“), negativ = Einspeisung ins Gerät („Eingang“, wie PV). Der Energiefluss zeigt nur Beträge, die Animation läuft in Flussrichtung; vorher stand bei Einspeisung „nicht belegt“ und die Linie stand still
-- **Verbindungsprobleme (beide Designs):** Ein einzelner Abfrage-Aussetzer bleibt unsichtbar; erst nach zwei Fehlern in Folge erscheinen Hinweis (mit Grund, z. B. „Zeitüberschreitung“) und „Verbindungsproblem“, die Gerätekarten werden blass, im neuen Design „veraltet“, Animationen halten an. Läuft eine Abfrage noch, fällt der nächste Takt aus (vorher konnten sich Anfragen am Shelly stapeln)
-- **Proxy zählt Abfragefehler** je Tag nach Art (Zeitüberschreitung, nicht erreichbar, Fehler vom Shelly) mit letztem Zeitpunkt und Grund: neue Adresse `/proxy_fehler`, im Fuß des Dashboards „Abfragefehler heute: …“, jeder Fehler auch im Protokoll (auch mit `-q` und in der Home-Assistant-App). Die 502-Antwort enthält jetzt `art`
-- Proxy: `config_api` darf 10 s statt 5 s dauern (der Shelly wartet dort auf seine Geräteabfrage und liest die KVS); die Zeitüberschreitungen traten nur dort auf. Messwerte (`status_api`) bleiben bei 5 s
-- Neues Design: Gerätekarten schlanker – der Hinweisbereich reserviert keine zwei Zeilen mehr, unten weniger Abstand; die Einstellungen beginnen weiter in allen Karten auf gleicher Höhe
-- Neues Design, Energiefluss: In der Gesamtansicht steht in der Mitte „Solarflows“ statt der Liste aller Gerätenamen
-- Home-Assistant-App bis Version 3.5.12.6
+- Home-Assistant-App bis Version 3.5.12.3
 
 ## Changelog 3.5.11
 

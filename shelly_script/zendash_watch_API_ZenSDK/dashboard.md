@@ -43,7 +43,7 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDas
 
 ## Bedienung
 
-Beschrieben ist das Standard-Layout unter `http://<Proxy-Adresse>:8000/`.
+Ab 4.0.0 zeigt die Startseite `http://<Proxy-Adresse>:8000/` das [neue Design](#neues-design-startseite). Beschrieben ist hier zuerst das klassische Dashboard unter `http://<Proxy-Adresse>:8000/klassisch`; Kopfzeile, Übersicht, Regelung, Sperre und Menü sind in beiden gleich.
 
 ### Aufbau der Seite
 
@@ -73,13 +73,13 @@ Auf Touch-Geräten hat der Regler **Reserve (`minSoc`)** zusätzlich ein eigenes
 | **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
 | **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
 | **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
-| **Design** ⇄ | wechselt zwischen dem klassischen Dashboard (`/`) und dem neuen Design (`/neu`) |
+| **Design** ⇄ | wechselt zwischen dem neuen Design (Startseite `/`) und dem klassischen Dashboard (`/klassisch`) |
 
 Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
-### Neues Design (`/neu`)
+### Neues Design (Startseite)
 
-Unter `http://<Proxy-Adresse>:8000/neu` gibt es eine Alternative zum klassischen Dashboard. Kopfzeile, Übersicht, Regelung, Sperre und alle Schreibwege sind gleich – anders sind nur der Gerätebereich und die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
+Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das klassische Dashboard liegt unter `/klassisch`. Lesezeichen auf die frühere Adresse `/neu` landen auf der Startseite. Kopfzeile, Übersicht, Regelung, Sperre und alle Schreibwege sind gleich – anders sind nur der Gerätebereich und die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
 
 | Bereich der Gerätekarte | Inhalt |
 |---|---|
@@ -92,6 +92,8 @@ Unter `http://<Proxy-Adresse>:8000/neu` gibt es eine Alternative zum klassischen
 | **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
 
 Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
+
+Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
 
 ### Was du einstellen kannst
 
@@ -357,7 +359,7 @@ Der Proxy zählt alle gescheiterten Anfragen an den Shelly, getrennt nach Zeitü
 
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup` – und den Bericht unter `/bericht_zendure` lesen. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Script-Nummer:** Beim **Update** über den Configurator bleibt die Nummer gleich. Wird das Script **neu angelegt** (erste Installation, „andere löschen“, Shelly-Wechsel oder Upload von Hand), bekommt es eine neue Nummer. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
-- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das frühere Layout unter `/b` ist seit 3.5.12 entfernt, die Adresse leitet auf das Dashboard weiter.
+- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das frühere Layout unter `/b` ist seit 3.5.12 entfernt, die Adresse leitet auf das Dashboard weiter. Ab 4.0.0 liegt dieser Aufbau unter `/klassisch`, die Startseite zeigt das [neue Design](#neues-design-startseite).
 - **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
 
 ---

@@ -18,7 +18,8 @@ Empfohlen auf der Seite *Info* der App: **„Beim Booten starten“** und **„W
 
 | Adresse | Inhalt |
 |---|---|
-| `http://<ha-ip>:8000/` | Dashboard (Standard-Layout) |
+| `http://<ha-ip>:8000/` | Dashboard (neues Design mit Gerätekarten und Energiefluss, ab 4.0.0) |
+| `http://<ha-ip>:8000/klassisch` | Dashboard im klassischen Layout |
 | `http://<ha-ip>:8000/setup` | Shelly-IP und Script-ID ändern |
 | `http://<ha-ip>:8000/thingspeak` | ThingSpeak-Upload einrichten |
 | `http://<ha-ip>:8000/thingsboard` | ThingsBoard-Upload einrichten, Werte auswählen, Speicherverbrauch abschätzen |

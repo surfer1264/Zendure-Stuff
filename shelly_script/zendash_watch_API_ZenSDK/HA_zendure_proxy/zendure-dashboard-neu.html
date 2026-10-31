@@ -17,7 +17,7 @@
 <meta name="theme-color" content="#0B1220">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Zendure Grid · Dashboard (neu)</title>
+<title>Zendure Grid · Dashboard</title>
 <style>
 /* IBM Plex, direkt eingebettet - keine Verbindung zu fonts.googleapis.com
    oder fonts.gstatic.com mehr, die Seite ist damit vollstaendig offline-
@@ -163,6 +163,9 @@
   .status-dot.offline{ background:var(--alert-text); animation:none; }
   .clock-pill .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; color:var(--text); }
   .clock-pill .date{ font-size:.75rem; }
+  .clock-pill .sun{ font-size:.75rem; font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; white-space:nowrap; }
+  .clock-pill .sun[hidden]{ display:none; }
+  .clock-pill .sun i{ font-style:normal; font-family:'IBM Plex Sans', system-ui, sans-serif; font-size:.95rem; color:var(--amber-text); margin-right:.2rem; }
 
   /* Sperre: wichtigster Knopf der Seite. Nur Symbol (runder Knopf, farbiger
      Rand) - mit Text brach die Kopfzeile in laengeren Sprachen (Franzoesisch)
@@ -531,7 +534,8 @@
   #app.expert .plain{ display:none; }
 
   /* ==========================================================================
-     Neues Design (zendure-dashboard-neu.html, Adresse /neu):
+     Neues Design (zendure-dashboard-neu.html), ab 4.0.0 die Startseite /
+     (klassisch unter /klassisch):
      Geraetekarten mit Reserve im Ladebalken, Hinweisen nur bei Abweichung,
      Einstellungen nur bei freigegebener Bedienung, Technische Details als
      eigener Block - und als Alternative die Ansicht "Energiefluss".
@@ -714,6 +718,9 @@
   @media (max-width:420px){
     .clock-pill .date{ display:none; }
   }
+  @media (max-width:560px){
+    .clock-pill .sun{ display:none; }
+  }
   /* Weniger Bewegung, wenn im System so eingestellt */
   @media (prefers-reduced-motion: reduce){
     .status-dot{ animation:none; }
@@ -748,7 +755,7 @@
       </div>
       <div class="head-right">
         <div class="pill status-pill" role="status" aria-live="polite"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span id="statusText" data-i18n="connecting">Verbinde…</span></div>
-        <div class="pill clock-pill"><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span></div>
+        <div class="pill clock-pill"><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span><span class="sun" id="clockSun" hidden></span></div>
         <button type="button" class="lock-btn locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><span id="lockIcon" aria-hidden="true"><svg class="lock-icon"><use href="#lk-closed"/></svg></span></button>
         <details class="menu" id="viewMenu">
           <summary><span aria-hidden="true">⚙</span><span data-i18n="viewMenu">Ansicht</span></summary>
@@ -759,7 +766,7 @@
             <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
             <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
-            <div class="set-row"><span><span class="lbl" id="designLbl" data-i18n="setDesign">Design</span><span class="hint" data-i18n="setDesignToOld">Zum klassischen Dashboard wechseln</span></span><a class="icon-btn" href="./" aria-labelledby="designLbl">⇄</a></div>
+            <div class="set-row"><span><span class="lbl" id="designLbl" data-i18n="setDesign">Design</span><span class="hint" data-i18n="setDesignToOld">Zum klassischen Dashboard wechseln</span></span><a class="icon-btn" href="klassisch" aria-labelledby="designLbl">⇄</a></div>
           </div>
         </details>
       </div>
@@ -898,7 +905,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen.
-  const VERSION = "3.5.12";
+  const VERSION = "4.0.0";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -1335,7 +1342,7 @@
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
-    fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
+    sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
@@ -1354,7 +1361,7 @@
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
-    fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
+    sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
@@ -1373,7 +1380,7 @@
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
-    fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
+    sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
@@ -1584,6 +1591,57 @@
   }
   tickClock();
   setInterval(tickClock, 1000);
+
+  /* ---------------- Sonnenauf- und -untergang ----------------
+     Standort vom Proxy (/standort, aus Sys.GetConfig des Dashboard-Shellys),
+     gerechnet im Browser nach der Sonnenaufgangsgleichung (Almanac for
+     Computers, Zenit 90,833 Grad, genau auf etwa 1-2 Minuten). Ohne Standort
+     oder ohne Proxy bleibt die Anzeige aus. */
+  let sunLoc = null, sunDay = '';
+  function sunEventUtc(y, m, d, lat, lon, rising){
+    const r = Math.PI / 180;
+    const n = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(y, 0, 0)) / 86400000);
+    const t = n + ((rising ? 6 : 18) - lon / 15) / 24;
+    const M = 0.9856 * t - 3.289;
+    let L = M + 1.916 * Math.sin(M * r) + 0.020 * Math.sin(2 * M * r) + 282.634;
+    L = ((L % 360) + 360) % 360;
+    let RA = Math.atan(0.91764 * Math.tan(L * r)) / r;
+    RA = ((RA % 360) + 360) % 360;
+    RA = (RA + Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90) / 15;
+    const sinDec = 0.39782 * Math.sin(L * r);
+    const cosDec = Math.cos(Math.asin(sinDec));
+    const cosH = (Math.cos(90.833 * r) - sinDec * Math.sin(lat * r)) / (cosDec * Math.cos(lat * r));
+    if (cosH > 1 || cosH < -1) return null;   // Polartag oder -nacht
+    const H = (rising ? 360 - Math.acos(cosH) / r : Math.acos(cosH) / r) / 15;
+    const T = H + RA - 0.06571 * t - 6.622;
+    const ut = (((T - lon / 15) % 24) + 24) % 24;
+    return new Date(Date.UTC(y, m - 1, d) + ut * 3600000);
+  }
+  function showSun(){
+    const el = document.getElementById('clockSun');
+    if (!el) return;
+    if (!sunLoc) { el.hidden = true; return; }
+    const now = new Date();
+    const y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate();
+    sunDay = y + '-' + m + '-' + d;
+    const up = sunEventUtc(y, m, d, sunLoc.lat, sunLoc.lon, true);
+    const down = sunEventUtc(y, m, d, sunLoc.lat, sunLoc.lon, false);
+    if (!up || !down) { el.hidden = true; return; }
+    const f = function(x){ return x.toLocaleTimeString(locale(), { hour:'2-digit', minute:'2-digit', hour12:false }); };
+    el.innerHTML = '<i aria-hidden="true">☀\uFE0E</i>' + f(up) + '–' + f(down);
+    el.title = t('sunTitle');
+    el.hidden = false;
+  }
+  fetch('standort', { cache: 'no-store' }).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(j){
+    if (j && typeof j.lat === 'number' && typeof j.lon === 'number') { sunLoc = j; showSun(); }
+  }).catch(function(){});
+  // Neuer Tag: neu rechnen (Pruefung einmal pro Minute reicht)
+  setInterval(function(){
+    const n = new Date();
+    if (sunLoc && sunDay !== n.getFullYear() + '-' + (n.getMonth() + 1) + '-' + n.getDate()) showSun();
+  }, 60000);
 
   /* ---------------- API-Aufrufe ---------------- */
   async function fetchJ(path){
@@ -3427,6 +3485,7 @@
 
   function relabelAll(){
     if (typeof showFehler === 'function') showFehler();
+    if (typeof showSun === 'function') showSun();
     hideHelp();
     applyStaticTexts();
     buildFlowScopes();

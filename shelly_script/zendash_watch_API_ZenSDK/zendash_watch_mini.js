@@ -1,4 +1,4 @@
-let SCRIPT_TYPE="zdmc-zendash-watch";let VERSION="3.5.12";let CONFIG_SCHEMA=1;
+let SCRIPT_TYPE="zdmc-zendash-watch";let VERSION="4.0.0";let CONFIG_SCHEMA=1;
 let CONFIG = {
   // ------------------------------------------------------------------
   // GERAETEBLOCK - wie im Regel-Script, gleiche Reihenfolge.
@@ -38,9 +38,10 @@ let CONFIG = {
   api: {
     enabled: true,
 
-    // "local" = KVS auf DIESEM Geraet (Script laeuft neben dem Regler),
-    // "<IP>"  = KVS auf dem Regler-Shelly, Zugriff per RPC ueber HTTP.
-    // Voraussetzung: dort ist keine Authentifizierung aktiv.
+    // "<IP>"  = KVS auf dem Regler-Shelly, Zugriff per RPC ueber HTTP
+    //           (Normalfall - beide Scripte passen nicht auf einen Shelly).
+    //           Voraussetzung: dort ist keine Authentifizierung aktiv.
+    // "local" = KVS auf DIESEM Geraet (nur zum Testen ohne Regler).
     kvsHost: "192.168.178.117",
 
     // Reine Anzeige im Dashboard - 1:1 aus dem Regel-Script kopieren.

@@ -44,7 +44,7 @@ Navigateur  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Shelly tableau de bor
 
 ## Utilisation
 
-Ce qui suit décrit la mise en page par défaut à l'adresse `http://<adresse-du-proxy>:8000/`.
+Depuis 4.0.0, la page d'accueil `http://<adresse-du-proxy>:8000/` affiche le [nouveau design](#nouveau-design-page-daccueil). Ce qui suit décrit d'abord le tableau de bord classique à l'adresse `http://<adresse-du-proxy>:8000/klassisch` ; en-tête, vue d'ensemble, régulation, verrouillage et menu sont identiques dans les deux.
 
 ### Organisation de la page
 
@@ -74,18 +74,19 @@ Sur les appareils tactiles, le curseur **Réserve (`minSoc`)** a en plus son pro
 | **Plein écran** | masque les barres du navigateur ; n'apparaît que si le navigateur le permet |
 | **Détails techniques** | affiche les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`). Sans cet interrupteur, le tableau de bord n'affiche que du texte en clair. |
 | **Réinitialiser l'affichage** ↺ | taille, jour/nuit, détails techniques et vue d'ensemble par défaut. La langue est conservée. |
-| **Design** ⇄ | bascule entre le tableau de bord classique (`/`) et le nouveau design (`/neu`) |
+| **Design** ⇄ | bascule entre le nouveau design (page d'accueil `/`) et le tableau de bord classique (`/klassisch`) |
 
 Toutes les entrées sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
 
-### Nouveau design (`/neu`)
+### Nouveau design (page d'accueil)
 
-`http://<adresse-du-proxy>:8000/neu` propose une alternative au tableau de bord classique. En-tête, vue d'ensemble, régulation, verrouillage et toutes les écritures sont identiques – seule la zone des appareils change, avec en plus l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.
+Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>:8000/` ; le tableau de bord classique se trouve à `/klassisch`. Les favoris vers l'ancienne adresse `/neu` mènent à la page d'accueil. En-tête, vue d'ensemble, régulation, verrouillage et toutes les écritures sont identiques – seule la zone des appareils change, avec en plus l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.
 
 - **Cartes des appareils :** état en toutes lettres, puissance en grand, barre de charge avec la réserve (sous `minSoc`) et la zone au-dessus de la limite de charge hachurées, PV · batterie · hors réseau (batterie = PV − sortie − hors réseau), température et cellule la plus faible sur une petite ligne.
 - **Remarques** uniquement en cas d'écart (plein/vide bloqué, `socSet`/`minSoc` différent, export interdit, décharge désactivée, charge manuelle active), sinon « Aucune remarque ».
 - **Réglages** (interrupteurs, réserve, puissance de charge, charge manuelle) visibles seulement quand les commandes sont déverrouillées ; chaque carte peut être repliée. Les **détails techniques** forment un bloc à part, affiché uniquement avec l'interrupteur du menu.
 - **Flux d'énergie :** PV, appareil, batterie, maison, réseau et hors réseau avec des lignes animées (sens, vitesse et épaisseur selon la puissance), pour tous les appareils ou un seul (choix mémorisé par navigateur). Réseau et maison couvrent toujours tous les appareils (maison = solde réseau + somme des sorties). Sur écran étroit, le schéma défile latéralement.
+- **Lever et coucher du soleil :** à côté de l'horloge (☀ 07:00–16:39). Une fois par jour, le proxy lit la position dans la configuration du Shelly du tableau de bord (`Sys.GetConfig`, pas via le script) ; le calcul se fait dans le navigateur. Sans position enregistrée sur le Shelly, l'affichage est masqué – à renseigner dans l'interface web du Shelly (position/fuseau horaire). Masqué sur écran étroit.
 
 ### Ce que vous pouvez régler
 
@@ -352,7 +353,7 @@ Le proxy compte toutes les requêtes échouées vers le Shelly, réparties en d�
 
 - **Pas de mot de passe :** toute personne du réseau domestique connaissant l'adresse peut ouvrir le tableau de bord et modifier les réglages – y compris l'adresse du Shelly sous `/setup` – et lire le rapport sous `/bericht_zendure`. Ne **jamais** exposer le proxy sur Internet par une redirection de port.
 - **Numéro du script :** lors d'une **mise à jour** via le Configurator, le numéro reste le même. Si le script est **recréé** (première installation, « supprimer les autres », changement de Shelly ou téléversement manuel), il reçoit un nouveau numéro. Si le tableau de bord ne fonctionne plus ensuite, saisir le nouveau numéro sous `http://<adresse-du-proxy>:8000/setup`. Pas besoin de redémarrer le proxy.
-- **Mise en page :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page sous `/b` a été supprimée en 3.5.12 ; l'adresse redirige vers le tableau de bord.
+- **Mise en page :** à l'adresse `http://<adresse-du-proxy>:8000/`, le tableau de bord utilise désormais la nouvelle mise en page – structure plus claire, bouton de verrouillage bien visible, état en langage courant, vue d'ensemble repliable, détails techniques (clés KVS, adresses IP) seulement sur demande via le menu « Affichage ». Les réglages choisis y sont mémorisés – voir [Utilisation](#utilisation). L'ancienne mise en page sous `/b` a été supprimée en 3.5.12 ; l'adresse redirige vers le tableau de bord. Depuis 4.0.0, cette mise en page se trouve à `/klassisch` et la page d'accueil affiche le [nouveau design](#nouveau-design-page-daccueil).
 - **Nouvelle version du tableau de bord :** avec le script Python et sur le Synology, il suffit de remplacer `zendure-dashboard.html` et de recharger la page dans le navigateur – le proxy relit le fichier à chaque requête. Dans le programme prêt à l'emploi, la page est intégrée ; elle arrive avec un nouveau téléchargement. Dans Home Assistant, l'app doit être reconstruite.
 
 ---

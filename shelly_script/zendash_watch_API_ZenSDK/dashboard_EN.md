@@ -44,7 +44,7 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard Shelly (zenDas
 
 ## Operation
 
-This describes the default layout at `http://<proxy-address>:8000/`.
+From 4.0.0 the start page `http://<proxy-address>:8000/` shows the [new design](#new-design-start-page). This section first describes the classic dashboard at `http://<proxy-address>:8000/klassisch`; header, overview, control, locking and menu are the same in both.
 
 ### Page layout
 
@@ -74,18 +74,19 @@ On touch devices the **Reserve (`minSoc`)** slider additionally has its own smal
 | **Full screen** | hides the browser bars; only shown if the browser supports it |
 | **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
 | **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
-| **Design** ⇄ | switches between the classic dashboard (`/`) and the new design (`/neu`) |
+| **Design** ⇄ | switches between the new design (start page `/`) and the classic dashboard (`/klassisch`) |
 
 All entries are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
-### New design (`/neu`)
+### New design (start page)
 
-`http://<proxy-address>:8000/neu` offers an alternative to the classic dashboard. Header, overview, control, locking and all write paths are the same – only the device area differs, plus an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
+From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`; the classic dashboard is at `/klassisch`. Bookmarks to the former address `/neu` lead to the start page. Header, overview, control, locking and all write paths are the same – only the device area differs, plus an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
 
 - **Device cards:** state in words, output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
 - **Settings** (switches, reserve, charging power, manual charging) are only visible while the controls are unlocked; each card can be collapsed. **Technical details** are a separate block, shown only with the switch in the menu.
 - **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs). On narrow screens the diagram scrolls sideways.
+- **Sunrise and sunset:** next to the clock (☀ 07:00–16:39). Once a day the proxy reads the location from the dashboard Shelly's configuration (`Sys.GetConfig`, not via the script); the times are calculated in the browser. Without a location on the Shelly the display is hidden – set it in the Shelly web interface under location/time zone. Hidden on narrow screens.
 
 ### What you can set
 
@@ -352,7 +353,7 @@ The proxy counts every failed request to the Shelly, split into timeout (no answ
 
 - **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup` – and read the report under `/bericht_zendure`. So **never** expose the proxy to the internet via port forwarding.
 - **Script number:** When **updating** via the Configurator, the number stays the same. If the script is **created anew** (first installation, "delete others", Shelly replacement or manual upload), it gets a new number. If the dashboard stops working after that, enter the new number under `http://<proxy-address>:8000/setup`. Restarting the proxy is not necessary.
-- **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former layout at `/b` was removed in 3.5.12; the address redirects to the dashboard.
+- **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former layout at `/b` was removed in 3.5.12; the address redirects to the dashboard. From 4.0.0 this layout is at `/klassisch`, and the start page shows the [new design](#new-design-start-page).
 - **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.
 
 ---

@@ -3,8 +3,14 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 4.0.0.0
+
+- Das neue Design ist jetzt die Startseite der App („Web-UI öffnen“), das klassische Dashboard liegt unter `klassisch` (Menü „Ansicht“ → „Design“). Alte Lesezeichen auf `neu` leiten auf die Startseite weiter
+- Gesamtpaket Version 4.0.0 (Dashboard, Proxy und Shelly-Script `zendash_watch`); Details im ausführlichen CHANGELOG
+
 ## 3.5.12.6
 
+- Neues Design: Sonnenaufgang und -untergang neben der Uhr (Standort des Dashboard-Shellys, über den Proxy)
 - Energiefluss, Gesamtansicht: „Solarflows“ statt aller Gerätenamen
 - Neues Design: Gerätekarten schlanker (kein reservierter Platz für Hinweise mehr)
 - Einstellungen (`config_api`) dürfen 10 s statt 5 s brauchen; nur dort gab es Zeitüberschreitungen
