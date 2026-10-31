@@ -5,6 +5,7 @@ https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watc
 
 ## 3.5.12.5
 
+- Einstellungen (`config_api`) dürfen 10 s statt 5 s brauchen; nur dort gab es Zeitüberschreitungen
 - Verbindungsprobleme: Hinweis erst nach zwei gescheiterten Abfragen in Folge, mit Grund; Gerätekarten dann blass bzw. „veraltet“; keine überlappenden Abfragen mehr
 - Proxy zählt Abfragefehler je Tag (Zeitüberschreitung, nicht erreichbar, Fehler vom Shelly): Anzeige im Fuß des Dashboards, Adresse `proxy_fehler`, jeder Fehler steht im Protokoll der App
 - Neues Design: Offgrid mit Richtung – positiv = Abgabe ans Haus („Ausgang“), negativ = Einspeisung ins Gerät („Eingang“, wie PV). Der Energiefluss zeigt nur Beträge, die Animation läuft in Flussrichtung; vorher stand bei Einspeisung „nicht belegt“ und die Linie stand still

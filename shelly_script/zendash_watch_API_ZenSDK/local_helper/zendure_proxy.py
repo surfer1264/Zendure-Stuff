@@ -147,6 +147,10 @@ def fehler_stand():
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
 TIMEOUT = 5
+# config_api braucht laenger: Der Shelly wartet bis zu 2 s auf das Ende seiner
+# Geraeteabfrage und liest dann die KVS. Mit 5 s gab es dort gelegentlich
+# Zeitueberschreitungen (gezaehlt ueber /proxy_fehler).
+CONFIG_TIMEOUT = 10
 # kvs_set_api schreibt im Shelly-Script mehrere Keys nacheinander (je bis zu
 # 5 s HTTP-Timeout, 0,5 s Pause dazwischen, vorher bis 2 s Warten auf den
 # eigenen Poll). Mit 5 s brach der Proxy das Beenden des manuellen Ladens
@@ -716,7 +720,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             url += "?" + query
 
         try:
-            wait = KVS_SET_TIMEOUT if endpoint == "kvs_set_api" else TIMEOUT
+            wait = (KVS_SET_TIMEOUT if endpoint == "kvs_set_api" else
+                    CONFIG_TIMEOUT if endpoint == "config_api" else TIMEOUT)
             with urllib.request.urlopen(url, timeout=wait) as resp:
                 body = resp.read()
                 status = resp.status

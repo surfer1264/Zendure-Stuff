@@ -344,7 +344,7 @@ Si le proxy trouve un rapport, le tableau de bord affiche le lien **« Analyse :
 
 Un échec isolé de la requête au Shelly reste invisible. Ce n'est qu'après deux échecs consécutifs que l'avis avec la cause apparaît en haut (p. ex. « HTTP 502 pour status_api (délai dépassé) »), avec « Problème de connexion ». Les cartes des appareils pâlissent alors, le nouveau design affiche « obsolète » et les animations s'arrêtent. À la requête réussie suivante, tout redevient normal. Tant qu'une requête est en cours, le cycle de 4 s suivant est sauté pour que les requêtes ne s'accumulent pas sur le Shelly.
 
-Le proxy compte toutes les requêtes échouées vers le Shelly, réparties en délai dépassé (pas de réponse en 5 s), « injoignable » et erreurs du Shelly. Le compteur repart à zéro à minuit et à chaque démarrage du proxy. S'il y a eu des erreurs aujourd'hui, le pied du tableau de bord affiche **« Erreurs de requête aujourd'hui : … »** avec l'heure de la dernière ; l'infobulle donne la répartition. Données brutes : `http://<adresse-du-proxy>:8000/proxy_fehler`. Chaque erreur figure aussi dans le journal du proxy, y compris dans l'application Home Assistant.
+Le proxy compte toutes les requêtes échouées vers le Shelly, réparties en délai dépassé (pas de réponse en 5 s, 10 s pour les réglages `config_api`), « injoignable » et erreurs du Shelly. Le compteur repart à zéro à minuit et à chaque démarrage du proxy. S'il y a eu des erreurs aujourd'hui, le pied du tableau de bord affiche **« Erreurs de requête aujourd'hui : … »** avec l'heure de la dernière ; l'infobulle donne la répartition. Données brutes : `http://<adresse-du-proxy>:8000/proxy_fehler`. Chaque erreur figure aussi dans le journal du proxy, y compris dans l'application Home Assistant.
 
 ---
 

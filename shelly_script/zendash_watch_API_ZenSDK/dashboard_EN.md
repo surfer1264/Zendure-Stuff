@@ -344,7 +344,7 @@ If the proxy finds a report, the dashboard shows the link **"Analysis: log repor
 
 A single failed query to the Shelly stays invisible. Only when two queries in a row fail does the notice with the reason appear at the top (e.g. "HTTP 502 for status_api (timeout)"), together with "Connection problem". The device cards then fade, the new design shows "stale", and the animations stop. With the next successful query everything is back to normal. While a query is still running, the next 4 s cycle is skipped so requests do not pile up on the Shelly.
 
-The proxy counts every failed request to the Shelly, split into timeout (no answer within 5 s), "unreachable" and errors from the Shelly. The counter restarts at midnight and whenever the proxy starts. If there were errors today, the dashboard footer shows **"Request errors today: …"** with the last time; the tooltip shows the breakdown. Raw data: `http://<proxy-address>:8000/proxy_fehler`. Each error is also written to the proxy log, including in the Home Assistant app.
+The proxy counts every failed request to the Shelly, split into timeout (no answer within 5 s, 10 s for the settings `config_api`), "unreachable" and errors from the Shelly. The counter restarts at midnight and whenever the proxy starts. If there were errors today, the dashboard footer shows **"Request errors today: …"** with the last time; the tooltip shows the breakdown. Raw data: `http://<proxy-address>:8000/proxy_fehler`. Each error is also written to the proxy log, including in the Home Assistant app.
 
 ---
 
