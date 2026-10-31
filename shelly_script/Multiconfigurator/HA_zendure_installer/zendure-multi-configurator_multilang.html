@@ -254,7 +254,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.9.3";
+const APP_VERSION = "2.9.4";
 
 const I18N = {
 de: {
@@ -414,6 +414,11 @@ de: {
   int_own: "Anderer Wert (ms):",
   int_own_btn: "Übernehmen",
   int_own_err: "Bitte eine ganze Zahl ab 3000 eingeben.",
+  int_h2: "Regel-Intervall (Controller)",
+  int_info_rec: "Eingestellt: {cur} ms – das ist die Empfehlung bei {n} Gerät(en) (3000 ms + 500 ms je Gerät; die Geräte werden nacheinander abgefragt). Ändern kannst du den Wert hier jederzeit.",
+  int_info_dev: "Eingestellt: {cur} ms. Empfehlung bei {n} Gerät(en): {r} ms (3000 ms + 500 ms je Gerät; die Geräte werden nacheinander abgefragt).",
+  coffee_text: "Gefällt dir die Suite?",
+  coffee_link: "Spendier mir einen Kaffee",
   result_rest: "Alles Übrige:",
   result_rest_value: "bleibt auf dem jeweiligen empfohlenen Standardwert.",
 
@@ -836,6 +841,11 @@ en: {
   int_own: "Other value (ms):",
   int_own_btn: "Apply",
   int_own_err: "Please enter a whole number of at least 3000.",
+  int_h2: "Control interval (Controller)",
+  int_info_rec: "Set to {cur} ms – this is the recommendation for {n} device(s) (3000 ms + 500 ms per device; the devices are queried one after the other). You can change the value here at any time.",
+  int_info_dev: "Set to {cur} ms. Recommendation for {n} device(s): {r} ms (3000 ms + 500 ms per device; the devices are queried one after the other).",
+  coffee_text: "Do you like the suite?",
+  coffee_link: "Buy me a coffee",
   result_rest: "Everything else:",
   result_rest_value: "stays at its recommended default value.",
 
@@ -1258,6 +1268,11 @@ fr: {
   int_own: "Autre valeur (ms) :",
   int_own_btn: "Appliquer",
   int_own_err: "Saisis un nombre entier d’au moins 3000.",
+  int_h2: "Intervalle de régulation (Controller)",
+  int_info_rec: "Réglé sur {cur} ms – c’est la recommandation pour {n} appareil(s) (3000 ms + 500 ms par appareil ; les appareils sont interrogés l’un après l’autre). Tu peux modifier la valeur ici à tout moment.",
+  int_info_dev: "Réglé sur {cur} ms. Recommandation pour {n} appareil(s) : {r} ms (3000 ms + 500 ms par appareil ; les appareils sont interrogés l’un après l’autre).",
+  coffee_text: "La suite te plaît ?",
+  coffee_link: "Offre-moi un café",
   result_rest: "Tout le reste :",
   result_rest_value: "reste à la valeur par défaut recommandée.",
 
@@ -2843,14 +2858,20 @@ function setOwnInterval(){
   if(!Number.isInteger(n) || n < 3000){ state.intervalErr = true; render(); return; }
   setIntervalChoice(n);
 }
-function intervalWarnBlock(){
-  const v = importedInterval(), r = recommendedInterval(), n = state.devices.length;
-  return `<div class="panel"><div class="note" style="margin-top:0;">${t('int_warn', {v: v, n: n, r: r})}</div>
+// Immer sichtbar und aenderbar. Weicht ein eingelesener Wert von der
+// Empfehlung ab und ist noch nichts entschieden, steht der Hinweis mit
+// "Beibehalten" dabei; ohne Entscheidung bleibt der bisherige Wert.
+function intervalBlock(){
+  const v = importedInterval(), r = recommendedInterval(), n = state.devices.length, cur = ctrlInterval();
+  const open = intervalOpen();
+  const info = open ? `<div class="note" style="margin-top:0;">${t('int_warn', {v: v, n: n, r: r})}</div>`
+    : `<p class="hint" style="margin-top:0;">${t(cur === r ? 'int_info_rec' : 'int_info_dev', {cur: cur, n: n, r: r})}</p>`;
+  return `<div class="panel"><h2>${t('int_h2')}</h2>${info}
     <div class="copy-row" style="justify-content:flex-start; margin-top:10px; flex-wrap:wrap; gap:8px;">
-      <button class="btn btn-primary" onclick="setIntervalChoice('rec')">${t('int_take_rec', {r: r})}</button>
-      <button class="btn" onclick="setIntervalChoice(${v})">${t('int_keep', {v: v})}</button>
+      ${open || cur !== r ? `<button class="btn ${open ? 'btn-primary' : ''}" onclick="setIntervalChoice('rec')">${t('int_take_rec', {r: r})}</button>` : ''}
+      ${open ? `<button class="btn" onclick="setIntervalChoice(${v})">${t('int_keep', {v: v})}</button>` : ''}
       <span class="hint" style="margin:0;">${t('int_own')}</span>
-      <input type="number" id="intervalOwn" min="3000" step="500" value="${r}" style="width:110px;">
+      <input type="number" id="intervalOwn" min="3000" step="500" value="${open ? r : cur}" style="width:110px;" onkeydown="if(event.key==='Enter') setOwnInterval()">
       <button class="btn" onclick="setOwnInterval()">${t('int_own_btn')}</button>
     </div>
     ${state.intervalErr ? `<p class="error">${t('int_own_err')}</p>` : ''}
@@ -3601,6 +3622,8 @@ function renderStart(){
     ${modeChoice('download', 'start_dl_title', 'start_dl_desc', false)}
   </div>`;
   html += memCheckBlock(true);
+  html += `<p style="text-align:center; margin:18px 0 0; font-size:.9rem;">${t('coffee_text')}
+    <a href="https://ko-fi.com/surfer1264" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:6px; margin-left:6px; padding:6px 14px; border-radius:999px; border:1px solid var(--border); color:var(--accent-text); text-decoration:none; font-weight:600;"><span style="font-size:1.25rem;" aria-hidden="true">☕</span>${t('coffee_link')}</a></p>`;
   if(state.mode === 'update' && canUpdate) html += renderUpdatePanel();
   if(state.mode === 'log' && canLog) html += renderLogPanel();
   if(state.mode === 'download') html += renderDownloadPanel();
@@ -4293,7 +4316,7 @@ function renderResult(){
   const row = (label, value) => `<div><b>${label}</b> ${value}</div>`;
 
   let html = state.updateReady ? `<div class="panel"><p class="note" style="margin:0;">${t('result_update_hint')}</p></div>` : '';
-  if(p.controller && intervalOpen()) html += intervalWarnBlock();
+  if(p.controller) html += intervalBlock();
   html += `
   <div class="panel">
     <h2>${t('result_h2')}</h2>

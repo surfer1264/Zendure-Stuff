@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 2.9.4.0
+
+- Multi-Configurator 2.9.4: Regel-Intervall im Ergebnis immer sichtbar und änderbar, mit Empfehlung; Kaffee-Link im Startdialog
+
 ## 2.9.3.0
 
 - Multi-Configurator 2.9.3: Eine neue Version wird gleich beim Öffnen oben auf der Seite angezeigt, mit dem Weg zum Update in Home Assistant statt eines Download-Links für die EXE

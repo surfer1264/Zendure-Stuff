@@ -243,7 +243,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 
 Übernommen wird alles – auch Werte, die der Assistent gar nicht abfragt (z. B. `dampingFactor`, `interval` oder die Warnschwellen des Watchdog). Neue Einstellungen, die es in deiner alten Version noch nicht gab, bekommen ihren Standardwert.
 
-**Regel-Intervall (`interval`):** Empfohlen sind 3000 ms + 500 ms je Gerät, also 3500 ms bei einem, 4000 ms bei zwei und 4500 ms bei drei Geräten. Bei einer neuen Einrichtung setzt der Assistent diesen Wert. Weicht der übernommene Wert davon ab, zeigt die Ergebnisseite einen Hinweis: Du kannst die Empfehlung übernehmen, den bisherigen Wert behalten oder einen eigenen Wert ab 3000 ms eintragen.
+**Regel-Intervall (`interval`):** Empfohlen sind 3000 ms + 500 ms je Gerät, also 3500 ms bei einem, 4000 ms bei zwei und 4500 ms bei drei Geräten. Bei einer neuen Einrichtung setzt der Assistent diesen Wert. Die Ergebnisseite zeigt das Intervall immer mit der Empfehlung, und du kannst es dort jederzeit ändern: Empfehlung übernehmen oder einen eigenen Wert ab 3000 ms eintragen. Weicht ein übernommener Wert ab, steht zusätzlich ein Hinweis mit der Wahl „Beibehalten“; ohne Entscheidung bleibt der bisherige Wert.
 
 ### Update ohne Helfer
 

@@ -243,7 +243,7 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
 
 Tout est repris – y compris les valeurs que l'assistant ne demande pas (par ex. `dampingFactor`, `interval` ou les seuils d'alerte du Watchdog). Les nouveaux réglages qui n'existaient pas encore dans ton ancienne version reçoivent leur valeur par défaut.
 
-**Intervalle de régulation (`interval`) :** la recommandation est de 3000 ms + 500 ms par appareil, soit 3500 ms pour un, 4000 ms pour deux et 4500 ms pour trois appareils. Pour une nouvelle installation, l'assistant utilise cette valeur. Si la valeur reprise diffère, la page de résultat affiche un avis : tu peux reprendre la recommandation, conserver l'ancienne valeur ou saisir ta propre valeur d'au moins 3000 ms.
+**Intervalle de régulation (`interval`) :** la recommandation est de 3000 ms + 500 ms par appareil, soit 3500 ms pour un, 4000 ms pour deux et 4500 ms pour trois appareils. Pour une nouvelle installation, l'assistant utilise cette valeur. La page de résultat affiche toujours l'intervalle avec la recommandation, et tu peux le modifier à tout moment : reprendre la recommandation ou saisir ta propre valeur d'au moins 3000 ms. Si une valeur reprise diffère, un avis avec le choix « Conserver » s'affiche en plus ; sans décision, l'ancienne valeur reste.
 
 ### Mise à jour sans l'assistant local
 

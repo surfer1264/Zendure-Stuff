@@ -1,5 +1,10 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 2.9.4
+
+- Configurator: Das Regel-Intervall (`interval`) steht im Ergebnis-Schritt immer als eigener Bereich, nicht nur bei Abweichung. Er zeigt den eingestellten Wert und die Empfehlung (3000 ms + 500 ms je Gerät); ändern geht jederzeit (Empfehlung übernehmen oder eigener Wert ab 3000 ms). Weicht ein übernommener Wert ab, steht wie bisher der Hinweis mit „Beibehalten“ dabei
+- Configurator: Link „Spendier mir einen Kaffee“ ☕ (Ko-fi) im Startdialog
+
 ## 2.9.3
 
 - Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg

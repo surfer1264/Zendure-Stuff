@@ -243,7 +243,7 @@ When a new version of a script is available, you can bring your Shellys up to da
 
 Everything is carried over – including values the wizard doesn't ask for (e.g. `dampingFactor`, `interval` or the Watchdog's warning thresholds). New settings that didn't exist in your old version get their default value.
 
-**Control interval (`interval`):** The recommendation is 3000 ms + 500 ms per device, i.e. 3500 ms for one, 4000 ms for two and 4500 ms for three devices. For a new setup the wizard uses this value. If the carried-over value differs, the result page shows a notice: you can use the recommendation, keep the previous value or enter your own value of at least 3000 ms.
+**Control interval (`interval`):** The recommendation is 3000 ms + 500 ms per device, i.e. 3500 ms for one, 4000 ms for two and 4500 ms for three devices. For a new setup the wizard uses this value. The result page always shows the interval together with the recommendation, and you can change it there at any time: use the recommendation or enter your own value of at least 3000 ms. If a carried-over value differs, a notice with the option "Keep" is shown as well; without a decision the previous value stays.
 
 ### Update without the helper
 
