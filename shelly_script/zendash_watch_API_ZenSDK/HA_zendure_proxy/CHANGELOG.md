@@ -5,6 +5,8 @@ https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watc
 
 ## 3.5.12.6
 
+- Energiefluss, Gesamtansicht: „Solarflows“ statt aller Gerätenamen
+- Neues Design: Gerätekarten schlanker (kein reservierter Platz für Hinweise mehr)
 - Einstellungen (`config_api`) dürfen 10 s statt 5 s brauchen; nur dort gab es Zeitüberschreitungen
 
 ## 3.5.12.5

@@ -553,7 +553,7 @@
 
   /* Karte: senkrechter Aufbau, Einstellungen in allen Karten auf gleicher Hoehe */
   .hubs-grid{ align-items:stretch; }
-  .hub{ display:flex; flex-direction:column; gap:.875rem; }
+  .hub{ display:flex; flex-direction:column; gap:.875rem; padding-bottom:1rem; }
   .hub-head{ margin-bottom:0; }
   #app .hub-tag{ display:none; }
   .state-pill{
@@ -590,7 +590,9 @@
   .hub .pack-line .mono{ font-family:'IBM Plex Mono', monospace; }
   .hub .pack-line .cell-line{ display:inline; }
 
-  .hub-flags{ min-height:4rem; align-content:flex-start; }
+  /* Hinweise so hoch wie ihr Inhalt; die Einstellungen richtet margin-top:auto
+     trotzdem in allen Karten auf gleiche Hoehe aus */
+  .hub-flags{ align-content:flex-start; }
   .no-hints{ font-size:.74rem; color:var(--idle); padding:.1875rem 0; }
   .flag.info{ color:var(--blue-text); border-color:var(--blue-text); }
   #app .hub .lock-status, #app.hide-hub-controls .hub .lock-status{ display:none; }
@@ -1333,7 +1335,7 @@
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
-    fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
+    fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
@@ -1352,7 +1354,7 @@
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
-    fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
+    fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
@@ -1371,7 +1373,7 @@
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
-    fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
+    fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
@@ -3307,7 +3309,7 @@
     const sel = hubs.filter(function(h){ return flowScope === 'all' || String(h.id) === flowScope; });
     const on = sel.filter(function(h){ return h.online; });
     const name = flowScope === 'all'
-      ? (hubs.length > 1 ? hubs.map(function(h){ return h.label; }).join(' + ') : (hubs[0] ? hubs[0].label : '–'))
+      ? (hubs.length > 1 ? t('fAllHubs') : (hubs[0] ? hubs[0].label : '–'))   // Gesamt: Sammelname statt Namensliste
       : (sel[0] ? sel[0].label : '–');
     const sum = function(list, f){ return list.reduce(function(s, h){ return s + f(h); }, 0); };
     const hasPv = on.some(function(h){ return h.pv !== null && h.pv !== undefined; });

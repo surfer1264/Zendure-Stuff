@@ -12,6 +12,8 @@
 - **Verbindungsprobleme (beide Designs):** Ein einzelner Abfrage-Aussetzer bleibt unsichtbar; erst nach zwei Fehlern in Folge erscheinen Hinweis (mit Grund, z. B. „Zeitüberschreitung“) und „Verbindungsproblem“, die Gerätekarten werden blass, im neuen Design „veraltet“, Animationen halten an. Läuft eine Abfrage noch, fällt der nächste Takt aus (vorher konnten sich Anfragen am Shelly stapeln)
 - **Proxy zählt Abfragefehler** je Tag nach Art (Zeitüberschreitung, nicht erreichbar, Fehler vom Shelly) mit letztem Zeitpunkt und Grund: neue Adresse `/proxy_fehler`, im Fuß des Dashboards „Abfragefehler heute: …“, jeder Fehler auch im Protokoll (auch mit `-q` und in der Home-Assistant-App). Die 502-Antwort enthält jetzt `art`
 - Proxy: `config_api` darf 10 s statt 5 s dauern (der Shelly wartet dort auf seine Geräteabfrage und liest die KVS); die Zeitüberschreitungen traten nur dort auf. Messwerte (`status_api`) bleiben bei 5 s
+- Neues Design: Gerätekarten schlanker – der Hinweisbereich reserviert keine zwei Zeilen mehr, unten weniger Abstand; die Einstellungen beginnen weiter in allen Karten auf gleicher Höhe
+- Neues Design, Energiefluss: In der Gesamtansicht steht in der Mitte „Solarflows“ statt der Liste aller Gerätenamen
 - Home-Assistant-App bis Version 3.5.12.6
 
 ## Changelog 3.5.11

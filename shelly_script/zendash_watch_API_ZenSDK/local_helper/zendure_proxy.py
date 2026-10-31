@@ -147,9 +147,10 @@ def fehler_stand():
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
 TIMEOUT = 5
-# config_api braucht laenger: Der Shelly wartet bis zu 2 s auf das Ende seiner
-# Geraeteabfrage und liest dann die KVS. Mit 5 s gab es dort gelegentlich
-# Zeitueberschreitungen (gezaehlt ueber /proxy_fehler).
+# config_api braucht laenger: Das Script wartet bis zu 2 s, falls es gerade die
+# Speicher abfragt, und liest dann die KVS - mit eigenem Controller-Shelly
+# (kvsHost) per HTTP von dort, mit bis zu 5 s Timeout. Zusammen bis ~7 s;
+# mit 5 s gab es hier gelegentlich Zeitueberschreitungen (/proxy_fehler).
 CONFIG_TIMEOUT = 10
 # kvs_set_api schreibt im Shelly-Script mehrere Keys nacheinander (je bis zu
 # 5 s HTTP-Timeout, 0,5 s Pause dazwischen, vorher bis 2 s Warten auf den
