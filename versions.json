@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-10-30T20:23:14Z",
+  "generated": "2026-10-31T07:25:22Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -344,17 +344,25 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.9.3",
+      "version": "2.9.4",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d2e0237913c705d6ab62a761a74325bf896f3326/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/3e6082f873413ab6d1d7a92ec5bf9c6c5a058305/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg",
-        "Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)",
-        "Configurator: Neue Auswahl **„Downloads“** im Startdialog (auch ohne Helfer). Direkte Links auf das neueste Release für den Dashboard-Proxy (Windows, macOS) und den Helfer (Windows 64/32 Bit, macOS); das eigene Betriebssystem ist hervorgehoben. Dazu je die aktuelle Version aus dem Manifest, das App-Repository für Home Assistant, die Anleitungen und die Release-Seite mit den Prüfsummen"
+        "Configurator: Das Regel-Intervall (`interval`) steht im Ergebnis-Schritt immer als eigener Bereich, nicht nur bei Abweichung. Er zeigt den eingestellten Wert und die Empfehlung (3000 ms + 500 ms je Gerät); ändern geht jederzeit (Empfehlung übernehmen oder eigener Wert ab 3000 ms). Weicht ein übernommener Wert ab, steht wie bisher der Hinweis mit „Beibehalten“ dabei",
+        "Configurator: Link „Spendier mir einen Kaffee“ ☕ (Ko-fi) im Startdialog"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "history": [
+        {
+          "version": "2.9.3",
+          "changes": [
+            "Configurator: Prüft beim Öffnen still, ob es eine neue Version des Configurators/Helfers gibt, und zeigt das oben auf der Seite an. Bisher stand der Hinweis nur nach „Updates prüfen“. Ohne Internet oder ohne Antwort von GitHub bleibt er weg",
+            "Configurator in der Home-Assistant-App: Statt des Download-Links (für die EXE) steht der Weg zum Update in Home Assistant (Einstellungen → Apps → Aktualisieren)",
+            "Configurator: Neue Auswahl **„Downloads“** im Startdialog (auch ohne Helfer). Direkte Links auf das neueste Release für den Dashboard-Proxy (Windows, macOS) und den Helfer (Windows 64/32 Bit, macOS); das eigene Betriebssystem ist hervorgehoben. Dazu je die aktuelle Version aus dem Manifest, das App-Repository für Home Assistant, die Anleitungen und die Release-Seite mit den Prüfsummen"
+          ],
+          "notice": null
+        },
         {
           "version": "2.9.2",
           "changes": [
@@ -427,15 +435,6 @@
             "Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API",
             "Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)",
             "Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.3.0",
-          "changes": [
-            "Passwortgeschützte Shellys: Der Configurator fragt nach dem Passwort, der Helfer meldet sich per Digest-Authentifizierung an (Upload, Update, Speicher prüfen, Log aufzeichnen); das Passwort bleibt nur im Arbeitsspeicher des Helfers",
-            "Bestehende Config einlesen: zusätzlich direkt vom Shelly (Controller- bzw. Dashboard-Shelly, nur mit Helfer) – landet wie beim Datei-Laden zuerst im Textfeld",
-            "Geräte: Button „Testen“ neben jeder Speicher-IP öffnet den Report (/properties/report) in einem neuen Tab"
           ],
           "notice": null
         }
