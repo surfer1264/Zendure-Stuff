@@ -69,6 +69,8 @@ import urllib.error
 import urllib.request
 import webbrowser
 import re
+import threading
+import time
 
 # ThingSpeak-Upload ist optional: fehlt ts_bridge.py, laeuft der Proxy
 # ganz normal weiter, nur ohne /thingspeak, /thingsboard und ohne Mitlesen.
@@ -109,6 +111,39 @@ HTML_FILENAME_NEU = "zendure-dashboard-neu.html"
 BERICHT_FILENAME = "bericht.html"
 BERICHT_PATH = None
 CONFIG_FILENAME = "zendure_proxy_config.json"
+
+# Fehlerzaehler fuer Anfragen an den Shelly (nur im Speicher, beginnt um
+# Mitternacht und bei jedem Start neu). Das Dashboard liest ihn ueber
+# /proxy_fehler und zeigt ihn im Fuss der Seite.
+#   timeout        Shelly hat nicht innerhalb von TIMEOUT s geantwortet
+#   unreachable    keine Verbindung (aus, WLAN weg, falsche IP ...)
+#   shelly         Shelly hat mit einem Fehlerstatus geantwortet
+FEHLER_LOCK = threading.Lock()
+FEHLER = {"tag": None, "timeout": 0, "unreachable": 0, "shelly": 0, "letzter": None}
+
+
+def fehler_merken(art, endpoint, grund):
+    now = time.localtime()
+    tag = time.strftime("%Y-%m-%d", now)
+    with FEHLER_LOCK:
+        if FEHLER["tag"] != tag:
+            FEHLER.update({"tag": tag, "timeout": 0, "unreachable": 0, "shelly": 0, "letzter": None})
+        FEHLER[art] += 1
+        FEHLER["letzter"] = {"zeit": time.strftime("%H:%M:%S", now), "art": art,
+                             "endpoint": endpoint, "grund": grund}
+    # Auch mit -q protokollieren (Home-Assistant-App), nur --silent schweigt
+    say("[proxy] Fehler bei {}: {} ({})".format(endpoint, art, grund))
+
+
+def fehler_stand():
+    tag = time.strftime("%Y-%m-%d")
+    with FEHLER_LOCK:
+        if FEHLER["tag"] != tag:
+            return {"tag": tag, "timeout": 0, "unreachable": 0, "shelly": 0, "gesamt": 0, "letzter": None}
+        d = dict(FEHLER)
+    d["gesamt"] = d["timeout"] + d["unreachable"] + d["shelly"]
+    return d
+
 
 API_ENDPOINTS = ("config_api", "status_api", "kvs_set_api")
 TIMEOUT = 5
@@ -463,6 +498,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.serve_bericht()
             return
 
+        if path == "/proxy_fehler":
+            # Fehlerzaehler des Tages fuer die Fusszeile des Dashboards
+            self._json(200, fehler_stand())
+            return
+
         if path == "/bericht_vorhanden":
             # Abfrage des Dashboards, ob es den Link zum Bericht zeigen soll. Als GET,
             # weil Home-Assistant-Ingress HEAD-Anfragen nicht durchreicht.
@@ -689,10 +729,17 @@ class Handler(http.server.BaseHTTPRequestHandler):
             body = e.read()
             status = e.code
             content_type = "application/json"
+            fehler_merken("shelly", endpoint, "HTTP {}".format(e.code))
         except Exception as e:
-            body = ('{{"success":false,"error":"Shelly nicht erreichbar: {}"}}'.format(str(e))).encode("utf-8")
+            # Zeitueberschreitung oder keine Verbindung. "art" liest das Dashboard.
+            reason = getattr(e, "reason", e)
+            art = "timeout" if isinstance(reason, (socket.timeout, TimeoutError)) or "timed out" in str(reason) else "unreachable"
+            grund = str(reason)
+            body = json.dumps({"success": False, "art": art,
+                               "error": "Shelly nicht erreichbar: " + grund}).encode("utf-8")
             status = 502
             content_type = "application/json"
+            fehler_merken(art, endpoint, grund)
 
         self.send_response(status)
         self.send_header("Content-Type", content_type)

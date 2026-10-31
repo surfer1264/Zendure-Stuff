@@ -26,6 +26,7 @@ Gilt für jede Aktion, lokal wie in der Cloud, und hat Vorrang vor allen anderen
 ## Wenn der Rechner offline ist (Cloud-Sitzung)
 
 Ist der lokale Ordner nicht erreichbar, wird auf einer Kopie des GitHub-Stands (`surfer1264/Zendure-Stuff`, Branch `main`) gearbeitet.
+Das gilt auch für Fragen zu Code, Texten oder Verhalten: nicht aus dem Gedächtnis antworten, sondern sofort im GitHub-Stand nachsehen.
 
 - **Vorher immer frisch holen** (`git fetch` + Abgleich mit `origin/main`). Nicht gepushte lokale Änderungen sind dort unsichtbar – im Zweifel nachfragen.
 - **Erlaubt:** lesen, analysieren, `*_src.js`/CHANGELOG/Doku/Proxy-Code ändern, minifizieren, Tests in Node laufen lassen. Geänderte Dateien und Testergebnisse als Dateien an den Nutzer schicken.

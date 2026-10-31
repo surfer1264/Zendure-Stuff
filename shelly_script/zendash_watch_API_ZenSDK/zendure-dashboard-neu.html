@@ -214,6 +214,11 @@
   .lang-toggle{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.82rem; letter-spacing:.04em; }
   .fs-toggle[hidden]{ display:none; }
   #berichtLine[hidden]{ display:none; }
+  #fehlerLine[hidden]{ display:none; }
+  /* Abfrage mehrfach fehlgeschlagen: letzte Werte blass, Bewegung aus */
+  #app.stale .hub{ opacity:.55; }
+  #app.stale .hub::before, #app.stale .fdot{ animation:none !important; }
+  #app.stale .fnode{ opacity:.55; }
   .fs-toggle.active{ color:var(--teal-text); border-color:var(--teal-text); }
   .sw-btn{
     position:relative; width:3.25rem; height:1.875rem; flex-shrink:0; padding:0; cursor:pointer;
@@ -863,6 +868,7 @@
         <a href="thingspeak">ThingSpeak</a>
         <a href="thingsboard">ThingsBoard</a>
         <span id="berichtLine" hidden><span data-i18n="berichtLbl">Auswertung:</span> <a href="bericht_zendure" data-i18n="berichtLink">Log-Bericht</a></span>
+        <span id="fehlerLine" hidden></span>
       </div>
     </footer>
 
@@ -1007,6 +1013,9 @@
       connProblem: 'Verbindungsproblem',
       live: 'Live · Poll alle {s}s',
       pollFail: 'Abfrage fehlgeschlagen: {err}. IP/SCRIPT_ID oben im Code prüfen, oder ob der Shelly erreichbar ist.',
+      stale: 'veraltet', errLine: 'Abfragefehler heute: {n}', errLast: 'zuletzt {z} · {a}',
+      errTimeout: 'Zeitüberschreitung', errUnreach: 'nicht erreichbar', errShelly: 'Fehler vom Shelly',
+      errDetail: 'Zeitüberschreitung {a} · nicht erreichbar {b} · Fehler vom Shelly {c} (Zähler des Proxys, beginnt um Mitternacht und bei jedem Proxy-Start neu)',
       unreachable: 'nicht erreichbar',
       flagFeeding: 'speist ein', flagCharging: 'lädt/Stby', flagStandby: 'Standby',
       flagSocSetDiff: 'abweichend, Konfiguration {max} %',
@@ -1122,6 +1131,9 @@
       connProblem: 'Connection problem',
       live: 'Live · polling every {s}s',
       pollFail: 'Query failed: {err}. Check IP/SCRIPT_ID at the top of the code, or whether the Shelly is reachable.',
+      stale: 'stale', errLine: 'Request errors today: {n}', errLast: 'last {z} · {a}',
+      errTimeout: 'timeout', errUnreach: 'unreachable', errShelly: 'error from Shelly',
+      errDetail: 'timeout {a} · unreachable {b} · error from Shelly {c} (proxy counter, resets at midnight and on every proxy start)',
       unreachable: 'unreachable',
       flagFeeding: 'feeding in', flagCharging: 'charging/stby', flagStandby: 'standby',
       flagSocSetDiff: 'differs, configuration {max} %',
@@ -1237,6 +1249,9 @@
       connProblem: 'Problème de connexion',
       live: 'En direct · relevé toutes les {s}\u00a0s',
       pollFail: 'Échec de la requête\u00a0: {err}. Vérifiez IP/SCRIPT_ID en haut du code, ou que le Shelly est joignable.',
+      stale: 'obsolète', errLine: 'Erreurs de requête aujourd’hui\u00a0: {n}', errLast: 'dernière {z} · {a}',
+      errTimeout: 'délai dépassé', errUnreach: 'injoignable', errShelly: 'erreur du Shelly',
+      errDetail: 'délai dépassé {a} · injoignable {b} · erreur du Shelly {c} (compteur du proxy, remis à zéro à minuit et à chaque démarrage)',
       unreachable: 'injoignable',
       flagFeeding: 'injecte', flagCharging: 'charge/veille', flagStandby: 'veille',
       flagSocSetDiff: 'différent, configuration {max} %',
@@ -1318,7 +1333,7 @@
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
-    fOffOn: 'Ausgang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
+    fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
@@ -1337,7 +1352,7 @@
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
-    fOffOn: 'output', fOffNone: 'not in use', fNoData: 'no data',
+    fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
@@ -1356,7 +1371,7 @@
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
-    fOffOn: 'sortie', fOffNone: 'non utilisé', fNoData: 'pas de données',
+    fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
@@ -1571,7 +1586,12 @@
   /* ---------------- API-Aufrufe ---------------- */
   async function fetchJ(path){
     const res = await fetch(API_BASE + path, { cache: 'no-store' });
-    if (!res.ok) throw new Error(t('httpErr', { status: res.status, path: path }));
+    if (!res.ok) {
+      // Der Proxy schickt bei 502 die Art mit (timeout / unreachable)
+      let why = '';
+      try { const j = await res.json(); if (j && j.art) why = t(j.art === 'timeout' ? 'errTimeout' : 'errUnreach'); } catch (e) {}
+      throw new Error(t('httpErr', { status: res.status, path: path }) + (why ? ' (' + why + ')' : ''));
+    }
     return res.json();
   }
 
@@ -2071,6 +2091,13 @@
   // statt bis zum naechsten regulaeren Abgleich zu warten.
   let forceConfigNext = false;
   let pollTimer = null;
+  // Fehlertoleranz: Ein einzelner Aussetzer bleibt unsichtbar, erst ab
+  // FAIL_SHOW Fehlern in Folge erscheinen Hinweis, Verbindungsproblem und
+  // "veraltet". Laeuft eine Abfrage noch, faellt der naechste Takt aus.
+  const FAIL_SHOW = 2;
+  let failStreak = 0;
+  let pollBusy = false;
+  let staleData = false;
   let pollWanted = false;   // Abfrage gewuenscht (unabhaengig von Sichtbarkeit)
 
   /* ---------------- Chart ---------------- */
@@ -2682,7 +2709,36 @@
     }
   }
 
+  function setStale(on){
+    staleData = on;
+    appEl.classList.toggle('stale', on);
+  }
+
+  // Fehlerzaehler des Proxys in der Fusszeile (fehlt ohne Proxy oder bei aelterem Proxy)
+  let lastFehler = null;
+  function showFehler(){
+    const el = document.getElementById('fehlerLine');
+    const j = lastFehler;
+    if (!el) return;
+    if (!j || !j.gesamt) { el.hidden = true; return; }
+    const names = { timeout: 'errTimeout', unreachable: 'errUnreach', shelly: 'errShelly' };
+    el.textContent = t('errLine', { n: j.gesamt }) +
+      (j.letzter ? ' · ' + t('errLast', { z: String(j.letzter.zeit).slice(0, 5), a: t(names[j.letzter.art] || 'errUnreach') }) : '');
+    el.title = t('errDetail', { a: j.timeout, b: j.unreachable, c: j.shelly });
+    el.hidden = false;
+  }
+  function updateFehler(){
+    fetch('proxy_fehler', { cache: 'no-store' }).then(function(r){
+      return r.ok ? r.json() : null;
+    }).then(function(j){
+      lastFehler = (j && typeof j.gesamt === 'number') ? j : null;
+      showFehler();
+    }).catch(function(){});
+  }
+
   async function pollAll(){
+    if (pollBusy) return;   // vorige Abfrage laeuft noch: diesen Takt auslassen
+    pollBusy = true;
     try {
       const status = await fetchJ('status_api');
 
@@ -2693,6 +2749,7 @@
         forceConfigNext = false;
         configFresh = true;
         const cfg = await fetchJ('config_api');
+        updateFehler();
         readWdVolt(cfg);
         lastConfigAt = Date.now();
 
@@ -2772,6 +2829,8 @@
       }
 
       document.getElementById('diag').hidden = true;
+      failStreak = 0;
+      if (staleData) { setStale(false); updateFehler(); }
       if (holdCheckArmed && configFresh) {
         const c = holdCheck;
         holdCheck = null;
@@ -2780,8 +2839,14 @@
       }
       updateStatusPill(false);
     } catch (err) {
-      showDiag(t('pollFail', { err: err.message }));
-      updateStatusPill(true);
+      failStreak++;
+      if (failStreak >= FAIL_SHOW) {
+        showDiag(t('pollFail', { err: err.message }));
+        updateStatusPill(true);
+        if (!staleData) { setStale(true); updateFehler(); }
+      }
+    } finally {
+      pollBusy = false;
     }
     render();
   }
@@ -2892,6 +2957,7 @@
     const el = document.getElementById('statePill-' + d.id);
     if (!el) return;
     if (!d.online) { el.className = 'state-pill off'; el.textContent = t('unreachable'); return; }
+    if (staleData) { el.className = 'state-pill off'; el.textContent = t('stale'); return; }
     const pw = Math.round(d.power || 0);
     el.className = 'state-pill' + (pw > 0 ? ' out' : (pw < 0 ? ' in' : ''));
     el.textContent = t(pw > 0 ? 'stOut' : (pw < 0 ? 'stIn' : 'stIdle'));
@@ -2900,10 +2966,14 @@
   // Akku-Leistung aus den Geraetewerten: PV - Ausgang - Offgrid
   // (+ = laedt, - = entlaedt). null, wenn das Geraet weder PV noch Offgrid meldet
   // und offline ist.
+  // Offgrid-Leistung mit Vorzeichen (gridOffPower): positiv = Abgabe ans Haus (Ausgang),
+  // negativ = Einspeisung in das Geraet (Eingang, wirkt wie PV). null = kein Offgrid-Anschluss.
+  function offW(d){ return (d.offGrid === null || d.offGrid === undefined) ? null : Number(d.offGrid); }
+
   function battPower(d){
     if (!d.online) return null;
     const pv = (d.pv === null || d.pv === undefined) ? 0 : Number(d.pv);
-    const off = (d.offGrid === null || d.offGrid === undefined) ? 0 : Number(d.offGrid);
+    const off = offW(d) || 0;
     return pv - Number(d.power || 0) - off;
   }
 
@@ -2982,7 +3052,7 @@
       return;
     }
     if (pvEl) pvEl.textContent = (d.pv !== null && d.pv !== undefined) ? Math.round(d.pv) + ' W' : '–';
-    if (offEl) offEl.textContent = (d.offGrid !== null && d.offGrid !== undefined) ? Math.round(d.offGrid) + ' W' : '–';
+    if (offEl) offEl.textContent = offW(d) !== null ? (Math.round(offW(d)) < 0 ? '−' : '') + Math.abs(Math.round(offW(d))) + ' W' : '–';
     if (bEl) {
       const bp = Math.round(battPower(d));
       bEl.textContent = (bp > 0 ? '+' : (bp < 0 ? '−' : '')) + Math.abs(bp) + ' W';
@@ -3243,7 +3313,7 @@
     const hasPv = on.some(function(h){ return h.pv !== null && h.pv !== undefined; });
     const hasOff = on.some(function(h){ return h.offGrid !== null && h.offGrid !== undefined; });
     const pv = sum(on, function(h){ return Number(h.pv || 0); });
-    const off = sum(on, function(h){ return Number(h.offGrid || 0); });
+    const off = sum(on, function(h){ return offW(h) || 0; });
     const ac = sum(on, function(h){ return Number(h.power || 0); });
     const batt = sum(on, function(h){ return battPower(h) || 0; });
     const allOn = hubs.filter(function(h){ return h.online; });
@@ -3264,7 +3334,8 @@
     setText('fnSoc', soc === null ? '' : (socs.length > 1 ? 'Ø ' : '') + soc + ' %');
     const sb = document.getElementById('fnSocBar'); if (sb) sb.style.width = (soc || 0) + '%';
     setText('fnOff', none || !hasOff ? '–' : fmtW(off));
-    setText('fnOffSub', none || !hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : 'fOffNone'));
+    // Im Fluss nur Betraege; Richtung zeigt Text und Animation (setFlowLine nimmt das Vorzeichen)
+    setText('fnOffSub', none || !hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : 'fOffNone')));
     setText('fnHouse', house === null ? '–' : fmtW(house));
     setText('fnHouseSub', t('fHouse') + tagTotal);
     const g = gridOnline ? Math.round(gridPower) : null;
@@ -3353,6 +3424,7 @@
   window.addEventListener('resize', hideHelp);
 
   function relabelAll(){
+    if (typeof showFehler === 'function') showFehler();
     hideHelp();
     applyStaticTexts();
     buildFlowScopes();

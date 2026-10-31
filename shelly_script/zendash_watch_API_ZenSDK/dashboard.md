@@ -345,6 +345,12 @@ In der Home-Assistant-App gehört die Datei nach `/share/zendure/bericht.html`. 
 
 Findet der Proxy einen Bericht, zeigt das Dashboard im Fuß der Seite den Link **„Auswertung: Log-Bericht“**. Ohne Bericht fehlt der Link.
 
+### Verbindungsprobleme und Fehlerzähler
+
+Ein einzelner Aussetzer bei der Abfrage des Shellys bleibt unsichtbar. Erst wenn zwei Abfragen hintereinander scheitern, erscheinen oben der Hinweis mit dem Grund (z. B. „HTTP 502 bei status_api (Zeitüberschreitung)“) und „Verbindungsproblem“. Die Gerätekarten werden dann blass, im neuen Design steht „veraltet“, und die Animationen halten an. Mit der nächsten erfolgreichen Abfrage ist alles wieder normal. Läuft eine Abfrage noch, fällt der nächste 4-s-Takt aus, damit sich am Shelly keine Anfragen stapeln.
+
+Der Proxy zählt alle gescheiterten Anfragen an den Shelly, getrennt nach Zeitüberschreitung (keine Antwort in 5 s), „nicht erreichbar“ und Fehler vom Shelly. Der Zähler beginnt um Mitternacht und bei jedem Start des Proxys neu. Gab es heute Fehler, steht im Fuß des Dashboards **„Abfragefehler heute: …“** mit dem letzten Zeitpunkt; der Tooltip zeigt die Aufteilung. Rohdaten: `http://<Proxy-Adresse>:8000/proxy_fehler`. Jeder Fehler steht außerdem im Protokoll des Proxys, auch in der Home-Assistant-App.
+
 ---
 
 ## Gut zu wissen

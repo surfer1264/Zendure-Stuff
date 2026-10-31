@@ -3,6 +3,12 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 3.5.12.5
+
+- Verbindungsprobleme: Hinweis erst nach zwei gescheiterten Abfragen in Folge, mit Grund; Gerätekarten dann blass bzw. „veraltet“; keine überlappenden Abfragen mehr
+- Proxy zählt Abfragefehler je Tag (Zeitüberschreitung, nicht erreichbar, Fehler vom Shelly): Anzeige im Fuß des Dashboards, Adresse `proxy_fehler`, jeder Fehler steht im Protokoll der App
+- Neues Design: Offgrid mit Richtung – positiv = Abgabe ans Haus („Ausgang“), negativ = Einspeisung ins Gerät („Eingang“, wie PV). Der Energiefluss zeigt nur Beträge, die Animation läuft in Flussrichtung; vorher stand bei Einspeisung „nicht belegt“ und die Linie stand still
+
 ## 3.5.12.4
 
 - Neues, alternatives Dashboard-Design unter der Adresse `neu` (in Home Assistant: „Web-UI öffnen“, dann im Menü „Ansicht“ → „Design“). Das klassische Dashboard bleibt unverändert die Startseite; beide Seiten verlinken sich gegenseitig im Menü „Ansicht“

@@ -92,7 +92,7 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
 | `socSet` | Am Gerät eingestellte obere Ladegrenze in % (Report `socSet` / 10, also `950` → 95). `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.1 |
 | `minSocHw` | Am Gerät eingestellte untere Entladegrenze in % (Report `minSoc` / 10, also `150` → 15). Das Regel-Script überträgt jede Änderung von `zdmc_dev{id}_minSoc` auf das Gerät; das Dashboard vergleicht beide Werte und meldet eine anhaltende Abweichung. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.4 |
 | `temp` | Gerätetemperatur in ganzen °C. Report `hyperTmp` in Zehntel-Kelvin, umgerechnet `(hyperTmp − 2731) / 10` und gerundet, also `2921` → 19. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.9 |
-| `offGrid` | Leistung am Offgrid-Ausgang in W (`gridOffPower`). `null` = Gerät hat keinen Offgrid-Ausgang bzw. Hub offline. Seit 3.5.9 |
+| `offGrid` | Leistung am Offgrid-Anschluss in W (`gridOffPower`): positiv = Abgabe ans Haus, negativ = Einspeisung ins Gerät (wie PV). `null` = Gerät hat keinen Offgrid-Ausgang bzw. Hub offline. Seit 3.5.9 |
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
