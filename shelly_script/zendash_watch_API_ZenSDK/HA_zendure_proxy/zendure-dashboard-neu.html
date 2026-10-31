@@ -693,7 +693,14 @@
   .sky-glow, .sky-stars, .sky-scrim{ inset:0; }
   .sky-star{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; opacity:.8; }
   .sky-star.big{ width:3px; height:3px; }
-  .sky-moon{ width:40px; height:40px; border-radius:50%; box-shadow:inset -11px -4px 0 0 #E9E5D2; filter:drop-shadow(0 0 12px rgba(233,229,210,.35)); }
+  .sky-moon{ width:44px; height:44px; overflow:visible; }
+  .sky-moon path{ fill:#E9E5D2; filter:drop-shadow(0 0 8px rgba(233,229,210,.45)); }
+  .sky-meteor{ width:7.5rem; height:2px; border-radius:2px; background:linear-gradient(90deg, rgba(255,255,255,0), #fff); opacity:0; }
+  .sky-meteor.m1{ left:24%; top:10%; } .sky-meteor.m2{ left:57%; top:5%; }
+  .flow-wrap.bg-meteor .sky-meteor{ animation:skyMeteor 11s linear infinite; }
+  .flow-wrap.bg-meteor .sky-meteor.m2{ animation-delay:-5.5s; }
+  @keyframes skyMeteor{ 0%{ opacity:0; transform:translate(0,0) rotate(25deg); } 2%{ opacity:1; }
+    6%{ opacity:0; transform:translate(13rem,6rem) rotate(25deg); } 100%{ opacity:0; transform:translate(13rem,6rem) rotate(25deg); } }
   .sky-sun{ border-radius:50%; }
   .sky-track{ left:0; width:100%; height:5.5rem; }
   .sky-track .sky-cloud{ position:absolute; left:0; top:0; width:19rem; height:100%; }
@@ -706,7 +713,7 @@
   .flow-wrap.bg-move .sky-star{ animation:skyTwinkle 3.2s ease-in-out infinite; }
   @keyframes skyDrift{ from{ transform:translateX(-30%); } to{ transform:translateX(100%); } }
   @keyframes skyTwinkle{ 0%,100%{ opacity:.25; } 50%{ opacity:.95; } }
-  @media (prefers-reduced-motion: reduce){ .flow-wrap.bg-move .sky-track, .flow-wrap.bg-move .sky-star{ animation:none; } }
+  @media (prefers-reduced-motion: reduce){ .flow-wrap.bg-move .sky-track, .flow-wrap.bg-move .sky-star, .flow-wrap.bg-meteor .sky-meteor{ animation:none; } }
   /* Kacheln und Linien auf dem Bild: deckend genug zum Lesen */
   html[data-theme="dark"] .flow-wrap.bg-on .fnode{ background:rgba(27,39,64,.96); }
   html[data-theme="dark"] .flow-wrap.bg-on .fnode.hubn{ background:rgba(15,26,45,.96); }
@@ -881,17 +888,30 @@
       <div class="sky" id="flowSky" aria-hidden="true" hidden>
         <div class="sky-glow" id="skyGlow"></div>
         <div class="sky-stars" id="skyStars"></div>
-        <div class="sky-moon" id="skyMoon"></div>
+        <i class="sky-meteor m1"></i><i class="sky-meteor m2"></i>
+        <svg class="sky-moon" id="skyMoon" viewBox="-22 -22 44 44" aria-hidden="true"><circle r="18" fill="rgba(233,229,210,0.10)"></circle><path id="skyMoonLit" d=""></path></svg>
         <div class="sky-sun" id="skySun"></div>
         <div class="sky-track c1"><div class="sky-cloud"></div></div>
         <div class="sky-track c2"><div class="sky-cloud"></div></div>
         <svg class="sky-hills" viewBox="0 0 1040 170" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
           <path id="skyFar" d="M0 70 C 140 40, 300 85, 480 62 S 820 30, 1040 66 L1040 170 L0 170 Z"></path>
+          <path class="sky-snow" data-k=".55" d="M0 70 C 140 40, 300 85, 480 62 S 820 30, 1040 66 L1040 170 L0 170 Z"></path>
           <path id="skyMid" d="M0 100 C 200 76, 380 118, 600 96 S 900 80, 1040 104 L1040 170 L0 170 Z"></path>
-          <path id="skyTrees" d="M96 140 L110 102 L124 140 Z M300 138 L313 106 L326 138 Z M834 136 L849 96 L864 136 Z M870 138 L881 110 L892 138 Z"></path>
+          <path class="sky-field" id="skyField" d="M640 98 C 720 88, 820 82, 900 86 L 930 130 L 610 132 Z"></path>
+          <path class="sky-field" id="skyFieldLines" d="M630 106 L915 98 M622 114 L922 110 M616 122 L926 121" fill="none" stroke-width="1.5"></path>
+          <path class="sky-snow" data-k=".7" d="M0 100 C 200 76, 380 118, 600 96 S 900 80, 1040 104 L1040 170 L0 170 Z"></path>
+          <path id="skyTrees" d="M96 140 L110 102 L124 140 Z M834 136 L849 96 L864 136 Z M870 138 L881 110 L892 138 Z"></path>
+          <path class="sky-snow" data-k="1" d="M104 117 L110 102 L116 117 Z M843 112 L849 96 L855 112 Z M877 121 L881 110 L885 121 Z"></path>
+          <path class="sky-trunk" d="M292 136 L292 110 M772 132 L772 104" stroke-width="3"></path>
+          <path class="sky-trunk" id="skyBranches" d="M292 120 L283 109 M292 116 L301 105 M292 124 L303 117 M772 116 L763 103 M772 112 L782 100 M772 120 L783 112" stroke-width="1.5"></path>
+          <ellipse class="sky-crown" cx="292" cy="105" rx="16" ry="14"></ellipse>
+          <ellipse class="sky-crown" cx="772" cy="99" rx="18" ry="15"></ellipse>
+          <g id="skyBlossom" fill="#FFFFFF"><circle cx="284" cy="100" r="1.6"></circle><circle cx="295" cy="96" r="1.4"></circle><circle cx="301" cy="106" r="1.6"></circle><circle cx="288" cy="110" r="1.3"></circle><circle cx="297" cy="113" r="1.5"></circle><circle cx="762" cy="94" r="1.6"></circle><circle cx="775" cy="90" r="1.4"></circle><circle cx="783" cy="100" r="1.6"></circle><circle cx="767" cy="105" r="1.4"></circle><circle cx="778" cy="108" r="1.5"></circle></g>
           <path id="skyNear" d="M0 132 C 180 116, 360 150, 560 134 S 880 122, 1040 140 L1040 170 L0 170 Z"></path>
+          <path class="sky-snow" data-k=".85" d="M0 132 C 180 116, 360 150, 560 134 S 880 122, 1040 140 L1040 170 L0 170 Z"></path>
           <rect id="skyHouse" x="176" y="104" width="68" height="30"></rect>
           <path id="skyRoof" d="M168 106 L210 80 L252 106 Z"></path>
+          <path class="sky-snow" data-k="1" d="M166 107 L210 79 L254 107 L247 107 L210 84 L173 107 Z"></path>
           <path d="M184 102 L210 86 L236 102 Z" fill="#20375A"></path>
           <path d="M197 94 L223 94 M210 86 L210 102" stroke="#3B5A86" stroke-width="1"></path>
           <rect class="sky-win" x="185" y="112" width="12" height="10"></rect>
@@ -1757,6 +1777,39 @@
     }
     return SKY_KF[SKY_KF.length - 1][1].map(skyHex);
   }
+  // Jahreszeit aus dem Tag des Jahres: Farben der Landschaft (stufenlos), Laubbaum
+  // (kahl, Bluete, Gruen, Herbstfarben) und die Staerke der Monatselemente
+  const SKY_SEASON = [[15, ['#7F93A6', '#61788A', '#465B6A']], [105, ['#6C977A', '#4E7E5E', '#386848']], [196, ['#5B8264', '#3D6A4A', '#2B5436']],
+    [237, ['#7E8A5A', '#6E7340', '#4A5A34']], [293, ['#7D7660', '#6E5A3A', '#4B442E']], [335, ['#76848F', '#5C6A72', '#424F57']]];
+  const SKY_CROWN = [[0, '#3A3328', 0], [80, '#3A3328', 0], [105, '#F0B4C6', 1], [140, '#6AA052', 1], [200, '#4C8640', 1], [250, '#7E8E3E', 1],
+    [285, '#D27A2C', 1], [305, '#B4522A', 1], [322, '#5A4630', 0], [366, '#3A3328', 0]];
+  function skySeason(doy){
+    const k = SKY_SEASON.concat([[SKY_SEASON[0][0] + 365, SKY_SEASON[0][1]]]);
+    const dd = doy < SKY_SEASON[0][0] ? doy + 365 : doy;
+    let hills = SKY_SEASON[0][1].map(skyHex);
+    for (let i = 1; i < k.length; i++) {
+      if (dd <= k[i][0]) {
+        const q = (dd - k[i - 1][0]) / (k[i][0] - k[i - 1][0]);
+        hills = k[i - 1][1].map(function(h, j){ return skyMix(skyHex(h), skyHex(k[i][1][j]), q); });
+        break;
+      }
+    }
+    let crown = skyHex(SKY_CROWN[0][1]), crownOp = 0;
+    for (let i = 1; i < SKY_CROWN.length; i++) {
+      if (doy <= SKY_CROWN[i][0]) {
+        const q = (doy - SKY_CROWN[i - 1][0]) / (SKY_CROWN[i][0] - SKY_CROWN[i - 1][0]);
+        crown = skyMix(skyHex(SKY_CROWN[i - 1][1]), skyHex(SKY_CROWN[i][1]), q);
+        crownOp = SKY_CROWN[i - 1][2] + (SKY_CROWN[i][2] - SKY_CROWN[i - 1][2]) * q;
+        break;
+      }
+    }
+    return {
+      hills: hills, crown: crown, crownOp: crownOp,
+      snow: doy >= 345 || doy <= 50 ? 1 : (doy > 320 ? (doy - 320) / 25 : (doy < 75 ? (75 - doy) / 25 : 0)),
+      blossom: skyClamp(1 - Math.abs(doy - 118) / 22, 0, 1),
+      field: skyClamp(Math.min((doy - 195) / 20, (275 - doy) / 20), 0, 1)
+    };
+  }
   function buildSkyStars(){
     const box = document.getElementById('skyStars');
     if (!box || skyStarsBuilt) return;
@@ -1802,7 +1855,10 @@
     const fDay = (tod - SR) / DAY;
     const gNight = ((((tod - SS) % 1440) + 1440) % 1440) / NIGHT;
     const isDay = fDay >= 0 && fDay <= 1;
-    const elev = isDay ? 24 * Math.sin(Math.PI * fDay) : -40 * Math.sin(Math.PI * gNight);
+    // Hoechster Sonnenstand des Tages aus Breite und Datum: im Sommer hoher, im Winter flacher Bogen
+    const doy = Math.round((new Date(y, m - 1, d) - new Date(y, 0, 0)) / 86400000);
+    const maxElev = skyClamp(90 - Math.abs(sunLoc.lat) + 23.44 * Math.sin(2 * Math.PI * (284 + doy) / 365) * (sunLoc.lat < 0 ? -1 : 1), 5, 85);
+    const elev = isDay ? maxElev * Math.sin(Math.PI * fDay) : -40 * Math.sin(Math.PI * gNight);
     const light = skyClamp((elev + 10) / 30, 0, 1);
     const golden = skyClamp(1 - Math.abs(elev - 1) / 9, 0, 1);
     const nearHz = skyClamp(1 - Math.abs(elev) / 12, 0, 1);
@@ -1814,16 +1870,26 @@
     const sunF = skyClamp(fDay, -0.1, 1.1);
     // Mittag bei 68 % statt 50 %: dort steht sonst die PV-Kachel vor der Sonne
     const sunX = sunF <= 0.5 ? 7 + sunF * 2 * 61 : 68 + (sunF - 0.5) * 2 * 25;
-    const sunY = 80 - Math.sin(Math.PI * sunF) * 66;
+    const sunY = 80 - Math.sin(Math.PI * sunF) * (28 + 38 * skyClamp(maxElev / 61, 0, 1));
     const glowX = skyClamp(isDay ? sunX : (gNight < 0.5 ? 93 : 7), 4, 96);
     document.getElementById('skyGlow').style.background = 'radial-gradient(ellipse 55% 42% at ' + glowX.toFixed(1) + '% 80%, rgba(255,150,80,' +
       (elev > -9 ? 0.55 * nearHz : 0).toFixed(2) + '), rgba(255,150,80,0) 70%)';
     document.getElementById('skyStars').style.opacity = starOp.toFixed(2);
     const moon = document.getElementById('skyMoon');
     const mF = skyClamp(gNight, 0, 1);
-    moon.style.left = 'calc(' + (5 + mF * 86).toFixed(1) + '% - 20px)';
-    moon.style.top = 'calc(' + (78 - Math.sin(Math.PI * mF) * 60).toFixed(1) + '% - 20px)';
+    moon.style.left = 'calc(' + (5 + mF * 86).toFixed(1) + '% - 22px)';
+    moon.style.top = 'calc(' + (78 - Math.sin(Math.PI * mF) * 60).toFixed(1) + '% - 22px)';
     moon.style.opacity = (starOp * 0.95).toFixed(2);
+    // Mondphase aus dem Datum (synodischer Monat ab dem Neumond am 6.1.2000);
+    // auf der Suedhalbkugel ist die beleuchtete Seite gespiegelt
+    const SYN = 29.530588853;
+    const mAge = ((((now.getTime() - Date.UTC(2000, 0, 6, 18, 14)) / 86400000) % SYN) + SYN) % SYN;
+    const mp = mAge / SYN, waxing = mp < 0.5, crescent = mp < 0.25 || mp > 0.75;
+    const mrx = (18 * Math.abs(Math.cos(2 * Math.PI * mp))).toFixed(2);
+    document.getElementById('skyMoonLit').setAttribute('d', waxing
+      ? 'M0 -18 A18 18 0 0 1 0 18 A' + mrx + ' 18 0 0 ' + (crescent ? 0 : 1) + ' 0 -18 Z'
+      : 'M0 -18 A18 18 0 0 0 0 18 A' + mrx + ' 18 0 0 ' + (crescent ? 1 : 0) + ' 0 -18 Z');
+    moon.style.transform = sunLoc.lat < 0 ? 'scaleX(-1)' : '';
     const sun = document.getElementById('skySun');
     const r = Math.round(30 + 16 * nearHz), toRed = skyClamp(1 - elev / 14, 0, 1);
     const core = skyMix(skyHex('#FFF6D8'), skyHex('#FF9A4D'), toRed), edge = skyMix(skyHex('#FFD66B'), skyHex('#E2574C'), toRed);
@@ -1840,12 +1906,36 @@
       ' 0%, transparent 72%), radial-gradient(ellipse 32% 42% at 74% 60%, ' + cc + ' 0%, transparent 72%)';
     document.querySelectorAll('#flowSky .sky-cloud').forEach(function(el){ el.style.background = blob; });
     // Landschaft: Nacht- und Tagfarben nach Licht gemischt, im Morgen-/Abendrot waermer
-    const dayC = ['#4F7C8C', '#305B67', '#1C3B45', '#2A4B55', '#15262D'];
+    // Jahreszeit: Tag des Jahres, auf der Suedhalbkugel um ein halbes Jahr versetzt
+    const sd = sunLoc.lat < 0 ? ((doy + 182 - 1) % 365) + 1 : doy;
+    const season = skySeason(sd);
+    const dayC = [season.hills[0], season.hills[1], season.hills[2], skyHex('#2A4B55'), skyHex('#15262D')];
     const nightC = ['#16233A', '#0E182C', '#070F1D', '#0F1A2B', '#060B14'];
-    const hc = dayC.map(function(h, i){ return skyCss(skyMix(skyMix(skyHex(nightC[i]), skyHex(h), light), skyHex('#8A5A5E'), golden * (i === 0 ? 0.45 : 0.25))); });
+    const hcRgb = dayC.map(function(c, i){ return skyMix(skyMix(skyHex(nightC[i]), c, light), skyHex('#8A5A5E'), golden * (i === 0 ? 0.45 : 0.25)); });
+    const hc = hcRgb.map(function(c){ return skyCss(c); });
     document.getElementById('skyFar').setAttribute('fill', hc[0]);
     document.getElementById('skyMid').setAttribute('fill', hc[1]);
-    document.getElementById('skyTrees').setAttribute('fill', hc[2]);
+    document.getElementById('skyTrees').setAttribute('fill', skyCss(skyMix(hcRgb[2], [18, 46, 32], 0.35)));
+    // Monatselemente als festes Bild: Schnee, Bluete, Getreidefeld, Herbstlaub
+    const nightRgb = skyHex('#0E182C'), litK = 0.15 + 0.85 * light;
+    const snowC = skyCss(skyMix(skyHex('#2C3852'), skyHex('#F2F6FA'), light));
+    document.querySelectorAll('#flowSky .sky-snow').forEach(function(el){
+      el.setAttribute('fill', snowC);
+      el.setAttribute('opacity', (season.snow * parseFloat(el.getAttribute('data-k'))).toFixed(2));
+    });
+    document.getElementById('skyField').setAttribute('fill', skyCss(skyMix(nightRgb, skyHex('#D9B24A'), litK)));
+    document.getElementById('skyFieldLines').setAttribute('stroke', skyCss(skyMix(nightRgb, skyHex('#B48C2C'), litK)));
+    document.querySelectorAll('#flowSky .sky-field').forEach(function(el){ el.setAttribute('opacity', season.field.toFixed(2)); });
+    const trunkC = skyCss(skyMix(skyHex('#140E0A'), skyHex('#4A3A2C'), light));
+    document.querySelectorAll('#flowSky .sky-trunk').forEach(function(el){ el.setAttribute('stroke', trunkC); });
+    document.getElementById('skyBranches').setAttribute('opacity', (1 - season.crownOp * 0.9).toFixed(2));
+    document.querySelectorAll('#flowSky .sky-crown').forEach(function(el){
+      el.setAttribute('fill', skyCss(skyMix(nightRgb, season.crown, litK)));
+      el.setAttribute('opacity', season.crownOp.toFixed(2));
+    });
+    document.getElementById('skyBlossom').setAttribute('opacity', (season.blossom * light).toFixed(2));
+    // Sternschnuppen nur in Bewegung, nachts, Mitte Juli bis Ende August (Perseiden)
+    wrap.classList.toggle('bg-meteor', bgMode === 'move' && starOp > 0.3 && sd >= 200 && sd <= 235);
     document.getElementById('skyNear').setAttribute('fill', hc[2]);
     document.getElementById('skyHouse').setAttribute('fill', hc[3]);
     document.getElementById('skyRoof').setAttribute('fill', hc[4]);
