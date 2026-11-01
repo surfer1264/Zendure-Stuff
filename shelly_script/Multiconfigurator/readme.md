@@ -158,6 +158,8 @@ Starte den Helfer. Im Startdialog wählst du **„Neu konfigurieren oder manuell
 
 ### Der Ablauf
 
+<img width="800" alt="image" src="https://github.com/user-attachments/assets/342a4c15-b6f3-4cdc-8656-769a4402ec4d" />
+
 1. **Start** – „Neu konfigurieren oder manuell updaten“ wählen
 2. **Funktionen** – Controller, zenDash-API und/oder Watchdog auswählen und die **IP-Adressen deiner beiden Shellys** eintragen. Hast du schon eine Konfiguration, kannst du sie hier [einlesen](#bestehende-konfiguration-einlesen), statt alles neu einzugeben.
 3. **Geräte** – deine Zendure-Speicher mit IP, maximaler Leistung und minSoc/maxSoc; je Gerät, ob der Watchdog es überwachen soll. **„Testen“** neben der IP öffnet den Report des Speichers (`/properties/report`) in einem neuen Tab – so siehst du sofort, ob die IP stimmt
