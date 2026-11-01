@@ -56,3 +56,11 @@ Le **[tableau de bord](zendash_watch_API_ZenSDK/dashboard.md)** (allemand) est l
 | **KVS** | stockage clé-valeur dans le Shelly pour les réglages modifiables en cours de fonctionnement (p. ex. depuis le tableau de bord) |
 
 Plus d'informations dans la [vue d'ensemble du système (S-Z-S-C-S)](szscs_FR.md).
+
+## Remarques sur l'utilisation
+
+- La suite est un projet communautaire privé, pas un produit de Zendure ou de Shelly. Elle est fournie gratuitement et sans garantie ([licence MIT](https://github.com/surfer1264/Zendure-Stuff/blob/main/LICENSE)).
+- Elle pilote de vraies puissances de charge et de décharge. Vous l'utilisez sous votre propre responsabilité et vérifiez après la mise en place que votre installation se comporte comme prévu.
+- Les règles de raccordement au réseau et d'injection (par ex. déclaration, limites d'injection) restent applicables. La suite ne vous en dispense pas.
+- En cas de doute, voyez avec le fabricant si l'utilisation d'un logiciel tiers affecte sa garantie.
+- La responsabilité des auteurs n'est engagée que dans la mesure où la loi ne permet pas de l'exclure (par ex. faute intentionnelle ou négligence grave).

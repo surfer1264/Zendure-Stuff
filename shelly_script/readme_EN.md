@@ -56,3 +56,11 @@ The **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** (German) itself is a 
 | **KVS** | key-value store in the Shelly for settings you can change during operation (e.g. from the dashboard) |
 
 More background can be found in the [system overview (S-Z-S-C-S)](szscs_EN.md).
+
+## Notes on use
+
+- The suite is a private community project, not a product of Zendure or Shelly. It is provided free of charge and without warranty ([MIT license](https://github.com/surfer1264/Zendure-Stuff/blob/main/LICENSE)).
+- It controls real charging and discharging power. You use it on your own responsibility and check after setup that your system behaves as expected.
+- Rules for grid connection and feed-in (e.g. registration, feed-in limits) still apply. The suite does not release you from them.
+- Whether running third-party software affects the manufacturer's warranty is something to clarify with the manufacturer if in doubt.
+- The authors are liable only to the extent that liability cannot be excluded by law (e.g. intent or gross negligence).

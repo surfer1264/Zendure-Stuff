@@ -55,3 +55,11 @@ Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webse
 | **KVS** | Ablage im Shelly für Einstellungen, die du im laufenden Betrieb ändern kannst (z. B. aus dem Dashboard) |
 
 Mehr Hintergrund steht im [Systemüberblick (S-Z-S-C-S)](szscs.md).
+
+## Hinweise zur Nutzung
+
+- Die Suite ist ein privates Community-Projekt, kein Produkt von Zendure oder Shelly. Sie wird kostenlos und ohne Gewährleistung bereitgestellt ([MIT-Lizenz](https://github.com/surfer1264/Zendure-Stuff/blob/main/LICENSE)).
+- Sie steuert echte Lade- und Entladeleistungen. Du setzt sie auf eigene Verantwortung ein und prüfst nach der Einrichtung, ob sich deine Anlage wie erwartet verhält.
+- Regeln zum Netzanschluss und zur Einspeisung (z. B. Anmeldung, Einspeisegrenzen) gelten weiter. Die Suite entbindet dich nicht davon.
+- Ob der Betrieb mit fremder Software die Herstellergarantie berührt, klärst du im Zweifel mit dem Hersteller.
+- Eine Haftung der Autoren besteht nur, soweit sie gesetzlich nicht ausgeschlossen werden kann (z. B. bei Vorsatz oder grober Fahrlässigkeit).
