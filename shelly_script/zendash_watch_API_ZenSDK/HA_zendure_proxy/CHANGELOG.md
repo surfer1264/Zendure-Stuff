@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive Shelly-Script:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md
 
+## 4.0.0.4
+
+- Hintergrund: Kommt deutlich weniger PV als an den besten Tagen der letzten zwei Wochen zur selben Uhrzeit, wird die Sonne etwas blasser und der Wolkenschleier etwas dichter
+
 ## 4.0.0.3
 
 - Energiefluss: Kacheln mit leichtem 3D-Effekt (Lichtkante oben, sanfter Verlauf, weicher Schatten), damit sie sich abheben

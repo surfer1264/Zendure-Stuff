@@ -1761,6 +1761,43 @@
   let bgMode = 'off';
   try { const v = localStorage.getItem(BG_KEY); if (v === 'still' || v === 'move') bgMode = v; } catch (e) {}
   let skyStarsBuilt = false;
+  // Truebung nach PV: die aktuelle PV-Leistung aller Geraete wird mit dem besten
+  // Wert der letzten 14 Tage in derselben Viertelstunde verglichen (merkt sich der
+  // Browser). Kommt deutlich weniger, wird die Sonne etwas blasser und der
+  // Wolkenschleier etwas dichter. Bei vollem Akku regelt das Geraet PV ab - dann
+  // weder lernen noch trueben. Ohne mindestens 3 Vergleichstage: klarer Himmel.
+  const PVREF_KEY = 'zendash_neu_pvref';
+  let pvRef = {};
+  try { const v = JSON.parse(localStorage.getItem(PVREF_KEY)); if (v && typeof v === 'object') pvRef = v; } catch (e) {}
+  let pvDim = 0, pvDimShown = 0, pvRefSaved = 0;
+  function skyDayKey(dt){ return dt.getFullYear() + '-' + ('0' + (dt.getMonth() + 1)).slice(-2) + '-' + ('0' + dt.getDate()).slice(-2); }
+  function skyPvSample(){
+    const on = hubs.filter(function(h){ return h.online; });
+    const withPv = on.filter(function(h){ return h.pv !== null && h.pv !== undefined; });
+    let target = 0;
+    if (withPv.length) {
+      const pv = withPv.reduce(function(s, h){ return s + Math.max(0, Number(h.pv) || 0); }, 0);
+      const full = on.some(function(h){ return h.socLimit === 1 || (h.soc !== null && h.soc !== undefined && Number(h.soc) >= socTop(h) - 1); });
+      const now = new Date(), key = skyDayKey(now), slot = Math.floor((now.getHours() * 60 + now.getMinutes()) / 15);
+      if (!full) {
+        if (!Array.isArray(pvRef[key])) pvRef[key] = [];
+        const arr = pvRef[key];
+        if (!(arr[slot] >= pv)) arr[slot] = Math.round(pv);
+      }
+      if (Date.now() - pvRefSaved > 300000) {
+        const oldest = skyDayKey(new Date(now.getTime() - 14 * 86400000));
+        Object.keys(pvRef).forEach(function(k){ if (k < oldest) delete pvRef[k]; });
+        try { localStorage.setItem(PVREF_KEY, JSON.stringify(pvRef)); } catch (e) {}
+        pvRefSaved = Date.now();
+      }
+      let best = 0, days = 0;
+      Object.keys(pvRef).forEach(function(k){ const v = Array.isArray(pvRef[k]) ? (Number(pvRef[k][slot]) || 0) : 0; if (v > 0) days++; if (v > best) best = v; });
+      if (!full && days >= 3 && best >= 40) target = skyClamp((0.7 - pv / best) / 0.5, 0, 1);
+    }
+    pvDim = pvDim * 0.7 + target * 0.3;   // geglaettet: kurze Schatten wirken nicht sofort
+    if (pvDim < 0.01) pvDim = 0;
+    if (Math.abs(pvDim - pvDimShown) > 0.08) updateSky();
+  }
   const SKY_KF = [
     [-18, ['#03060F', '#07102A', '#0E1B38']],
     [-12, ['#061026', '#0F2045', '#22335E']],
@@ -1871,8 +1908,14 @@
     const nearHz = skyClamp(1 - Math.abs(elev) / 12, 0, 1);
     const starOp = skyClamp((-elev - 5) / 9, 0, 1);
     const hell = document.documentElement.getAttribute('data-theme') === 'light';
-    const c = skyColors(elev);
-    sky.style.background = 'linear-gradient(180deg, ' + skyCss(c[0]) + ' 0%, ' + skyCss(c[1]) + ' 55%, ' + skyCss(c[2]) + ' 80%)';
+    // Truebung nur bei Tag und erst ab etwas Sonnenhoehe (morgens/abends ist wenig PV normal)
+    pvDimShown = pvDim;
+    const dim = isDay ? pvDim * skyClamp((elev - 3) / 8, 0, 1) : 0;
+    const veilRgb = [170, 178, 188];
+    const c = skyColors(elev).map(function(x){ return skyMix(x, veilRgb, 0.35 * dim); });
+    const veil = dim > 0 ? 'linear-gradient(180deg, ' + skyCss([226, 230, 236], (0.30 * dim).toFixed(2)) + ' 0%, ' +
+      skyCss([226, 230, 236], (0.14 * dim).toFixed(2)) + ' 55%, rgba(226,230,236,0) 80%), ' : '';
+    sky.style.background = veil + 'linear-gradient(180deg, ' + skyCss(c[0]) + ' 0%, ' + skyCss(c[1]) + ' 55%, ' + skyCss(c[2]) + ' 80%)';
     // Horizont bei 80 % der Kartenhoehe; Sonne im Bogen von links (Osten) nach rechts (Westen)
     const sunF = skyClamp(fDay, -0.1, 1.1);
     // Mittag bei 68 % statt 50 %: dort steht sonst die PV-Kachel vor der Sonne
@@ -1904,10 +1947,10 @@
     sun.style.left = 'calc(' + sunX.toFixed(1) + '% - ' + r + 'px)';
     sun.style.top = 'calc(' + sunY.toFixed(1) + '% - ' + r + 'px)';
     sun.style.background = 'radial-gradient(circle, ' + skyCss(core) + ' 0%, ' + skyCss(edge) + ' 100%)';
-    sun.style.boxShadow = '0 0 ' + Math.round(50 + 50 * nearHz) + 'px ' + Math.round(14 + 22 * nearHz) + 'px ' + skyCss(edge, (0.35 + 0.15 * nearHz).toFixed(2));
-    sun.style.opacity = (fDay > -0.1 && fDay < 1.1) ? '1' : '0';
+    sun.style.boxShadow = '0 0 ' + Math.round(50 + 50 * nearHz) + 'px ' + Math.round(14 + 22 * nearHz) + 'px ' + skyCss(edge, ((0.35 + 0.15 * nearHz) * (1 - 0.6 * dim)).toFixed(2));
+    sun.style.opacity = (fDay > -0.1 && fDay < 1.1) ? (1 - 0.45 * dim).toFixed(2) : '0';
     // Wolken aus drei weichen Verlaeufen (kein Unschaerfe-Filter)
-    const cc = elev > 6 ? skyCss([255, 255, 255], 0.42)
+    const cc = elev > 6 ? skyCss(skyMix([255, 255, 255], [196, 202, 212], 0.6 * dim), (0.42 + 0.28 * dim).toFixed(2))
       : (elev > -6 ? skyCss(skyMix([255, 168, 140], [255, 255, 255], skyClamp(elev / 6, 0, 1)), 0.55) : skyCss([46, 58, 86], 0.55));
     const blob = 'radial-gradient(ellipse 34% 46% at 30% 58%, ' + cc + ' 0%, transparent 72%), radial-gradient(ellipse 30% 58% at 52% 44%, ' + cc +
       ' 0%, transparent 72%), radial-gradient(ellipse 32% 42% at 74% 60%, ' + cc + ' 0%, transparent 72%)';
@@ -3609,6 +3652,7 @@
       if (dirEl) dirEl.textContent = t(pw > 0 ? 'dirOut' : (pw < 0 ? 'dirIn' : 'dirIdle'));
     });
     renderFlow();
+    skyPvSample();
   }
 
   /* ---------------- Neues Design: Ansicht Geraete / Energiefluss ----------------
