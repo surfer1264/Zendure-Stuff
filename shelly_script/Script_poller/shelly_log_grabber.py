@@ -15,13 +15,23 @@ Aufruf:
 
 Voraussetzung:
     pip install websocket-client
-V2.1.0
+
+Datenschutz: Mit "mask_sensitive": true (Standard) werden vor dem Schreiben
+Seriennummern, Telefonnummern, API-Keys/Tokens und Webhook-IDs ersetzt -
+in der Datei UND in der Konsole. Seriennummern werden zu "SN-xxxxxx"
+(gleiches Geraet = gleicher Ersatz, auch ueber Neustarts; der Schluessel
+dafuer liegt in .mask_salt neben der Config und gehoert nicht weitergegeben).
+Mit "mask_ips": true werden zusaetzlich IP-Adressen ersetzt.
+V2.2.0
 """
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
+import secrets
 import sys
 import time
 from datetime import datetime
@@ -56,8 +66,71 @@ def load_config(path):
     cfg.setdefault("reconnect_delay", 5)
     cfg.setdefault("script_fd_base", 100)
     cfg.setdefault("show_fd_debug", False)
+    cfg.setdefault("mask_sensitive", True)
+    cfg.setdefault("mask_ips", False)
 
     return cfg
+
+
+# --- Maskierung sensibler Daten --------------------------------------
+# Was die Scripte ausgeben koennen: Seriennummern (Pack-Zeilen, Meldung
+# "Zelle <SN> nur ...", Debug-Schreibbefehle mit "sn"), CallMeBot-URLs mit
+# phone/apikey (Fehlermeldungen, Systemmeldungen der Firmware) und
+# Webhook-URLs (die ID wirkt wie ein Passwort).
+RE_SECRET_PARAM = re.compile(
+    r"(?i)\b(phone|apikey|api_key|token|access_token|key|password|passwd|pwd|secret|auth)=([^&\s\"']+)")
+RE_SECRET_JSON = re.compile(
+    r'(?i)("(?:phone|apikey|api_key|token|access_token|password|passwd|secret|webhookurl)"\s*:\s*")([^"]*)(")')
+RE_WEBHOOK = re.compile(r"(/api/webhook/)[^/\s\"'?&]+")
+RE_PHONE = re.compile(r"(?<![\w.])\+\d[\d ()/-]{6,}\d")
+RE_SN_JSON = re.compile(r'("sn"\s*:\s*")([^"]+)(")')
+# Zendure-Seriennummer: zwei Grossbuchstaben, dann Grossbuchstaben/Ziffern,
+# insgesamt 10 bis 24 Zeichen, mindestens zwei Ziffern (schliesst Woerter
+# wie DEBUG oder WHATSAPP aus)
+RE_SN = re.compile(r"\b(?=[A-Z0-9]*\d[A-Z0-9]*\d)[A-Z]{2}[A-Z0-9]{8,22}\b")
+RE_IP = re.compile(r"\b(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}\b")
+
+MASK_SALT = b""
+
+
+def load_mask_salt(config_path):
+    """Zufaelliger Schluessel fuer die Seriennummer-Ersatzwerte, einmal
+    erzeugt und in .mask_salt neben der Config gemerkt. So bleibt der
+    Ersatz fuer ein Geraet ueber Neustarts gleich, laesst sich ohne die
+    Datei aber nicht auf die Seriennummer zurueckrechnen."""
+    path = os.path.join(os.path.dirname(os.path.abspath(config_path)), ".mask_salt")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            salt = f.read().strip()
+        if salt:
+            return salt.encode("utf-8")
+    except OSError:
+        pass
+    salt = secrets.token_hex(16)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(salt + "\n")
+    except OSError as e:
+        print(f"Hinweis: {path} nicht schreibbar ({e}) - SN-Ersatz gilt nur bis zum Neustart.")
+    return salt.encode("utf-8")
+
+
+def sn_alias(sn):
+    return "SN-" + hmac.new(MASK_SALT, sn.encode("utf-8"), hashlib.sha256).hexdigest()[:6]
+
+
+def mask_sensitive(text):
+    if not CONFIG["mask_sensitive"]:
+        return text
+    text = RE_SECRET_PARAM.sub(lambda m: m.group(1) + "=***", text)
+    text = RE_SECRET_JSON.sub(lambda m: m.group(1) + "***" + m.group(3), text)
+    text = RE_WEBHOOK.sub(lambda m: m.group(1) + "***", text)
+    text = RE_SN_JSON.sub(lambda m: m.group(1) + sn_alias(m.group(2)) + m.group(3), text)
+    text = RE_SN.sub(lambda m: sn_alias(m.group(0)), text)
+    text = RE_PHONE.sub("+***", text)
+    if CONFIG["mask_ips"]:
+        text = RE_IP.sub("x.x.x.x", text)
+    return text
 
 
 def format_timestamp():
@@ -165,6 +238,7 @@ def on_message(ws, message):
     if log_text is None:
         return  # Gefiltert
 
+    log_text = mask_sensitive(log_text)
     ts = format_timestamp()
     prefix = f"[Script {script_id}] " if (CONFIG["show_script_prefix"] and script_id is not None) else ""
     formatted_msg = f"[{ts}] {prefix}{log_text}"
@@ -190,6 +264,11 @@ def on_open(ws):
         print(f"  -> Filter aktiv: Nur Nachrichten von Script ID(s) {ids}")
     else:
         print("  -> Zeige Logs aller Skripte")
+    if CONFIG["mask_sensitive"]:
+        ips = ", IP-Adressen" if CONFIG["mask_ips"] else ""
+        print(f"  -> Maskierung aktiv: Seriennummern, Telefonnummern, Keys{ips}")
+    else:
+        print("  -> ACHTUNG: Maskierung aus - Seriennummern, Telefonnummern und Keys stehen im Klartext im Log")
     if CONFIG["log_to_file"]:
         rotation_info = " (taegliche Rotation aktiv)" if CONFIG["daily_log_rotation"] else ""
         print(f"  -> Logdatei aktuell: {build_log_filename()}{rotation_info}")
@@ -203,6 +282,9 @@ def main():
 
     global CONFIG
     CONFIG = load_config(args.config)
+    global MASK_SALT
+    if CONFIG["mask_sensitive"]:
+        MASK_SALT = load_mask_salt(args.config)
 
     shelly_ip = CONFIG["shelly_ip"]
     ws_url = f"ws://{shelly_ip}/debug/log"

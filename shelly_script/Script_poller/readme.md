@@ -125,7 +125,7 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
 
 ```json
 {
-  "shelly_ip": "192.168.178.117",
+  "shelly_ip": "<shelly-ip>",
 
   "target_script_ids": [6, 8],
   "only_script_logs": true,
@@ -140,7 +140,10 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
   "reconnect_delay": 5,
 
   "script_fd_base": 100,
-  "show_fd_debug": false
+  "show_fd_debug": false,
+
+  "mask_sensitive": true,
+  "mask_ips": false
 }
 ```
 
@@ -156,6 +159,8 @@ Die Konfiguration erfolgt über eine JSON-Datei (hier: `config_log_grabber.json`
 * **`show_script_prefix`**: `true` = schreibt `[Script 6]` vor jede Zeile (sinnvoll bei mehreren IDs).
 * **`auto_reconnect`** / **`reconnect_delay`**: Automatische Wiederverbindung bei Verbindungsabbruch und Wartezeit in Sekunden.
 * **`script_fd_base`** / **`show_fd_debug`**: Interne Erkennung, welche fd-Werte zu Skript-Ausgaben gehören (Standard `100`, siehe Hinweis unten). Nur bei Bedarf ändern.
+* **`mask_sensitive`**: `true` (Standard) = persönliche Daten werden ersetzt, bevor eine Zeile in Datei oder Konsole landet – siehe [Datenschutz im Log](#datenschutz-im-log). Fehlt der Schlüssel, ist die Maskierung an.
+* **`mask_ips`**: `true` = zusätzlich IP-Adressen durch `x.x.x.x` ersetzen. Standard `false`, weil die Geräte-IPs bei der Fehlersuche oft gebraucht werden.
 
 > **Hinweis zur fd-Erkennung:** Shelly kennzeichnet jede Log-Zeile mit einem `fd`-Feld. Systemmeldungen (auch solche, die *über* ein Skript berichten, z. B. CPU-Auslastung) laufen auf niedrigen fd-Werten. Echte `print()`/`console.log()`-Ausgaben eines Skripts laufen auf einem eigenen, höheren fd. Beobachtung: `fd = script_fd_base + Script-ID` (z. B. Script 6 → fd 106). Das ist nicht offiziell dokumentiert – bitte einmal mit `"show_fd_debug": true` verifizieren, ob es auf deiner Firmware stimmt.
 
@@ -177,6 +182,23 @@ Jede Zeile wird mit Zeitstempel im Terminal ausgegeben und (bei `log_to_file`) i
 [2026-09-27 13:43:27] [Script 1] SF2400: Leistung gesetzt: 18 W (Export, smartMode 1)
 [2026-09-27 13:43:31] [Script 1] Netzsaldo: -30 W | Ist-Summe: 18 W | Regelsignal: -11 W | Ladekorrektur: 0 W
 ```
+
+### Datenschutz im Log
+
+Logs werden oft weitergegeben, z. B. für die Fehlersuche. Deshalb ersetzt der Grabber ab Version 2.2.0 vor dem Schreiben:
+
+| Was | Wo es auftaucht | Wird zu |
+|---|---|---|
+| Seriennummern von Hub und Akkus | Pack-Zeilen des Watchdogs, Meldung „Zelle … nur … V“, Debug-Schreibbefehle (`"sn":…`) | `SN-3f9a2c` |
+| Telefonnummer, API-Key, Token, Passwort | CallMeBot-URLs (`phone=`, `apikey=`), Fehlermeldungen beim Senden, Systemmeldungen der Firmware | `phone=***`, `apikey=***` |
+| Webhook-ID | `…/api/webhook/<ID>` | `…/api/webhook/***` |
+| Telefonnummern im Text | z. B. `+49 170 …` | `+***` |
+| IP-Adressen (nur mit `mask_ips`) | Debug-Zeilen mit URLs | `x.x.x.x` |
+
+- Dieselbe Seriennummer wird immer zum selben Ersatz, auch nach einem Neustart. So bleibt erkennbar, welcher Akku gemeint ist.
+- Der Ersatz wird mit einem Zufallsschlüssel gebildet, den der Grabber beim ersten Start in `.mask_salt` neben der Config anlegt. Ohne diese Datei lässt sich die Seriennummer nicht zurückrechnen. **`.mask_salt` nicht weitergeben**; wird sie gelöscht, entstehen ab dann neue Ersatzwerte.
+- Die Auswertung (`stat/auswertung`) ist davon nicht betroffen: Sie arbeitet mit den Gerätenamen, nicht mit Seriennummern.
+- Gilt nur für neu geschriebene Zeilen. **Ältere Logs** (vor 2.2.0, vor allem mit eingeschaltetem Debug) können Seriennummern im Klartext enthalten – vor dem Weitergeben prüfen.
 
 ### Auswerten
 
