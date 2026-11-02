@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 4.0.1.0
+
+- Versionsnummer passend zum Shelly-Script 4.0.1; die App selbst ist unverändert
+
 ## 4.0.0.5
 
 - Geräte-Einstellungen neu: Reiter Regelung · Offgrid · Laden, Reserve mit −/+ und „Übernehmen“ (ohne eigenes Reserve-Schloss), Ladestufen statt Schieberegler, kein Einklappen mehr; Offgrid (Aus · Ein · Öko) noch ohne Funktion

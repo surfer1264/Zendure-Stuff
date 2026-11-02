@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Script, Dashboard und Proxy tragen weiter dieselbe Versionsnummer. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.0.1
+
+**Ziel:** Kleineres Script auf dem Shelly, Funktion unverändert.
+
+- **Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)
+- Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.0.0
 
 - Nur die Versionsnummer, inhaltlich wie 3.5.12. Einmal neu hochladen, damit Configurator und Dashboard 4.0.0 zeigen

@@ -8,6 +8,11 @@ Es gibt drei Changelogs:
 
 Script, Dashboard und Proxy tragen dieselbe Versionsnummer. Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 4.0.1
+
+- Nur die Versionsnummer, passend zum Shelly-Script 4.0.1 (kleiner minifiziert). Dashboard und Proxy unverändert
+- Home-Assistant-App 4.0.1.0
+
 ## Changelog 4.0.0
 
 Ziel: Das neue Design wird die Startseite des Dashboards; dazu robustere Verbindung zum Shelly und Fehlerzähler im Proxy.

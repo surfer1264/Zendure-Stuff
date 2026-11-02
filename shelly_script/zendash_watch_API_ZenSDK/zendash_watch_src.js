@@ -59,7 +59,7 @@
 // Wirkung, nur Grundlast).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.0.0";
+let VERSION = "4.0.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
