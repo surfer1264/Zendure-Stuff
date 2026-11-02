@@ -115,7 +115,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge, die deine eigene Konfiguration eins
 2. In `deploy.cmd` eintragen: `SHELLY_IP` (Dashboard-Shelly) und `SKRIPTNAME` (Standard `zd`). `QUELLE=..\zendash_watch_src.js` und `MEINE_CONFIG=myconfig.js` sind schon vorbelegt.
 3. `deploy.cmd` starten.
 
-> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Änderungen, die du direkt in `zendash_watch_src.js` machst, werden dabei überschrieben. Die verkleinerte Fassung mit deiner Konfiguration schreibt es nach `..\zendash_watch_mini.js` – also über die Datei aus dem Repository. Diese Änderung nicht committen oder `FERTIG` auf eine eigene Datei umstellen.
+> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Änderungen, die du direkt in `zendash_watch_src.js` machst, werden dabei überschrieben. Die verkleinerte Fassung mit deiner Konfiguration schreibt es nach `Deploy\upload_mini.js`. Diese Datei steht in der `.gitignore` und kommt nicht ins Repository; die `zendash_watch_mini.js` aus dem Repository bleibt unverändert.
 
 ### Nach dem Start
 

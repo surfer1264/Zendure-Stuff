@@ -86,7 +86,7 @@ Le dossier [Deploy](Deploy) contient des outils qui insèrent votre propre confi
 2. Renseigner dans `deploy.cmd` : `SHELLY_IP` (Shelly tableau de bord) et `SKRIPTNAME` (par défaut `zd`). `QUELLE=..\zendash_watch_src.js` et `MEINE_CONFIG=myconfig.js` sont déjà préremplis.
 3. Lancer `deploy.cmd`.
 
-> **Important :** `deploy.cmd` prend toujours le bloc CONFIG de **votre** fichier. Les modifications faites directement dans `zendash_watch_src.js` seront écrasées. La version minifiée avec votre configuration est écrite dans `..\zendash_watch_mini.js` – donc par-dessus le fichier du dépôt. Ne pas committer cette modification, ou faire pointer `FERTIG` vers votre propre fichier.
+> **Important :** `deploy.cmd` prend toujours le bloc CONFIG de **votre** fichier. Les modifications faites directement dans `zendash_watch_src.js` seront écrasées. La version minifiée avec votre configuration est écrite dans `Deploy\upload_mini.js`. Ce fichier figure dans `.gitignore` et n'arrive jamais dans le dépôt ; le `zendash_watch_mini.js` du dépôt reste inchangé.
 
 ### Après le démarrage
 

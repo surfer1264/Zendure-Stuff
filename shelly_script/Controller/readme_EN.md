@@ -108,7 +108,7 @@ The [Deploy](Deploy) folder contains tools (Windows, Python 3 required) that ins
 2. Enter in `deploy.cmd`: `SHELLY_IP` (Controller Shelly) and `SKRIPTNAME` (default `ctrl`). `MEINE_CONFIG` is already set to `myconfig.js` – only change it if your file has a different name.
 3. Run `deploy.cmd`. Sequence: insert CONFIG (`swap_config.py`) → minify (`minify_keep_config.py`) → upload and start (`upload_shelly.py`).
 
-> **Important:** `deploy.cmd` always takes the CONFIG block from **your** file. It writes the minified version to `..\zerooutput_multi_kvs_mini.js` – i.e. over the file from the repository. If you update the folder via Git, don't commit this change, or point `FERTIG` to a file of your own. `minify.cmd` only creates the minified version without your own configuration.
+> **Important:** `deploy.cmd` always takes the CONFIG block from **your** file. It writes the minified version with your configuration to `Deploy\upload_mini.js`. This file is listed in `.gitignore` and never goes into the repository; the `zerooutput_multi_kvs_mini.js` from the repository stays unchanged. `minify.cmd` only creates the minified version without your own configuration.
 
 ---
 

@@ -106,7 +106,7 @@ Im Ordner [Deploy](Deploy) liegen Werkzeuge (Windows, Python 3 nötig), die dein
 2. In `deploy.cmd` eintragen: `SHELLY_IP` (Controller-Shelly) und `SKRIPTNAME` (Standard `ctrl`). `MEINE_CONFIG` steht schon auf `myconfig.js` – nur ändern, wenn deine Datei anders heißt.
 3. `deploy.cmd` starten. Ablauf: CONFIG einsetzen (`swap_config.py`) → verkleinern (`minify_keep_config.py`) → hochladen und starten (`upload_shelly.py`).
 
-> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Die verkleinerte Fassung schreibt es nach `..\zerooutput_multi_kvs_mini.js` – also über die Datei aus dem Repository. Wer den Ordner per Git aktualisiert, sollte diese Änderung nicht committen oder `FERTIG` auf eine eigene Datei umstellen. `minify.cmd` erzeugt nur die verkleinerte Fassung ohne eigene Konfiguration.
+> **Wichtig:** `deploy.cmd` nimmt immer den CONFIG-Block aus **deiner** Datei. Die verkleinerte Fassung mit deiner Konfiguration schreibt es nach `Deploy\upload_mini.js`. Diese Datei steht in der `.gitignore` und kommt nicht ins Repository; die `zerooutput_multi_kvs_mini.js` aus dem Repository bleibt unverändert. `minify.cmd` erzeugt nur die verkleinerte Fassung ohne eigene Konfiguration.
 
 ---
 

@@ -13,8 +13,10 @@ REM Datei mit deinem CONFIG-Block
 set MEINE_CONFIG=myconfig.js
 REM Gepatchte Version
 set PATCH=patch.js
-REM Zieldatei, die hochgeladen werden kann
-set FERTIG=..\zerooutput_multi_kvs_mini.js
+REM Zieldatei, die hochgeladen werden kann - mit DEINER Konfiguration.
+REM Bewusst nicht ..\zerooutput_multi_kvs_mini.js (Datei aus dem Repository):
+REM upload_mini.js steht in der .gitignore und landet nie auf GitHub.
+set FERTIG=upload_mini.js
 REM ====================================================================
 
 cd /d "%~dp0"

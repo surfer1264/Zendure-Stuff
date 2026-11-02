@@ -22,3 +22,6 @@ myconfig.js
 
 # Schluessel fuer die SN-Maskierung des Log-Grabbers - nicht weitergeben
 .mask_salt
+
+# Von deploy.cmd erzeugtes Script MIT eigener Konfiguration - nie committen
+upload_mini.js

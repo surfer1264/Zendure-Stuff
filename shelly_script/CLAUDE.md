@@ -103,7 +103,7 @@ Werte, deren Bedeutung hier nicht steht, nicht interpretieren – nachfragen ode
 - Bearbeitet wird **immer `*_src.js`**.
 - `*_mini.js` wird erzeugt – nie von Hand ändern.
 - Pipeline je Script im Ordner `Deploy/`:
-  `deploy.cmd` → `swap_config.py` (CONFIG aus `myconfig.js` einsetzen) → `minify_keep_config.py` (Terser, CONFIG bleibt byte-gleich) → `upload_shelly.py`.
+  `deploy.cmd` → `swap_config.py` (CONFIG aus `myconfig.js` einsetzen) → `minify_keep_config.py` (Terser, CONFIG bleibt byte-gleich) → `Deploy\upload_mini.js` (lokal, in `.gitignore`) → `upload_shelly.py`. Die eingecheckte `*_mini.js` erzeugt nur `minify.cmd` aus der Quelle, ohne eigene Konfiguration.
 - `myconfig.js`, `patch.js` und echte IPs gehören nicht ins Repo.
 
 ## Versionierung und Changelog
