@@ -62,7 +62,7 @@ Tapping the **"▾ Overview"** line collapses the overview. When collapsed, a sh
 
 The page starts **locked** – it then only displays, with the note "View only" below the control section. Tapping the **padlock** in the header enables the controls, and the icon changes to an open padlock. After 60 seconds without input the page locks itself again, and also after every reload. This is meant for dashboards that stay open permanently on a tablet or second monitor.
 
-On touch devices the **Reserve (`minSoc`)** slider additionally has its own small padlock next to the value. It only ever releases this one slider and locks it again after 5 seconds without touch, after saving or when scrolling. The value only changes by dragging the knob – tapping or swiping on the bar is reverted.
+In the new design the **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” – an accidental tap changes nothing, so no extra padlock is needed there. In the classic dashboard the slider additionally has a small padlock next to the value on touch devices. It only ever releases this one slider and locks it again after 5 seconds without touch, after saving or when scrolling. There the value only changes by dragging the knob – tapping or swiping on the bar is reverted.
 
 ### "View" menu
 
@@ -84,7 +84,7 @@ From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`; the 
 
 - **Device cards:** state in words, output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
-- **Settings** (switches, reserve, charging power, manual charging) are only visible while the controls are unlocked; each card can be collapsed. **Technical details** are a separate block, shown only with the switch in the menu.
+- **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the switch in the menu.
 - **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs). On narrow screens the diagram scrolls sideways.
 - **Sunrise and sunset:** next to the clock (☀ 07:00–16:39). Once a day the proxy reads the location from the dashboard Shelly's configuration (`Sys.GetConfig`, not via the script); the times are calculated in the browser. Without a location on the Shelly the display is hidden – set it in the Shelly web interface under location/time zone. Hidden on narrow screens.
 - **Background by time of day:** top right in the energy flow – **Off · Picture · Motion** (default off, remembered per browser). The sun moves from left (east) to right (west), the sky changes smoothly from dawn through day and sunset to night with moon and stars; the little house's windows light up in the evening. Over the year, day length, sun height and landscape colours follow the season, and the moon shows its real phase. When PV is clearly below the best value of the last two weeks at the same time of day, the sun turns paler and the cloud veil thickens (the browser remembers the reference values; with a full battery and during the first days the sky stays clear). Depending on the month: snow on hills and roof (December to February), trees in blossom (April/May), a golden grain field (late summer) and autumn leaves; shifted by half a year in the southern hemisphere. With “Motion” two clouds drift, the stars twinkle and on midsummer nights the occasional shooting star appears. Recalculated once a minute from sunrise and sunset; without a location on the Shelly the switch is hidden. “Reset view” turns it off again; with “reduce motion” on the device everything stands still.
@@ -101,20 +101,22 @@ All settings go to the Controller and take effect on its next control cycle. Aft
 | **Discharge lock** | Once a battery has discharged down to the reserve (`minSoc`), it only supplies energy again from reserve (`minSoc`) + this value. Prevents constant switching on and off at the reserve (`minSoc`). After a restart of the Controller, the discharge lock only takes effect once the battery has discharged down to the reserve (`minSoc`) again – if the state of charge is in between at startup, it may discharge at first. Type the value into the field and confirm with ↵ or "Done"; invalid values are rejected with a message. If the window charge limit (`maxSoc`) − reserve (`minSoc`) of any battery is smaller than 14 points, the field is locked and 3 applies. Only takes effect with Controller 5.2.4 or newer – older versions ignore the value. | 3 to (smallest window charge limit (`maxSoc`) − reserve (`minSoc`) of all batteries) − 11 %, whole numbers |
 | **Fixed discharge** | Fixed discharge power instead of control. Type the value into the field and confirm with ↵ or "Done". While it is active, the setpoint tile notes that the setpoint is currently not being regulated. | `0` = off, otherwise from `dischargeStartupPower` (e.g. 35 W) |
 
-**On each device card under "Controls":**
+**On each device card in the "Control" tab:**
 
 | Control | Effect | Range |
 |---|---|---|
 | **Discharge allowed** | May this battery supply the house? If the watchdog has locked discharging because of undervoltage, the switch is off and has to be switched on again by hand ([discharge lock](readme_EN.md#discharge-lock-on-undervoltage)). | on/off |
 | **Charging from grid allowed** | May this battery absorb surplus from the grid? | on/off |
-| **Reserve (`minSoc`)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. The upper limit is shown below the value ("max … %"). An increase is not saved if the discharge lock no longer fits afterwards (reserve (`minSoc`) at most charge limit (`maxSoc`) − 11 − discharge lock) – a message appears and the slider jumps back. Lowering always works. | 10 % up to 5 percentage points below the effective charge limit, i.e. the lower of charge limit (`maxSoc`) and the charge limit set on the device (`socSet`) |
+| **Reserve (`minSoc`)** | Below this state of charge there is no discharging. Is additionally set in the battery itself. The upper limit is shown below the value ("max … %"). An increase is not saved if the discharge lock no longer fits afterwards (reserve (`minSoc`) at most charge limit (`maxSoc`) − 11 − discharge lock) – a message appears and the value jumps back. Lowering always works. With −/+ in 1 % steps, holding the button keeps it running; the new value turns orange with “Discard” and “Apply” and is only saved with “Apply”. Switching tabs or locking discards it. | 10 % up to 5 percentage points below the effective charge limit, i.e. the lower of charge limit (`maxSoc`) and the charge limit set on the device (`socSet`) |
 
-**On each device card under "Manual charging":**
+**On each device card in the "Charge" tab:**
 
 | Control | Effect | Range |
 |---|---|---|
-| **Grid charging power** | only selects the power, no effect yet | 0 to `maxInputPower`, in 50 W steps |
+| **Grid charging power** | only selects the power, no effect yet (not saved) | fixed steps from `maxInputPower`: Off, up to four round steps (50/100/200/250/500 W) and Max, e.g. at 800 W: Off · 200 · 400 · 600 · Max |
 | **Start / stop manual charging** | starts or stops charging with the selected power | – |
+
+**"Off-grid" tab:** Off · On · Eco for the off-grid socket – not functional yet, switching will come with a later script update.
 
 On start, the dashboard asks for confirmation once and then switches "Discharge allowed" and "Charging from grid allowed" off for this battery – the battery is thus taken out of control, and the note next to the button shows "Active at … W". On stop it restores the previous state. When the battery is full, the script ends charging by itself, even with the dashboard closed ([auto-stop](readme_EN.md#manual-charging-and-auto-stop)). If the process is interrupted halfway (Shelly not reachable), a warning appears – then check the switches and charging power on the card.
 

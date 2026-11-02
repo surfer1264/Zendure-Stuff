@@ -179,7 +179,6 @@
   .lock-btn:active{ transform:scale(.97); }
   #lockIcon{ display:inline-flex; }
   .lock-icon{ width:1.25rem; height:1.25rem; display:block; overflow:visible; }
-  .soc-lock .lock-icon{ width:1.125rem; height:1.125rem; }
 
   /* Menue "Ansicht" */
   .menu{ position:relative; }
@@ -491,15 +490,6 @@
   .ctrl-head .val{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.92rem; }
   .ctrl-row .key{ font-size:.68rem; color:var(--text-muted); }
   .ctrl-end{ display:inline-flex; align-items:center; gap:.5rem; }
-  .soc-lock{
-    display:none; align-items:center; justify-content:center;
-    width:2.5rem; height:2.5rem; border-radius:50%; padding:0;
-    background:var(--surface-2); border:1px solid var(--amber-deep);
-    color:var(--amber-text); cursor:pointer; -webkit-tap-highlight-color:transparent;
-  }
-  @media (pointer: coarse){ .soc-lock{ display:inline-flex; } }
-  .soc-lock.open{ border-color:var(--teal-text); color:var(--teal-text); }
-  .ctrl-row.soc-open{ outline:2px solid var(--teal-text); outline-offset:4px; border-radius:var(--radius-sm); }
 
   .switch-row{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; min-height:var(--tap); padding:.25rem 0; }
   .switch-text{ display:flex; flex-direction:column; }
@@ -607,19 +597,66 @@
   }
   #app.hide-hub-controls .hub-settings{ display:none; }
   .settings-head{
-    appearance:none; border:0; background:transparent; color:var(--text); cursor:pointer; width:100%;
-    display:flex; justify-content:space-between; align-items:center; gap:.5rem; min-height:var(--tap); padding:0;
-    font-family:'IBM Plex Sans', sans-serif; font-size:.92rem; font-weight:600;
+    display:flex; align-items:center; gap:.5rem; min-height:var(--tap);
+    color:var(--text); font-size:.92rem; font-weight:600;
   }
   .settings-head .ttl{ display:inline-flex; align-items:center; gap:.5rem; }
   .settings-head .ttl svg{ width:1rem; height:1rem; }
-  .settings-head .settings-hint{ font-size:.74rem; font-weight:500; color:var(--text-muted); }
-  .settings-head:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; border-radius:var(--radius-sm); }
-  .hub-settings.collapsed .settings-body{ display:none; }
-  .settings-body .ctrl-group:first-child{ margin-top:0; }
-  .settings-body .manual-group{ background:var(--surface); }
-  .settings-body .manual-group input[type="range"]::-webkit-slider-runnable-track{ background:var(--surface-2); }
-  .settings-body .manual-group input[type="range"]::-moz-range-track{ background:var(--surface-2); }
+  /* Reiter Regelung / Offgrid / Laden */
+  .set-tabs{ display:flex; gap:2px; padding:.1875rem; border-radius:999px; background:var(--surface); border:1px solid var(--border); margin-bottom:.625rem; }
+  .set-tab{ flex:1 1 auto; min-width:0; appearance:none; border:0; background:none; color:var(--text-muted); cursor:pointer;
+    min-height:2.5rem; padding:0 .25rem; border-radius:999px; font-family:'IBM Plex Sans', sans-serif; font-size:.85rem; font-weight:500;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .set-tab[hidden]{ display:none; }
+  .set-tab[aria-selected="true"]{ background:var(--surface-2); color:var(--text); font-weight:600;
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--text-muted) 45%, transparent); }
+  .set-tab:hover{ color:var(--text); }
+  .set-tab:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
+  /* Alle Reiter liegen in derselben Rasterzelle - der Block ist so hoch wie
+     der hoechste Reiter (Offgrid, auch wenn er bei diesem Geraet fehlt) und
+     springt beim Umschalten nicht. Ausgeblendete Reiter sind unsichtbar und
+     fuer Tastatur und Screenreader nicht erreichbar (visibility:hidden). */
+  .settings-body{ display:grid; }
+  .set-panel{ grid-area:1 / 1; min-width:0; }
+  .set-panel[hidden]{ display:block; visibility:hidden; }
+  /* Reserve: -/+ mit Entwurf */
+  .soc-row .ctrl-head{ flex-wrap:wrap; row-gap:.5rem; }
+  .soc-lbl{ display:flex; flex-direction:column; gap:.0625rem; }
+  .soc-row .ctrl-end{ margin-left:auto; }
+  .step{ display:inline-flex; align-items:center; border:1px solid var(--border); border-radius:999px; background:var(--surface); }
+  .step button{ appearance:none; width:2.75rem; height:2.5rem; border:0; background:none; color:var(--text); cursor:pointer;
+    border-radius:999px; font-family:'IBM Plex Sans', sans-serif; font-size:1.25rem; line-height:1; }
+  .step button:disabled{ opacity:.35; cursor:not-allowed; }
+  .step button{ touch-action:manipulation; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .step button:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
+  .step .val{ min-width:3.5rem; text-align:center; }
+  .step .val.dirty{ color:var(--amber-text); }
+  .soc-draft{ margin-top:.375rem; }
+  .soc-draft[hidden]{ display:none; }
+  .soc-draft p{ margin:0 0 .375rem; font-size:.8rem; line-height:1.4; color:var(--amber-text); text-align:right; }
+  .draft-btns{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.5rem; }
+  .draft-btns .btn{ padding:.5rem .375rem; }
+  .btn.btn-ok{ background:var(--teal-deep); color:#06201D; border-color:transparent; }
+  /* Offgrid (noch ohne Funktion) */
+  .og-list{ display:flex; flex-direction:column; gap:.5rem; }
+  .og-opt{ appearance:none; text-align:left; width:100%; display:flex; align-items:center; gap:.75rem; padding:.6875rem .75rem; min-height:3.75rem;
+    border-radius:var(--radius-sm); background:var(--surface); border:1px solid var(--border); color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif; cursor:not-allowed; }
+  .og-opt[aria-pressed="true"]{ border:2px solid var(--teal-deep); padding:.625rem .6875rem; }
+  .og-opt .ic{ width:2.125rem; height:2.125rem; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:var(--surface-2); color:var(--text-muted); flex-shrink:0; }
+  .og-opt .ic svg{ width:1.125rem; height:1.125rem; }
+  .og-opt[aria-pressed="true"] .ic{ background:var(--teal-deep); color:#06201D; }
+  .og-opt b{ display:block; font-size:.92rem; font-weight:600; }
+  .og-opt small{ display:block; font-size:.8rem; color:var(--text-muted); margin-top:.125rem; line-height:1.35; }
+  .og-soon{ margin:.625rem 0 0; font-size:.8rem; line-height:1.4; color:var(--text-muted); }
+  /* Ladestufen */
+  .in-chips{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.375rem; margin-top:.5rem; }
+  .in-chip{ appearance:none; min-height:2.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface);
+    color:var(--text); cursor:pointer; font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.85rem; font-weight:500; }
+  .in-chip[aria-pressed="true"]{ background:var(--teal-deep); color:#06201D; border-color:transparent; font-weight:600; }
+  .in-chip:disabled{ opacity:.5; cursor:not-allowed; }
+  .in-chip:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
 
   .tech-block{ display:none; border:1px dashed var(--border); border-radius:var(--radius-md); padding:.75rem .875rem; }
   #app.expert .tech-block{ display:block; }
@@ -1046,7 +1083,6 @@
       sub: 'Über lokalen Proxy',
       connecting: 'Verbinde…',
       lockAria: 'Bedienung sperren/entsperren',
-      socLockAria: 'Reserve-Regler entsperren/sperren',
       fontAria: 'Ansichtsgröße umschalten',
       themeAria: 'Tag/Nacht umschalten',
       langAria: 'Sprache wechseln',
@@ -1164,7 +1200,6 @@
       sub: 'Via local proxy',
       connecting: 'Connecting…',
       lockAria: 'Lock/unlock controls',
-      socLockAria: 'Unlock/lock reserve slider',
       fontAria: 'Change view size',
       themeAria: 'Toggle day/night',
       langAria: 'Change language',
@@ -1282,7 +1317,6 @@
       sub: 'Via le proxy local',
       connecting: 'Connexion…',
       lockAria: 'Verrouiller/déverrouiller les commandes',
-      socLockAria: 'Déverrouiller/verrouiller le curseur de réserve',
       fontAria: 'Changer la taille d’affichage',
       themeAria: 'Basculer jour/nuit',
       langAria: 'Changer de langue',
@@ -1447,7 +1481,11 @@
     stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
-    noHints: 'Keine Hinweise', settingsTitle: 'Einstellungen', settingsCollapse: 'zuklappen', settingsExpand: 'aufklappen',
+    noHints: 'Keine Hinweise', settingsTitle: 'Einstellungen', tabCtrl: 'Regelung', tabOffgrid: 'Offgrid', tabCharge: 'Laden',
+    socDec: 'Reserve verringern', socInc: 'Reserve erhöhen', socDraft: 'nicht gespeichert · vorher {o} %', discard: 'Verwerfen', apply: 'Übernehmen',
+    chipOff: 'Aus', chipMax: 'Max',
+    ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Schaltet sich bei Leerlauf selbst ab',
+    ogSoon: 'Noch ohne Funktion – die Umschaltung folgt mit einem späteren Script-Update.',
     flagDischargeOff: 'Entladen gesperrt', flagChargeOff: 'Laden aus dem Netz gesperrt', flagManualOn: 'manuelles Laden aktiv · Regelung pausiert',
     techMinSoc: 'minSoc KVS / Gerät', techLock: 'Entladen / Netzladen', techKvs: 'KVS-Schlüssel', techIp: 'IP',
     techCellLock: 'Sperrschwelle Zelle', yes: 'ja', no: 'nein'
@@ -1467,7 +1505,11 @@
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
-    noHints: 'No notices', settingsTitle: 'Settings', settingsCollapse: 'collapse', settingsExpand: 'expand',
+    noHints: 'No notices', settingsTitle: 'Settings', tabCtrl: 'Control', tabOffgrid: 'Off-grid', tabCharge: 'Charge',
+    socDec: 'Decrease reserve', socInc: 'Increase reserve', socDraft: 'not saved · was {o} %', discard: 'Discard', apply: 'Apply',
+    chipOff: 'Off', chipMax: 'Max',
+    ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Switches itself off when idle',
+    ogSoon: 'Not functional yet – switching will come with a later script update.',
     flagDischargeOff: 'discharge disabled', flagChargeOff: 'grid charging disabled', flagManualOn: 'manual charging active · control paused',
     techMinSoc: 'minSoc KVS / device', techLock: 'Discharge / grid charging', techKvs: 'KVS keys', techIp: 'IP',
     techCellLock: 'Cell lock threshold', yes: 'yes', no: 'no'
@@ -1487,7 +1529,11 @@
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
-    noHints: 'Aucune remarque', settingsTitle: 'Réglages', settingsCollapse: 'replier', settingsExpand: 'déplier',
+    noHints: 'Aucune remarque', settingsTitle: 'Réglages', tabCtrl: 'Régulation', tabOffgrid: 'Hors réseau', tabCharge: 'Charge',
+    socDec: 'Diminuer la réserve', socInc: 'Augmenter la réserve', socDraft: 'non enregistré · avant {o}\u00a0%', discard: 'Annuler', apply: 'Appliquer',
+    chipOff: 'Arrêt', chipMax: 'Max',
+    ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'S’éteint d’elle-même en l’absence de charge',
+    ogSoon: 'Pas encore fonctionnel – la commutation viendra avec une prochaine mise à jour du script.',
     flagDischargeOff: 'décharge désactivée', flagChargeOff: 'charge réseau désactivée', flagManualOn: 'charge manuelle active · régulation en pause',
     techMinSoc: 'minSoc KVS / appareil', techLock: 'Décharge / charge réseau', techKvs: 'Clés KVS', techIp: 'IP',
     techCellLock: 'Seuil de blocage cellule', yes: 'oui', no: 'non'
@@ -2117,102 +2163,33 @@
     return document.querySelectorAll('.setpoint-card input, .hub input, .hub button');
   }
 
-  /* ---------------- Reglersperre Reserve (Stufe 2, nur Touch) ----------------
-     Unter dem globalen Schloss: Bei entsperrter Seite ist der Reserve-Regler
-     (zdmc_devN_minSoc) am Touchgeraet trotzdem gesperrt. Das Schloss neben
-     dem Wert gibt genau EINEN Regler frei. Wieder gesperrt wird er
-       - SOC_OPEN_MS nach der letzten Beruehrung,
-       - direkt nach dem Speichern,
-       - wenn ein anderer Reserve-Regler freigegeben wird,
-       - beim Scrollen,
-       - mit dem globalen Schloss,
-       - wenn die Seite in den Hintergrund geht.
-     Zusaetzlich verstellt im freigegebenen Zustand nur das Ziehen am Punkt
-     den Wert - Tippen oder Wischen auf der Leiste wird zurueckgenommen.
-     Mit Maus (feiner Zeiger) gilt nichts davon, dort bleibt alles wie bisher. */
-  const SOC_OPEN_MS = 5000;
-  // Reglerpunkt und Fangbereich sind seit 3.5.5 in rem (1,375rem = 22px bei
-  // Stufe 1) und wachsen mit der Ansichtsgroesse - deshalb in px umrechnen.
-  const SOC_THUMB_REM = 1.375;  // Breite des Reglerpunkts (siehe CSS)
-  const SOC_TOL_REM = 1.375;    // Fangbereich links/rechts der Punktmitte
-  function remPx(){
-    const v = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    return v > 0 ? v : 16;
-  }
-  const coarseQuery = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
-  let socOpenId = null;      // id des freigegebenen Geraets (String) oder null
-  let socTimer = null;
-  let socDragging = false;
-
-  function socGateActive(){ return !!(coarseQuery && coarseQuery.matches); }
-
   // true = Fenster fuer die Entlade-Hysterese zu klein, Regler gesperrt
   // (siehe showResetMargin). Bis zum ersten config_api unbekannt -> gesperrt.
   let resetMarginBlocked = true;
 
-  // true = dieser Reserve-Regler ist durch Stufe 2 gesperrt
-  function isSocGated(el){
-    return !!el && el.classList.contains('soc-range') && socGateActive() &&
-      socOpenId !== el.getAttribute('data-dev');
-  }
-
   // Zusaetzliche Sperren ueber dem globalen Schloss
   function isGated(el){
-    return isSocGated(el) || (!!el && el.id === 'resetMarginInput' && resetMarginBlocked);
+    return (!!el && el.id === 'resetMarginInput' && resetMarginBlocked) || isCardGated(el);
   }
 
-  function armSocTimer(){
-    clearTimeout(socTimer);
-    socTimer = setTimeout(function(){
-      if (socDragging) { armSocTimer(); return; }
-      closeSocGate();
-    }, SOC_OPEN_MS);
-  }
-
-  function openSocGate(id){
-    socOpenId = String(id);
-    socDragging = false;
-    touchLockTimer();
-    armSocTimer();
-    applyLockState();
-  }
-
-  function closeSocGate(){
-    clearTimeout(socTimer);
-    socDragging = false;
-    if (socOpenId === null) return;
-    socOpenId = null;
-    applyLockState();
-  }
-
-  // Liegt der Beruehrungspunkt ausserhalb des Reglerpunkts?
-  function offThumb(el, clientX){
-    const r = el.getBoundingClientRect();
-    const min = Number(el.min), max = Number(el.max), v = Number(el.value);
-    const frac = max > min ? (v - min) / (max - min) : 0;
-    const rp = remPx(), thumb = SOC_THUMB_REM * rp;
-    const cx = r.left + thumb / 2 + frac * (r.width - thumb);
-    return Math.abs(clientX - cx) > SOC_TOL_REM * rp;
-  }
-
-  // Schloss-Knoepfe und Rahmen dem Zustand anpassen. Ueber das DOM statt
-  // ueber hubs, weil applyLockState() schon vor dem Aufbau der Karten laeuft.
-  function applySocGateVisuals(){
-    const btns = document.querySelectorAll('.soc-lock');
-    for (let i = 0; i < btns.length; i++) {
-      const b = btns[i];
-      const open = socGateActive() && socOpenId === b.getAttribute('data-dev');
-      b.classList.toggle('open', open);
-      setLockIcon(b, open);
-      b.setAttribute('aria-pressed', open ? 'true' : 'false');
-      const row = b.closest('.ctrl-row');
-      if (row) row.classList.toggle('soc-open', open);
+  // Sperren der Einstellungen in der Geraetekarte:
+  //  - Offgrid-Wahl: noch ohne Funktion (folgt mit einem Script-Update)
+  //  - Ladestufen: gesperrt, solange manuelles Laden laeuft
+  //  - Reserve -/+: an der jeweiligen Grenze
+  function isCardGated(el){
+    if (!el || !el.classList) return false;
+    if (el.classList.contains('og-opt')) return true;
+    const id = el.getAttribute('data-dev');
+    if (id === null) return false;
+    const d = hubs.find(function(h){ return String(h.id) === id; });
+    if (!d) return false;
+    if (el.classList.contains('in-chip')) return isManualActive(d);
+    if (el.classList.contains('soc-step')) {
+      const cur = socCur(d);
+      return Number(el.getAttribute('data-dir')) < 0 ? cur <= 10 : cur >= minSocCeiling(d);
     }
+    return false;
   }
-
-  window.addEventListener('scroll', function(){
-    if (socOpenId !== null && !socDragging) closeSocGate();
-  }, { passive: true });
 
   // Schloss-Symbol setzen: open=true -> aufgeklappter Buegel
   function setLockIcon(el, open){
@@ -2234,7 +2211,6 @@
         el.disabled = isGated(el);
       }
     }
-    applySocGateVisuals();
     // Nur die Geraete-Schalter/-Slider ein-/ausblenden (siehe CSS), nicht
     // Sollwert oder Fix-Entladung - die bleiben immer sichtbar.
     appEl.classList.toggle('hide-hub-controls', uiLocked);
@@ -2300,18 +2276,16 @@
 
   function setLocked(next){
     uiLocked = next;
-    // Neues Design: beim Freigeben sind die Einstellungen aller Karten offen
-    if (!uiLocked) {
-      document.querySelectorAll('.hub-settings.collapsed').forEach(function(box){
-        box.classList.remove('collapsed');
-        const id = box.id.replace('settings-', '');
-        const head = document.getElementById('settingsHead-' + id);
-        const hint = document.getElementById('settingsHint-' + id);
-        if (head) head.setAttribute('aria-expanded', 'true');
-        if (hint) hint.textContent = t('settingsCollapse');
-      });
-    }
-    if (uiLocked) { clearTimeout(socTimer); socDragging = false; socOpenId = null; }
+    // Beim Sperren und beim Entsperren alle nicht gespeicherten Aenderungen
+    // verwerfen (Reserve-Entwurf, gewaehlte Ladestufe); nach dem Entsperren
+    // steht jede Karte auf dem Reiter "Regelung".
+    hubs.forEach(function(d){
+      socDraft[d.id] = null;
+      manualSel[d.id] = 0;
+      if (!uiLocked) selectSetTab(d.id, 'ctrl', false);
+      showSoc(d);
+      showChips(d);
+    });
     clearTimeout(relockTimer);
     if (!uiLocked) { relockTimer = setTimeout(function(){ setLocked(true); }, RELOCK_MS); }
     applyLockState();
@@ -2635,6 +2609,8 @@
 
   /* ---------------- Hub-Karten: einmal aus config_api aufbauen ---------------- */
   let hubs = [];
+  // Nur im Browser, nie gespeichert: Reserve-Entwurf und gewaehlte Ladestufe je Geraet
+  const socDraft = {}, manualSel = {};
   const hubsGrid = document.getElementById('hubsGrid');
 
   // Obergrenze fuer die Reserve. Sie muss mindestens 5 Punkte UNTER maxSoc
@@ -2668,10 +2644,99 @@
   // Regler-Obergrenze und Beschriftung "max X %" nachfuehren - nach jedem
   // Status-Abruf, weil sich socSet jederzeit aendern kann.
   function applyMinSocCeiling(d){
-    const ms = document.getElementById('minSoc-' + d.id);
-    if (ms && !isBusy(ms)) ms.max = minSocCeiling(d);
+    const dr = socDraft[d.id];
+    if (dr !== null && dr !== undefined && dr > minSocCeiling(d)) { socDraft[d.id] = null; showSoc(d); }
     const mx = document.getElementById('minSocMax-' + d.id);
     if (mx) mx.innerHTML = '<span class="raw">zdmc_dev' + d.id + '_minSoc \u00b7 </span>max ' + minSocCeiling(d) + ' %';
+  }
+
+
+  /* ---------------- Einstellungen in der Geraetekarte (Reiter) ----------------
+     Regelung (Schalter + Reserve), Offgrid (noch ohne Funktion), Laden
+     (manuelles Laden). Nichts davon wird im Browser gespeichert. */
+  function setTab(id, key, i18n, sel){
+    return '<button type="button" class="set-tab" role="tab" data-tab="' + key + '" id="tab-' + key + '-' + id + '" aria-controls="panel-' + key + '-' + id +
+      '" aria-selected="' + (sel ? 'true' : 'false') + '" tabindex="' + (sel ? '0' : '-1') + '"' + (key === 'og' ? ' hidden' : '') +
+      ' data-i18n="' + i18n + '">' + t(i18n) + '</button>';
+  }
+  const OG_ICON = {
+    off: '<path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/>',
+    on: '<path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v4"/>',
+    eco: '<path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19l7-7"/>'
+  };
+  function ogOpt(m){
+    const k = m.charAt(0).toUpperCase() + m.slice(1);
+    return '<button type="button" class="og-opt" aria-pressed="false" disabled>' +
+      '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' + OG_ICON[m] + '</svg></span>' +
+      '<span class="txt"><b data-i18n="og' + k + '">' + t('og' + k) + '</b><small data-i18n="og' + k + 'Desc">' + t('og' + k + 'Desc') + '</small></span></button>';
+  }
+  // Ladestufen aus der maximalen Ladeleistung: glatte Schrittweite (50/100/
+  // 200/250/500 W) mit hoechstens 5 Stufen, die letzte ist immer "Max".
+  function inSteps(max){
+    max = Number(max) || 0;
+    if (max <= 0) return [0];
+    const nice = [50, 100, 200, 250, 500, 1000];
+    let st = nice[nice.length - 1];
+    for (let i = 0; i < nice.length; i++) { if (max / nice[i] <= 5) { st = nice[i]; break; } }
+    const out = [0];
+    for (let w = st; w < max; w += st) out.push(w);
+    out.push(max);
+    return out;
+  }
+  function inChips(d){
+    const max = Number(d.maxInputPower) || 0;
+    return inSteps(max).map(function(w){
+      const lbl = w === 0 ? t('chipOff') : (w === max ? t('chipMax') : w + ' W');
+      return '<button type="button" class="in-chip" data-dev="' + d.id + '" data-w="' + w + '" aria-pressed="false"' +
+        (w === 0 ? ' data-i18n="chipOff"' : (w === max ? ' data-i18n="chipMax" title="' + w + ' W"' : '')) + '>' + lbl + '</button>';
+    }).join('');
+  }
+  function selectSetTab(id, key, focus){
+    const d = hubs.find(function(h){ return String(h.id) === String(id); });
+    // Reiterwechsel verwirft einen nicht uebernommenen Reserve-Entwurf
+    if (d && socDraft[d.id] !== null && socDraft[d.id] !== undefined) { socDraft[d.id] = null; showSoc(d); }
+    document.querySelectorAll('#settings-' + id + ' .set-tab').forEach(function(tab){
+      const on = tab.getAttribute('data-tab') === key;
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+      tab.tabIndex = on ? 0 : -1;
+      if (on && focus) tab.focus();
+      const panel = document.getElementById('panel-' + tab.getAttribute('data-tab') + '-' + id);
+      if (panel) panel.hidden = !on;
+    });
+    applyLockState();
+  }
+  // Offgrid-Reiter nur fuer Geraete mit Offgrid-Ausgang (gridOffPower geliefert)
+  function applyOgTab(d){
+    const tab = document.getElementById('tab-og-' + d.id);
+    if (!tab) return;
+    const has = d.offGrid !== null && d.offGrid !== undefined;
+    if (tab.hidden === !has) return;
+    tab.hidden = !has;
+    if (!has && tab.getAttribute('aria-selected') === 'true') selectSetTab(d.id, 'ctrl', false);
+  }
+  function socCur(d){
+    const dr = socDraft[d.id];
+    return (dr !== null && dr !== undefined) ? dr : Number(d.minSoc);
+  }
+  function showSoc(d){
+    const val = document.getElementById('minSocValue-' + d.id);
+    if (!val) return;
+    const dr = socDraft[d.id], dirty = dr !== null && dr !== undefined;
+    val.textContent = socCur(d) + ' %';
+    val.classList.toggle('dirty', dirty);
+    const box = document.getElementById('minSocDraft-' + d.id);
+    if (box) box.hidden = !dirty;
+    const txt = document.getElementById('minSocDraftText-' + d.id);
+    if (txt && dirty) txt.textContent = t('socDraft', { o: d.minSoc });
+  }
+  function showChips(d){
+    const active = isManualActive(d);
+    const sel = active ? Number(d.inputLimit) : Number(manualSel[d.id] || 0);
+    document.querySelectorAll('#panel-man-' + d.id + ' .in-chip').forEach(function(ch){
+      ch.setAttribute('aria-pressed', Number(ch.getAttribute('data-w')) === sel ? 'true' : 'false');
+    });
+    const v = document.getElementById('inputLimitValue-' + d.id);
+    if (v) v.textContent = sel ? sel + ' W' : t('off');
   }
 
   // Reiner Text-Ersatz fuer die ausgeblendeten Schalter im gesperrten
@@ -2720,13 +2785,12 @@
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
         '<div class="lock-status" id="lockStatus-' + d.id + '">' + lockStatusText(d.dischargeAllowed, d.reverse) + '</div>' +
         '<div class="hub-settings" id="settings-' + d.id + '">' +
-        '<button type="button" class="settings-head" id="settingsHead-' + d.id + '" aria-expanded="true" aria-controls="settingsBody-' + d.id + '">' +
-          '<span class="ttl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span data-i18n="settingsTitle">' + t('settingsTitle') + '</span></span>' +
-          '<span class="settings-hint" id="settingsHint-' + d.id + '">' + t('settingsCollapse') + '</span>' +
-        '</button>' +
-        '<div class="settings-body" id="settingsBody-' + d.id + '">' +
-        '<div class="ctrl-group">' +
-          '<div class="group-lbl" data-i18n="groupControl">' + t('groupControl') + '</div>' +
+        '<div class="settings-head"><span class="ttl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span data-i18n="settingsTitle">' + t('settingsTitle') + '</span></span></div>' +
+        '<div class="set-tabs" role="tablist" data-i18n-aria="settingsTitle" aria-label="' + t('settingsTitle') + '">' +
+          setTab(d.id, 'ctrl', 'tabCtrl', true) + setTab(d.id, 'og', 'tabOffgrid', false) + setTab(d.id, 'man', 'tabCharge', false) +
+        '</div>' +
+        '<div class="settings-body">' +
+        '<div class="set-panel" role="tabpanel" id="panel-ctrl-' + d.id + '" aria-labelledby="tab-ctrl-' + d.id + '">' +
           '<div class="switch-row">' +
             '<div class="switch-text"><span class="lbl" id="dischargeLbl-' + d.id + '" data-i18n="dischargeAllowed">' + t('dischargeAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_dischargeAllowed</span></div>' +
             '<label class="switch amber"><input type="checkbox" role="switch" id="discharge-' + d.id + '" aria-labelledby="dischargeLbl-' + d.id + '" ' + (d.dischargeAllowed ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
@@ -2735,18 +2799,36 @@
             '<div class="switch-text"><span class="lbl" id="reverseLbl-' + d.id + '" data-i18n="reverseAllowed">' + t('reverseAllowed') + '</span><span class="key mono">zdmc_dev' + d.id + '_reverse</span></div>' +
             '<label class="switch teal"><input type="checkbox" role="switch" id="reverse-' + d.id + '" aria-labelledby="reverseLbl-' + d.id + '" ' + (d.reverse ? 'checked' : '') + '><span class="track"></span><span class="thumb"></span></label>' +
           '</div>' +
-          '<div class="ctrl-row">' +
-            '<div class="ctrl-head"><span class="lbl" id="reserveLbl-' + d.id + '" data-i18n="reserve">' + t('reserve') + '</span><span class="ctrl-end"><span class="val" id="minSocValue-' + d.id + '">' + d.minSoc + ' %</span><button type="button" class="soc-lock" id="minSocLock-' + d.id + '" data-dev="' + d.id + '" data-i18n-aria="socLockAria" data-i18n-title="socLockAria" aria-label="' + t('socLockAria') + '" title="' + t('socLockAria') + '" aria-pressed="false"><svg class="lock-icon" aria-hidden="true"><use href="#lk-closed"/></svg></button></span></div>' +
-            '<span class="key keep mono" id="minSocMax-' + d.id + '"><span class="raw">zdmc_dev' + d.id + '_minSoc &middot; </span>max ' + minSocCeiling(d) + ' %</span>' +
-            '<input type="range" class="soc-range" data-dev="' + d.id + '" id="minSoc-' + d.id + '" min="10" max="' + minSocCeiling(d) + '" step="1" value="' + d.minSoc + '" aria-labelledby="reserveLbl-' + d.id + '">' +
+          '<div class="ctrl-row soc-row">' +
+            '<div class="ctrl-head">' +
+              '<span class="soc-lbl"><span class="lbl" id="reserveLbl-' + d.id + '" data-i18n="reserve">' + t('reserve') + '</span>' +
+              '<span class="key keep mono" id="minSocMax-' + d.id + '"><span class="raw">zdmc_dev' + d.id + '_minSoc &middot; </span>max ' + minSocCeiling(d) + ' %</span></span>' +
+              '<span class="ctrl-end">' +
+                '<span class="step" role="group" aria-labelledby="reserveLbl-' + d.id + '">' +
+                  '<button type="button" class="soc-step" data-dev="' + d.id + '" data-dir="-1" id="minSocDown-' + d.id + '" data-i18n-aria="socDec" aria-label="' + t('socDec') + '">\u2212</button>' +
+                  '<output class="val" id="minSocValue-' + d.id + '" aria-live="polite">' + d.minSoc + ' %</output>' +
+                  '<button type="button" class="soc-step" data-dev="' + d.id + '" data-dir="1" id="minSocUp-' + d.id + '" data-i18n-aria="socInc" aria-label="' + t('socInc') + '">+</button>' +
+                '</span>' +
+              '</span>' +
+            '</div>' +
+            '<div class="soc-draft" id="minSocDraft-' + d.id + '" hidden>' +
+              '<p id="minSocDraftText-' + d.id + '"></p>' +
+              '<div class="draft-btns"><button type="button" class="btn" id="minSocDiscard-' + d.id + '" data-i18n="discard">' + t('discard') + '</button>' +
+              '<button type="button" class="btn btn-ok" id="minSocSave-' + d.id + '" data-i18n="apply">' + t('apply') + '</button></div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
-        '<div class="ctrl-group manual-group">' +
-          '<div class="group-lbl" data-i18n="groupManual">' + t('groupManual') + '</div>' +
+        '<div class="set-panel" role="tabpanel" id="panel-og-' + d.id + '" aria-labelledby="tab-og-' + d.id + '" hidden>' +
+          '<div class="og-list" role="group" aria-labelledby="tab-og-' + d.id + '">' +
+            ogOpt('off') + ogOpt('on') + ogOpt('eco') +
+          '</div>' +
+          '<p class="og-soon" data-i18n="ogSoon">' + t('ogSoon') + '</p>' +
+        '</div>' +
+        '<div class="set-panel" role="tabpanel" id="panel-man-' + d.id + '" aria-labelledby="tab-man-' + d.id + '" hidden>' +
           '<div class="ctrl-row">' +
-            '<div class="ctrl-head"><span class="lbl help-mark" id="inputLimitLbl-' + d.id + '" data-i18n="inputLimitLbl" data-help="helpInputLimit" tabindex="0">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + (d.inputLimit ? d.inputLimit + ' W' : t('off')) + '</span></div>' +
+            '<div class="ctrl-head"><span class="lbl help-mark" id="inputLimitLbl-' + d.id + '" data-i18n="inputLimitLbl" data-help="helpInputLimit" tabindex="0">' + t('inputLimitLbl') + '</span><span class="val" id="inputLimitValue-' + d.id + '">' + t('off') + '</span></div>' +
             '<span class="key mono">zdmc_dev' + d.id + '_inputLimit</span>' +
-            '<input type="range" id="inputLimit-' + d.id + '" min="0" max="' + d.maxInputPower + '" step="50" value="' + d.inputLimit + '" aria-labelledby="inputLimitLbl-' + d.id + '">' +
+            '<div class="in-chips" role="group" aria-labelledby="inputLimitLbl-' + d.id + '">' + inChips(d) + '</div>' +
           '</div>' +
           '<div class="manual-row">' +
             '<span class="hint help-mark" id="manualHint-' + d.id + '" data-help="helpManual" tabindex="0"></span>' +
@@ -2758,14 +2840,17 @@
         '<div class="tech-block"><div class="tech-title" data-i18n="setExpert">' + t('setExpert') + '</div><div class="kv" id="tech-' + d.id + '"></div></div>';
       hubsGrid.appendChild(el);
 
-      // Einstellungen je Karte zu-/aufklappen (beim Freigeben wieder alle offen)
-      document.getElementById('settingsHead-' + d.id).addEventListener('click', function(){
-        touchLockTimer();
-        const box = document.getElementById('settings-' + d.id);
-        const zu = !box.classList.contains('collapsed');
-        box.classList.toggle('collapsed', zu);
-        this.setAttribute('aria-expanded', zu ? 'false' : 'true');
-        document.getElementById('settingsHint-' + d.id).textContent = t(zu ? 'settingsExpand' : 'settingsCollapse');
+      // Reiter Regelung / Offgrid / Laden. Bewusst nicht gespeichert:
+      // nach dem Laden der Seite steht jede Karte auf "Regelung".
+      document.querySelectorAll('#settings-' + d.id + ' .set-tab').forEach(function(tab){
+        tab.addEventListener('click', function(){ touchLockTimer(); selectSetTab(d.id, tab.getAttribute('data-tab'), false); });
+        tab.addEventListener('keydown', function(e){
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+          e.preventDefault();
+          const tabs = Array.prototype.filter.call(document.querySelectorAll('#settings-' + d.id + ' .set-tab'), function(x){ return !x.hidden; });
+          const i = tabs.indexOf(tab), n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+          selectSetTab(d.id, n.getAttribute('data-tab'), true);
+        });
       });
 
       const fullLineEl = document.getElementById('fullLine-' + d.id);
@@ -2793,78 +2878,86 @@
         });
       });
 
-      const minSocEl = document.getElementById('minSoc-' + d.id);
-      const minSocValEl = document.getElementById('minSocValue-' + d.id);
-      // Stufe 2: Schloss neben dem Wert gibt nur diesen Regler frei.
-      document.getElementById('minSocLock-' + d.id).addEventListener('click', function(){
-        if (uiBlocked()) return;
-        if (socOpenId === String(d.id)) closeSocGate(); else openSocGate(d.id);
+      // Reserve: -/+ aendert nur den Entwurf (orange), geschrieben wird erst
+      // mit "Uebernehmen" - ein einziger KVS-Aufruf statt einem pro Klick.
+      // 1-%-Schritte. Kurz tippen = ein Schritt (erst beim Loslassen, damit
+      // Scrollen ueber die Taste nichts aendert), gedrueckt halten = nach
+      // 400 ms laufend weiter. Tastatur (Enter/Leertaste): ein Schritt.
+      ['minSocDown-', 'minSocUp-'].forEach(function(pre){
+        const btn = document.getElementById(pre + d.id);
+        const dir = Number(btn.getAttribute('data-dir'));
+        let holdT = null, repT = null, repeated = false, armed = false;
+        const stepOnce = function(){
+          if (uiBlocked() || isGated(btn)) return false;
+          touchLockTimer();
+          const cur = socCur(d);
+          const nv = Math.max(10, Math.min(minSocCeiling(d), cur + dir));
+          if (nv === cur) return false;
+          socDraft[d.id] = (nv === Number(d.minSoc)) ? null : nv;
+          showSoc(d);
+          applyLockState();
+          return true;
+        };
+        const stop = function(){ clearTimeout(holdT); clearInterval(repT); holdT = repT = null; armed = false; };
+        btn.addEventListener('pointerdown', function(e){
+          if (e.button > 0 || btn.disabled) return;
+          stop();
+          armed = true; repeated = false;
+          holdT = setTimeout(function(){
+            repeated = true;
+            if (!stepOnce()) { stop(); return; }
+            repT = setInterval(function(){ if (!stepOnce()) stop(); }, 80);
+          }, 400);
+        });
+        btn.addEventListener('pointerup', function(){
+          const single = armed && !repeated;
+          stop();
+          if (single) stepOnce();
+        });
+        btn.addEventListener('pointerleave', stop);
+        btn.addEventListener('pointercancel', stop);
+        btn.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+        btn.addEventListener('click', function(e){ if (e.detail === 0) stepOnce(); });
       });
-
-      // Nur Ziehen am Punkt: Beginnt eine Touch-Beruehrung neben dem Punkt
-      // (Tippen/Wischen auf der Leiste), wird jede Wertaenderung dieser
-      // Beruehrung zurueckgenommen und nichts geschrieben. Maus: unveraendert.
-      let socStartVal = null;   // Wert beim Aufsetzen des Fingers
-      let socReject = false;    // diese Beruehrung darf nichts aendern
-      function socRestore(){
-        minSocEl.value = socStartVal;
-        minSocValEl.textContent = socStartVal + ' %';
-      }
-      minSocEl.addEventListener('pointerdown', function(e){
-        socReject = false;
-        if (e.pointerType === 'mouse' || !socGateActive()) return;
-        socStartVal = minSocEl.value;
-        socReject = offThumb(minSocEl, e.clientX);
-        socDragging = true;
-        armSocTimer();
+      document.getElementById('minSocDiscard-' + d.id).addEventListener('click', function(){
+        touchLockTimer();
+        socDraft[d.id] = null;
+        showSoc(d);
+        applyLockState();
       });
-      const socRelease = function(e){
-        if (e.pointerType === 'mouse' || !socGateActive()) return;
-        socDragging = false;
-        // Abgebrochene Beruehrung (z. B. Seite scrollt los): nichts uebernehmen.
-        if (e.type === 'pointercancel' && socStartVal !== null) { socReject = true; socRestore(); }
-        armSocTimer();
-      };
-      minSocEl.addEventListener('pointerup', socRelease);
-      minSocEl.addEventListener('pointercancel', socRelease);
-      minSocEl.addEventListener('keydown', function(){ socReject = false; });
-
-      minSocEl.addEventListener('input', function(e){
-        if (socReject) { socRestore(); return; }
-        minSocValEl.textContent = e.target.value + ' %';
-      });
-      minSocEl.addEventListener('change', function(e){
-        if (socReject) { socReject = false; socRestore(); return; }
-        const nv = Number(e.target.value);
+      document.getElementById('minSocSave-' + d.id).addEventListener('click', function(e){
+        const nv = socDraft[d.id];
+        if (nv === null || nv === undefined) return;
         const nvMax = socTop(d) - 11 - liveResetMargin;
         if (nv > Number(d.minSoc) && nv > nvMax) {
           showToast(t('minSocBlocked', { v: nv, m: liveResetMargin, max: nvMax }));
-          minSocEl.value = d.minSoc;
-          minSocValEl.textContent = d.minSoc + ' %';
-          if (socGateActive()) closeSocGate();
+          socDraft[d.id] = null;
+          showSoc(d);
+          applyLockState();
           return;
         }
-        lockControl(e.target);
+        const btns = [e.currentTarget, document.getElementById('minSocDown-' + d.id), document.getElementById('minSocUp-' + d.id)];
+        btns.forEach(lockControl);
+        socDraft[d.id] = null;
+        const old = d.minSoc;
+        d.minSoc = nv;
+        showSoc(d);
         kvsSet('zdmc_dev' + d.id + '_minSoc', nv).then(function(ok){
-          if (ok) { d.minSoc = nv; showResetMargin(); }
-          else unlockControl(e.target);
+          if (ok) showResetMargin();
+          else { d.minSoc = old; showSoc(d); btns.forEach(unlockControl); }
         });
-        // Direkt nach dem Speichern wieder sperren.
-        if (socGateActive()) closeSocGate();
       });
 
-      const inputLimitEl = document.getElementById('inputLimit-' + d.id);
-      const inputLimitValEl = document.getElementById('inputLimitValue-' + d.id);
-      inputLimitEl.addEventListener('input', function(e){
-        const v = Number(e.target.value);
-        inputLimitValEl.textContent = v ? v + ' W' : t('off');
+      // Ladestufen waehlen nur die Leistung (nur im Browser, nicht gespeichert).
+      // Geschrieben wird erst von startManual() in der richtigen Reihenfolge.
+      document.querySelectorAll('#panel-man-' + d.id + ' .in-chip').forEach(function(ch){
+        ch.addEventListener('click', function(){
+          if (uiBlocked() || isGated(ch)) return;
+          touchLockTimer();
+          manualSel[d.id] = Number(ch.getAttribute('data-w'));
+          showChips(d);
+        });
       });
-      // Bewusst KEIN Schreiben bei 'change': ein inputLimit, das gesetzt wird,
-      // waehrend das Geraet noch in der Regelung haengt, wird vom Regel-Script
-      // im naechsten Zyklus ueberschrieben. Der Regler waehlt hier nur die
-      // Leistung aus; geschrieben wird sie von startManual() in der richtigen
-      // Reihenfolge.
-      inputLimitEl.addEventListener('change', function(){ touchLockTimer(); });
 
       document.getElementById('manualBtn-' + d.id).addEventListener('click', function(){
         touchLockTimer();
@@ -2872,6 +2965,7 @@
       });
     });
 
+    hubs.forEach(function(d){ showSoc(d); showChips(d); applyOgTab(d); });
     applyLockState();
     buildFlowScopes();
   }
@@ -2910,8 +3004,7 @@
   }
 
   async function startManual(d){
-    const slider = document.getElementById('inputLimit-' + d.id);
-    const watt = Number(slider ? slider.value : 0);
+    const watt = Number(manualSel[d.id] || 0);
 
     if (!watt) {
       showDiag(t('pickPower'));
@@ -2974,6 +3067,7 @@
       d.inputLimit = 0;
       d.dischargeAllowed = true;
       d.reverse = true;
+      manualSel[d.id] = 0;
       startHold(t('backInControl', { d: d.label }));
     } else {
       startHold(t('manualCheck', { d: d.label }), {
@@ -2996,20 +3090,17 @@
   function renderManual(d){
     const btn = document.getElementById('manualBtn-' + d.id);
     const hint = document.getElementById('manualHint-' + d.id);
-    const slider = document.getElementById('inputLimit-' + d.id);
     if (!btn || !hint) return;
 
     const active = isManualActive(d);
     btn.textContent = t(active ? 'manualStop' : 'manualStart');
     btn.classList.toggle('stop', active);
 
-    if (active) {
-      hint.textContent = t('manualActiveHint', { w: d.inputLimit });
-      if (slider) slider.disabled = true;
-    } else {
-      hint.textContent = t('manualIdleHint');
-      if (slider && !isTempLocked(slider)) slider.disabled = uiBlocked();
-    }
+    hint.textContent = active ? t('manualActiveHint', { w: d.inputLimit }) : t('manualIdleHint');
+    showChips(d);
+    document.querySelectorAll('#panel-man-' + d.id + ' .in-chip').forEach(function(ch){
+      if (!isTempLocked(ch)) ch.disabled = uiBlocked() || isGated(ch);
+    });
   }
 
   /* ---------------- Initiale Konfiguration ---------------- */
@@ -3092,25 +3183,9 @@
       const ls = document.getElementById('lockStatus-' + d.id);
       if (ls) ls.textContent = lockStatusText(!!d.dischargeAllowed, !!d.reverse);
 
-      const ms = document.getElementById('minSoc-' + d.id);
-      const msVal = document.getElementById('minSocValue-' + d.id);
-      if (ms && !isBusy(ms) && d.minSoc !== undefined) {
-        // Obergrenze mitfuehren - maxSoc kommt aus der Konfiguration und
-        // kann sich nach einem Neustart des API-Scripts geaendert haben;
-        // socSet steht nur im Live-Zustand der Gerätekarte (hubs).
-        const hd = hubs.find(function(h){ return h.id === d.id; });
-        ms.max = minSocCeiling({ maxSoc: d.maxSoc !== undefined ? d.maxSoc : (hd && hd.maxSoc), socSet: hd ? hd.socSet : null });
-        ms.value = d.minSoc;
-        if (msVal) msVal.textContent = d.minSoc + ' %';
-      }
-
-      const il = document.getElementById('inputLimit-' + d.id);
-      const ilVal = document.getElementById('inputLimitValue-' + d.id);
-      if (il && !isBusy(il) && d.inputLimit !== undefined) {
-        const v = Number(d.inputLimit);
-        il.value = v;
-        if (ilVal) ilVal.textContent = v ? v + ' W' : t('off');
-      }
+      // Reserve und Ladestufen: Anzeige aus dem Live-Zustand (hubs), den
+      // pollAll() direkt danach aus diesen KVS-Werten nachfuehrt - siehe
+      // showSoc()/showChips() im Anschluss dort. Ein offener Entwurf bleibt.
     });
   }
 
@@ -3213,6 +3288,8 @@
         });
         liveResetMargin = Number(cfg.dischargeResetMargin || 3);
         showResetMargin();
+        hubs.forEach(function(d){ showSoc(d); showChips(d); });
+        applyLockState();
       }
 
       gridOnline = !!(status.grid && status.grid.online);
@@ -3308,7 +3385,7 @@
   // Laeuft gerade ein manueller Lade-Vorgang (pollWanted = false), startet
   // der Vorgang die Abfrage danach selbst.
   document.addEventListener('visibilitychange', function(){
-    if (document.hidden) { closeSocGate(); haltTimer(); return; }
+    if (document.hidden) { haltTimer(); return; }
     if (pollWanted && !pollTimer) {
       forceConfigNext = true;
       runTimer();
@@ -3651,6 +3728,7 @@
       const dirEl = document.getElementById('powerDir-' + d.id);
       if (dirEl) dirEl.textContent = t(pw > 0 ? 'dirOut' : (pw < 0 ? 'dirIn' : 'dirIdle'));
     });
+    hubs.forEach(applyOgTab);
     renderFlow();
     skyPvSample();
   }
@@ -3858,11 +3936,6 @@
     applyStaticTexts();
     buildFlowScopes();
     applyView();
-    hubs.forEach(function(d){
-      const box = document.getElementById('settings-' + d.id);
-      const hint = document.getElementById('settingsHint-' + d.id);
-      if (box && hint) hint.textContent = t(box.classList.contains('collapsed') ? 'settingsExpand' : 'settingsCollapse');
-    });
     langToggle.textContent = lang.toUpperCase();
     langToggle.title = t('langTitle');
     applyTheme();
@@ -3879,9 +3952,8 @@
     hubs.forEach(function(d){
       const ls = document.getElementById('lockStatus-' + d.id);
       if (ls) ls.textContent = lockStatusText(d.dischargeAllowed, d.reverse);
-      const il = document.getElementById('inputLimit-' + d.id);
-      const ilVal = document.getElementById('inputLimitValue-' + d.id);
-      if (il && ilVal) { const v = Number(il.value); ilVal.textContent = v ? v + ' W' : t('off'); }
+      showChips(d);
+      showSoc(d);
     });
     // render() erst, wenn schon eine Abfrage gelaufen ist - sonst zeigt die
     // Seite beim Start kurz "Netzzaehler nicht erreichbar".

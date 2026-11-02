@@ -109,6 +109,7 @@ Werte, deren Bedeutung hier nicht steht, nicht interpretieren – nachfragen ode
 ## Versionierung und Changelog
 
 - Bei jeder Änderung an einem Script: `VERSION` im Script erhöhen und Eintrag im `CHANGELOG.md` des jeweiligen Ordners.
+- `zendash_watch_API_ZenSDK/` hat drei Changelogs: `CHANGELOG.md` nur für das Shelly-Script (daraus liest das Versions-Manifest die Änderungen für den Configurator), `CHANGELOG_dashboard.md` für Dashboard und Proxy, `HA_zendure_proxy/CHANGELOG.md` nur für App-Themen mit Verweis auf den Dashboard-Changelog. Die Versionsnummer bleibt gemeinsam.
 - Changelog-Stil wie bestehend: **Ziel** in einem Satz, dann Stichpunkte nach Wirkung, Messwerte (Peak, Laufzeit) wenn vorhanden, Schlusssatz „Keine Änderung am CONFIG-Block nötig.“ oder was der Nutzer anpassen muss.
 - `manifest_meta.json` (`helperMin`) anpassen, wenn ein Script eine neuere Helfer-Version voraussetzt.
 

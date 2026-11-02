@@ -63,7 +63,8 @@ nav:
         - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
         - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/INSTALLATION.md
         - API-Referenz: zendash_watch_API_ZenSDK/API.md
-      - Änderungen: zendash_watch_API_ZenSDK/CHANGELOG.md
+      - Änderungen Shelly-Script: zendash_watch_API_ZenSDK/CHANGELOG.md
+      - Änderungen Dashboard und Proxy: zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md
   - Werkzeuge:
       - Script-Monitor: Script_poller/readme.md
       - Easy Statistik: stat/auswertung/readme.md

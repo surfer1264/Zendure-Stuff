@@ -13,7 +13,7 @@ A Shelly script for your **Dashboard Shelly** that takes on two tasks around you
 
 Both parts can be switched on and off individually. A single script queries the batteries and shares the data between both tasks – this saves memory on the Shelly and reduces the load on your Zendure devices. Previously there were two separate scripts (zenDash API 2.x and AkkuVolt Watchdog 1.x) which, depending on the number of batteries, together hit the Shelly's memory limit.
 
-The current version and all changes are listed in the [changelog](CHANGELOG.md).
+The current version and all changes are listed in the changelogs: [Shelly script](CHANGELOG.md) and [dashboard and proxy](CHANGELOG_dashboard.md).
 
 ---
 
@@ -430,6 +430,7 @@ Schedules from an earlier watchdog are still on this Shelly, usually after the s
 | `zendure_proxy.py` | proxy for the dashboard | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py) |
 | `zendure-dashboard.html` | dashboard page | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) |
 | `ts_bridge.py` | bridge to ThingSpeak/ThingsBoard | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py) |
-| `CHANGELOG.md` | changes per version (German) | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) |
+| `CHANGELOG.md` | changes Shelly script (German) | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md) |
+| `CHANGELOG_dashboard.md` | changes dashboard and proxy (German) | [View](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md) · [Download](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md) |
 
 Proxy as a ready-made program: [Windows](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-windows.exe) · [macOS (Apple Silicon)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_proxy-macos) · [Releases page](https://github.com/surfer1264/Zendure-Stuff/releases/latest)

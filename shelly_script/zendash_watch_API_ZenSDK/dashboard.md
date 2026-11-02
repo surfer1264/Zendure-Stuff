@@ -61,7 +61,7 @@ Ein Tipp auf die Zeile **„▾ Übersicht“** klappt die Übersicht ein. Einge
 
 Die Seite startet **gesperrt** – sie zeigt dann nur an, Hinweis „Nur Anzeige“ unter der Regelung. Ein Tipp auf das **Schloss** in der Kopfzeile gibt die Bedienung frei, das Symbol wechselt auf ein offenes Schloss. Nach 60 Sekunden ohne Eingabe sperrt sich die Seite von selbst wieder, ebenso nach jedem Neuladen. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
 
-Auf Touch-Geräten hat der Regler **Reserve (`minSoc`)** zusätzlich ein eigenes kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
+Im neuen Design wird die **Reserve (`minSoc`)** mit −/+ eingestellt und erst mit „Übernehmen“ gespeichert – ein versehentliches Antippen ändert also nichts, ein eigenes Schloss braucht es dort nicht. Im klassischen Dashboard hat der Schieberegler auf Touch-Geräten zusätzlich ein kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert dort nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
 
 ### Menü „Ansicht“
 
@@ -88,7 +88,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das 
 | **Ladebalken** | SOC; der Bereich unter der Reserve (`minSoc`) und über der Ladegrenze ist schraffiert. Darunter Bereich und nutzbarer Anteil, rechts „100 %: vor n Tagen“ |
 | **Werte** | PV, Akku und Offgrid; Akku = PV − Ausgang − Offgrid (+ lädt, − entlädt). Darunter klein Temperatur und schwächste Zelle |
 | **Hinweise** | nur Abweichungen: voll oder leer gesperrt, `socSet`/`minSoc` abweichend, Export verboten, Entladen gesperrt, manuelles Laden aktiv. Sonst „Keine Hinweise“ |
-| **Einstellungen** | Schalter, Reserve, Ladeleistung und manuelles Laden – nur sichtbar, solange die Bedienung freigegeben ist, einzeln zuklappbar |
+| **Einstellungen** | Reiter **Regelung · Offgrid · Laden** – nur sichtbar, solange die Bedienung freigegeben ist. Nach dem Laden der Seite und nach jedem Entsperren steht jede Karte auf „Regelung“; nicht übernommene Änderungen (Reserve-Entwurf, gewählte Ladestufe) werden dabei verworfen. Der Reiter wird nicht gespeichert. „Offgrid“ erscheint nur bei Geräten mit Offgrid-Ausgang |
 | **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
 
 Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
@@ -109,20 +109,22 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 | **Entlade-Sperre** | Hat ein Speicher bis zur Reserve (`minSoc`) entladen, gibt er erst ab Reserve (`minSoc`) + diesem Wert wieder Energie ab. Verhindert ständiges Ein- und Ausschalten an der Reserve (`minSoc`). Nach einem Neustart des Controllers wirkt die Entlade-Sperre erst, wenn der Speicher wieder bis zur Reserve (`minSoc`) entladen hat – liegt der Ladestand beim Start dazwischen, darf er zunächst entladen. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen; ungültige Werte werden mit Meldung verworfen. Ist bei einem Speicher das Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) kleiner als 14 Punkte, ist das Feld gesperrt und es gilt 3. Wirkt erst ab Controller 5.2.4 – ältere Versionen ignorieren den Wert. | 3 bis (kleinstes Fenster Ladegrenze (`maxSoc`) − Reserve (`minSoc`) aller Speicher) − 11 %, ganze Zahlen |
 | **Fix-Entladung** | Feste Entladeleistung statt Regelung. Wert ins Feld eintippen und mit ↵ bzw. „Fertig“ übernehmen. Solange sie aktiv ist, weist die Sollwert-Kachel darauf hin, dass der Sollwert gerade nicht ausgeregelt wird. | `0` = aus, sonst ab `dischargeStartupPower` (z. B. 35 W) |
 
-**Auf jeder Gerätekarte unter „Steuerung“:**
+**Auf jeder Gerätekarte im Reiter „Regelung“:**
 
 | Bedienelement | Wirkung | Bereich |
 |---|---|---|
 | **Entladen erlaubt** | Darf dieser Speicher ins Haus abgeben? Hat der Watchdog das Entladen wegen Unterspannung gesperrt, steht der Schalter auf aus und muss von Hand wieder eingeschaltet werden ([Entladesperre](readme.md#entladesperre-bei-unterspannung)). | an/aus |
 | **Laden vom Netz erlaubt** | Darf dieser Speicher Überschuss aus dem Netz aufnehmen? | an/aus |
-| **Reserve (`minSoc`)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). Eine Erhöhung wird nicht gespeichert, wenn die Entlade-Sperre danach nicht mehr passt (Reserve (`minSoc`) höchstens Ladegrenze (`maxSoc`) − 11 − Entlade-Sperre) – es erscheint eine Meldung und der Regler springt zurück. Senken geht immer. | 10 % bis 5 Prozentpunkte unter der wirksamen Ladegrenze, also dem kleineren Wert aus Ladegrenze (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
+| **Reserve (`minSoc`)** | Unter diesen Ladestand wird nicht entladen. Wird zusätzlich im Speicher selbst eingestellt. Die Obergrenze steht unter dem Wert („max … %“). Eine Erhöhung wird nicht gespeichert, wenn die Entlade-Sperre danach nicht mehr passt (Reserve (`minSoc`) höchstens Ladegrenze (`maxSoc`) − 11 − Entlade-Sperre) – es erscheint eine Meldung und der Wert springt zurück. Senken geht immer. Mit −/+ in 1-%-Schritten, gedrückt halten läuft schnell weiter; der neue Wert erscheint orange mit „Verwerfen“ und „Übernehmen“ und wird erst mit „Übernehmen“ gespeichert. Ein Reiterwechsel oder das Sperren verwirft ihn. | 10 % bis 5 Prozentpunkte unter der wirksamen Ladegrenze, also dem kleineren Wert aus Ladegrenze (`maxSoc`) und am Gerät eingestellter Ladegrenze (`socSet`) |
 
-**Auf jeder Gerätekarte unter „Manuelles Laden“:**
+**Auf jeder Gerätekarte im Reiter „Laden“:**
 
 | Bedienelement | Wirkung | Bereich |
 |---|---|---|
-| **Ladeleistung aus dem Netz** | wählt nur die Leistung, noch ohne Wirkung | 0 bis `maxInputPower`, in 50-W-Schritten |
+| **Ladeleistung aus dem Netz** | wählt nur die Leistung, noch ohne Wirkung (wird nicht gespeichert) | feste Stufen aus `maxInputPower`: Aus, bis zu vier glatte Stufen (50/100/200/250/500 W) und Max, z. B. bei 800 W: Aus · 200 · 400 · 600 · Max |
 | **Manuelles Laden starten / beenden** | startet bzw. beendet das Laden mit der gewählten Leistung | – |
+
+**Reiter „Offgrid“:** Aus · Ein · Öko für die Offgrid-Steckdose – noch ohne Funktion, die Umschaltung folgt mit einem späteren Script-Update.
 
 Beim Start fragt das Dashboard einmal nach und schaltet dann für diesen Speicher „Entladen erlaubt“ und „Laden vom Netz erlaubt“ aus – der Speicher ist damit aus der Regelung genommen, der Hinweis neben dem Knopf zeigt „Aktiv mit … W“. Beim Beenden stellt es den vorherigen Zustand wieder her. Ist der Akku voll, beendet das Script das Laden selbst, auch bei geschlossenem Dashboard ([Auto-Stop](readme.md#manuelles-laden-und-auto-stop)). Bricht der Vorgang mittendrin ab (Shelly nicht erreichbar), erscheint ein Warnhinweis – dann Schalter und Ladeleistung auf der Karte prüfen.
 
