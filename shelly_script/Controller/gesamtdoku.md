@@ -228,7 +228,7 @@ Regelgüte und Schonung von Geräten:
 Robustheit auf dem Shelly:
 
 - **Watchdog:** Bleibt ein Regelzyklus hängen, gibt der Watchdog
-  (`interval` × 2,5) die Zyklussperre frei und meldet den Fehler. Siehe
+  (`max(interval × 2,5, Geräte × 9 s + 2 s)`) die Zyklussperre frei und meldet den Fehler. Siehe
   Kapitel 8.3.
 - **Fehlerzähler & Benachrichtigung:** Nach `errorThreshold` (Standard 6)
   Fehlern in Folge meldet der Controller sich per Signal, WhatsApp
@@ -1248,7 +1248,7 @@ eigenen CONFIG-Felder mehr** und lassen sich nicht mehr direkt einstellen:
   zwei Geräte nacheinander in den Timeout liefen (Log 02.11.2026, 15:30), und
   gab den Takt frei, während die zweite Anfrage noch lief.
 - `httpTimeout` (pro einzelnem HTTP-Call an Geräte/Grid-Meter) ist im Code
-  fest verdrahtet: **Lesen 3,5 s** (seit 5.3.9, vorher 4 s), **Schreiben 4 s**.
+  fest verdrahtet: **Lesen 3 s** (seit 5.3.9, vorher 4 s), **Schreiben 4 s**.
   Er taucht nicht im Start-Banner auf (siehe Kapitel 8.7). Die
   Signal-/Webhook-Benachrichtigungen nutzen unabhängig davon weiterhin einen
   eigenen, ebenfalls fest verdrahteten Timeout von `8` Sekunden (ebenfalls
@@ -2140,7 +2140,7 @@ inzwischen neueren Zyklus anzuwenden (siehe Kapitel 8.3/8.1). Damit ist die
 in der Einzelgerät-Version noch offene Einschränkung hier größtenteils
 adressiert – ausgeschlossen ist eine Restunschärfe bei sehr knapp getakteten
 `interval`/`watchdog`-Kombinationen dennoch nicht vollständig. Seit V2.4.4
-ist `httpTimeout` fest verdrahtet (aktuell **3,5 s lesen, 4 s schreiben**) und
+ist `httpTimeout` fest verdrahtet (aktuell **3 s lesen, 4 s schreiben**) und
 `watchdog` wird automatisch abgeleitet, seit 5.3.9 als
 `max(interval × 2.5, Geräte × 9 s + 2 s)` (siehe 8.3). Damit endet jeder
 reguläre Zyklus vor dem Watchdog, auch wenn alle Geräte in den Timeout laufen.
@@ -2391,8 +2391,8 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   `unlock()` – also praktisch die Wartezeit auf Zähler und Geräte.
   `uebersprungen` zählt die verworfenen Takte (Zeile oben). Liegt `max`
   regelmäßig nahe an `interval` oder ist `uebersprungen` oft größer 0, ist
-  `interval` zu knapp. Ein einzelnes `max` knapp über 3500 ms ist meist ein
-  Lese-Timeout (3,5 s, Kapitel 8.3), also ein Netzwerk-Hänger. `s` verteilt
+  `interval` zu knapp. Ein einzelnes `max` knapp über 3000 ms ist meist ein
+  Lese-Timeout (3 s, Kapitel 8.3), also ein Netzwerk-Hänger. `s` verteilt
   dieselben `n` Zyklen auf sieben Klassen der Zyklusdauer (siehe unten). Der
   Controller führt dafür nur zwölf Zahlen mit (kein Puffer, kein zusätzlicher
   Timer).

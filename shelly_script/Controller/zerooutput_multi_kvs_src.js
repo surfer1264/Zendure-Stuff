@@ -127,7 +127,7 @@ let CONFIG = {
 };
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
 // v5.3.9: Watchdog deckt den schlimmsten regulaeren Zyklus ab: je Geraet
-// Lese- und Schreib-Timeout (3,5 s + 4 s) plus Verbindungsaufbau = 9 s,
+// Lese- und Schreib-Timeout (3 s + 4 s) plus Verbindungsaufbau = 9 s,
 // dazu 2 s Reserve. Vorher (interval x 2.5 = 10 s) schlug er schon an, wenn
 // zwei Geraete nacheinander nicht antworteten - und gab den Takt frei,
 // waehrend die zweite Anfrage noch lief.
@@ -806,7 +806,7 @@ function propsPos(r) {
   return (r && r.lastIndexOf("}") >= r.length - 3) ? r.indexOf('"properties"') : -1;
 }
 
-// v5.3.9: Lese-Timeout 3,5 s (Schreiben bleibt 4 s)
+// v5.3.9: Lese-Timeout 3 s (Schreiben bleibt 4 s)
 function httpGet(url, callback) {
   safeCall(
     "HTTP.GET",

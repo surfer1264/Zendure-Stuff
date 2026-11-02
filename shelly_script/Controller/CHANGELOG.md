@@ -2,8 +2,9 @@
 
 ## v5.3.9
 
-- **Lese-Timeout 3s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.
-- **Regelverhalten unverändert**, solange ein Gerät innerhalb von 3 s antworten. Standard ist ca. 1Sek
+- **Lese-Timeout 3 s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.
+- **Watchdog nach Geräteanzahl:** `max(interval × 2,5, Geräte × 9 s + 2 s)`, bei 2 Geräten also 20 s statt 10 s. Vorher schlug er schon an, wenn zwei Geräte nacheinander nicht antworteten, und gab den Takt frei, während die zweite Anfrage noch lief.
+- **Regelverhalten unverändert**, solange ein Gerät innerhalb von 3 s antwortet. Üblich ist etwa 1 s.
 
 Keine Änderung am CONFIG-Block nötig.
 
