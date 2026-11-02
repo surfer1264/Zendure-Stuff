@@ -2354,7 +2354,7 @@ FEHLER (<Label>/<Typ>): <Meldungstext> - aufeinanderfolgende Fehler: <N>
 
 | Label/Typ | Bedeutung |
 | --- | --- |
-| `<Geraet>/connect` | Gerät unter der konfigurierten IP nicht erreichbar |
+| `<Geraet>/connect` | Gerät unter der konfigurierten IP nicht erreichbar. Seit 5.3.10 steht der Grund in Klammern: `(HTTP <Status>)` oder `(<Fehlercode> <Text>)`, z. B. `-104` = Timeout, `-1 call rejected` = vom Shelly abgewiesen |
 | `<Geraet>/json` | Antwort des Geräts nicht als JSON parsbar |
 | `<Geraet>/serial` | Keine Seriennummer in der Geräte-Antwort |
 | `<Geraet>/write` | Schreibvorgang (Leistung setzen) fehlgeschlagen |
@@ -2450,7 +2450,8 @@ fehlt dann für die angefangene Stunde.
 - `Webhook-Timeout (-104), Nachricht kam vermutlich trotzdem an.` — bekannter Sonderfall; der Versand ist meist trotzdem erfolgreich.
 - `Synchronisiere SoC-Grenzwerte einmalig...` / `SoC-Sync abgeschlossen.` — Klammern um den einmaligen Start-Sync.
 - `<Geraet>: SoC-Grenzwerte synchronisiert (minSoc X%, maxSoc Y%)` — einmalig beim Start, Übertragung der konfigurierten SOC-Grenzen an das Gerät. Bei `gridReverseMode: "always1"`/`"always2"` ergänzt um `, gridReverse=N`.
-- `<Geraet>: SoC-Sync uebersprungen - keine Seriennummer` (seit 5.3.0) — SOC-Grenzwert-Synchronisierung beim Start nicht möglich, weil der Geräte-Abruf keine Seriennummer lieferte. Die Ursache steht in der FEHLER-Zeile direkt davor (`Geraet nicht erreichbar` oder `Fehler beim Parsen der Antwort`). Bis 5.2.6 lauteten die Meldungen `... - Geraet nicht erreichbar`, `... - Fehler beim Parsen der Antwort` bzw. `... - keine Seriennummer gefunden`.
+- `<Geraet>: SoC-Sync neuer Versuch in 2 s` (seit 5.3.10) — Der Geräte-Abruf beim Start ist gescheitert; der SoC-Sync für dieses Gerät wird nach 2 s einmal wiederholt.
+- `<Geraet>: SoC-Sync uebersprungen - keine Seriennummer` (seit 5.3.0) — SOC-Grenzwert-Synchronisierung beim Start nicht möglich, weil der Geräte-Abruf keine Seriennummer lieferte (seit 5.3.10 erst nach dem zweiten Versuch). Das Gerät behält dann seine bisherigen SoC-Grenzen bis zum nächsten Neustart bzw. zur nächsten KVS-Änderung von `minSoc`. Die Ursache steht in der FEHLER-Zeile direkt davor (`Geraet nicht erreichbar` oder `Fehler beim Parsen der Antwort`). Bis 5.2.6 lauteten die Meldungen `... - Geraet nicht erreichbar`, `... - Fehler beim Parsen der Antwort` bzw. `... - keine Seriennummer gefunden`.
 - `<Geraet>: SoC-Sync fehlgeschlagen beim Schreiben` — das Gerät war erreichbar, hat den Schreibvorgang aber nicht mit `200` quittiert.
 - `Starte Regelbetrieb.` — ab hier läuft der `interval`-Timer.
 
@@ -2465,7 +2466,7 @@ fehlt dann für die angefangene Stunde.
 - `KVS-Aenderung erkannt (Rev: N) - Lade Overrides...` / `KVS-Overrides aktualisiert.` — bzw. `KVS-Aenderung erkannt (Rev: N) - vorgemerkt` (seit 5.3.4), wenn gerade ein Regelzyklus oder eine andere KVS-Übernahme läuft. Übernommen wird dann direkt danach.
 - `DEBUG Takt ausgesetzt - KVS-Uebernahme laeuft` (seit 5.3.4, nur mit `debug`) — ein Regeltakt fiel in die KVS-Übernahme und wurde ausgelassen. Zählt nicht als `uebersprungen` in der Stundenzeile.
 - `KVS-Uebernahme haengt seit X ms - Regelung laeuft weiter` (seit 5.3.4) — Sicherung: Nach der Watchdog-Zeit regelt das Script weiter, auch wenn die KVS-Übernahme nicht fertig wurde.
-- `KVS <key>: Wert uebernommen (alt -> neu)` (seit 5.2.5 immer, vorher nur mit `debug`) — welcher Key mit welchem Wert übernommen wurde. Erscheint auch beim Start für jeden KVS-Wert, der vom CONFIG-Block abweicht.
+- `KVS <key>: Wert uebernommen (alt -> neu)` (seit 5.2.5 immer, vorher nur mit `debug`) — welcher Key mit welchem Wert übernommen wurde. Erscheint auch beim Start für jeden KVS-Wert, der vom CONFIG-Block abweicht; seit 5.3.12 werden diese Startmeldungen gesammelt und nach dem KVS-Lesen einzeln mit 150 ms Abstand gedruckt (wie das Banner), gefolgt von `KVS Event-Listener aktiv.`. Vorher gingen Zeilen kurz hintereinander im Log teils verloren; die Sammelzeile aus 5.3.11 brach die Konsole nach ca. 128 Zeichen um.
 - `<Geraet>: minSoc auf Geraet synchronisiert (X%)` bzw. `<Geraet>: minSoc-Sync fehlgeschlagen beim Schreiben` — Folge eines `zdmc_devN_minSoc`-Overrides (Kapitel 13.4).
 - `<Geraet>: manuelles Laden erzwungen (acMode 1), inputLimit gesetzt: X W` bzw. `<Geraet>: inputLimit-Sync fehlgeschlagen` — Folge eines `zdmc_devN_inputLimit`-Overrides (Kapitel 13.4).
 

@@ -1,5 +1,24 @@
 # Changelog Controller
 
+## v5.3.12
+
+Enthält 5.3.10 und 5.3.11.
+
+- **SoC-Grenzen beim Start wieder sicher:** Der SoC-Sync startet 500 ms nach dem KVS-Lesen und wiederholt einen gescheiterten Geräte-Abruf nach 2 s einmal. Seit 5.3.7 bekam das erste Gerät beim Start oft weder `minSoc` noch `socSet`
+- **KVS-Startmeldungen vollständig:** Die Zeilen `Wert uebernommen` beim Start kommen einzeln mit 150 ms Abstand und gehen im Log nicht mehr verloren. Der Start dauert dadurch bis zu 1 s länger
+- **Fehlergrund im Log:** `Geraet nicht erreichbar (<Grund>)`, z. B. `HTTP 500` oder `-104 …` (Timeout)
+- Regelverhalten unverändert
+
+Keine Änderung am CONFIG-Block nötig.
+
+## v5.3.11
+
+- KVS-Startmeldungen in einer Sammelzeile – in 5.3.12 wieder einzeln, weil die Konsole lange Zeilen umbricht
+
+## v5.3.10
+
+- SoC-Sync beim Start 500 ms später und mit zweitem Versuch nach 2 s; Fehlergrund bei `Geraet nicht erreichbar`. Simulationsvergleich mit 5.3.9: alle Stellbefehle identisch
+
 ## v5.3.9
 
 - **Lese-Timeout 3 s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.

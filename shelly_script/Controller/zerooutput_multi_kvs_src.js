@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.3.9";
+let VERSION = "5.3.12";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -550,6 +550,12 @@ function kvsTrigger() {
   });
 }
 
+// v5.3.12: beim Start werden die Uebernahme-Meldungen gesammelt und danach
+// einzeln mit 150 ms Abstand gedruckt (wie das Banner). Mehrere print() kurz
+// hintereinander gingen im Log teils verloren; eine Sammelzeile (5.3.11)
+// bricht die Konsole nach ca. 128 Zeichen um. null = sofort drucken.
+let kvsLog = null;
+
 function applyKvsValue(key, raw, currentValue, validate, apply) {
   let n = Number(raw);
 
@@ -566,7 +572,9 @@ function applyKvsValue(key, raw, currentValue, validate, apply) {
   // Uebernommene Aenderungen immer loggen, damit sichtbar ist, welcher Key
   // den Override ausgeloest hat (ungueltige Werte weiterhin nur mit debug).
   if (n !== currentValue) {
-    print("KVS " + key + ": Wert uebernommen (" + currentValue + " -> " + n + ")");
+    let t = "KVS " + key + ": Wert uebernommen (" + currentValue + " -> " + n + ")";
+    if (kvsLog === null) print(t);
+    else kvsLog.push(t);
   }
 
   apply(n);
@@ -993,14 +1001,17 @@ function readDevice(index, myCycle, callback) {
 
     "http://" + cfg.ip + "/properties/report",
 
-    function (res) {
+    function (res, ec, em) {
       if (myCycle !== state.cycleId) {
         debugStale("readDevice(" + cfg.label + ")", myCycle);
         return;
       }
 
       if (!res || res.code !== 200) {
-        reportError(ds.errors, ds.notified, "connect", cfg.label, "Geraet nicht erreichbar");
+        // v5.3.10: Fehlercode mitloggen (z.B. -104 Timeout, -1 abgewiesen,
+        // HTTP-Status) - vorher war die Ursache im Log nicht erkennbar
+        reportError(ds.errors, ds.notified, "connect", cfg.label, "Geraet nicht erreichbar (" +
+          (res ? "HTTP " + res.code : ec + " " + em) + ")");
         callback();
         return;
       }
@@ -2281,7 +2292,7 @@ function syncInputLimitDevice(index, callback) {
   );
 }
 
-function syncSocLimitsDevice(index, callback) {
+function syncSocLimitsDevice(index, callback, again) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
 
@@ -2298,6 +2309,15 @@ function syncSocLimitsDevice(index, callback) {
   // erreichbar oder die Antwort unlesbar, meldet readDevice das selbst.
   readDevice(index, state.cycleId, function () {
       if (!ds.serial) {
+        // v5.3.10: einmal nach 2 s wiederholen - sonst bekommt das Geraet
+        // bis zum naechsten Neustart weder minSoc noch socSet
+        if (!again) {
+          print("  " + cfg.label + ": SoC-Sync neuer Versuch in 2 s");
+          Timer.set(2000, false, function () {
+            syncSocLimitsDevice(index, callback, true);
+          });
+          return;
+        }
         print("  " + cfg.label + ": SoC-Sync uebersprungen - keine Seriennummer");
         callback();
         return;
@@ -2533,12 +2553,24 @@ printBannerLine(function () {
     Timer.set(CONFIG.interval, true, update);
   };
 
+  // v5.3.12: Zeilen einzeln mit 150 ms Abstand drucken (wie das Banner)
+  let printLines = function (arr, i, done) {
+    if (i >= arr.length) { done(); return; }
+    print(arr[i]);
+    Timer.set(150, false, function () { printLines(arr, i + 1, done); });
+  };
+
   // SoC-Grenzen schreiben, danach ggf. inputLimit-Syncs aus der KVS
+  // v5.3.10: 500 ms Abstand zum KVS-Lesen. Direkt aus der KVS-Kette heraus
+  // schlug der erste Geraete-Abruf (SF2400) seit 5.3.7 bei jedem Start
+  // sofort fehl (Log 02.11.2026, 5 von 5 Starts).
   let syncPhase = function (todo, done) {
-    print("Synchronisiere SoC-Grenzwerte einmalig... ");
-    syncSocLimitsAll(0, function () {
-      print("SoC-Sync abgeschlossen.");
-      runKvsSyncs(todo, 0, done);
+    Timer.set(500, false, function () {
+      print("Synchronisiere SoC-Grenzwerte einmalig... ");
+      syncSocLimitsAll(0, function () {
+        print("SoC-Sync abgeschlossen.");
+        runKvsSyncs(todo, 0, done);
+      });
     });
   };
 
@@ -2551,6 +2583,7 @@ printBannerLine(function () {
   } else {
 
     print("Lade KVS-Overrides (fehlende Keys werden angelegt)...");
+    kvsLog = [];
 
     readKvsOverrides(function (todo) {
 
@@ -2567,12 +2600,16 @@ printBannerLine(function () {
         }
       });
 
-      print("KVS Event-Listener aktiv.");
+      let lines = kvsLog;
+      kvsLog = null;
+      lines.push("KVS Event-Listener aktiv.");
 
-      syncPhase(todo, function () {
-        state.busy = false;
-        startController();
-        if (state.kvsPending) Timer.set(0, false, kvsTrigger);
+      printLines(lines, 0, function () {
+        syncPhase(todo, function () {
+          state.busy = false;
+          startController();
+          if (state.kvsPending) Timer.set(0, false, kvsTrigger);
+        });
       });
     }, true);
   }
