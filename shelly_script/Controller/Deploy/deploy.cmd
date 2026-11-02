@@ -40,6 +40,7 @@ if errorlevel 1 goto :fehler
 echo.
 echo Alles erledigt.
 pause
+del "%FERTIG%"
 exit /b 0
 
 :fehler
