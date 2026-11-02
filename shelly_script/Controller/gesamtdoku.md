@@ -1418,7 +1418,12 @@ Properties des Zendure-Geräts. Die dafür nötige Seriennummer holt seit 5.3.0
 der normale Geräte-Abruf (`readDevice()`), vorher gab es dafür einen
 eigenen Report-Abruf:
 
-- `minSoc` (Script) → `minSoc`-Property (Zendure, ×10, z. B. 15 % → `150`)
+- `minSoc` (Script) → `minSoc`-Property (Zendure, ×10, z. B. 15 % → `150`).
+  Bei `kvsEnabled: true` ist das seit 5.3.7 bereits der KVS-Wert
+  (`zdmc_devN_minSoc`), weil die KVS vorher gelesen wird. Vorher stand nach
+  jedem Neustart einige Sekunden der CONFIG-Wert auf dem Gerät. Ist der
+  KVS-Wert nicht lesbar oder ungültig, wird `minSoc` gar nicht geschrieben,
+  das Gerät behält seinen bisherigen Wert (Logzeile `minSoc unveraendert`).
 - `maxSoc` (Script) → `socSet`-Property (Zendure, ×10, z. B. 100 % →
   `1000`)
 
@@ -1524,10 +1529,14 @@ Reihenfolge beim Start:
 1. Banner wird zeilenweise ausgegeben.
 2. Ist `signal.enabled` aktiv, wird eine Start-Nachricht verschickt
    ("... gestartet (N Geräte).").
-3. `syncSocLimitsAll()` läuft einmalig über alle Geräte (siehe 8.6).
-4. Nur bei `kvsEnabled: true`: Einlesen der Overrides, fehlende Keys werden
-   dabei angelegt (seit 5.3.2 ein gemeinsamer Durchlauf), danach
-   Registrierung des Status-Handlers (siehe Kapitel 13).
+3. Nur bei `kvsEnabled: true` (seit 5.3.7 **vor** dem SoC-Sync): Einlesen
+   der Overrides, fehlende Keys werden dabei angelegt (seit 5.3.2 ein
+   gemeinsamer Durchlauf), danach Registrierung des Status-Handlers (siehe
+   Kapitel 13). KVS-Änderungen bis zum Regelstart werden nur vorgemerkt und
+   direkt danach übernommen.
+4. `syncSocLimitsAll()` läuft einmalig über alle Geräte (siehe 8.6), bei
+   `kvsEnabled: true` schon mit den KVS-Werten. Danach ggf. der
+   `inputLimit`-Sync aus der KVS (manuelles Laden).
 5. Erst danach startet der reguläre `interval`-Timer und damit der
    eigentliche Regelbetrieb.
 6. **Freigabe des Einmal-Codes (seit 4.3.0):** Unmittelbar nach dem Start

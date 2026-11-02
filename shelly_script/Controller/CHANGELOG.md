@@ -1,5 +1,36 @@
 # Changelog Controller
 
+## v5.3.8
+
+**Ziel:** Den Offgrid-Modus (`gridOffMode`) je Gerät über die KVS steuern, analog zu `minSoc` und `inputLimit`.
+
+- **Neuer KVS-Key je Gerät:** `zdmc_devN_gridOffMode` mit `0` = EIN (normal), `1` = Öko, `2` = AUS. Andere Werte werden ignoriert. Der Key fällt unter `zdmc_*`, `KVS.GetMany` liest ihn mit.
+- **Kein CONFIG-Eintrag:** Es gibt keinen Default. Fehlt der Key, wird er weder angelegt (auch nicht mit `kvsForceReseed`) noch wird `gridOffMode` am Gerät angefasst.
+- **Geschrieben wird nur bei einer Änderung:** Ändert sich der KVS-Wert, schreibt der Controller `{gridOffMode: v}` auf das betroffene Gerät. Das läuft wie bei `minSoc` über die Geräte-Syncs nach der KVS-Übernahme.
+- **Beim Start wird nichts geschrieben:** Der KVS-Wert wird nur gelesen und gemerkt. Beim Start schreibt der Controller weiterhin nur die SoC-Grenzen. Wird `gridOffMode` in der App geändert, gleicht der Controller das nicht ab. Er schreibt erst bei der nächsten Änderung des KVS-Werts.
+- **Intern:** `syncMinSocDevice()` heißt jetzt `syncPropDevice(index, prop)` und schreibt `minSoc` oder `gridOffMode`. Die Sync-Kennung zählt je Gerät in Dreierschritten (minSoc, inputLimit, gridOffMode) statt gerade/ungerade.
+- **Log:** `<Gerät>: gridOffMode auf Geraet synchronisiert (2)` bzw. `gridOffMode-Sync fehlgeschlagen beim Schreiben`. Die minSoc-Meldung ist unverändert.
+- **Regelverhalten unverändert:** `gridOffMode` geht nicht in die Regelung ein.
+- **Bei zwei Geräten 13 statt 11 Keys:** Mit `debug` einmal prüfen, ob `KVS.GetMany` noch alle Keys auf einer Seite liefert.
+
+Keine Änderung am CONFIG-Block nötig.
+
+## v5.3.7
+
+**Ziel:** Nach einem Neustart steht nie der CONFIG-`minSoc` auf dem Gerät, wenn die KVS einen anderen Wert hat.
+
+- **Vorher:** Beim Start wurden zuerst die CONFIG-Werte geschrieben (z. B. `minSoc` 15 %), erst danach die KVS gelesen und der KVS-Wert (z. B. 40 %) nachgeschrieben. Im Log vom 02.11.2026 lagen 4 s dazwischen (08:00:16 → 08:00:20). In dieser Zeit war die Entladesperre der Firmware zu tief, und jedes Gerät bekam bei jedem Start zwei minSoc-Writes.
+- **Jetzt bei `kvsEnabled: true`:** Erst die KVS lesen, dann `minSoc`/`socSet` **einmal** mit dem KVS-Wert aufs Gerät schreiben. Der eigene minSoc-Sync beim Start entfällt.
+- **Jetzt bei `kvsEnabled: false`:** Unverändert, die CONFIG-Werte werden geschrieben.
+- **KVS-minSoc nicht lesbar oder ungültig** (z. B. 5): `minSoc` wird beim Start **nicht** geschrieben, das Gerät behält seinen bisherigen Wert. Log: `SoC-Grenzwerte synchronisiert (minSoc unveraendert, …)`; ein nicht lesbarer Key erscheint zusätzlich wie bisher als KVS-Fehler. Vorher landete in diesem Fall still der CONFIG-Wert auf dem Gerät. Fehlt der Key (erster Start) oder ist `kvsForceReseed` aktiv, wird wie bisher der CONFIG-Wert angelegt und geschrieben.
+- **Manuelles Laden über einen Neustart:** Der `inputLimit`-Sync braucht die Seriennummer und läuft deshalb weiter nach dem SoC-Sync.
+- **KVS-Änderungen während des Starts:** Der Status-Handler wird direkt nach dem KVS-Lesen registriert. Änderungen bis zum Regelstart werden vorgemerkt und gleich danach übernommen statt verloren zu gehen.
+- **Log:** Die Zeile `SoC-Grenzwerte synchronisiert (minSoc 40%, …)` zeigt jetzt den tatsächlich geschriebenen Wert; `minSoc auf Geraet synchronisiert` erscheint beim Start nicht mehr.
+- **Getestet** (Mock, echte Zeit): Start mit KVS 40 % → je Gerät genau ein Write `minSoc 400`; 5.3.6 schrieb `150` und 0,9 s später `400`. Ohne KVS → `150`. KVS-Key nicht lesbar bzw. Wert 5 → nur `socSet`, kein `minSoc`. Manuelles Laden (`inputLimit 1000`) → wird nach dem SoC-Sync erzwungen. Key fehlt bzw. `kvsForceReseed` → `150`. KVS-Änderung während des Starts → vorgemerkt, nach Regelstart übernommen. Simulationslauf (2400 Zyklen, Seed 42, Werktag): alle 3923 Stellbefehle und die Ergebnis-CSV identisch.
+- Mini-Script 409 Byte größer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.3.6
 
 **Ziel:** In der Stundenzeile sehen, wie sich die Zyklusdauer verteilt, nicht nur Mittel und Maximum.

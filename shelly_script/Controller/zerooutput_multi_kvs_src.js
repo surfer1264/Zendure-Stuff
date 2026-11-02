@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.3.6";
+let VERSION = "5.3.8";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -268,6 +268,10 @@ for (let i = 0; i < CONFIG.devices.length; i++) {
 
     realDirection: null, reversalHoldCount: 0, standbyHoldCount: 0,
     dischargeLocked: false, // Entlade-Hysterese, siehe CONFIG.dischargeResetMargin
+    // v5.3.7: KVS-minSoc beim Start nicht lesbar oder ungueltig -> minSoc
+    // auf dem Geraet nicht ueberschreiben (sonst stuende dort still der
+    // CONFIG-Wert). Nur beim Start gesetzt.
+    minSocUnread: false,
 
     errors: { connect: 0, json: 0, serial: 0, write: 0 },
     notified: { connect: false, json: false, serial: false, write: false }
@@ -640,17 +644,18 @@ function kvsReadAll(callback) {
   });
 }
 
-// Name von Key n: 0-2 global, danach je Geraet 4 Keys. null = kein Key mehr.
+// Name von Key n: 0-2 global, danach je Geraet 5 Keys. null = kein Key mehr.
 function kvsKey(n) {
   if (n < 3) return ["zdmc_setpoint", "zdmc_dischargeResetMargin", "zdmc_dischargeFixed"][n];
   n = n - 3;
-  let i = (n - n % 4) / 4;
+  let i = (n - n % 5) / 5;
   if (i >= CONFIG.devices.length) return null;
-  return "zdmc_dev" + i + "_" + ["dischargeAllowed", "reverse", "minSoc", "inputLimit"][n % 4];
+  return "zdmc_dev" + i + "_" + ["dischargeAllowed", "reverse", "minSoc", "inputLimit", "gridOffMode"][n % 5];
 }
 
 // Zu Key n: aktueller Wert (c), Pruefung (ok), Uebernahme (set) und ggf. der
-// Geraete-Sync fuer runKvsSyncs (s: gerade = minSoc, ungerade = inputLimit).
+// Geraete-Sync fuer runKvsSyncs (s = i * 3 + Art: 0 minSoc, 1 inputLimit,
+// 2 gridOffMode).
 function kvsField(n) {
   if (n === 0) return { c: CONFIG.setpoint,
     ok: function (v) { return v >= -40 && v <= 40; },
@@ -663,8 +668,8 @@ function kvsField(n) {
     set: function (v) { CONFIG.dischargeFixed = v; } };
 
   n = n - 3;
-  let i = (n - n % 4) / 4;
-  let f = n % 4;
+  let i = (n - n % 5) / 5;
+  let f = n % 5;
   let dev = CONFIG.devices[i];
   let bin = function (v) { return v === 0 || v === 1; };
 
@@ -672,12 +677,17 @@ function kvsField(n) {
     set: function (v) { dev.dischargeAllowed = (v !== 0); } };
   if (f === 1) return { c: (dev.reverse ? 1 : 0), ok: bin,
     set: function (v) { dev.reverse = (v !== 0); } };
-  if (f === 2) return { c: dev.minSoc, s: i * 2,
+  if (f === 2) return { c: dev.minSoc, s: i * 3,
     ok: function (v) { return v >= 10 && v <= dev.maxSoc - SOC_GAP; },
     set: function (v) { dev.minSoc = v; } };
-  return { c: dev.inputLimit, s: i * 2 + 1,
+  if (f === 3) return { c: dev.inputLimit, s: i * 3 + 1,
     ok: function (v) { return v >= 0 && v <= dev.maxInputPower; },
     set: function (v) { dev.inputLimit = v; } };
+  // v5.3.8: gridOffMode (0 EIN, 1 Oeko, 2 AUS) - kein CONFIG-Wert, nur KVS.
+  // Ohne Key bleibt c undefined: kein Seed, das Geraet wird nicht angefasst.
+  return { c: dev.gridOffMode, s: i * 3 + 2,
+    ok: function (v) { return v === 0 || v === 1 || v === 2; },
+    set: function (v) { dev.gridOffMode = v; } };
 }
 
 // Liest Key n, uebernimmt ihn bzw. legt ihn an (seed), dann Key n + 1.
@@ -693,7 +703,11 @@ function kvsStep(n, seed, todo, fails, callback) {
       reportSuccess(state.errors, state.notified, "kvs", "KVS");
     }
     if (CONFIG.debug) memLog("KVS gelesen");
-    runKvsSyncs(todo, 0, callback);
+    // v5.3.7: kvsStep laeuft nur beim Start, VOR syncSocLimitsAll(). minSoc
+    // schreibt dort syncSocLimitsDevice() gleich mit dem KVS-Wert. In todo
+    // stehen nur inputLimit-Syncs; sie brauchen die Seriennummer und laufen
+    // nach syncSocLimitsAll() (siehe Start).
+    callback(todo);
     return;
   }
 
@@ -706,7 +720,9 @@ function kvsStep(n, seed, todo, fails, callback) {
         write = true;
       } else {
         applyKvsValue(key, res.value, f.c, f.ok, f.set);
-        if (f.s !== undefined && kvsField(n).c !== f.c) todo.push(f.s);
+        // nur inputLimit; minSoc schreibt der SoC-Sync, gridOffMode wird
+        // beim Start bewusst nicht geschrieben (v5.3.8)
+        if (f.s !== undefined && f.s % 3 === 1 && kvsField(n).c !== f.c) todo.push(f.s);
       }
     } else if (err_code === -105) {
       write = seed;
@@ -715,7 +731,15 @@ function kvsStep(n, seed, todo, fails, callback) {
       if (CONFIG.debug) print("DEBUG KVS.Get " + key + " fehlgeschlagen (" + err_msg + ")");
     }
 
+    // v5.3.7: minSoc-Key gilt als bekannt, wenn er gueltig gelesen, per
+    // Reseed oder - weil er fehlt - mit dem CONFIG-Wert angelegt wird.
+    // Sonst (nicht lesbar, ungueltig) bleibt minSoc auf dem Geraet stehen.
+    if (f.s !== undefined && f.s % 3 === 0) state.devices[f.s / 3].minSocUnread =
+      !(err_code === 0 && res ? CONFIG.kvsForceReseed || f.ok(Number(res.value)) : err_code === -105);
+
     res = null;
+    // v5.3.8: ohne Wert (gridOffMode ohne Key) nichts anlegen
+    if (f.c === undefined) write = false;
     let next = function () {
       kvsStep(n + 1, seed, todo, fails, callback);
     };
@@ -741,14 +765,15 @@ function runKvsSyncs(todo, k, callback) {
   }
 
   let n = todo[k];
-  let idx = (n - n % 2) / 2;
+  let idx = (n - n % 3) / 3;
+  let m = n % 3;
   let next = function () {
     if (CONFIG.debug) memLog("nach KVS-Sync " + CONFIG.devices[idx].label);
     runKvsSyncs(todo, k + 1, callback);
   };
 
-  if (n % 2) syncInputLimitDevice(idx, next);
-  else syncMinSocDevice(idx, next);
+  if (m === 1) syncInputLimitDevice(idx, next);
+  else syncPropDevice(idx, m ? "gridOffMode" : "minSoc", next);
 }
 
 // v5.3.0: Wert hinter "k": aus dem JSON-Rohtext lesen, OHNE JSON.parse (spart
@@ -2153,35 +2178,40 @@ function setGridReverseAll(index, value, callback) {
   });
 }
 
-// Schreibt CONFIG.devices[index].minSoc (z.B. nach KVS-Live-Override) als
-// Hardware-Schutzgrenze aufs Geraet. Sonst bliebe die Geraete-eigene minSoc-Sperre
-// auf dem beim Start (syncSocLimitsAll) geschriebenen Wert stehen.
-function syncMinSocDevice(index, callback) {
+// Schreibt nach einem KVS-Live-Override einen Einzelwert aufs Geraet:
+// - "minSoc": CONFIG.devices[index].minSoc als Hardware-Schutzgrenze. Sonst
+//   bliebe die Geraete-eigene minSoc-Sperre auf dem beim Start
+//   (syncSocLimitsAll) geschriebenen Wert stehen.
+// - "gridOffMode" (v5.3.8): Offgrid-Ausgang 0 EIN, 1 Oeko, 2 AUS. Wird nur
+//   bei einer Aenderung des KVS-Werts geschrieben, nie beim Start.
+function syncPropDevice(index, prop, callback) {
   let cfg = CONFIG.devices[index];
   let ds = state.devices[index];
 
   if (cfg.dryRun || !ds.serial) {
     if (CONFIG.debug) {
-      print("  " + cfg.label + ": minSoc-Sync skip");
+      print("  " + cfg.label + ": " + prop + "-Sync skip");
     }
     callback();
     return;
   }
 
-  let minSocRaw = Math.round(cfg.minSoc * 10);
+  let props = {};
+  props[prop] = prop === "minSoc" ? Math.round(cfg.minSoc * 10) : cfg[prop];
 
   httpPost(
     "http://" + cfg.ip + "/properties/write",
-    { sn: ds.serial, properties: { minSoc: minSocRaw } },
+    { sn: ds.serial, properties: props },
     function (res, error_code, error_message) {
       if (res && res.code === 200) {
-        print("  " + cfg.label + ": minSoc auf Geraet synchronisiert (" + cfg.minSoc + "%)");
+        print("  " + cfg.label + ": " + prop + " auf Geraet synchronisiert (" +
+          cfg[prop] + (prop === "minSoc" ? "%)" : ")"));
       } else {
         if (CONFIG.debug) {
-          print("DEBUG " + cfg.label + "/minSocSync - res: " + JSON.stringify(res) +
+          print("DEBUG " + cfg.label + "/" + prop + "Sync - res: " + JSON.stringify(res) +
             " | error_code: " + error_code + " | error_message: " + error_message);
         }
-        print("  " + cfg.label + ": minSoc-Sync fehlgeschlagen beim Schreiben");
+        print("  " + cfg.label + ": " + prop + "-Sync fehlgeschlagen beim Schreiben");
       }
       callback();
     }
@@ -2189,7 +2219,7 @@ function syncMinSocDevice(index, callback) {
 }
 
 // v4.5.0: Schreibt CONFIG.devices[index].inputLimit (nach KVS-Live-Override)
-// als Ladeleistung aufs Geraet - analog syncMinSocDevice(). Reine Zusatz-
+// als Ladeleistung aufs Geraet - analog syncPropDevice(). Reine Zusatz-
 // Schnittstelle fuer manuelles AC-Laden; die Regelung bleibt unveraendert.
 // Voraussetzung ist, dass der User das Geraet vorher aus der Lastverteilung
 // genommen hat (reverse:false, dischargeAllowed:false).
@@ -2271,7 +2301,8 @@ function syncSocLimitsDevice(index, callback) {
       let maxSocRaw = Math.round(cfg.maxSoc * 10);
       if (ds.gridReverse === 2) {state.allMaxedLogged = true;}
 
-      let props = { minSoc: minSocRaw, socSet: maxSocRaw };
+      let props = { socSet: maxSocRaw };
+      if (!ds.minSocUnread) props.minSoc = minSocRaw;
       if (CONFIG.gridReverseMode === "always1") props.gridReverse = 1;
       if (CONFIG.gridReverseMode === "always2") props.gridReverse = 2;
 
@@ -2288,7 +2319,8 @@ function syncSocLimitsDevice(index, callback) {
           if (res2 && res2.code === 200) {
             if (props.gridReverse !== undefined) ds.gridReverse = props.gridReverse;
             print("  " + cfg.label + ": SoC-Grenzwerte synchronisiert (minSoc " +
-              cfg.minSoc + "%, maxSoc " + cfg.maxSoc + "%)" +
+              (ds.minSocUnread ? "unveraendert" : cfg.minSoc + "%") +
+              ", maxSoc " + cfg.maxSoc + "%)" +
               (props.gridReverse !== undefined ? ", gridReverse=" + props.gridReverse : ""));
           } else {
             if (CONFIG.debug) {
@@ -2444,82 +2476,98 @@ printBannerLine(function () {
   }
   print("--------------------------------");
   if (CONFIG.debug) memLog("nach Banner");
-  print("Synchronisiere SoC-Grenzwerte einmalig... ");
-  syncSocLimitsAll(0, function () {
+  // v5.3.7: Bei kvsEnabled ZUERST die KVS lesen, dann die SoC-Grenzen aufs
+  // Geraet schreiben. Vorher stand nach jedem Neustart einige Sekunden der
+  // CONFIG-minSoc auf dem Geraet (z.B. 15 % statt KVS 40 %), bis der
+  // KVS-Sync nachzog - die Entladesperre der Firmware war so lange zu tief.
 
-    print("SoC-Sync abgeschlossen.");
+  // Hilfsfunktion zum Starten des Timers (vermeidet doppelten Code)
+  let startController = function () {
+    // Einmal-Code der Startphase freigeben. Verzoegert per Timer.set(0),
+    // damit keine der Funktionen mehr auf dem Aufruf-Stack liegt.
+    Timer.set(0, false, function () {
+      try {
+        printBannerLine = null;
+        bannerLine = null;
+        syncSocLimitsDevice = null;
+        syncSocLimitsAll = null;
+        checkBand = null;
 
-    // Hilfsfunktion zum Starten des Timers (vermeidet doppelten Code)
-    let startController = function () {
-      // Einmal-Code der Startphase freigeben. Verzoegert per Timer.set(0),
-      // damit keine der Funktionen mehr auf dem Aufruf-Stack liegt.
-      Timer.set(0, false, function () {
-        try {
-          printBannerLine = null;
-          bannerLine = null;
-          syncSocLimitsDevice = null;
-          syncSocLimitsAll = null;
-          checkBand = null;
-
-          // Nur Funktionen, deren einzige Aufrufstellen durch die jeweilige
-          // (nicht KVS-aenderbare) CONFIG-Einstellung nie erreicht werden.
-          if (!CONFIG.kvsEnabled) {
-            readKvsOverrides = null;
-            kvsKey = null;
-            kvsField = null;
-            kvsStep = null;
-            kvsReadAll = null;
-            runKvsSyncs = null;
-            applyKvsValue = null;
-            syncMinSocDevice = null;
-            syncInputLimitDevice = null;
-          }
-          if (!CONFIG.signal.enabled) msgResult = null;
-          if (!CONFIG.signal.enabled || CONFIG.signal.typ != "WEBHOOK") sendWebhookMessage = null;
-          if (!CONFIG.signal.enabled || CONFIG.signal.typ == "WEBHOOK") simpleEncode = null;
-          if (CONFIG.gridSource === "local") handleGenericGridResponse = null;
-          if (CONFIG.gridReverseMode !== "dynamic") {
-            setGridReverseAll = null;
-            setGridReverseDevice = null;
-          }
-        } catch (e) {
-          // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
+        // Nur Funktionen, deren einzige Aufrufstellen durch die jeweilige
+        // (nicht KVS-aenderbare) CONFIG-Einstellung nie erreicht werden.
+        if (!CONFIG.kvsEnabled) {
+          readKvsOverrides = null;
+          kvsKey = null;
+          kvsField = null;
+          kvsStep = null;
+          kvsReadAll = null;
+          runKvsSyncs = null;
+          applyKvsValue = null;
+          syncPropDevice = null;
+          syncInputLimitDevice = null;
         }
-        if (CONFIG.debug) memLog("nach Freigabe Startcode");
+        if (!CONFIG.signal.enabled) msgResult = null;
+        if (!CONFIG.signal.enabled || CONFIG.signal.typ != "WEBHOOK") sendWebhookMessage = null;
+        if (!CONFIG.signal.enabled || CONFIG.signal.typ == "WEBHOOK") simpleEncode = null;
+        if (CONFIG.gridSource === "local") handleGenericGridResponse = null;
+        if (CONFIG.gridReverseMode !== "dynamic") {
+          setGridReverseAll = null;
+          setGridReverseDevice = null;
+        }
+      } catch (e) {
+        // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
+      }
+      if (CONFIG.debug) memLog("nach Freigabe Startcode");
+    });
+
+    if (CONFIG.debug) memLog("vor Regelbetrieb");
+    print("Starte Regelbetrieb.");
+    print("--------------------------------");
+
+    Timer.set(CONFIG.interval, true, update);
+  };
+
+  // SoC-Grenzen schreiben, danach ggf. inputLimit-Syncs aus der KVS
+  let syncPhase = function (todo, done) {
+    print("Synchronisiere SoC-Grenzwerte einmalig... ");
+    syncSocLimitsAll(0, function () {
+      print("SoC-Sync abgeschlossen.");
+      runKvsSyncs(todo, 0, done);
+    });
+  };
+
+  // PRÜFUNG: Ist KVS überhaupt aktiviert?
+  if (!CONFIG.kvsEnabled) {
+
+    print("KVS-Funktion ist deaktiviert - KVS wird ignoriert.");
+    syncPhase([], startController);
+
+  } else {
+
+    print("Lade KVS-Overrides (fehlende Keys werden angelegt)...");
+
+    readKvsOverrides(function (todo) {
+
+      // StatusHandler gleich registrieren, damit keine Aenderung verloren
+      // geht. Bis zum Regelstart haelt busy die Uebernahme zurueck
+      // (kvsTrigger: "vorgemerkt"), sie laeuft erst nach dem Start-Sync.
+      state.busy = true;
+      Shelly.addStatusHandler(function (e) {
+        if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
+          print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ")" +
+            (state.kvsBusy || state.busy ? " - vorgemerkt" : " - Lade Overrides..."));
+          state.kvsPending = true;
+          kvsTrigger();
+        }
       });
 
-      if (CONFIG.debug) memLog("vor Regelbetrieb");
-      print("Starte Regelbetrieb.");
-      print("--------------------------------");
+      print("KVS Event-Listener aktiv.");
 
-      Timer.set(CONFIG.interval, true, update);
-    };
-
-    // PRÜFUNG: Ist KVS überhaupt aktiviert?
-    if (!CONFIG.kvsEnabled) {
-
-      print("KVS-Funktion ist deaktiviert - KVS wird ignoriert.");
-      startController();
-
-    } else {
-
-      print("Lade KVS-Overrides (fehlende Keys werden angelegt)...");
-
-        readKvsOverrides(function () {
-
-          // StatusHandler nur registrieren, wenn KVS aktiv ist
-          Shelly.addStatusHandler(function (e) {
-            if (e.component === "sys" && e.delta && typeof e.delta.kvs_rev !== "undefined") {
-              print("KVS-Aenderung erkannt (Rev: " + e.delta.kvs_rev + ")" +
-                (state.kvsBusy || state.busy ? " - vorgemerkt" : " - Lade Overrides..."));
-              state.kvsPending = true;
-              kvsTrigger();
-            }
-          });
-
-          print("KVS Event-Listener aktiv.");
-          startController();
-        }, true);
-    }
-  });
+      syncPhase(todo, function () {
+        state.busy = false;
+        startController();
+        if (state.kvsPending) Timer.set(0, false, kvsTrigger);
+      });
+    }, true);
+  }
 });
