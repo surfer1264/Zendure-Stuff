@@ -1,116 +1,123 @@
 let SCRIPT_TYPE="zdmc-controller";let VERSION="5.3.9";let CONFIG_SCHEMA=1;
 let CONFIG = {
   devices: [
-    {
-      ip: "192.168.178.143",
-      label: "SF2400",
-
+     {
+      ip: "192.168.178.143",    // Zendure IP address
+      label: "SF2400",          // short name, used in logs/messages
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
       reverse: true,
       maxInputPower: 1000,
       maxOutput: 800,
-
       dryRun: false
     },
     {
       ip: "192.168.178.150",
-      label: "SF800",
-
+      label: "Fatamorgana",
       minSoc: 15,
       maxSoc: 100,
       dischargeAllowed: true,
       reverse: true,
-      maxInputPower: 1000,
-      maxOutput: 800,
-
+      maxInputPower: 2000,
+      maxOutput: 2000,
       dryRun: false
-    }
+    },
   ],
   // ------------------------------------------------------------------
   // SMARTMETER SECTION
-  gridSource: "local",
+  gridSource: "local", // "local", "remote", "http_json"
+  // ------------------------------------------------------------------
+  // ONLY required/used when gridSource = "remote".
   gridSourceIp: "<IP address Shelly Pro 3EM>",
   gridSourceEmId: 0,
+  // ------------------------------------------------------------------
+  // only gridSource=http_json; z.B. Zendure 3CT
   gridSourceUrl: "http://<IP-of-your-meter>/properties/report",
   gridSourceField: "total_power",
   gridSourceInvert: false,
 
   // ------------------------------------------------------------------
-  // RULES ENGINE CORE PARAMETERS — im Configurator-Schritt
-  // "Regelparameter" festgelegt, siehe Doku Kapitel 4
-  setpoint: 0,
-  hysteresis: 13,
+  // RULES ENGINE CORE PARAMETERS
+  setpoint: 0, // (KVS-live-overridable)
+  // Hysteresis in watts, PER DEVICE
+  hysteresis: 12,
+  // Damping / gain factor for the COMBINED control signal (0.4 <= factor <= 0.8),
   dampingFactor: 0.65,
+  // OPTIONAL: Faktor der schnellen Flanke bei Spruengen in Richtung
+  // "weniger Export" (0.4 <= factor <= 0.9). Fehlt der Eintrag, gilt 0.9.
+  // jumpFactor: 0.9,
 
   // ------------------------------------------------------------------
-  // Konzentrieren/Verteilen — im Schritt "Regelparameter" festgelegt
-  // (Doku Kapitel 7b)
+  // THRESHOLD SECTION ONLY RELEVANT FOR MULTI DEVICES
   discharge: {
-    concentrateBelow: 590,
-    spreadAbove: 790
+    concentrateBelow: 600,  // W - below this combined target, use ONE device
+    spreadAbove: 800        // W - above this, split across all devices
   },
 
   charge: {
-    concentrateBelow: 590,
-    spreadAbove: 790
+    concentrateBelow: 600,
+    spreadAbove: 800
   },
-  concentrateHoldMinutes: 1,
+  // Time-coupled hysteresis for  (only) spread -> single
+  concentrateHoldMinutes: 3,
 
   // ------------------------------------------------------------------
+  // SOC-BALANCING Max. SOC-Differenz zwischen Geraeten (%)
   rebalance: {
-    socMargin: 6
+    socMargin: 5        // percentage points of advantage required to switch
   },
 
   // ------------------------------------------------------------------
-  reverseStartupPower: 40,
-  reverseStopPower: 25,
+  // REVERSE-Hysterese, nur bei reverse:true relevant
+  reverseStartupPower: 35,
+  // Ladeleistung, unter der gestoppt wird
+  reverseStopPower: 15,
+  // gridReverse-Modus: dynamic / always1 / always2
   gridReverseMode: "dynamic",
-  chargeResetMargin: 10,
+  chargeResetMargin: 10, // nur relevant bei gridReverseMode: "dynamic"
 
   // ------------------------------------------------------------------
-  dischargeStartupPower: 40,
-  dischargeStopPower: 25,
+  // DISCHARGE MODE SECTION
+  dischargeStartupPower: 35,
+  // Entladeleistung, unter der gestoppt wird
+  dischargeStopPower: 15,
 
   // ------------------------------------------------------------------
+  // INTERNAL SECTION BE CAREFUL
+  // Update interval (milliseconds)
   interval: 4000,
-  errorThreshold: 15,
-  directionChangeHoldCycles: 5,
+  // Dont Change It
+  // Anzahl Fehler bis Benachrichtigung
+  errorThreshold: 6,
+  // Cooldown-Takte Laden/Entladen-Wechsel
+  directionChangeHoldCycles: 4,
+  // true->smartMode 0, false->1
   standbySmartModeZero: false,
-  kvsEnabled: true,
+  // KVS-Live-Override an/aus (false = CONFIG fix, kein KVS-Zugriff)
+  // ------------------------------------------------------------------
+  kvsEnabled: false,
+  // true = Start ueberschreibt KVS mit CONFIG, danach false
   kvsForceReseed: false,
+  // operation to keep the console output clean.
+  // ------------------------------------------------------------------
   debug: false,
-
   // ------------------------------------------------------------------
-  // Sparmodus — Standard, siehe Doku Kapitel 6
+  // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
   idleSkip: {
-    enabled: true,
-    cyclesUnchanged: 2,
-    maxSkipSeconds: 48
+    enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
+    cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
+    maxSkipSeconds: 44   // max. Alter der Geraete-Daten (SOC/socLimit) waehrend des Aussetzens
   },
 
   // ------------------------------------------------------------------
+  // MESSAGE SECTION
   signal: {
-    enabled: true,
-    typ: "WEBHOOK",
-    phone: "PHONE-STRING",
-    apiKey: "YOUR_API_KEY",
-    webhookUrl: "http://192.168.178.50:8123/api/webhook/-1fhzv1ksfMHbOOCWxPeTaz7Q"
-  },
-
-  // ------------------------------------------------------------------
-  // ZUSAETZLICHE EINTRAEGE — vom Configurator nicht verwaltet,
-  // unveraendert aus der eingelesenen Config uebernommen
-  dischargeResetMargin: 4,
-
-  // ------------------------------------------------------------------
-  // RUNTIME — vom Configurator gepflegt (IPs der beiden Shellys), vom
-  // Script nicht ausgewertet. Nicht entfernen: beim naechsten Einlesen
-  // uebernimmt der Configurator die IPs von hier.
-  runtime: {
-    ctr_kvs: "192.168.178.117",
-    apidash_watch: "192.168.178.149"
+    enabled: false,          // set to true to activate notifications
+	typ: "WEBHOOK",			 // "SIGNAL", "WHATSAPP" oder "WEBHOOK"
+    phone: "PHONE-STRING",   // e.g. +4917XXXXXXXX (nur SIGNAL/WHATSAPP)
+    apiKey: "YOUR_API_KEY",  // CallMeBot API key
+    webhookUrl: "http://<IP-ADRESSE>:8123/api/webhook/<deine-webhook-id>" // only webhook
   }
 };
 
