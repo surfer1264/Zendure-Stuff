@@ -1,5 +1,12 @@
 # Changelog Controller
 
+## v5.3.9
+
+- **Lese-Timeout 3s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.
+- **Regelverhalten unverändert**, solange ein Gerät innerhalb von 3 s antworten. Standard ist ca. 1Sek
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.3.8
 
 **Ziel:** Den Offgrid-Modus (`gridOffMode`) je Gerät über die KVS steuern, analog zu `minSoc` und `inputLimit`.

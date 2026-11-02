@@ -2,7 +2,7 @@
 // Shelly mJS: Balancing mehrerer Zendure-Geraete gegen Pro 3EM/JSON-Zaehler
 // Konfiguration erfolgt ausschliesslich im CONFIG-Block unten
 let SCRIPT_TYPE = "zdmc-controller";
-let VERSION = "5.3.8";
+let VERSION = "5.3.9";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   devices: [
@@ -126,7 +126,12 @@ let CONFIG = {
   }
 };
 if (CONFIG.interval < 3000) CONFIG.interval = 3000;
-CONFIG.watchdog = CONFIG.interval * 2.5;
+// v5.3.9: Watchdog deckt den schlimmsten regulaeren Zyklus ab: je Geraet
+// Lese- und Schreib-Timeout (3,5 s + 4 s) plus Verbindungsaufbau = 9 s,
+// dazu 2 s Reserve. Vorher (interval x 2.5 = 10 s) schlug er schon an, wenn
+// zwei Geraete nacheinander nicht antworteten - und gab den Takt frei,
+// waehrend die zweite Anfrage noch lief.
+CONFIG.watchdog = Math.max(CONFIG.interval * 2.5, CONFIG.devices.length * 9000 + 2000);
 
 function checkBand(band) {
   if (band.concentrateBelow < 35) band.concentrateBelow = 35;
@@ -801,12 +806,13 @@ function propsPos(r) {
   return (r && r.lastIndexOf("}") >= r.length - 3) ? r.indexOf('"properties"') : -1;
 }
 
+// v5.3.9: Lese-Timeout 3,5 s (Schreiben bleibt 4 s)
 function httpGet(url, callback) {
   safeCall(
     "HTTP.GET",
     {
       url: url,
-      timeout: 4
+      timeout: 3
     },
     callback
   );

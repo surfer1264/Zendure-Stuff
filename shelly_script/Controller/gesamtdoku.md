@@ -372,7 +372,7 @@ optional und mit sinnvollen Standardwerten vorbelegt.
 
 | Wert | Festwert | Bedeutung |
 | --- | --- | --- |
-| `watchdog` | `interval × 2.5` | Watchdog-Zeit, siehe Kapitel 8.3 |
+| `watchdog` | `max(interval × 2.5, Geräte × 9 s + 2 s)` (seit 5.3.9) | Watchdog-Zeit, siehe Kapitel 8.3 |
 | HTTP-Timeout | `4` s (Benachrichtigungen `8` s) | siehe Kapitel 8.3 |
 | `dischargeFixed` | `0` | Fix-Entladeleistung. Wird nach dem CONFIG-Block fest auf `0` gesetzt und ist **nur per KVS** (`zdmc_dischargeFixed`) wirksam, siehe Kapitel 13.4 |
 | `standbyHoldCycles` | `15` | Mindestanzahl Standby-Zyklen in Folge, bevor `smartMode 0` geschrieben wird (nur bei `standbySmartModeZero: true`), siehe Kapitel 8.11 |
@@ -1038,7 +1038,7 @@ praktisch immer alle Geräte laufen (ineffizient).
     - Läuft ein vorheriger Zyklus noch → der Takt wird übersprungen. Seit
       5.1.3 erscheint dazu die Logzeile
       `Takt uebersprungen - Zyklus N laeuft noch seit X ms` (Kapitel 12.7).
-      Hängt der Zyklus dauerhaft, greift nach `interval × 2.5` der Watchdog
+      Hängt der Zyklus dauerhaft, greift nach `watchdog` ms der Watchdog
       (Kapitel 8.3).
     - Andernfalls: `lock()` setzt `state.busy = true`, erhöht `state.cycleId`
       und startet einen Watchdog-Timer (`watchdog` ms, siehe 8.3).
@@ -1240,13 +1240,16 @@ Zusammengefasst: Der Watchdog ist reine **Buchhaltung** auf Script-Ebene (“ich
 ⚠️ **Seit V2.4.4 geändert:** `watchdog` und `httpTimeout` sind **keine
 eigenen CONFIG-Felder mehr** und lassen sich nicht mehr direkt einstellen:
 
-- `watchdog` wird bei **jedem Start** bedingungslos aus `interval` abgeleitet:
-  `CONFIG.watchdog = interval × 2.5`. Wer den Watchdog-Zeitraum ändern
-  möchte, tut das also indirekt über `interval` (siehe Tabelle Kapitel 4).
+- `watchdog` wird bei **jedem Start** bedingungslos abgeleitet, seit 5.3.9
+  aus `interval` **und** der Zahl der Geräte:
+  `CONFIG.watchdog = max(interval × 2.5, Geräte × 9 s + 2 s)`. Die 9 s je
+  Gerät decken Lese- und Schreib-Timeout samt Verbindungsaufbau ab, die 2 s
+  sind Reserve. Vorher (`interval × 2.5`) schlug der Watchdog schon an, wenn
+  zwei Geräte nacheinander in den Timeout liefen (Log 02.11.2026, 15:30), und
+  gab den Takt frei, während die zweite Anfrage noch lief.
 - `httpTimeout` (pro einzelnem HTTP-Call an Geräte/Grid-Meter) ist im Code
-  fest auf `4` Sekunden verdrahtet (**Korrektur gegenüber früheren
-  Doku-Ständen**, die hier `3` s bzw. `5` s nannten – im aktuellen Code steht
-  `timeout: 4`) und taucht auch nicht im Start-Banner auf (siehe Kapitel 8.7). Die
+  fest verdrahtet: **Lesen 3,5 s** (seit 5.3.9, vorher 4 s), **Schreiben 4 s**.
+  Er taucht nicht im Start-Banner auf (siehe Kapitel 8.7). Die
   Signal-/Webhook-Benachrichtigungen nutzen unabhängig davon weiterhin einen
   eigenen, ebenfalls fest verdrahteten Timeout von `8` Sekunden (ebenfalls
   korrigiert, vorher fälschlich als 15 s dokumentiert).
@@ -1262,13 +1265,11 @@ starten.
 
 Da bei mehreren Geräten **sequenziell** gelesen und geschrieben wird (siehe
 8.1 und Kapitel 10), muss `watchdog` den gesamten Zyklus abdecken – Netz
-lesen + alle Geräte lesen + Verteilung + alle Schreibvorgänge. Der fest
-verdrahtete `httpTimeout` von 4 s (pro einzelnem HTTP-Call) ist bewusst
-deutlich kürzer als der abgeleitete `watchdog` (Faktor 2.5 × `interval`),
-damit jeder Einzel-Call sicher terminiert (erfolgreich oder mit Fehler),
-bevor der Gesamt-Watchdog überhaupt greifen könnte – so bleibt in der Praxis
-Zeit für einen sauberen, regulären Zyklusabbruch statt eines harten
-Watchdog-Resets.
+lesen + alle Geräte lesen + Verteilung + alle Schreibvorgänge. Seit 5.3.9 ist
+`watchdog` deshalb so gewählt, dass auch der schlimmste reguläre Fall – jedes
+Gerät läuft beim Lesen und beim Schreiben in den Timeout – vor dem Watchdog
+endet. Er greift damit nur noch bei einem wirklich hängenden Zyklus, etwa
+wenn ein Callback nie kommt.
 
 Zusätzliche Absicherung im Multi-Script: Jeder asynchrone Callback (Grid-Read,
 Geräte-Read, `calculate()`, `applyOutputs()`, `writeDevice()`) prüft zu Beginn
@@ -1280,15 +1281,15 @@ Zyklus überschreibt (siehe auch die „Bekannte Einschränkung" in Kapitel 11).
 
 **Empfehlung für `interval`**
 
-Nicht unter 3 Sekunden gehen. Der daraus abgeleitete `watchdog`-Wert
-(`interval × 2.5`) steht danach automatisch im Start-Banner:
+Nicht unter 3 Sekunden gehen. Der abgeleitete `watchdog`-Wert steht danach
+automatisch im Start-Banner:
 
-| Anzahl Geräte | Bem. | `interval` (s) | `httpTimeout` (s, fest) | `watchdog` (ms, abgeleitet) |
+| Anzahl Geräte | Bem. | `interval` (s) | `httpTimeout` (s, fest) | `watchdog` (ms, abgeleitet, seit 5.3.9) |
 | --- | --- | --- | --- | --- |
-| 1 | | 3000 | 4 (fest) | 7500 |
-| 2 | | 3500 | 4 (fest) | 8750 |
-| 3 | default | 4000 | 4 (fest) | 10000 |
-| 4 | | 4500 | 4 (fest) | 11250 |
+| 1 | | 3000 | 3,5 lesen / 4 schreiben | 11000 |
+| 2 | | 3500 | 3,5 lesen / 4 schreiben | 20000 |
+| 3 | default | 4000 | 3,5 lesen / 4 schreiben | 29000 |
+| 4 | | 4500 | 3,5 lesen / 4 schreiben | 38000 |
 
 ℹ️ Der Sparmodus (Kapitel 8.12) verkürzt die Zyklusdauer in ruhigen Phasen
 deutlich, da die Geräte-Reads entfallen – am `watchdog`-Wert ändert das
@@ -1982,7 +1983,7 @@ DEBUG Sparmodus: Geraete-Poll ausgesetzt (7 Zyklen verbleibend, Netzmessung aktu
 flowchart TD
     A(["Timer-Tick alle CONFIG.interval ms: update()"]) --> B{"Vorheriger Zyklus noch aktiv? (state.busy)"}
     B -->|"ja"| B1["Takt verwerfen, Log: Takt uebersprungen"]
-    B -->|"nein"| C["lock(): cycleId + 1, Watchdog starten (interval x 2.5)"]
+    B -->|"nein"| C["lock(): cycleId + 1, Watchdog starten (max(interval x 2.5, Geraete x 9 s + 2 s))"]
     C --> D["Netzleistung lesen (local / remote / http_json)"]
     D --> E{"Erfolgreich?"}
     E -->|"nein"| E1["Fehler em zaehlen, unlock()"]
@@ -2139,10 +2140,10 @@ inzwischen neueren Zyklus anzuwenden (siehe Kapitel 8.3/8.1). Damit ist die
 in der Einzelgerät-Version noch offene Einschränkung hier größtenteils
 adressiert – ausgeschlossen ist eine Restunschärfe bei sehr knapp getakteten
 `interval`/`watchdog`-Kombinationen dennoch nicht vollständig. Seit V2.4.4
-ist `httpTimeout` fest verdrahtet (aktuell **4 s**) und `watchdog` wird automatisch
-als `interval × 2.5` abgeleitet (siehe 8.3) – wer hier zusätzlichen
-Sicherheitsabstand möchte, kann das nur noch indirekt über eine großzügigere
-Wahl von `interval` erreichen.
+ist `httpTimeout` fest verdrahtet (aktuell **3,5 s lesen, 4 s schreiben**) und
+`watchdog` wird automatisch abgeleitet, seit 5.3.9 als
+`max(interval × 2.5, Geräte × 9 s + 2 s)` (siehe 8.3). Damit endet jeder
+reguläre Zyklus vor dem Watchdog, auch wenn alle Geräte in den Timeout laufen.
 
 **Veraltete Gerätedaten im Sparmodus**
 
@@ -2381,7 +2382,7 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   fertig war (z. B. weil ein Gerät langsam antwortet). Der Takt wird
   verworfen. Vereinzelt ist das unkritisch; tritt die Zeile häufig auf, ist
   `interval` für die Anzahl der Geräte zu knapp (Kapitel 4b). Bleibt der
-  Zyklus ganz hängen, folgt nach `interval × 2.5` die Watchdog-Fehlermeldung
+  Zyklus ganz hängen, folgt nach `watchdog` ms die Watchdog-Fehlermeldung
   (Kapitel 12.6).
 - `Zyklen 1h: n N | avg X ms | max Y ms | uebersprungen S | interval I ms | s a/b/c/d/e/f/g`
   (seit 5.2.6, Teil `s` seit 5.3.6) — einmal pro Stunde, auch ohne `debug`. `n`, `avg` und `max`
@@ -2390,8 +2391,8 @@ Ein daraus folgender Fehler (z. B. `connect`) wird zusätzlich regulär gezählt
   `unlock()` – also praktisch die Wartezeit auf Zähler und Geräte.
   `uebersprungen` zählt die verworfenen Takte (Zeile oben). Liegt `max`
   regelmäßig nahe an `interval` oder ist `uebersprungen` oft größer 0, ist
-  `interval` zu knapp. Ein einzelnes `max` knapp unter 4000 ms ist meist ein
-  HTTP-Timeout (4 s, Kapitel 8.3), also ein Netzwerk-Hänger. `s` verteilt
+  `interval` zu knapp. Ein einzelnes `max` knapp über 3500 ms ist meist ein
+  Lese-Timeout (3,5 s, Kapitel 8.3), also ein Netzwerk-Hänger. `s` verteilt
   dieselben `n` Zyklen auf sieben Klassen der Zyklusdauer (siehe unten). Der
   Controller führt dafür nur zwölf Zahlen mit (kein Puffer, kein zusätzlicher
   Timer).
