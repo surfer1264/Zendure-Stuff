@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-02T18:55:56Z",
+  "generated": "2026-11-02T20:10:34Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.3.9",
+      "version": "5.3.12",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/852206309de041b43f113d353f9b0b6e8e140920/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 42687,
-      "codeHash": "sha256:26d052a153b8258c3733bfc2f10e2df6ac705ec53aeca012d27dd7f071875d0c",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/aaa54a4d8781d41af2c661fc8f14257269ecafbf/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 43113,
+      "codeHash": "sha256:5f4c5cef4e2975ca3c35b467ed55f43edc9dfd937771cb652201f22a03b96e59",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Lese-Timeout 3 s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.",
-        "**Watchdog nach Geräteanzahl:** `max(interval × 2,5, Geräte × 9 s + 2 s)`, bei 2 Geräten also 20 s statt 10 s. Vorher schlug er schon an, wenn zwei Geräte nacheinander nicht antworteten, und gab den Takt frei, während die zweite Anfrage noch lief.",
-        "**Regelverhalten unverändert**, solange ein Gerät innerhalb von 3 s antwortet. Üblich ist etwa 1 s."
+        "**SoC-Grenzen beim Start wieder sicher:** Der SoC-Sync startet 500 ms nach dem KVS-Lesen und wiederholt einen gescheiterten Geräte-Abruf nach 2 s einmal. Seit 5.3.7 bekam das erste Gerät beim Start oft weder `minSoc` noch `socSet`",
+        "**KVS-Startmeldungen vollständig:** Die Zeilen `Wert uebernommen` beim Start kommen einzeln mit 150 ms Abstand und gehen im Log nicht mehr verloren. Der Start dauert dadurch bis zu 1 s länger",
+        "**Fehlergrund im Log:** `Geraet nicht erreichbar (<Grund>)`, z. B. `HTTP 500` oder `-104 …` (Timeout)"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.3.9",
+          "schema": 1,
+          "codeHash": "sha256:26d052a153b8258c3733bfc2f10e2df6ac705ec53aeca012d27dd7f071875d0c",
+          "changes": [
+            "**Lese-Timeout 3 s statt 4 s** (`httpGet`: Geräteabfrage, Remote-/JSON-Zähler). Schreiben bleibt bei 4 s.",
+            "**Watchdog nach Geräteanzahl:** `max(interval × 2,5, Geräte × 9 s + 2 s)`, bei 2 Geräten also 20 s statt 10 s. Vorher schlug er schon an, wenn zwei Geräte nacheinander nicht antworteten, und gab den Takt frei, während die zweite Anfrage noch lief.",
+            "**Regelverhalten unverändert**, solange ein Gerät innerhalb von 3 s antwortet. Üblich ist etwa 1 s."
+          ],
+          "notice": null
+        },
         {
           "version": "5.3.8",
           "schema": 1,
@@ -163,17 +174,6 @@
             "**minSoc/maxSoc: Mindestabstand 5 Prozentpunkte:** Beim Start gilt jetzt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`). Liegen beide Werte zu eng beieinander, wird `maxSoc` angehoben, die Reserve bleibt erhalten.",
             "**KVS-Override `zdmc_devN_minSoc` wird gegen `maxSoc` geprüft:** Übernommen wird nur ein Wert zwischen 10 und `maxSoc − 5`. Vorher galt 10–99 ohne Bezug zu `maxSoc` – ein zu hoher Wert (z. B. aus Home Assistant oder Node-RED) wurde übernommen und per `syncMinSocDevice()` sogar aufs Gerät geschrieben. Ungültige Werte werden jetzt ignoriert (mit `debug: true` steht ein Hinweis im Log).",
             "Fehlt `minSoc` oder `maxSoc` im CONFIG-Block eines Geräts, gilt 10 % bzw. 100 % (vorher `NaN`)."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.2.0",
-          "schema": 1,
-          "codeHash": "sha256:0d4557441900efde0543a9aac033351c494743012b12e64761ca1411c804ff62",
-          "changes": [
-            "**Ruhigere Regelung bei konstanter Last (Nachbesserung zu 5.1.8):** Die schnelle Flanke greift nur noch bei einem echten Sprung, wenn der neue Wert mehr als **3 × `hysteresis`** (höchstens **50 W**) unter dem aktuellen Regelsignal liegt. Kleinere Abweichungen werden wieder in beide Richtungen mit `dampingFactor` gedämpft, wie bis 5.1.7.",
-            "**Schnelle Flanke mit Faktor 0,9 statt ungedämpft:** Bei einem Sprung übernimmt der Controller 90 % der Änderung sofort, nicht 100 %. Wegen der Reaktionszeit der Solarflows (~3 s) steckt das Gerät beim nächsten Messen oft noch in der Rampe. Ein voller Sprung schoss dann leicht über und wurde im Folgetakt wieder zurückgenommen.",
-            "Simulation mit 4 s Takt und 3 s Reaktionszeit: beim Wasserkocher ein Drittel weniger Richtungswechsel, beim Herd-Thermostat rund 35 % weniger, bei taktender Induktion ein Viertel weniger Schreibbefehle. Der Export ist dabei nur 5–10 % höher als mit voll ungedämpfter Flanke, liegt aber weiter deutlich unter 5.1.7 (Wasserkocher: 23,8 statt 30,5 Wh)."
           ],
           "notice": null
         }
