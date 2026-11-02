@@ -78,7 +78,7 @@ def terser_minify(js_text, tmp_path):
         f.write(js_text)
 
     result = subprocess.run(
-        [NPX, "terser", in_path, "-o", out_path, "--ecma", "5", "-f", "beautify=false"],
+        [NPX, "terser", in_path, "-o", out_path, "--ecma", "5", "--mangle", "-f", "beautify=false"],
         capture_output=True, text=True
     )
     if result.returncode != 0:
