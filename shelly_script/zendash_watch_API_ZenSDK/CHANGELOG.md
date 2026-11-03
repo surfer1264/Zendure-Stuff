@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Script, Dashboard und Proxy tragen weiter dieselbe Versionsnummer. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.1.0
+
+**Ziel:** Den Offgrid-Modus (`gridOffMode`) für das Dashboard lesbar und schreibbar machen. Das Schreiben auf das Gerät übernimmt das Regel-Script ab 5.3.8.
+
+- **status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.
+- **config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.
+- **kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen.
+- **Log (mit `debug`):** Die config_api-Zeile zeigt je Gerät zusätzlich `gom=`.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.0.1
 
 **Ziel:** Kleineres Script auf dem Shelly, Funktion unverändert.

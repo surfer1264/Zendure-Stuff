@@ -637,11 +637,13 @@
   .draft-btns{ display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:.5rem; }
   .draft-btns .btn{ padding:.5rem .375rem; }
   .btn.btn-ok{ background:var(--teal-deep); color:#06201D; border-color:transparent; }
-  /* Offgrid (noch ohne Funktion) */
+  /* Offgrid-Modus (zdmc_devN_gridOffMode) */
   .og-list{ display:flex; flex-direction:column; gap:.5rem; }
   .og-opt{ appearance:none; text-align:left; width:100%; display:flex; align-items:center; gap:.75rem; padding:.6875rem .75rem; min-height:3.75rem;
     border-radius:var(--radius-sm); background:var(--surface); border:1px solid var(--border); color:var(--text);
-    font-family:'IBM Plex Sans', sans-serif; cursor:not-allowed; }
+    font-family:'IBM Plex Sans', sans-serif; cursor:pointer; }
+  .og-opt:disabled{ opacity:.5; cursor:not-allowed; }
+  .og-opt:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
   .og-opt[aria-pressed="true"]{ border:2px solid var(--teal-deep); padding:.625rem .6875rem; }
   .og-opt .ic{ width:2.125rem; height:2.125rem; border-radius:50%; display:flex; align-items:center; justify-content:center;
     background:var(--surface-2); color:var(--text-muted); flex-shrink:0; }
@@ -649,7 +651,8 @@
   .og-opt[aria-pressed="true"] .ic{ background:var(--teal-deep); color:#06201D; }
   .og-opt b{ display:block; font-size:.92rem; font-weight:600; }
   .og-opt small{ display:block; font-size:.8rem; color:var(--text-muted); margin-top:.125rem; line-height:1.35; }
-  .og-soon{ margin:.625rem 0 0; font-size:.8rem; line-height:1.4; color:var(--text-muted); }
+  .og-state{ margin:.625rem 0 0; font-size:.8rem; line-height:1.4; color:var(--text-muted); }
+  .og-state.dirty{ color:var(--amber-text); }
   /* Ladestufen */
   .in-chips{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.375rem; margin-top:.5rem; }
   .in-chip{ appearance:none; min-height:2.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface);
@@ -1042,7 +1045,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen.
-  const VERSION = "4.0.1";
+  const VERSION = "4.1.0";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -1067,6 +1070,7 @@
       helpAcMode: 'Betriebsart des Geräts: 1 = Laden bzw. Bereitschaft, 2 = Einspeisen ins Hausnetz. Wird vom Regel-Script gesetzt.',
       helpSocSet: 'Obere Ladegrenze, die gerade am Gerät eingestellt ist (socSet). Das Regel-Script setzt sie nur beim Start auf maxSoc aus der Konfiguration. Weicht sie ab, wurde sie danach von außen geändert (z. B. App oder Home Assistant) – das Gerät lädt dann nur bis zu diesem Wert. Abhilfe: Regel-Script neu starten oder maxSoc in der Konfiguration anpassen.',
       helpMinSoc: 'Untere Entladegrenze, die gerade am Gerät eingestellt ist (minSoc), verglichen mit der Reserve aus der KVS (zdmc_devN_minSoc). Das Regel-Script übernimmt jede Änderung aus der KVS auf das Gerät. Bleibt eine Abweichung länger als etwa eine Minute bestehen, wurde der Wert von außen geändert (z. B. App oder Home Assistant) oder das Regel-Script hat ihn nicht übernommen. Abhilfe: Reserve im Dashboard neu setzen bzw. Regel-Script prüfen.',
+      helpOg: 'Offgrid-Modus, der gerade am Gerät eingestellt ist (gridOffMode), verglichen mit dem Wert aus der KVS (zdmc_devN_gridOffMode). Das Regel-Script schreibt den Modus nur, wenn sich der KVS-Wert ändert – nicht beim Start und nicht, wenn er in der App geändert wurde. Bleibt eine Abweichung länger als etwa eine Minute bestehen, wurde der Modus von außen geändert oder das Regel-Script hat ihn nicht übernommen. Abhilfe: Regel-Script prüfen bzw. den Modus in der App zurückstellen.',
       helpSocLimit: 'Ladegrenze des Geräts: 0 = frei, 1 = voll (Laden gesperrt), 2 = untere Grenze erreicht (Entladen gesperrt).',
       helpGridReverse: '2 - Überschuss exportieren verboten für das Gerät; 1 - Export erlaubt. Im gridReverseMode „dynamic“ entscheidet der Controller selbstständig über die Einstellung.',
       helpInputLimit: 'Wählt nur die Leistung. Wirksam erst mit „Manuelles Laden starten“.',
@@ -1184,6 +1188,7 @@
       helpAcMode: 'Operating mode of the device: 1 = charging or standby, 2 = feeding into the house grid. Set by the control script.',
       helpSocSet: 'Upper charge limit currently set on the device (socSet). The control script sets it to maxSoc from the configuration only at startup. If it differs, it was changed externally afterwards (e.g. app or Home Assistant) – the device then only charges up to this value. Fix: restart the control script or adjust maxSoc in the configuration.',
       helpMinSoc: 'Lower discharge limit currently set on the device (minSoc), compared with the reserve from the KVS (zdmc_devN_minSoc). The control script applies every KVS change to the device. If a difference persists for more than about a minute, the value was changed externally (e.g. app or Home Assistant) or the control script did not apply it. Remedy: set the reserve again in the dashboard or check the control script.',
+      helpOg: 'Off-grid mode currently set on the device (gridOffMode), compared with the value from the KVS (zdmc_devN_gridOffMode). The control script writes the mode only when the KVS value changes – not at startup and not when it was changed in the app. If a difference persists for more than about a minute, the mode was changed externally or the control script did not apply it. Remedy: check the control script or set the mode back in the app.',
       helpSocLimit: 'Charge limit of the device: 0 = free, 1 = full (charging blocked), 2 = lower limit reached (discharge blocked).',
       helpGridReverse: '2 - exporting surplus is blocked for this device; 1 - export allowed. In gridReverseMode "dynamic" the controller decides on this setting by itself.',
       helpInputLimit: 'Only selects the power. Takes effect with “Start manual charging”.',
@@ -1301,6 +1306,7 @@
       helpAcMode: 'Mode de fonctionnement de l’appareil\u00a0: 1 = charge ou veille, 2 = injection dans le réseau domestique. Défini par le script de régulation.',
       helpSocSet: 'Limite de charge supérieure actuellement réglée sur l’appareil (socSet). Le script de régulation la règle sur maxSoc de la configuration uniquement au démarrage. Si elle diffère, elle a été modifiée de l’extérieur ensuite (p.\u00a0ex. application ou Home Assistant) – l’appareil ne charge alors que jusqu’à cette valeur. Solution\u00a0: redémarrer le script de régulation ou adapter maxSoc dans la configuration.',
       helpMinSoc: 'Limite de décharge inférieure actuellement réglée sur l’appareil (minSoc), comparée à la réserve de la KVS (zdmc_devN_minSoc). Le script de régulation applique chaque modification de la KVS à l’appareil. Si un écart persiste plus d’une minute environ, la valeur a été modifiée de l’extérieur (p.\u00a0ex. application ou Home Assistant) ou le script de régulation ne l’a pas appliquée. Remède\u00a0: régler à nouveau la réserve dans le tableau de bord ou vérifier le script de régulation.',
+      helpOg: 'Mode hors réseau actuellement réglé sur l’appareil (gridOffMode), comparé à la valeur de la KVS (zdmc_devN_gridOffMode). Le script de régulation n’écrit le mode que lorsque la valeur KVS change – ni au démarrage, ni lorsqu’il a été modifié dans l’application. Si un écart persiste plus d’une minute environ, le mode a été modifié de l’extérieur ou le script de régulation ne l’a pas appliqué. Remède\u00a0: vérifier le script de régulation ou remettre le mode dans l’application.',
       helpSocLimit: 'Limite de charge de l’appareil\u00a0: 0 = libre, 1 = pleine (charge bloquée), 2 = limite basse atteinte (décharge bloquée).',
       helpGridReverse: '2 - exportation du surplus interdite pour l’appareil\u00a0; 1 - exportation autorisée. En gridReverseMode «\u00a0dynamic\u00a0», le contrôleur décide lui-même de ce réglage.',
       helpInputLimit: 'Choisit seulement la puissance. Effective avec «\u00a0Démarrer la charge manuelle\u00a0».',
@@ -1485,7 +1491,8 @@
     socDec: 'Reserve verringern', socInc: 'Reserve erhöhen', socDraft: 'nicht gespeichert · vorher {o} %', discard: 'Verwerfen', apply: 'Übernehmen',
     chipOff: 'Aus', chipMax: 'Max',
     ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Schaltet sich bei Leerlauf selbst ab',
-    ogSoon: 'Noch ohne Funktion – die Umschaltung folgt mit einem späteren Script-Update.',
+    ogHw: 'Am Gerät: {m}', ogNoKvs: 'noch nicht in der KVS – das Regel-Script ändert am Gerät nichts',
+    plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät',
     flagDischargeOff: 'Entladen gesperrt', flagChargeOff: 'Laden aus dem Netz gesperrt', flagManualOn: 'manuelles Laden aktiv · Regelung pausiert',
     techMinSoc: 'minSoc KVS / Gerät', techLock: 'Entladen / Netzladen', techKvs: 'KVS-Schlüssel', techIp: 'IP',
     techCellLock: 'Sperrschwelle Zelle', yes: 'ja', no: 'nein'
@@ -1509,7 +1516,8 @@
     socDec: 'Decrease reserve', socInc: 'Increase reserve', socDraft: 'not saved · was {o} %', discard: 'Discard', apply: 'Apply',
     chipOff: 'Off', chipMax: 'Max',
     ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Switches itself off when idle',
-    ogSoon: 'Not functional yet – switching will come with a later script update.',
+    ogHw: 'On device: {m}', ogNoKvs: 'not in the KVS yet – the control script leaves the device unchanged',
+    plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device',
     flagDischargeOff: 'discharge disabled', flagChargeOff: 'grid charging disabled', flagManualOn: 'manual charging active · control paused',
     techMinSoc: 'minSoc KVS / device', techLock: 'Discharge / grid charging', techKvs: 'KVS keys', techIp: 'IP',
     techCellLock: 'Cell lock threshold', yes: 'yes', no: 'no'
@@ -1533,7 +1541,8 @@
     socDec: 'Diminuer la réserve', socInc: 'Augmenter la réserve', socDraft: 'non enregistré · avant {o}\u00a0%', discard: 'Annuler', apply: 'Appliquer',
     chipOff: 'Arrêt', chipMax: 'Max',
     ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'S’éteint d’elle-même en l’absence de charge',
-    ogSoon: 'Pas encore fonctionnel – la commutation viendra avec une prochaine mise à jour du script.',
+    ogHw: 'Sur l’appareil\u00a0: {m}', ogNoKvs: 'pas encore dans la KVS – le script de régulation ne modifie pas l’appareil',
+    plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil',
     flagDischargeOff: 'décharge désactivée', flagChargeOff: 'charge réseau désactivée', flagManualOn: 'charge manuelle active · régulation en pause',
     techMinSoc: 'minSoc KVS / appareil', techLock: 'Décharge / charge réseau', techKvs: 'Clés KVS', techIp: 'IP',
     techCellLock: 'Seuil de blocage cellule', yes: 'oui', no: 'non'
@@ -2086,7 +2095,7 @@
     if (key === 'zdmc_dischargeResetMargin') return t('resetMargin');
     const m = /^zdmc_dev(\d+)_(\w+)$/.exec(key);
     if (!m) return key;
-    const names = { dischargeAllowed: 'dischargeAllowed', reverse: 'reverseAllowed', minSoc: 'reserve', inputLimit: 'inputLimitLbl' };
+    const names = { dischargeAllowed: 'dischargeAllowed', reverse: 'reverseAllowed', minSoc: 'reserve', inputLimit: 'inputLimitLbl', gridOffMode: 'tabOffgrid' };
     const hub = hubs.find(function(h){ return String(h.id) === m[1]; });
     return (hub ? hub.label : 'dev' + m[1]) + ' · ' + (names[m[2]] ? t(names[m[2]]) : m[2]);
   }
@@ -2094,6 +2103,7 @@
     if (appEl.classList.contains('expert')) return String(value);
     if (/_(dischargeAllowed|reverse)$/.test(key)) return t(Number(value) ? 'valOn' : 'valOff');
     if (/_(minSoc|dischargeResetMargin)$/.test(key)) return value + ' %';
+    if (/_gridOffMode$/.test(key)) return ogName(value);
     return value + ' W';
   }
 
@@ -2173,12 +2183,10 @@
   }
 
   // Sperren der Einstellungen in der Geraetekarte:
-  //  - Offgrid-Wahl: noch ohne Funktion (folgt mit einem Script-Update)
   //  - Ladestufen: gesperrt, solange manuelles Laden laeuft
   //  - Reserve -/+: an der jeweiligen Grenze
   function isCardGated(el){
     if (!el || !el.classList) return false;
-    if (el.classList.contains('og-opt')) return true;
     const id = el.getAttribute('data-dev');
     if (id === null) return false;
     const d = hubs.find(function(h){ return String(h.id) === id; });
@@ -2652,7 +2660,7 @@
 
 
   /* ---------------- Einstellungen in der Geraetekarte (Reiter) ----------------
-     Regelung (Schalter + Reserve), Offgrid (noch ohne Funktion), Laden
+     Regelung (Schalter + Reserve), Offgrid (Modus), Laden
      (manuelles Laden). Nichts davon wird im Browser gespeichert. */
   function setTab(id, key, i18n, sel){
     return '<button type="button" class="set-tab" role="tab" data-tab="' + key + '" id="tab-' + key + '-' + id + '" aria-controls="panel-' + key + '-' + id +
@@ -2664,9 +2672,16 @@
     on: '<path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v4"/>',
     eco: '<path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15"/><path d="M5 19l7-7"/>'
   };
-  function ogOpt(m){
+  // Offgrid-Modus: Wert in KVS und am Geraet (gridOffMode) 0 EIN, 1 Oeko, 2 AUS
+  const OG_VAL = { on: 0, eco: 1, off: 2 };
+  const OG_KEY = ['ogOn', 'ogEco', 'ogOff'];
+  function ogName(v){
+    v = (v === null || v === undefined) ? NaN : Number(v);
+    return OG_KEY[v] ? t(OG_KEY[v]) : '–';
+  }
+  function ogOpt(id, m){
     const k = m.charAt(0).toUpperCase() + m.slice(1);
-    return '<button type="button" class="og-opt" aria-pressed="false" disabled>' +
+    return '<button type="button" class="og-opt" id="og-' + m + '-' + id + '" data-og="' + OG_VAL[m] + '" aria-pressed="false">' +
       '<span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' + OG_ICON[m] + '</svg></span>' +
       '<span class="txt"><b data-i18n="og' + k + '">' + t('og' + k) + '</b><small data-i18n="og' + k + 'Desc">' + t('og' + k + 'Desc') + '</small></span></button>';
   }
@@ -2737,6 +2752,22 @@
     });
     const v = document.getElementById('inputLimitValue-' + d.id);
     if (v) v.textContent = sel ? sel + ' W' : t('off');
+  }
+
+  // Offgrid: markiert ist der KVS-Wert (Vorgabe fuer das Regel-Script),
+  // ohne KVS-Key der Ist-Wert am Geraet. Darunter der Ist-Wert, orange,
+  // solange er von der KVS abweicht.
+  function showOg(d){
+    const kvs = d.gridOffMode, hw = d.gridOffModeHw;
+    const sel = (kvs !== null) ? kvs : hw;
+    document.querySelectorAll('#panel-og-' + d.id + ' .og-opt').forEach(function(b){
+      b.setAttribute('aria-pressed', (sel !== null && Number(b.getAttribute('data-og')) === sel) ? 'true' : 'false');
+    });
+    const st = document.getElementById('ogState-' + d.id);
+    if (!st) return;
+    const differs = kvs !== null && hw !== null && hw !== kvs;
+    st.textContent = t('ogHw', { m: ogName(hw) }) + (kvs === null ? ' · ' + t('ogNoKvs') : (differs ? ' · ' + t('flagOgDiff', { kvs: ogName(kvs) }) : ''));
+    st.classList.toggle('dirty', differs);
   }
 
   // Reiner Text-Ersatz fuer die ausgeblendeten Schalter im gesperrten
@@ -2820,9 +2851,10 @@
         '</div>' +
         '<div class="set-panel" role="tabpanel" id="panel-og-' + d.id + '" aria-labelledby="tab-og-' + d.id + '" hidden>' +
           '<div class="og-list" role="group" aria-labelledby="tab-og-' + d.id + '">' +
-            ogOpt('off') + ogOpt('on') + ogOpt('eco') +
+            ogOpt(d.id, 'off') + ogOpt(d.id, 'on') + ogOpt(d.id, 'eco') +
           '</div>' +
-          '<p class="og-soon" data-i18n="ogSoon">' + t('ogSoon') + '</p>' +
+          '<span class="key mono">zdmc_dev' + d.id + '_gridOffMode</span>' +
+          '<p class="og-state" id="ogState-' + d.id + '" aria-live="polite"></p>' +
         '</div>' +
         '<div class="set-panel" role="tabpanel" id="panel-man-' + d.id + '" aria-labelledby="tab-man-' + d.id + '" hidden>' +
           '<div class="ctrl-row">' +
@@ -2948,6 +2980,26 @@
         });
       });
 
+      // Offgrid-Modus: ein Klick schreibt sofort zdmc_devN_gridOffMode. Das
+      // Regel-Script (ab 5.3.8) uebertraegt den Wert beim naechsten KVS-Abgleich
+      // auf das Geraet - aber nur, wenn er sich in der KVS aendert.
+      document.querySelectorAll('#panel-og-' + d.id + ' .og-opt').forEach(function(b){
+        b.addEventListener('click', function(){
+          if (uiBlocked() || isGated(b)) return;
+          touchLockTimer();
+          const nv = Number(b.getAttribute('data-og'));
+          if (d.gridOffMode === nv) return;
+          const btns = Array.prototype.slice.call(document.querySelectorAll('#panel-og-' + d.id + ' .og-opt'));
+          btns.forEach(lockControl);
+          const old = d.gridOffMode;
+          d.gridOffMode = nv;
+          showOg(d);
+          kvsSet('zdmc_dev' + d.id + '_gridOffMode', nv).then(function(ok){
+            if (!ok) { d.gridOffMode = old; showOg(d); btns.forEach(unlockControl); }
+          });
+        });
+      });
+
       // Ladestufen waehlen nur die Leistung (nur im Browser, nicht gespeichert).
       // Geschrieben wird erst von startManual() in der richtigen Reihenfolge.
       document.querySelectorAll('#panel-man-' + d.id + ' .in-chip').forEach(function(ch){
@@ -2965,7 +3017,7 @@
       });
     });
 
-    hubs.forEach(function(d){ showSoc(d); showChips(d); applyOgTab(d); });
+    hubs.forEach(function(d){ showSoc(d); showChips(d); showOg(d); applyOgTab(d); });
     applyLockState();
     buildFlowScopes();
   }
@@ -3161,6 +3213,8 @@
         acMode: null, socLimit: null, gridReverse: null,
         pv: null, minVol: null, socSet: null, temp: null, offGrid: null,
         minSocHw: null, minSocDiffKey: '', minSocDiffSince: 0,
+        // ab Script 4.1.0: Offgrid-Modus aus der KVS (null = kein Key) und am Geraet
+        gridOffMode: ogNum(d.gridOffMode), gridOffModeHw: null, ogDiffKey: '', ogDiffSince: 0,
         watch: d.watch === true,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
@@ -3169,6 +3223,9 @@
     buildHubCards();
     showResetMargin();
   }
+
+  // Offgrid-Wert aus config_api/status_api: Zahl oder null (fehlt/aelteres Script)
+  function ogNum(v){ return (v === null || v === undefined) ? null : Number(v); }
 
   // Gleicht Schalter und Regler mit den KVS-Werten ab, ohne die Karten neu
   // aufzubauen. Elemente, die gerade bedient werden (Fokus), bleiben unberührt,
@@ -3281,6 +3338,8 @@
           if (!c) return;
           if (c.minSoc !== undefined) d.minSoc = Number(c.minSoc);
           if (c.inputLimit !== undefined) d.inputLimit = Number(c.inputLimit);
+          // Gerade geklickter Modus bleibt, bis seine Sperre abgelaufen ist
+          if (!isTempLocked(document.getElementById('og-on-' + d.id))) d.gridOffMode = ogNum(c.gridOffMode);
           d.dischargeAllowed = !!c.dischargeAllowed;
           d.reverse = !!c.reverse;
           if (c.lastFull !== undefined) d.lastFull = Number(c.lastFull || 0);
@@ -3288,7 +3347,7 @@
         });
         liveResetMargin = Number(cfg.dischargeResetMargin || 3);
         showResetMargin();
-        hubs.forEach(function(d){ showSoc(d); showChips(d); });
+        hubs.forEach(function(d){ showSoc(d); showChips(d); showOg(d); });
         applyLockState();
       }
 
@@ -3311,10 +3370,13 @@
           // ab Script 3.5.9: Geraetetemperatur (ganze °C) und Offgrid-Leistung (W)
           d.temp = (h.temp === undefined) ? null : h.temp;
           d.offGrid = (h.offGrid === undefined) ? null : h.offGrid;
+          // ab Script 4.1.0: Offgrid-Modus am Geraet
+          d.gridOffModeHw = ogNum(h.gridOffModeHw);
           applyMinSocCeiling(d);
         } else {
           d.online = false;
         }
+        showOg(d);
       });
       showResetMargin();
 
@@ -3418,6 +3480,16 @@
     return (Date.now() - d.minSocDiffSince) >= MINSOC_DIFF_MS;
   }
 
+  // Wie minSocDiffPersists, fuer den Offgrid-Modus. Ohne KVS-Key oder
+  // ohne Ist-Wert (Hub offline, Script < 4.1.0) nie.
+  function ogDiffPersists(d){
+    const kvs = d.gridOffMode, hw = d.gridOffModeHw;
+    if (kvs === null || hw === null || kvs === hw) { d.ogDiffKey = ''; d.ogDiffSince = 0; return false; }
+    const key = kvs + '|' + hw;
+    if (d.ogDiffKey !== key) { d.ogDiffKey = key; d.ogDiffSince = Date.now(); }
+    return (Date.now() - d.ogDiffSince) >= MINSOC_DIFF_MS;
+  }
+
   function renderFlags(d){
     const box = document.getElementById('flags-' + d.id);
     if (!box) return;
@@ -3442,6 +3514,10 @@
     // Untere Entladegrenze am Geraet weicht laenger von der KVS ab
     if (minSocDiffPersists(d)) {
       flags.push(['warn', t('plainMinSoc', { v: d.minSocHw }) + ' · ' + t('flagMinSocDiff', {kvs: d.minSoc}), 'helpMinSoc']);
+    }
+    // Offgrid-Modus am Geraet weicht laenger von der KVS ab
+    if (ogDiffPersists(d)) {
+      flags.push(['warn', t('plainOg', { m: ogName(d.gridOffModeHw) }) + ' · ' + t('flagOgDiff', { kvs: ogName(d.gridOffMode) }), 'helpOg']);
     }
     if (d.gridReverse === 2) flags.push(['block', t('flagExportBlocked'), 'helpGridReverse']);
     // Manuelles Laden schaltet beide Schalter ab: dann nur dieser eine Hinweis
@@ -3522,6 +3598,7 @@
       [t('techKvs'), 'zdmc_dev' + d.id + '_*'],
       [t('techIp'), v(d.ip)]
     ];
+    if (d.gridOffMode !== null || d.gridOffModeHw !== null) rows.splice(5, 0, [t('techOg'), v(d.gridOffMode) + ' / ' + v(d.gridOffModeHw)]);
     if (wdVolt && d.watch) rows.push([t('techCellLock'), fmtVolt(wdVolt.warn) + ' V']);
     box.textContent = '';
     rows.forEach(function(r){

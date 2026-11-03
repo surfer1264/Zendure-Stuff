@@ -23,12 +23,12 @@
 // Endpunkte (nur bei api.enabled, alle mit CORS):
 //   GET config_api  -> { version, setpoint, hysteresis, dischargeFixed,
 //                        dischargeStartupPower, dischargeResetMargin,
-//                        devices:[{..., lastFull}] }
+//                        devices:[{..., lastFull, gridOffMode}] }
 //   GET status_api  -> { grid:{power,online},
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
-//                               minSocHw,temp,offGrid}] }
+//                               minSocHw,temp,offGrid,gridOffModeHw}] }
 //                      ?bg=wake: ein einzelner Poll (Cloud-Upload), ?bg=read: nur lesen
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
@@ -57,9 +57,12 @@
 // schon frei. Fehler in config_api geben Slot und Warteschlange frei
 // (vorher blieb configPending haengen). KVS_TMP aus 3.5.7 entfernt (ohne
 // Wirkung, nur Grundlast).
+// 4.1.0: Offgrid-Modus - status_api liefert je Hub gridOffModeHw (Ist-Wert
+// am Geraet), config_api je Geraet gridOffMode (KVS-Wert, null = kein Key),
+// kvs_set_api nimmt zdmc_devN_gridOffMode nur mit 0, 1 oder 2 an.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.0.1";
+let VERSION = "4.1.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1040,6 +1043,10 @@ function updateGridPowerStatus(callback) {
 //            fehlt. offGrid: Leistung am Offgrid-Ausgang in W (Report
 //            gridOffPower), null = Geraet hat keinen Offgrid-Ausgang
 //            (seit 3.5.9).
+//            gridOffModeHw: am Geraet eingestellter Offgrid-Modus (Report
+//            gridOffMode: 0 EIN, 1 Oeko, 2 AUS), null = Feld fehlt. Das
+//            Regel-Script schreibt nur Aenderungen von zdmc_devN_gridOffMode -
+//            eine Aenderung in der App wird erst hierueber sichtbar (seit 4.1.0).
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -1052,7 +1059,7 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     id: hi, soc: null, power: 0, acMode: null, socLimit: null,
     gridReverse: null, pv: null, minVol: null, online: false,
     home: null, gridIn: null, packIn: null, packOut: null, socSet: null,
-    minSocHw: null, temp: null, offGrid: null
+    minSocHw: null, temp: null, offGrid: null, gridOffModeHw: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1082,6 +1089,7 @@ function setHubOffline(index) {
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
   h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
   h.socSet = null; h.minSocHw = null; h.temp = null; h.offGrid = null;
+  h.gridOffModeHw = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1189,6 +1197,7 @@ function extractHub(index, body, watchNow, logPacks) {
   WSTATE[index].hyperTemp = (ht !== null) ? (ht - 2731) / 10 : null;
   hub.temp = (ht !== null) ? Math.round((ht - 2731) / 10) : null;
   hub.offGrid = jsonNum(body, "gridOffPower");
+  hub.gridOffModeHw = jsonNum(body, "gridOffMode");
 
   let packLog = scanPacks(index, body, watchNow, logPacks);
   if (logPacks) {
@@ -1557,7 +1566,7 @@ function configFail(res, where, e) {
 //      frei - und erst dann devices bauen, stringify, senden.
 // Der Ueberlappungsschutz bleibt ueber BEIDE Schritte belegt: dazwischen
 // kann weder geschrieben (kvs_set_api wartet) noch gepollt werden.
-// kv: [setpoint, dischargeFixed, dischargeResetMargin, je Geraet da, rv, minSoc, il]; null = fehlt
+// kv: [setpoint, dischargeFixed, dischargeResetMargin, je Geraet da, rv, minSoc, il, gom]; null = fehlt
 function serveConfig(res, attempt) {
   if (attempt === 0) {
     if (configPending) { configWaiters[configWaiters.length] = res; return; }
@@ -1584,6 +1593,7 @@ function serveConfig(res, attempt) {
         kv[kv.length] = kvsNumOrNull(store, pre + "reverse");
         kv[kv.length] = kvsNumOrNull(store, pre + "minSoc");
         kv[kv.length] = kvsNumOrNull(store, pre + "inputLimit");
+        kv[kv.length] = kvsNumOrNull(store, pre + "gridOffMode");
         let lfv = kvsValue(store, pre + "lastFull");
         if (lfv !== undefined) adoptLastFull(i, lfv);
       }
@@ -1610,7 +1620,7 @@ function configRespond(res, kv, kvsOk) {
   if (DBG) memLog("config_api Callback verlassen");
   let devices = buildDeviceDefaults();
   for (let i = 0; i < devices.length; i++) {
-    let k = 3 + i * 4;
+    let k = 3 + i * 5;
     if (kv[k] !== null) devices[i].dischargeAllowed = (kv[k] !== 0);
     if (kv[k + 1] !== null) devices[i].reverse = (kv[k + 1] !== 0);
     // KVS-Reserve auf den Bereich begrenzen, den das Regel-Script annimmt
@@ -1618,6 +1628,8 @@ function configRespond(res, kv, kvsOk) {
       devices[i].minSoc = Math.max(10, Math.min(devices[i].maxSoc - SOC_GAP, kv[k + 2]));
     }
     if (kv[k + 3] !== null) devices[i].inputLimit = kv[k + 3];
+    // Offgrid-Modus: kein CONFIG-Default, fehlt der Key -> null
+    devices[i].gridOffMode = kv[k + 4];
     devices[i].lastFull = LASTFULL[i].day;
   }
   let setpoint = (kv[0] !== null) ? kv[0] : 0;
@@ -1645,7 +1657,7 @@ function configRespond(res, kv, kvsOk) {
       " setpoint=" + setpoint + " dischargeFixed=" + dischargeFixed + " drm=" + dischargeResetMargin;
     for (let j = 0; j < devices.length; j++) {
       line += " | dev" + j + " da=" + (devices[j].dischargeAllowed ? 1 : 0) + " rv=" + (devices[j].reverse ? 1 : 0) +
-        " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit;
+        " minSoc=" + devices[j].minSoc + " il=" + devices[j].inputLimit + " gom=" + devices[j].gridOffMode;
     }
     logDebug(line + (configWaiters.length ? " (+" + configWaiters.length + " wartende Anfragen)" : ""));
   }
@@ -1746,6 +1758,19 @@ function handleKvsSet(req, res) {
         sendJson(res, 400, JSON.stringify({
           success: false,
           error: "dischargeResetMargin muss 3..79 sein"
+        }));
+        return;
+      }
+    }
+    // Offgrid-Modus: nur 0 (EIN), 1 (Oeko), 2 (AUS) - andere Werte
+    // verwirft der Regler kommentarlos.
+    if (keys[i].indexOf("zdmc_dev") === 0 && keys[i].slice(keys[i].length - 12) === "_gridOffMode") {
+      let gv = Number(data[keys[i]]);
+      if (gv !== 0 && gv !== 1 && gv !== 2) {
+        if (DBG) logDebug("kvs_set_api: abgelehnt - " + keys[i] + "=" + data[keys[i]] + " (erlaubt 0, 1, 2)");
+        sendJson(res, 400, JSON.stringify({
+          success: false,
+          error: "gridOffMode muss 0, 1 oder 2 sein"
         }));
         return;
       }

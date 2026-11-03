@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Script, Dashboard und Proxy tragen dieselbe Versionsnummer. Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 4.1.0
+
+**Ziel:** Der Reiter „Offgrid“ in der Gerätekarte (neues Design) funktioniert jetzt. Dafür braucht es das Shelly-Script 4.1.0 und das Regel-Script ab 5.3.8.
+
+- **Modus wählen:** Ein Klick auf „Aus“, „Ein“ oder „Öko“ schreibt sofort `zdmc_devN_gridOffMode` (`2`, `0` bzw. `1`) über `kvs_set_api`. Wie die anderen Bedienelemente geht das nur bei freigegebener Bedienung. Während des Schreibens sind die drei Buttons kurz gesperrt. Schlägt das Schreiben fehl, springt die Auswahl zurück.
+- **Anzeige:** Markiert ist der Wert aus der KVS. Gibt es noch keinen KVS-Key, ist der Modus am Gerät markiert. Darunter steht „Am Gerät: …“, orange mit „abweichend, KVS …“, solange das Gerät einen anderen Modus hat. Ohne KVS-Key steht dort, dass das Regel-Script am Gerät nichts ändert.
+- **Hinweis bei Abweichung:** Weicht der Modus am Gerät länger als 75 s von der KVS ab (z. B. nach einer Änderung in der App), erscheint in der Karte der Hinweis „Offgrid am Gerät … · abweichend, KVS …“, mit Hilfetext. Das Prinzip ist dasselbe wie bei der Reserve.
+- **Technische Details:** neue Zeile „Offgrid KVS / Gerät“ mit den Rohwerten.
+- Der Reiter erscheint weiterhin nur bei Geräten mit Offgrid-Ausgang. Das klassische Dashboard hat nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 4.1.0.0
+
 ## Changelog 4.0.1
 
 - Nur die Versionsnummer, passend zum Shelly-Script 4.0.1 (kleiner minifiziert). Dashboard und Proxy unverändert

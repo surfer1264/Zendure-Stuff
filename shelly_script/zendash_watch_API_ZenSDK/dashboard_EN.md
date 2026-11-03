@@ -116,7 +116,13 @@ All settings go to the Controller and take effect on its next control cycle. Aft
 | **Grid charging power** | only selects the power, no effect yet (not saved) | fixed steps from `maxInputPower`: Off, up to four round steps (50/100/200/250/500 W) and Max, e.g. at 800 W: Off · 200 · 400 · 600 · Max |
 | **Start / stop manual charging** | starts or stops charging with the selected power | – |
 
-**"Off-grid" tab:** Off · On · Eco for the off-grid socket – not functional yet, switching will come with a later script update.
+**On each device card in the "Off-grid" tab** (only on devices with an off-grid socket):
+
+| Control | Effect | Range |
+|---|---|---|
+| **Off-grid mode (`gridOffMode`)** | Switches the off-grid socket. A click saves immediately to `zdmc_devN_gridOffMode`, and the controller applies the mode to the device at its next sync. The saved mode is highlighted. Below it is the mode currently set on the device ("On device: …"). If it differs, it is shown in orange with "differs, KVS …". | Off (`2`) · On (`0`, always on) · Eco (`1`, switches itself off when idle) |
+
+The controller writes the mode only when it changes in the KVS. It does not write it at startup and does not sync a change made in the app. As long as no mode has been saved, it leaves the socket unchanged. In that case the mode on the device is highlighted, with the note "not in the KVS yet" below. If the mode was changed in the app, clicking the mode that is already highlighted does not bring it back. Instead, briefly choose another mode and then the one you want, or set the mode back in the app. This requires controller 5.3.8 or later and dashboard script 4.1.0 or later.
 
 On start, the dashboard asks for confirmation once and then switches "Discharge allowed" and "Charging from grid allowed" off for this battery – the battery is thus taken out of control, and the note next to the button shows "Active at … W". On stop it restores the previous state. When the battery is full, the script ends charging by itself, even with the dashboard closed ([auto-stop](readme_EN.md#manual-charging-and-auto-stop)). If the process is interrupted halfway (Shelly not reachable), a warning appears – then check the switches and charging power on the card.
 
@@ -135,7 +141,7 @@ Not changeable in the dashboard are the **hysteresis** (tolerance around the set
   - PV input, off-grid power (only on devices with an off-grid socket), device temperature in °C and weakest cell ("Cell min 3.28 V") – which is only meaningful under load. For batteries monitored by the watchdog, the lock threshold follows, e.g. "lock < 2.90 V", and the colour follows the watchdog thresholds: yellow below `minVoltReset`, red below `minVoltWarn`. Otherwise: yellow below 3.0 V, red below 2.8 V.
   - "100 %: N days ago" – when the battery was last completely full; tapping shows the date ([more on this](readme_EN.md#last-full-charge))
   - status in plain language, e.g. "feeding in", "full, charging blocked", "empty, discharge blocked", "export blocked". This explains the most common "Why is the battery doing nothing?" cases. With "Technical details" the raw code is shown in front (`socLimit 1`, `gridReverse 2` …).
-  - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %". Usually the value was changed externally (app, Home Assistant).
+  - notes when something different is set on the device than in the configuration, e.g. "Charge limit 90 % · differs, configuration 100 %" (`socSet` ≠ `maxSoc`) or "Reserve on device 15 % · differs, KVS 20 %" or "Off-grid on device On · differs, KVS Off". The last two only appear once the difference has lasted for more than about a minute. Usually the value was changed externally (app, Home Assistant).
   - below that "Discharge: allowed · Grid charging: blocked" as a summary of the two switches
 - **Footer:** versions of page and script (yellow if they do not match), time of the last update, **Help** link to this guide. `config_api` and `status_api` open the raw data as JSON in a new tab. **ThingSpeak** and **ThingsBoard** lead to the setup pages for the cloud upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md), German).
 

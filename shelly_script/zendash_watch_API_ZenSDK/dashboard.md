@@ -124,7 +124,13 @@ Alle Einstellungen gehen an den Controller und wirken bei dessen nächstem Regel
 | **Ladeleistung aus dem Netz** | wählt nur die Leistung, noch ohne Wirkung (wird nicht gespeichert) | feste Stufen aus `maxInputPower`: Aus, bis zu vier glatte Stufen (50/100/200/250/500 W) und Max, z. B. bei 800 W: Aus · 200 · 400 · 600 · Max |
 | **Manuelles Laden starten / beenden** | startet bzw. beendet das Laden mit der gewählten Leistung | – |
 
-**Reiter „Offgrid“:** Aus · Ein · Öko für die Offgrid-Steckdose – noch ohne Funktion, die Umschaltung folgt mit einem späteren Script-Update.
+**Auf jeder Gerätekarte im Reiter „Offgrid“** (nur bei Geräten mit Offgrid-Steckdose):
+
+| Bedienelement | Wirkung | Bereich |
+|---|---|---|
+| **Offgrid-Modus (`gridOffMode`)** | Schaltet die Offgrid-Steckdose. Ein Klick speichert sofort in `zdmc_devN_gridOffMode`, der Controller überträgt den Modus beim nächsten Abgleich auf das Gerät. Markiert ist der gespeicherte Modus. Darunter steht der Modus, der gerade am Gerät eingestellt ist („Am Gerät: …“). Weicht er ab, steht er dort orange mit „abweichend, KVS …“. | Aus (`2`) · Ein (`0`, dauerhaft an) · Öko (`1`, schaltet sich bei Leerlauf selbst ab) |
+
+Der Controller schreibt den Modus nur, wenn er sich in der KVS ändert. Beim Start schreibt er ihn nicht, und eine Änderung in der App gleicht er nicht ab. Solange noch kein Modus gespeichert ist, lässt er die Steckdose unverändert. Dann ist der Modus am Gerät markiert und der Hinweis „noch nicht in der KVS“ steht darunter. Wurde der Modus in der App geändert, holt ein Klick auf den bereits markierten Modus ihn nicht zurück. Dafür kurz einen anderen Modus wählen und dann wieder den gewünschten, oder den Modus in der App zurückstellen. Dafür braucht es den Controller ab 5.3.8 und das Dashboard-Script ab 4.1.0.
 
 Beim Start fragt das Dashboard einmal nach und schaltet dann für diesen Speicher „Entladen erlaubt“ und „Laden vom Netz erlaubt“ aus – der Speicher ist damit aus der Regelung genommen, der Hinweis neben dem Knopf zeigt „Aktiv mit … W“. Beim Beenden stellt es den vorherigen Zustand wieder her. Ist der Akku voll, beendet das Script das Laden selbst, auch bei geschlossenem Dashboard ([Auto-Stop](readme.md#manuelles-laden-und-auto-stop)). Bricht der Vorgang mittendrin ab (Shelly nicht erreichbar), erscheint ein Warnhinweis – dann Schalter und Ladeleistung auf der Karte prüfen.
 
@@ -143,7 +149,7 @@ Nicht im Dashboard änderbar sind die **Hysterese** (Toleranz um den Sollwert, w
   - PV-Eingang, Offgrid-Leistung (nur bei Geräten mit Offgrid-Steckdose), Gerätetemperatur in °C und schwächste Zelle („Zelle min 3,28 V“) – aussagekräftig ist sie nur unter Last. Bei Speichern, die der Watchdog überwacht, steht dahinter die Sperrschwelle, z. B. „Sperre < 2,90 V“, und die Farbe richtet sich nach den Watchdog-Schwellen: gelb unter `minVoltReset`, rot unter `minVoltWarn`. Sonst gilt: gelb unter 3,0 V, rot unter 2,8 V.
   - „100 %: vor N Tagen“ – wann der Speicher zuletzt ganz voll war; Antippen zeigt das Datum ([mehr dazu](readme.md#letzte-vollladung))
   - Status in Klartext, z. B. „speist ein“, „voll, Laden gesperrt“, „leer, Entladen gesperrt“, „Export verboten“. Das erklärt die häufigsten „Warum tut der Speicher nichts?“-Fälle. Mit „Technische Details“ steht der Rohcode davor (`socLimit 1`, `gridReverse 2` …).
-  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration, z. B. „Ladegrenze 90 % · abweichend, Konfiguration 100 %“ (`socSet` ≠ `maxSoc`) oder „Reserve am Gerät 15 % · abweichend, KVS 20 %“. Meist wurde der Wert von außen geändert (App, Home Assistant).
+  - Hinweise, wenn am Gerät etwas anderes eingestellt ist als in der Konfiguration, z. B. „Ladegrenze 90 % · abweichend, Konfiguration 100 %“ (`socSet` ≠ `maxSoc`) oder „Reserve am Gerät 15 % · abweichend, KVS 20 %“ bzw. „Offgrid am Gerät Ein · abweichend, KVS Aus“. Die beiden letzten erscheinen erst, wenn die Abweichung länger als etwa eine Minute besteht. Meist wurde der Wert von außen geändert (App, Home Assistant).
   - darunter „Entladen: erlaubt · Netzladen: gesperrt“ als Kurzfassung der beiden Schalter
 - **Fußzeile:** Versionen von Seite und Script (gelb, wenn sie nicht zusammenpassen), Zeitpunkt der letzten Aktualisierung, Link **Hilfe** auf diese Anleitung. `config_api` und `status_api` öffnen die Rohdaten als JSON in einem neuen Tab. **ThingSpeak** und **ThingsBoard** führen zu den Einrichtungsseiten für den Cloud-Upload ([ThingSpeak](thingspeak.md), [ThingsBoard](thingsboard.md)).
 

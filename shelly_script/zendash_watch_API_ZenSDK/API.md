@@ -66,7 +66,8 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
       "socSet": 100,
       "minSocHw": 15,
       "temp": 19,
-      "offGrid": 0
+      "offGrid": 0,
+      "gridOffModeHw": 0
     }
   ]
 }
@@ -93,6 +94,7 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
 | `minSocHw` | Am Gerät eingestellte untere Entladegrenze in % (Report `minSoc` / 10, also `150` → 15). Das Regel-Script überträgt jede Änderung von `zdmc_dev{id}_minSoc` auf das Gerät; das Dashboard vergleicht beide Werte und meldet eine anhaltende Abweichung. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.4 |
 | `temp` | Gerätetemperatur in ganzen °C. Report `hyperTmp` in Zehntel-Kelvin, umgerechnet `(hyperTmp − 2731) / 10` und gerundet, also `2921` → 19. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 3.5.9 |
 | `offGrid` | Leistung am Offgrid-Anschluss in W (`gridOffPower`): positiv = Abgabe ans Haus, negativ = Einspeisung ins Gerät (wie PV). `null` = Gerät hat keinen Offgrid-Ausgang bzw. Hub offline. Seit 3.5.9 |
+| `gridOffModeHw` | Am Gerät eingestellter Offgrid-Modus (Report `gridOffMode`): `0` = EIN, `1` = Öko, `2` = AUS. Das Regel-Script (ab 5.3.8) schreibt nur Änderungen von `zdmc_dev{id}_gridOffMode` auf das Gerät; eine Änderung in der App wird erst über dieses Feld sichtbar. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.1.0 |
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
@@ -146,7 +148,8 @@ eigenen Eingabe zusätzlich sofort.
       "dischargeAllowed": true,
       "reverse": true,
       "watch": true,
-      "lastFull": 20260926
+      "lastFull": 20260926,
+      "gridOffMode": null
     }
   ]
 }
@@ -165,6 +168,7 @@ eigenen Eingabe zusätzlich sofort.
 | `watch` | `CONFIG`, ob der Watchdog dieses Gerät überwacht. Seit 3.5.3 |
 | `watchdog` | `CONFIG` (`watchdog.enabled`, `watchdog.minVoltWarn`, `watchdog.minVoltReset`), nur zur Anzeige. `minVoltWarn` ist die Sperrschwelle: fällt die schwächste Zelle eines überwachten Geräts darunter, meldet der Watchdog und setzt `dischargeAllowed` auf `0`. Seit 3.5.3 |
 | `lastFull` | KVS (`zdmc_dev{id}_lastFull`), Datum der letzten echten 100 % als JJJJMMTT (lokales Datum des Shelly). `0` = noch nie erfasst. Seit 3.3 |
+| `gridOffMode` | KVS (`zdmc_dev{id}_gridOffMode`), Offgrid-Modus `0` = EIN, `1` = Öko, `2` = AUS. Kein Rückfallwert aus `CONFIG`: fehlt der Key, `null`. Seit 4.1.0 |
 
 Ist die KVS nicht erreichbar, antwortet der Endpunkt trotzdem — dann mit den
 Vorgabewerten aus `CONFIG`, statt die Anfrage hängen zu lassen.
@@ -201,6 +205,7 @@ entsprechend rund eine Sekunde.
 | `400` | `data` fehlt oder ist kein gültiges JSON-Objekt |
 | `400` | `zdmc_dischargeFixed` ist weder `0` noch ≥ `dischargeStartupPower` – dann wird **kein** Schlüssel geschrieben |
 | `400` | `zdmc_dischargeResetMargin` ist keine ganze Zahl von 3 bis 79 – dann wird **kein** Schlüssel geschrieben (seit 3.5.12) |
+| `400` | `zdmc_dev{id}_gridOffMode` ist weder `0`, `1` noch `2` – dann wird **kein** Schlüssel geschrieben (seit 4.1.0) |
 | `500` mit `success: false` | mindestens ein Schreibvorgang fehlgeschlagen bzw. interner Fehler |
 
 Fehlerantworten enthalten zusätzlich ein Feld `error` mit einem kurzen Text, z. B.
@@ -230,6 +235,7 @@ die Regelung ignoriert sie.
 | `zdmc_dev{id}_reverse` | `0` / `1` | Laden aus dem Netz erlaubt |
 | `zdmc_dev{id}_minSoc` | 10 … `maxSoc − 5` | Reserve in %. Wird zusätzlich als Schutzgrenze auf die Hardware geschrieben |
 | `zdmc_dev{id}_inputLimit` | 0 … `maxInputPower` | Manuelle Ladeleistung in W |
+| `zdmc_dev{id}_gridOffMode` | `0` / `1` / `2` | Offgrid-Modus: `0` = EIN, `1` = Öko, `2` = AUS. Das Regel-Script (ab 5.3.8) schreibt den Wert nur bei einer Änderung auf das Gerät, nicht beim Start. Andere Werte lehnt `kvs_set_api` mit `400` ab |
 
 Zusätzlich schreibt das Script selbst:
 
