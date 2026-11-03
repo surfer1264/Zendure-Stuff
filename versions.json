@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-02T20:10:34Z",
+  "generated": "2026-11-03T20:28:35Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -180,12 +180,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.0.1",
+      "version": "4.1.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/852206309de041b43f113d353f9b0b6e8e140920/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 37448,
-      "codeHash": "sha256:d17490276f9bd7b43db9873e98a204f055ddd52df02a032c876683bcadc24c42",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/f0b1ef8d690224933466fd8098a81af22e96460e/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 37927,
+      "codeHash": "sha256:28e0446d10fda60cea8e3a81b4243b693c0aadd99b62be23054359c1091516d3",
       "configKeys": [
         "api",
         "apiEvents",
@@ -232,13 +232,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)",
-        "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
+        "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
+        "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
+        "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.0.1",
+          "schema": 1,
+          "codeHash": "sha256:d17490276f9bd7b43db9873e98a204f055ddd52df02a032c876683bcadc24c42",
+          "changes": [
+            "**Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)",
+            "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
+          ],
+          "notice": null
+        },
         {
           "version": "4.0.0",
           "schema": 1,
@@ -324,17 +335,6 @@
           "changes": [
             "Fix 131; StackOverflow",
             "https://github.com/surfer1264/Zendure-Stuff/issues/131"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.4",
-          "schema": 1,
-          "codeHash": "sha256:ab59014cbac37f140ed7e3caf89cf15cd1eae035827c2b89d45e07c4ec54b7fa",
-          "changes": [
-            "Schloss-Icons",
-            "Zusatzsperre minSoc-Slider um versehentliche Fehlbedinung zu vermeiden",
-            "Dashboard: Hinweis an der Geraetekarte, wenn `minSoc` am Geraet von Konfiguration des Dashboard (KVS-Wert) abweicht (durch Änderung von \"außen\", oder wenn KVS Wert nicht auf das Gerät geschrieben wurde - Fehlerfall)"
           ],
           "notice": null
         }
@@ -440,16 +440,25 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "4.0.1",
+      "version": "4.1.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/852206309de041b43f113d353f9b0b6e8e140920/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/f0b1ef8d690224933466fd8098a81af22e96460e/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)",
-        "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
+        "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
+        "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
+        "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "history": [
+        {
+          "version": "4.0.1",
+          "changes": [
+            "**Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)",
+            "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
+          ],
+          "notice": null
+        },
         {
           "version": "4.0.0",
           "changes": [
