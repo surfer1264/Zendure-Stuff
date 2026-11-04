@@ -83,7 +83,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das 
 
 | Bereich der Gerätekarte | Inhalt |
 |---|---|
-| **Kopf** | Name, Online-Punkt, Zustand in Worten („speist ein“, „lädt vom Netz“, „Standby“, „nicht erreichbar“) |
+| **Kopf** | Name, Online-Punkt, Zustand am AC-Anschluss in Worten: „speist ein“, „bezieht vom Netz“, „Offgrid“ (kein Austausch mit dem Hausnetz, Offgrid-Ausgang gibt mindestens 5 W ab) oder „Standby“. „Standby“ sagt nichts über den Akku: Die PV kann ihn dabei laden. Bei Störungen steht dort „nicht erreichbar“ bzw. „veraltet“ |
 | **Leistung** | Leistung am AC-Anschluss, groß |
 | **Ladebalken** | SOC; der Bereich unter der Reserve (`minSoc`) und über der Ladegrenze ist schraffiert. Darunter Bereich und nutzbarer Anteil, rechts „100 %: vor n Tagen“ |
 | **Werte** | PV, Akku und Offgrid; Akku = PV − Ausgang − Offgrid (+ lädt, − entlädt). Darunter klein Temperatur und schwächste Zelle |

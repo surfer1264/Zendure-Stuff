@@ -452,7 +452,6 @@
   .soc-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.75rem; line-height:1.05; }
   .power-wrap{ display:inline-flex; align-items:baseline; gap:.375rem; }
   .power-value{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:1.05rem; }
-  .power-dir{ font-size:.75rem; color:var(--text-muted); }
   .soc-sub{ font-size:.75rem; color:var(--text-muted); }
   .pack-line{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.74rem; color:var(--text-muted); margin-top:.125rem; }
   .pack-line .low{ color:var(--amber-text); }
@@ -1439,7 +1438,6 @@
     setFs: 'Vollbild', setExpert: 'Technische Details',
     setExpertHint: 'KVS-Schlüssel, IP-Adressen und Rohwerte einblenden',
     avgSoc: 'Ø Ladestand {v} %',
-    dirOut: 'gibt ab', dirIn: 'lädt', dirIdle: 'Bereitschaft',
     gridIn: 'Bezug', gridOut: 'Einspeisung', gridZero: '',
     fixedActive: 'Fix-Entladung aktiv – der Sollwert wird derzeit nicht ausgeregelt.',
     fixedEnter: 'Wert eingeben, mit ↵ bzw. „Fertig“ übernehmen',
@@ -1456,7 +1454,6 @@
     setFs: 'Full screen', setExpert: 'Technical details',
     setExpertHint: 'Show KVS keys, IP addresses and raw values',
     avgSoc: 'Avg. charge {v} %',
-    dirOut: 'supplying', dirIn: 'charging', dirIdle: 'standby',
     gridIn: 'import', gridOut: 'export', gridZero: '',
     fixedActive: 'Fixed discharge active – the setpoint is not being regulated right now.',
     fixedEnter: 'Enter a value, confirm with ↵ or “Done”',
@@ -1473,7 +1470,6 @@
     setFs: 'Plein écran', setExpert: 'Détails techniques',
     setExpertHint: 'Afficher clés KVS, adresses IP et valeurs brutes',
     avgSoc: 'Charge moy. {v}\u00a0%',
-    dirOut: 'fournit', dirIn: 'charge', dirIdle: 'veille',
     gridIn: 'soutirage', gridOut: 'injection', gridZero: '',
     fixedActive: 'Décharge fixe active – la consigne n’est pas régulée pour l’instant.',
     fixedEnter: 'Saisir une valeur, valider avec ↵ ou «\u00a0OK\u00a0»',
@@ -1496,7 +1492,7 @@
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
     bgLbl: 'Hintergrund', bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
     sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
-    stOut: 'speist ein', stIn: 'lädt vom Netz', stIdle: 'Standby',
+    stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Standby', stOg: 'Offgrid',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
     noHints: 'Keine Hinweise', settingsTitle: 'Einstellungen', tabCtrl: 'Regelung', tabOffgrid: 'Offgrid', tabCharge: 'Laden',
@@ -1521,7 +1517,7 @@
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
     bgLbl: 'Background', bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
     sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
-    stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby',
+    stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby', stOg: 'off-grid',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
     noHints: 'No notices', settingsTitle: 'Settings', tabCtrl: 'Control', tabOffgrid: 'Off-grid', tabCharge: 'Charge',
@@ -1546,7 +1542,7 @@
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
     bgLbl: 'Arrière-plan', bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
     sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
-    stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille',
+    stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille', stOg: 'hors réseau',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
     noHints: 'Aucune remarque', settingsTitle: 'Réglages', tabCtrl: 'Régulation', tabOffgrid: 'Hors réseau', tabCharge: 'Charge',
@@ -2816,7 +2812,7 @@
           '<span class="state-pill" id="statePill-' + d.id + '"></span>' +
           '<div class="hub-tag">[dev' + d.id + '] ' + d.ip + '</div>' +
         '</div>' +
-        '<div class="power-big"><span class="power-value" id="powerValue-' + d.id + '" data-help="helpPower" tabindex="0">-- W</span><span class="power-dir" id="powerDir-' + d.id + '"></span></div>' +
+        '<div class="power-big"><span class="power-value" id="powerValue-' + d.id + '" data-help="helpPower" tabindex="0">-- W</span></div>' +
         '<div class="soc-block">' +
           '<div class="soc-head"><span><span data-i18n="socShort">' + t('socShort') + '</span><span class="soc-value mono" id="socValue-' + d.id + '">--%</span></span>' +
             '<span class="full-line" id="fullLine-' + d.id + '" role="button" tabindex="0" data-i18n-title="fullTitle" title="' + t('fullTitle') + '"></span></div>' +
@@ -3561,8 +3557,10 @@
     if (!d.online) { el.className = 'state-pill off'; el.textContent = t('unreachable'); return; }
     if (staleData) { el.className = 'state-pill off'; el.textContent = t('stale'); return; }
     const pw = Math.round(d.power || 0);
-    el.className = 'state-pill' + (pw > 0 ? ' out' : (pw < 0 ? ' in' : ''));
-    el.textContent = t(pw > 0 ? 'stOut' : (pw < 0 ? 'stIn' : 'stIdle'));
+    // Kein Austausch mit dem Hausnetz, aber Abgabe am Offgrid-Ausgang (Schwelle wie im Flowchart)
+    const og = pw === 0 && (offW(d) || 0) >= 5;
+    el.className = 'state-pill' + (pw > 0 || og ? ' out' : (pw < 0 ? ' in' : ''));
+    el.textContent = t(pw > 0 ? 'stOut' : (pw < 0 ? 'stIn' : (og ? 'stOg' : 'stIdle')));
   }
 
   // Akku-Leistung aus den Geraetewerten: PV - Ausgang - Offgrid
@@ -3817,7 +3815,6 @@
 
       if (!d.online || d.soc === null || d.soc === undefined) {
         socEl.textContent = '--%'; powerEl.textContent = '-- W'; powerEl.style.color = '';
-        const dirOff = document.getElementById('powerDir-' + d.id); if (dirOff) dirOff.textContent = '';
         hubEl.setAttribute('data-flow', 'idle');
         return;
       }
@@ -3830,8 +3827,6 @@
       powerEl.textContent = (pw > 0 ? '+' : '') + pw + ' W';
       powerEl.style.color = pw > 0 ? 'var(--amber-text)' : (pw < 0 ? 'var(--teal-text)' : '');
       hubEl.setAttribute('data-flow', pw > 0 ? 'out' : (pw < 0 ? 'in' : 'idle'));
-      const dirEl = document.getElementById('powerDir-' + d.id);
-      if (dirEl) dirEl.textContent = t(pw > 0 ? 'dirOut' : (pw < 0 ? 'dirIn' : 'dirIdle'));
     });
     hubs.forEach(applyOgTab);
     renderFlow();
