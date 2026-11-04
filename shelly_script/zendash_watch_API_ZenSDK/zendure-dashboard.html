@@ -240,11 +240,18 @@
   .diag b{ color:var(--alert-text); }
   /* Haltezeit nach Start/Ende des manuellen Ladens: Bedienung gesperrt */
   .hold{
-    background:var(--surface-2, rgba(127,127,127,0.12)); border:1px solid var(--border);
-    color:var(--text); border-radius:var(--radius-md);
-    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.85rem; line-height:1.45;
+    position:sticky; top:.5rem; z-index:50;   /* bleibt beim Scrollen sichtbar */
+    background:var(--amber); border:2px solid var(--amber-deep);
+    color:#2B1A00; border-radius:var(--radius-md);
+    padding:.875rem 1rem; margin-bottom:1.25rem; font-size:.95rem; font-weight:600; line-height:1.45;
+    animation:holdPulse 1.6s ease-out infinite;
   }
-  .hold b{ font-weight:600; }
+  .hold b{ font-size:1.05rem; font-weight:700; }
+  @keyframes holdPulse{
+    from{ box-shadow:0 0 0 0 color-mix(in srgb, var(--amber) 70%, transparent); }
+    to{ box-shadow:0 0 0 .625rem transparent; }
+  }
+  @media (prefers-reduced-motion: reduce){ .hold{ animation:none; } }
 
   /* ---------- Abschnitte ---------- */
   .section-title{
@@ -1440,7 +1447,7 @@
      ganze Bedienung gesperrt und eine Leiste zeigt Ergebnis und Restzeit.
      So sieht man klar, was passiert ist, und kein zweiter Klick trifft auf
      ein Regel-Script, das die Aenderung gerade erst uebernimmt. */
-  const HOLD_MS = 10000;
+  const HOLD_MS = 12000;
   let holdUntil = 0;
   let holdMsg = '';
   let holdTick = null;

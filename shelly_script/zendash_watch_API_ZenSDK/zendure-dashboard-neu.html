@@ -242,11 +242,18 @@
   .diag b{ color:var(--alert-text); }
   /* Haltezeit nach Start/Ende des manuellen Ladens: Bedienung gesperrt */
   .hold{
-    background:var(--surface-2, rgba(127,127,127,0.12)); border:1px solid var(--border);
-    color:var(--text); border-radius:var(--radius-md);
-    padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.85rem; line-height:1.45;
+    position:sticky; top:.5rem; z-index:50;   /* bleibt beim Scrollen sichtbar */
+    background:var(--amber); border:2px solid var(--amber-deep);
+    color:#2B1A00; border-radius:var(--radius-md);
+    padding:.875rem 1rem; margin-bottom:1.25rem; font-size:.95rem; font-weight:600; line-height:1.45;
+    animation:holdPulse 1.6s ease-out infinite;
   }
-  .hold b{ font-weight:600; }
+  .hold b{ font-size:1.05rem; font-weight:700; }
+  @keyframes holdPulse{
+    from{ box-shadow:0 0 0 0 color-mix(in srgb, var(--amber) 70%, transparent); }
+    to{ box-shadow:0 0 0 .625rem transparent; }
+  }
+  @media (prefers-reduced-motion: reduce){ .hold{ animation:none; } }
 
   /* ---------- Abschnitte ---------- */
   .section-title{
@@ -1478,7 +1485,7 @@
     setResetHint: 'Größe, Tag/Nacht, Details, Übersicht, Geräte/Energiefluss und Hintergrund auf Standard',
     flowTotal: 'Gesamt', flowPv: 'PV', flowBatt: 'Akku', flowHouse: 'Haus', flowGrid: 'Netz', flowOffgrid: 'Offgrid',
     fPvOn: 'Erzeugung', fPvOff: 'keine Erzeugung', fPvNone: 'kein PV-Eingang',
-    fAcOut: 'Ausgang ins Haus', fAcIn: 'Laden vom Netz', fAcIdle: 'Bereitschaft',
+    fAcOut: 'Ausgang ins Haus', fAcIn: 'Netzbezug', fAcIdle: 'Bereitschaft',
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
@@ -1490,7 +1497,7 @@
     noHints: 'Keine Hinweise', settingsTitle: 'Einstellungen', tabCtrl: 'Regelung', tabOffgrid: 'Offgrid', tabCharge: 'Laden',
     socDec: 'Reserve verringern', socInc: 'Reserve erhöhen', socDraft: 'nicht gespeichert · vorher {o} %', discard: 'Verwerfen', apply: 'Übernehmen',
     chipOff: 'Aus', chipMax: 'Max',
-    ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Schaltet sich bei Leerlauf selbst ab',
+    ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Soll sich bei Leerlauf selbst abschalten',
     ogHw: 'Am Gerät: {m}', ogNoKvs: 'noch nicht in der KVS – das Regel-Script ändert am Gerät nichts',
     plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät',
     flagDischargeOff: 'Entladen gesperrt', flagChargeOff: 'Laden aus dem Netz gesperrt', flagManualOn: 'manuelles Laden aktiv · Regelung pausiert',
@@ -1515,7 +1522,7 @@
     noHints: 'No notices', settingsTitle: 'Settings', tabCtrl: 'Control', tabOffgrid: 'Off-grid', tabCharge: 'Charge',
     socDec: 'Decrease reserve', socInc: 'Increase reserve', socDraft: 'not saved · was {o} %', discard: 'Discard', apply: 'Apply',
     chipOff: 'Off', chipMax: 'Max',
-    ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Switches itself off when idle',
+    ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Should switch itself off when idle',
     ogHw: 'On device: {m}', ogNoKvs: 'not in the KVS yet – the control script leaves the device unchanged',
     plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device',
     flagDischargeOff: 'discharge disabled', flagChargeOff: 'grid charging disabled', flagManualOn: 'manual charging active · control paused',
@@ -1540,7 +1547,7 @@
     noHints: 'Aucune remarque', settingsTitle: 'Réglages', tabCtrl: 'Régulation', tabOffgrid: 'Hors réseau', tabCharge: 'Charge',
     socDec: 'Diminuer la réserve', socInc: 'Augmenter la réserve', socDraft: 'non enregistré · avant {o}\u00a0%', discard: 'Annuler', apply: 'Appliquer',
     chipOff: 'Arrêt', chipMax: 'Max',
-    ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'S’éteint d’elle-même en l’absence de charge',
+    ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'Devrait s’éteindre d’elle-même en l’absence de charge',
     ogHw: 'Sur l’appareil\u00a0: {m}', ogNoKvs: 'pas encore dans la KVS – le script de régulation ne modifie pas l’appareil',
     plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil',
     flagDischargeOff: 'décharge désactivée', flagChargeOff: 'charge réseau désactivée', flagManualOn: 'charge manuelle active · régulation en pause',
@@ -2147,7 +2154,7 @@
      ganze Bedienung gesperrt und eine Leiste zeigt Ergebnis und Restzeit.
      So sieht man klar, was passiert ist, und kein zweiter Klick trifft auf
      ein Regel-Script, das die Aenderung gerade erst uebernimmt. */
-  const HOLD_MS = 10000;
+  const HOLD_MS = 12000;
   let holdUntil = 0;
   let holdMsg = '';
   let holdTick = null;

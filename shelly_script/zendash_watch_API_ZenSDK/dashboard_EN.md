@@ -120,7 +120,7 @@ All settings go to the Controller and take effect on its next control cycle. Aft
 
 | Control | Effect | Range |
 |---|---|---|
-| **Off-grid mode (`gridOffMode`)** | Switches the off-grid socket. A click saves immediately to `zdmc_devN_gridOffMode`, and the controller applies the mode to the device at its next sync. The saved mode is highlighted. Below it is the mode currently set on the device ("On device: …"). If it differs, it is shown in orange with "differs, KVS …". | Off (`2`) · On (`0`, always on) · Eco (`1`, switches itself off when idle) |
+| **Off-grid mode (`gridOffMode`)** | Switches the off-grid socket. A click saves immediately to `zdmc_devN_gridOffMode`, and the controller applies the mode to the device at its next sync. The saved mode is highlighted. Below it is the mode currently set on the device ("On device: …"). If it differs, it is shown in orange with "differs, KVS …". | Off (`2`) · On (`0`, always on) · Eco (`1`, should switch itself off when idle; so far this has been observed not to work every time – the socket may stay on) |
 
 The controller writes the mode only when it changes in the KVS. It does not write it at startup and does not sync a change made in the app. As long as no mode has been saved, it leaves the socket unchanged. In that case the mode on the device is highlighted, with the note "not in the KVS yet" below. If the mode was changed in the app, clicking the mode that is already highlighted does not bring it back. Instead, briefly choose another mode and then the one you want, or set the mode back in the app. This requires controller 5.3.8 or later and dashboard script 4.1.0 or later.
 
