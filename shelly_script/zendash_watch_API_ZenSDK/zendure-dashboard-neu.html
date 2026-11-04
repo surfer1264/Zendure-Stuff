@@ -3620,8 +3620,14 @@
       [t('techKvs'), 'zdmc_dev' + d.id + '_*'],
       [t('techIp'), v(d.ip)]
     ];
-    if (d.gridOffMode !== null || d.gridOffModeHw !== null) rows.splice(5, 0, [t('techOg'), v(d.gridOffMode) + ' / ' + v(d.gridOffModeHw)]);
-    if (wdVolt && d.watch) rows.push([t('techCellLock'), fmtVolt(wdVolt.warn) + ' V']);
+    // Zeilen gelten fuer alle Karten oder keine: gleich viele Zeilen halten
+    // die Einstellungen darueber auf gleicher Hoehe (fehlt der Wert: "–").
+    if (hubs.some(function(h){ return h.gridOffMode !== null || h.gridOffModeHw !== null; })) {
+      rows.splice(5, 0, [t('techOg'), v(d.gridOffMode) + ' / ' + v(d.gridOffModeHw)]);
+    }
+    if (wdVolt && hubs.some(function(h){ return h.watch; })) {
+      rows.push([t('techCellLock'), d.watch ? fmtVolt(wdVolt.warn) + ' V' : '–']);
+    }
     box.textContent = '';
     rows.forEach(function(r){
       const k = document.createElement('span'); k.className = 'k'; k.textContent = r[0];
