@@ -658,8 +658,13 @@
   .og-opt[aria-pressed="true"] .ic{ background:var(--teal-deep); color:#06201D; }
   .og-opt b{ display:block; font-size:.92rem; font-weight:600; }
   .og-opt small{ display:block; font-size:.8rem; color:var(--text-muted); margin-top:.125rem; line-height:1.35; }
-  .og-state{ margin:.625rem 0 0; font-size:.8rem; line-height:1.4; color:var(--text-muted); }
-  .og-state.dirty{ color:var(--amber-text); }
+  /* Unsichtbarer Platzhalter mit dem laengsten Text in derselben Rasterzelle:
+     der Block bleibt in jedem Zustand gleich hoch, die Einstellungen aller
+     Karten beginnen auf gleicher Hoehe. */
+  .og-state{ display:grid; margin:.625rem 0 0; font-size:.8rem; line-height:1.4; color:var(--text-muted); }
+  .og-state > span{ grid-area:1 / 1; min-width:0; }
+  .og-state-size{ visibility:hidden; }
+  .og-state-txt.dirty{ color:var(--amber-text); }
   /* Ladestufen */
   .in-chips{ display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:.375rem; margin-top:.5rem; }
   .in-chip{ appearance:none; min-height:2.5rem; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--surface);
@@ -2764,6 +2769,13 @@
   // Offgrid: markiert ist der KVS-Wert (Vorgabe fuer das Regel-Script),
   // ohne KVS-Key der Ist-Wert am Geraet. Darunter der Ist-Wert, orange,
   // solange er von der KVS abweicht.
+  // Laengster Text, den showOg in der aktuellen Sprache anzeigen kann
+  function ogLongest(){
+    const names = OG_KEY.map(function(k){ return t(k); });
+    const m = names.reduce(function(a, b){ return b.length > a.length ? b : a; });
+    const tails = [t('ogNoKvs'), t('flagOgDiff', { kvs: m })];
+    return t('ogHw', { m: m }) + ' · ' + (tails[0].length >= tails[1].length ? tails[0] : tails[1]);
+  }
   function showOg(d){
     const kvs = d.gridOffMode, hw = d.gridOffModeHw;
     const sel = (kvs !== null) ? kvs : hw;
@@ -2772,6 +2784,8 @@
     });
     const st = document.getElementById('ogState-' + d.id);
     if (!st) return;
+    const size = document.getElementById('ogSize-' + d.id);
+    if (size) size.textContent = ogLongest();
     const differs = kvs !== null && hw !== null && hw !== kvs;
     st.textContent = t('ogHw', { m: ogName(hw) }) + (kvs === null ? ' · ' + t('ogNoKvs') : (differs ? ' · ' + t('flagOgDiff', { kvs: ogName(kvs) }) : ''));
     st.classList.toggle('dirty', differs);
@@ -2861,7 +2875,8 @@
             ogOpt(d.id, 'off') + ogOpt(d.id, 'on') + ogOpt(d.id, 'eco') +
           '</div>' +
           '<span class="key mono">zdmc_dev' + d.id + '_gridOffMode</span>' +
-          '<p class="og-state" id="ogState-' + d.id + '" aria-live="polite"></p>' +
+          '<p class="og-state"><span class="og-state-txt" id="ogState-' + d.id + '" aria-live="polite"></span>' +
+            '<span class="og-state-size" id="ogSize-' + d.id + '" aria-hidden="true"></span></p>' +
         '</div>' +
         '<div class="set-panel" role="tabpanel" id="panel-man-' + d.id + '" aria-labelledby="tab-man-' + d.id + '" hidden>' +
           '<div class="ctrl-row">' +
@@ -4037,6 +4052,7 @@
       const ls = document.getElementById('lockStatus-' + d.id);
       if (ls) ls.textContent = lockStatusText(d.dischargeAllowed, d.reverse);
       showChips(d);
+      showOg(d);
       showSoc(d);
     });
     // render() erst, wenn schon eine Abfrage gelaufen ist - sonst zeigt die
