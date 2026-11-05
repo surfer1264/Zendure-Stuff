@@ -8,7 +8,7 @@ Beschrieben sind die drei JSON-Endpunkte des Scripts `zendash_watch` (API-Modul)
 Messwerte und Einstellungen für das Dashboard und schreiben Sollwerte in die
 Shelly-KVS des Controller-Shelly, aus der der Controller (`zerooutput_multi_kvs`) seine Vorgaben liest.
 
-Seit Version 3.2 gibt es keine eigene API-Versionsnummer mehr: Die Schnittstelle trägt die Versionsnummer des Scripts, und die Dashboard-Seite muss dieselbe Nummer haben. Was sich geändert hat, steht im [Changelog](CHANGELOG.md).
+Seit Version 3.2 gibt es keine eigene API-Versionsnummer mehr: Die Schnittstelle trägt die Versionsnummer des Scripts. Das Dashboard hat ab 5.0.0 eine eigene Nummer und prüft nur, ob das Script mindestens die Version hat, die es braucht (`MIN_SCRIPT`). Was sich geändert hat, steht im [Changelog](CHANGELOG.md).
 
 ## Basisadresse
 

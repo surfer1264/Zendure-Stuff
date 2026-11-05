@@ -235,7 +235,7 @@ When a new version of a script is available, you can bring your Shellys up to da
 
 4. Tick the scripts you want → **"Update now"**. The configurator reads your current configuration directly from the Shelly and jumps to the result.
 5. There, click **"⚡ Upload directly"**. The new script replaces the old one in the same slot (the script number stays the same – important e.g. for the dashboard proxy) and is started again.
-6. For the script "zenDash API + Watchdog", also update the **dashboard proxy** afterwards: dashboard and script carry the same version; with an old proxy the dashboard shows "script version mismatch". The configurator points this out in the update table and after uploading, with the download links (or the way in Home Assistant).
+6. For the script "zenDash API + Watchdog", also check afterwards whether the **dashboard proxy** is current: from 5.0.0 on dashboard/proxy have their own version number, but a new script may require a newer dashboard, and new displays only come with a new dashboard. The configurator points this out in the update table and after uploading, with the download links (or the way in Home Assistant).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/fb19b123-4555-4be9-bc5d-39c16310bf12" />
 

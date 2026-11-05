@@ -6,7 +6,16 @@ Es gibt drei Changelogs:
 - **Dashboard und Proxy** – diese Datei (Dashboard in beiden Designs, `zendure_proxy.py`, EXE und local_helper)
 - [Home-Assistant-App Dashboard-Proxy](HA_zendure_proxy/CHANGELOG.md) – nur was die App selbst betrifft
 
-Script, Dashboard und Proxy tragen dieselbe Versionsnummer. Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
+Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
+
+## Changelog 5.0.0
+
+**Ziel:** Eigene Versionsnummer für Dashboard und Proxy und Hinweis auf neuere Versionen. Braucht das Shelly-Script ab 4.1.0.
+
+- **Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.
+- **Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.
+- **Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie.
+- Home-Assistant-App 5.0.0.0
 
 ## Changelog 4.1.0
 

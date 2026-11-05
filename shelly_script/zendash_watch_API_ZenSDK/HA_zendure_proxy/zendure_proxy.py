@@ -33,6 +33,8 @@ Start:
     python3 zendure_proxy.py         normal, mit Zugriffsprotokoll
     python3 zendure_proxy.py -q      leise: Startmeldung ja, Zugriffe nein
     python3 zendure_proxy.py -s      still: gar keine Ausgabe (Fehler nach stderr)
+    python3 zendure_proxy.py --no-update-check
+                                     nie bei GitHub nach neueren Versionen fragen
     python3 zendure_proxy.py --bericht=PFAD
                                      bericht.html der Log-Auswertung (stat/auswertung)
                                      unter /bericht_zendure ausliefern; PFAD = Datei
@@ -79,6 +81,13 @@ try:
 except ImportError:
     ts_bridge = None
 
+# Versionsstand des Proxys. Proxy und Dashboard tragen dieselbe Nummer,
+# unabhaengig vom Shelly-Script (ab 5.0.0, siehe CHANGELOG_dashboard.md).
+# APP_TYPE ist ein fester Bezeichner fuer versions.json (Manifest-Workflow).
+APP_TYPE = "zdmc-proxy"
+APP_VERSION = "5.0.0"
+APP_CHANGELOG = "CHANGELOG_dashboard.md"
+
 # ---------------------------------------------------------------
 # Konfiguration - hier anpassen
 # ---------------------------------------------------------------
@@ -111,6 +120,24 @@ HTML_FILENAME_NEU = "zendure-dashboard-neu.html"
 BERICHT_FILENAME = "bericht.html"
 BERICHT_PATH = None
 CONFIG_FILENAME = "zendure_proxy_config.json"
+
+# Update-Pruefung: der Proxy holt versions.json (vom GitHub-Workflow
+# "Versions-Manifest" erzeugt) beim Start und danach alle 12 Stunden, im
+# Hintergrund - keine Anfrage an das Dashboard wartet darauf. Ohne Internet
+# bleibt einfach der letzte Stand (auch ueber einen Neustart, Datei in
+# data_dir()) bzw. nichts; der Proxy laeuft normal weiter.
+# Abschalten: --no-update-check (dann geht keine Anfrage an GitHub).
+MANIFEST_URL = "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/manifest/versions.json"
+UPDATE_CHECK = True
+VERSIONS_CACHE_FILENAME = "zendure_versions_cache.json"
+VERSIONS_TTL_OK = 12 * 3600
+VERSIONS_TTL_FEHLER = 1800
+VERSIONS_TIMEOUT = 8
+# Nur diese Eintraege gibt /versions weiter (Dashboard braucht nicht alles).
+VERSIONS_TYPES = ("zdmc-zendash-watch", "zdmc-dashboard", "zdmc-proxy",
+                  "zdmc-controller", "zdmc-configurator")
+VERSIONS_LOCK = threading.Lock()
+VERSIONS = {"manifest": None, "geholt": 0.0, "ok": False, "laeuft": False, "fehler": None}
 
 # Fehlerzaehler fuer Anfragen an den Shelly (nur im Speicher, beginnt um
 # Mitternacht und bei jedem Start neu). Das Dashboard liest ihn ueber
@@ -169,6 +196,98 @@ def standort_holen():
     with STANDORT_LOCK:
         STANDORT.update({"lat": lat, "lon": lon, "ok": ok})
     return {"lat": lat, "lon": lon}
+
+
+def versions_cache_path():
+    return os.path.join(data_dir(), VERSIONS_CACHE_FILENAME)
+
+
+def version_tuple(v):
+    """'4.1.0' -> (4, 1, 0); Nicht-Zahlen am Ende sortieren hinter Zahlen."""
+    out = []
+    for p in re.split(r"[.\-]", str(v or "")):
+        out.append((0, int(p)) if p.isdigit() else (1, p))
+    return tuple(out)
+
+
+def manifest_kurz(m):
+    """Nur das Noetige aus versions.json: Version, Aenderungen, Changelog-Link."""
+    scripts = (m or {}).get("scripts") or {}
+    out = {}
+    for t in VERSIONS_TYPES:
+        e = scripts.get(t)
+        if isinstance(e, dict) and e.get("version"):
+            out[t] = {"version": e.get("version"), "changes": e.get("changes") or [],
+                      "notice": e.get("notice"), "changelogUrl": e.get("changelogUrl")}
+    return {"generated": (m or {}).get("generated"), "scripts": out}
+
+
+def versions_laden_aus_datei():
+    try:
+        with open(versions_cache_path(), encoding="utf-8") as fh:
+            d = json.load(fh)
+        with VERSIONS_LOCK:
+            VERSIONS["manifest"] = d.get("manifest")
+            VERSIONS["geholt"] = float(d.get("geholt") or 0)
+            VERSIONS["ok"] = VERSIONS["manifest"] is not None
+    except (OSError, ValueError):
+        pass
+
+
+def versions_holen():
+    """Laeuft im Hintergrund-Thread. Fehler werden nur gemerkt, nie geworfen."""
+    try:
+        req = urllib.request.Request(MANIFEST_URL, headers={
+            "User-Agent": "zendure-proxy/" + APP_VERSION, "Cache-Control": "no-cache"})
+        with urllib.request.urlopen(req, timeout=VERSIONS_TIMEOUT) as resp:
+            m = manifest_kurz(json.loads(resp.read().decode("utf-8")))
+        now = time.time()
+        with VERSIONS_LOCK:
+            VERSIONS.update({"manifest": m, "geholt": now, "ok": True, "fehler": None})
+        try:
+            with open(versions_cache_path(), "w", encoding="utf-8") as fh:
+                json.dump({"geholt": now, "manifest": m}, fh)
+        except OSError:
+            pass
+        neu = (m["scripts"].get(APP_TYPE) or {}).get("version")
+        if neu and version_tuple(neu) > version_tuple(APP_VERSION):
+            say("[proxy] Neuere Version {} verfuegbar (laeuft: {}) - "
+                "https://github.com/surfer1264/Zendure-Stuff/releases/latest".format(neu, APP_VERSION))
+    except Exception as e:
+        with VERSIONS_LOCK:
+            VERSIONS.update({"geholt": time.time(), "ok": VERSIONS["manifest"] is not None,
+                             "fehler": str(e)[:200]})
+        say("[proxy] Update-Pruefung nicht moeglich (offline?): {}".format(e))
+    finally:
+        with VERSIONS_LOCK:
+            VERSIONS["laeuft"] = False
+
+
+def versions_pruefen_falls_faellig():
+    """Startet bei Bedarf einen Abruf im Hintergrund und kehrt sofort zurueck."""
+    if not UPDATE_CHECK:
+        return
+    with VERSIONS_LOCK:
+        alter = time.time() - VERSIONS["geholt"]
+        ttl = VERSIONS_TTL_OK if VERSIONS["fehler"] is None and VERSIONS["ok"] else VERSIONS_TTL_FEHLER
+        if VERSIONS["laeuft"] or (VERSIONS["geholt"] and alter < ttl):
+            return
+        VERSIONS["laeuft"] = True
+    threading.Thread(target=versions_holen, name="versions", daemon=True).start()
+
+
+def versions_stand():
+    """Antwort fuer /versions: eigene Version + letzter bekannter Manifest-Stand."""
+    versions_pruefen_falls_faellig()
+    with VERSIONS_LOCK:
+        m = VERSIONS["manifest"]
+        geholt = VERSIONS["geholt"] if m is not None else None
+    return {
+        "proxy": {"type": APP_TYPE, "version": APP_VERSION},
+        "updateCheck": UPDATE_CHECK,
+        "manifest": m,
+        "fetched": (time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(geholt)) if geholt else None),
+    }
 
 
 def fehler_stand():
@@ -544,6 +663,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(200, standort_holen())
             return
 
+        if path == "/versions":
+            # Eigene Version + zuletzt geholtes versions.json fuer die Fusszeile
+            self._json(200, versions_stand())
+            return
+
         if path == "/proxy_fehler":
             # Fehlerzaehler des Tages fuer die Fusszeile des Dashboards
             self._json(200, fehler_stand())
@@ -839,7 +963,7 @@ def get_lan_ip():
 
 
 def parse_args():
-    global QUIET, SILENT, OPEN_BROWSER, BERICHT_PATH
+    global QUIET, SILENT, OPEN_BROWSER, BERICHT_PATH, UPDATE_CHECK
     for arg in sys.argv[1:]:
         if arg in ("-q", "--quiet"):
             QUIET = True
@@ -849,6 +973,8 @@ def parse_args():
             OPEN_BROWSER = True
         elif arg == "--no-browser":
             OPEN_BROWSER = False
+        elif arg == "--no-update-check":
+            UPDATE_CHECK = False
         elif arg.startswith("--bericht="):
             BERICHT_PATH = arg.split("=", 1)[1] or None
         elif arg in ("-h", "--help"):
@@ -888,7 +1014,7 @@ def main():
         sys.stderr.write("Lege die Datei in den Ordner dieses Scripts oder eine Ebene hoeher,\n")
         sys.stderr.write("oder pruefe --add-data beim exe-Build.\n\n")
 
-    say("Zendure Dashboard Proxy")
+    say("Zendure Dashboard Proxy " + APP_VERSION)
     if is_configured():
         say("  Shelly:   " + shelly_base())
     else:
@@ -912,6 +1038,16 @@ def main():
     else:
         say("  Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)")
     say("(Strg+C zum Beenden)\n")
+
+    if UPDATE_CHECK:
+        versions_laden_aus_datei()
+        # Beim Start immer einmal frisch fragen (Hinweis auf neuere Version
+        # in der Konsole), egal wie alt der gespeicherte Stand ist.
+        with VERSIONS_LOCK:
+            VERSIONS["geholt"] = 0.0
+        versions_pruefen_falls_faellig()
+    else:
+        say("  Update-Pruefung: aus (--no-update-check)")
 
     if ts_bridge is not None:
         ts_bridge.LOG = not (QUIET or SILENT)

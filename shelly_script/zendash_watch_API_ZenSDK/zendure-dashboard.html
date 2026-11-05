@@ -724,16 +724,22 @@
      ================================================================ */
   const API_BASE = "";
 
-  // Versionsstand dieser Seite. Dashboard, API und Shelly-Script
-  // (zendash_watch_src.js) tragen seit 3.2 immer DIESELBE Nummer - bei jeder
-  // Aenderung an einem der beiden Teile werden beide gemeinsam hochgezaehlt.
-  // Stimmt sie nicht ueberein, weist die Fusszeile darauf hin (typischer Fall:
-  // HTML aktualisiert, Script auf dem Shelly aber nicht, oder umgekehrt).
+  // Versionsstand dieser Seite. Ab 5.0.0 haben Dashboard und Proxy eine
+  // eigene Nummer, unabhaengig vom Shelly-Script (zendash_watch_src.js) -
+  // beide werden nur hochgezaehlt, wenn sich an ihnen selbst etwas aendert.
+  // Dashboard und Proxy tragen untereinander dieselbe Nummer (der Proxy
+  // liefert die Seite aus, die exe enthaelt sie).
+  // MIN_SCRIPT: aelteste Script-Version, mit der diese Seite voll
+  // funktioniert. Ist das Script auf dem Shelly aelter, wird die Fusszeile
+  // gelb. Hochsetzen, sobald die Seite neue Felder der API braucht. Der
+  // Manifest-Workflow uebernimmt den Wert als "requires".
   // APP_TYPE/APP_VERSION: Kennung fuer versions.json (Manifest-Workflow),
   // der Configurator zeigt damit die aktuelle Proxy-Version bei den Downloads.
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "4.1.0";
+  const APP_VERSION = "5.0.0";
+  const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
+  const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
      Sprachen: Deutsch, Englisch, Franzoesisch.
@@ -766,7 +772,8 @@
       helpCellLock: 'Sperrschwelle des Watchdogs (minVoltWarn). Fällt die schwächste Zelle dieses Geräts unter {warn} V, sendet der Watchdog eine Meldung und schaltet das Entladen ab – der Schalter „Entladen erlaubt“ geht auf aus. Wieder einschalten nur von Hand. Erneut sperren kann der Watchdog erst, wenn die Spannung zwischendurch über {reset} V (minVoltReset) gestiegen ist. Gelb: unter {reset} V, rot: unter {warn} V.',
       helpPack: 'PV = gesamter Solareingang des Geräts. Offgrid = Leistung am Offgrid-Ausgang (nur bei Geräten mit Offgrid-Steckdose). °C = Gerätetemperatur. min = schwächste Zelle aller Akkupacks, nur unter Last aussagekräftig. Gelb unter 3,0 V, rot unter 2,8 V.',
       fsAria: 'Vollbild umschalten', fsEnter: 'Vollbild', fsExit: 'Vollbild beenden',
-      scriptMismatch: 'Script v{v} (abweichend!)',
+      scriptVer: 'Script v{v}',
+      scriptTooOld: 'Script v{v} – zu alt, mind. v{min} nötig!',
       fullTitle: 'Letzte Vollladung (100 %) - antippen für Datum',
       fullNever: '100 %: noch nicht erfasst', fullInvalid: '100 %: Datum ungültig',
       fullDate: '100 %: {date}', fullToday: '100 %: heute', fullYesterday: '100 %: gestern',
@@ -847,6 +854,9 @@
       manualActiveHint: 'Aktiv mit {w} W. Das Gerät ist aus der Regelung genommen.',
       manualIdleHint: 'Nimmt das Gerät aus der Regelung (beide Schalter aus) und setzt die gewählte Ladeleistung.',
       apiUnknown: 'API unbekannt',
+      updAvail: 'Update {v} verfügbar',
+      updTitle: 'Neuere Version auf GitHub: {list}. Klick öffnet den Changelog.',
+      updDash: 'Dashboard', updScript: 'Shelly-Script', updProxy: 'Proxy',
       connProblem: 'Verbindungsproblem',
       live: 'Live · Poll alle {s}s',
       pollFail: 'Abfrage fehlgeschlagen: {err}. IP/SCRIPT_ID oben im Code prüfen, oder ob der Shelly erreichbar ist.',
@@ -884,7 +894,8 @@
       helpCellLock: 'Watchdog lock threshold (minVoltWarn). If the weakest cell of this device drops below {warn} V, the watchdog sends a notification and disables discharging – the “Discharge allowed” switch turns off. Re-enable only manually. The watchdog can lock again only after the voltage has risen above {reset} V (minVoltReset) in between. Amber: below {reset} V, red: below {warn} V.',
       helpPack: 'PV = total solar input of the device. Offgrid = power at the off-grid output (only on devices with an off-grid socket). °C = device temperature. min = weakest cell across all battery packs, only meaningful under load. Amber below 3.0 V, red below 2.8 V.',
       fsAria: 'Toggle full screen', fsEnter: 'Full screen', fsExit: 'Exit full screen',
-      scriptMismatch: 'script v{v} (mismatch!)',
+      scriptVer: 'script v{v}',
+      scriptTooOld: 'script v{v} – too old, needs v{min} or newer!',
       fullTitle: 'Last full charge (100 %) - tap for date',
       fullNever: '100 %: not recorded yet', fullInvalid: '100 %: invalid date',
       fullDate: '100 %: {date}', fullToday: '100 %: today', fullYesterday: '100 %: yesterday',
@@ -965,6 +976,9 @@
       manualActiveHint: 'Active at {w} W. The device has been taken out of the control loop.',
       manualIdleHint: 'Takes the device out of the control loop (both switches off) and applies the selected charging power.',
       apiUnknown: 'API unknown',
+      updAvail: 'update {v} available',
+      updTitle: 'Newer version on GitHub: {list}. Click opens the changelog.',
+      updDash: 'dashboard', updScript: 'Shelly script', updProxy: 'proxy',
       connProblem: 'Connection problem',
       live: 'Live · polling every {s}s',
       pollFail: 'Query failed: {err}. Check IP/SCRIPT_ID at the top of the code, or whether the Shelly is reachable.',
@@ -1002,7 +1016,8 @@
       helpCellLock: 'Seuil de blocage du watchdog (minVoltWarn). Si la cellule la plus faible de cet appareil passe sous {warn}\u00a0V, le watchdog envoie une notification et désactive la décharge – l’interrupteur «\u00a0Décharge autorisée\u00a0» passe sur arrêt. Réactivation uniquement à la main. Le watchdog ne peut bloquer à nouveau qu’après une remontée de la tension au-dessus de {reset}\u00a0V (minVoltReset). Orange\u00a0: sous {reset}\u00a0V, rouge\u00a0: sous {warn}\u00a0V.',
       helpPack: 'PV = entrée solaire totale de l’appareil. Offgrid = puissance sur la sortie hors réseau (uniquement sur les appareils avec prise hors réseau). °C = température de l’appareil. min = cellule la plus faible de tous les packs, significative seulement en charge. Orange sous 3,0\u00a0V, rouge sous 2,8\u00a0V.',
       fsAria: 'Basculer en plein écran', fsEnter: 'Plein écran', fsExit: 'Quitter le plein écran',
-      scriptMismatch: 'script v{v} (différent\u00a0!)',
+      scriptVer: 'script v{v}',
+      scriptTooOld: 'script v{v} – trop ancien, v{min} minimum\u00a0!',
       fullTitle: 'Dernière charge complète (100\u00a0%) - toucher pour la date',
       fullNever: '100\u00a0%\u00a0: pas encore enregistrée', fullInvalid: '100\u00a0%\u00a0: date invalide',
       fullDate: '100\u00a0%\u00a0: {date}', fullToday: '100\u00a0%\u00a0: aujourd’hui', fullYesterday: '100\u00a0%\u00a0: hier',
@@ -1083,6 +1098,9 @@
       manualActiveHint: 'Active à {w} W. L’appareil est retiré de la régulation.',
       manualIdleHint: 'Retire l’appareil de la régulation (les deux interrupteurs désactivés) et applique la puissance de charge choisie.',
       apiUnknown: 'API inconnue',
+      updAvail: 'mise à jour {v} disponible',
+      updTitle: 'Version plus récente sur GitHub : {list}. Le clic ouvre le changelog.',
+      updDash: 'tableau de bord', updScript: 'script Shelly', updProxy: 'proxy',
       connProblem: 'Problème de connexion',
       live: 'En direct · relevé toutes les {s}\u00a0s',
       pollFail: 'Échec de la requête\u00a0: {err}. Vérifiez IP/SCRIPT_ID en haut du code, ou que le Shelly est joignable.',
@@ -2327,19 +2345,86 @@
     }
   }
 
+  /* ---------------- Update-Hinweis (versions.json) ----------------
+     Der Proxy liefert unter /versions seine eigene Version und den zuletzt
+     von GitHub geholten Stand (versions.json vom Workflow "Versions-Manifest").
+     Aeltere Proxys ohne /versions: das Dashboard fragt GitHub direkt. Hat der
+     Nutzer die Pruefung abgeschaltet (--no-update-check), fragt es auch
+     selbst nicht. Offline bleibt der Hinweis einfach weg. */
+  const MANIFEST_URL = 'https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/manifest/versions.json';
+  const VERSIONS_EVERY_MS = 6 * 3600 * 1000;
+  let verInfo = null, verAt = 0;
+  function cmpVer(a, b){
+    const pa = String(a).split(/[.\-]/), pb = String(b).split(/[.\-]/);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const x = pa[i], y = pb[i];
+      if (x === undefined) return -1;
+      if (y === undefined) return 1;
+      const nx = /^\d+$/.test(x), ny = /^\d+$/.test(y);
+      if (nx && ny) { if (+x !== +y) return +x < +y ? -1 : 1; }
+      else if (x !== y) return nx ? -1 : (ny ? 1 : (x < y ? -1 : 1));
+    }
+    return 0;
+  }
+  function loadVersions(){
+    verAt = Date.now();
+    fetch('versions', { cache: 'no-store' }).then(function(r){
+      return r.ok ? r.json() : null;
+    }).catch(function(){ return null; }).then(function(d){
+      if (d && (d.manifest || d.updateCheck === false)) return d;
+      return fetch(MANIFEST_URL, { cache: 'no-store' }).then(function(r){
+        return r.ok ? r.json() : null;
+      }).then(function(m){ return { proxy: d && d.proxy, manifest: m }; })
+        .catch(function(){ return d; });
+    }).then(function(d){
+      verInfo = d;
+      showUpdate(lastApiVersion);
+    });
+  }
+  function showUpdate(apiVersion){
+    if (Date.now() - verAt > VERSIONS_EVERY_MS) loadVersions();
+    let el = document.getElementById('versionUpd');
+    const line = document.getElementById('versionLine');
+    if (!el && line) {
+      el = document.createElement('a');
+      el.id = 'versionUpd';
+      el.target = '_blank'; el.rel = 'noopener';
+      el.style.color = 'var(--amber-text)';
+      el.hidden = true;
+      line.insertAdjacentElement('afterend', el);
+    }
+    if (!el) return;
+    const s = (verInfo && verInfo.manifest && verInfo.manifest.scripts) || {};
+    const parts = [
+      ['updDash', VERSION, s['zdmc-dashboard']],
+      ['updScript', apiVersion, s['zdmc-zendash-watch']],
+      ['updProxy', verInfo && verInfo.proxy && verInfo.proxy.version, s['zdmc-proxy']]
+    ].filter(function(p){ return p[1] && p[2] && p[2].version && cmpVer(p[1], p[2].version) < 0; });
+    if (!parts.length) { el.hidden = true; return; }
+    let newest = parts[0][2];
+    parts.forEach(function(p){ if (cmpVer(p[2].version, newest.version) > 0) newest = p[2]; });
+    el.textContent = '⬆ ' + t('updAvail', { v: newest.version });
+    el.title = t('updTitle', { list: parts.map(function(p){ return t(p[0]) + ' ' + p[1] + ' → ' + p[2].version; }).join(', ') });
+    el.href = (s['zdmc-dashboard'] && s['zdmc-dashboard'].changelogUrl) || newest.changelogUrl ||
+      'https://github.com/surfer1264/Zendure-Stuff/releases/latest';
+    el.hidden = false;
+  }
+
   /* ---------------- Initiale Konfiguration ---------------- */
   let lastApiVersion = null; // fuer den Sprachwechsel zwischengespeichert
   function showVersion(apiVersion){
     lastApiVersion = apiVersion;
+    showUpdate(apiVersion);
     const el = document.getElementById('versionLine');
     if (!el) return;
     if (!apiVersion) { el.textContent = 'v' + VERSION + ' · ' + t('apiUnknown'); return; }
-    el.textContent = (apiVersion === VERSION)
-      ? 'v' + VERSION
-      : 'v' + VERSION + ' · ' + t('scriptMismatch', { v: apiVersion });
-    // Auseinanderlaufende Staende sind die haeufigste Ursache fuer seltsames
-    // Verhalten nach einem Update - deshalb sichtbar machen.
-    el.style.color = (apiVersion === VERSION) ? '' : 'var(--amber-text)';
+    // Dashboard und Script zaehlen getrennt - gelb nur, wenn das Script
+    // aelter ist als MIN_SCRIPT (typischer Fall: Dashboard/Proxy
+    // aktualisiert, Script auf dem Shelly aber noch nicht).
+    const tooOld = cmpVer(apiVersion, MIN_SCRIPT) < 0;
+    el.textContent = 'v' + VERSION + ' · ' +
+      (tooOld ? t('scriptTooOld', { v: apiVersion, min: MIN_SCRIPT }) : t('scriptVer', { v: apiVersion }));
+    el.style.color = tooOld ? 'var(--amber-text)' : '';
   }
 
   // Schwellen der Zellspannungs-Ueberwachung aus config_api (ab Script

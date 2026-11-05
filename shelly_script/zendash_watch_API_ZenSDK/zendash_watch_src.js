@@ -178,7 +178,8 @@ let CONFIG = {
 };
 
 // Ab 3.2 gibt es keine eigene API-Version mehr: config_api liefert VERSION
-// aus, und das Dashboard traegt immer dieselbe Nummer wie dieses Script.
+// aus. Das Dashboard zaehlt ab 5.0.0 eigenstaendig und prueft nur, ob
+// dieses Script mindestens seine MIN_SCRIPT-Version hat.
 
 // =====================================================
 // Plausibilitaets-Checks

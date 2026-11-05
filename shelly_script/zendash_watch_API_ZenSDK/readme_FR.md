@@ -102,7 +102,7 @@ Nachrichten: SIGNAL -> callmebot | Debug: AUS
 --------------------------------
 ```
 
-`[W]` derrière un appareil signifie : le watchdog le surveille. Le numéro de version est celui de votre script ; le tableau de bord doit avoir la même version.
+`[W]` derrière un appareil signifie : le watchdog le surveille. Le numéro de version est celui de votre script ; le tableau de bord a son propre numéro.
 
 Si les messages sont activés, vous recevez aussi le message **« ✅ zenDash/Watchdog v… gestartet »** (démarré). Vous savez ainsi immédiatement que l'envoi des messages fonctionne.
 

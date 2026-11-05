@@ -254,7 +254,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "2.9.4";
+const APP_VERSION = "3.0.0";
 
 const I18N = {
 de: {
@@ -479,7 +479,7 @@ de: {
   dl_h2: "Downloads (neuestes Release)",
   dl_ha_mode: "Du nutzt den Configurator in Home Assistant – Updates der Apps kommen dort über Einstellungen → Apps. Die Dateien unten sind für Windows und macOS.",
   dl_proxy_h: "Dashboard-Proxy",
-  dl_proxy_desc: "Zeigt das Dashboard im Browser und lädt auf Wunsch zu ThingSpeak/ThingsBoard hoch. Gehört zum Script „zenDash-API + Watchdog“ – beide tragen dieselbe Version. Ohne EXE (Linux, Synology) läuft er als Python-Script, siehe Anleitung.",
+  dl_proxy_desc: "Zeigt das Dashboard im Browser und lädt auf Wunsch zu ThingSpeak/ThingsBoard hoch. Gehört zum Script „zenDash-API + Watchdog“, hat aber eine eigene Versionsnummer. Ohne EXE (Linux, Synology) läuft er als Python-Script, siehe Anleitung.",
   dl_helper_h: "Lokaler Helfer mit Configurator",
   dl_helper_desc: "Für Direkt-Upload, Update und Log-Aufzeichnung. Startet den Configurator selbst.",
   dl_current: "aktuell {v}",
@@ -492,9 +492,9 @@ de: {
   dl_ha_short: "Home Assistant: App „Zendure Dashboard Proxy“ unter Einstellungen → Apps aktualisieren",
   dl_docs: "Anleitung",
   dl_release: "Alle Dateien mit Prüfsummen (.sha256) und Änderungen auf der Release-Seite:",
-  upd_proxy_too: "Nutzt du das Dashboard, danach auch den Dashboard-Proxy auf {v} aktualisieren:",
-  proxy_after_h: "Jetzt noch den Dashboard-Proxy aktualisieren",
-  proxy_after_text: "Dashboard und Script tragen dieselbe Version ({v}). Mit dem alten Proxy zeigt das Dashboard „Script-Version abweichend“, neue Anzeigen fehlen.",
+  upd_proxy_too: "Nutzt du das Dashboard: aktueller Dashboard-Proxy ist {v} (eigene Versionsnummer) – die Fußzeile des Dashboards zeigt, ob ein Update fällig ist:",
+  proxy_after_h: "Dashboard-Proxy prüfen",
+  proxy_after_text: "Dashboard und Proxy haben eine eigene Versionsnummer (aktuell {v}). Ist das Script zu neu für deinen Proxy oder dein Proxy zu alt für das Script, zeigt das Dashboard es in der Fußzeile an.",
   result_proxy_line: "Passender Dashboard-Proxy:",
   log_h2: "Log aufzeichnen",
   log_hint: "Das gewählte Script wird gestoppt und neu gestartet, dabei werden seine Meldungen mitgeschrieben – inklusive Script-Start. Am Ende wird das Log als Datei gespeichert. Webhook-IDs, Tokens, API-Keys, Passwörter und Telefonnummern werden maskiert, von Seriennummern bleiben nur die letzten 4 Zeichen. Vor dem Teilen das Log trotzdem kurz durchsehen.",
@@ -906,7 +906,7 @@ en: {
   dl_h2: "Downloads (latest release)",
   dl_ha_mode: "You are using the configurator in Home Assistant – app updates come through Settings → Apps there. The files below are for Windows and macOS.",
   dl_proxy_h: "Dashboard proxy",
-  dl_proxy_desc: "Shows the dashboard in the browser and optionally uploads to ThingSpeak/ThingsBoard. Belongs to the script “zenDash API + Watchdog” – both carry the same version. Without the EXE (Linux, Synology) it runs as a Python script, see the guide.",
+  dl_proxy_desc: "Shows the dashboard in the browser and optionally uploads to ThingSpeak/ThingsBoard. Belongs to the script “zenDash API + Watchdog”, but has its own version number. Without the EXE (Linux, Synology) it runs as a Python script, see the guide.",
   dl_helper_h: "Local helper with configurator",
   dl_helper_desc: "For direct upload, update and log recording. Opens the configurator by itself.",
   dl_current: "current {v}",
@@ -919,9 +919,9 @@ en: {
   dl_ha_short: "Home Assistant: update the app “Zendure Dashboard Proxy” under Settings → Apps",
   dl_docs: "Guide",
   dl_release: "All files with checksums (.sha256) and changes on the release page:",
-  upd_proxy_too: "If you use the dashboard, also update the dashboard proxy to {v} afterwards:",
-  proxy_after_h: "Now update the dashboard proxy as well",
-  proxy_after_text: "Dashboard and script carry the same version ({v}). With the old proxy the dashboard shows “script version mismatch” and new displays are missing.",
+  upd_proxy_too: "If you use the dashboard: the current dashboard proxy is {v} (own version number) – the dashboard footer shows whether an update is due:",
+  proxy_after_h: "Check the dashboard proxy",
+  proxy_after_text: "Dashboard and proxy have their own version number (currently {v}). If your proxy is outdated or too old for the script, the dashboard says so in its footer.",
   result_proxy_line: "Matching dashboard proxy:",
   log_h2: "Record log",
   log_hint: "The selected script is stopped and restarted, and its messages are recorded – including the script start. At the end, the log is saved as a file. Webhook IDs, tokens, API keys, passwords and phone numbers are masked; only the last 4 characters of serial numbers remain. Still, please skim the log before sharing it.",
@@ -1333,7 +1333,7 @@ fr: {
   dl_h2: "Téléchargements (dernière version)",
   dl_ha_mode: "Tu utilises le configurateur dans Home Assistant – les mises à jour des applications passent par Paramètres → Applications. Les fichiers ci-dessous sont pour Windows et macOS.",
   dl_proxy_h: "Proxy du tableau de bord",
-  dl_proxy_desc: "Affiche le tableau de bord dans le navigateur et envoie si souhaité vers ThingSpeak/ThingsBoard. Va avec le script « zenDash-API + Watchdog » – les deux portent la même version. Sans EXE (Linux, Synology), il tourne comme script Python, voir le guide.",
+  dl_proxy_desc: "Affiche le tableau de bord dans le navigateur et envoie si souhaité vers ThingSpeak/ThingsBoard. Va avec le script « zenDash-API + Watchdog », mais a son propre numéro de version. Sans EXE (Linux, Synology), il tourne comme script Python, voir le guide.",
   dl_helper_h: "Assistant local avec configurateur",
   dl_helper_desc: "Pour l'envoi direct, la mise à jour et l'enregistrement du journal. Ouvre lui-même le configurateur.",
   dl_current: "actuelle {v}",
@@ -1346,9 +1346,9 @@ fr: {
   dl_ha_short: "Home Assistant : mettre à jour l'application « Zendure Dashboard Proxy » sous Paramètres → Applications",
   dl_docs: "Guide",
   dl_release: "Tous les fichiers avec sommes de contrôle (.sha256) et modifications sur la page de version :",
-  upd_proxy_too: "Si tu utilises le tableau de bord, mets ensuite aussi le proxy à jour en {v} :",
-  proxy_after_h: "Mets maintenant aussi le proxy du tableau de bord à jour",
-  proxy_after_text: "Le tableau de bord et le script portent la même version ({v}). Avec l'ancien proxy, le tableau de bord affiche « version du script différente » et les nouveaux affichages manquent.",
+  upd_proxy_too: "Si tu utilises le tableau de bord : le proxy actuel est {v} (numéro de version propre) – le pied de page du tableau de bord indique si une mise à jour est nécessaire :",
+  proxy_after_h: "Vérifie le proxy du tableau de bord",
+  proxy_after_text: "Le tableau de bord et le proxy ont leur propre numéro de version (actuellement {v}). Si ton proxy est dépassé ou trop ancien pour le script, le tableau de bord l'indique dans son pied de page.",
   result_proxy_line: "Proxy du tableau de bord correspondant :",
   log_h2: "Enregistrer le journal",
   log_hint: "Le script choisi est arrêté puis redémarré, et ses messages sont enregistrés – démarrage du script compris. À la fin, le journal est enregistré dans un fichier. Les ID de webhook, jetons, clés d'API, mots de passe et numéros de téléphone sont masqués ; seuls les 4 derniers caractères des numéros de série restent visibles. Parcours tout de même le journal avant de le partager.",
@@ -3667,9 +3667,15 @@ function docLink(url){
   return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-text);">${t('dl_docs')} ↗</a>`;
 }
 
-// Dashboard (im Proxy) und zendash-watch tragen dieselbe Version - nach
-// einem neuen Script muss auch der Proxy neu, sonst meldet das Dashboard
-// "Script-Version abweichend".
+// Dashboard/Proxy haben ab 5.0.0 eine eigene Versionsnummer (unabhaengig
+// von zendash-watch). Nach einem neuen Script nur Hinweis + Links; ob das
+// Dashboard passt, zeigt es selbst in der Fusszeile (MIN_SCRIPT, Update-Hinweis).
+function latestProxyVersion(){
+  const sc = (manifestData && manifestData.scripts) || {};
+  const m = sc['zdmc-proxy'] || sc['zdmc-dashboard'];
+  return m && m.version ? m.version : null;
+}
+
 function proxyLinksHtml(){
   return dlLinks('proxy') + ' · ' + escapeHtml(t('dl_ha_short')) + ' · ' + docLink(DASHBOARD_DOC_URLS[state.lang] || DASHBOARD_DOC_URLS.de);
 }
@@ -3921,7 +3927,7 @@ function renderUpdateTable(){
       changes += `<a href="${escapeHtml(r.changelogUrl)}" target="_blank" rel="noopener" style="font-size:.8rem; color:var(--accent-text);">${t('upd_changes_details')} ↗</a>`;
     }
     if(r.status === 'outdated' && key === 'zdw'){
-      changes += `<div style="margin-top:6px; font-size:.82rem; color:var(--warn);">${escapeHtml(t('upd_proxy_too', {v: r.available}))}
+      changes += `<div style="margin-top:6px; font-size:.82rem; color:var(--warn);">${escapeHtml(t('upd_proxy_too', {v: latestProxyVersion() || '?'}))}
         <div style="margin-top:2px;">${proxyLinksHtml()}</div></div>`;
     }
     const color = r.status === 'outdated' ? 'var(--warn)' : (r.status === 'current' ? 'var(--accent-text)' : 'var(--muted)');
@@ -4207,7 +4213,7 @@ async function directUpload(key, confirmIds, deleteOthers){
     }
     statusEl.textContent = t(data.action === 'updated' ? 'upload_success_updated' : 'upload_success', {ip: ip, id: data.id}) +
       (data.kept_others ? ' ' + t('upload_kept_others', {n: data.kept_others}) : '');
-    if(key === 'zdw' && state.products.api) confirmEl.innerHTML = proxyAfterUploadHtml(parseScriptVersion(key, merged));
+    if(key === 'zdw' && state.products.api) confirmEl.innerHTML = proxyAfterUploadHtml(latestProxyVersion());
   } catch(e){
     statusEl.textContent = t('upload_error', {msg: e.message});
     statusEl.className = 'error';

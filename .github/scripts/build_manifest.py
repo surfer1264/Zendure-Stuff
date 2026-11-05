@@ -31,8 +31,22 @@ Changelog (optional, je Script-Ordner): CHANGELOG.md oder jede .md mit
 manifest_meta.json (optional, unter shelly_script/):
     {
       "helperMin": "1.0",
-      "requires": { "zdmc-zendash-watch": { "zdmc-controller": ">=5.0" } }
+      "requires": { "zdmc-zendash-watch": { "zdmc-controller": ">=5.0" } },
+      "sameVersion": [["zdmc-dashboard", "zdmc-proxy"]]
     }
+    sameVersion: Gruppen, die dieselbe Versionsnummer tragen sollen -
+    Abweichungen gibt es als Warnung (Manifest wird trotzdem geschrieben).
+
+Anwendungen (Configurator, Dashboard, Proxy): .html- oder .py-Dateien mit
+    APP_TYPE = "zdmc-..."     fester Bezeichner
+    APP_VERSION = "4.1.0"
+    APP_CHANGELOG = "CHANGELOG_dashboard.md"   optional, Changelog-Datei im
+                              selben Ordner (sonst wie bei den Scripten)
+    MIN_SCRIPT = "4.1.0"      optional (Dashboard): aelteste passende Version
+                              des Shelly-Scripts -> "requires" im Manifest
+Kopien derselben App (z.B. local_helper/zendure_proxy.py) sind erlaubt,
+wenn sie dieselbe Version tragen; die erste gefundene Datei gilt.
+Abweichende Versionen sind ein Fehler (Kopie nicht nachgezogen).
 
 Umgebungsvariablen (vom Workflow gesetzt):
     GITHUB_SHA         Commit, aus dem die Dateien stammen
@@ -53,7 +67,7 @@ HASH_ALGO = "sha256-noconfig-v1"
 HISTORY_MAX = 10
 CHANGES_MAX = 3
 SCRIPT_GLOB = "shelly_script/**/*_mini.js"
-APP_GLOB = "shelly_script/**/*.html"
+APP_GLOBS = ("shelly_script/**/*.html", "shelly_script/**/*.py")
 META_FILE = "shelly_script/manifest_meta.json"
 CONFIG_PLACEHOLDER = "let CONFIG = __CONFIG__;"
 
@@ -62,6 +76,10 @@ RE_VERSION = re.compile(r"""\bVERSION\s*=\s*["']([^"']+)["']""")
 RE_SCHEMA = re.compile(r"""\bCONFIG_SCHEMA\s*=\s*(\d+)""")
 RE_APP_TYPE = re.compile(r"""\bAPP_TYPE\s*=\s*["']([^"']+)["']""")
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
+RE_APP_MIN_SCRIPT = re.compile(r"""\bMIN_SCRIPT\s*=\s*["']([^"']+)["']""")
+# Fuer welches Script MIN_SCRIPT gilt (nur das Dashboard nutzt es bisher)
+MIN_SCRIPT_TYPE = "zdmc-zendash-watch"
+RE_APP_CHANGELOG = re.compile(r"""\bAPP_CHANGELOG\s*=\s*["']([^"'/\\]+)["']""")
 RE_CONFIG_START = re.compile(r"^let CONFIG\s*=\s*\{", re.MULTILINE)
 RE_CHANGELOG_NAME = re.compile(r"chang\w*log", re.IGNORECASE)
 # Ordner mit Kopien fuer Home-Assistant-Apps (HA_zendure_proxy,
@@ -192,9 +210,16 @@ def version_tuple(v):
     return tuple(parts)
 
 
-def find_changelog(folder):
-    """Changelog im Script-Ordner: bevorzugt CHANGELOG.md, sonst jede .md,
-    deren Name 'chang...log' enthaelt (z.B. 'ChangLog MultiDevice.md')."""
+def find_changelog(folder, name=None):
+    """Changelog im Script-Ordner: ausdruecklich genannte Datei (APP_CHANGELOG),
+    sonst bevorzugt CHANGELOG.md, sonst jede .md, deren Name 'chang...log'
+    enthaelt (z.B. 'ChangLog MultiDevice.md')."""
+    if name:
+        path = os.path.join(folder, name)
+        if os.path.isfile(path):
+            return path
+        warn("%s: APP_CHANGELOG-Datei nicht gefunden." % path.replace(os.sep, "/"))
+        return None
     try:
         names = sorted(os.listdir(folder))
     except OSError:
@@ -208,12 +233,12 @@ def find_changelog(folder):
     return None
 
 
-def read_changelog(folder, version):
+def read_changelog(folder, version, name=None):
     """Liefert (changes, notice, pfad). Erkennt Ueberschriften wie
     '## 5.0.8', '## v5.0.8', '## Changelog 5.0.8', '## Changlog 5.0.6'.
     changes: Aufzaehlungspunkte (- / *) des Abschnitts; gibt es keine,
     die ersten Prosa-Zeilen. Zeilen mit '>' werden zum Hinweis (notice)."""
-    path = find_changelog(folder)
+    path = find_changelog(folder, name)
     if not path:
         return [], None, None
     with open(path, encoding="utf-8") as fh:
@@ -309,7 +334,7 @@ def build_entry(path, repo, sha, meta):
     return stype, entry
 
 
-def build_app_entry(path, repo, sha):
+def build_app_entry(path, repo, sha, meta=None):
     """Anwendungen (z.B. der Configurator, der zusammen mit dem Helfer
     veroeffentlicht wird): HTML-Dateien mit APP_TYPE + APP_VERSION.
     Kein Code-Hash und keine Schema-Pruefung - die Datei aendert sich oft,
@@ -323,8 +348,14 @@ def build_app_entry(path, repo, sha):
     if not m_ver:
         err("%s: APP_TYPE vorhanden, aber kein APP_VERSION." % path)
         return m_type.group(1), None
-    changes, notice, cl_path = read_changelog(os.path.dirname(path), m_ver.group(1))
+    m_cl = RE_APP_CHANGELOG.search(text)
+    changes, notice, cl_path = read_changelog(os.path.dirname(path), m_ver.group(1),
+                                              m_cl.group(1) if m_cl else None)
     fpath = path.replace(os.sep, "/")
+    requires = dict(((meta or {}).get("requires") or {}).get(m_type.group(1), {}))
+    m_min = RE_APP_MIN_SCRIPT.search(text)
+    if m_min:
+        requires[MIN_SCRIPT_TYPE] = ">=" + m_min.group(1)
     return m_type.group(1), {
         "kind": "app",
         "version": m_ver.group(1),
@@ -334,6 +365,7 @@ def build_app_entry(path, repo, sha):
         "notice": notice,
         "changelogUrl": ("https://github.com/%s/blob/main/%s" % (repo, urllib.parse.quote(cl_path))
                          if cl_path else None),
+        "requires": requires,
         "history": [],
     }
 
@@ -343,7 +375,7 @@ def merge_app_with_old(atype, new, old):
         return new
     if old.get("version") == new["version"]:
         kept = dict(old)
-        for k in ("changes", "notice", "changelogUrl", "file"):
+        for k in ("changes", "notice", "changelogUrl", "file", "requires"):
             kept[k] = new[k]
         return kept
     if version_tuple(new["version"]) < version_tuple(old["version"]):
@@ -436,17 +468,34 @@ def main():
         print("%-22s v%-8s schema %-4s %s" % (
             stype, scripts[stype]["version"], scripts[stype]["schema"], scripts[stype]["file"]))
 
-    for path in sorted(glob.glob(APP_GLOB, recursive=True)):
+    app_seen = {}   # APP_TYPE -> (Datei, Version) der zuerst gefundenen Datei
+    app_paths = sorted(set(p for g in APP_GLOBS for p in glob.glob(g, recursive=True)))
+    # Kopien in Unterordnern (z.B. local_helper/) nach dem Original pruefen
+    app_paths.sort(key=lambda p: (p.replace(os.sep, "/").count("/"), p))
+    for path in app_paths:
         if RE_HA_COPY.search(path):
             continue
-        atype, entry = build_app_entry(path, repo, sha)
+        with open(path, encoding="utf-8") as fh:
+            head = fh.read()
+        m_t, m_v = RE_APP_TYPE.search(head), RE_APP_VERSION.search(head)
+        if m_t and m_t.group(1) in app_seen:
+            atype = m_t.group(1)
+            first, first_v = app_seen[atype]
+            if not m_v or m_v.group(1) != first_v:
+                err("APP_TYPE '%s': %s hat Version %s, %s aber %s - Kopie nachziehen."
+                    % (atype, path, m_v.group(1) if m_v else "?", first, first_v))
+            else:
+                print("%-22s Kopie, gleiche Version: %s" % (atype, path))
+            continue
+        atype, entry = build_app_entry(path, repo, sha, meta)
         if atype is None:
             continue
         if atype in scripts:
-            err("APP_TYPE '%s' kommt mehrfach vor bzw. kollidiert (zuletzt in %s)." % (atype, path))
+            err("APP_TYPE '%s' kollidiert mit einem SCRIPT_TYPE (in %s)." % (atype, path))
             continue
         if entry is None:
             continue
+        app_seen[atype] = (path, entry["version"])
         scripts[atype] = merge_app_with_old(atype, entry, old_scripts.get(atype))
         print("%-22s v%-8s (App)      %s" % (atype, scripts[atype]["version"], scripts[atype]["file"]))
 
@@ -456,6 +505,12 @@ def main():
 
     if not scripts:
         err("Keine Scripte mit SCRIPT_TYPE gefunden (%s)." % SCRIPT_GLOB)
+
+    for group in meta.get("sameVersion") or []:
+        found = {t: scripts[t]["version"] for t in group if t in scripts}
+        if len(set(found.values())) > 1:
+            warn("Versionen sollten gleich sein, weichen aber ab: " +
+                 ", ".join("%s %s" % (t, v) for t, v in sorted(found.items())))
 
     if errors:
         print("\n%d Fehler - Manifest wird NICHT aktualisiert." % len(errors))

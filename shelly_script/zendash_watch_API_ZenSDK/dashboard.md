@@ -189,7 +189,7 @@ Für die Anzeige nebenbei reicht jeder Rechner. Soll das Dashboard **immer** err
 
   Die HTML-Datei darf **im selben Ordner** wie der Proxy liegen oder **eine Ebene höher**. Liegt an beiden Stellen eine, gewinnt die im selben Ordner.
 
-> **Wichtig:** Dashboard-Seite und Script auf dem Shelly müssen **dieselbe Versionsnummer** haben. Aktualisierst du das Script, hol dir auch die passende `zendure-dashboard.html` (bzw. das neue Programm). Laufen die Versionen auseinander, wird der Hinweis in der Fußzeile des Dashboards gelb.
+> **Versionen:** Dashboard/Proxy und Script auf dem Shelly haben ab 5.0.0 eigene Versionsnummern. Die Fußzeile zeigt beide, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie, wenn das Script älter ist als die Version, die das Dashboard mindestens braucht – dann das Script aktualisieren. Gibt es auf GitHub eine neuere Version, steht dort „⬆ Update … verfügbar“ (Proxy-Option `--no-update-check` schaltet die Abfrage ab).
 
 ---
 

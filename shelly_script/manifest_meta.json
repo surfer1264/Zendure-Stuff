@@ -1,4 +1,10 @@
 {
   "helperMin": "1.0",
-  "requires": { }
+  "requires": {},
+  "sameVersion": [
+    [
+      "zdmc-dashboard",
+      "zdmc-proxy"
+    ]
+  ]
 }

@@ -181,7 +181,7 @@ Pour un affichage occasionnel, n'importe quel ordinateur suffit. Si le tableau d
 
   Le fichier HTML peut se trouver **dans le même dossier** que le proxy ou **un niveau au-dessus**. S'il y en a un aux deux endroits, celui du même dossier l'emporte.
 
-> **Important :** la page du tableau de bord et le script sur le Shelly doivent avoir **le même numéro de version**. Si vous mettez à jour le script, récupérez aussi le `zendure-dashboard.html` correspondant (ou le nouveau programme). Si les versions divergent, l'indication dans le pied de page du tableau de bord devient jaune.
+> **Versions :** à partir de 5.0.0, le tableau de bord/proxy et le script sur le Shelly ont des numéros de version distincts. Le pied de page affiche les deux, p. ex. « v5.0.0 · script v4.1.0 ». Il devient jaune si le script est plus ancien que la version minimale requise par le tableau de bord – mettez alors le script à jour. Si une version plus récente existe sur GitHub, il affiche « ⬆ mise à jour … disponible » (l'option du proxy `--no-update-check` désactive la vérification).
 
 ---
 

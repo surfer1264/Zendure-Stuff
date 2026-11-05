@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.0.0.0
+
+- Dashboard und Proxy haben jetzt eine eigene Versionsnummer, unabhängig vom Shelly-Script (braucht Script ab 4.1.0). Die Fußzeile zeigt beide Nummern und weist auf neuere Versionen auf GitHub hin
+
 ## 4.1.0.0
 
 - Offgrid-Reiter in der Gerätekarte funktioniert: Aus · Ein · Öko schreibt `zdmc_devN_gridOffMode`, die Karte zeigt den Modus am Gerät und meldet eine Abweichung. Dafür braucht es das Shelly-Script 4.1.0 und das Regel-Script ab 5.3.8

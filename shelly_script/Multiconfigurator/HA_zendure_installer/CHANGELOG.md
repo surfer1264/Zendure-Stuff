@@ -3,6 +3,11 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 3.0.0.0
+
+- Multi-Configurator 3.0.0: Abschluss der 2.x-Reihe; fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand
+- Neu in 3.0.0: Hinweis zum Dashboard-Proxy passt zur eigenen Versionsnummer von Dashboard/Proxy
+
 ## 2.9.4.0
 
 - Multi-Configurator 2.9.4: Regel-Intervall im Ergebnis immer sichtbar und änderbar, mit Empfehlung; Kaffee-Link im Startdialog

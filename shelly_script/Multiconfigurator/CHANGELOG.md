@@ -1,5 +1,13 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 3.0.0
+
+- Abschluss der 2.x-Reihe: Diese Version fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand
+- Einrichtung und Update: Neu konfigurieren oder Update mit übernommenen Einstellungen, Einlesen aus Text, Datei oder direkt vom Shelly, Regel-Intervall nach Geräteanzahl
+- Helfer und Home-Assistant-App: Direkt-Upload mit Fortschrittsanzeige, passwortgeschützte Shellys, Log aufzeichnen, Downloads im Startdialog
+- Netzquellen: Vorlagen für Smartmeter und verschachtelte Felder bei `http_json`
+- Neu in 3.0.0 – Configurator: Dashboard und Proxy haben ab 5.0.0 eine eigene Versionsnummer, unabhängig vom Script „zenDash-API + Watchdog“. Die Hinweise nach dem Script-Update und in der Update-Tabelle nennen jetzt die aktuelle Proxy-Version aus dem Manifest statt der Script-Version und verweisen auf die Fußzeile des Dashboards
+
 ## 2.9.4
 
 - Configurator: Das Regel-Intervall (`interval`) steht im Ergebnis-Schritt immer als eigener Bereich, nicht nur bei Abweichung. Er zeigt den eingestellten Wert und die Empfehlung (3000 ms + 500 ms je Gerät); ändern geht jederzeit (Empfehlung übernehmen oder eigener Wert ab 3000 ms). Weicht ein übernommener Wert ab, steht wie bisher der Hinweis mit „Beibehalten“ dabei

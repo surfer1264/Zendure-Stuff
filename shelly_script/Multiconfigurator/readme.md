@@ -237,7 +237,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 
 4. Gewünschte Scripte anhaken → **„Jetzt updaten“**. Der Configurator liest deine aktuelle Konfiguration direkt vom Shelly und springt zum Ergebnis.
 5. Dort **„⚡ Direkt hochladen“** klicken. Das neue Script ersetzt das alte an derselben Stelle (die Script-Nummer bleibt gleich – wichtig z. B. für den Dashboard-Proxy) und wird wieder gestartet.
-6. Beim Script „zenDash-API + Watchdog“ danach auch den **Dashboard-Proxy** aktualisieren: Dashboard und Script tragen dieselbe Version, mit altem Proxy zeigt das Dashboard „Script-Version abweichend“. Der Configurator weist in der Update-Tabelle und nach dem Hochladen darauf hin, mit den Download-Links (bzw. dem Weg in Home Assistant).
+6. Beim Script „zenDash-API + Watchdog“ danach auch prüfen, ob der **Dashboard-Proxy** aktuell ist: Dashboard/Proxy haben ab 5.0.0 eine eigene Versionsnummer, ein neues Script kann aber eine neuere Dashboard-Version voraussetzen bzw. bringt neue Anzeigen erst mit einem neuen Dashboard. Der Configurator weist in der Update-Tabelle und nach dem Hochladen darauf hin, mit den Download-Links (bzw. dem Weg in Home Assistant).
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/fb19b123-4555-4be9-bc5d-39c16310bf12" />
 

@@ -181,7 +181,7 @@ Any computer will do for occasional viewing. If the dashboard should **always** 
 
   The HTML file may be **in the same folder** as the proxy or **one level up**. If there is one in both places, the one in the same folder wins.
 
-> **Important:** The dashboard page and the script on the Shelly must have **the same version number**. When you update the script, also get the matching `zendure-dashboard.html` (or the new program). If the versions drift apart, the note in the dashboard footer turns yellow.
+> **Versions:** From 5.0.0 on, dashboard/proxy and the script on the Shelly have separate version numbers. The footer shows both, e.g. “v5.0.0 · script v4.1.0”. It turns yellow if the script is older than the minimum version the dashboard needs – then update the script. If a newer version is available on GitHub, it shows “⬆ update … available” (proxy option `--no-update-check` turns the check off).
 
 ---
 

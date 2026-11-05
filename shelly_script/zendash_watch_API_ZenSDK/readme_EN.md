@@ -102,7 +102,7 @@ Nachrichten: SIGNAL -> callmebot | Debug: AUS
 --------------------------------
 ```
 
-`[W]` after a device means: the watchdog monitors it. The version number is that of your script; the dashboard must have the same version.
+`[W]` after a device means: the watchdog monitors it. The version number is that of your script; the dashboard has its own number.
 
 If messages are enabled, you will also receive the message **"✅ zenDash/Watchdog v… gestartet"** (started). This tells you immediately that the notification path works.
 

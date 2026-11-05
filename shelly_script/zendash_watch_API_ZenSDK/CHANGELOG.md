@@ -6,7 +6,7 @@ Es gibt drei Changelogs:
 - [Dashboard und Proxy](CHANGELOG_dashboard.md)
 - [Home-Assistant-App Dashboard-Proxy](HA_zendure_proxy/CHANGELOG.md)
 
-Script, Dashboard und Proxy tragen weiter dieselbe Versionsnummer. Bis 3.5.12 stand alles gemeinsam hier.
+Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
 ## Changelog 4.1.0
 
