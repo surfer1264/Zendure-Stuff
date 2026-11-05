@@ -19,6 +19,7 @@ site/
 shelly_script/stat/*.gz
 shelly_script/stat/auswertung/cache/
 myconfig.js
+zendure_versions_cache.json
 
 # Schluessel fuer die SN-Maskierung des Log-Grabbers - nicht weitergeben
 .mask_salt
