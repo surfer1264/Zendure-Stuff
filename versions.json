@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-03T20:28:35Z",
+  "generated": "2026-11-05T16:42:57Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -342,16 +342,26 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "2.9.4",
+      "version": "3.0.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/3e6082f873413ab6d1d7a92ec5bf9c6c5a058305/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Configurator: Das Regel-Intervall (`interval`) steht im Ergebnis-Schritt immer als eigener Bereich, nicht nur bei Abweichung. Er zeigt den eingestellten Wert und die Empfehlung (3000 ms + 500 ms je Gerät); ändern geht jederzeit (Empfehlung übernehmen oder eigener Wert ab 3000 ms). Weicht ein übernommener Wert ab, steht wie bisher der Hinweis mit „Beibehalten“ dabei",
-        "Configurator: Link „Spendier mir einen Kaffee“ ☕ (Ko-fi) im Startdialog"
+        "Abschluss der 2.x-Reihe: Diese Version fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand",
+        "Einrichtung und Update: Neu konfigurieren oder Update mit übernommenen Einstellungen, Einlesen aus Text, Datei oder direkt vom Shelly, Regel-Intervall nach Geräteanzahl",
+        "Helfer und Home-Assistant-App: Direkt-Upload mit Fortschrittsanzeige, passwortgeschützte Shellys, Log aufzeichnen, Downloads im Startdialog"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
+      "requires": {},
       "history": [
+        {
+          "version": "2.9.4",
+          "changes": [
+            "Configurator: Das Regel-Intervall (`interval`) steht im Ergebnis-Schritt immer als eigener Bereich, nicht nur bei Abweichung. Er zeigt den eingestellten Wert und die Empfehlung (3000 ms + 500 ms je Gerät); ändern geht jederzeit (Empfehlung übernehmen oder eigener Wert ab 3000 ms). Weicht ein übernommener Wert ab, steht wie bisher der Hinweis mit „Beibehalten“ dabei",
+            "Configurator: Link „Spendier mir einen Kaffee“ ☕ (Ko-fi) im Startdialog"
+          ],
+          "notice": null
+        },
         {
           "version": "2.9.3",
           "changes": [
@@ -426,31 +436,34 @@
             "Verbesserte Benutzerführung"
           ],
           "notice": null
-        },
-        {
-          "version": "2.4.0",
-          "changes": [
-            "Netzquelle http_json: verschachtelte Felder (z. B. Tasmota) mit Punkten eingeben (`StatusSNS.DVS7420.power`), geschrieben wird ein Array für Controller und zenDash-API",
-            "Fix: eingelesene Configs mit Feldpfad als Array gingen beim Einlesen/Update verloren (wurden zu einem ungültigen Text)",
-            "Vorlagen für Zendure Smart Meter 3CT, Shelly 3EM (ohne Pro) und Tasmota; Platzhalter <IP>/<Gerät> müssen vor „Weiter“ ersetzt werden"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "4.1.0",
+      "version": "5.0.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/f0b1ef8d690224933466fd8098a81af22e96460e/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
-        "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
-        "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
+        "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
+        "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
+        "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
       ],
       "notice": null,
-      "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
+      "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
+      "requires": {
+        "zdmc-zendash-watch": ">=4.1.0"
+      },
       "history": [
+        {
+          "version": "4.1.0",
+          "changes": [
+            "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
+            "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
+            "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
+          ],
+          "notice": null
+        },
         {
           "version": "4.0.1",
           "changes": [
@@ -476,6 +489,21 @@
           "notice": null
         }
       ]
+    },
+    "zdmc-proxy": {
+      "kind": "app",
+      "version": "5.0.0",
+      "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "changes": [
+        "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
+        "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
+        "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
+      ],
+      "notice": null,
+      "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
+      "requires": {},
+      "history": []
     }
   }
 }
