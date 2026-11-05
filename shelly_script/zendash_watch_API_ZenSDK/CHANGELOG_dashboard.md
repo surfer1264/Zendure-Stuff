@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.1.0
+
+**Ziel:** Heizzustand des Geräts in der Karte und in den technischen Details anzeigen. Läuft weiter ab Shelly-Script 4.1.0, die neuen Anzeigen erscheinen ab Script 4.2.0.
+
+- **Flamme hinter dem Gerätenamen (neues Design):** Sie erscheint, solange die Heizung an ist (`heatState` = 1). Antippen oder mit der Maus darauf zeigen erklärt sie. Bei 0, ohne Wert, offline und bei veralteten Daten ist sie ausgeblendet.
+- **Technische Details (neues Design):** neue Zeile `heatState`, z. B. „0 · Heizung aus“. Wie bei den anderen Zeilen gilt: Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.
+- **Offgrid im Energiefluss:** Der Untertext unterscheidet jetzt „keine Last“ (Gerät meldet Offgrid, unter 5 W), „nicht belegt“ (kein Gerät meldet Offgrid) und „keine Daten“ (kein Gerät online).
+- **Hintergrund im Energiefluss:** Das Wort „Hintergrund“ in der Auswahl entfällt, weil es wie ein Button aussah. Die Erklärung steht jetzt im Tooltip der drei Buttons.
+- Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.1.0.0
+
 ## Changelog 5.0.0
 
 **Ziel:** Eigene Versionsnummer für Dashboard und Proxy und Hinweis auf neuere Versionen. Braucht das Shelly-Script ab 4.1.0.

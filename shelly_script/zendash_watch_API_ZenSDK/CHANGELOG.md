@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.2.0
+
+**Ziel:** Den Heizzustand des Geräts für das Dashboard und eigene Anbindungen lesbar machen.
+
+- **status_api:** Je Hub gibt es das neue Feld `heatState` aus dem Report des Geräts (`1` = Heizung an, `0` = aus). Der gleichnamige Wert der Akkupacks wird nicht verwendet. Fehlt das Feld oder ist der Hub offline, steht dort `null`.
+- Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Der Speicherbedarf auf dem Shelly ist noch nicht gemessen.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.1.0
 
 **Ziel:** Den Offgrid-Modus (`gridOffMode`) für das Dashboard lesbar und schreibbar machen. Das Schreiben auf das Gerät übernimmt das Regel-Script ab 5.3.8.

@@ -28,7 +28,7 @@
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
-//                               minSocHw,temp,offGrid,gridOffModeHw}] }
+//                               minSocHw,temp,offGrid,gridOffModeHw,heatState}] }
 //                      ?bg=wake: ein einzelner Poll (Cloud-Upload), ?bg=read: nur lesen
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
@@ -60,9 +60,10 @@
 // 4.1.0: Offgrid-Modus - status_api liefert je Hub gridOffModeHw (Ist-Wert
 // am Geraet), config_api je Geraet gridOffMode (KVS-Wert, null = kein Key),
 // kvs_set_api nimmt zdmc_devN_gridOffMode nur mit 0, 1 oder 2 an.
+// 4.2.0: status_api liefert je Hub heatState (Report, Geraeteebene).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.1.0";
+let VERSION = "4.2.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1048,6 +1049,8 @@ function updateGridPowerStatus(callback) {
 //            gridOffMode: 0 EIN, 1 Oeko, 2 AUS), null = Feld fehlt. Das
 //            Regel-Script schreibt nur Aenderungen von zdmc_devN_gridOffMode -
 //            eine Aenderung in der App wird erst hierueber sichtbar (seit 4.1.0).
+//            heatState: Report heatState der Geraeteebene, null = Feld fehlt
+//            (seit 4.2.0).
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -1060,7 +1063,8 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     id: hi, soc: null, power: 0, acMode: null, socLimit: null,
     gridReverse: null, pv: null, minVol: null, online: false,
     home: null, gridIn: null, packIn: null, packOut: null, socSet: null,
-    minSocHw: null, temp: null, offGrid: null, gridOffModeHw: null
+    minSocHw: null, temp: null, offGrid: null, gridOffModeHw: null,
+    heatState: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1090,7 +1094,7 @@ function setHubOffline(index) {
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
   h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
   h.socSet = null; h.minSocHw = null; h.temp = null; h.offGrid = null;
-  h.gridOffModeHw = null;
+  h.gridOffModeHw = null; h.heatState = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1199,6 +1203,8 @@ function extractHub(index, body, watchNow, logPacks) {
   hub.temp = (ht !== null) ? Math.round((ht - 2731) / 10) : null;
   hub.offGrid = jsonNum(body, "gridOffPower");
   hub.gridOffModeHw = jsonNum(body, "gridOffMode");
+  // heatState steht auch je Pack: nur vor packData suchen
+  hub.heatState = jsonNum(body, "heatState", 0, body.indexOf('"packData"'));
 
   let packLog = scanPacks(index, body, watchNow, logPacks);
   if (logPacks) {

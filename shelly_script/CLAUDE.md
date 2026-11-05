@@ -63,7 +63,7 @@ Das gilt auch für Fragen zu Code, Texten oder Verhalten: nicht aus dem Gedächt
 
 Echter Report eines SolarFlow 800 mit 2 Akkupacks (Seriennummern maskiert): `testController/report_sf800_referenz.json`. Bei Parser-, Mock- oder Doku-Arbeit diese Datei als Vorlage nehmen, nicht raten.
 
-Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleichnamige Felder in `properties` und `packData` (z. B. `heatState`, `sn`) → nur zwischen `properties` und `packData` suchen.
+Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleichnamige Felder in `properties` und `packData` (z. B. `sn`, beim SolarFlow 800 auch `heatState`) → nur zwischen `properties` und `packData` suchen.
 
 | Feld | Einheit / Bedeutung | Beispiel |
 |---|---|---|
@@ -82,6 +82,20 @@ Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleic
 | `packNum`, `rssi`, `ts` | Anzahl Packs, WLAN dBm, Unix-Zeit | 2, −66 |
 
 Werte, deren Bedeutung hier nicht steht, nicht interpretieren – nachfragen oder als unbekannt kennzeichnen.
+
+Weitere echte Reports (Seriennummern maskiert). Die Geräte melden nicht dieselben Felder: Nur der SolarFlow 2400 Pro hat in `properties` u. a. `gridOffPower` und `gridOffMode`, nur der SolarFlow 800 hat `heatState` auch in `packData`.
+
+SolarFlow 2400 Pro (1 Akkupack, Standby):
+
+```json
+{"timestamp":1793908037,"messageId":70,"sn":"xxxxxxxxxxxxxx","version":3,"product":"solarFlow2400Pro","properties":{"heatState":0,"packInputPower":0,"outputPackPower":0,"outputHomePower":0,"remainOutTime":59940,"packState":0,"electricLevel":55,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"solarPower3":0,"solarPower4":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2841,"gridOffPower":0,"dcStatus":0,"pvStatus":1,"acStatus":0,"dataReady":1,"gridState":1,"BatVolt":4912,"socLimit":0,"faultLevel":0,"acCouplingState":57344,"offGridState":0,"dryNodeState":1,"writeRsp":0,"acMode":1,"inputLimit":0,"outputLimit":0,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"gridOffMode":2,"IOTState":2,"Fanmode":0,"Fanspeed":0,"bindstate":0,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1791136227,"tsZone":14,"smartMode":1,"chargeMaxLimit":2400,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":1,"rssi":-52,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxxxxx","packType":500,"socLevel":55,"state":0,"power":0,"maxTemp":2831,"totalVol":4910,"batcur":0,"maxVol":327,"minVol":327,"softVersion":4355}]}
+```
+
+SolarFlow 800 (2 Akkupacks, entlädt):
+
+```json
+{"timestamp":1793909065,"messageId":245,"sn":"xxxxxxxxxxxxxxx","version":3,"product":"solarFlow800","properties":{"heatState":0,"packInputPower":356,"outputPackPower":0,"outputHomePower":356,"remainOutTime":225,"packState":2,"electricLevel":55,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2891,"dcStatus":2,"pvStatus":0,"acStatus":1,"dataReady":1,"gridState":1,"BatVolt":4837,"socLimit":0,"faultLevel":0,"writeRsp":0,"acMode":2,"inputLimit":0,"outputLimit":356,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"IOTState":2,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1793909064,"bindstate":0,"tsZone":13,"chargeMaxLimit":800,"smartMode":1,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":2,"rssi":-59,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":280,"maxTemp":2871,"totalVol":4830,"batcur":65478,"maxVol":323,"minVol":321,"softVersion":4354,"heatState":0},{"sn":"xxxxxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":183,"maxTemp":2861,"totalVol":4830,"batcur":65502,"maxVol":322,"minVol":321,"softVersion":8223,"heatState":0}]}
+```
 
 ## Harte Regeln für Shelly-Scripte (mJS)
 

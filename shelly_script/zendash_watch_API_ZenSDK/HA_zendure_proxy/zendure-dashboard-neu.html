@@ -431,6 +431,9 @@
     display:inline-block; margin-right:.4375rem; flex-shrink:0;
   }
   .hub-status-dot.offline{ background:var(--alert-text); }
+  .heat-icon{ display:inline-flex; margin-left:.4375rem; color:var(--amber-text); flex-shrink:0; }
+  .heat-icon[hidden]{ display:none; }
+  .heat-icon svg{ display:block; width:1em; height:1em; fill:currentColor; }
   .hub-tag{
     font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-size:.68rem; color:var(--text-muted);
     background:var(--surface-2); border:1px solid var(--border); border-radius:.375rem; padding:.125rem .375rem;
@@ -738,8 +741,6 @@
   .flow-wrap .flow-scroll{ position:relative; z-index:1; }
   .flow-bg{ margin-left:auto; display:flex; align-items:center; gap:.375rem; }
   .flow-bg[hidden]{ display:none; }
-  .flow-bg .lbl{ display:inline-flex; align-items:center; padding:0 .5rem 0 .625rem; font-size:.78rem; color:var(--text-muted); }
-  @media (max-width:560px){ .flow-bg .lbl{ display:none; } }
   .flow-bg .seg3{ display:inline-flex; padding:.1875rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); }
   .flow-bg .seg3 button{ appearance:none; cursor:pointer; border:0; background:none; color:var(--text-muted); min-height:2rem; padding:0 .75rem;
     border-radius:999px; font-family:'IBM Plex Sans', sans-serif; font-size:.78rem; font-weight:500; }
@@ -981,8 +982,7 @@
       <div class="flow-head">
         <div class="flow-scopes" id="flowScopes" role="group" data-i18n-aria="flowScopeAria" aria-label="Geräte im Energiefluss"></div>
         <div class="flow-bg" id="flowBg" hidden>
-          <span class="seg3" role="group" data-i18n-aria="bgAria" aria-label="Hintergrund des Energieflusses">
-            <span class="lbl" data-i18n="bgLbl">Hintergrund</span>
+          <span class="seg3" role="group" data-i18n-aria="bgAria" data-i18n-title="bgAria" aria-label="Hintergrund des Energieflusses" title="Hintergrund des Energieflusses">
             <button type="button" data-bg="off" data-i18n="bgOff">Aus</button><button type="button" data-bg="still" data-i18n="bgStill">Bild</button><button type="button" data-bg="move" data-i18n="bgMove">Bewegung</button>
           </span>
         </div>
@@ -1060,7 +1060,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen (MIN_SCRIPT ebenso).
-  const VERSION = "5.0.0";
+  const VERSION = "5.1.0";
   const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
@@ -1086,6 +1086,7 @@
       helpAcMode: 'Betriebsart des Geräts: 1 = Laden bzw. Bereitschaft, 2 = Einspeisen ins Hausnetz. Wird vom Regel-Script gesetzt.',
       helpSocSet: 'Obere Ladegrenze, die gerade am Gerät eingestellt ist (socSet). Das Regel-Script setzt sie nur beim Start auf maxSoc aus der Konfiguration. Weicht sie ab, wurde sie danach von außen geändert (z. B. App oder Home Assistant) – das Gerät lädt dann nur bis zu diesem Wert. Abhilfe: Regel-Script neu starten oder maxSoc in der Konfiguration anpassen.',
       helpMinSoc: 'Untere Entladegrenze, die gerade am Gerät eingestellt ist (minSoc), verglichen mit der Reserve aus der KVS (zdmc_devN_minSoc). Das Regel-Script übernimmt jede Änderung aus der KVS auf das Gerät. Bleibt eine Abweichung länger als etwa eine Minute bestehen, wurde der Wert von außen geändert (z. B. App oder Home Assistant) oder das Regel-Script hat ihn nicht übernommen. Abhilfe: Reserve im Dashboard neu setzen bzw. Regel-Script prüfen.',
+      helpHeat: 'Die Heizung des Geräts ist gerade an (heatState = 1).',
       helpOg: 'Offgrid-Modus, der gerade am Gerät eingestellt ist (gridOffMode), verglichen mit dem Wert aus der KVS (zdmc_devN_gridOffMode). Das Regel-Script schreibt den Modus nur, wenn sich der KVS-Wert ändert – nicht beim Start und nicht, wenn er in der App geändert wurde. Bleibt eine Abweichung länger als etwa eine Minute bestehen, wurde der Modus von außen geändert oder das Regel-Script hat ihn nicht übernommen. Abhilfe: Regel-Script prüfen bzw. den Modus in der App zurückstellen.',
       helpSocLimit: 'Ladegrenze des Geräts: 0 = frei, 1 = voll (Laden gesperrt), 2 = untere Grenze erreicht (Entladen gesperrt).',
       helpGridReverse: '2 - Überschuss exportieren verboten für das Gerät; 1 - Export erlaubt. Im gridReverseMode „dynamic“ entscheidet der Controller selbstständig über die Einstellung.',
@@ -1208,6 +1209,7 @@
       helpAcMode: 'Operating mode of the device: 1 = charging or standby, 2 = feeding into the house grid. Set by the control script.',
       helpSocSet: 'Upper charge limit currently set on the device (socSet). The control script sets it to maxSoc from the configuration only at startup. If it differs, it was changed externally afterwards (e.g. app or Home Assistant) – the device then only charges up to this value. Fix: restart the control script or adjust maxSoc in the configuration.',
       helpMinSoc: 'Lower discharge limit currently set on the device (minSoc), compared with the reserve from the KVS (zdmc_devN_minSoc). The control script applies every KVS change to the device. If a difference persists for more than about a minute, the value was changed externally (e.g. app or Home Assistant) or the control script did not apply it. Remedy: set the reserve again in the dashboard or check the control script.',
+      helpHeat: 'The device’s heater is on at the moment (heatState = 1).',
       helpOg: 'Off-grid mode currently set on the device (gridOffMode), compared with the value from the KVS (zdmc_devN_gridOffMode). The control script writes the mode only when the KVS value changes – not at startup and not when it was changed in the app. If a difference persists for more than about a minute, the mode was changed externally or the control script did not apply it. Remedy: check the control script or set the mode back in the app.',
       helpSocLimit: 'Charge limit of the device: 0 = free, 1 = full (charging blocked), 2 = lower limit reached (discharge blocked).',
       helpGridReverse: '2 - exporting surplus is blocked for this device; 1 - export allowed. In gridReverseMode "dynamic" the controller decides on this setting by itself.',
@@ -1330,6 +1332,7 @@
       helpAcMode: 'Mode de fonctionnement de l’appareil\u00a0: 1 = charge ou veille, 2 = injection dans le réseau domestique. Défini par le script de régulation.',
       helpSocSet: 'Limite de charge supérieure actuellement réglée sur l’appareil (socSet). Le script de régulation la règle sur maxSoc de la configuration uniquement au démarrage. Si elle diffère, elle a été modifiée de l’extérieur ensuite (p.\u00a0ex. application ou Home Assistant) – l’appareil ne charge alors que jusqu’à cette valeur. Solution\u00a0: redémarrer le script de régulation ou adapter maxSoc dans la configuration.',
       helpMinSoc: 'Limite de décharge inférieure actuellement réglée sur l’appareil (minSoc), comparée à la réserve de la KVS (zdmc_devN_minSoc). Le script de régulation applique chaque modification de la KVS à l’appareil. Si un écart persiste plus d’une minute environ, la valeur a été modifiée de l’extérieur (p.\u00a0ex. application ou Home Assistant) ou le script de régulation ne l’a pas appliquée. Remède\u00a0: régler à nouveau la réserve dans le tableau de bord ou vérifier le script de régulation.',
+      helpHeat: 'Le chauffage de l’appareil est actuellement activé (heatState = 1).',
       helpOg: 'Mode hors réseau actuellement réglé sur l’appareil (gridOffMode), comparé à la valeur de la KVS (zdmc_devN_gridOffMode). Le script de régulation n’écrit le mode que lorsque la valeur KVS change – ni au démarrage, ni lorsqu’il a été modifié dans l’application. Si un écart persiste plus d’une minute environ, le mode a été modifié de l’extérieur ou le script de régulation ne l’a pas appliqué. Remède\u00a0: vérifier le script de régulation ou remettre le mode dans l’application.',
       helpSocLimit: 'Limite de charge de l’appareil\u00a0: 0 = libre, 1 = pleine (charge bloquée), 2 = limite basse atteinte (décharge bloquée).',
       helpGridReverse: '2 - exportation du surplus interdite pour l’appareil\u00a0; 1 - exportation autorisée. En gridReverseMode «\u00a0dynamic\u00a0», le contrôleur décide lui-même de ce réglage.',
@@ -1507,8 +1510,8 @@
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
-    bgLbl: 'Hintergrund', bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
-    sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fNoData: 'keine Daten',
+    bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
+    sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fOffIdle: 'keine Last', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Standby', stOg: 'Offgrid',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
@@ -1517,7 +1520,7 @@
     chipOff: 'Aus', chipMax: 'Max',
     ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Soll sich bei Leerlauf selbst abschalten',
     ogHw: 'Am Gerät: {m}', ogNoKvs: 'noch nicht in der KVS – das Regel-Script ändert am Gerät nichts',
-    plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät',
+    plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät', heatOn: 'Heizung an', heatOff: 'Heizung aus',
     flagDischargeOff: 'Entladen gesperrt', flagChargeOff: 'Laden aus dem Netz gesperrt', flagManualOn: 'manuelles Laden aktiv · Regelung pausiert',
     techMinSoc: 'minSoc KVS / Gerät', techLock: 'Entladen / Netzladen', techKvs: 'KVS-Schlüssel', techIp: 'IP',
     techCellLock: 'Sperrschwelle Zelle', yes: 'ja', no: 'nein'
@@ -1532,8 +1535,8 @@
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
-    bgLbl: 'Background', bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
-    sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fNoData: 'no data',
+    bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
+    sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fOffIdle: 'no load', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby', stOg: 'off-grid',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
@@ -1542,7 +1545,7 @@
     chipOff: 'Off', chipMax: 'Max',
     ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Should switch itself off when idle',
     ogHw: 'On device: {m}', ogNoKvs: 'not in the KVS yet – the control script leaves the device unchanged',
-    plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device',
+    plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device', heatOn: 'heater on', heatOff: 'heater off',
     flagDischargeOff: 'discharge disabled', flagChargeOff: 'grid charging disabled', flagManualOn: 'manual charging active · control paused',
     techMinSoc: 'minSoc KVS / device', techLock: 'Discharge / grid charging', techKvs: 'KVS keys', techIp: 'IP',
     techCellLock: 'Cell lock threshold', yes: 'yes', no: 'no'
@@ -1557,8 +1560,8 @@
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
-    bgLbl: 'Arrière-plan', bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
-    sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fNoData: 'pas de données',
+    bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
+    sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fOffIdle: 'aucune charge', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille', stOg: 'hors réseau',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
@@ -1567,7 +1570,7 @@
     chipOff: 'Arrêt', chipMax: 'Max',
     ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'Devrait s’éteindre d’elle-même en l’absence de charge',
     ogHw: 'Sur l’appareil\u00a0: {m}', ogNoKvs: 'pas encore dans la KVS – le script de régulation ne modifie pas l’appareil',
-    plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil',
+    plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil', heatOn: 'chauffage activé', heatOff: 'chauffage désactivé',
     flagDischargeOff: 'décharge désactivée', flagChargeOff: 'charge réseau désactivée', flagManualOn: 'charge manuelle active · régulation en pause',
     techMinSoc: 'minSoc KVS / appareil', techLock: 'Décharge / charge réseau', techKvs: 'Clés KVS', techIp: 'IP',
     techCellLock: 'Seuil de blocage cellule', yes: 'oui', no: 'non'
@@ -2825,7 +2828,7 @@
         // Werte, Hinweise, Einstellungen (nur bei freigegebener Bedienung),
         // Technische Details als eigener Block. IDs wie im klassischen Design.
         '<div class="hub-head">' +
-          '<h3 class="hub-name"><span class="hub-status-dot offline" id="hubDot-' + d.id + '" aria-hidden="true"></span>' + d.label + '</h3>' +
+          '<h3 class="hub-name"><span class="hub-status-dot offline" id="hubDot-' + d.id + '" aria-hidden="true"></span>' + d.label + '<span class="heat-icon" id="heat-' + d.id + '" role="img" data-help="helpHeat" tabindex="0" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 3.6 5.5 6 5.5 11.5a5.5 5.5 0 0 1-11 0c0-2.3 1-3.9 2.3-5.1.2 1.4.8 2.3 1.7 2.7C10.2 8.3 10.5 5 12 2z"/></svg></span></h3>' +
           '<span class="state-pill" id="statePill-' + d.id + '"></span>' +
           '<div class="hub-tag">[dev' + d.id + '] ' + d.ip + '</div>' +
         '</div>' +
@@ -3317,6 +3320,7 @@
         minSocHw: null, minSocDiffKey: '', minSocDiffSince: 0,
         // ab Script 4.1.0: Offgrid-Modus aus der KVS (null = kein Key) und am Geraet
         gridOffMode: ogNum(d.gridOffMode), gridOffModeHw: null, ogDiffKey: '', ogDiffSince: 0,
+        heatState: null,
         watch: d.watch === true,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
@@ -3474,6 +3478,8 @@
           d.offGrid = (h.offGrid === undefined) ? null : h.offGrid;
           // ab Script 4.1.0: Offgrid-Modus am Geraet
           d.gridOffModeHw = ogNum(h.gridOffModeHw);
+          // ab Script 4.2.0
+          d.heatState = (h.heatState === undefined) ? null : h.heatState;
           applyMinSocCeiling(d);
         } else {
           d.online = false;
@@ -3635,6 +3641,14 @@
   }
 
   // Status-Pille im Kartenkopf: Betriebszustand in Worten
+  // Flamme hinter dem Geraetenamen, solange die Heizung an ist
+  function renderHeat(d){
+    const el = document.getElementById('heat-' + d.id);
+    if (!el) return;
+    el.hidden = !(d.online && !staleData && d.heatState === 1);
+    el.setAttribute('aria-label', t('heatOn'));
+  }
+
   function renderStatePill(d){
     const el = document.getElementById('statePill-' + d.id);
     if (!el) return;
@@ -3706,6 +3720,9 @@
     // die Einstellungen darueber auf gleicher Hoehe (fehlt der Wert: "–").
     if (hubs.some(function(h){ return h.gridOffMode !== null || h.gridOffModeHw !== null; })) {
       rows.splice(5, 0, [t('techOg'), v(d.gridOffMode) + ' / ' + v(d.gridOffModeHw)]);
+    }
+    if (hubs.some(function(h){ return h.heatState !== null; })) {
+      rows.push(['heatState', v(d.heatState) + (d.heatState === 1 ? ' · ' + t('heatOn') : (d.heatState === 0 ? ' · ' + t('heatOff') : ''))]);
     }
     if (wdVolt && hubs.some(function(h){ return h.watch; })) {
       rows.push([t('techCellLock'), d.watch ? fmtVolt(wdVolt.warn) + ' V' : '–']);
@@ -3885,6 +3902,7 @@
       dot.classList.toggle('offline', !d.online);
       renderFlags(d);
       renderStatePill(d);
+      renderHeat(d);
       renderPackLine(d);
       renderFullLine(d);
       renderManual(d);
@@ -4025,7 +4043,7 @@
     const sb = document.getElementById('fnSocBar'); if (sb) sb.style.width = (soc || 0) + '%';
     setText('fnOff', none || !hasOff ? '–' : fmtW(off));
     // Im Fluss nur Betraege; Richtung zeigt Text und Animation (setFlowLine nimmt das Vorzeichen)
-    setText('fnOffSub', none || !hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : 'fOffNone')));
+    setText('fnOffSub', none ? t('fNoData') : (!hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : 'fOffIdle'))));
     setText('fnHouse', house === null ? '–' : fmtW(house));
     setText('fnHouseSub', t('fHouse'));   // ohne „gesamt“ – das Haus ist immer das ganze Haus
     const g = gridOnline ? Math.round(gridPower) : null;
