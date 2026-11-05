@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-05T16:42:57Z",
+  "generated": "2026-11-05T20:55:32Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -180,12 +180,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.1.0",
+      "version": "4.2.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/f0b1ef8d690224933466fd8098a81af22e96460e/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 37927,
-      "codeHash": "sha256:28e0446d10fda60cea8e3a81b4243b693c0aadd99b62be23054359c1091516d3",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4f3a36f9e20c248e26af3a1b3535e4ce0c15ef4a/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38020,
+      "codeHash": "sha256:aff1bda653b5c01a5c74ca6dc896cd370a2d8e6a6c0498111d21c6fe8b26647d",
       "configKeys": [
         "api",
         "apiEvents",
@@ -232,14 +232,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
-        "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
-        "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
+        "**status_api:** Je Hub gibt es das neue Feld `heatState` aus dem Report des Geräts (`1` = Heizung an, `0` = aus). Der gleichnamige Wert der Akkupacks wird nicht verwendet. Fehlt das Feld oder ist der Hub offline, steht dort `null`.",
+        "Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Der Speicherbedarf auf dem Shelly ist noch nicht gemessen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.1.0",
+          "schema": 1,
+          "codeHash": "sha256:28e0446d10fda60cea8e3a81b4243b693c0aadd99b62be23054359c1091516d3",
+          "changes": [
+            "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
+            "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
+            "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
+          ],
+          "notice": null
+        },
         {
           "version": "4.0.1",
           "schema": 1,
@@ -325,16 +335,6 @@
           "codeHash": "sha256:9bb873f713fc8577728d1728bda9e23cfd2796f07014ba9182220e8dbb6ff1b2",
           "changes": [
             "Speicheroptimierung"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.5",
-          "schema": 1,
-          "codeHash": "sha256:47ae0d9d7fa07b6e1f9c89d615df0fb06d0648d4ec9647129c0ce8fa96d341f5",
-          "changes": [
-            "Fix 131; StackOverflow",
-            "https://github.com/surfer1264/Zendure-Stuff/issues/131"
           ],
           "notice": null
         }
@@ -441,13 +441,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.0.0",
+      "version": "5.1.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4f3a36f9e20c248e26af3a1b3535e4ce0c15ef4a/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
-        "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
-        "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
+        "**Flamme hinter dem Gerätenamen (neues Design):** Sie erscheint, solange die Heizung an ist (`heatState` = 1). Antippen oder mit der Maus darauf zeigen erklärt sie. Bei 0, ohne Wert, offline und bei veralteten Daten ist sie ausgeblendet.",
+        "**Technische Details (neues Design):** neue Zeile `heatState`, z. B. „0 · Heizung aus“. Wie bei den anderen Zeilen gilt: Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
+        "**Offgrid im Energiefluss:** Der Untertext unterscheidet jetzt „keine Last“ (Gerät meldet Offgrid, unter 5 W), „nicht belegt“ (kein Gerät meldet Offgrid) und „keine Daten“ (kein Gerät online)."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -455,6 +455,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.0.0",
+          "changes": [
+            "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
+            "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
+            "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
+          ],
+          "notice": null
+        },
         {
           "version": "4.1.0",
           "changes": [
@@ -492,18 +501,28 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.0.0",
+      "version": "5.1.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/4f3a36f9e20c248e26af3a1b3535e4ce0c15ef4a/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
-        "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
-        "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
+        "**Flamme hinter dem Gerätenamen (neues Design):** Sie erscheint, solange die Heizung an ist (`heatState` = 1). Antippen oder mit der Maus darauf zeigen erklärt sie. Bei 0, ohne Wert, offline und bei veralteten Daten ist sie ausgeblendet.",
+        "**Technische Details (neues Design):** neue Zeile `heatState`, z. B. „0 · Heizung aus“. Wie bei den anderen Zeilen gilt: Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
+        "**Offgrid im Energiefluss:** Der Untertext unterscheidet jetzt „keine Last“ (Gerät meldet Offgrid, unter 5 W), „nicht belegt“ (kein Gerät meldet Offgrid) und „keine Daten“ (kein Gerät online)."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
-      "history": []
+      "history": [
+        {
+          "version": "5.0.0",
+          "changes": [
+            "**Eigene Versionsnummer:** Dashboard und Proxy zählen ab jetzt unabhängig vom Shelly-Script. Die Fußzeile zeigt beide Nummern, z. B. „v5.0.0 · Script v4.1.0“. Gelb wird sie nur noch, wenn das Script älter ist als die Mindestversion.",
+            "**Update-Hinweis:** Gibt es auf GitHub eine neuere Version von Dashboard, Proxy oder Shelly-Script, steht in der Fußzeile „⬆ Update … verfügbar“ mit Link auf den Changelog. Ohne Internet bleibt der Hinweis weg.",
+            "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
+          ],
+          "notice": null
+        }
+      ]
     }
   }
 }
