@@ -13,7 +13,7 @@ Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. 
 **Ziel:** Den Heizzustand des Geräts für das Dashboard und eigene Anbindungen lesbar machen.
 
 - **status_api:** Je Hub gibt es das neue Feld `heatState` aus dem Report des Geräts (`1` = Heizung an, `0` = aus). Der gleichnamige Wert der Akkupacks wird nicht verwendet. Fehlt das Feld oder ist der Hub offline, steht dort `null`.
-- Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Der Speicherbedarf auf dem Shelly ist noch nicht gemessen.
+- Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Gemessen mit zwei Geräten und KVS-Schreibvorgängen: Peak 19.292 Bytes, in Ruhe 14.756 Bytes belegt, etwa 5,9 kB Reserve beim Peak (kurzer Messlauf, kein Vergleichswert zu 4.1.0).
 
 Keine Änderung am CONFIG-Block nötig.
 
