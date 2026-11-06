@@ -27,6 +27,7 @@ console.log("[runner] Ziel: " + CYCLES + " Zyklen. Warte auf tatsaechliche Ferti
 // ---------------------------------------------------------------
 // Erweiterung fuer Testmatrix (alles optional, ohne Variablen wie bisher):
 //   DAMPING   = dampingFactor fuer diesen Lauf (ersetzt den Wert in zdmc_test.js)
+//   JUMP      = jumpFactor fuer diesen Lauf (Faktor der schnellen Flanke)
 //   MOCK_PORT = Port des Mocks; wird auch in die URLs von zdmc_test.js eingesetzt
 //   OUT_DIR   = Ordner fuer closed_loop_result.csv und die angepasste Skriptkopie
 // Die Original-Datei zdmc_test.js wird NIE veraendert - angepasst wird eine Kopie.
@@ -37,8 +38,9 @@ if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 function prepareScript() {
   const src = path.join(__dirname, "zdmc_test.js");
   const damping = process.env.DAMPING;
+  const jump = process.env.JUMP;
   const port = process.env.MOCK_PORT;
-  if (damping === undefined && (port === undefined || port === "3900")) return src;
+  if (damping === undefined && jump === undefined && (port === undefined || port === "3900")) return src;
 
   let code = fs.readFileSync(src, "utf8");
   if (damping !== undefined) {
@@ -46,6 +48,12 @@ function prepareScript() {
     if (!re.test(code)) throw new Error("dampingFactor in zdmc_test.js nicht gefunden");
     code = code.replace(re, "dampingFactor: " + Number(damping));
     console.log("[runner] dampingFactor fuer diesen Lauf: " + Number(damping));
+  }
+  if (jump !== undefined) {
+    const re = /dampingFactor:\s*[0-9.]+/;
+    if (!re.test(code)) throw new Error("dampingFactor in zdmc_test.js nicht gefunden");
+    code = code.replace(re, (m) => m + ", jumpFactor: " + Number(jump));
+    console.log("[runner] jumpFactor fuer diesen Lauf: " + Number(jump));
   }
   if (port !== undefined && port !== "3900") {
     code = code.split("localhost:3900").join("localhost:" + port);
