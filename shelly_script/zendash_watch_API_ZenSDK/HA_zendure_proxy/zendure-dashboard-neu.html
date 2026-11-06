@@ -789,6 +789,13 @@
   footer a{ color:inherit; text-decoration:underline; text-underline-offset:2px; }
   footer a:hover, footer a:focus-visible{ color:var(--teal-text); }
   .meta-line{ display:flex; justify-content:center; flex-wrap:wrap; gap:.375rem .875rem; margin-top:.5rem; font-size:.74rem; color:var(--text-muted); }
+  /* Einrichtung und Technik selten gebraucht: hinter "Mehr" bzw. nur mit Technischen Details */
+  .foot-more{ appearance:none; background:none; border:0; padding:0; color:inherit; font:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+  .foot-more:hover, .foot-more:focus-visible{ color:var(--teal-text); }
+  .foot-more .caret{ display:inline-block; }
+  .foot-more[aria-expanded="true"] .caret{ transform:rotate(180deg); }
+  #app:not(.expert) .foot-api{ display:none; }
+  #versionUpd{ font-weight:600; }
 
   [data-help]{ cursor:help; }
   button[data-help]{ cursor:pointer; }
@@ -1013,23 +1020,29 @@
     </div>
 
     <footer>
-      <span data-i18n="footer">Eigenständige Seite · Daten &amp; Regelparameter über die Shelly-API</span>
-      (<a href="config_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">config_api</a>
-      / <a href="status_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">status_api</a>
-      / kvs_set_api).
       <div class="meta-line">
-        <span id="chartWindowLabel" data-i18n="chartBuilding">Verlauf wird aufgebaut</span>
-        <span id="lastUpdate" data-i18n="lastUpdateNone">zuletzt aktualisiert –</span>
         <span id="versionLine">v–</span>
-        <a id="helpLink" href="https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard">Hilfe</a>
-      </div>
-      <div class="meta-line">
-        <span><span data-i18n="shellySetup">Dashboard-Shelly:</span> <a href="setup" data-i18n="shellySetupLink">IP / Script-ID ändern</a></span>
-        <span data-i18n="cloudSetup">Cloud-Upload einrichten:</span>
-        <a href="thingspeak">ThingSpeak</a>
-        <a href="thingsboard">ThingsBoard</a>
-        <span id="berichtLine" hidden><span data-i18n="berichtLbl">Auswertung:</span> <a href="bericht_zendure" data-i18n="berichtLink">Log-Bericht</a></span>
         <span id="fehlerLine" hidden></span>
+        <a id="helpLink" href="https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/" target="_blank" rel="noopener" data-i18n="helpLink" data-i18n-href="helpUrl" data-i18n-title="helpTitle" title="Anleitung zum Dashboard">Hilfe</a>
+        <button type="button" class="foot-more" id="footMoreBtn" aria-expanded="false" aria-controls="footMore"><span data-i18n="footMore">Mehr</span> <span class="caret" aria-hidden="true">▾</span></button>
+      </div>
+      <div class="meta-line foot-api">
+        <a href="config_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">config_api</a>
+        <a href="status_api" target="_blank" rel="noopener" data-i18n-title="apiRawTitle" title="Rohdaten (JSON) im neuen Tab">status_api</a>
+        <span>kvs_set_api</span>
+      </div>
+      <div id="footMore" hidden>
+        <div class="meta-line">
+          <span id="chartWindowLabel" data-i18n="chartBuilding">Verlauf wird aufgebaut</span>
+          <span id="lastUpdate" data-i18n="lastUpdateNone">zuletzt aktualisiert –</span>
+        </div>
+        <div class="meta-line">
+          <span><span data-i18n="shellySetup">Dashboard-Shelly:</span> <a href="setup" data-i18n="shellySetupLink">IP / Script-ID ändern</a></span>
+          <span data-i18n="cloudSetup">Cloud-Upload einrichten:</span>
+          <a href="thingspeak">ThingSpeak</a>
+          <a href="thingsboard">ThingsBoard</a>
+          <span id="berichtLine" hidden><span data-i18n="berichtLbl">Auswertung:</span> <a href="bericht_zendure" data-i18n="berichtLink">Log-Bericht</a></span>
+        </div>
       </div>
     </footer>
 
@@ -1061,7 +1074,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen (MIN_SCRIPT ebenso).
-  const VERSION = "5.3.0";
+  const VERSION = "5.4.0";
   const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
@@ -1118,7 +1131,7 @@
       devices: 'Geräte',
       overview: 'Übersicht', overviewAria: 'Übersicht ein-/ausklappen',
       ovSummary: 'Soll {s} W · Netz {g} W · Speicher {b} W',
-      footer: 'Eigenständige Seite · Daten & Regelparameter über die Shelly-API',
+      footMore: 'Mehr',
       helpLink: 'Hilfe', helpTitle: 'Anleitung zum Dashboard',
       helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/',
       apiRawTitle: 'Rohdaten (JSON) im neuen Tab',
@@ -1241,7 +1254,7 @@
       devices: 'Devices',
       overview: 'Overview', overviewAria: 'Expand/collapse overview',
       ovSummary: 'Target {s} W · Grid {g} W · Storage {b} W',
-      footer: 'Standalone page · data & control parameters via the Shelly API',
+      footMore: 'More',
       helpLink: 'Help', helpTitle: 'Dashboard guide',
       helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard_EN/',
       apiRawTitle: 'Raw data (JSON) in a new tab',
@@ -1364,7 +1377,7 @@
       devices: 'Appareils',
       overview: 'Vue d’ensemble', overviewAria: 'Déplier/replier la vue d’ensemble',
       ovSummary: 'Consigne {s}\u00a0W · Réseau {g}\u00a0W · Stockage {b}\u00a0W',
-      footer: 'Page autonome · données et paramètres de régulation via l’API Shelly',
+      footMore: 'Plus',
       helpLink: 'Aide', helpTitle: 'Guide du tableau de bord',
       helpUrl: 'https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard_FR/',
       apiRawTitle: 'Données brutes (JSON) dans un nouvel onglet',
@@ -4179,6 +4192,13 @@
      Technische Details (KVS-Schluessel, IP, Rohcodes) ein-/ausblenden -
      reine Anzeige, wird pro Browser gemerkt. */
   const EXPERT_KEY = 'zendash_b_expert';
+  const footMoreBtn = document.getElementById('footMoreBtn');
+  footMoreBtn.addEventListener('click', function(){
+    const open = footMoreBtn.getAttribute('aria-expanded') !== 'true';
+    footMoreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    document.getElementById('footMore').hidden = !open;
+  });
+
   const expertToggle = document.getElementById('expertToggle');
   let expert = false;
   try { expert = localStorage.getItem(EXPERT_KEY) === '1'; } catch (e) {}

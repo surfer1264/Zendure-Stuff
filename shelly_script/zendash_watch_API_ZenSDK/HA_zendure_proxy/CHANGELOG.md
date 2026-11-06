@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.4.0.0
+
+- Aufgeräumte Fußzeile im neuen Design: Einrichtung hinter „Mehr“, API-Links nur mit technischen Details
+
 ## 5.3.0.0
 
 - Solarflow-Knoten im Energiefluss zeigt „gibt ab“, „nimmt auf“ oder „Bereitschaft“; auf Deutsch heißt „Standby“ überall „Bereitschaft“ (neues Design)

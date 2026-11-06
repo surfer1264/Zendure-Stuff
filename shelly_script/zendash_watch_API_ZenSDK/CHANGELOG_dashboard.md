@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.4.0
+
+**Ziel:** Aufgeräumte Fußzeile im neuen Design. Braucht das Shelly-Script ab 4.1.0.
+
+- **Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.
+- **„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.
+- **API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details.
+- **Update-Hinweis:** in Fettschrift, damit er auffällt. Der Satz „Eigenständige Seite …“ entfällt.
+- Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.4.0.0
+
 ## Changelog 5.3.0
 
 **Ziel:** Der Solarflow-Knoten im Energiefluss zeigt, was das Gerät insgesamt macht. Braucht das Shelly-Script ab 4.1.0.

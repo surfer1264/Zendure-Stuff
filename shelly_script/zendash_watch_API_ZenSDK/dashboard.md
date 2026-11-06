@@ -91,6 +91,8 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das 
 | **Einstellungen** | Reiter **Regelung · Offgrid · Laden** – nur sichtbar, solange die Bedienung freigegeben ist. Nach dem Laden der Seite und nach jedem Entsperren steht jede Karte auf „Regelung“; nicht übernommene Änderungen (Reserve-Entwurf, gewählte Ladestufe) werden dabei verworfen. Der Reiter wird nicht gespeichert. „Offgrid“ erscheint nur bei Geräten mit Offgrid-Ausgang |
 | **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
 
+Auch die **Fußzeile** ist im neuen Design aufgeräumt: Sichtbar sind Version, Update-Hinweis, Abfragefehler und **Hilfe**. **Mehr ▾** klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Links zu `config_api` und `status_api` erscheinen nur bei eingeschalteten technischen Details.
+
 Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
 
 Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
