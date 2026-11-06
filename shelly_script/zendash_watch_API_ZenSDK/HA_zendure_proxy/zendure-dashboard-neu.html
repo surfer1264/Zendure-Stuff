@@ -1061,7 +1061,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen (MIN_SCRIPT ebenso).
-  const VERSION = "5.2.0";
+  const VERSION = "5.3.0";
   const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
@@ -1188,7 +1188,7 @@
       errTimeout: 'Zeitüberschreitung', errUnreach: 'nicht erreichbar', errShelly: 'Fehler vom Shelly',
       errDetail: 'Zeitüberschreitung {a} · nicht erreichbar {b} · Fehler vom Shelly {c} (Zähler des Proxys, beginnt um Mitternacht und bei jedem Proxy-Start neu)',
       unreachable: 'nicht erreichbar',
-      flagFeeding: 'speist ein', flagCharging: 'lädt/Stby', flagStandby: 'Standby',
+      flagFeeding: 'speist ein', flagCharging: 'lädt/bereit', flagStandby: 'Bereitschaft',
       flagSocSetDiff: 'abweichend, Konfiguration {max} %',
       flagMinSocDiff: 'abweichend, KVS {kvs} %',
       flagFull: 'voll, Laden gesperrt', flagEmpty: 'leer, Entladen gesperrt', flagFree: 'frei',
@@ -1507,13 +1507,13 @@
     setResetHint: 'Größe, Tag/Nacht, Details, Übersicht, Geräte/Energiefluss und Hintergrund auf Standard',
     flowTotal: 'Gesamt', flowPv: 'PV', flowBatt: 'Akku', flowHouse: 'Haus', flowGrid: 'Netz', flowOffgrid: 'Offgrid',
     fPvOn: 'Erzeugung', fPvOff: 'keine Erzeugung', fPvNone: 'kein PV-Eingang',
-    fAcOut: 'Ausgang ins Haus', fAcIn: 'Netzbezug', fAcIdle: 'Bereitschaft',
+    fAcOut: 'gibt ab', fAcIn: 'nimmt auf', fAcIdle: 'Bereitschaft',
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
     bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
     sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fOffIdle: 'keine Last', fNoData: 'keine Daten',
-    stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Standby', stOg: 'Offgrid',
+    stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Bereitschaft', stOg: 'Offgrid',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
     noHints: 'Keine Hinweise', settingsTitle: 'Einstellungen', tabCtrl: 'Regelung', tabOffgrid: 'Offgrid', tabCharge: 'Laden',
@@ -1532,7 +1532,7 @@
     setResetHint: 'Size, day/night, details, overview, devices/energy flow and background back to default',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Battery', flowHouse: 'Home', flowGrid: 'Grid', flowOffgrid: 'Off-grid',
     fPvOn: 'generation', fPvOff: 'no generation', fPvNone: 'no PV input',
-    fAcOut: 'output to home', fAcIn: 'charging from grid', fAcIdle: 'standby',
+    fAcOut: 'supplying', fAcIn: 'taking in', fAcIdle: 'standby',
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
@@ -1557,7 +1557,7 @@
     setResetHint: 'Taille, jour/nuit, détails, vue d’ensemble, appareils/flux et arrière-plan par défaut',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Batterie', flowHouse: 'Maison', flowGrid: 'Réseau', flowOffgrid: 'Hors réseau',
     fPvOn: 'production', fPvOff: 'pas de production', fPvNone: 'pas d’entrée PV',
-    fAcOut: 'sortie vers la maison', fAcIn: 'charge depuis le réseau', fAcIdle: 'veille',
+    fAcOut: 'fournit', fAcIn: 'absorbe', fAcIdle: 'veille',
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
@@ -4042,7 +4042,8 @@
     setText('fnPv', none || !hasPv ? '–' : fmtW(pv));
     setText('fnPvSub', none ? t('fNoData') : (!hasPv ? t('fPvNone') : t(pv >= 5 ? 'fPvOn' : 'fPvOff')));
     setText('fnAc', none ? '–' : fmtW(ac));
-    setText('fnAcSub', none ? t('unreachable') : t(ac > 5 ? 'fAcOut' : (ac < -5 ? 'fAcIn' : 'fAcIdle')));
+    // Was das Geraet insgesamt macht; der Wert darueber bleibt die AC-Leistung
+    setText('fnAcSub', none ? t('unreachable') : t(ac > 5 || off >= 5 ? 'fAcOut' : (ac < -5 || off <= -5 || pv >= 5 ? 'fAcIn' : 'fAcIdle')));
     setText('fnBatt', none ? '–' : fmtW(batt));
     setText('fnBattSub', none ? '' : t(batt > 5 ? 'fBattIn' : (batt < -5 ? 'fBattOut' : 'fBattIdle')));
     setText('fnSoc', soc === null ? '' : (socs.length > 1 ? 'Ø ' : '') + soc + ' %');

@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.3.0
+
+**Ziel:** Der Solarflow-Knoten im Energiefluss zeigt, was das Gerät insgesamt macht. Braucht das Shelly-Script ab 4.1.0.
+
+- **Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.
+- **Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.
+- Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.3.0.0
+
 ## Changelog 5.2.0
 
 **Ziel:** Kühlstes Pack in den technischen Details anzeigen. Läuft weiter ab Shelly-Script 4.1.0, die neue Zeile erscheint ab Script 4.3.0.
