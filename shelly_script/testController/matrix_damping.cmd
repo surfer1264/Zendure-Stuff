@@ -11,7 +11,7 @@ rem Schritt = Regelintervall aus zdmc_test.js (interval: 4000 ms -> 4/60 min)
 set STEP_MIN=0.0666667
 set INTERVAL_MS=4000
 set START_SOC=30
-set LOAD_SCALE=0.5
+set LOAD_SCALE=0.4
 
 set SCENARIO=szenario_werktag.json
 
