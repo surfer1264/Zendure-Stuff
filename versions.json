@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-06T08:17:00Z",
+  "generated": "2026-11-06T11:35:17Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -234,7 +234,7 @@
       "changes": [
         "**status_api:** Je Hub gibt es das neue Feld `packTempLow`, das kühlste Pack in ganzen °C. Das ist der kleinste `maxTemp`-Wert aller Packs. Packs, die als Rohwert 0 melden (keine gültige Messung), zählen nicht; eine Temperatur von 0 °C wird normal gewertet. Fehlt ein Wert oder ist der Hub offline, steht dort `null`.",
         "**Näherung:** Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen. Als Kälteschutz ist der Wert nicht geeignet.",
-        "Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Der Speicherbedarf auf dem Shelly ist noch nicht gemessen."
+        "Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Gemessen mit zwei Geräten: Peak 19.418 Bytes, etwa 5,8 kB Reserve beim Peak (kurzer Messlauf)."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
@@ -443,12 +443,12 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.2.0",
+      "version": "5.3.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ba1af5b6d4eb633fe766d2ea04a7d434e5d58244/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5cb9e1ccbd2eadf359f5f40e722a4e6d354cfb83/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Technische Details (neues Design):** neue Zeile „Kühlstes Pack“, z. B. „17 °C“. Das ist der kleinste `maxTemp`-Wert aller Packs, also eine Näherung: Die kälteste Zelle kann darunter liegen. Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
-        "**Offgrid-Reiter:** Der KVS-Schlüssel `zdmc_devN_gridOffMode` erscheint bei eingeblendeten technischen Details in derselben kleinen Schrift wie die anderen Schlüssel. Bisher war er viel zu groß.",
+        "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
+        "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
         "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
       ],
       "notice": null,
@@ -457,6 +457,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.2.0",
+          "changes": [
+            "**Technische Details (neues Design):** neue Zeile „Kühlstes Pack“, z. B. „17 °C“. Das ist der kleinste `maxTemp`-Wert aller Packs, also eine Näherung: Die kälteste Zelle kann darunter liegen. Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
+            "**Offgrid-Reiter:** Der KVS-Schlüssel `zdmc_devN_gridOffMode` erscheint bei eingeblendeten technischen Details in derselben kleinen Schrift wie die anderen Schlüssel. Bisher war er viel zu groß.",
+            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.0",
           "changes": [
@@ -512,18 +521,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.2.0",
+      "version": "5.3.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ba1af5b6d4eb633fe766d2ea04a7d434e5d58244/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5cb9e1ccbd2eadf359f5f40e722a4e6d354cfb83/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Technische Details (neues Design):** neue Zeile „Kühlstes Pack“, z. B. „17 °C“. Das ist der kleinste `maxTemp`-Wert aller Packs, also eine Näherung: Die kälteste Zelle kann darunter liegen. Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
-        "**Offgrid-Reiter:** Der KVS-Schlüssel `zdmc_devN_gridOffMode` erscheint bei eingeblendeten technischen Details in derselben kleinen Schrift wie die anderen Schlüssel. Bisher war er viel zu groß.",
+        "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
+        "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
         "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.2.0",
+          "changes": [
+            "**Technische Details (neues Design):** neue Zeile „Kühlstes Pack“, z. B. „17 °C“. Das ist der kleinste `maxTemp`-Wert aller Packs, also eine Näherung: Die kälteste Zelle kann darunter liegen. Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.",
+            "**Offgrid-Reiter:** Der KVS-Schlüssel `zdmc_devN_gridOffMode` erscheint bei eingeblendeten technischen Details in derselben kleinen Schrift wie die anderen Schlüssel. Bisher war er viel zu groß.",
+            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.1.0",
           "changes": [
