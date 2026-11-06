@@ -54,7 +54,7 @@ function pvCurve(minuteOfDay, start, end, peak, maxPower) {
 
 const WIN_START = 8 * 60, WIN_END = 18 * 60;
 function pv800(m) { return pvCurve(m, WIN_START-60, WIN_END-60, 10 * 60, 1400); }
-function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 920); }
+function pv2400(m) { return pvCurve(m, WIN_START, WIN_END+60, 15 * 60, 900); }
 
 // ===============================================================
 // RAUSCH- UND SZENARIO-MODELL (deterministisch)
