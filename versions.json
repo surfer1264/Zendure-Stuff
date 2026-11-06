@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-06T11:35:17Z",
+  "generated": "2026-11-06T20:15:12Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -180,12 +180,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.3.0",
+      "version": "4.4.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ba1af5b6d4eb633fe766d2ea04a7d434e5d58244/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38207,
-      "codeHash": "sha256:806ac8f5bcb50159c8f28c3a5245430e010d0f17a8adafffdbe07acfa5e2127c",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/e40e3f592027376e84a738b4af20b6db8fb6f6b6/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38578,
+      "codeHash": "sha256:b816af8e017f5cf96922d5757f5353e505afb73440c0f3441b2c92c8f40f2472",
       "configKeys": [
         "api",
         "apiEvents",
@@ -232,14 +232,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**status_api:** Je Hub gibt es das neue Feld `packTempLow`, das kühlste Pack in ganzen °C. Das ist der kleinste `maxTemp`-Wert aller Packs. Packs, die als Rohwert 0 melden (keine gültige Messung), zählen nicht; eine Temperatur von 0 °C wird normal gewertet. Fehlt ein Wert oder ist der Hub offline, steht dort `null`.",
-        "**Näherung:** Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen. Als Kälteschutz ist der Wert nicht geeignet.",
-        "Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Gemessen mit zwei Geräten: Peak 19.418 Bytes, etwa 5,8 kB Reserve beim Peak (kurzer Messlauf)."
+        "**Neue Meldung:** „♨️ SF800: Heizung an“, sobald `heatState` auf 1 steht. Sie gilt für alle Geräte, die der Watchdog überwacht, und ist nicht abschaltbar, wie die übrigen Meldungen auch. Bei aktivierten Benachrichtigungen kommt sie also nach dem Update ohne weitere Einstellung.",
+        "**Erneute Meldung:** erst, wenn die Heizung zwischendurch 30 Minuten durchgehend aus war. So löst ein Pendeln zwischen 0 und 1 keine Meldungsserie aus. Das Ausschalten wird nicht gemeldet.",
+        "**Ausfall:** Ist das Gerät nicht erreichbar oder fehlt der Wert, beginnen die 30 Minuten danach neu."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.3.0",
+          "schema": 1,
+          "codeHash": "sha256:806ac8f5bcb50159c8f28c3a5245430e010d0f17a8adafffdbe07acfa5e2127c",
+          "changes": [
+            "**status_api:** Je Hub gibt es das neue Feld `packTempLow`, das kühlste Pack in ganzen °C. Das ist der kleinste `maxTemp`-Wert aller Packs. Packs, die als Rohwert 0 melden (keine gültige Messung), zählen nicht; eine Temperatur von 0 °C wird normal gewertet. Fehlt ein Wert oder ist der Hub offline, steht dort `null`.",
+            "**Näherung:** Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen. Als Kälteschutz ist der Wert nicht geeignet.",
+            "Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Gemessen mit zwei Geräten: Peak 19.418 Bytes, etwa 5,8 kB Reserve beim Peak (kurzer Messlauf)."
+          ],
+          "notice": null
+        },
         {
           "version": "4.2.0",
           "schema": 1,
@@ -331,13 +342,6 @@
           "changes": [
             "Speicheroptimierung"
           ],
-          "notice": null
-        },
-        {
-          "version": "3.5.7",
-          "schema": 1,
-          "codeHash": "sha256:d036f35b04ceb2eb601537753ec2011d42ad5d3755604434b00ec38869e0a1c3",
-          "changes": [],
           "notice": null
         }
       ]
