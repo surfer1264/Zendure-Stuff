@@ -8,6 +8,16 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.5.0
+
+**Ziel:** Eigenes Zeichen im Kopf des Dashboards. Braucht das Shelly-Script ab 4.1.0.
+
+- **Ligatur „ZS“ (beide Designs):** Links neben „ZENDURE // GRID“ steht jetzt das Zeichen „ZS“ für Zendure und Shelly, mit einem eigenen Bild für jeden Monat. Der Monat kommt aus dem Datum des Browsers und wechselt auch bei offener Seite.
+- **Größe und Farben:** Das Zeichen reicht von der Oberkante von „ZENDURE“ bis zur Grundlinie der Unterzeile und passt sich an Ansichtsgröße, Sprache und Fensterbreite an. Tag- und Nachtansicht haben eigene Farben.
+- Mit `?zmonth=1` bis `?zmonth=12` in der Adresse lässt sich jedes Monatsbild ansehen.
+- Der Proxy hat nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.5.0.0
+
 ## Changelog 5.4.0
 
 **Ziel:** Aufgeräumte Fußzeile im neuen Design. Braucht das Shelly-Script ab 4.1.0.

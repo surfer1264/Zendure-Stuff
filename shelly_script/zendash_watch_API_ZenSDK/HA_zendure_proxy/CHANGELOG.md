@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.5.0.0
+
+- Neues Zeichen „ZS“ mit Monatsbild im Kopf des Dashboards (beide Designs)
+
 ## 5.4.0.0
 
 - Aufgeräumte Fußzeile im neuen Design: Einrichtung hinter „Mehr“, API-Links nur mit technischen Details
