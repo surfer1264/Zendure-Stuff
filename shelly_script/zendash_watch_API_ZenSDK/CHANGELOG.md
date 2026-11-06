@@ -14,7 +14,7 @@ Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. 
 
 - **status_api:** Je Hub gibt es das neue Feld `packTempLow`, das kühlste Pack in ganzen °C. Das ist der kleinste `maxTemp`-Wert aller Packs. Packs, die als Rohwert 0 melden (keine gültige Messung), zählen nicht; eine Temperatur von 0 °C wird normal gewertet. Fehlt ein Wert oder ist der Hub offline, steht dort `null`.
 - **Näherung:** Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen. Als Kälteschutz ist der Wert nicht geeignet.
-- Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Der Speicherbedarf auf dem Shelly ist noch nicht gemessen.
+- Keine zusätzliche Abfrage: Der Wert kommt aus dem ohnehin geholten Report. Gemessen mit zwei Geräten: Peak 19.418 Bytes, etwa 5,8 kB Reserve beim Peak (kurzer Messlauf).
 
 Keine Änderung am CONFIG-Block nötig.
 
