@@ -8,6 +8,18 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.4.0
+
+**Ziel:** Melden, wenn die Heizung eines überwachten Geräts einschaltet.
+
+- **Neue Meldung:** „♨️ SF800: Heizung an“, sobald `heatState` auf 1 steht. Sie gilt für alle Geräte, die der Watchdog überwacht, und ist nicht abschaltbar, wie die übrigen Meldungen auch. Bei aktivierten Benachrichtigungen kommt sie also nach dem Update ohne weitere Einstellung.
+- **Erneute Meldung:** erst, wenn die Heizung zwischendurch 30 Minuten durchgehend aus war. So löst ein Pendeln zwischen 0 und 1 keine Meldungsserie aus. Das Ausschalten wird nicht gemeldet.
+- **Ausfall:** Ist das Gerät nicht erreichbar oder fehlt der Wert, beginnen die 30 Minuten danach neu.
+- **Grenzen:** Ohne offenes Dashboard wird nur im Watchdog-Intervall geprüft (`intervalSec`), kurze Heizphasen können dazwischen unbemerkt bleiben. Nach einem Neustart des Scripts kann die Meldung erneut kommen.
+- Der Speicherbedarf auf dem Shelly ist noch nicht gemessen.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.3.0
 
 **Ziel:** Eine Näherung für die Temperatur der Akkus bereitstellen, auch bei mehreren Packs.

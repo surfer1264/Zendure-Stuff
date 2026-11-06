@@ -299,6 +299,7 @@ Diese Nachrichten kann das Script verschicken:
 | ✅ zenDash/Watchdog v… gestartet (2/2 ueberwacht) | nach jedem Start des Scripts |
 | 🔋 SF2400 voll (99%) | Ladestand hat die `vollSchwelle` erreicht |
 | 🔥 SF800 Temp hoch: 46.2C | Gerätetemperatur über `tempWarn` |
+| ♨️ SF800: Heizung an | Heizung des Geräts eingeschaltet (`heatState` = 1). Erneute Meldung erst, wenn sie zwischendurch 30 Minuten durchgehend aus war |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | eine Zelle unter `minVoltWarn`, mit Seriennummer des Akkupacks |
 | ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | direkt danach: Entladen für diesen Speicher im Controller abgeschaltet, siehe [Entladesperre](#entladesperre-bei-unterspannung). Kommt nicht, wenn das Entladen schon aus war. |
 | ❌ SF800: nicht erreichbar seit 10 min | Speicher antwortet nicht mehr |

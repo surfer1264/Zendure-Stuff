@@ -268,6 +268,7 @@ Le script peut envoyer les messages suivants. Les textes des messages sont en al
 | ✅ zenDash/Watchdog v… gestartet (2/2 ueberwacht) | après chaque démarrage du script (démarré, 2 sur 2 surveillés) |
 | 🔋 SF2400 voll (99%) | l'état de charge a atteint `vollSchwelle` (pleine) |
 | 🔥 SF800 Temp hoch: 46.2C | température de l'appareil au-dessus de `tempWarn` (température élevée) |
+| ♨️ SF800: Heizung an | chauffage de l'appareil activé (`heatState` = 1). Nouveau message seulement après 30 minutes d'arrêt sans interruption |
 | ⚠️ SF800 Zelle BO1234… nur 2.85V | une cellule sous `minVoltWarn`, avec le numéro de série du pack |
 | ⛔ SF800: Entladen gesperrt wegen Unterschreitung minVol (2.85V) | juste après : décharge de cette batterie désactivée dans le Controller, voir [blocage de la décharge](#blocage-de-la-décharge-en-cas-de-sous-tension). N'est pas envoyé si la décharge était déjà désactivée. |
 | ❌ SF800: nicht erreichbar seit 10 min | la batterie ne répond plus (injoignable depuis 10 min) |

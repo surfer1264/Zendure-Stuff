@@ -63,9 +63,10 @@
 // kvs_set_api nimmt zdmc_devN_gridOffMode nur mit 0, 1 oder 2 an.
 // 4.2.0: status_api liefert je Hub heatState (Report, Geraeteebene).
 // 4.3.0: status_api liefert je Hub packTempLow (kuehlstes Pack in ganzen C).
+// 4.4.0: Watchdog meldet das Einschalten der Heizung (heatState 1).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.3.0";
+let VERSION = "4.4.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1079,6 +1080,8 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     offlineMsgSent: false,
     akkuVollMsgSent: false,
     hyperTempMsgSent: false,
+    heatMsgSent: false,
+    heatOffSince: 0,
     notFullMsgSent: false,
     // Nur Packs mit offenem Unterspannungs-Alarm (Seriennummer -> true).
     // Gesunde Packs stehen NICHT darin - spart RAM bei vielen Packs.
@@ -1260,6 +1263,10 @@ function pollHub(index, watchNow, logPacks, callback) {
 // Watchdog-Auswertung
 // =====================================================
 
+// heatState kann pendeln: Erneute Meldung erst, wenn die Heizung so lange
+// durchgehend aus war.
+let HEAT_RESET_MS = 30 * 60000;
+
 function watchdogCheckHub(index, failReason) {
   let cfg = CONFIG.devices[index];
   let ws = WSTATE[index];
@@ -1269,6 +1276,7 @@ function watchdogCheckHub(index, failReason) {
   if (failReason !== "") {
     if (ws.failSince === 0) ws.failSince = now;
     ws.failReason = failReason;
+    ws.heatOffSince = 0;   // Ausfall zaehlt nicht als "aus"
     let mins = Math.floor((now - ws.failSince) / 60000);
     if (DBG) logDebug("Watchdog: " + cfg.label + " " + failReason + " seit " + mins + " min");
     if (!ws.offlineMsgSent && (now - ws.failSince) >= W.offlineAlarmMin * 60000) {
@@ -1301,6 +1309,22 @@ function watchdogCheckHub(index, failReason) {
     } else if (ws.hyperTemp < W.tempReset) {
       ws.hyperTempMsgSent = false;
     }
+  }
+
+  if (hub.heatState === 1) {
+    if (!ws.heatMsgSent) {
+      ws.heatMsgSent = true;
+      notify("♨️ " + cfg.label + ": Heizung an");
+    }
+    ws.heatOffSince = 0;
+  } else if (hub.heatState === 0 && ws.heatMsgSent) {
+    if (ws.heatOffSince === 0) ws.heatOffSince = now;
+    else if (now - ws.heatOffSince >= HEAT_RESET_MS) {
+      ws.heatMsgSent = false;
+      ws.heatOffSince = 0;
+    }
+  } else {
+    ws.heatOffSince = 0;   // kein Wert zaehlt nicht als "aus"
   }
 }
 
