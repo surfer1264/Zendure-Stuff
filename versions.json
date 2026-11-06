@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-06T20:15:12Z",
+  "generated": "2026-11-06T20:45:14Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -447,13 +447,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.3.0",
+      "version": "5.4.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5cb9e1ccbd2eadf359f5f40e722a4e6d354cfb83/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/cc354b3e51699cc7b74c361dfef65b0ce57f3e3e/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
-        "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
-        "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+        "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
+        "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
+        "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -461,6 +461,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.3.0",
+          "changes": [
+            "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
+            "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
+            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.0",
           "changes": [
@@ -525,18 +534,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.3.0",
+      "version": "5.4.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/5cb9e1ccbd2eadf359f5f40e722a4e6d354cfb83/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/cc354b3e51699cc7b74c361dfef65b0ce57f3e3e/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
-        "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
-        "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+        "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
+        "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
+        "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.3.0",
+          "changes": [
+            "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
+            "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
+            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.2.0",
           "changes": [
