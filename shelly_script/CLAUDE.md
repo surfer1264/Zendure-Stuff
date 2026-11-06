@@ -83,7 +83,7 @@ Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleic
 
 Werte, deren Bedeutung hier nicht steht, nicht interpretieren – nachfragen oder als unbekannt kennzeichnen.
 
-Weitere echte Reports (Seriennummern maskiert). Die Geräte melden nicht dieselben Felder: Nur der SolarFlow 2400 Pro hat in `properties` u. a. `gridOffPower` und `gridOffMode`, nur der SolarFlow 800 hat `heatState` auch in `packData`.
+Weitere echte Reports (Seriennummern maskiert). Die Geräte melden nicht dieselben Felder: Nur die beiden Pro-Geräte haben in `properties` u. a. `gridOffPower` und `gridOffMode`, nur der SolarFlow 800 hat `heatState` auch in `packData`.
 
 SolarFlow 2400 Pro (1 Akkupack, Standby):
 
@@ -95,6 +95,12 @@ SolarFlow 800 (2 Akkupacks, entlädt):
 
 ```json
 {"timestamp":1793909065,"messageId":245,"sn":"xxxxxxxxxxxxxxx","version":3,"product":"solarFlow800","properties":{"heatState":0,"packInputPower":356,"outputPackPower":0,"outputHomePower":356,"remainOutTime":225,"packState":2,"electricLevel":55,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2891,"dcStatus":2,"pvStatus":0,"acStatus":1,"dataReady":1,"gridState":1,"BatVolt":4837,"socLimit":0,"faultLevel":0,"writeRsp":0,"acMode":2,"inputLimit":0,"outputLimit":356,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"IOTState":2,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1793909064,"bindstate":0,"tsZone":13,"chargeMaxLimit":800,"smartMode":1,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":2,"rssi":-59,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":280,"maxTemp":2871,"totalVol":4830,"batcur":65478,"maxVol":323,"minVol":321,"softVersion":4354,"heatState":0},{"sn":"xxxxxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":183,"maxTemp":2861,"totalVol":4830,"batcur":65502,"maxVol":322,"minVol":321,"softVersion":8223,"heatState":0}]}
+```
+
+SolarFlow 800 Pro (3 Akkupacks, entlädt, Offgrid in Betrieb):
+
+```json
+{"timestamp":1792006493,"messageId":123,"sn":"xxxxxxxxxxxxxxx","version":3,"product":"solarFlow800Pro","properties":{"heatState":0,"packInputPower":741,"outputPackPower":0,"outputHomePower":636,"remainOutTime":87,"packState":2,"electricLevel":19,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"solarPower3":0,"solarPower4":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":3001,"gridOffPower":105,"dcStatus":1,"pvStatus":1,"acStatus":1,"dataReady":1,"gridState":1,"BatVolt":4711,"socLimit":0,"faultLevel":0,"writeRsp":0,"acMode":2,"inputLimit":0,"outputLimit":636,"socSet":1000,"minSoc":150,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":1,"gridOffMode":0,"IOTState":2,"Fanmode":1,"Fanspeed":0,"bindstate":0,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1792005800,"tsZone":14,"smartMode":1,"chargeMaxLimit":1000,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":3,"rssi":-32,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxxxxx","packType":300,"socLevel":18,"state":2,"power":240,"maxTemp":2951,"totalVol":4710,"batcur":65485,"maxVol":315,"minVol":313,"softVersion":4354},{"sn":"xxxxxxxxxxxxxxx","packType":300,"socLevel":19,"state":2,"power":268,"maxTemp":2901,"totalVol":4710,"batcur":65479,"maxVol":314,"minVol":314,"softVersion":4354},{"sn":"xxxxxxxxxxxxxxxx","packType":300,"socLevel":20,"state":2,"power":241,"maxTemp":2901,"totalVol":4730,"batcur":65485,"maxVol":316,"minVol":315,"softVersion":4354}]}
 ```
 
 ## Harte Regeln für Shelly-Scripte (mJS)

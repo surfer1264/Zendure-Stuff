@@ -647,6 +647,7 @@
   .draft-btns .btn{ padding:.5rem .375rem; }
   .btn.btn-ok{ background:var(--teal-deep); color:#06201D; border-color:transparent; }
   /* Offgrid-Modus (zdmc_devN_gridOffMode) */
+  .og-list + .key{ display:block; margin-top:.5rem; font-size:.68rem; color:var(--text-muted); }
   .og-list{ display:flex; flex-direction:column; gap:.5rem; }
   .og-opt{ appearance:none; text-align:left; width:100%; display:flex; align-items:center; gap:.75rem; padding:.6875rem .75rem; min-height:3.75rem;
     border-radius:var(--radius-sm); background:var(--surface); border:1px solid var(--border); color:var(--text);
@@ -1060,7 +1061,7 @@
   // versions.json traegt nur zendure-dashboard.html, sonst meldet der
   // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
   // mit der klassischen Seite uebereinstimmen (MIN_SCRIPT ebenso).
-  const VERSION = "5.1.0";
+  const VERSION = "5.2.0";
   const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
@@ -1520,7 +1521,7 @@
     chipOff: 'Aus', chipMax: 'Max',
     ogOff: 'Aus', ogOn: 'Ein', ogEco: 'Öko', ogOffDesc: 'Steckdose stromlos', ogOnDesc: 'Dauerhaft eingeschaltet', ogEcoDesc: 'Soll sich bei Leerlauf selbst abschalten',
     ogHw: 'Am Gerät: {m}', ogNoKvs: 'noch nicht in der KVS – das Regel-Script ändert am Gerät nichts',
-    plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät', heatOn: 'Heizung an', heatOff: 'Heizung aus',
+    plainOg: 'Offgrid am Gerät {m}', flagOgDiff: 'abweichend, KVS {kvs}', techOg: 'Offgrid KVS / Gerät', techPackLow: 'Kühlstes Pack', heatOn: 'Heizung an', heatOff: 'Heizung aus',
     flagDischargeOff: 'Entladen gesperrt', flagChargeOff: 'Laden aus dem Netz gesperrt', flagManualOn: 'manuelles Laden aktiv · Regelung pausiert',
     techMinSoc: 'minSoc KVS / Gerät', techLock: 'Entladen / Netzladen', techKvs: 'KVS-Schlüssel', techIp: 'IP',
     techCellLock: 'Sperrschwelle Zelle', yes: 'ja', no: 'nein'
@@ -1545,7 +1546,7 @@
     chipOff: 'Off', chipMax: 'Max',
     ogOff: 'Off', ogOn: 'On', ogEco: 'Eco', ogOffDesc: 'Socket without power', ogOnDesc: 'Always on', ogEcoDesc: 'Should switch itself off when idle',
     ogHw: 'On device: {m}', ogNoKvs: 'not in the KVS yet – the control script leaves the device unchanged',
-    plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device', heatOn: 'heater on', heatOff: 'heater off',
+    plainOg: 'Off-grid on device {m}', flagOgDiff: 'differs, KVS {kvs}', techOg: 'Off-grid KVS / device', techPackLow: 'Coolest pack', heatOn: 'heater on', heatOff: 'heater off',
     flagDischargeOff: 'discharge disabled', flagChargeOff: 'grid charging disabled', flagManualOn: 'manual charging active · control paused',
     techMinSoc: 'minSoc KVS / device', techLock: 'Discharge / grid charging', techKvs: 'KVS keys', techIp: 'IP',
     techCellLock: 'Cell lock threshold', yes: 'yes', no: 'no'
@@ -1570,7 +1571,7 @@
     chipOff: 'Arrêt', chipMax: 'Max',
     ogOff: 'Arrêt', ogOn: 'Marche', ogEco: 'Éco', ogOffDesc: 'Prise hors tension', ogOnDesc: 'Toujours allumée', ogEcoDesc: 'Devrait s’éteindre d’elle-même en l’absence de charge',
     ogHw: 'Sur l’appareil\u00a0: {m}', ogNoKvs: 'pas encore dans la KVS – le script de régulation ne modifie pas l’appareil',
-    plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil', heatOn: 'chauffage activé', heatOff: 'chauffage désactivé',
+    plainOg: 'Hors réseau sur l’appareil {m}', flagOgDiff: 'différent, KVS {kvs}', techOg: 'Hors réseau KVS / appareil', techPackLow: 'Pack le plus frais', heatOn: 'chauffage activé', heatOff: 'chauffage désactivé',
     flagDischargeOff: 'décharge désactivée', flagChargeOff: 'charge réseau désactivée', flagManualOn: 'charge manuelle active · régulation en pause',
     techMinSoc: 'minSoc KVS / appareil', techLock: 'Décharge / charge réseau', techKvs: 'Clés KVS', techIp: 'IP',
     techCellLock: 'Seuil de blocage cellule', yes: 'oui', no: 'non'
@@ -3320,7 +3321,7 @@
         minSocHw: null, minSocDiffKey: '', minSocDiffSince: 0,
         // ab Script 4.1.0: Offgrid-Modus aus der KVS (null = kein Key) und am Geraet
         gridOffMode: ogNum(d.gridOffMode), gridOffModeHw: null, ogDiffKey: '', ogDiffSince: 0,
-        heatState: null,
+        heatState: null, packTempLow: null,
         watch: d.watch === true,
         lastFull: Number(d.lastFull || 0), showFullDate: false
       };
@@ -3480,6 +3481,8 @@
           d.gridOffModeHw = ogNum(h.gridOffModeHw);
           // ab Script 4.2.0
           d.heatState = (h.heatState === undefined) ? null : h.heatState;
+          // ab Script 4.3.0
+          d.packTempLow = (h.packTempLow === undefined) ? null : h.packTempLow;
           applyMinSocCeiling(d);
         } else {
           d.online = false;
@@ -3720,6 +3723,9 @@
     // die Einstellungen darueber auf gleicher Hoehe (fehlt der Wert: "–").
     if (hubs.some(function(h){ return h.gridOffMode !== null || h.gridOffModeHw !== null; })) {
       rows.splice(5, 0, [t('techOg'), v(d.gridOffMode) + ' / ' + v(d.gridOffModeHw)]);
+    }
+    if (hubs.some(function(h){ return h.packTempLow !== null; })) {
+      rows.push([t('techPackLow'), d.packTempLow === null ? '–' : d.packTempLow + ' °C']);
     }
     if (hubs.some(function(h){ return h.heatState !== null; })) {
       rows.push(['heatState', v(d.heatState) + (d.heatState === 1 ? ' · ' + t('heatOn') : (d.heatState === 0 ? ' · ' + t('heatOff') : ''))]);

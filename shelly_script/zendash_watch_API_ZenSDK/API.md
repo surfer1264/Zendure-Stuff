@@ -68,7 +68,8 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
       "temp": 19,
       "offGrid": 0,
       "gridOffModeHw": 0,
-      "heatState": 0
+      "heatState": 0,
+      "packTempLow": 17
     }
   ]
 }
@@ -97,6 +98,7 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
 | `offGrid` | Leistung am Offgrid-Anschluss in W (`gridOffPower`): positiv = Abgabe ans Haus, negativ = Einspeisung ins Gerät (wie PV). `null` = Gerät hat keinen Offgrid-Ausgang bzw. Hub offline. Seit 3.5.9 |
 | `gridOffModeHw` | Am Gerät eingestellter Offgrid-Modus (Report `gridOffMode`): `0` = EIN, `1` = Öko, `2` = AUS. Das Regel-Script (ab 5.3.8) schreibt nur Änderungen von `zdmc_dev{id}_gridOffMode` auf das Gerät; eine Änderung in der App wird erst über dieses Feld sichtbar. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.1.0 |
 | `heatState` | Wert `heatState` aus dem Report des Geräts (nicht der Akkupacks), `1` = Heizung an, `0` = aus. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.2.0 |
+| `packTempLow` | Kühlstes Pack in ganzen °C: der kleinste `maxTemp`-Wert aller Akkupacks. Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen; als Kälteschutz ist der Wert deshalb nicht geeignet. `null`, wenn kein Pack einen Wert meldet bzw. der Hub offline ist. Seit 4.3.0 |
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei

@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.2.0
+
+**Ziel:** Kühlstes Pack in den technischen Details anzeigen. Läuft weiter ab Shelly-Script 4.1.0, die neue Zeile erscheint ab Script 4.3.0.
+
+- **Technische Details (neues Design):** neue Zeile „Kühlstes Pack“, z. B. „17 °C“. Das ist der kleinste `maxTemp`-Wert aller Packs, also eine Näherung: Die kälteste Zelle kann darunter liegen. Liefert ein Gerät den Wert nicht, steht dort „–“. Liefert ihn keines, entfällt die Zeile.
+- **Offgrid-Reiter:** Der KVS-Schlüssel `zdmc_devN_gridOffMode` erscheint bei eingeblendeten technischen Details in derselben kleinen Schrift wie die anderen Schlüssel. Bisher war er viel zu groß.
+- Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.2.0.0
+
 ## Changelog 5.1.0
 
 **Ziel:** Heizzustand des Geräts in der Karte und in den technischen Details anzeigen. Läuft weiter ab Shelly-Script 4.1.0, die neuen Anzeigen erscheinen ab Script 4.2.0.

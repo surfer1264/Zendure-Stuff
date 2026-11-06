@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.2.0.0
+
+- Neue Zeile „Kühlstes Pack“ in den technischen Details (neues Design). Sie erscheint ab Shelly-Script 4.3.0
+
 ## 5.1.0.0
 
 - Flamme hinter dem Gerätenamen, solange die Heizung an ist, und neue Zeile `heatState` in den technischen Details (neues Design). Beides erscheint ab Shelly-Script 4.2.0

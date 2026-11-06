@@ -28,7 +28,8 @@
 //                        hubs:[{id,soc,power,acMode,socLimit,
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
-//                               minSocHw,temp,offGrid,gridOffModeHw,heatState}] }
+//                               minSocHw,temp,offGrid,gridOffModeHw,heatState,
+//                               packTempLow}] }
 //                      ?bg=wake: ein einzelner Poll (Cloud-Upload), ?bg=read: nur lesen
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
@@ -61,9 +62,10 @@
 // am Geraet), config_api je Geraet gridOffMode (KVS-Wert, null = kein Key),
 // kvs_set_api nimmt zdmc_devN_gridOffMode nur mit 0, 1 oder 2 an.
 // 4.2.0: status_api liefert je Hub heatState (Report, Geraeteebene).
+// 4.3.0: status_api liefert je Hub packTempLow (kuehlstes Pack in ganzen C).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.2.0";
+let VERSION = "4.3.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1051,6 +1053,9 @@ function updateGridPowerStatus(callback) {
 //            eine Aenderung in der App wird erst hierueber sichtbar (seit 4.1.0).
 //            heatState: Report heatState der Geraeteebene, null = Feld fehlt
 //            (seit 4.2.0).
+//            packTempLow: kleinster maxTemp-Wert der Packs in ganzen C, null =
+//            kein Wert. Packs melden nur ihren waermsten Wert, die kaelteste
+//            Zelle kann also darunter liegen (seit 4.3.0).
 // WSTATE[i]- Zusatzfelder und Merker des Watchdogs.
 // Beide werden einmal angelegt und danach nur ueberschrieben - kein neues
 // Objekt je Poll.
@@ -1064,7 +1069,7 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
     gridReverse: null, pv: null, minVol: null, online: false,
     home: null, gridIn: null, packIn: null, packOut: null, socSet: null,
     minSocHw: null, temp: null, offGrid: null, gridOffModeHw: null,
-    heatState: null
+    heatState: null, packTempLow: null
   };
   WSTATE[hi] = {
     hyperTemp: null,
@@ -1094,7 +1099,7 @@ function setHubOffline(index) {
   h.gridReverse = null; h.pv = null; h.minVol = null; h.online = false;
   h.home = null; h.gridIn = null; h.packIn = null; h.packOut = null;
   h.socSet = null; h.minSocHw = null; h.temp = null; h.offGrid = null;
-  h.gridOffModeHw = null; h.heatState = null;
+  h.gridOffModeHw = null; h.heatState = null; h.packTempLow = null;
 }
 
 // Laeuft ueber alle Packs in packData (Array aus FLACHEN Objekten), jede
@@ -1109,6 +1114,7 @@ function scanPacks(index, body, checkVolt, logPacks) {
   let lbl = CONFIG.devices[index].label;
 
   hub.minVol = null;
+  hub.packTempLow = null;
 
   let p = jsonValuePos(body, "packData", 0, -1);
   if (p < 0 || body.charAt(p) !== "[") return logPacks ? "keine packData" : "";
@@ -1162,6 +1168,12 @@ function scanPacks(index, body, checkVolt, logPacks) {
       }
 
       if (hub.minVol === null || raw < hub.minVol) hub.minVol = raw;
+    }
+    // Kuehlstes Pack: kleinster maxTemp-Wert, 0 zaehlt wie bei minVol nicht
+    let mt = jsonNum(body, "maxTemp", objStart, objEnd);
+    if (mt !== null && mt > 0) {
+      mt = Math.round((mt - 2731) / 10);
+      if (hub.packTempLow === null || mt < hub.packTempLow) hub.packTempLow = mt;
     }
     pos = objEnd + 1;
   }
