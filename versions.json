@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-07T17:14:01Z",
+  "generated": "2026-11-07T17:59:18Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -447,13 +447,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.4.1",
+      "version": "5.4.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/656e451111d581f8d0db2f0edf635c60febcb2d1/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/1ec24f696ac679416fbf77de7b457fcb83872364/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
-        "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
-        "Das Dashboard hat nur die neue Versionsnummer bekommen."
+        "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
+        "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
+        "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -461,6 +461,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.4.1",
+          "changes": [
+            "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
+            "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
+            "Das Dashboard hat nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.0",
           "changes": [
@@ -543,18 +552,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.4.1",
+      "version": "5.4.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/656e451111d581f8d0db2f0edf635c60febcb2d1/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/1ec24f696ac679416fbf77de7b457fcb83872364/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
-        "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
-        "Das Dashboard hat nur die neue Versionsnummer bekommen."
+        "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
+        "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
+        "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.4.1",
+          "changes": [
+            "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
+            "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
+            "Das Dashboard hat nur die neue Versionsnummer bekommen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.0",
           "changes": [
