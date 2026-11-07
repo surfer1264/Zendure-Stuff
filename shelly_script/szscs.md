@@ -68,7 +68,7 @@ Helfer herunterladen, Fragen beantworten, hochladen – nach 10 Minuten läuft d
 
 Lies diese Prinzipien, an die sich das Projekt hält:
 
-[Prinzipien](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Multi-Device-Controller-%E2%80%90-Prinzipien-erkl%C3%A4rt)
+[Prinzipien](prinzipien.md)
 
 und wie ich Qualität sicherstelle
 

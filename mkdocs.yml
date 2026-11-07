@@ -36,7 +36,9 @@ exclude_docs: |
 # EN/FR-Fassungen nicht eintragen - siehe not_in_nav.
 # ------------------------------------------------------------------
 nav:
-  - Start: readme.md
+  - Start:
+      - Startseite: readme.md
+      - Prinzipien: prinzipien.md
   - Überblick:
       - Was die Suite kann: szscs.md
       - So arbeiten die Teile zusammen: architektur.md
