@@ -1,39 +1,39 @@
 # Simulation - Einfluss Damping auf Energiebilanz
 
-Stand: 22.10.2026 · Controller-Version im Test: 5.2.2
+Stand: 07.11.2026 · Controller-Version im Test: 5.3.9 (5.3.10 bis 5.3.12 ändern das Regelverhalten nicht)
 
 Diese Testumgebung lässt das echte Controller-Skript (`zdmc_test.js`) gegen einen simulierten Stromzähler und zwei simulierte Zendure-Geräte laufen. Die Simulation reagiert auf das, was der Controller schreibt (geschlossener Regelkreis). Ein Testtag von 14 Stunden läuft in etwa 6–12 Minuten durch.
 
-Anbei ein vollständiges Tagespropfil eines Testlaufes: [doku/beispiel_report.html](doku/beispiel_report.html) (im Browser öffnen).
+Anbei ein vollständiges Tagesprofil eines Testlaufes: [doku/beispiel_report.html](doku/beispiel_report.html) (im Browser öffnen).
 
-**Achtung:** Die Simulation spiegelt das Verhalten des Controllers in Version 5.2.2 wieder und ist damit nicht übertragbar auf andere Regelsysteme oder hat grundsätzliche Aussagekraft darüber hinaus! Sie gibt eine Orientierungshilfe für **Optimierer**
+**Achtung:** Die Simulation spiegelt das Verhalten dieses Controllers in diesem Szenario wider. Sie ist nicht auf andere Regelsysteme übertragbar und hat darüber hinaus keine grundsätzliche Aussagekraft. Sie gibt eine Orientierungshilfe für **Optimierer**.
 
 ---
 
-## Fazit: Regelung 5.2.2 im Simulator (Entwurf)
+## Fazit: Regelung 5.3.9 im Simulator
 
-Untersucht wurde der Einfluss des damping-Faktors auf Netzbezug, Netzeinspeisung, Schreibvorgänge und Regelgüte (im Hystereseband).
+Untersucht wurde der Einfluss des `dampingFactor` auf Netzbezug, Netzeinspeisung, Schreibvorgänge und Regelgüte (im Hystereseband).
 
-Von diesen vier Größen beeinflusst der dampingFactor die **Einspeisung am stärksten** und den **Netzbezug am wenigsten**. Vergleich von 0.4 mit 0.8:
+Am stärksten verändert der `dampingFactor` die **Einspeisung**. Die anderen drei Größen ändern sich um 11–18 %. Vergleich von 0.4 mit 0.8:
 
 | Rang | Kennzahl | 0.4 | 0.8 | Änderung | Eindeutig? |
 |---|---|---|---|---|---|
-| 1 (größte Wirkung) | **Einspeisung** | 0,22 kWh | 0,38 kWh | **+74 %** | ja (100 %) |
-| 2 | **Schreibvorgänge** | 3449 | 4148 | **+20 %** | ja (100 %) |
-| 3 | **Regelgüte (im Band ±13 W)** | 54,6 % | 63,1 % | **+16 %** (+8,5 Punkte) | ja (100 %) |
-| 4 (geringste Wirkung) | **Netzbezug** | 1,06 kWh | 0,93 kWh | **−12 %** | ja (89 %) |
+| 1 (größte Wirkung) | **Einspeisung** | 0,19 kWh | 0,36 kWh | **+93 %** | ja (99 %) |
+| 2 | **Netzbezug** | 0,59 kWh | 0,48 kWh | **−18 %** | ja (99 %) |
+| 3 | **Schreibvorgänge** | 2768 | 3090 | **+12 %** | ja (98 %) |
+| 4 (geringste Wirkung) | **Regelgüte (im Band ±13 W)** | 70,9 % | 78,8 % | **+11 %** (+7,9 Punkte) | ja (100 %) |
 
-Ein höherer Wert verbessert die Regelgüte also spürbar. Bezahlt wird das vor allem mit **mehr Einspeisung** und mehr **Schreibvorgängen**. Der Netzbezug sinkt etwas. Bezug und Export zusammen bleiben fast gleich (1,27–1,31 kWh).
+Ein höherer Wert verbessert die Regelgüte also spürbar. Bezahlt wird das vor allem mit **mehr Einspeisung** und mehr **Schreibvorgängen**. Der Netzbezug sinkt dabei. Bezug und Export zusammen steigen leicht (0,77–0,84 kWh).
 
-**0.65 ist der Punkt, ab dem sich mehr Damping kaum noch lohnt:**
+**0.65 ist ein Kompromiss, aber kein Knickpunkt:**
 
 | Schritt | Gewinn im Band | mehr Schreibvorgänge | mehr Export |
 |---|---|---|---|
-| 0.4 → 0.5 | +3,2 Punkte | +42 (+1 %) | +0,05 kWh |
-| 0.5 → 0.65 | +3,6 Punkte | +199 (+6 %) | +0,06 kWh |
-| 0.65 → 0.8 | +1,7 Punkte | +458 (+12 %) | +0,05 kWh |
+| 0.4 → 0.5 | +2,7 Punkte | +53 (+2 %) | +0,05 kWh |
+| 0.5 → 0.65 | +3,0 Punkte | +91 (+3 %) | +0,07 kWh |
+| 0.65 → 0.8 | +2,1 Punkte | +178 (+6 %) | +0,05 kWh |
 
-Bis 0.65 steigt die Regelgüte deutlich bei wenig Mehraufwand, darüber kostet jeder Punkt viele Schreibvorgänge. Auf der Damping-Seite gewinnt 0.65 bei 56 % aller Regler-Kombinationen.
+Die Regelgüte steigt über den ganzen Bereich fast gleichmäßig. Oberhalb von 0.65 steigen die Schreibvorgänge etwa doppelt so schnell. Welcher Wert am besten passt, hängt deshalb von den eigenen Prioritäten ab. Auf der Damping-Seite gewinnt je nach Reglerstellung jeder der vier Werte: 0.8 bei 31 % aller Regler-Kombinationen, 0.5 bei 26 %, 0.4 bei 25 % und 0.65 bei 18 %. Wer ein Ziel klar bevorzugt, landet meist bei 0.4 oder 0.8. 0.65 ist bei keiner Voreinstellung Sieger, aber auch nie Letzter, und bleibt damit als Standard der Mittelweg.
 
 🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
 stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
@@ -44,38 +44,49 @@ Werte untereinander verhalten.
 
 **Grundlage:**
 
-- Damping-Matrix 5: 12 Läufe (dampingFactor 0.4–0.8, je 3 Testtage), Controller 5.2.2
-- Gerätemodell aus echten Logs: 1,25 s Totzeit, Rampe 350 W/s, Start aus Standby 4,5 s Totzeit (`WRITE_LAG_S=1.25`, `DEVICE_RATE_WPS=350`, `START_DELAY_S=3.25`)
-- Tagesprofil 14 h mit Waschmaschine, Induktionsherd, Wasserkocher, Kühlschrank und 12 × Kaffeevollautomat (Abschnitt 5)
-- Beispiel-Report [doku/beispiel_report.html](doku/beispiel_report.html) (aus einer früheren Matrix, altes Gerätemodell)
-- zwei echte Tageslogs (11.10. mit 5.1.7, 15.10.) zur Prüfung des Zeitverhaltens
+- Damping-Matrix `Matrix-261106-205753`: 12 Läufe (`dampingFactor` 0.4, 0.5, 0.65 und 0.8, je 3 Testtage), Controller 5.3.9
+- `jumpFactor`-Matrix `Matrix-261106-215316-jump…`: 9 Läufe (`jumpFactor` 0.8, 0.65 und 0.5, je 3 Testtage, `dampingFactor` 0.65), Vergleichswert 0.9 aus der Damping-Matrix
+- Gerätemodell aus echten Logs vom 11.10. und 15.10.: 1,25 s Totzeit, Rampe 350 W/s, Start aus Standby 4,5 s Totzeit (`WRITE_LAG_S=1.25`, `DEVICE_RATE_WPS=350`, `START_DELAY_S=3.25`)
+- Tagesprofil 14 h mit Waschmaschine, Induktionsherd, Wasserkocher, Kühlschrank und 12 × Kaffeevollautomat (Abschnitt 5), Grundprofil mit `LOAD_SCALE=0.4`
+- Beispiel-Report [doku/beispiel_report.html](doku/beispiel_report.html) aus derselben Damping-Matrix
 
-Alle Zahlen im Fazit sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wie auf der Damping-Seite. `matrix_ergebnis.md` zeigt stattdessen den Median, die Werte weichen deshalb leicht ab.
+Alle Zahlen zur Damping-Matrix sind Mittelwerte der 3 Testtage aus `matrix_laeufe.csv`, wie auf der Damping-Seite. `matrix_ergebnis.md` zeigt stattdessen den Median, die Werte weichen deshalb leicht ab.
 
 ### Regelgüte (qualitativ)
 
-- **Stabil bei aktueller Geräte-Meldung:** In keinem Matrix-Lauf hat sich die Regelung aufgeschaukelt, bei keinem Damping-Wert von 0.4 bis 0.8. Der Controller rechnet vom Ist-Wert der Geräte aus, nicht vom alten Sollwert. Meldet ein Gerät seine Ist-Leistung 2 s zu alt (`REPORT_AGE_S=2`), pendelt die Regelung auch bei ruhiger Last (siehe 4.3). In den echten Logs vom 11., 15. und 19.10. kommt so ein Dauerpendeln nicht vor.
-- **Ruhige Phasen:** Der Netzwert liegt meist eng um 0 W, Abweichungen über 50 W sind selten (0,7–1,1 % der Zyklen). Das gilt trotz eines bewusst unruhigen Haushalts.
+- **Stabil:** In keinem der 21 Läufe hat sich die Regelung aufgeschaukelt, bei keinem `dampingFactor` von 0.4 bis 0.8 und keinem `jumpFactor` von 0.5 bis 0.9. Außerhalb der Ereignisse gab es höchstens 3 Vorzeichenwechsel mit einem Sprung über 200 W in Folge. Der Controller rechnet vom Ist-Wert der Geräte aus, nicht vom alten Sollwert.
+- **Ruhige Phasen:** Der Netzwert liegt meist eng um 0 W, Abweichungen über 50 W sind selten (0,7–1,0 % der Zyklen). Das gilt trotz eines bewusst unruhigen Haushalts.
 - **Damping verschiebt, statt zu verschlechtern:** Höheres Damping regelt schneller nach, verschiebt die Abweichung aber von Bezug zu Export und braucht mehr Schreibvorgänge.
-- **Reihenfolge der Damping-Werte stabil:** An jedem Testtag steigt der Anteil im Band von 0.4 bis 0.8, über den ganzen Tag und in ruhigen Phasen (54,6 → 57,8 → 61,5 → 63,1 %).
-- **Sättigung (6–7 %)** entsteht an Kapazitätsgrenzen: morgens minSoc, abends maximale Abgabe, oder ein Gerät steht weniger als die Hysterese unter seinem Maximum, während das andere leer ist. Das ist kein Regelfehler.
+- **Reihenfolge der Damping-Werte stabil:** An jedem Testtag steigt der Anteil im Band von 0.4 bis 0.8, über den ganzen Tag und in ruhigen Phasen (ganzer Tag: 70,9 → 73,6 → 76,6 → 78,8 %).
+- **Sättigung (1,2–2,0 %)** entsteht an Kapazitätsgrenzen: morgens minSoc, abends maximale Abgabe, oder ein Gerät steht weniger als die Hysterese unter seinem Maximum, während das andere leer ist. Das ist kein Regelfehler.
 
 ### Zeitverhalten
 
 - **Reaktion der Geräte aus echten Logs nachgebildet:** Kleine Änderungen sind nach etwa 1,5 s umgesetzt, 800 W nach 3,5 s, 1500 W erst nach 5,5 s. Aus dem Standby kommt die Leistung erst im übernächsten Takt.
-- **Schnelle Flanke wirkt:** Bei großem Lastabfall reagiert der Controller sofort mit Faktor 0.9. Der Export danach ist kurz und bei allen Damping-Werten gleich.
-- **Robust:** Alle 12 Läufe vollständig (Exit 0), im geprüften Lauf (Testtag 1, dampingFactor 0.4) 0 FEHLER. Übersprungene Takte kommen vom beschleunigten Test, nicht vom Regler.
+- **Robust:** Alle 21 Läufe vollständig (Exit 0) und ohne FEHLER im Log. Übersprungene Takte kommen vom beschleunigten Test, nicht vom Regler.
 
-#### Frühere Matrizen (altes Gerätemodell: feste 3 s Rampe)
+### Schnelle Flanke (`jumpFactor`)
 
-Mit dem alten Modell (1 s + 3 s, unabhängig von der Sprunghöhe) war die Reihenfolge der Damping-Werte gleich. Der Abstand bei den Schreibvorgängen zwischen 0.5 und 0.65 war aber größer, deshalb lag dort 0.5 vorn. Eine Gegenprobe mit noch langsameren Geräten (1,5 s + 3,2 s) kostete nur 0,5–1,2 Punkte im Band und änderte die Reihenfolge nicht. Kleine Änderungen setzt das alte Modell zu langsam um, das neue Modell ist näher an den echten Logs.
+Bei einem Sprung in Richtung „weniger Export“ nutzt der Controller statt des `dampingFactor` den `jumpFactor` (Standard 0.9). Der Vergleich zeigt, was ein kleinerer Wert bewirkt (Median je Spalte, `dampingFactor` 0.65):
+
+| `jumpFactor` | Netzbezug | Export | Bezug + Export | Schreibvorgänge | im Band | Richtungswechsel/h Induktion | Richtungswechsel/h Waschmaschine |
+|---|---|---|---|---|---|---|---|
+| **0.9** | 0,48 kWh | 0,30 kWh | 0,80 kWh | 2907 | 76,7 % | 461 | 289 |
+| 0.8 | 0,46 kWh | 0,33 kWh | 0,81 kWh | 2811 | 76,3 % | 461 | 289 |
+| 0.65 | 0,42 kWh | 0,36 kWh | 0,81 kWh | 2777 | 75,7 % | 456 | 289 |
+| 0.5 | 0,38 kWh | 0,40 kWh | 0,81 kWh | 2855 | 75,4 % | 453 | 289 |
+
+- **Keine Beruhigung:** Bei schnell wechselnden Lasten wechselt die Ausgabe fast gleich oft die Richtung, auch mit dem `dampingFactor` ändert sich das kaum. Ein kleinerer Faktor verkleinert nur die Ausschläge. Als Richtungswechsel zählt, wenn die Summe der Geräteleistungen in Schritten ab 13 W die Richtung umkehrt.
+- **Verschiebung statt Gewinn:** Ein kleinerer `jumpFactor` verlagert Netzbezug zu Export, die Summe bleibt fast gleich. Die Schreibvorgänge sinken nur um 2–5 %.
+- **0.9 bleibt der Standard:** Dieser Wert hat das beste Band und den wenigsten Export.
+- **Grenze der Messung:** Der Export nach dem Ende eines Ereignisses fällt in die ruhige Zeit. Die Wirkung auf einzelne Lastabwürfe ist damit nur grob erfasst.
 
 ### Ausreißer: Wo die Regelung an Grenzen kommt
 
 | Situation | Verhalten | Ursache |
 |---|---|---|
-| Taktende Induktion | Saldo springt um ±1–1,5 kW, unter 10 % im Band | Die Last wechselt alle 8–12 s, ähnlich schnell wie Messen (4 s) plus Reaktion. Kein Damping-Wert hilft. |
-| Waschmaschine, Motorphase | Saldo schwankt um etwa ±200 W | schnell wechselnde Trommellast |
+| Taktende Induktion | Saldo springt um ±1–1,8 kW, etwa 14 % im Band | Die Last wechselt alle 8–20 s, ähnlich schnell wie Messen (4 s) plus Reaktion. Kein Damping-Wert hilft. |
+| Waschmaschine, Motorphase | Saldo schwankt um etwa ±250 W | schnell wechselnde Trommellast |
 | Wasserkocher, Kaffeevollautomat | 1–2 Takte Spitze am Anfang (Bezug) und am Ende (Export) | Sprung wird erst im nächsten Takt gesehen |
 | Lasten über der maximalen Abgabe | dauerhafter Bezug | Kapazitätsgrenze |
 | Akkus leer (minSoc) | Bezug in Höhe der Hauslast | Entladesperre, gewollt |
@@ -103,7 +114,7 @@ matrix_damping.cmd ──► matrix.js ──┬─► run_test.js (Lauf 1) ─�
 ```
 
 - **Einzellauf:** ein Testtag mit festen Einstellungen. Start über `14hlauf0600.cmd` (ohne Rauschen) oder `14hlauf0600_rauschen.cmd` (mit Rauschen).
-- **Matrix:** mehrere Testtage mit verschiedenen `dampingFactor`-Werten und Seeds. Start über `matrix_damping.cmd`. Ergebnis ist eine Vergleichstabelle.
+- **Matrix:** mehrere Testtage mit verschiedenen `dampingFactor`-Werten und Seeds. Start über `matrix_damping.cmd`. Ergebnis ist eine Vergleichstabelle. `matrix_jump.cmd` macht dasselbe für den `jumpFactor`.
 
 ---
 
@@ -116,6 +127,7 @@ Alle Dateien liegen im selben Ordner.
 | `zdmc_test.js` | Das Controller-Skript, das getestet wird: echtes Skript mit dem CONFIG-Block aus `testconfig.js` | ja, bei jeder neuen Version (siehe Abschnitt 4.1) |
 | `testconfig.js` | Der CONFIG-Block für den Test (Mock-Adressen, feste Testwerte). Vorlage, aus der `zdmc_test.js` entsteht (siehe 4.1) | nur wenn sich Testwerte oder CONFIG-Einträge ändern |
 | `minify_patch_start.cmd` | Baut `zdmc_test.js` aus dem aktuellen Quellcode und startet danach den Einzellauf (siehe 4.1) | Pfad zum Quellcode, ggf. welche .cmd am Ende startet |
+| `minify_patch_start-rauschen.cmd` | Wie `minify_patch_start.cmd`, startet am Ende den Einzellauf mit Rauschen | wie oben |
 | `minify_keep_config.py` | Verkleinert das Skript mit Terser (nur Kommentare und Leerraum weg), lässt den CONFIG-Block Byte für Byte unverändert, prüft das Ergebnis | nein |
 | `swap_config.py` | Ersetzt den CONFIG-Block eines Skripts durch einen anderen (hier aus `testconfig.js`), Rest bleibt unverändert | nein |
 | `shelly_shim.js` | Bildet die Shelly-Funktionen nach (`Shelly.call`, `Timer.set`, `print`, KVS als leere Antwort) und beschleunigt den Regeltakt | nein |
@@ -127,6 +139,7 @@ Alle Dateien liegen im selben Ordner.
 | `14hlauf0600.cmd` | Einzellauf ohne Rauschen | Werte bei Bedarf |
 | `14hlauf0600_rauschen.cmd` | Einzellauf mit Rauschen | Werte bei Bedarf |
 | `matrix_damping.cmd` | Damping-Matrix | Werte bei Bedarf |
+| `matrix_jump.cmd` | `jumpFactor`-Matrix | Werte bei Bedarf |
 | `doku/` | Beispiel-Report (`beispiel_report.html`) und die Bilder für Abschnitt 8.2. Nur für die Doku, für den Test nicht nötig | nein |
 
 Voraussetzungen:
@@ -169,14 +182,14 @@ Die Namen passen nicht zusammen. Die CSV-Spalte `sf800` gehört zum Controller-G
 - Startet den Mock (im selben Prozess) und nach 0,5 s das Controller-Skript über `shelly_shim.js`.
 - Wartet, bis der Mock `CYCLES` Zyklen geloggt hat, und schreibt dann `closed_loop_result.csv`.
 - Bricht ab, wenn 20 s lang kein Zyklus mehr kommt oder das Sicherheitslimit erreicht ist.
-- Mit `DAMPING` und/oder `MOCK_PORT` legt er eine angepasste Kopie `zdmc_run.js` an. Das Original bleibt unverändert.
+- Mit `DAMPING`, `JUMP` und/oder `MOCK_PORT` legt er eine angepasste Kopie `zdmc_run.js` an. Das Original bleibt unverändert.
 
 ### shelly_shim.js
 
 - Führt `zdmc_test.js` in einer abgeschlossenen Node-Umgebung aus.
 - `Shelly.call` mit `HTTP.GET`/`HTTP.Request` wird zu echten HTTP-Aufrufen an den Mock (wiederverwendete Verbindung, Timeout aus dem Skript).
 - `KVS.GetMany`/`KVS.Set` antworten leer bzw. mit Erfolg.
-- **Timer:** Nur wiederkehrende Timer (der Regeltakt) werden beschleunigt: `Intervall / SPEED_FACTOR`, mindestens `MIN_REAL_MS`. **Einmal-Timer laufen in echter Zeit**, also der Watchdog (10 s), `Timer.set(0, …)` und die Banner-Verzögerung.
+- **Timer:** Nur wiederkehrende Timer (der Regeltakt) werden beschleunigt: `Intervall / SPEED_FACTOR`, mindestens `MIN_REAL_MS`. **Einmal-Timer laufen in echter Zeit**, also der Watchdog (bei 2 Geräten 20 s), `Timer.set(0, …)` und die Banner-Verzögerung.
 
 ### generate_charts.js
 
@@ -226,7 +239,7 @@ Nach jedem `Pause` kann man die Ausgabe prüfen, bevor es weitergeht. Getestet w
 
 Hinweis: Das frühere Werkzeug `patch_for_mock.js` wird nicht mehr benutzt. Der Kommentar „automatisch auf Mock umgebogen (patch_for_mock.js)“ bei `gridSource` in `testconfig.js` stammt noch daher und hat keine Wirkung.
 
-Beim Start korrigiert der Controller manche Werte auf seine Mindestwerte. Mit dem Stand von `testconfig.js` (17.10.2026) wirken `directionChangeHoldCycles` als 4 (eingetragen 2) und `chargeResetMargin` als 10 (eingetragen 5). Maßgeblich ist, was das Banner zeigt.
+Beim Start korrigiert der Controller manche Werte auf seine Mindestwerte. Maßgeblich ist, was das Banner zeigt.
 
 In `testconfig.js` müssen diese Test-Einstellungen stehen:
 
@@ -280,9 +293,10 @@ Gesetzt werden sie in den .cmd-Dateien mit `set NAME=Wert`.
 | `MAX_WAIT_MS` | Sicherheitslimit Laufzeit | automatisch | lassen |
 | `START_SOC` | Start-SoC beider Geräte in % | 50 | 30 |
 | `START_SOC_SF800` / `START_SOC_SF2400` | Start-SoC einzeln | = START_SOC | bei Bedarf |
-| `LOAD_SCALE` | Faktor für das Grundprofil der Last (nicht für Ereignisse) | 1.0 | 0.5 |
+| `LOAD_SCALE` | Faktor für das Grundprofil der Last (nicht für Ereignisse) | 1.0 | 0.4 |
 | `MOCK_PORT` | Port des Mocks | 3900 | nur Matrix setzt das |
 | `DAMPING` | dampingFactor für diesen Lauf (ersetzt den Wert im Skript) | – | nur Matrix oder gezielter Einzeltest |
+| `JUMP` | jumpFactor für diesen Lauf (Faktor der schnellen Flanke) | – | nur `matrix_jump.cmd` oder gezielter Einzeltest |
 | `OUT_DIR` | Ordner für CSV und Skriptkopie | Skriptordner | nur Matrix setzt das |
 
 **Rauschmodell**
@@ -308,7 +322,7 @@ Gesetzt werden sie in den .cmd-Dateien mit `set NAME=Wert`.
 
 Ohne diese Variablen setzt ein Gerät jede Vorgabe sofort um, und das Ergebnis ist identisch mit dem Mock ohne Verzögerung (geprüft).
 
-**Wichtig zur Wirkung:** Der Zähler wird am Ende jedes Zyklus gemessen. Erreicht das Gerät den neuen Wert vor der nächsten Messung (`WRITE_LAG_S + DEVICE_DELAY_S` kleiner als das Intervall), sieht der Controller keinen Unterschied. Es ändern sich nur Bezug und Export **zwischen** den Messungen. Erst wenn die Summe das Intervall erreicht, sieht der Controller bei der nächsten Messung noch nicht das Ergebnis seiner Vorgabe. Bisherige Einstellung für 4 s Intervall: `DEVICE_DELAY_S=3`, `WRITE_LAG_S=1`, `START_DELAY_S=4`.
+**Wichtig zur Wirkung:** Der Zähler wird am Ende jedes Zyklus gemessen. Erreicht das Gerät den neuen Wert vor der nächsten Messung (`WRITE_LAG_S + DEVICE_DELAY_S` kleiner als das Intervall), sieht der Controller keinen Unterschied. Es ändern sich nur Bezug und Export **zwischen** den Messungen. Erst wenn die Summe das Intervall erreicht, sieht der Controller bei der nächsten Messung noch nicht das Ergebnis seiner Vorgabe.
 
 **Gemessenes Modell (aus echten Logs):** Totzeit im Betrieb 1,25 s, danach Rampe mit 350 W/s; aus Standby 4,5 s Totzeit. Im Mock:
 ```
@@ -328,21 +342,9 @@ set DEVICE_DELAY_S=
 
 Ohne `DEVICE_RATE_WPS` verhält sich der Mock genau wie vorher (geprüft).
 
-**Veraltete Geräte-Meldung (`REPORT_AGE_S`):** Bildet ab, dass ein Gerät beim Abfragen eine Ist-Leistung meldet, die schon einige Sekunden alt ist, während der Zähler bereits den neuen Stand zeigt. Netzwert und Ist passen dann nicht zusammen, und das Regelsignal springt. Kurztest mit dem gemessenen Gerätemodell: Bei `REPORT_AGE_S=4` erscheint jede Änderung einen Takt später in der Gerätemeldung, bei `8` zwei Takte später. Die Zählerwerte bleiben unverändert. Ohne `REPORT_AGE_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft). Die CSV-Spalten `gemeldet_sf800`/`gemeldet_sf2400` zeigen die gemeldete Leistung, `ist_*` die tatsächliche. Vergleichslauf (Damping 0.65, Seed 42, je 12.600 Zyklen):
+**Veraltete Geräte-Meldung (`REPORT_AGE_S`):** Bildet ab, dass ein Gerät beim Abfragen eine Ist-Leistung meldet, die schon einige Sekunden alt ist, während der Zähler bereits den neuen Stand zeigt. Bei `REPORT_AGE_S=4` erscheint jede Änderung einen Takt später in der Gerätemeldung, bei `8` zwei Takte später. Die Zählerwerte bleiben unverändert. Ohne `REPORT_AGE_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft). Die CSV-Spalten `gemeldet_sf800`/`gemeldet_sf2400` zeigen die gemeldete Leistung, `ist_*` die tatsächliche. In den Matrizen steht die Option auf 0.
 
-| Kennzahl | `REPORT_AGE_S=0` | `REPORT_AGE_S=2` |
-| --- | --- | --- |
-| Im Band ±13 W | 58,0 % | 54,1 % |
-| Abweichung > 50 W | 16,9 % | 22,6 % |
-| Netzbezug | 1,45 kWh | 1,60 kWh |
-| Einspeisung | 0,47 kWh | 0,49 kWh |
-| Schreibvorgänge | 4155 | 4896 |
-| Signalsprünge > 200 W | 659 | 1644 |
-| Pendel-Phasen (≥ 10 Takte, > 200 W) | 2 (nur während Induktion) | 11, davon 06:19–06:57 ohne aktives Gerät |
-
-Die Bandwerte stammen hier aus dem Log, ohne Abzug gesättigter Zyklen.
-
-**Anlauf aus Standby:** Im echten Log vom 15.10. zeigten die Geräte nach einem Start aus 0 W im nächsten Takt meist noch keine Leistung (11 von 13 Fällen), erst im übernächsten. Beim Senken der Leistung oder Erhöhen aus dem Betrieb war die Vorgabe meist schon im nächsten Takt erreicht. Mit `START_DELAY_S=4` bildet der Mock das nach: Schreiben im Takt n, im Takt n+1 noch 0 W, im Takt n+2 fast der volle Wert. Ohne `START_DELAY_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft).
+**Anlauf aus Standby:** Im echten Log vom 15.10. zeigten die Geräte nach einem Start aus 0 W im nächsten Takt meist noch keine Leistung (11 von 13 Fällen), erst im übernächsten. Beim Senken der Leistung oder Erhöhen aus dem Betrieb war die Vorgabe meist schon im nächsten Takt erreicht. Das gemessene Modell bildet das nach: Schreiben im Takt n, im Takt n+1 noch 0 W, im Takt n+2 der volle Wert. Ohne `START_DELAY_S` ist das Ergebnis identisch mit der Version ohne diese Option (geprüft).
 
 Ohne `SCENARIO` und ohne `NOISE_SEED` rechnet der Mock ohne Rauschen. Das Ergebnis ist in allen alten Spalten identisch mit dem korrigierten Mock ohne Rauschmodell.
 
@@ -368,10 +370,10 @@ Ohne `SCENARIO` und ohne `NOISE_SEED` rechnet der Mock ohne Rauschen. Das Ergebn
 ```json
 {
   "name": "werktag",
-  "grundrauschenW": 30,
+  "grundrauschenW": 20,
   "grundrauschenPeriodeS": 60,
-  "lastzitternW": 8,
-  "messrauschenW": 3,
+  "lastzitternW": 5,
+  "messrauschenW": 2,
   "geraeteMessrauschenW": 2,
   "kuehlschrank": { "leistungW": 100, "anMin": 15, "ausMin": 30 },
   "events": [ ... ],
@@ -408,14 +410,14 @@ Mit `stufen` lässt sich die Kochstufe während des Ereignisses ändern:
 **Zufällige Ereignisse** (`zufallsEvents`) werden je Tag aus dem Seed in ein Zeitfenster gelegt:
 
 ```json
-{ "typ": "wasserkocher", "anzahlProTag": 2, "von": "14:00", "bis": "22:00", "dauer": 3, "leistungW": 2000 }
+{ "typ": "wasserkocher", "anzahlProTag": 2, "von": "14:00", "bis": "20:00", "dauer": 3, "leistungW": 2000 }
 ```
 
 Im Szenario `szenario_werktag.json` stehen 3 Zufallsereignisse:
 
 | Typ | Anzahl je Tag | Zeitfenster | Dauer | Leistung | Zweck |
 |---|---|---|---|---|---|
-| `wasserkocher` | 2 | 14:00–22:00 | 3 min | 2000 W | zusätzliche Lastsprünge am Nachmittag |
+| `wasserkocher` | 2 | 14:00–20:00 | 3 min | 2000 W | zusätzliche Lastsprünge am Nachmittag |
 | `block` | 1 | 08:00–20:00 | 20 min | 800 W | mittlere Last über längere Zeit |
 | `kaffeevollautomat` | 12 | 06:30–16:30 | 1 min | 1500 W | kurze große Spitzen, wie sie in echten Logs mehrmals täglich vorkommen |
 
@@ -465,10 +467,10 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 2. Starten. Im Konsolenfenster erscheint:
 
     ```
-    [matrix] 12 Laeufe (Damping 0.5/0.65/0.7/0.8 x Seeds 1/2/3), parallel 3 -> ...\Matrix-261017-220145
-    [matrix] Start  seed 1 damping 0.5 (Port 3901)
+    [matrix] 12 Laeufe (Damping 0.4/0.5/0.65/0.8 x Seeds 1/2/3), parallel 4 -> ...\Matrix-261106-205753
+    [matrix] Start  seed 1 damping 0.4 (Port 3901)
     ...
-    [matrix] Fertig seed 1 damping 0.5 nach 597 s (Exit 0)
+    [matrix] Fertig seed 1 damping 0.4 nach … s (Exit 0)
     ```
 
     `Exit 0` = Lauf vollständig. Am Ende wird die Ergebnistabelle angezeigt.
@@ -478,7 +480,11 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
     - `matrix_laeufe.csv`: eine Zeile je Lauf
     - je Lauf ein Unterordner `seed<S>_damp<D>` mit `lauf.log`, `closed_loop_result.csv`, `report.html`, `zdmc_run.js`
 
-**Dauer:** gemessen etwa 10 min je Lauf mit 12.600 Zyklen bei 3 parallelen Läufen. 12 Läufe dauern damit etwa 40 min. Ein Zyklus braucht real 30–45 ms; schneller als das wird es auch mit höherem SPEED_FACTOR nicht.
+**Dauer:** 12 Läufe mit je 12.600 Zyklen dauern bei 4 parallelen Läufen etwa 35 min. Ein Zyklus braucht real 30–45 ms; schneller als das wird es auch mit höherem SPEED_FACTOR nicht.
+
+### 6.3a `jumpFactor`-Matrix
+
+Start über `matrix_jump.cmd`. Sie nutzt dieselben Werte wie `matrix_damping.cmd`, hält `dampingFactor` bei 0.65 fest und läuft je `jumpFactor` (0.8, 0.65, 0.5) mit allen Seeds. Je Wert entsteht ein eigener Ordner `Matrix-<Datum-Uhrzeit>-jump<Wert>`. Den Vergleichswert 0.9 liefert die Damping-Matrix. Im Log steht `[runner] jumpFactor fuer diesen Lauf: …`, das Banner zeigt den Wert in der Zeile `Damping`.
 
 ### 6.4 Kontrollen
 
@@ -516,11 +522,12 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 | Schnell taktende Last | Induktionsherd 8/12/20 s | Fenster „induktion“, Zickzack |
 | Wiederholbarkeit | gleicher Seed zweimal | CSV identisch |
 | Damping-Vergleich | Matrix | `matrix_ergebnis.md` |
+| `jumpFactor`-Vergleich | `matrix_jump.cmd` | `matrix_ergebnis.md` je Ordner |
 
 **Nicht abgedeckt** (Stand heute):
 
 - **Störungen:** Gerät nicht erreichbar, langsame Antwort, Schreibfehler, Zählerausfall. Geplant als eigener Robustheitstest mit Störungen im Szenario.
-- **Verzögerung der Geräte:** ist als Option vorhanden (`DEVICE_DELAY_S`, `DEVICE_RATE_WPS`, `WRITE_LAG_S`, `START_DELAY_S`, siehe 4.3), aber standardmäßig aus. Für realistische Damping-Vergleiche einschalten.
+- **Verzögerung der Geräte:** ist als Option vorhanden (`DEVICE_DELAY_S`, `DEVICE_RATE_WPS`, `WRITE_LAG_S`, `START_DELAY_S`, siehe 4.3). Der Mock lässt sie ohne diese Variablen aus, die mitgelieferten Matrix- und Rausch-Läufe schalten das gemessene Modell ein.
 - **Hysterese von socLimit 1:** Der Mock nimmt socLimit 1 sofort zurück, wenn der SoC minimal unter 100 % fällt. Ob echte Geräte hier eine Hysterese haben, ist nicht bekannt. Im Log erscheinen dadurch mehrfache Wechsel 0 ↔ 1.
 - **Sparmodus (idleSkip), KVS, Nachrichten:** im Test-CONFIG ausgeschaltet.
 - **Wolken / PV-Schwankungen:** Die PV-Kurven sind glatt.
@@ -538,7 +545,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 - mittlerer Betrag des Netzsaldos
 - Anteil der Zeit innerhalb ±30 W und innerhalb ±13 W (`BAND_W`)
 
-**Tabelle der Zeitfenster** (nur mit Rauschen): je Fenster (ruhig, Waschmaschine, Induktion, Wasserkocher, sonstige) Zyklen, mittlerer Betrag des Netzsaldos, Anteil im Band und Anteil über 50 W. Daran sieht man, wo der Regler gut ist und wo nicht.
+**Tabelle der Zeitfenster** (nur mit Rauschen): je Fenster (ruhig, Waschmaschine, Induktion, Wasserkocher, Kaffeevollautomat, sonstige) Zyklen, mittlerer Betrag des Netzsaldos, Anteil im Band und Anteil über 50 W. Daran sieht man, wo der Regler gut ist und wo nicht.
 
 **Diagramme:**
 
@@ -549,7 +556,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 | 2) Leistungskurven | Ausgabe je Gerät, + Export / − Laden vom Netz | Verteilung, Kapazitätsgrenzen, Laden |
 | 3) SoC-Verlauf | SoC je Gerät | minSoc-Sperren, Vollladung |
 
-Farbige Hintergrundflächen zeigen die Ereignisfenster (Waschmaschine blau, Induktion orange, Wasserkocher rot, sonstige grau).
+Farbige Hintergrundflächen zeigen die Ereignisfenster (Waschmaschine blau, Induktion orange, Wasserkocher rot, Kaffeevollautomat hellbraun, sonstige grau).
 
 Bitte beachten: Die Legende „SF800 Pro / SF2400“ folgt den Mock-Namen (siehe Abschnitt 3).
 
@@ -557,21 +564,22 @@ Bitte beachten: Die Legende „SF800 Pro / SF2400“ folgt den Mock-Namen (siehe
 
 Vollständiger Report: [doku/beispiel_report.html](doku/beispiel_report.html) (im Browser öffnen).
 
-Lauf: Matrix-261017-225429, Seed 2, dampingFactor 0.4, 12600 Zyklen (06:00–20:00), Start-SoC 30 %, `DEVICE_DELAY_S` 3, `WRITE_LAG_S` 1.
+Lauf: Matrix-261106-205753, Seed 2, `dampingFactor` 0.65, 12600 Zyklen (06:00–20:00), Start-SoC 30 %, `LOAD_SCALE` 0.4, gemessenes Gerätemodell (siehe 4.3).
 
-Farben in allen Diagrammen: **blau** = SF800 Pro (dev0, max. 800 W), **rot** = SF2400 (dev1, max. 2000 W). Hintergrund: Waschmaschine blau, Induktion orange, Wasserkocher rot, sonstige grau.
+Farben in allen Diagrammen: **blau** = SF800 Pro (dev0, max. 800 W), **rot** = SF2400 (dev1, max. 2000 W). Hintergrund: Waschmaschine blau, Induktion orange, Wasserkocher rot, Kaffeevollautomat hellbraun, sonstige grau.
 
 **Kopfzeile und Tabelle**
 
 | Zeitfenster | Zyklen | mittl. \|Netz\| | im Band ±13 W | > 50 W |
 |---|---|---|---|---|
-| ruhig | 10633 | 28.3 W | 64.2 % | 3.9 % |
-| waschmaschine | 900 | 101.6 W | 12.3 % | 63.8 % |
-| induktion | 900 | 1002.8 W | 6.8 % | 87.4 % |
-| wasserkocher | 135 | 505.3 W | 0.0 % | 100.0 % |
-| sonstige | 32 | 26.9 W | 59.4 % | 6.3 % |
+| ruhig | 10498 | 10.4 W | 83.4 % | 0.9 % |
+| waschmaschine | 900 | 102.3 W | 20.7 % | 44.3 % |
+| induktion | 675 | 924.5 W | 12.1 % | 85.2 % |
+| wasserkocher | 135 | 160.9 W | 25.9 % | 46.7 % |
+| kaffee | 135 | 528.4 W | 42.2 % | 48.1 % |
+| sonstige | 257 | 10.2 W | 88.7 % | 1.2 % |
 
-- Über den ganzen Tag: 55.7 % der Zeit im Band ±13 W, 80.5 % innerhalb ±30 W.
+- Über den ganzen Tag: 74.1 % der Zeit im Band ±13 W, 89.1 % innerhalb ±30 W.
 - Die Zeile **ruhig** zeigt die Regelgüte ohne große Verbraucher. Sie ist die wichtigste Zeile für den Vergleich von Damping-Werten.
 - Die Ereigniszeilen zeigen, wie gut der Regler schnellen Laständerungen folgt.
 
@@ -581,11 +589,11 @@ Farben in allen Diagrammen: **blau** = SF800 Pro (dev0, max. 800 W), **rot** = S
 
 - Rot ist der echte Netzwert, als Min/Max-Hülle. Grau ist der Wert, den der Regler misst (mit Messrauschen). Die schwarze Linie ist 0 W.
 - **Ruhige Zeiten:** Die Linie liegt eng um 0 W. Das ist der Normalfall.
-- **Spitzen am Anfang eines Ereignisses** (07:10, 10:00, 12:15, 18:18): Die Last springt hoch. Der Regler braucht einige Takte, bis die Geräte nachgezogen haben. So lange wird Strom aus dem Netz bezogen (positiv).
-- **Spitzen am Ende eines Ereignisses** (z. B. 07:12, nach unten): Die Last fällt weg, die Geräte liefern noch die alte Leistung. Kurz wird ins Netz eingespeist (negativ).
-- **07:25–07:40:** Bezug von etwa 900 W. Beide Geräte stehen auf minSoc (Diagramm 3) und geben nichts ab. Das ist eine Kapazitätsgrenze, kein Regelfehler.
-- **Waschmaschine 10:00–11:00:** In der Heizphase (2000 W) gleichen die Geräte gut aus. In der Motorphase schwankt das Saldo um etwa ±200 W.
-- **Induktion 12:15 und 18:30:** Das Kochfeld taktet im Abstand von wenigen Sekunden zwischen hoher und niedriger Leistung. Der Regler misst alle 4 s, die Geräte reagieren 3 s später. Der Regler kann diesem Takt nicht folgen, das Saldo springt zwischen etwa −1300 W und +1600 W. Am Abend erreichen die Geräte zusätzlich ihre maximale Ausgabe (Diagramm 2).
+- **Spitzen am Anfang eines Ereignisses** (z. B. 07:10, 10:00, 12:15, 18:30): Die Last springt hoch. Der Regler braucht einige Takte, bis die Geräte nachgezogen haben. So lange wird Strom aus dem Netz bezogen (positiv).
+- **Spitzen am Ende eines Ereignisses** (z. B. 07:13, nach unten): Die Last fällt weg, die Geräte liefern noch die alte Leistung. Kurz wird ins Netz eingespeist (negativ).
+- **Kaffeevollautomat** (die schmalen hellbraunen Streifen): 1500 W für eine Minute erzeugen je eine kurze Spitze nach oben und nach unten.
+- **Waschmaschine 10:00–11:00:** In der Heizphase bis etwa 10:18 schwankt das Saldo um etwa ±120 W, in der Motorphase um etwa ±250 W.
+- **Induktion 12:15 und 18:30:** In den ersten Minuten läuft das Kochfeld mit Dauerleistung, danach taktet es alle 8–20 s zwischen voller Leistung und aus. Der Regler misst alle 4 s, die Geräte reagieren mit Verzögerung. Er kann diesem Takt nicht folgen, das Saldo springt zwischen etwa −1700 W und +1800 W. Am Abend erreichen die Geräte zusätzlich ihre maximale Ausgabe (Diagramm 2).
 
 **Haushaltslast**
 
@@ -599,18 +607,19 @@ Farben in allen Diagrammen: **blau** = SF800 Pro (dev0, max. 800 W), **rot** = S
 ![Leistung je Gerät](doku/bsp_2_leistung.png)
 
 - Positiv: Das Gerät gibt Leistung ins Haus ab. Negativ: Das Gerät lädt über AC.
-- **Vormittag ab etwa 07:40:** Das SF800 Pro (blau) deckt den Grundbedarf. Das SF2400 (rot) springt nur bei Ereignissen ein. Das ist der Modus concentrate.
+- **06:31–07:45:** Beide Geräte liefern. Dann erreicht das SF2400 seine Reserve (`minSoc`, Diagramm 3) und stoppt.
+- **Vormittag ab 07:45:** Das SF800 Pro (blau) deckt den Grundbedarf. Das SF2400 (rot) springt nur bei Ereignissen ein. Das ist der Modus concentrate.
 - **Flache Linien bei 800 W (blau) und 2000 W (rot):** Das Gerät ist an seiner maximalen Ausgabe.
-- **Ab 14:00:** Das SF800 Pro ist voll (Diagramm 3) und gibt seinen PV-Überschuss ab. Das SF2400 nimmt ihn über AC auf (negativ). Das Netzsaldo bleibt bei 0 W.
-- **Ab 16:00:** Umgekehrt. Das SF2400 ist voll, das SF800 Pro lädt kurz über AC.
-- **Ab etwa 17:00:** Beide Geräte geben fast gleich viel ab. Das ist der Modus spread.
+- **13:14–15:13:** Das SF800 Pro ist voll (Diagramm 3) und gibt seinen PV-Überschuss ab. Das SF2400 nimmt ihn über AC auf (negativ, bis etwa −450 W). Das Netzsaldo bleibt bei 0 W.
+- **Ab 16:36:** Das SF2400 übernimmt für etwa eine halbe Stunde die Abgabe, weil es den höheren SoC hat (SoC-Ausgleich).
+- **Ab 17:05:** Beide Geräte geben fast gleich viel ab. Das ist der Modus spread.
 
 **Diagramm 3: SoC-Verlauf**
 
 ![SoC-Verlauf](doku/bsp_3_soc.png)
 
-- Morgens fallen beide Geräte bis minSoc 15 %. Danach laden sie mit PV.
-- Das SF800 Pro hat mehr PV und ist um 14:00 voll, das SF2400 um 16:15.
+- Morgens fällt das SF2400 bis auf die Reserve (`minSoc`) von 15 %, das SF800 Pro bis auf 17 %. Danach laden beide mit PV.
+- Das SF800 Pro hat vormittags mehr PV und ist um 13:12 voll, das SF2400 um 15:13.
 - Bei der Waschmaschine fällt der SoC des SF2400 kurz, weil es den großen Teil der Last trägt.
 - Ab dem Nachmittag entladen beide. Gegen Abend liegen sie fast gleichauf. Der Regler gleicht die SoC-Werte an (`rebalance.socMargin`).
 
@@ -632,7 +641,7 @@ Eine Zeile je Damping-Wert, jeweils Median über die Seeds:
 - **Bezug,** obwohl jedes Gerät gesperrt (socLimit 2), am Maximum oder in der Entlade-Hysterese ist (still, SoC < minSoc + 3 %), oder
 - **Export,** obwohl jedes Gerät voll (socLimit 1 oder SoC ≥ maxSoc) oder am maximalen Laden ist.
 
-„Am Maximum“ heißt: weniger als `SAT_TOL_W` (Standard 13 W) unter maxOutput bzw. maxInputPower. Die letzten Watt unterhalb der Hysterese regelt der Controller nicht mehr nach. Bis 18.10.2026 lag die Grenze bei 1 W. Dadurch wurden z. B. bei Testtag 3 von 07:44 bis 07:59 Zyklen als Ausreißer gezählt, in denen ein Gerät bei 791 von 800 W stand und das andere leer war. Ältere Matrix-Ordner lassen sich mit `NUR_AUSWERTEN=1` neu auswerten.
+„Am Maximum“ heißt: weniger als `SAT_TOL_W` (Standard 13 W) unter maxOutput bzw. maxInputPower. Die letzten Watt unterhalb der Hysterese regelt der Controller nicht mehr nach. Vorhandene Matrix-Ordner lassen sich mit `NUR_AUSWERTEN=1` neu auswerten.
 
 Diese Abweichungen kann kein Regler beheben. Deshalb werden die Bänder ohne sie berechnet. Die Entlade-Hysterese steht nicht in der CSV und wird deshalb näherungsweise erkannt.
 
@@ -668,10 +677,10 @@ Gleicher Seed, gleiche Einstellungen und gleiche Controller-Version ergeben eine
 
 - Die Shim beschleunigt **nur den Regeltakt**: Takt = Intervall / SPEED_FACTOR, mindestens 15 ms (`MIN_REAL_MS`). Über SPEED 267 (bei 4 s) ändert sich daher nichts mehr.
 - Ein Zyklus braucht real etwa 30–45 ms (HTTP zum Mock). Ist der Takt kürzer, erscheint **„Takt übersprungen“**. Das ist harmlos: Der Mock zählt Zyklen, nicht Zeit, und das Ergebnis bleibt identisch (geprüft: SPEED 150 gegen 130, 0 Unterschiede).
-- Der **Watchdog** (2,5 × Intervall = 10 s) läuft in **echter Zeit**. Er schlägt nur an, wenn ein Zyklus wirklich 10 s hängt, nicht wegen eines hohen SPEED_FACTOR.
+- Der **Watchdog** läuft in **echter Zeit**. Seit 5.3.9 gilt max(2,5 × Intervall, Geräte × 9 s + 2 s), im Test also 20 s. Er schlägt nur an, wenn ein Zyklus wirklich so lange hängt, nicht wegen eines hohen SPEED_FACTOR.
 - **Empfehlung:** SPEED_FACTOR 150. Ein höherer Wert bringt kaum Zeitgewinn, weil die Zyklen selbst die Grenze sind.
 - Übersprungene Takte testen **nicht** das Fehlerverhalten des Reglers. Im Mock läuft während eines übersprungenen Takts keine Zeit weiter. Das gehört in einen eigenen Robustheitstest.
-- Hinweis für diesen Robustheitstest: Weil der Watchdog in echter Zeit läuft, muss eine simulierte Störung real länger als 10 s dauern, um ihn auszulösen. Auf die Simulation umgerechnet sind 10 s bei SPEED 150 rund 25 min.
+- Hinweis für diesen Robustheitstest: Weil der Watchdog in echter Zeit läuft, muss eine simulierte Störung real länger als 20 s dauern, um ihn auszulösen. Auf die Simulation umgerechnet sind 20 s bei SPEED 150 rund 50 min.
 
 ### 9.3 Häufige Fehler
 
@@ -684,7 +693,7 @@ Gleicher Seed, gleiche Einstellungen und gleiche Controller-Version ergeben eine
 | `npx wurde nicht gefunden` beim Bauen | Node.js/npm nicht installiert oder nicht im PATH | Node.js installieren, neue Konsole öffnen |
 | `ACHTUNG: mindestens eine Verifikation ist fehlgeschlagen` | Terser hat etwas verändert, das er nicht soll, oder der Quellcode nutzt `=>`/Template-Strings | Ausgabe der Verifikation lesen, Quellcode prüfen |
 | `Kein 'let CONFIG = {' gefunden` | CONFIG-Block nicht am Zeilenanfang oder anders geschrieben | Schreibweise `let CONFIG = {` am Zeilenanfang einhalten |
-| `FEHLER (System/watchdog)` | ein Zyklus hing real länger als 10 s (Mock hängt, Rechner überlastet, Ruhezustand) | Log prüfen, Lauf wiederholen |
+| `FEHLER (System/watchdog)` | ein Zyklus hing real länger als 20 s (Mock hängt, Rechner überlastet, Ruhezustand) | Log prüfen, Lauf wiederholen |
 | Netzsaldo schwingt stark hin und her (Zickzack) ohne Ereignisse | alter Mock, der die Zeit am Netz-Poll weiterrechnet | aktuellen `mock_server.js` verwenden |
 | Matrix: falsche Bezug/Export-Werte | `STEP_MIN` in der .cmd fehlt | `STEP_MIN` setzen |
 | Matrix: Port belegt | anderer Lauf oder Programm auf 3901 ff. | `BASE_PORT` ändern |

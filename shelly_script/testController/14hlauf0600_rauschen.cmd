@@ -1,5 +1,5 @@
 set LOGFILE=14tageslauf.log
-set RELEASE=533
+set RELEASE=539
 
 del %LOGFILE%
 del closed_loop_result.csv
@@ -12,7 +12,7 @@ set SPEED_FACTOR=120
 set STEP_MIN=0.0666667
 set INTERVAL_MS=4000
 set START_SOC=30
-set LOAD_SCALE=0.5
+set LOAD_SCALE=0.4
 
 rem --- Rauschmodell (leer lassen = Mock ohne Rauschen wie bisher) ---
 set SCENARIO=szenario_werktag.json

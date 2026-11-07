@@ -1212,26 +1212,24 @@ Die Empfehlung hängt sehr von den persönlichen Prioritäten ab:
 - wenig Bezug
 - wenig Schreibbefehle auf die Solarflows, wenig Lastwechsel
 
-<img width="800"  alt="image" src="https://github.com/user-attachments/assets/be599884-dffd-4b4f-afa7-c12c24d15da1" />
-
-
-**Über 0,7 lohnt sich selten.** In der Simulation verbessert 0,8 gegenüber
-0,65 die Regelgüte nur wenig (+2,7 Prozentpunkte im Band ±13 W). Die
-Energiebilanz (Bezug + Export) wird nicht besser, die Zahl der
-Schreibvorgänge steigt um rund 14 %. Bei schnell taktenden Lasten
+**0,65 ist der Kompromiss, über 0,7 lohnt sich selten.** In der Simulation
+verbessert 0,8 gegenüber 0,65 die Regelgüte um 2,1 Prozentpunkte im Band
+±13 W. Die Energiebilanz (Bezug + Export) wird nicht besser, die Zahl der
+Schreibvorgänge steigt um rund 6 %. Bei schnell taktenden Lasten
 (Induktion) hilft ein höherer Wert gar nicht. Schnelle Reaktion auf
 Lastabwurf liefert seit 5.1.8 ohnehin die schnelle Flanke (`JUMP_FACTOR`),
 nicht ein hoher `dampingFactor`. Seit 5.2.3 lässt sich deren Faktor
 optional mit `jumpFactor` im CONFIG-Block einstellen (0,4 bis 0,9,
-Standard 0,9).
+Standard 0,9). Ein kleinerer Wert macht die Regelung bei schnell taktenden
+Lasten nicht ruhiger, er verlagert Netzbezug zu Export. Einzelheiten stehen
+unter [Damping/Simulation](Damping_Kompromiss.md).
 
 🧮 **Selbst ausprobieren:** Im [Damping-Kompromiss](damping_kompromiss.html)
 stellst du ein, was dir wichtig ist: gute Regelung, wenig Export, wenig
 Netzbezug oder wenige Schreibvorgänge. Die Seite zeigt, welcher Wert in der
 Simulation am besten dazu passt. Sie rechnet mit einem simulierten, bewusst
 unruhigen Haushalt (2 Geräte, `http_json`, 4 s Takt) und zeigt, wie sich die
-Werte untereinander verhalten. Die Tabelle oben bleibt der Ausgangspunkt für
-die eigene Anlage.
+Werte untereinander verhalten.
 
 ### 8.3) Watchdog / Timer
 
