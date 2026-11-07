@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.4.1
+
+**Ziel:** Das Zeichen „ZS“ auch als Symbol im Browser-Tab und auf dem Home-Bildschirm. Braucht das Shelly-Script ab 4.1.0.
+
+- **Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.
+- **Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.
+- Das Dashboard hat nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.4.1.0
+
 ## Changelog 5.4.0
 
 **Ziel:** Aufgeräumte Fußzeile im neuen Design und eigenes Zeichen im Kopf des Dashboards. Braucht das Shelly-Script ab 4.1.0.
