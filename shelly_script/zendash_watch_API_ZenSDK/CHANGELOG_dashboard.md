@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.4.2
+
+**Ziel:** iOS übernimmt das Zeichen „ZS“ beim Hinzufügen zum Home-Bildschirm. Braucht das Shelly-Script ab 4.1.0.
+
+- **Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.
+- **Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.
+- **HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“.
+- Home-Assistant-App 5.4.2.0
+
 ## Changelog 5.4.1
 
 **Ziel:** Das Zeichen „ZS“ auch als Symbol im Browser-Tab und auf dem Home-Bildschirm. Braucht das Shelly-Script ab 4.1.0.

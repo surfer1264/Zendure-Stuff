@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.4.2.0
+
+- Home-Bildschirm-Symbol „ZS“ auf iOS, auch beim Öffnen über die Seitenleiste
+
 ## 5.4.1.0
 
 - Zeichen „ZS“ als Symbol im Browser-Tab und auf dem Home-Bildschirm

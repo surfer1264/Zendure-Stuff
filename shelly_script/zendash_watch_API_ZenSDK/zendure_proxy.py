@@ -85,7 +85,7 @@ except ImportError:
 # unabhaengig vom Shelly-Script (ab 5.0.0, siehe CHANGELOG_dashboard.md).
 # APP_TYPE ist ein fester Bezeichner fuer versions.json (Manifest-Workflow).
 APP_TYPE = "zdmc-proxy"
-APP_VERSION = "5.4.1"
+APP_VERSION = "5.4.2"
 APP_CHANGELOG = "CHANGELOG_dashboard.md"
 
 # ---------------------------------------------------------------
@@ -736,8 +736,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_error(404, "Nicht gefunden: " + path)
 
     def do_HEAD(self):
-        # Nur fuer den Bericht: das Dashboard fragt so ab, ob es den Link zeigen soll
+        # Fuer den Bericht: das Dashboard fragt so ab, ob es den Link zeigen soll.
+        # Fuer die Icons: iOS prueft das Home-Bildschirm-Symbol teils erst per
+        # HEAD und nimmt sonst ein Ersatzsymbol.
         path = self.path.split("?", 1)[0]
+        endpoint = path.strip("/")
+        if endpoint in ICON_PATHS or endpoint in APPLE_ICON_PATHS:
+            png = endpoint in APPLE_ICON_PATHS
+            body = APPLE_TOUCH_ICON_PNG if png else FAVICON_SVG
+            self.send_response(200)
+            self.send_header("Content-Type", "image/png" if png else "image/svg+xml")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.end_headers()
+            return
         if path in ("/bericht_zendure", "/bericht_zendure/") and find_bericht():
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
