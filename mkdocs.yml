@@ -88,10 +88,13 @@ hooks:
 theme:
   name: material
   language: de
+  # Logo aus dem Designsystem ZendureDashboard (ZS-Ligatur). Die Kopfzeile ist
+  # in beiden Themes dunkel -> immer die Nacht-Fassung. Favicon wechselt die
+  # Farben selbst mit dem System-Theme.
+  logo: img/logo/zs-ligatur-nacht.svg
+  favicon: img/logo/favicon.svg
   icon:
-    logo: material/solar-power-variant
     repo: fontawesome/brands/github
-  favicon: https://cdn.jsdelivr.net/npm/@mdi/svg@7/svg/solar-power-variant.svg
   font:
     text: Inter
     code: JetBrains Mono
