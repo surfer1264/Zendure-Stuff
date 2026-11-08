@@ -50,7 +50,7 @@ Depuis 4.0.0, la page d'accueil `http://<adresse-du-proxy>:8000/` affiche le [no
 
 | Zone | Contenu |
 |---|---|
-| **En-tête** | état de la connexion (p. ex. « En direct · relevé toutes les 4 s »), heure et date, le **cadenas** et le menu **⚙ Affichage** |
+| **En-tête** | état de la connexion : un point vert signifie que la dernière requête au script Shelly (toutes les 4 s) a abouti ; l’infobulle l’explique. Rouge avec « Problème de connexion » signifie qu’au moins deux requêtes de suite ont échoué. Le design classique affiche en plus le texte « En direct · relevé toutes les 4 s ». Puis heure et date, le **cadenas** et le menu **⚙ Affichage** |
 | **Vue d'ensemble – Maintenant** | mesures : soutirage/injection réseau et puissance Solarflow (somme de toutes les batteries) avec courbe d'historique |
 | **Vue d'ensemble – Régulation** | réglages communs à toutes les batteries : consigne, blocage de décharge et décharge fixe |
 | **Appareils** | une carte par batterie avec mesures, état, « Commandes » et « Charge manuelle » |

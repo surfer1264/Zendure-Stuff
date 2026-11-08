@@ -8,6 +8,28 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.4.4
+
+**Ziel:** Eigenes Osterbild in der Ligatur „ZS“, von Karfreitag bis Ostermontag. Braucht das Shelly-Script ab 4.1.0.
+
+- **Ostern:** Über dem S stehen Hasenohren, auf dem unteren Balken des Z liegen drei bunte Ostereier. Gilt in beiden Designs und in Tag- und Nachtansicht.
+- **Datum:** Das Dashboard berechnet Ostern selbst aus der Jahreszahl (Gaußsche Osterformel), ohne Internet und ohne Tabelle. 2027 zum Beispiel gilt das Bild vom 26. bis 29. März.
+- **Tooltip:** „ZS · Ostern“ (EN „Easter“, FR „Pâques“).
+- **Ansehen:** `?zdate=` nimmt jetzt auch eine Jahreszahl, z. B. `?zdate=2027-03-26`. Ohne Jahr gilt das aktuelle Jahr.
+- **Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.
+- Der Proxy hat nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.4.4.0
+
+## Changelog 5.4.3
+
+**Ziel:** Eigenes Bild für den Valentinstag in der Ligatur „ZS“. Braucht das Shelly-Script ab 4.1.0.
+
+- **Valentinstag (14.2.):** Am S hängt ein Doppelherz, ein rotes und ein rosa Herz mit rotem Rand, in beiden Designs und in Tag- und Nachtansicht. Am Tag davor und danach erscheint wieder das Februarbild.
+- **Tooltip:** „ZS · Valentinstag“ (EN „Valentine’s Day“, FR „Saint-Valentin“).
+- **Ansehen:** mit `?zdate=02-14` in der Adresse.
+- Der Proxy hat nur die neue Versionsnummer bekommen.
+- Home-Assistant-App 5.4.3.0
+
 ## Changelog 5.4.2
 
 **Ziel:** iOS übernimmt das Zeichen „ZS“ beim Hinzufügen zum Home-Bildschirm. Braucht das Shelly-Script ab 4.1.0.

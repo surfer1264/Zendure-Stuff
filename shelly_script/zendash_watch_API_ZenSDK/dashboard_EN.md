@@ -50,7 +50,7 @@ From 4.0.0 the start page `http://<proxy-address>:8000/` shows the [new design](
 
 | Area | Content |
 |---|---|
-| **Header** | connection status (e.g. "Live · polling every 4s"), time and date, the **padlock** and the **⚙ View** menu |
+| **Header** | connection status: a green dot means the last request to the Shelly script (every 4 s) succeeded; the tooltip explains it. Red with "Connection problem" means at least two requests in a row failed. The classic design also shows the text "Live · polling every 4s". Then time and date, the **padlock** and the **⚙ View** menu |
 | **Overview – Now** | readings: grid import/export and Solarflow power (sum of all batteries) with history curve |
 | **Overview – Control** | settings for all batteries: setpoint, discharge lock and fixed discharge |
 | **Devices** | one card per battery with readings, status, "Controls" and "Manual charging" |

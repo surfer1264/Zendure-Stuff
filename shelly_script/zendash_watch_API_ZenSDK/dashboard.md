@@ -49,7 +49,7 @@ Ab 4.0.0 zeigt die Startseite `http://<Proxy-Adresse>:8000/` das [neue Design](#
 
 | Bereich | Inhalt |
 |---|---|
-| **Kopfzeile** | Verbindungsstatus (z. B. „Live · Poll alle 4s“), Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
+| **Kopfzeile** | Verbindungsstatus: Ein grüner Punkt heißt, die letzte Abfrage beim Shelly-Script (alle 4 s) hat geklappt; die Erklärung steht im Tooltip. Rot mit „Verbindungsproblem“ heißt, mindestens zwei Abfragen in Folge sind gescheitert. Das klassische Design zeigt dazu den Text „Live · Poll alle 4s“. Dazu Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
 | **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
 | **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Sperre und Fix-Entladung |
 | **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
