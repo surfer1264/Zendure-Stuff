@@ -4,13 +4,12 @@ Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changel
 
 ## 5.4.4.0
 
-- Osterbild in der Ligatur „ZS“ (Karfreitag bis Ostermontag), siehe [Dashboard-Changelog](../CHANGELOG_dashboard.md)
 - Verbindungsstatus im neuen Design nur noch als grüner Punkt mit Tooltip
 - ThingsBoard: neue wählbare Werte `temp`, `packTempLow` und `heatState` (standardmäßig aus)
 
 ## 5.4.3.0
 
-- Valentinstag-Bild in der Ligatur „ZS“, siehe [Dashboard-Changelog](../CHANGELOG_dashboard.md)
+- Kleine optische Änderungen im Kopf des Dashboards
 
 ## 5.4.2.0
 
@@ -22,7 +21,7 @@ Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changel
 
 ## 5.4.0.1
 
-- Neues Zeichen „ZS“ mit Monatsbild im Kopf des Dashboards (beide Designs)
+- Neues Zeichen „ZS“ im Kopf des Dashboards (beide Designs)
 
 ## 5.4.0.0
 

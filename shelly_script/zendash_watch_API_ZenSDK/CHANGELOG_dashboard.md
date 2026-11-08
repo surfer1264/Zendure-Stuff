@@ -10,23 +10,17 @@ Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard un
 
 ## Changelog 5.4.4
 
-**Ziel:** Eigenes Osterbild in der Ligatur „ZS“, von Karfreitag bis Ostermontag. Braucht das Shelly-Script ab 4.1.0.
+**Ziel:** Verbindungsstatus als Punkt und neue Werte für ThingsBoard. Braucht das Shelly-Script ab 4.1.0.
 
-- **Ostern:** Über dem S stehen Hasenohren, auf dem unteren Balken des Z liegen drei bunte Ostereier. Gilt in beiden Designs und in Tag- und Nachtansicht.
-- **Datum:** Das Dashboard berechnet Ostern selbst aus der Jahreszahl (Gaußsche Osterformel), ohne Internet und ohne Tabelle. 2027 zum Beispiel gilt das Bild vom 26. bis 29. März.
-- **Tooltip:** „ZS · Ostern“ (EN „Easter“, FR „Pâques“).
-- **Ansehen:** `?zdate=` nimmt jetzt auch eine Jahreszahl, z. B. `?zdate=2027-03-26`. Ohne Jahr gilt das aktuelle Jahr.
 - **Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.
 - **ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.
 - Home-Assistant-App 5.4.4.0
 
 ## Changelog 5.4.3
 
-**Ziel:** Eigenes Bild für den Valentinstag in der Ligatur „ZS“. Braucht das Shelly-Script ab 4.1.0.
+**Ziel:** Optische Kleinigkeiten im Kopf des Dashboards. Braucht das Shelly-Script ab 4.1.0.
 
-- **Valentinstag (14.2.):** Am S hängt ein Doppelherz, ein rotes und ein rosa Herz mit rotem Rand, in beiden Designs und in Tag- und Nachtansicht. Am Tag davor und danach erscheint wieder das Februarbild.
-- **Tooltip:** „ZS · Valentinstag“ (EN „Valentine’s Day“, FR „Saint-Valentin“).
-- **Ansehen:** mit `?zdate=02-14` in der Adresse.
+- Das Dashboard bekommt kleine optische Änderungen in beiden Designs.
 - Der Proxy hat nur die neue Versionsnummer bekommen.
 - Home-Assistant-App 5.4.3.0
 
@@ -56,9 +50,8 @@ Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard un
 - **„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.
 - **API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details.
 - **Update-Hinweis:** in Fettschrift, damit er auffällt. Der Satz „Eigenständige Seite …“ entfällt.
-- **Ligatur „ZS“ (beide Designs):** Links neben „ZENDURE // GRID“ steht jetzt das Zeichen „ZS“ für Zendure und Shelly, mit einem eigenen Bild für jeden Monat. Der Monat kommt aus dem Datum des Browsers und wechselt auch bei offener Seite.
+- **Ligatur „ZS“ (beide Designs):** Links neben „ZENDURE // GRID“ steht jetzt das Zeichen „ZS“ für Zendure und Shelly.
 - **Größe und Farben:** Das Zeichen reicht von der Oberkante von „ZENDURE“ bis zur Grundlinie der Unterzeile und passt sich an Ansichtsgröße, Sprache und Fensterbreite an. Tag- und Nachtansicht haben eigene Farben.
-- Mit `?zmonth=1` bis `?zmonth=12` in der Adresse lässt sich jedes Monatsbild ansehen.
 - Der Proxy hat nur die neue Versionsnummer bekommen.
 - Home-Assistant-App 5.4.0.0 und 5.4.0.1
 
