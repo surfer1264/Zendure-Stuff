@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../../img/kofi2.png" /></a>
+
 # Auswertung Zendure-Speicher
 
 Statistische Auswertung der Logs des Multi-Device-Controllers (Shelly-Skript) für einen

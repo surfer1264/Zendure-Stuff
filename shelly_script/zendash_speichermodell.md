@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 # Skalierungsmodell - Wieviel Solarflows
 
 Stand: 01.11.2026 · Watchdog-Script (`zendash_watch`) bis v4.0.0, Regler bis 5.3.6 · jeweils **Debug aus**

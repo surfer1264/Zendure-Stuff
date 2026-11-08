@@ -1,7 +1,4 @@
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="shelly_script/img/kofi2.png" /></a>
 
 ## [HIGHLIGHT: Shelly-Zendure-Suite](https://surfer1264.github.io/Zendure-Stuff/szscs/)
 

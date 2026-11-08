@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 Dieser Report ist generiert aus den Tageslogfiles des Shelly Controllers und vergleicht zwei 24h Profile
 
 # Analyse Multi-Device-Controller – 20.10.2026 im Vergleich zum 07.10.2026

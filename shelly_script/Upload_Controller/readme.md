@@ -1,8 +1,6 @@
-# Upload Controller to Shelly
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
 
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
+# Upload Controller to Shelly
 
 > ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch den [Configurator](../Multiconfigurator/readme.md) mit Helfer (Direkt-Upload und Update). Für eigene Deploy-Pipelines gibt es die Werkzeuge jetzt in den Ordnern [Controller/Deploy](../Controller/Deploy) und [zendash_watch_API_ZenSDK/Deploy](../zendash_watch_API_ZenSDK/Deploy). Diese Seite bleibt nur zum Nachschlagen.
 

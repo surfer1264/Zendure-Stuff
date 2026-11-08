@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # Simulation - Einfluss Damping auf Energiebilanz
 
 Stand: 07.11.2026 · Controller-Version im Test: 5.3.9 (5.3.10 bis 5.3.12 ändern das Regelverhalten nicht)

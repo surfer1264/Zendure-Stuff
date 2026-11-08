@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # ZenDash API
 
 Die drei JSON-Endpunkte von `zendure_dashboard_api.js` (Version 2.7). Sie liefern

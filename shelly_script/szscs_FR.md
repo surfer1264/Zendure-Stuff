@@ -1,12 +1,8 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 [:de: Deutsch](szscs.md) · [:gb: English](szscs_EN.md) · :fr: **Français**
 
 # Simple Zendure Shelly Cloudless System
-
-**Offre-moi un café !**
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
 
 <img width="1000" alt="image" src="https://github.com/user-attachments/assets/0267db3d-7941-472e-87de-e134ada66dea" />
 

@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # Controller – Kernfunktionen
 
 Der Controller ist ein Shelly-Script (JavaScript) für **Shelly Gen2/3/4-Geräte**. Er regelt den Netzbezug auf nahe 0 W (Nulleinspeisung) und verteilt die Lade- und Entladeleistung auf **einen oder mehrere Zendure-Speicher** mit zenSDK-Schnittstelle (SF800 und neuer, siehe [Kompatible Geräte](../kompatible_geraete.md)).

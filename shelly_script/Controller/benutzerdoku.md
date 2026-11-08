@@ -1,10 +1,8 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # Controller im Alltag
 
 > Diese Seite erklärt in einfachen Worten, was der Controller tut, woran du siehst, dass alles läuft, und wie du später etwas änderst. Eingerichtet wird er mit dem [Configurator](../Multiconfigurator/readme.md), siehe [Getting Started](readme.md). Alle technischen Details stehen in der [Gesamtdokumentation](gesamtdoku.md).
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
 
 ---
 

@@ -1,13 +1,8 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 :de: **Deutsch** · [:gb: English](szscs_EN.md) · [:fr: Français](szscs_FR.md)
 
 # Simple Zendure Shelly Cloudless System
-
-**Buy me a coffee!**
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
-
 
 * Du hast **einen** oder **mehrere** SolarFlow (SF800 oder neuer, zenSDK-fähig)?
 * Du hast einen Shelly Pro 3EM oder ein anderes Smartmeter mit lokaler Schnittstelle?, siehe [Kompatible Geräte](kompatible_geraete.md)

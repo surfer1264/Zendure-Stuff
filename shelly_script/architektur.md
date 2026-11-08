@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 :de: **Deutsch** · [:gb: English](architektur_EN.md) · [:fr: Français](architektur_FR.md)
 
 # So arbeiten die Teile zusammen

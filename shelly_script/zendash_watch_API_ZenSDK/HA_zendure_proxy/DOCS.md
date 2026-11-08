@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/img/kofi2.png" /></a>
+
 # Zendure Dashboard Proxy – Bedienung
 
 Die App stellt das Zendure-Dashboard im Heimnetz bereit und holt die Daten vom

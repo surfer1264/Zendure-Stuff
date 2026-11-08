@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 [:de: Deutsch](kompatible_geraete.md) · :gb: **English** · [:fr: Français](kompatible_geraete_FR.md)
 
 # Compatible devices

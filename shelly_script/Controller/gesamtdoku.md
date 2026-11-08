@@ -1,10 +1,6 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # Zendure Multi-Device Controller – Gesamtdokumentation
-
-**Spend me a Coffee!**
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
 
 **Controller** zur lokalen, **cloud-unabhängigen** Regelung der Lade-/Entladeleistung
 von **einem oder mehreren** Zendure-SolarFlow-Systemen. Das Script unterstützt alle Zendure-Geräte mit

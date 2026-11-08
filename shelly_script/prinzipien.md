@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 # Insight Shelly-Multi-Device Controller Prinzipien 
 
 Der Shelly Multi Device Controller (**SMDC**) folgt folgenden Designprinzipien, die in Folge erläutert werden. Die Reihenfolge gibt dabei auch eine Priorisierung vor, ist also nicht zufällig gewählt

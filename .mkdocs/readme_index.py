@@ -7,6 +7,8 @@
 - Startseite jedes Ordners in der Navigation nach oben sortieren
 - eigenes Stylesheet (.mkdocs/extra.css) einbinden, ohne es in shelly_script abzulegen
 - mehrsprachige Seiten (es gibt x_EN.md / x_FR.md) in der Seitenleiste kennzeichnen
+- relative <img src> in rohem HTML auf die Seitenadresse umrechnen (MkDocs passt
+  nur Markdown-Bilder an; z. B. der Ko-fi-Button am Seitenanfang)
 """
 import os
 import posixpath
@@ -24,6 +26,7 @@ _H1 = re.compile(r"^#\s+(.+?)\s*#*\s*$", re.MULTILINE)
 _LINK = re.compile(r"(\]\()([^)\s]+)(\))")
 _FENCE = re.compile(r"(```.*?```)", re.DOTALL)
 _NAVLINK = re.compile(r'<a href="([^"#]*)" class="md-nav__link')
+_IMGSRC = re.compile(r'(<img\s[^>]*?\bsrc=")([^"]+)(")', re.I)
 
 # Sprachfassungen neben der deutschen Seite: Suffix -> Kürzel in der Seitenleiste
 LANG_SUFFIXES = (("_EN", "EN"), ("_FR", "FR"))
@@ -136,4 +139,26 @@ def on_page_markdown(markdown, page, config, files):
         m = _H1.search(_FENCE.sub("", markdown))
         if m:
             page.meta["title"] = m.group(1).strip()
-    return _rewrite_links(markdown, page, config, files)
+    return _fix_img_src(_rewrite_links(markdown, page, config, files), page)
+
+
+def _fix_img_src(markdown, page):
+    """Relativen Bildpfad (bezogen auf die .md-Datei) auf die Seiten-URL umrechnen.
+    Mit Verzeichnis-URLs liegt Controller/benutzerdoku.md unter Controller/benutzerdoku/,
+    ../img/x.png muss dort ../../img/x.png heissen."""
+    src_dir = posixpath.dirname(page.file.src_uri)
+    url_dir = page.file.url.rstrip("/") if page.file.url.endswith("/") else posixpath.dirname(page.file.url)
+
+    def fix(m):
+        target = m.group(2)
+        if re.match(r"^([a-z]+:|#|/)", target, re.I):
+            return m.group(0)
+        rel = posixpath.normpath(posixpath.join(src_dir, target))
+        if rel.startswith(".."):
+            return m.group(0)
+        return m.group(1) + posixpath.relpath(rel, url_dir or ".") + m.group(3)
+
+    parts = _FENCE.split(markdown)
+    for i in range(0, len(parts), 2):  # nur ausserhalb von Code-Bloecken
+        parts[i] = _IMGSRC.sub(fix, parts[i])
+    return "".join(parts)

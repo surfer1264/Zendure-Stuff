@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../../img/kofi2.png" /></a>
+
 # Helfer und Dashboard-Proxy unter macOS starten
 
 [← zurück zur Configurator-Anleitung](../readme.md) · [← zurück zu Dashboard einrichten](../../zendash_watch_API_ZenSDK/dashboard.md)

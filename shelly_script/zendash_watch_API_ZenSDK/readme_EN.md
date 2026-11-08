@@ -1,10 +1,8 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 [:de: Deutsch](readme.md) · :gb: **English** · [:fr: Français](readme_FR.md)
 
 # zenDash API + Watchdog
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
 
 A Shelly script for your **Dashboard Shelly** that takes on two tasks around your Zendure batteries:
 

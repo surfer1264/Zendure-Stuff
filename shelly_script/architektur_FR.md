@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
+
 [:de: Deutsch](architektur.md) · [:gb: English](architektur_EN.md) · :fr: **Français**
 
 # Comment les éléments fonctionnent ensemble

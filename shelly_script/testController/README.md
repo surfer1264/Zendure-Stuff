@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # Test-Harness für den Multi-Device-Controller
 
 Führt das echte Controller-Skript unter Node.js gegen einen simulierten Stromzähler und zwei simulierte Geräte aus.

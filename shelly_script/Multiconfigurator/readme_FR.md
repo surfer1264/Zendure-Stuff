@@ -1,10 +1,8 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 [:de: Deutsch](readme.md) · [:gb: English](readme_EN.md) · :fr: **Français**
 
 # Le configurateur
-
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
 
 Quelques clics pour piloter localement ta flotte Zendure – configurer, mettre à jour, terminé.
 

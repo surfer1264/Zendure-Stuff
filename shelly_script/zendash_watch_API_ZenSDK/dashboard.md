@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 :de: **Deutsch** · [:gb: English](dashboard_EN.md) · [:fr: Français](dashboard_FR.md)
 
 # Dashboard einrichten und bedienen

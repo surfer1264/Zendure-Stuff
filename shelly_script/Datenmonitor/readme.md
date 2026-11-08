@@ -1,6 +1,4 @@
-<a href="https://ko-fi.com/surfer1264">
-  <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
-</a>
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
 
 > ⚠️ **Veraltet – ohne Support.** Rudimentäre Hilfsscripte aus der Anfangszeit, die nicht weiterentwickelt werden. Für Live-Daten und Meldungen gibt es [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md) mit [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md). Diese Seite bleibt nur zum Nachschlagen.
 

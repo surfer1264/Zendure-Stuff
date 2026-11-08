@@ -1,3 +1,5 @@
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+
 # ThingSpeak-Upload
 
 [← zurück zu zenDash-API + Watchdog](readme.md) · [Dashboard einrichten](dashboard.md) · [API-Beschreibung](API.md) · [ThingsBoard-Upload](thingsboard.md)
