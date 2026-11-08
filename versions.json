@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-08T08:01:51Z",
+  "generated": "2026-11-08T08:21:21Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -451,9 +451,9 @@
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c47e50cbae4e6e3e732ba21a1963dde571ab9d74/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
       "changes": [
-        "**Ostern:** Über dem S stehen Hasenohren, auf dem unteren Balken des Z liegen drei bunte Ostereier. Gilt in beiden Designs und in Tag- und Nachtansicht.",
-        "**Datum:** Das Dashboard berechnet Ostern selbst aus der Jahreszahl (Gaußsche Osterformel), ohne Internet und ohne Tabelle. 2027 zum Beispiel gilt das Bild vom 26. bis 29. März.",
-        "**Tooltip:** „ZS · Ostern“ (EN „Easter“, FR „Pâques“)."
+        "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
+        "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
+        "Home-Assistant-App 5.4.4.0"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -556,9 +556,9 @@
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c47e50cbae4e6e3e732ba21a1963dde571ab9d74/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Ostern:** Über dem S stehen Hasenohren, auf dem unteren Balken des Z liegen drei bunte Ostereier. Gilt in beiden Designs und in Tag- und Nachtansicht.",
-        "**Datum:** Das Dashboard berechnet Ostern selbst aus der Jahreszahl (Gaußsche Osterformel), ohne Internet und ohne Tabelle. 2027 zum Beispiel gilt das Bild vom 26. bis 29. März.",
-        "**Tooltip:** „ZS · Ostern“ (EN „Easter“, FR „Pâques“)."
+        "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
+        "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
+        "Home-Assistant-App 5.4.4.0"
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
