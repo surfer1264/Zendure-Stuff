@@ -33,6 +33,7 @@ Der Upload ist optional und läuft **unabhängig vom [ThingSpeak-Upload](thingsp
   - [Betreiber und Datenschutz](#betreiber-und-datenschutz)
   - [Meldungen im Log](#meldungen-im-log)
   - [Fehlersuche](#fehlersuche)
+  - [Downloads](#downloads)
 
 ---
 
@@ -364,3 +365,25 @@ Siehe [Wie stelle ich sicher, im Free-Plan zu bleiben?](#wie-stelle-ich-sicher-i
 
 **ThingSpeak ist aus, trotzdem fragt der Proxy den Shelly ab.**
 Das ist richtig, solange ThingsBoard aktiv ist. Beide Ziele nutzen dieselben Abfragen. Erst wenn beide aus sind, fragt der Proxy nichts mehr ab.
+
+## Downloads
+
+Welche Dateien du brauchst, hängt davon ab, wie der Proxy bei dir läuft. Der Upload selbst steckt in `ts_bridge.py`.
+
+**Proxy mit Cloud-Upload** – eine Variante wählen:
+
+| Variante | Was du herunterlädst | `ts_bridge.py` |
+|---|---|---|
+| Fertiges Programm (Windows, Mac mit Apple Silicon) | `zendure_proxy-windows.exe` bzw. `zendure_proxy-macos` aus dem [neuesten Release](https://github.com/surfer1264/Zendure-Stuff/releases/latest) | schon eingebaut |
+| Home Assistant App | Installation siehe [Home-Assistant-App](HA_zendure_proxy/INSTALLATION.md) | schon eingebaut |
+| Python-Script | [`zendure_proxy.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py), [`zendure-dashboard.html`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) und [`ts_bridge.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py), alle drei in denselben Ordner | separat, siehe links |
+
+**Vorlagen für die Regelgüte** (optional, siehe [Vorlagen: Regelgüte](#vorlagen-regelgüte)), in dieser Reihenfolge importieren:
+
+1. [`regelgüte_echtzeit-klassifizierung.json`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/thingsboard/regelg%C3%BCte_echtzeit-klassifizierung.json) – berechnetes Feld, Echtzeit-Klassifizierung
+2. [`tägliche_regelgüte-statistik_shelly.json`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/thingsboard/t%C3%A4gliche_regelg%C3%BCte-statistik_shelly.json) – berechnetes Feld, Tagesstatistik
+3. [`regelgüte.json`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/thingsboard/regelg%C3%BCte.json) – Dashboard „Regelgüte“
+
+Die Links öffnen die Datei als Text im Browser. Zum Speichern: Rechtsklick auf den Link → **„Link speichern unter …“** (je nach Browser „Ziel speichern unter …“). Achte darauf, dass die Endung `.json` bzw. `.py` bleibt und nicht `.txt` angehängt wird.
+
+Nicht herunterladen musst du `zendure_thingsboard_config.json`: Die legt der Proxy beim ersten Speichern auf `/thingsboard` selbst an. Sie enthält deine Access Tokens, gib sie nicht weiter.

@@ -61,20 +61,20 @@ nav:
       - Dashboard-Shelly: zendash_watch_API_ZenSDK/readme.md
       - Live-Dashboard: zendash_watch_API_ZenSDK/dashboard.md
       - Tech Details:
-        - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
-        - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
         - Home-Assistant-App: zendash_watch_API_ZenSDK/HA_zendure_proxy/INSTALLATION.md
         - API-Referenz: zendash_watch_API_ZenSDK/API.md
       - Änderungen Shelly-Script: zendash_watch_API_ZenSDK/CHANGELOG.md
       - Änderungen Dashboard und Proxy: zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md
+  - Statistik & Auswertung:
+      - Easy Statistik: stat/auswertung/readme.md
+      - Beispiel-Bericht: stat/auswertung/bericht.html
+      - Referenz-Report: referenz.md
+      - ThingSpeak: zendash_watch_API_ZenSDK/thingspeak.md
+      - ThingsBoard: zendash_watch_API_ZenSDK/thingsboard.md
   - Werkzeuge:
       - Script-Monitor: Script_poller/readme.md
-      - Easy Statistik: stat/auswertung/readme.md
-      - Beispiel Statistik: stat/auswertung/bericht.html
   - Hintergrund:
       - Vergleich mit anderen Lösungen: Einordnung.md
-  - Referenz:
-      - Report: referenz.md
 
 # Englisch/Französisch nicht in der Seitenleiste zeigen
 # (bleiben über die Sprach-Links und die Suche erreichbar)
