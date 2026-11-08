@@ -8,7 +8,6 @@
   <img width="400" alt="image" src="https://github.com/user-attachments/assets/73f858ad-fb66-4f07-8d15-da2ff328c756" />
 </a>
 
-<img width="800" alt="image" src="https://github.com/user-attachments/assets/0267db3d-7941-472e-87de-e134ada66dea" />
 
 * Du hast **einen** oder **mehrere** SolarFlow (SF800 oder neuer, zenSDK-fähig)?
 * Du hast einen Shelly Pro 3EM oder ein anderes Smartmeter mit lokaler Schnittstelle?, siehe [Kompatible Geräte](kompatible_geraete.md)
