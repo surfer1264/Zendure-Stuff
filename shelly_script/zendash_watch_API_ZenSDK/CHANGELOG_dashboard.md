@@ -17,7 +17,7 @@ Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard un
 - **Tooltip:** „ZS · Ostern“ (EN „Easter“, FR „Pâques“).
 - **Ansehen:** `?zdate=` nimmt jetzt auch eine Jahreszahl, z. B. `?zdate=2027-03-26`. Ohne Jahr gilt das aktuelle Jahr.
 - **Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.
-- Der Proxy hat nur die neue Versionsnummer bekommen.
+- **ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.
 - Home-Assistant-App 5.4.4.0
 
 ## Changelog 5.4.3

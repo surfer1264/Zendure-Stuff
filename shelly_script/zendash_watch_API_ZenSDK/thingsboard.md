@@ -128,11 +128,16 @@ Lehnt ThingsBoard eine Meldung ab oder ist das Internet weg, versucht der Proxy 
 | `minVol` | Niedrigste Zellspannung | V | `minVol` ÷ 100 | an |
 | `batteryPower` | Akkuleistung, **+ = Akku entlädt, − = Akku lädt** | W | berechnet: `packIn` − `packOut` | aus |
 | `offGridPower` | Leistung am Offgrid-Ausgang | W | `offGrid` (ab zendash_watch 3.5.9) | aus |
+| `temp` | Gerätetemperatur, ganze Grad | °C | `temp` (ab zendash_watch 3.5.9) | aus |
+| `packTempLow` | Kühlstes Akkupack, ganze Grad | °C | `packTempLow` (ab zendash_watch 4.3.0) | aus |
 | `socLimit` * | Ladegrenzen-Status: 0 frei, 1 voll, 2 leer | – | `socLimit` | aus |
 | `socSet` * | Obere Ladegrenze am Gerät | % | `socSet` (ab zendash_watch 3.5.1) | aus |
 | `minSoc` * | Untere Entladegrenze am Gerät | % | `minSocHw` (ab zendash_watch 3.5.4) | aus |
+| `heatState` * | Heizung: 0 aus, 1 an | – | `heatState` (ab zendash_watch 4.2.0) | aus |
 
 `batteryPower` spart ein berechnetes Feld in ThingsBoard: Statt `packInputPower` und `outputPackPower` einzeln reicht dieser eine Wert, wenn du nur die Akkuleistung brauchst. Er fehlt, wenn einer der beiden Ausgangswerte fehlt. `offGridPower` fehlt bei Geräten ohne Offgrid-Steckdose.
+
+`packTempLow` ist der kleinste `maxTemp`-Wert aller Packs. Jedes Pack meldet nur seinen wärmsten Wert, die kälteste Zelle kann also darunter liegen. `temp`, `packTempLow` und `heatState` fehlen, wenn das Gerät sie nicht meldet oder das Shelly-Script zu alt ist.
 
 Die mit * markierten Werte ändern sich selten. Sie werden deshalb nur gesendet, wenn sie sich ändern, dazu einmal am Tag, nach einem Neustart des Proxys und nach jedem Speichern auf `/thingsboard`. Sie kosten daher kaum Datenpunkte.
 

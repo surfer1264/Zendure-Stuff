@@ -35,8 +35,11 @@ ThingsBoard - ein Geraet pro Hub plus ein Geraet "Netz":
         (aeltere Config) gelten die Standardwerte: electricLevel,
         solarInputPower, outputHomePower, gridInputPower, packInputPower,
         outputPackPower, minVol (V). Zusaetzlich waehlbar: batteryPower
-        (packIn - packOut, + = Akku entlaedt) und offGridPower.
+        (packIn - packOut, + = Akku entlaedt), offGridPower, temp
+        (Geraetetemperatur, ganze C) und packTempLow (kuehlstes Pack,
+        ganze C).
         Status/Grenzen socLimit, socSet (%), minSoc (%; status_api minSocHw)
+        und heatState (Heizung, 0 aus / 1 an)
         werden nur bei Aenderung gesendet, dazu einmal je Tag und nach
         jedem Neustart (TB_ON_CHANGE) - sie aendern sich selten.
   Netz: gridPower (W, positiv = Bezug), immer
@@ -226,13 +229,16 @@ TB_FIELDS = (
     ("minVol",          "Niedrigste Zellspannung (V)",           _min_vol,                   True),
     ("batteryPower",    "Akkuleistung (W, + entlaedt, - laedt)", _battery_power,             False),
     ("offGridPower",    "Offgrid-Leistung (W)",                  lambda h: h.get("offGrid"), False),
+    ("temp",            "Geraetetemperatur (Grad C)",            lambda h: h.get("temp"),    False),
+    ("packTempLow",     "Kuehlstes Akkupack (Grad C)",           lambda h: h.get("packTempLow"), False),
     ("socLimit",        "Ladegrenzen-Status (0 frei, 1 voll, 2 leer) *", lambda h: h.get("socLimit"), False),
     ("socSet",          "Obere Ladegrenze (%) *",                lambda h: h.get("socSet"),  False),
     ("minSoc",          "Untere Entladegrenze (%) *",            lambda h: h.get("minSocHw"), False),
+    ("heatState",       "Heizung (0 aus, 1 an) *",               lambda h: h.get("heatState"), False),
 )
 # Nur bei Aenderung senden (plus einmal je Tag und nach Neustart) - in der
 # Liste mit * markiert. Merker je Hub: {hub-id: {key: (wert, datum)}}.
-TB_ON_CHANGE = ("socLimit", "socSet", "minSoc")
+TB_ON_CHANGE = ("socLimit", "socSet", "minSoc", "heatState")
 _tb_last = {}
 TB_DEFAULT_FIELDS = [f[0] for f in TB_FIELDS if f[3]]
 

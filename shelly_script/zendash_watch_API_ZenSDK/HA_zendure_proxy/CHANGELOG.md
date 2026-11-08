@@ -6,6 +6,7 @@ Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changel
 
 - Osterbild in der Ligatur „ZS“ (Karfreitag bis Ostermontag), siehe [Dashboard-Changelog](../CHANGELOG_dashboard.md)
 - Verbindungsstatus im neuen Design nur noch als grüner Punkt mit Tooltip
+- ThingsBoard: neue wählbare Werte `temp`, `packTempLow` und `heatState` (standardmäßig aus)
 
 ## 5.4.3.0
 
