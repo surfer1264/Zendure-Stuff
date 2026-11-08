@@ -6,6 +6,8 @@
 
 Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit ohne Cloud geregelt: Ein Shelly hält deinen Netzbezug auf null, ein zweiter liefert die Daten für ein Dashboard und meldet sich, wenn etwas nicht stimmt. Was die Suite im Einzelnen kann: **[Was die Suite kann](szscs.md)**.
 
+<img width="800" alt="Shelly-Zendure-Multi-Device-Controller: mehrere SolarFlow-Geräte, ein Shelly, Netzbezug ≈ 0 W" src="img/shelly_zendure_hero.gif" />
+
 ## 👉 Hier starten
 
 1. **[Helfer herunterladen](https://github.com/surfer1264/Zendure-Stuff/releases/latest)** (Windows oder Mac mit Apple Silicon) und starten.
