@@ -9,6 +9,8 @@
 - mehrsprachige Seiten (es gibt x_EN.md / x_FR.md) in der Seitenleiste kennzeichnen
 - relative <img src> in rohem HTML auf die Seitenadresse umrechnen (MkDocs passt
   nur Markdown-Bilder an; z. B. der Ko-fi-Button am Seitenanfang)
+- Suche gewichten: Kernseiten nach oben, Übersetzungen und Changelogs nach unten,
+  interne Dateien (CLAUDE.md) gar nicht in den Suchindex
 """
 import os
 import posixpath
@@ -31,6 +33,33 @@ _IMGSRC = re.compile(r'(<img\s[^>]*?\bsrc=")([^"]+)(")', re.I)
 # Sprachfassungen neben der deutschen Seite: Suffix -> Kürzel in der Seitenleiste
 LANG_SUFFIXES = (("_EN", "EN"), ("_FR", "FR"))
 _multilang = {}  # URL der deutschen Seite -> "DE EN FR"
+
+# Suche (Material: page.meta["search"]). Ein Eintrag im Front Matter einer
+# Seite hat Vorrang. Werte < 1 schieben Treffer nach unten, > 1 nach oben.
+SEARCH_EXCLUDE = ("CLAUDE.md",)                     # Dateiname, in jedem Ordner
+SEARCH_BOOST_TOP = {                                # wichtigste Einstiegsseiten
+    "readme.md": 2,
+    "szscs.md": 2,
+    "Controller/benutzerdoku.md": 2,
+    "Multiconfigurator/readme.md": 2,
+    "zendash_watch_API_ZenSDK/dashboard.md": 2,
+}
+SEARCH_BOOST_LANG = 0.5                             # x_EN.md / x_FR.md
+SEARCH_BOOST_CHANGELOG = 0.3                        # CHANGELOG*.md
+
+
+def _search_meta(src_uri):
+    name = posixpath.basename(src_uri)
+    stem = posixpath.splitext(name)[0]
+    if name in SEARCH_EXCLUDE:
+        return {"exclude": True}
+    if src_uri in SEARCH_BOOST_TOP:
+        return {"boost": SEARCH_BOOST_TOP[src_uri]}
+    if stem.upper().startswith("CHANGELOG"):
+        return {"boost": SEARCH_BOOST_CHANGELOG}
+    if any(stem.endswith(sfx) for sfx, _ in LANG_SUFFIXES):
+        return {"boost": SEARCH_BOOST_LANG}
+    return None
 
 
 def on_config(config):
@@ -139,6 +168,10 @@ def on_page_markdown(markdown, page, config, files):
         m = _H1.search(_FENCE.sub("", markdown))
         if m:
             page.meta["title"] = m.group(1).strip()
+    if "search" not in page.meta:
+        meta = _search_meta(page.file.src_uri)
+        if meta:
+            page.meta["search"] = meta
     return _fix_img_src(_rewrite_links(markdown, page, config, files), page)
 
 

@@ -136,6 +136,11 @@ theme:
 plugins:
   - search:
       lang: [de, en, fr]
+      # Auch an _ . / und Klammern trennen, damit z. B. "minsoc" auch
+      # zdmc_devN_minSoc und "status" auch status_api findet. Nicht an
+      # Binnen-Großbuchstaben: sonst wird minSoc zu "min" + "soc".
+      # Gewichtung der Seiten (Übersetzungen, Changelogs) im Hook.
+      separator: '[\s​\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;'
 
 extra:
   # Dateitypen, die nie veröffentlicht werden (Links gehen zu GitHub)
