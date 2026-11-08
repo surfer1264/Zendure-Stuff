@@ -1,42 +1,37 @@
 <a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="img/kofi2.png" /></a>
 
-# Skalierungsmodell - Wieviel Solarflows
+# Speicherbedarf – wie viele Geräte und Akkus?
 
-Stand: 01.11.2026 · Watchdog-Script (`zendash_watch`) bis v4.0.0, Regler bis 5.3.6 · jeweils **Debug aus**
+Jedes Script hat auf seinem Shelly rund 25 kB Arbeitsspeicher. Wie viel davon gebraucht wird, hängt von der Zahl der SolarFlow-Geräte ab und davon, wie viele Akkus das größte Gerät hat.
 
-Wie viele SolarFlow-Geräte und Akkus verkraften die beiden Scripte, bevor ihnen auf dem Shelly der Speicher ausgeht?
+## Maximale Konfiguration
 
-## Fazit: Was funktioniert
+**So zählst du:**
 
-Gezählt wird **A = die Akkus am Gerät mit den meisten Akkus**, nicht die Gesamtzahl. Bei Pro-Modellen zählt der eingebaute Akku mit. Beispiel: 3 Geräte mit 3 / 3 / 1 Akkus → A = 3.
+- **Geräte:** Anzahl der SolarFlow-Geräte.
+- **Akkus:** die Akkus am Gerät mit den **meisten** Akkus. Bei Pro-Modellen zählt der eingebaute Akku mit. Ein Gerät hat höchstens 6 Akkus.
+- **Beispiel:** 3 Geräte mit 3 / 3 / 1 Akkus → 3 Geräte, 3 Akkus.
 
-| Geräte | ✅ Funktioniert | ⚠️ Grenzbereich | ❌ Nicht unterstützt |
-|---|---|---|---|
-| 1 | bis A = 12 | A = 13 bis 14 | ab A = 15 |
-| 2 | bis A = 9 | A = 10 bis 11 | ab A = 12 |
-| 3 | bis A = 4 | A = 5 bis 6 | ab A = 7 |
-| 4 | **nur Regler**, bis A = 3 | nur Regler, A = 4 bis 5 | **Watchdog-Script immer**; Regler ab A = 6 |
+| Geräte | Regler (Regel-Shelly) | Watchdog (Dashboard-Shelly) |
+|---|---|---|
+| 1 | ✅ bis 6 Akkus | ✅ bis 6 Akkus |
+| 2 | ✅ bis 6 Akkus | ✅ bis 6 Akkus |
+| 3 | ✅ bis 6 Akkus | ✅ bis 4 Akkus · ⚠️ 5–6 Akkus |
+| 4 | ✅ bis 3 Akkus · ⚠️ 4–5 Akkus · ❌ 6 Akkus | ❌ nicht möglich |
 
-- **✅ Funktioniert:** Reserve mindestens 2 kB in beiden Scripten. Mit 1 bis 3 Geräten bis A = 4 an echten Anlagen gemessen, darüber vom Modell abgeleitet. Das Modell liegt an den Messpunkten mit aktueller Software knapp über den Messwerten.
-- **⚠️ Grenzbereich:** 1 bis 2 kB Reserve. Läuft nach dem Modell, aber mit wenig Puffer und bisher nicht gemessen. Wer es einsetzt, prüft nach dem Start und nach einigen Stunden `mem_peak` (Shelly-Weboberfläche oder `Script.GetStatus`). Kein Debug einschalten, es kostet weitere 0,3–0,5 kB.
-- **❌ Nicht unterstützt:** weniger als 1 kB Reserve. Ein ungünstiger Moment (Nachricht senden, Dashboard-Abruf) reicht dann für einen Absturz.
+- ✅ **läuft** mit genug Reserve.
+- ⚠️ **läuft knapp.** Nach dem Start und nach einigen Stunden `mem_peak` prüfen (Shelly-Weboberfläche bei den Scripten oder `Script.GetStatus`). Debug ausgeschaltet lassen.
+- ❌ **nicht unterstützt.** Der Speicher reicht nicht sicher.
 
-**Welches Script begrenzt?**
+**Die ganze Suite** (Regler, Dashboard und Meldungen) läuft also mit bis zu 3 Geräten, bei 3 Geräten sicher bis 4 Akkus am größten Gerät. Mit 4 Geräten läuft nur der Regler allein, dann ohne Dashboard, Meldungen und Upload zu ThingSpeak/ThingsBoard.
 
-| Geräte | Watchdog-Script (Dashboard-Shelly) | Regler (Regel-Shelly) | Die ganze Suite |
-|---|---|---|---|
-| 1 | ✅ bis A = 17 · ⚠️ 18–20 · ❌ ab 21 | ✅ bis A = 12 · ⚠️ 13–14 · ❌ ab 15 | ✅ bis A = 12 · ⚠️ 13–14 · ❌ ab 15 |
-| 2 | ✅ bis A = 10 · ⚠️ 11–13 · ❌ ab 14 | ✅ bis A = 9 · ⚠️ 10–11 · ❌ ab 12 | ✅ bis A = 9 · ⚠️ 10–11 · ❌ ab 12 |
-| 3 | ✅ bis A = 4 · ⚠️ 5–6 · ❌ ab 7 | ✅ bis A = 6 · ⚠️ 7–8 · ❌ ab 9 | ✅ bis A = 4 · ⚠️ 5–6 · ❌ ab 7 |
-| 4 | ❌ immer (0,3 kB Reserve) | ✅ bis A = 3 · ⚠️ 4–5 · ❌ ab 6 | nur Regler, ohne Dashboard und Meldungen |
+An echten Anlagen gemessen ist bis 3 Geräte und 4 Akkus, alles darüber ist gerechnet. Stand der Messungen: Watchdog-Script 4.0.0, Regler 5.3.6, jeweils mit Debug aus.
 
-Mit 4 Geräten läuft also nur der Regler allein: Dem Watchdog-Script bleiben rechnerisch nur 0,3 kB Reserve. Ohne Watchdog-Script entfallen Dashboard, Watchdog-Meldungen und der Upload zu ThingSpeak/ThingsBoard.
+## Rechenmodell
 
-**Bestätigt durch Messung:** Watchdog-Script mit 1, 2 und 3 Geräten bis A = 4 (7 Messpunkte, davon 2 mit v4.0.0). Regler mit 2 Geräten (A = 2) und 3 Geräten (A = 3, zwei Anlagen). Mit 4 Geräten und mit mehr als 4 Akkus an einem Gerät gibt es noch keine Messung.
+Für alle, die es genau wissen wollen: So entstehen die Werte oben. Die Bewertung richtet sich nach der Reserve, also dem freien Speicher bei der höchsten Belastung: ✅ ab 2 kB, ⚠️ 1–2 kB, ❌ unter 1 kB.
 
-Die Herleitung, Formeln und Messpunkte folgen unten.
-
-## Grundlagen
+### Grundlagen
 
 | Begriff | Bedeutung |
 |---|---|
@@ -45,9 +40,9 @@ Die Herleitung, Formeln und Messpunkte folgen unten.
 | Spitze | höchster Speicherbedarf (`mem_peak`), entsteht beim Lesen eines Hub-Reports |
 | Reserve | 25,2 kB − Spitze |
 
-## Watchdog-Script
+### Watchdog-Script
 
-### Formel
+#### Formel
 
 Eingaben:
 
@@ -81,7 +76,7 @@ Reserve:   =25,2-C2
 Bewertung: =WENN(D2>=2;"✅";WENN(D2>=1;"⚠️";"❌"))
 ```
 
-### Tabelle
+#### Tabelle
 
 Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Geräte verteilt sind. Gemessene Werte stehen unter „Messpunkte“.
 
@@ -107,7 +102,7 @@ Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Gerä
 
 **Ungleiche Verteilung:** Bei 4 Geräten mit 8 Akkus in der Verteilung 5/1/1/1 kämen 3 × 0,35 kB dazu. Die Spitze läge dann bei etwa 26,0 kB und passt nicht mehr in den Speicher.
 
-### Was Geräte und Akkus kosten
+#### Was Geräte und Akkus kosten
 
 | | Grundlast | Spitze |
 |---|---|---|
@@ -117,7 +112,7 @@ Für die Modellzeilen ist angenommen, dass die Akkus gleichmäßig auf die Gerä
 
 Die Gesamtzahl der Akkus ist nicht entscheidend. Die Hub-Reports werden nacheinander gelesen, und der größte Report setzt die Spitze. Ein Report wächst mit der Zahl der Akkus am Gerät, weil `packData` einen Eintrag pro Akku enthält. Im RAM belegt ein Report etwa das Doppelte seiner Größe.
 
-### Messpunkte
+#### Messpunkte
 
 | Anlage | Version | Geräte | Grundlast | `mem_peak` | Modell | Modell − Messung |
 |---|---|---|---|---|---|---|
@@ -143,7 +138,7 @@ Alle Messungen mit Debug aus. Mit v4.0.0 liegt das Modell 0,2–0,3 kB über den
 
 Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Modell setzt 0,35 kB an und hat damit einen kleinen Sicherheitszuschlag.
 
-### Belastbarkeit
+#### Belastbarkeit
 
 - **Grundwert (15,3 kB):** angepasst an zwei Messpunkte mit v4.0.0 (A und F). Wächst das Script weiter, steigt auch er; nach größeren Änderungen neu messen.
 - **Gerätekosten (2,4 kB):** gut belegt durch 7 Messpunkte an 5 Anlagen. Mit v4.0.0 ergeben A (2 Geräte) und F (3 Geräte) zusammen 2,6 kB für ein Gerät plus einen Akku über 2 – das Modell rechnet dafür 2,75 kB.
@@ -156,13 +151,13 @@ Drei Anlagen ergeben unabhängig voneinander ~0,28–0,29 kB pro Akku. Das Model
 
 **Noch offen:** Messpunkte mit 5 oder mehr Akkus an einem Gerät und mit 4 Geräten.
 
-## Regler-Script (Controller)
+### Regler-Script (Controller)
 
 Stand: 01.11.2026 · gilt für das Regler-Script `zerooutput_multi_kvs` **v5.3.5 bis 5.3.6** mit **Debug aus** · 5 Messpunkte an 3 Anlagen, Rest abgeleitet
 
 Das Regler-Script läuft auf einem eigenen Shelly mit eigener Grenze von ~25,2 kB. Es folgt demselben Muster: Die Geräte werden nacheinander abgefragt, und der größte Report setzt die Spitze. Seit 5.3.0 zerlegt der Regler den Report nicht mehr mit `JSON.parse`. Die Akkus kosten deshalb nur noch über die Größe des Reports Speicher, nicht über geparste Objekte.
 
-### Formel
+#### Formel
 
 Gleiche Eingaben wie oben: **G** = Anzahl SolarFlow-Geräte, **A** = Akkus am Gerät mit den meisten Akkus (bei Pro-Modellen mit integriertem Akku).
 
@@ -181,7 +176,7 @@ Bewertung wie oben: ✅ Reserve ≥ 2 kB · ⚠️ 1–2 kB · ❌ < 1 kB
 - **Akku-Zuschlag:** 0,5 kB je Akku = 2,9 × 0,17 kB. Gerechnet ist mit dem größeren SF2400-Pro-Report, das Modell schätzt also eher zu hoch.
 - **Kosten je Gerät:** Die 1,55 kB stammen aus dem Vergleich von 2 und 3 eingetragenen Geräten.
 
-### Tabelle
+#### Tabelle
 
 | Geräte | A = 1 | A = 2 | A = 4 | A = 6 |
 |---|---|---|---|---|
@@ -192,7 +187,7 @@ Bewertung wie oben: ✅ Reserve ≥ 2 kB · ⚠️ 1–2 kB · ❌ < 1 kB
 
 Angaben: Spitze · Reserve (kB) · Bewertung.
 
-### Messpunkte
+#### Messpunkte
 
 | Anlage | Geräte | Grundlast | `mem_peak` | Modell |
 |---|---|---|---|---|
@@ -210,7 +205,7 @@ Bei Anlage A ist A = 2, weil der SF800 zwei Akkus hat. Das Modell liegt dort 0,3
 
 Das dritte Gerät im zweiten Messpunkt liefert keinen Report. Es zeigt deshalb nur die Kosten eines weiteren Geräts, nicht die eines weiteren Reports. Für die Spitze ist das unerheblich, weil der größte Report gleich bleibt.
 
-### Belastbarkeit
+#### Belastbarkeit
 
 - **Kosten je Gerät (1,55 kB):** aus zwei Messpunkten an Anlage A; Anlage E (3 echte Geräte) bestätigt sie, das Modell liegt dort 0,7–0,8 kB zu hoch. Anlage F (3/3/3, v5.3.6) liegt 0,2 kB unter dem Modell – das Modell bleibt vorsichtig, der Abstand ist aber kleiner als bei E.
 - **Akku-Zuschlag (0,5 kB):** abgeleitet aus der Report-Größe. Einzeln nicht gemessen; Anlagen E und F (A = 3) liegen unter dem Modell, der Zuschlag ist also eher zu hoch als zu niedrig.
@@ -218,7 +213,7 @@ Das dritte Gerät im zweiten Messpunkt liefert keinen Report. Es zeigt deshalb n
 - **Noch offen:** Messpunkte mit 4 oder mehr Akkus an einem Gerät und mit 4 echten Geräten.
 - **Weitere Spitze beim Übernehmen von KVS-Änderungen:** Pro Key kostet sie etwa 0,21 kB, und es gibt 3 + 4 × G Keys. Bei 4 Geräten sind das etwa 4 kB über der Grundlast, ungefähr so viel wie ein Report. Seit 5.3.5 laufen beide nie gleichzeitig, weil KVS-Änderungen nur zwischen zwei Regelzyklen übernommen werden.
 
-### Änderungen, die den Speicher betreffen
+#### Änderungen, die den Speicher betreffen
 
 | Version | Änderung | Wirkung |
 |---|---|---|
