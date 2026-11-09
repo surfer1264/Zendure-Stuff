@@ -104,9 +104,16 @@ def dominant_newline(text):
     return "\n"
 
 
+_NEWLINE_RE = re.compile(r"\r+\n|\r+|\n")
+
+
 def normalise_newlines(text, newline):
-    plain = text.replace("\r\n", "\n").replace("\r", "\n")
-    return plain.replace("\n", newline)
+    # Fasst jede Zeilenende-Variante - auch kaputte/verdoppelte wie "\r\r\n" -
+    # als GENAU EIN Zeilenende auf und ersetzt sie einheitlich. Ein simples
+    # text.replace("\r\n","\n").replace("\r","\n") wuerde bei "\r\r\n" eine
+    # zusaetzliche Leerzeile erzeugen, weil das nach dem ersten replace uebrig
+    # gebliebene "\r" beim zweiten replace nochmal als eigene Zeile zaehlt.
+    return _NEWLINE_RE.sub(newline, text)
 
 
 def read(path):
