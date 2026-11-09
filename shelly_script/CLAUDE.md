@@ -57,7 +57,7 @@ Das gilt auch für Fragen zu Code, Texten oder Verhalten: nicht aus dem Gedächt
 | Test-Harness | `testController/` | Führt den Controller unverändert unter Node gegen einen Mock-Server aus |
 | Werkzeuge | `Script_poller/`, `stat/auswertung/`, `thingsboard/` | Speicher-/CPU-Messung, Log-Auswertung, Dashboards |
 
-**Veraltet – nicht weiterentwickeln, nur lesen:** `Upload_Controller/`, `zendash/`, `WatchdogZenSDK/`, `AkkuWatchDogMulti/`, `Datenmonitor/`. Änderungen gehören in die Nachfolger (Controller, zendash_watch, Configurator).
+**Veraltet – nicht weiterentwickeln, nur lesen:** liegt im Repo unter `archiv/` (`archiv/shelly_script/`: `Upload_Controller/`, `WatchdogZenSDK/`, `AkkuWatchDogMulti/`, `Datenmonitor/`; `archiv/ha/`: frühere Home-Assistant-Dateien). `zendash/` ist gelöscht. Änderungen gehören in die Nachfolger (Controller, zendash_watch, Configurator).
 
 ## Referenz: Geräte-Report `GET /properties/report`
 

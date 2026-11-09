@@ -1,8 +1,8 @@
-<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../../../shelly_script/img/kofi2.png" /></a>
 
 # Upload Controller to Shelly
 
-> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch den [Configurator](../Multiconfigurator/readme.md) mit Helfer (Direkt-Upload und Update). Für eigene Deploy-Pipelines gibt es die Werkzeuge jetzt in den Ordnern [Controller/Deploy](../Controller/Deploy) und [zendash_watch_API_ZenSDK/Deploy](../zendash_watch_API_ZenSDK/Deploy). Diese Seite bleibt nur zum Nachschlagen.
+> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch den [Configurator](../../../shelly_script/Multiconfigurator/readme.md) mit Helfer (Direkt-Upload und Update). Für eigene Deploy-Pipelines gibt es die Werkzeuge jetzt in den Ordnern [Controller/Deploy](../../../shelly_script/Controller/Deploy) und [zendash_watch_API_ZenSDK/Deploy](../../../shelly_script/zendash_watch_API_ZenSDK/Deploy). Diese Seite bleibt nur zum Nachschlagen.
 
 Das `deploy Script` ersetzt die generische Konfig mit deiner konkreten Config `myconfig.js`, lädt den Controller auf den Shelly und startet den Controller. Update erfolgt nach gleichem Muster.
 

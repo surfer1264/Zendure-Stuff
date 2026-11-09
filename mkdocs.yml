@@ -20,13 +20,7 @@ site_dir: site
 exclude_docs: |
   __pycache__/
   /perf/
-  /AkkuWatchDogMulti/
   /testController/
-  /AkkuWatchDogMulti/
-  /WatchdogZenSDK/
-  /Datenmonitor/
-  /zendash/
-  /Upload_Controller/
   
 
 # ------------------------------------------------------------------

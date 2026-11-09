@@ -1,6 +1,6 @@
-<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../../../shelly_script/img/kofi2.png" /></a>
 
-> ⚠️ **Veraltet – ohne Support.** Rudimentäre Hilfsscripte aus der Anfangszeit, die nicht weiterentwickelt werden. Für Live-Daten und Meldungen gibt es [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md) mit [Dashboard](../zendash_watch_API_ZenSDK/dashboard.md). Diese Seite bleibt nur zum Nachschlagen.
+> ⚠️ **Veraltet – ohne Support.** Rudimentäre Hilfsscripte aus der Anfangszeit, die nicht weiterentwickelt werden. Für Live-Daten und Meldungen gibt es [zenDash-API + Watchdog](../../../shelly_script/zendash_watch_API_ZenSDK/readme.md) mit [Dashboard](../../../shelly_script/zendash_watch_API_ZenSDK/dashboard.md). Diese Seite bleibt nur zum Nachschlagen.
 
 # Datenmonitor
 

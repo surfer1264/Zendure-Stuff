@@ -1,6 +1,6 @@
-<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../img/kofi2.png" /></a>
+<a href="https://ko-fi.com/surfer1264"><img width="143" alt="Buy me a coffee at ko-fi.com" src="../../../shelly_script/img/kofi2.png" /></a>
 
-> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch [zenDash-API + Watchdog](../zendash_watch_API_ZenSDK/readme.md). Neu einrichten am einfachsten mit dem [Configurator](../Multiconfigurator/readme.md). Diese Seite bleibt nur zum Nachschlagen.
+> ⚠️ **Veraltet – wird nicht mehr weiterentwickelt.** Ersetzt durch [zenDash-API + Watchdog](../../../shelly_script/zendash_watch_API_ZenSDK/readme.md). Neu einrichten am einfachsten mit dem [Configurator](../../../shelly_script/Multiconfigurator/readme.md). Diese Seite bleibt nur zum Nachschlagen.
 
 # AkkuVolt Watchdog — Multi-Device (zenSDK) — Schnellstart
 
@@ -16,7 +16,7 @@ Ausführliche Hintergründe (Zendure-Zugangsdaten für ältere Geräte, CallMeBo
 - IP-Adresse(n) der Hub(s) (zenSDK-Geräte werden lokal per REST angesprochen, keine Cloud-Zugangsdaten nötig)
 - Optional: CallMeBot-API-Key (Signal/WhatsApp) oder eine Webhook-URL (z. B. Home Assistant) — siehe Gesamtdoku Abschnitt 3
 - [Dokumentation](https://github.com/surfer1264/Zendure-Stuff/wiki/Shelly-Script-Akkudaten-auslesen)
-- [Download](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/WatchdogZenSDK/zenSDKWatchDog_mini.js)
+- [Download](https://github.com/surfer1264/Zendure-Stuff/blob/main/archiv/shelly_script/WatchdogZenSDK/zenSDKWatchDog_mini.js)
 
 ## Schnellstart
 
