@@ -24,20 +24,20 @@ Das Script bildet eine geschlossene Regelschleife:
 ### A. Lastverteilung beim Entladen und Laden
 
 - **Ein Gerät oder alle** ([Kapitel 7](gesamtdoku.md#7-lastaufteilung--wie-wirken-concentratebelow-und-spreadabove)):
-    - Bei kleinem Bedarf (unter `concentrateBelow`, Standard 600 W) arbeitet **nur ein** Gerät. Das spart Wandlungsverluste und Schreibzugriffe.
-    - Bei größerem Bedarf (über `spreadAbove`, Standard 800 W) oder wenn das aktive Gerät an seine Leistungsgrenze stößt, wird auf alle verfügbaren Geräte verteilt („Wasserfüllung“).
+  - Bei kleinem Bedarf (unter `concentrateBelow`, Standard 600 W) arbeitet **nur ein** Gerät. Das spart Wandlungsverluste und Schreibzugriffe.
+  - Bei größerem Bedarf (über `spreadAbove`, Standard 800 W) oder wenn das aktive Gerät an seine Leistungsgrenze stößt, wird auf alle verfügbaren Geräte verteilt („Wasserfüllung“).
 - **Ausgleich der Ladestände** ([Kapitel 6c](gesamtdoku.md#6c-sanfter-ausgleich-rebalance)):
-    - Beim Entladen tragen Geräte mit höherem SOC mehr bei, beim Laden Geräte mit mehr freiem Platz.
-    - Hat ein anderes Gerät einen Vorsprung von mindestens `rebalance.socMargin` (Standard 5 Prozentpunkte), wechselt im Ein-Geräte-Betrieb das aktive Gerät.
+  - Beim Entladen tragen Geräte mit höherem SOC mehr bei, beim Laden Geräte mit mehr freiem Platz.
+  - Hat ein anderes Gerät einen Vorsprung von mindestens `rebalance.socMargin` (Standard 5 Prozentpunkte), wechselt im Ein-Geräte-Betrieb das aktive Gerät.
 
 ### B. Regelung und Dämpfung
 
 - **Asymmetrische Dämpfung** ([Kapitel 8.2](gesamtdoku.md#82-dämpfung-der-lade-entladesignale)):
-    - Das Regelsignal folgt gedämpft mit `dampingFactor` (Standard 0,65). Das verhindert Überschwingen.
-    - Nur bei einem Sprung größer `JUMP_THRESHOLD` in Richtung „weniger Export“ (z. B. Wasserkocher aus) greift die schnelle Flanke `jumpFactor` (Standard 0,9). So bleibt ungewollte Einspeisung kurz.
+  - Das Regelsignal folgt gedämpft mit `dampingFactor` (Standard 0,65). Das verhindert Überschwingen.
+  - Nur bei einem Sprung größer `JUMP_THRESHOLD` in Richtung „weniger Export“ (z. B. Wasserkocher aus) greift die schnelle Flanke `jumpFactor` (Standard 0,9). So bleibt ungewollte Einspeisung kurz.
 - **Hysterese** ([Kapitel 8.9](gesamtdoku.md#89-startstop-hysterese-laden--entladen)):
-    - Geschrieben wird erst ab einer Änderung von `hysteresis` (Standard 12 W).
-    - An den SoC-Grenzen verhindern `dischargeResetMargin` und `chargeResetMargin` das Flattern zwischen Standby und Betrieb.
+  - Geschrieben wird erst ab einer Änderung von `hysteresis` (Standard 12 W).
+  - An den SoC-Grenzen verhindern `dischargeResetMargin` und `chargeResetMargin` das Flattern zwischen Standby und Betrieb.
 
 ### C. Schutz für Geräte und Script
 
@@ -51,15 +51,15 @@ Das Script bildet eine geschlossene Regelschleife:
 
 - **Sparmodus** (`idleSkip`, [Kapitel 8.12](gesamtdoku.md#812-adaptives-polling--sparmodus-idleskip)): Bleibt der berechnete Output `cyclesUnchanged` (Standard 4) Zyklen lang innerhalb der Hysterese, setzt das Script die Abfrage der Zendure-Geräte für bis zu `maxSkipSeconds` (Standard 44 s) aus. Die Netzmessung läuft in jedem Zyklus weiter.
 - **Speicher** ([Kapitel 8.7](gesamtdoku.md#87-startprotokoll-banner)):
-    - Banner-Texte und Start-Funktionen werden nach dem Start auf `null` gesetzt und freigegeben.
-    - HTTP-Antworten werden direkt nach dem Parsen verworfen (`res = null`). Das senkt Speicherspitzen.
+  - Banner-Texte und Start-Funktionen werden nach dem Start auf `null` gesetzt und freigegeben.
+  - HTTP-Antworten werden direkt nach dem Parsen verworfen (`res = null`). Das senkt Speicherspitzen.
 - **Abfragereihenfolge** (`buildPollOrder()`, [Kapitel 8.1](gesamtdoku.md#81-ablauf-eines-regelzyklus)): Zuerst werden die Geräte abgefragt, die gerade nicht regeln, zuletzt das regelnde Gerät, direkt vor dem Smartmeter. So passen Ist-Leistung und Netzwert zeitlich zusammen.
 
 ### E. Schnittstellen
 
 - **Live-Einstellungen per KVS** ([Kapitel 13](gesamtdoku.md#13-live-override-der-regelparameter-per-kvs-z-b-home-assistant)):
-    - Werte wie `setpoint`, `dischargeFixed`, `minSoc` oder `inputLimit` lassen sich im laufenden Betrieb ändern, ohne Neustart des Scripts.
-    - Das Script reagiert ereignisgesteuert auf Änderungen von `kvs_rev`, statt den KVS zyklisch abzufragen.
+  - Werte wie `setpoint`, `dischargeFixed`, `minSoc` oder `inputLimit` lassen sich im laufenden Betrieb ändern, ohne Neustart des Scripts.
+  - Das Script reagiert ereignisgesteuert auf Änderungen von `kvs_rev`, statt den KVS zyklisch abzufragen.
 - **Benachrichtigungen** (`signal`, [Kapitel 8.5](gesamtdoku.md#85-signal-benachrichtigung-callmebot--inkl-whatsapp)): per Signal oder WhatsApp (über CallMeBot) oder per Webhook (z. B. Home Assistant).
 
 ---
