@@ -102,7 +102,7 @@ Bei einem Sprung in Richtung „weniger Export“ nutzt der Controller statt des
 
 ## 1. Überblick
 
-```
+```text
 matrix_damping.cmd ──► matrix.js ──┬─► run_test.js (Lauf 1) ──► mock_server.js  (Zähler + 2 Geräte)
    (optional)                      ├─► run_test.js (Lauf 2)      shelly_shim.js  (Shelly-Nachbildung)
                                    └─► ...                       zdmc_test.js    (Controller)
@@ -215,7 +215,7 @@ Beschreibt Rauschen und Ereignisse des Testtags (Aufbau siehe Abschnitt 5).
 
 **Normaler Weg: `minify_patch_start.cmd`**
 
-```
+```cmd
 python3 minify_keep_config.py D:\Uspace\git\Zendure-Stuff\shelly_script\Controller\zerooutput_multi_kvs_src.js zerooutput_multi_kvs_mini.js
 python3 swap_config.py zerooutput_multi_kvs_mini.js --config-from testconfig.js -o zdmc_test.js
 14hlauf0600.cmd
@@ -264,7 +264,7 @@ Alle anderen Werte (Damping, Hysterese, Schwellen, minSoc …) sind das, was get
 
 Der Controller nimmt sein Intervall aus `zdmc_test.js` (`interval`). Der Mock muss pro Zyklus genau so viel Zeit simulieren:
 
-```
+```text
 STEP_MIN = interval in ms / 60000
 ```
 
@@ -327,12 +327,14 @@ Ohne diese Variablen setzt ein Gerät jede Vorgabe sofort um, und das Ergebnis i
 **Wichtig zur Wirkung:** Der Zähler wird am Ende jedes Zyklus gemessen. Erreicht das Gerät den neuen Wert vor der nächsten Messung (`WRITE_LAG_S + DEVICE_DELAY_S` kleiner als das Intervall), sieht der Controller keinen Unterschied. Es ändern sich nur Bezug und Export **zwischen** den Messungen. Erst wenn die Summe das Intervall erreicht, sieht der Controller bei der nächsten Messung noch nicht das Ergebnis seiner Vorgabe.
 
 **Gemessenes Modell (aus echten Logs):** Totzeit im Betrieb 1,25 s, danach Rampe mit 350 W/s; aus Standby 4,5 s Totzeit. Im Mock:
-```
+
+```text
 set WRITE_LAG_S=1.25
 set DEVICE_RATE_WPS=350
 set START_DELAY_S=3.25
 set DEVICE_DELAY_S=
 ```
+
 `START_DELAY_S` kommt zu `WRITE_LAG_S` hinzu: 1,25 + 3,25 = 4,5 s. Kleine Änderungen sind damit nach etwa 1,5 s umgesetzt, 800 W nach 3,5 s, 1500 W erst nach 5,5 s. Geprüft mit einem Kurztest (Schreiben im Takt n):
 
 | Vorgabe | Takt n+1 | Takt n+2 |
@@ -429,7 +431,7 @@ Zufallsereignisse können sich überlagern, zum Beispiel ein Kaffeevollautomat w
 
 Beim Start schreibt der Mock den Ereignisplan des ersten Tages ins Log:
 
-```
+```text
 [mock] Rauschmodell: an | Szenario "werktag" | Seed 42 | Teilschritt 1.00 s (4 je Schritt) | ...
 [mock]   Ereignis Tag 0: waschmaschine 10:00-11:00 (60 min)
 ```
@@ -440,12 +442,12 @@ Der Seed ist eine Startzahl für den Zufall. **Gleicher Seed = exakt gleicher Te
 
 - **Gleich bei jedem Seed:** Grundprofil, PV, feste Ereignisse mit Uhrzeit, Dauer und Leistung, Start-SoC.
 - **Verschieden je Seed:**
-    - Uhrzeit der Zufallsereignisse
-    - Verlauf von Grundrauschen und Zittern
-    - Phase des Kühlschranks
-    - Phase und Leistungsschwankung des Induktionsherds
-    - Trommelstöße der Waschmaschine
-    - Mess- und Geräterauschen
+  - Uhrzeit der Zufallsereignisse
+  - Verlauf von Grundrauschen und Zittern
+  - Phase des Kühlschranks
+  - Phase und Leistungsschwankung des Induktionsherds
+  - Trommelstöße der Waschmaschine
+  - Mess- und Geräterauschen
 
 Technisch rechnet der Mock jede Zufallszahl mit `rnd(seed, index, kanal)`. Der Index ist die Simulationszeit (Zyklus, Sekunde, Minute oder ein Zähler im Ereignis), der Kanal ein fester Name je Zweck (z. B. `"meter"`, `"zittern"`, `"f1d0:trommel"`). Es gibt keine fortlaufende Zufallsfolge. Deshalb kann der Controller die Last nicht beeinflussen, auch wenn er öfter liest oder schreibt.
 
@@ -468,7 +470,7 @@ Wie 6.1 mit `14hlauf0600_rauschen.cmd`. Zusätzlich gesetzt sind `SCENARIO` und 
 1. In `matrix_damping.cmd` `DAMPINGS`, `SEEDS`, `PARALLEL`, `CYCLES` und `SPEED_FACTOR` setzen.
 2. Starten. Im Konsolenfenster erscheint:
 
-    ```
+    ```text
     [matrix] 12 Laeufe (Damping 0.4/0.5/0.65/0.8 x Seeds 1/2/3), parallel 4 -> ...\Matrix-261106-205753
     [matrix] Start  seed 1 damping 0.4 (Port 3901)
     ...
