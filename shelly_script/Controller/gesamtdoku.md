@@ -6,7 +6,7 @@
 von **einem oder mehreren** Zendure-SolarFlow-Systemen. Das Script unterstützt alle Zendure-Geräte mit
 zenSDK-Schnittstelle (SF800 und neuer).
 
-![alt](shelly_zendure_hero.gif)
+![Shelly-Zendure-Multi-Device-Controller: mehrere SolarFlow-Geräte, ein Shelly, Netzbezug ≈ 0 W](../img/shelly_zendure_hero.gif)
 
 Der Controller ist eine **Alternative** zu Home Assistant oder ähnlichem und
 läuft direkt als Shelly-Script auf einem Shelly Gen2/3/4-Gerät – ohne zusätzliche
