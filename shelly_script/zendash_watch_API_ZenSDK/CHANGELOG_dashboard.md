@@ -3,10 +3,25 @@
 Es gibt drei Changelogs:
 
 - [Shelly-Script `zendash_watch` (mit API)](CHANGELOG.md)
-- **Dashboard und Proxy** – diese Datei (Dashboard in beiden Designs, `zendure_proxy.py`, EXE und local_helper)
+- **Dashboard und Proxy** – diese Datei (Dashboard, `zendure_proxy.py`, `zeitplan.py`, EXE und local_helper)
 - [Home-Assistant-App Dashboard-Proxy](HA_zendure_proxy/CHANGELOG.md) – nur was die App selbst betrifft
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
+
+## Changelog 5.5.0
+
+**Ziel:** Entladen nach Zeitplan und nur noch ein Dashboard. Braucht das Shelly-Script ab 4.1.0, keine Änderung an den Shelly-Scripts.
+
+- **Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.
+- **Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.
+- **Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten.
+- **Gerät offline:** Gesperrt wird trotzdem, freigegeben erst, wenn das Gerät wieder erreichbar ist. Plan-Seite und Gerätekarte zeigen dann „Plan · Gerät offline“.
+- **Dashboard:** Menü „Ansicht“ hat den Eintrag „Zeitplan“. Jede Gerätekarte zeigt bei aktivem Plan eine Zeile mit Zustand und nächstem Wechsel und eine dünne Leiste für heute; Antippen öffnet den Zeitplan.
+- **Proxy:** neue Datei `zeitplan.py` (optional wie `ts_bridge.py`), neue Adressen `/zeitplan`, `/schedule` (GET/POST) und `/fonts.css`. Der Plan liegt in `zendure_schedule_config.json` und richtet sich nach der Uhrzeit des Proxy-Rechners. Antworten von `config_api` und `status_api`, die das Dashboard holt, nutzt der Plan mit.
+- **„von Hand“ sofort:** Schaltest du „Entladen erlaubt“ abweichend vom Plan um, zeigen Gerätekarte und Plan-Seite sofort „von Hand · bis …“, nicht erst nach der nächsten Prüfung im Proxy. Stellst du ihn wieder auf den Planstand, verschwindet „von Hand“ sofort und der Plan übernimmt das Gerät wieder. Der Proxy zieht Schaltvorgänge aus dem Dashboard dafür gleich nach.
+- **Gerätekarten:** Bei gesperrter Bedienung stehen die technischen Details in allen Karten wieder auf gleicher Höhe, auch wenn nur eine Karte die Zeitplan-Zeile zeigt.
+- **Klassisches Dashboard entfernt:** `zendure-dashboard.html` gibt es nicht mehr, `/klassisch` führt auf die Startseite. Die Kennung für das Versions-Manifest trägt jetzt `zendure-dashboard-neu.html`.
+- Home-Assistant-App 5.5.0.0
 
 ## Changelog 5.4.4
 

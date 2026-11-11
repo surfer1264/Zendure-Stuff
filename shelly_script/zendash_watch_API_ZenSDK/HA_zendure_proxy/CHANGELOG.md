@@ -2,6 +2,12 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.5.0.0
+
+- Neu: Zeitplan für das Entladen (Seite `/zeitplan`, Eintrag „Zeitplan“ im Menü „Ansicht“), richtet sich nach der Zeitzone von Home Assistant
+- Das klassische Dashboard ist entfernt, `/klassisch` führt auf die Startseite
+- Neue Datei `zeitplan.py` in der App, dazu das Paket `tzdata`
+
 ## 5.4.4.0
 
 - Verbindungsstatus im neuen Design nur noch als grüner Punkt mit Tooltip

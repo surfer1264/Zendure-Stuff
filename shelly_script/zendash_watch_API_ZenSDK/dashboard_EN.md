@@ -46,13 +46,13 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard Shelly (zenDas
 
 ## Operation
 
-From 4.0.0 the start page `http://<proxy-address>:8000/` shows the [new design](#new-design-start-page). This section first describes the classic dashboard at `http://<proxy-address>:8000/klassisch`; header, overview, control, locking and menu are the same in both.
+The start page `http://<proxy-address>:8000/` shows the dashboard. This section first describes header, overview, control, locking and menu, then the [device cards and energy flow](#new-design-start-page) and the [schedule](#schedule). The classic dashboard was removed in 5.5.0; the address `/klassisch` leads to the start page.
 
 ### Page layout
 
 | Area | Content |
 |---|---|
-| **Header** | connection status: a green dot means the last request to the Shelly script (every 4 s) succeeded; the tooltip explains it. Red with "Connection problem" means at least two requests in a row failed. The classic design also shows the text "Live · polling every 4s". Then time and date, the **padlock** and the **⚙ View** menu |
+| **Header** | connection status: a green dot means the last request to the Shelly script (every 4 s) succeeded; the tooltip explains it. Red with "Connection problem" means at least two requests in a row failed. Then time and date, the **padlock** and the **⚙ View** menu |
 | **Overview – Now** | readings: grid import/export and Solarflow power (sum of all batteries) with history curve |
 | **Overview – Control** | settings for all batteries: setpoint, discharge lock and fixed discharge |
 | **Devices** | one card per battery with readings, status, "Controls" and "Manual charging" |
@@ -64,7 +64,7 @@ Tapping the **"▾ Overview"** line collapses the overview. When collapsed, a sh
 
 The page starts **locked** – it then only displays, with the note "View only" below the control section. Tapping the **padlock** in the header enables the controls, and the icon changes to an open padlock. After 60 seconds without input the page locks itself again, and also after every reload. This is meant for dashboards that stay open permanently on a tablet or second monitor.
 
-In the new design the **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” – an accidental tap changes nothing, so no extra padlock is needed there. In the classic dashboard the slider additionally has a small padlock next to the value on touch devices. It only ever releases this one slider and locks it again after 5 seconds without touch, after saving or when scrolling. There the value only changes by dragging the knob – tapping or swiping on the bar is reverted.
+The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” – an accidental tap changes nothing, so no extra padlock is needed there.
 
 ### "View" menu
 
@@ -76,21 +76,54 @@ In the new design the **Reserve (`minSoc`)** is set with −/+ and only saved wi
 | **Full screen** | hides the browser bars; only shown if the browser supports it |
 | **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
 | **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
-| **Design** ⇄ | switches between the new design (start page `/`) and the classic dashboard (`/klassisch`) |
+| **Schedule** | opens the [schedule](#schedule) page (`/zeitplan`). Only appears if the proxy knows the schedule (from 5.5.0). |
 
 All entries are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
 ### New design (start page)
 
-From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`; the classic dashboard is at `/klassisch`. Bookmarks to the former address `/neu` lead to the start page. Header, overview, control, locking and all write paths are the same – only the device area differs, plus an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
+From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
 
 - **Device cards:** a flame after the name while the heater is on (`heatState` = 1, from script 4.2.0), state at the AC connection in words: “feeding in”, “charging from grid”, “off-grid” (no exchange with the house grid, off-grid output delivering at least 5 W) or “standby”. “Standby” says nothing about the battery: PV may be charging it at that moment. If there is a fault it reads “unreachable” or “stale”. Also output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
+- **Schedule:** only with the [schedule](#schedule) switched on: one line with the state and the next change, e.g. “Schedule · blocked until 17:00”, and a thin bar for today below it (light = discharge window, red line = now). Tap it to open the schedule.
 - **Footer:** shows the version, update notice, request errors and **Help**. **More ▾** opens the setup links (IP / script ID, ThingSpeak, ThingsBoard, log report), plus history and last update. The links to `config_api` and `status_api` only appear with technical details switched on.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
 - **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the switch in the menu.
 - **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs). On narrow screens the diagram scrolls sideways.
 - **Sunrise and sunset:** next to the clock (☀ 07:00–16:39). Once a day the proxy reads the location from the dashboard Shelly's configuration (`Sys.GetConfig`, not via the script); the times are calculated in the browser. Without a location on the Shelly the display is hidden – set it in the Shelly web interface under location/time zone. Hidden on narrow screens.
 - **Background by time of day:** top right in the energy flow – **Off · Picture · Motion** (default off, remembered per browser). The sun moves from left (east) to right (west), the sky changes smoothly from dawn through day and sunset to night with moon and stars; the little house's windows light up in the evening. Over the year, day length, sun height and landscape colours follow the season, and the moon shows its real phase. When PV is clearly below the best value of the last two weeks at the same time of day, the sun turns paler and the cloud veil thickens (the browser remembers the reference values; with a full battery and during the first days the sky stays clear). Depending on the month: snow on hills and roof (December to February), trees in blossom (April/May), a golden grain field (late summer) and autumn leaves; shifted by half a year in the southern hemisphere. With “Motion” two clouds drift, the stars twinkle and on midsummer nights the occasional shooting star appears. Recalculated once a minute from sunrise and sunset; without a location on the Shelly the switch is hidden. “Reset view” turns it off again; with “reduce motion” on the device everything stands still.
+
+### Schedule
+
+From 5.5.0 the proxy can allow and block discharging by time of day – e.g. only in the morning and evening when the household uses a lot. You plan **discharge windows**: discharging is allowed inside them and blocked outside them. One schedule applies to **all devices**; within a window the controller distributes the load as usual. Charging (surplus, grid charging) is not affected.
+
+Open it via **View → Schedule** or directly at `http://<proxy-address>:8000/zeitplan`.
+
+**Requirement:** the **watchdog** must be on in the zendash script (`watchdog.enabled: true`). The schedule only switches devices the watchdog monitors (`watch: true`), because it uses the watchdog's readings for full battery and cell voltage. If the watchdog is off, the page shows a note and the schedule doesn't switch.
+
+| Area | Content |
+|---|---|
+| **Schedule active** | turns the schedule on or off without deleting the windows |
+| **Today** | per device the state, a timeline for today (light = discharge window, red line = now) and the **follows** switch. A device that doesn't follow the schedule is never touched by the proxy – e.g. a battery that has to supply an off-grid socket |
+| **Discharge windows** | list of windows. Tap one to edit: from/to, weekdays, shortcuts “daily · Mon–Fri · Sat, Sun”. Windows past midnight (e.g. 22:00–02:00) count for the start day |
+| **Save schedule** | appears after a change. The saved schedule applies immediately |
+
+**How the schedule switches:**
+
+- Switching happens **only at the scheduled times** (start and end of a window). Anything you change by hand in between – e.g. “Discharge allowed” on the device card – stays until the next change. The device card then shows “manual change · until …” right away. If you set the switch back to the schedule's state, the schedule takes the device over again.
+- **Blocking** always works. **Releasing** only if the weakest cell is above the watchdog's `minVoltReset` (default 3.1 V). Otherwise the proxy retries every two minutes while the window is open (“waiting for cell voltage”). This keeps the watchdog's undervoltage lock effective.
+- **Manual charging** pauses the schedule for that device until the next change. Manual charging restores the previous state when it ends.
+- **Full battery** (`socLimit` 1) during a block: the proxy releases the device so solar power gets through and leaves it alone until the next change.
+- **Device offline:** blocking still works (the schedule only writes the KVS on the controller Shelly). Releasing waits until the device is reachable again and the cell voltage is fine. The schedule page and the device card show “Schedule · device offline”.
+- Without a window the schedule does nothing.
+
+**Good to know:**
+
+- The schedule runs **in the proxy** and follows its clock (in Home Assistant its time zone). If it differs from the phone's clock by more than three minutes, the page shows a note.
+- If the proxy is off, nothing switches – the last state stays. After a restart the schedule takes over at the next change.
+- Only `zdmc_devN_dischargeAllowed` is written, through the same interface as the switch in the dashboard. Nothing changes in the Shelly scripts.
+- The schedule is stored in `zendure_schedule_config.json` next to the proxy configuration (Home Assistant: `/data`).
+- At the scheduled times the proxy switches immediately. In between it checks every two minutes for a full battery, cell voltage, manual charging and manual changes. It only reads the values the watchdog fetches anyway (or the open dashboard) – the batteries are not polled additionally.
 
 ### What you can set
 
@@ -178,9 +211,11 @@ Any computer will do for occasional viewing. If the dashboard should **always** 
 - The script [zenDash API + Watchdog](readme_EN.md) runs on your Dashboard Shelly with **`api.enabled: true`**.
 - To also **change settings** in the dashboard (setpoint, reserve, manual charging …), `kvsEnabled: true` and `kvsForceReseed: false` must be set in the Controller. Without KVS the dashboard only displays.
 - For the Python script and the Synology: **Python 3.7 or newer** ([python.org](https://www.python.org/downloads/)). Nothing else needs to be installed.
-- Except for the ready-made program, the two files from [this folder](.):
+- Except for the ready-made program, the files from [this folder](.):
   - [`zendure_proxy.py`](zendure_proxy.py) – the proxy
-  - [`zendure-dashboard.html`](zendure-dashboard.html) – the dashboard page
+  - [`zendure-dashboard-neu.html`](zendure-dashboard-neu.html) – the dashboard page
+  - [`zeitplan.py`](zeitplan.py) – the [schedule](#schedule), optional (without it there is no schedule)
+  - [`ts_bridge.py`](ts_bridge.py) – the cloud upload, optional
 
   The HTML file may be **in the same folder** as the proxy or **one level up**. If there is one in both places, the one in the same folder wins.
 
@@ -219,7 +254,7 @@ On start the proxy shows a short overview (in German):
 ```text
 Zendure Dashboard Proxy
   Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
-  HTML:     /home/pi/zendure/zendure-dashboard.html
+  HTML:     /home/pi/zendure/zendure-dashboard-neu.html
   Konfig:   /home/pi/zendure/zendure_proxy_config.json
   Lokal:    http://localhost:8000/
   Im Netz:  http://192.168.178.21:8000/  (von jedem Rechner im selben Netzwerk)
@@ -285,7 +320,7 @@ For each file there is a `.sha256` file on the [releases page](https://github.co
 
     3.7 or newer is enough – the proxy only uses the standard library. The interpreter is often at `/bin/python3`. If nothing shows up, install **Python 3** in the Package Center; the path is then `/var/packages/Python3*/target/bin/python3`.
 
-2. **Place the files.** Put `zendure_proxy.py` into its own folder, e.g. `/volume1/homes/<user>/zendure`, and `zendure-dashboard.html` next to it or one level up. Not into the `web` folder – that belongs to Web Station.
+2. **Place the files.** Put `zendure_proxy.py` and `zeitplan.py` into their own folder, e.g. `/volume1/homes/<user>/zendure`, and `zendure-dashboard-neu.html` next to them or one level up. Not into the `web` folder – that belongs to Web Station.
 3. **Create a task.** Control Panel → Task Scheduler → Create → **Triggered Task** → User-defined script. Event **Boot-up**, user **root**, and as command the full path:
 
     ```bash
@@ -347,7 +382,7 @@ http://<proxy-address>:8000/bericht_zendure
 The analysis itself does not run in the proxy. It looks for the finished `bericht.html`:
 
 1. at the location given by `--bericht=PATH` or the environment variable `ZENDURE_BERICHT` (file or folder) – then only there,
-2. otherwise next to `zendure-dashboard.html`, next to its configuration, next to the script or program, and in the repo folder `stat/auswertung`.
+2. otherwise next to `zendure-dashboard-neu.html`, next to its configuration, next to the script or program, and in the repo folder `stat/auswertung`.
 
 In the Home Assistant app, put the file at `/share/zendure/bericht.html`. A newly generated report appears on the next request, without a restart. The proxy's start overview shows which file it found.
 
@@ -365,8 +400,8 @@ The proxy counts every failed request to the Shelly, split into timeout (no answ
 
 - **No password protection:** Anyone in your home network who knows the address can open the dashboard and change settings – including the Shelly address under `/setup` – and read the report under `/bericht_zendure`. So **never** expose the proxy to the internet via port forwarding.
 - **Script number:** When **updating** via the Configurator, the number stays the same. If the script is **created anew** (first installation, "delete others", Shelly replacement or manual upload), it gets a new number. If the dashboard stops working after that, enter the new number under `http://<proxy-address>:8000/setup`. Restarting the proxy is not necessary.
-- **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former layout at `/b` was removed in 3.5.12; the address redirects to the dashboard. From 4.0.0 this layout is at `/klassisch`, and the start page shows the [new design](#new-design-start-page).
-- **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.
+- **Layout:** At `http://<proxy-address>:8000/` the dashboard now uses the new layout – more clearly structured, clearly marked lock button, status in plain language, collapsible overview, technical details (KVS keys, IP addresses) only on request via the “View” menu. Settings chosen there are remembered – see [Operation](#operation). The former addresses `/b`, `/neu` and `/klassisch` redirect to the dashboard; the classic dashboard was removed in 5.5.0.
+- **New dashboard version:** With the Python script and on the Synology, simply replace `zendure-dashboard-neu.html` and reload the page in the browser – the proxy reads the file fresh on every request. In the ready-made program the page is built in; it comes with a new download. In Home Assistant the app has to be rebuilt.
 
 ---
 
@@ -378,10 +413,12 @@ The proxy counts every failed request to the Shelly, split into timeout (no answ
 | The setup page appears instead of the dashboard | The proxy is not set up yet, or `zendure_proxy_config.json` is missing or damaged. Simply set it up again. |
 | "Speichern & testen" reports an error | IP or script number is wrong – check with the test from [step 2](#dashboard-in-4-steps). The IP must be that of the **Dashboard Shelly**. |
 | Red note "Error loading configuration" | The Shelly is not reachable (any more) or the script number has changed – check under `/setup`. |
-| Version note in the footer is yellow | Dashboard page and script have different versions. Get the matching `zendure-dashboard.html` or the new program. |
-| 404 at `http://localhost:8000/` | `zendure-dashboard.html` is neither next to the proxy nor one level up. On start the proxy lists all places where it looked. |
+| Version note in the footer is yellow | Dashboard page and script have different versions. Get the matching `zendure-dashboard-neu.html` or the new program. |
+| 404 at `http://localhost:8000/` | `zendure-dashboard-neu.html` is neither next to the proxy nor one level up. On start the proxy lists all places where it looked. |
 | Setup cannot be saved | The proxy is not allowed to write in its folder (e.g. under `C:\Program Files`). Choose a folder with write access. |
 | Settings have no effect | Set `kvsEnabled: true` in the Controller. |
+| No “Schedule” entry in the menu | `zeitplan.py` is missing next to the proxy, or the proxy is older than 5.5.0. |
+| Schedule switches at the wrong time | The schedule follows the clock of the proxy computer. Check its time or time zone; the page `/zeitplan` shows the proxy time at the bottom. |
 | Settings gone after restarting the Controller | Set `kvsForceReseed: false` in the Controller. |
 | Not reachable from the phone | `http://` instead of `https://`, correct IP from the "Im Netz" line, check the firewall rule. |
 | Nothing can be operated | The page is locked – tap the padlock in the header. |

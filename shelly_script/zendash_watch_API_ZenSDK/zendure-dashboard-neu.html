@@ -556,7 +556,7 @@
 
   /* ==========================================================================
      Neues Design (zendure-dashboard-neu.html), ab 4.0.0 die Startseite /
-     (klassisch unter /klassisch):
+     (das klassische Dashboard ist seit 5.5.0 entfernt):
      Geraetekarten mit Reserve im Ladebalken, Hinweisen nur bei Abweichung,
      Einstellungen nur bei freigegebener Bedienung, Technische Details als
      eigener Block - und als Alternative die Ansicht "Energiefluss".
@@ -622,11 +622,25 @@
   .flag.info{ color:var(--blue-text); border-color:var(--blue-text); }
   #app .hub .lock-status, #app.hide-hub-controls .hub .lock-status{ display:none; }
 
+  /* Zeitplan (ab 5.5.0): eine Zeile mit dem naechsten Wechsel und eine
+     duenne 24-h-Leiste. Antippen oeffnet die Plan-Seite. */
+  .plan-line{ display:flex; flex-direction:column; gap:.3rem; margin-top:.625rem; font-size:.8rem; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .plan-line[hidden]{ display:none; }
+  .plan-line .pl-ok{ color:var(--teal-text); } .plan-line .pl-lock{ color:var(--text-muted); }
+  .plan-line .pl-pause{ color:var(--amber-text); } .plan-line .pl-warn{ color:var(--alert-text); }
+  .plan-bar{ display:block; position:relative; height:.25rem; border-radius:2px; overflow:hidden; background:var(--border); }
+  .plan-bar .seg{ position:absolute; top:0; bottom:0; background:var(--teal-text); opacity:.55; }
+  .plan-bar .now{ position:absolute; top:0; bottom:0; width:2px; background:var(--alert-text); }
+
   .hub-settings{
     background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-md);
     padding:.25rem .875rem .75rem; margin-top:auto;
   }
   #app.hide-hub-controls .hub-settings{ display:none; }
+  /* Ohne Einstellungen (Bedienung gesperrt) uebernehmen die technischen
+     Details das margin-top:auto - sonst stehen sie bei unterschiedlich
+     hohen Karten (z. B. Zeitplan-Zeile nur in einer Karte) versetzt. */
+  #app.hide-hub-controls .tech-block{ margin-top:auto; }
   .settings-head{
     display:flex; align-items:center; gap:.5rem; min-height:var(--tap);
     color:var(--text); font-size:.92rem; font-weight:600;
@@ -908,7 +922,7 @@
             <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
             <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
-            <div class="set-row"><span><span class="lbl" id="designLbl" data-i18n="setDesign">Design</span><span class="hint" data-i18n="setDesignToOld">Zum klassischen Dashboard wechseln</span></span><a class="icon-btn" href="klassisch" aria-labelledby="designLbl">⇄</a></div>
+            <div class="set-row" id="planRow" hidden><span><span class="lbl" id="planLbl" data-i18n="setPlan">Zeitplan</span><span class="hint" data-i18n="setPlanHint">Entladefenster festlegen</span></span><a class="icon-btn" href="zeitplan" aria-labelledby="planLbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v3l2 1"/></svg></a></div>
           </div>
         </details>
       </div>
@@ -1095,11 +1109,14 @@
   // funktioniert. Ist das Script auf dem Shelly aelter, wird die Fusszeile
   // gelb. Hochsetzen, sobald die Seite neue Felder der API braucht. Der
   // Manifest-Workflow uebernimmt den Wert als "requires".
-  // Neues Design: bewusst OHNE APP_TYPE/APP_VERSION - die Kennung fuer
-  // versions.json traegt nur zendure-dashboard.html, sonst meldet der
-  // Manifest-Workflow einen doppelten APP_TYPE. Die Version muss trotzdem
-  // mit der klassischen Seite uebereinstimmen (MIN_SCRIPT ebenso).
-  const VERSION = "5.4.4";
+  // APP_TYPE/APP_VERSION: Kennung fuer versions.json (Manifest-Workflow),
+  // der Configurator zeigt damit die aktuelle Proxy-Version bei den Downloads.
+  // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
+  // entfernt).
+  const APP_TYPE = "zdmc-dashboard";
+  const APP_VERSION = "5.5.0";
+  const APP_CHANGELOG = "CHANGELOG_dashboard.md";
+  const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
 
   /* ================================================================
@@ -1547,7 +1564,11 @@
   // Texte des neuen Designs (Geraetekarten, Energiefluss, Design-Wechsel)
   Object.assign(STRINGS.de, {
     viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
-    setDesign: 'Design', setDesignToOld: 'Zum klassischen Dashboard wechseln',
+    setPlan: 'Zeitplan', setPlanHint: 'Entladefenster festlegen',
+    planFree: 'Plan · frei {w}', planLocked: 'Plan · gesperrt {w}', planManual: 'Plan · pausiert {w} (manuelles Laden)',
+    planFull: 'Plan · pausiert {w} (Akku voll)', planVolt: 'Plan · wartet auf Zellspannung', planHand: 'von Hand · {w}',
+    planUnknown: 'Plan · greift ab {t}', planUntil: 'bis {t}', planUntilTomorrow: 'bis morgen {t}', planUntilDay: 'bis {d} {t}',
+    planDays: 'Mo,Di,Mi,Do,Fr,Sa,So', planTitle: 'Zeitplan öffnen', planNoWd: 'Plan · schaltet nicht (Watchdog aus)', planOffline: 'Plan · Gerät offline',
     setResetHint: 'Größe, Tag/Nacht, Details, Übersicht, Geräte/Energiefluss und Hintergrund auf Standard',
     flowTotal: 'Gesamt', flowPv: 'PV', flowBatt: 'Akku', flowHouse: 'Haus', flowGrid: 'Netz', flowOffgrid: 'Offgrid',
     fPvOn: 'Erzeugung', fPvOff: 'keine Erzeugung', fPvNone: 'kein PV-Eingang',
@@ -1572,7 +1593,11 @@
   });
   Object.assign(STRINGS.en, {
     viewDevices: 'Devices', viewFlow: 'Energy flow', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
-    setDesign: 'Design', setDesignToOld: 'Switch to the classic dashboard',
+    setPlan: 'Schedule', setPlanHint: 'Set discharge windows',
+    planFree: 'Schedule · free {w}', planLocked: 'Schedule · blocked {w}', planManual: 'Schedule · paused {w} (manual charging)',
+    planFull: 'Schedule · paused {w} (battery full)', planVolt: 'Schedule · waiting for cell voltage', planHand: 'manual change · {w}',
+    planUnknown: 'Schedule · takes over {t}', planUntil: 'until {t}', planUntilTomorrow: 'until tomorrow {t}', planUntilDay: 'until {d} {t}',
+    planDays: 'Mon,Tue,Wed,Thu,Fri,Sat,Sun', planTitle: 'Open schedule', planNoWd: 'Schedule · not switching (watchdog off)', planOffline: 'Schedule · device offline',
     setResetHint: 'Size, day/night, details, overview, devices/energy flow and background back to default',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Battery', flowHouse: 'Home', flowGrid: 'Grid', flowOffgrid: 'Off-grid',
     fPvOn: 'generation', fPvOff: 'no generation', fPvNone: 'no PV input',
@@ -1597,7 +1622,11 @@
   });
   Object.assign(STRINGS.fr, {
     viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
-    setDesign: 'Design', setDesignToOld: 'Passer au tableau de bord classique',
+    setPlan: 'Planning', setPlanHint: 'Définir les plages de décharge',
+    planFree: 'Planning · libre {w}', planLocked: 'Planning · bloqué {w}', planManual: 'Planning · en pause {w} (charge manuelle)',
+    planFull: 'Planning · en pause {w} (batterie pleine)', planVolt: 'Planning · attend la tension de cellule', planHand: 'modifié à la main · {w}',
+    planUnknown: 'Planning · actif {t}', planUntil: 'jusqu’à {t}', planUntilTomorrow: 'jusqu’à demain {t}', planUntilDay: 'jusqu’à {d} {t}',
+    planDays: 'lun,mar,mer,jeu,ven,sam,dim', planTitle: 'Ouvrir le planning', planNoWd: 'Planning · ne commute pas (watchdog arrêté)', planOffline: 'Planning · appareil hors ligne',
     setResetHint: 'Taille, jour/nuit, détails, vue d’ensemble, appareils/flux et arrière-plan par défaut',
     flowTotal: 'Total', flowPv: 'PV', flowBatt: 'Batterie', flowHouse: 'Maison', flowGrid: 'Réseau', flowOffgrid: 'Hors réseau',
     fPvOn: 'production', fPvOff: 'pas de production', fPvNone: 'pas d’entrée PV',
@@ -2896,6 +2925,7 @@
           '<div><span class="k" data-i18n="valOff">' + t('valOff') + '</span><span class="v offg" id="valOff-' + d.id + '">–</span></div>' +
         '</div>' +
         '<div class="hub-flags" id="flags-' + d.id + '"></div>' +
+        '<div class="plan-line" id="planLine-' + d.id + '" role="link" tabindex="0" data-i18n-title="planTitle" title="' + t('planTitle') + '" hidden></div>' +
         '<div class="lock-status" id="lockStatus-' + d.id + '">' + lockStatusText(d.dischargeAllowed, d.reverse) + '</div>' +
         '<div class="hub-settings" id="settings-' + d.id + '">' +
         '<div class="settings-head"><span class="ttl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span data-i18n="settingsTitle">' + t('settingsTitle') + '</span></span></div>' +
@@ -2968,6 +2998,12 @@
         });
       });
 
+      const planLineEl = document.getElementById('planLine-' + d.id);
+      planLineEl.addEventListener('click', function(){ location.href = 'zeitplan'; });
+      planLineEl.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); location.href = 'zeitplan'; }
+      });
+
       const fullLineEl = document.getElementById('fullLine-' + d.id);
       const toggleFullDate = function(){
         d.showFullDate = !d.showFullDate;
@@ -2982,7 +3018,11 @@
         const next = e.target.checked;
         lockControl(e.target);
         kvsSet('zdmc_dev' + d.id + '_dischargeAllowed', next ? 1 : 0).then(function(ok){
-          if (!ok) { e.target.checked = !next; unlockControl(e.target); }
+          if (!ok) { e.target.checked = !next; unlockControl(e.target); return; }
+          // Zeitplan-Zeile sofort anpassen ("von Hand"), nicht erst nach der
+          // naechsten Pruefung im Proxy
+          d.dischargeAllowed = next;
+          renderPlanLines();
         });
       });
       document.getElementById('reverse-' + d.id).addEventListener('change', function(e){
@@ -3373,6 +3413,86 @@
 
     buildHubCards();
     showResetMargin();
+    renderPlanLines();
+  }
+
+  /* ---------------- Zeitplan (ab 5.5.0) ----------------
+     Der Plan laeuft im Proxy (zeitplan.py). Hier nur die Anzeige: Zeile mit
+     dem naechsten Wechsel in jeder Geraetekarte und der Menueeintrag. Ohne
+     Proxy mit Zeitplan (404, aelterer Proxy) bleibt beides verborgen.
+     Abgefragt zusammen mit config_api (alle CONFIG_SEC) - /schedule liest
+     nur den Stand im Proxy, ohne Anfrage an den Shelly. */
+  let schedState = null;
+  function loadSchedule(){
+    return fetch('schedule', { cache: 'no-store' }).then(function(r){
+      return r.ok ? r.json() : null;
+    }).then(function(j){
+      schedState = (j && j.plan) ? j : null;
+    }).catch(function(){ schedState = null; }).then(function(){
+      document.getElementById('planRow').hidden = !schedState;
+      renderPlanLines();
+    });
+  }
+  function planToMin(s){ const p = String(s).split(':'); return (+p[0]) * 60 + (+p[1]); }
+  function planAllowed(p, day, min){
+    for (let i = 0; i < p.windows.length; i++){
+      const w = p.windows[i], f = planToMin(w.from), to = planToMin(w.to);
+      if (f < to) { if (w.days.indexOf(day) >= 0 && min >= f && min < to) return true; }
+      else {
+        if (w.days.indexOf(day) >= 0 && min >= f) return true;
+        if (w.days.indexOf(day === 1 ? 7 : day - 1) >= 0 && min < to) return true;
+      }
+    }
+    return false;
+  }
+  function planWhen(){
+    const n = schedState.next;
+    if (!n) return '';
+    if (n.days === 0) return t('planUntil', { t: n.time });
+    if (n.days === 1) return t('planUntilTomorrow', { t: n.time });
+    const names = t('planDays').split(',');
+    return t('planUntilDay', { d: names[(schedState.weekday - 1 + n.days) % 7], t: n.time });
+  }
+  function renderPlanLines(){
+    const s = schedState;
+    let segs = null;
+    hubs.forEach(function(d){
+      const el = document.getElementById('planLine-' + d.id);
+      if (!el) return;
+      let dv = s && s.active ? (s.devices || []).find(function(x){ return x.id === d.id; }) : null;
+      if (!dv || dv.state === 'off' || dv.state === 'empty' || dv.state === 'excluded' || dv.state === 'nowatch') { el.hidden = true; return; }
+      // Der Proxy erkennt "von Hand" erst bei seiner Pruefung (alle 2 min).
+      // Weicht der Schalter hier schon vom Plan ab, gleich so anzeigen.
+      // Und umgekehrt: wieder auf den Planstand gestellt -> gleich wieder "Plan".
+      if ((dv.state === 'free' || dv.state === 'locked') && !!d.dischargeAllowed !== (dv.state === 'free')) {
+        dv = { state: 'hand' };
+      } else if (dv.state === 'hand' && typeof s.allowed === 'boolean' && !!d.dischargeAllowed === s.allowed) {
+        dv = { state: s.allowed ? 'free' : 'locked' };
+      }
+      const w = planWhen();
+      const map = {
+        free: ['pl-ok', t('planFree', { w: w })], locked: ['pl-lock', t('planLocked', { w: w })],
+        manual: ['pl-pause', t('planManual', { w: w })], full: ['pl-pause', t('planFull', { w: w })],
+        volt: ['pl-warn', t('planVolt')], hand: ['pl-pause', t('planHand', { w: w })],
+        nowd: ['pl-warn', t('planNoWd')], offline: ['pl-warn', t('planOffline')]
+      };
+      const st = map[dv.state] || ['pl-lock', t('planUnknown', { t: s.next ? s.next.time : '' })];
+      if (!segs) {
+        segs = [];
+        let start = null;
+        for (let m = 0; m <= 1440; m += 5) {
+          const a = m < 1440 && planAllowed(s.plan, s.weekday, m);
+          if (a && start === null) start = m;
+          if (!a && start !== null) { segs.push([start, m]); start = null; }
+        }
+      }
+      const now = planToMin(s.now);
+      el.innerHTML = '<span class="' + st[0] + '">' + st[1] + '</span>' +
+        '<span class="plan-bar" aria-hidden="true">' +
+        segs.map(function(g){ return '<span class="seg" style="left:' + (g[0] / 14.4) + '%;width:' + ((g[1] - g[0]) / 14.4) + '%"></span>'; }).join('') +
+        '<span class="now" style="left:' + (now / 14.4) + '%"></span></span>';
+      el.hidden = false;
+    });
   }
 
   // Offgrid-Wert aus config_api/status_api: Zahl oder null (fehlt/aelteres Script)
@@ -3463,6 +3583,7 @@
         configFresh = true;
         const cfg = await fetchJ('config_api');
         updateFehler();
+        loadSchedule();
         readWdVolt(cfg);
         lastConfigAt = Date.now();
 
@@ -4114,7 +4235,7 @@
   }
   applyView();
 
-  loadConfig().then(startPolling).catch(function(err){
+  loadConfig().then(function(){ loadSchedule(); startPolling(); }).catch(function(err){
     console.error('Init-Fehler:', err);
     showDiag(t('initFail', { err: err.message }));
   });
@@ -4220,6 +4341,7 @@
   langToggle.addEventListener('click', function(){
     setLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length], true);
     relabelAll();
+    renderPlanLines();
   });
 
   /* ---------------- Variante B: Menue "Ansicht" ----------------

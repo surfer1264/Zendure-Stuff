@@ -376,7 +376,7 @@ Welche Dateien du brauchst, hängt davon ab, wie der Proxy bei dir läuft. Der U
 |---|---|---|
 | Fertiges Programm (Windows, Mac mit Apple Silicon) | `zendure_proxy-windows.exe` bzw. `zendure_proxy-macos` aus dem [neuesten Release](https://github.com/surfer1264/Zendure-Stuff/releases/latest) | schon eingebaut |
 | Home Assistant App | Installation siehe [Home-Assistant-App](HA_zendure_proxy/INSTALLATION.md) | schon eingebaut |
-| Python-Script | [`zendure_proxy.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py), [`zendure-dashboard.html`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html) und [`ts_bridge.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py), alle drei in denselben Ordner | separat, siehe links |
+| Python-Script | [`zendure_proxy.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py), [`zendure-dashboard-neu.html`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html) und [`ts_bridge.py`](https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/main/shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py), alle drei in denselben Ordner | separat, siehe links |
 
 **Vorlagen für die Regelgüte** (optional, siehe [Vorlagen: Regelgüte](#vorlagen-regelgüte)), in dieser Reihenfolge importieren:
 

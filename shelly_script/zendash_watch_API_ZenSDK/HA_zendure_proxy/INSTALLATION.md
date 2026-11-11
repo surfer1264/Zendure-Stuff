@@ -111,7 +111,8 @@ zendure_proxy/
     ├── run.sh
     ├── zendure_proxy.py
     ├── ts_bridge.py
-    ├── zendure-dashboard.html
+    ├── zeitplan.py
+    ├── zendure-dashboard-neu.html
     ├── README.md
     ├── DOCS.md
     ├── CHANGELOG.md
@@ -120,7 +121,7 @@ zendure_proxy/
         └── en.yaml
 ```
 
-Die ersten sieben Dateien braucht der Bau der App. Die übrigen zeigt Home Assistant
+Die ersten acht Dateien braucht der Bau der App. Die übrigen zeigt Home Assistant
 nur an und sind optional:
 
 | Datei | Wo sie erscheint |
@@ -206,11 +207,13 @@ build_from:
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-RUN apk add --no-cache python3
+# tzdata: der Zeitplan richtet sich nach der Ortszeit (TZ von Home Assistant)
+RUN apk add --no-cache python3 tzdata
 
 COPY zendure_proxy.py /zendure_proxy.py
 COPY ts_bridge.py /ts_bridge.py
-COPY zendure-dashboard.html /zendure-dashboard.html
+COPY zeitplan.py /zeitplan.py
+COPY zendure-dashboard-neu.html /zendure-dashboard-neu.html
 
 COPY run.sh /etc/services.d/zendure_proxy/run
 RUN chmod a+x /etc/services.d/zendure_proxy/run
@@ -270,7 +273,7 @@ wiederholen.
 ## Änderungen an den App-Dateien
 
 **Bei Änderungen an den App-Dateien** (`config.yaml`, `Dockerfile`,
-`run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zendure-dashboard.html` usw.)
+`run.sh`, `zendure_proxy.py`, `ts_bridge.py`, `zeitplan.py`, `zendure-dashboard-neu.html` usw.)
 muss die App neu gebaut werden – ein bloßer Restart liest die geänderten
 Dateien nicht neu ein. Der Container enthält eine eigene Kopie.
 

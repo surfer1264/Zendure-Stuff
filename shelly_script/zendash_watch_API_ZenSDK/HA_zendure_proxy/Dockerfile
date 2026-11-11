@@ -1,11 +1,12 @@
 ARG BUILD_FROM
 FROM $BUILD_FROM
 
-RUN apk add --no-cache python3
+# tzdata: der Zeitplan richtet sich nach der Ortszeit (TZ von Home Assistant)
+RUN apk add --no-cache python3 tzdata
 
 COPY zendure_proxy.py /zendure_proxy.py
 COPY ts_bridge.py /ts_bridge.py
-COPY zendure-dashboard.html /zendure-dashboard.html
+COPY zeitplan.py /zeitplan.py
 COPY zendure-dashboard-neu.html /zendure-dashboard-neu.html
 
 COPY run.sh /etc/services.d/zendure_proxy/run

@@ -21,13 +21,18 @@ Empfohlen auf der Seite *Info* der App: **„Beim Booten starten“** und **„W
 | Adresse | Inhalt |
 |---|---|
 | `http://<ha-ip>:8000/` | Dashboard (neues Design mit Gerätekarten und Energiefluss, ab 4.0.0) |
-| `http://<ha-ip>:8000/klassisch` | Dashboard im klassischen Layout |
+| `http://<ha-ip>:8000/zeitplan` | Zeitplan: Entladefenster für alle Geräte festlegen (ab 5.5.0) |
 | `http://<ha-ip>:8000/setup` | Shelly-IP und Script-ID ändern |
 | `http://<ha-ip>:8000/thingspeak` | ThingSpeak-Upload einrichten |
 | `http://<ha-ip>:8000/thingsboard` | ThingsBoard-Upload einrichten, Werte auswählen, Speicherverbrauch abschätzen |
 | `http://<ha-ip>:8000/bericht_zendure` | Bericht der Log-Auswertung (`bericht.html` aus `analyse.py`), siehe unten |
 
 Änderungen auf diesen Seiten wirken sofort – kein Neustart nötig.
+Das klassische Dashboard ist seit 5.5.0 entfernt; `/klassisch` führt auf die Startseite.
+
+Der **Zeitplan** läuft in der App und richtet sich nach der Zeitzone von Home Assistant.
+Er schaltet nur, solange die App läuft. Anleitung:
+[Zeitplan](https://surfer1264.github.io/Zendure-Stuff/zendash_watch_API_ZenSDK/dashboard/#zeitplan)
 
 Über **„Web-UI öffnen“** erreichst du dieselben Seiten über die Links im Fuß des
 Dashboards: **„Dashboard-Shelly: IP / Script-ID ändern“** sowie

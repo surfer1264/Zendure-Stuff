@@ -19,7 +19,7 @@ noetig). Loest zwei Probleme, die ein reiner Browser nicht loesen kann:
      Geraet, DHCP-Wechsel).
 
 Als exe gebaut (PyInstaller, --onefile) ist die Dashboard-HTML mit
-eingebettet (siehe --add-data im build-and-release.yml-Workflow) -
+eingebettet (siehe --add-data im build-and-release-dashboard.yml-Workflow) -
 find_html() findet sie dann im temporaeren Entpack-Ordner
 sys._MEIPASS. Im normalen Skriptbetrieb sucht der Proxy die HTML erst im
 selben Ordner wie das Script, danach im uebergeordneten Ordner (z.B.
@@ -81,11 +81,18 @@ try:
 except ImportError:
     ts_bridge = None
 
+# Entlade-Zeitplan ebenfalls optional: fehlt zeitplan.py, gibt es kein
+# /zeitplan und /schedule, sonst laeuft alles wie gehabt.
+try:
+    import zeitplan
+except ImportError:
+    zeitplan = None
+
 # Versionsstand des Proxys. Proxy und Dashboard tragen dieselbe Nummer,
 # unabhaengig vom Shelly-Script (ab 5.0.0, siehe CHANGELOG_dashboard.md).
 # APP_TYPE ist ein fester Bezeichner fuer versions.json (Manifest-Workflow).
 APP_TYPE = "zdmc-proxy"
-APP_VERSION = "5.4.4"
+APP_VERSION = "5.5.0"
 APP_CHANGELOG = "CHANGELOG_dashboard.md"
 
 # ---------------------------------------------------------------
@@ -110,11 +117,10 @@ SILENT = False
 # True = immer (--browser), False = nie (--no-browser).
 OPEN_BROWSER = None
 
-HTML_FILENAME = "zendure-dashboard.html"
-# Ab 4.0.0 ist das neue Design (Geraetekarten, Energiefluss) die Startseite /,
-# das klassische Dashboard liegt unter /klassisch. Beide werden an denselben
-# Orten gesucht; fehlt die neue Datei, zeigt / das klassische Dashboard.
-HTML_FILENAME_NEU = "zendure-dashboard-neu.html"
+# Das Dashboard (seit 4.0.0 das neue Design). Das klassische Dashboard
+# (zendure-dashboard.html, /klassisch) ist seit 5.5.0 entfernt - /klassisch
+# leitet auf die Startseite weiter.
+HTML_FILENAME = "zendure-dashboard-neu.html"
 # Bericht der Log-Auswertung (stat/auswertung/analyse.py), Adresse /bericht_zendure.
 # BERICHT_PATH: --bericht=PFAD, sonst Umgebungsvariable ZENDURE_BERICHT.
 BERICHT_FILENAME = "bericht.html"
@@ -316,6 +322,7 @@ KVS_SET_TIMEOUT = 25
 SETUP_TEST_TIMEOUT = 4
 
 IP_PATTERN = re.compile(r"^\d{1,3}(\.\d{1,3}){3}$")
+RE_FONT_FACE = re.compile(r"@font-face\s*\{[^}]*\}")
 
 # Kleines SVG-Icon: Ligatur "ZS" aus dem Designsystem ZendureDashboard
 # (Nacht-Farben Teal -> Amber auf dunklem Hintergrund, wie im Kopf des
@@ -363,7 +370,7 @@ APPLE_ICON_PATHS = (
 #                      sys._MEIPASS tut das nicht.
 #   data_dir()      = app_dir(), ausser ZENDURE_DATA_DIR ist gesetzt
 #                      (Home-Assistant-App: /data). Ablage fuer Shelly-
-#                      Config und ThingSpeak-Keys.
+#                      Config, ThingSpeak-Keys und Zeitplan.
 # ---------------------------------------------------------------
 def html_candidates(filename=HTML_FILENAME):
     """Alle Orte, an denen die Dashboard-HTML gesucht wird - in dieser
@@ -687,27 +694,41 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
-        # Startseite: neues Design (ab 4.0.0), ohne dessen Datei das klassische
         if path == "/" or path == "":
             if not is_configured():
                 self.serve_setup()
-            elif find_html(HTML_FILENAME_NEU):
-                self.serve_html(HTML_FILENAME_NEU)
             else:
                 self.serve_html()
             return
 
-        # Klassisches Dashboard. Relative Links und API-Aufrufe der Seite
-        # ("./", "status_api") stimmen nur ohne Schraegstrich am Ende -
-        # /klassisch/ leitet deshalb relativ weiter (auch hinter Ingress).
+        # Das klassische Dashboard ist entfernt (5.5.0) - alte Lesezeichen und
+        # Home-Bildschirm-Verknuepfungen landen auf der Startseite. Relativ,
+        # damit es auch hinter Ingress stimmt.
         if path == "/klassisch":
-            if is_configured():
-                self.serve_html()
-            else:
-                self.serve_setup()
+            self._redirect("./")
             return
         if path == "/klassisch/":
-            self._redirect("../klassisch")
+            self._redirect("../")
+            return
+
+        if path in ("/zeitplan", "/zeitplan/"):
+            if zeitplan is None:
+                self.send_error(404, "Zeitplan nicht verfuegbar: zeitplan.py fehlt neben dem Proxy")
+            elif path == "/zeitplan/":
+                self._redirect("../zeitplan")
+            else:
+                self._html(zeitplan.page_html())
+            return
+
+        if path == "/schedule":
+            if zeitplan is None:
+                self._json(404, {"ok": False, "error": "zeitplan.py fehlt neben dem Proxy"})
+            else:
+                self._json(200, zeitplan.state())
+            return
+
+        if path == "/fonts.css":
+            self.serve_fonts()
             return
 
         # Alte Adresse des neuen Designs (3.5.12): Lesezeichen landen auf der
@@ -764,6 +785,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path in ("/thingspeak", "/thingsboard"):
             self.post_cloud(self.path)
             return
+        if self.path == "/schedule":
+            self.post_schedule()
+            return
         if self.path != "/setup":
             self.send_error(404, "Nicht gefunden: " + self.path)
             return
@@ -812,6 +836,46 @@ class Handler(http.server.BaseHTTPRequestHandler):
         except Exception as e:
             self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
 
+    def post_schedule(self):
+        if zeitplan is None:
+            self._json(404, {"ok": False, "error": "zeitplan.py fehlt neben dem Proxy"})
+            return
+        # Nur echtes JSON annehmen (erzwingt beim Browser einen CORS-Preflight,
+        # den dieser Proxy nicht beantwortet - wie bei /thingspeak).
+        if not self.headers.get("Content-Type", "").startswith("application/json"):
+            self._json(415, {"ok": False, "error": "JSON erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            if length > 65536:
+                self._json(413, {"ok": False, "error": "zu gross"})
+                return
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            ok, error = zeitplan.handle_post(data)
+            self._json(200, {"ok": ok, "error": error})
+        except Exception as e:
+            self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
+
+    def serve_fonts(self):
+        """Die im Dashboard eingebetteten Schriften (@font-face) fuer
+        Nebenseiten wie /zeitplan - so muessen sie nicht doppelt im Proxy
+        stehen. Ohne Dashboard-Datei eine leere Datei (Ersatzschrift)."""
+        body = b""
+        path = find_html()
+        if path:
+            try:
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+                body = "\n".join(RE_FONT_FACE.findall(text)).encode("utf-8")
+            except OSError:
+                pass
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "public, max-age=3600")
+        self.end_headers()
+        self.wfile.write(body)
+
     def _html(self, text):
         body = text.encode("utf-8")
         self.send_response(200)
@@ -832,6 +896,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
 
@@ -923,6 +988,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 content_type = resp.headers.get("Content-Type", "application/json")
             if ts_bridge is not None and endpoint == "status_api" and status == 200:
                 ts_bridge.feed(body)   # mitlesen; tut nichts, wenn ThingSpeak inaktiv
+            if zeitplan is not None and status == 200 and endpoint in ("config_api", "status_api") \
+                    and "bg=" not in query:
+                zeitplan.feed(endpoint, body)   # Zeitplan spart sich so eigene Abfragen
+            elif zeitplan is not None and status == 200 and endpoint == "kvs_set_api":
+                zeitplan.feed_kvs(query, body)  # Schalter aus dem Dashboard sofort kennen
         except urllib.error.HTTPError as e:
             # Shelly hat selbst einen Fehlerstatus geliefert (z.B. 400/500) -
             # 1:1 durchreichen, damit die Seite die echte Fehlermeldung sieht.
@@ -957,6 +1027,26 @@ def fetch_status_for_bridge(query=""):
     url = shelly_base() + "status_api" + ("?" + query if query else "")
     with urllib.request.urlopen(url, timeout=TIMEOUT) as resp:
         return resp.read()
+
+
+def shelly_get(endpoint, query="", timeout=TIMEOUT):
+    """Fuer den Zeitplan: ein API-Endpunkt des Shelly-Scripts, Antwort als
+    Bytes. Fehler (auch HTTP-Status) werden geworfen und als Proxy-Fehler
+    gezaehlt."""
+    if not is_configured():
+        raise RuntimeError("Proxy noch nicht eingerichtet")
+    url = shelly_base() + endpoint + ("?" + query if query else "")
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        fehler_merken("shelly", endpoint, "HTTP {}".format(e.code))
+        raise
+    except Exception as e:
+        reason = getattr(e, "reason", e)
+        art = "timeout" if isinstance(reason, (socket.timeout, TimeoutError)) or "timed out" in str(reason) else "unreachable"
+        fehler_merken(art, endpoint, str(reason))
+        raise
 
 
 def get_lan_ip():
@@ -1014,6 +1104,13 @@ def say(msg):
         print(msg)
 
 
+def say_always(msg):
+    """Wie say(), aber auch mit -q (Schalten des Zeitplans gehoert ins Log
+    der Home-Assistant-App). Nur --silent schweigt."""
+    if not SILENT:
+        print(msg, flush=True)
+
+
 def main():
     parse_args()
     load_config()
@@ -1033,9 +1130,7 @@ def main():
         say("  Shelly:   " + shelly_base())
     else:
         say("  Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch")
-    html_neu = find_html(HTML_FILENAME_NEU)
-    say("  HTML:     " + (html_neu or (HTML_FILENAME_NEU + " nicht gefunden - Startseite zeigt das klassische Dashboard")))
-    say("  Klassisch: http://localhost:{}/klassisch  ({})".format(PORT, html or "NICHT GEFUNDEN"))
+    say("  HTML:     " + (html or (HTML_FILENAME + " NICHT GEFUNDEN")))
     say("  Konfig:   " + config_path())
     bericht = find_bericht()
     say("  Bericht:  " + ("http://localhost:{}/bericht_zendure  ({})".format(PORT, bericht) if bericht
@@ -1051,6 +1146,10 @@ def main():
         say("  ThingsBoard: http://localhost:{}/thingsboard".format(PORT))
     else:
         say("  Cloud-Upload: nicht verfuegbar (ts_bridge.py fehlt)")
+    if zeitplan is not None:
+        say("  Zeitplan:    http://localhost:{}/zeitplan".format(PORT))
+    else:
+        say("  Zeitplan: nicht verfuegbar (zeitplan.py fehlt)")
     say("(Strg+C zum Beenden)\n")
 
     if UPDATE_CHECK:
@@ -1066,6 +1165,10 @@ def main():
     if ts_bridge is not None:
         ts_bridge.LOG = not (QUIET or SILENT)
         ts_bridge.start(data_dir(), fetch_status_for_bridge)
+
+    if zeitplan is not None:
+        zeitplan.LOG = not (QUIET or SILENT)
+        zeitplan.start(data_dir(), shelly_get, say_always)
 
     try:
         # Mehrere gleichzeitige Anfragen: waehrend der Proxy auf den Shelly

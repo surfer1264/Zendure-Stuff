@@ -45,13 +45,13 @@ Browser  ──►  Proxy (PC/NAS/HA/Raspi)  ──►  Dashboard-Shelly (zenDas
 
 ## Bedienung
 
-Ab 4.0.0 zeigt die Startseite `http://<Proxy-Adresse>:8000/` das [neue Design](#neues-design-startseite). Beschrieben ist hier zuerst das klassische Dashboard unter `http://<Proxy-Adresse>:8000/klassisch`; Kopfzeile, Übersicht, Regelung, Sperre und Menü sind in beiden gleich.
+Die Startseite `http://<Proxy-Adresse>:8000/` zeigt das Dashboard. Beschrieben sind hier zuerst Kopfzeile, Übersicht, Regelung, Sperre und Menü, danach die [Gerätekarten und der Energiefluss](#neues-design-startseite) und der [Zeitplan](#zeitplan). Das klassische Dashboard ist seit 5.5.0 entfernt; die Adresse `/klassisch` führt auf die Startseite.
 
 ### Aufbau der Seite
 
 | Bereich | Inhalt |
 |---|---|
-| **Kopfzeile** | Verbindungsstatus: Ein grüner Punkt heißt, die letzte Abfrage beim Shelly-Script (alle 4 s) hat geklappt; die Erklärung steht im Tooltip. Rot mit „Verbindungsproblem“ heißt, mindestens zwei Abfragen in Folge sind gescheitert. Das klassische Design zeigt dazu den Text „Live · Poll alle 4s“. Dazu Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
+| **Kopfzeile** | Verbindungsstatus: Ein grüner Punkt heißt, die letzte Abfrage beim Shelly-Script (alle 4 s) hat geklappt; die Erklärung steht im Tooltip. Rot mit „Verbindungsproblem“ heißt, mindestens zwei Abfragen in Folge sind gescheitert. Dazu Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
 | **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
 | **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Sperre und Fix-Entladung |
 | **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
@@ -63,7 +63,7 @@ Ein Tipp auf die Zeile **„▾ Übersicht“** klappt die Übersicht ein. Einge
 
 Die Seite startet **gesperrt** – sie zeigt dann nur an, Hinweis „Nur Anzeige“ unter der Regelung. Ein Tipp auf das **Schloss** in der Kopfzeile gibt die Bedienung frei, das Symbol wechselt auf ein offenes Schloss. Nach 60 Sekunden ohne Eingabe sperrt sich die Seite von selbst wieder, ebenso nach jedem Neuladen. Gedacht ist das für Dashboards, die dauerhaft auf einem Tablet oder Zweitmonitor offen liegen.
 
-Im neuen Design wird die **Reserve (`minSoc`)** mit −/+ eingestellt und erst mit „Übernehmen“ gespeichert – ein versehentliches Antippen ändert also nichts, ein eigenes Schloss braucht es dort nicht. Im klassischen Dashboard hat der Schieberegler auf Touch-Geräten zusätzlich ein kleines Schloss neben dem Wert. Es gibt immer nur diesen einen Regler frei und sperrt ihn nach 5 Sekunden ohne Berührung, nach dem Speichern oder beim Scrollen wieder. Verstellt wird der Wert dort nur durch Ziehen am Punkt – Tippen oder Wischen auf der Leiste wird zurückgenommen.
+Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehmen“ gespeichert – ein versehentliches Antippen ändert also nichts, ein eigenes Schloss braucht es dort nicht.
 
 ### Menü „Ansicht“
 
@@ -75,13 +75,13 @@ Im neuen Design wird die **Reserve (`minSoc`)** mit −/+ eingestellt und erst m
 | **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
 | **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
 | **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
-| **Design** ⇄ | wechselt zwischen dem neuen Design (Startseite `/`) und dem klassischen Dashboard (`/klassisch`) |
+| **Zeitplan** | öffnet die Seite [Zeitplan](#zeitplan) (`/zeitplan`). Erscheint nur, wenn der Proxy den Zeitplan kennt (ab 5.5.0). |
 
 Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
 ### Neues Design (Startseite)
 
-Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das klassische Dashboard liegt unter `/klassisch`. Lesezeichen auf die frühere Adresse `/neu` landen auf der Startseite. Kopfzeile, Übersicht, Regelung, Sperre und alle Schreibwege sind gleich – anders sind nur der Gerätebereich und die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
+Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
 
 | Bereich der Gerätekarte | Inhalt |
 |---|---|
@@ -90,6 +90,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, das 
 | **Ladebalken** | SOC; der Bereich unter der Reserve (`minSoc`) und über der Ladegrenze ist schraffiert. Darunter Bereich und nutzbarer Anteil, rechts „100 %: vor n Tagen“ |
 | **Werte** | PV, Akku und Offgrid; Akku = PV − Ausgang − Offgrid (+ lädt, − entlädt). Darunter klein Temperatur und schwächste Zelle |
 | **Hinweise** | nur Abweichungen: voll oder leer gesperrt, `socSet`/`minSoc` abweichend, Export verboten, Entladen gesperrt, manuelles Laden aktiv. Sonst „Keine Hinweise“ |
+| **Zeitplan** | nur bei eingeschaltetem [Zeitplan](#zeitplan): eine Zeile mit dem Zustand und dem nächsten Wechsel, z. B. „Plan · gesperrt bis 17:00“, darunter eine dünne Leiste für heute (hell = Entladefenster, roter Strich = jetzt). Antippen öffnet den Zeitplan |
 | **Einstellungen** | Reiter **Regelung · Offgrid · Laden** – nur sichtbar, solange die Bedienung freigegeben ist. Nach dem Laden der Seite und nach jedem Entsperren steht jede Karte auf „Regelung“; nicht übernommene Änderungen (Reserve-Entwurf, gewählte Ladestufe) werden dabei verworfen. Der Reiter wird nicht gespeichert. „Offgrid“ erscheint nur bei Geräten mit Offgrid-Ausgang |
 | **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
 
@@ -100,6 +101,38 @@ Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Pun
 Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
 
 Im Energiefluss lässt sich oben rechts ein **Hintergrund nach Tageszeit** zuschalten: **Aus · Bild · Bewegung** (Standard: Aus, wird pro Browser gemerkt). Die Sonne zieht von links (Osten) nach rechts (Westen), der Himmel wechselt stufenlos von Morgendämmerung über Tag und Abendrot bis zur Nacht mit Mond und Sternen; die Fenster des kleinen Hauses leuchten abends. Über das Jahr folgen Tageslänge, Sonnenhöhe und die Farben der Landschaft der Jahreszeit; der Mond zeigt seine echte Phase. Kommt deutlich weniger PV als an den besten Tagen der letzten zwei Wochen zur selben Uhrzeit, wird die Sonne etwas blasser und der Wolkenschleier dichter (die Vergleichswerte merkt sich der Browser; bei vollem Akku und in den ersten Tagen bleibt der Himmel klar). Dazu je nach Monat: Schnee auf Hügeln und Dach (Dezember bis Februar), blühende Bäume (April/Mai), ein goldenes Getreidefeld (Spätsommer) und buntes Laub (Herbst); auf der Südhalbkugel um ein halbes Jahr versetzt. Bei „Bewegung“ ziehen zwei Wolken, die Sterne funkeln und im Hochsommer zieht nachts ab und zu eine Sternschnuppe. Gerechnet wird einmal pro Minute aus Sonnenauf- und -untergang; ohne Standort am Shelly fehlt der Schalter. „Ansicht zurücksetzen“ schaltet den Hintergrund wieder aus; bei „Bewegung reduzieren“ am Gerät steht alles still.
+
+### Zeitplan
+
+Ab 5.5.0 kann der Proxy das Entladen nach Uhrzeit freigeben und sperren – z. B. nur morgens und abends, wenn im Haushalt viel verbraucht wird. Geplant werden **Entladefenster**: Darin darf entladen werden, außerhalb ist Entladen gesperrt. Ein Plan gilt für **alle Geräte**; der Regler verteilt im Fenster wie gewohnt selbst. Laden (Überschuss, Netzladen) ist davon nicht betroffen.
+
+Öffnen über das Menü **Ansicht → Zeitplan** oder direkt `http://<Proxy-Adresse>:8000/zeitplan`.
+
+**Voraussetzung:** Im zendash-Script muss der **Watchdog** an sein (`watchdog.enabled: true`). Der Plan schaltet nur Geräte, die der Watchdog überwacht (`watch: true`), denn er nutzt dessen Messwerte für vollen Akku und Zellspannung. Ist der Watchdog aus, zeigt die Seite einen Hinweis und der Plan schaltet nicht.
+
+| Bereich | Inhalt |
+|---|---|
+| **Zeitplan aktiv** | schaltet den Plan an oder aus, ohne die Fenster zu löschen |
+| **Heute** | je Gerät der Zustand, eine Zeitleiste für heute (hell = Entladefenster, roter Strich = jetzt) und der Schalter **folgt**. Ein Gerät, das dem Plan nicht folgt, fasst der Proxy nie an – z. B. ein Speicher, der eine Offgrid-Steckdose versorgen muss |
+| **Entladefenster** | Liste der Fenster. Antippen öffnet die Bearbeitung: Von/Bis, Wochentage, Kurzwahl „täglich · Mo–Fr · Sa, So“. Fenster über Mitternacht (z. B. 22:00–02:00) zählen zum Starttag |
+| **Plan speichern** | erscheint nach einer Änderung. Der gespeicherte Plan gilt sofort |
+
+**So schaltet der Plan:**
+
+- Geschaltet wird **nur zu den Planzeiten** (Beginn und Ende eines Fensters). Was du dazwischen von Hand umstellst – z. B. „Entladen erlaubt“ in der Gerätekarte – gilt bis zum nächsten Wechsel. Die Gerätekarte zeigt dann sofort „von Hand · bis …“. Stellst du den Schalter wieder auf den Stand des Plans, übernimmt der Plan das Gerät wieder.
+- **Sperren** klappt immer. **Freigeben** nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt (Standard 3,1 V). Sonst versucht der Proxy es alle zwei Minuten erneut, solange das Fenster offen ist („wartet auf Zellspannung“). So bleibt die Unterspannungssperre des Watchdogs wirksam.
+- **Manuelles Laden** pausiert den Plan für dieses Gerät bis zum nächsten Wechsel. Das manuelle Laden stellt am Ende den vorherigen Zustand wieder her.
+- **Voller Akku** (`socLimit` 1) während einer Sperre: Der Proxy gibt das Gerät frei, damit Solarstrom durchkommt, und lässt es bis zum nächsten Wechsel in Ruhe.
+- **Gerät offline:** Gesperrt wird trotzdem (der Plan schreibt nur die KVS im Regler-Shelly). Freigegeben wird erst, wenn das Gerät wieder erreichbar ist und die Zellspannung passt. Plan-Seite und Gerätekarte zeigen „Plan · Gerät offline“.
+- Ohne Fenster tut der Plan nichts.
+
+**Gut zu wissen:**
+
+- Der Plan läuft **im Proxy** und richtet sich nach dessen Uhrzeit (in Home Assistant nach dessen Zeitzone). Weicht sie mehr als drei Minuten von der Uhr des Handys ab, zeigt die Seite einen Hinweis.
+- Ist der Proxy aus, schaltet nichts – der letzte Zustand bleibt stehen. Nach einem Neustart greift der Plan beim nächsten Wechsel.
+- Geschrieben wird nur `zdmc_devN_dischargeAllowed`, über dieselbe Schnittstelle wie der Schalter im Dashboard. An den Shelly-Scripts ändert sich nichts.
+- Der Plan liegt in `zendure_schedule_config.json` neben der Proxy-Konfiguration (Home Assistant: `/data`).
+- An den Planzeiten schaltet der Proxy sofort. Dazwischen prüft er alle zwei Minuten auf vollen Akku, Zellspannung, manuelles Laden und Umstellen von Hand. Er liest dafür nur die Werte, die der Watchdog ohnehin holt (bzw. das offene Dashboard) – die Speicher werden nicht zusätzlich abgefragt.
 
 ### Was du einstellen kannst
 
@@ -187,9 +220,11 @@ Für die Anzeige nebenbei reicht jeder Rechner. Soll das Dashboard **immer** err
 - Das Script [zenDash-API + Watchdog](readme.md) läuft auf deinem Dashboard-Shelly, mit **`api.enabled: true`**.
 - Damit du im Dashboard auch **einstellen** kannst (Sollwert, Reserve, manuelles Laden …), muss im Controller `kvsEnabled: true` und `kvsForceReseed: false` gesetzt sein. Ohne KVS zeigt das Dashboard nur an.
 - Für das Python-Script und die Synology: **Python 3.7 oder neuer** ([python.org](https://www.python.org/downloads/)). Es muss nichts zusätzlich installiert werden.
-- Außer beim fertigen Programm die zwei Dateien aus [diesem Ordner](.):
+- Außer beim fertigen Programm die Dateien aus [diesem Ordner](.):
   - [`zendure_proxy.py`](zendure_proxy.py) – der Proxy
-  - [`zendure-dashboard.html`](zendure-dashboard.html) – die Dashboard-Seite
+  - [`zendure-dashboard-neu.html`](zendure-dashboard-neu.html) – die Dashboard-Seite
+  - [`zeitplan.py`](zeitplan.py) – der [Zeitplan](#zeitplan), optional (fehlt sie, gibt es keinen Zeitplan)
+  - [`ts_bridge.py`](ts_bridge.py) – der Cloud-Upload, optional
 
   Die HTML-Datei darf **im selben Ordner** wie der Proxy liegen oder **eine Ebene höher**. Liegt an beiden Stellen eine, gewinnt die im selben Ordner.
 
@@ -228,7 +263,7 @@ Beim Start zeigt der Proxy eine kurze Übersicht:
 ```text
 Zendure Dashboard Proxy
   Shelly:   noch nicht eingerichtet - Einrichtungsseite oeffnet automatisch
-  HTML:     /home/pi/zendure/zendure-dashboard.html
+  HTML:     /home/pi/zendure/zendure-dashboard-neu.html
   Konfig:   /home/pi/zendure/zendure_proxy_config.json
   Lokal:    http://localhost:8000/
   Im Netz:  http://192.168.178.21:8000/  (von jedem Rechner im selben Netzwerk)
@@ -293,7 +328,7 @@ Zu jeder Datei liegt auf der [Releases-Seite](https://github.com/surfer1264/Zend
 
     Ab 3.7 reicht es – der Proxy nutzt nur die Standardbibliothek. Häufig liegt der Interpreter unter `/bin/python3`. Kommt gar nichts, im Paketzentrum **Python 3** installieren; der Pfad ist dann `/var/packages/Python3*/target/bin/python3`.
 
-2. **Dateien ablegen.** `zendure_proxy.py` in einen eigenen Ordner, z. B. `/volume1/homes/<benutzer>/zendure`, und `zendure-dashboard.html` daneben oder eine Ebene höher. Nicht in den `web`-Ordner – der gehört der Web Station.
+2. **Dateien ablegen.** `zendure_proxy.py` und `zeitplan.py` in einen eigenen Ordner, z. B. `/volume1/homes/<benutzer>/zendure`, und `zendure-dashboard-neu.html` daneben oder eine Ebene höher. Nicht in den `web`-Ordner – der gehört der Web Station.
 3. **Aufgabe anlegen.** Systemsteuerung → Aufgabenplaner → Erstellen → **Ausgelöste Aufgabe** → Benutzerdefiniertes Skript. Ereignis **Hochfahren**, Benutzer **root**, als Befehl der volle Pfad:
 
     ```bash
@@ -355,7 +390,7 @@ http://<Proxy-Adresse>:8000/bericht_zendure
 Die Auswertung selbst läuft nicht im Proxy. Er sucht die fertige `bericht.html`:
 
 1. an dem Ort, den `--bericht=PFAD` oder die Umgebungsvariable `ZENDURE_BERICHT` nennt (Datei oder Ordner) – dann nur dort,
-2. sonst neben der `zendure-dashboard.html`, neben seiner Konfiguration, neben dem Script bzw. Programm und im Repo-Ordner `stat/auswertung`.
+2. sonst neben der `zendure-dashboard-neu.html`, neben seiner Konfiguration, neben dem Script bzw. Programm und im Repo-Ordner `stat/auswertung`.
 
 In der Home-Assistant-App gehört die Datei nach `/share/zendure/bericht.html`. Ein neu erzeugter Bericht erscheint beim nächsten Aufruf, ohne Neustart. Welche Datei der Proxy gefunden hat, steht in seiner Startübersicht.
 
@@ -373,8 +408,8 @@ Der Proxy zählt alle gescheiterten Anfragen an den Shelly, getrennt nach Zeitü
 
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup` – und den Bericht unter `/bericht_zendure` lesen. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Script-Nummer:** Beim **Update** über den Configurator bleibt die Nummer gleich. Wird das Script **neu angelegt** (erste Installation, „andere löschen“, Shelly-Wechsel oder Upload von Hand), bekommt es eine neue Nummer. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
-- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Das frühere Layout unter `/b` ist seit 3.5.12 entfernt, die Adresse leitet auf das Dashboard weiter. Ab 4.0.0 liegt dieser Aufbau unter `/klassisch`, die Startseite zeigt das [neue Design](#neues-design-startseite).
-- **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
+- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Die früheren Adressen `/b`, `/neu` und `/klassisch` leiten auf das Dashboard weiter; das klassische Dashboard ist seit 5.5.0 entfernt.
+- **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard-neu.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
 
 ---
 
@@ -386,10 +421,12 @@ Der Proxy zählt alle gescheiterten Anfragen an den Shelly, getrennt nach Zeitü
 | Statt des Dashboards erscheint die Einrichtungsseite | Der Proxy ist noch nicht eingerichtet, oder `zendure_proxy_config.json` fehlt bzw. ist beschädigt. Einfach neu einrichten. |
 | „Speichern & testen“ meldet einen Fehler | IP oder Script-Nummer stimmen nicht – mit dem Test aus [Schritt 2](#als-python-prozess-starten) prüfen. Die IP muss die des **Dashboard-Shelly** sein. |
 | Roter Hinweis „Fehler beim Laden der Konfiguration“ | Der Shelly ist nicht (mehr) erreichbar oder die Script-Nummer hat sich geändert – unter `/setup` prüfen. |
-| Versionshinweis in der Fußzeile ist gelb | Dashboard-Seite und Script haben unterschiedliche Versionen. Passende `zendure-dashboard.html` bzw. das neue Programm holen. |
-| 404 unter `http://localhost:8000/` | `zendure-dashboard.html` liegt weder neben dem Proxy noch eine Ebene höher. Beim Start listet der Proxy alle Orte auf, an denen er gesucht hat. |
+| Versionshinweis in der Fußzeile ist gelb | Dashboard-Seite und Script haben unterschiedliche Versionen. Passende `zendure-dashboard-neu.html` bzw. das neue Programm holen. |
+| 404 unter `http://localhost:8000/` | `zendure-dashboard-neu.html` liegt weder neben dem Proxy noch eine Ebene höher. Beim Start listet der Proxy alle Orte auf, an denen er gesucht hat. |
 | Einrichtung lässt sich nicht speichern | Der Proxy darf in seinem Ordner nicht schreiben (z. B. unter `C:\Programme`). Ordner mit Schreibrecht wählen. |
 | Einstellungen wirken nicht | Im Controller `kvsEnabled: true` setzen. |
+| Kein Eintrag „Zeitplan“ im Menü | `zeitplan.py` fehlt neben dem Proxy, oder der Proxy ist älter als 5.5.0. |
+| Zeitplan schaltet zur falschen Uhrzeit | Der Plan folgt der Uhr des Proxy-Rechners. Uhrzeit bzw. Zeitzone dort prüfen; die Seite `/zeitplan` zeigt unten die Proxy-Zeit. |
 | Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
 | Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Firewall-Freigabe prüfen. |
 | Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss in der Kopfzeile antippen. |
