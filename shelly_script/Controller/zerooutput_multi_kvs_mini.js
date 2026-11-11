@@ -1,4 +1,4 @@
-let SCRIPT_TYPE="zdmc-controller";let VERSION="5.3.12";let CONFIG_SCHEMA=1;
+let SCRIPT_TYPE="zdmc-controller";let VERSION="5.4.0";let CONFIG_SCHEMA=1;
 let CONFIG = {
   devices: [
      {
@@ -65,23 +65,23 @@ let CONFIG = {
   // ------------------------------------------------------------------
   // SOC-BALANCING Max. SOC-Differenz zwischen Geraeten (%)
   rebalance: {
-    socMargin: 5        // percentage points of advantage required to switch
+    socMargin: 6        // percentage points of advantage required to switch
   },
 
   // ------------------------------------------------------------------
   // REVERSE-Hysterese, nur bei reverse:true relevant
-  reverseStartupPower: 35,
+  reverseStartupPower: 40,
   // Ladeleistung, unter der gestoppt wird
-  reverseStopPower: 15,
+  reverseStopPower: 30,
   // gridReverse-Modus: dynamic / always1 / always2
   gridReverseMode: "dynamic",
   chargeResetMargin: 10, // nur relevant bei gridReverseMode: "dynamic"
 
   // ------------------------------------------------------------------
   // DISCHARGE MODE SECTION
-  dischargeStartupPower: 35,
+  dischargeStartupPower: 40,
   // Entladeleistung, unter der gestoppt wird
-  dischargeStopPower: 15,
+  dischargeStopPower: 30,
 
   // ------------------------------------------------------------------
   // INTERNAL SECTION BE CAREFUL
@@ -106,7 +106,7 @@ let CONFIG = {
   // ADAPTIVE POLLING - reduziert HTTP-Last auf die Zendure-Geraete,
   idleSkip: {
     enabled: true,       // false = Funktion komplett aus, Verhalten wie vorher
-    cyclesUnchanged: 4,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
+    cyclesUnchanged: 3,  // so viele Zyklen in Folge innerhalb der Hysterese, bevor ausgesetzt wird
     maxSkipSeconds: 44   // max. Alter der Geraete-Daten (SOC/socLimit) waehrend des Aussetzens
   },
 

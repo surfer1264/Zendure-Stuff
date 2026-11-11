@@ -1,5 +1,23 @@
 # Changelog Controller
 
+## v5.4.0
+
+**Neue Standardwerte im CONFIG-Block.** Der Programmcode ist unverändert.
+
+| Einstellung | bisher | neu | Wirkung |
+|---|---|---|---|
+| `dischargeStartupPower` | 35 W | 40 W | Entladen startet erst ab 40 W Bedarf (alle Geräte zusammen) |
+| `dischargeStopPower` | 15 W | 30 W | Ein Gerät geht schon unter 30 W statt unter 15 W auf 0 W |
+| `reverseStartupPower` | 35 W | 40 W | Laden aus dem Netz startet erst ab 40 W Überschuss (alle Geräte zusammen) |
+| `reverseStopPower` | 15 W | 30 W | Ein Gerät hört schon unter 30 W statt unter 15 W auf zu laden |
+| `rebalance.socMargin` | 5 | 6 Prozentpunkte | Ein anderes Gerät übernimmt erst bei 6 statt 5 Prozentpunkten Vorsprung |
+| `idleSkip.cyclesUnchanged` | 4 | 3 | Der Sparmodus setzt einen Zyklus früher ein |
+
+- **Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen. Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.
+- **Grenzen eingehalten:** Startwerte liegen weiter über den Stoppwerten (40 > 30 W), `socMargin` liegt im erlaubten Bereich 5–25.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## v5.3.12
 
 Enthält 5.3.10 und 5.3.11.
