@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/with-contenv bash
+# with-contenv: s6 startet Dienste ohne die Umgebung des Containers. Erst so
+# kommt TZ (Zeitzone von Home Assistant) bei Python an - sonst laeuft der
+# Proxy in UTC und der Zeitplan schaltet zur falschen Uhrzeit.
 cd /
 # Einstellungen (Shelly-IP, ThingSpeak-Keys) nach /data - nur das
 # uebersteht Updates der App.

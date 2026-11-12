@@ -228,7 +228,10 @@ die Seite dort automatisch.
 ### run.sh
 
 ```bash
-#!/usr/bin/env bash
+#!/usr/bin/with-contenv bash
+# with-contenv: s6 startet Dienste ohne die Umgebung des Containers. Erst so
+# kommt TZ (Zeitzone von Home Assistant) bei Python an - sonst laeuft der
+# Proxy in UTC und der Zeitplan schaltet zur falschen Uhrzeit.
 cd /
 # Einstellungen (Shelly-IP, ThingSpeak-Keys) nach /data - nur das
 # uebersteht Updates der App.
@@ -345,7 +348,8 @@ Für die App gilt zusätzlich:
 | App steht zweimal im App Store | lokale App unter `/addons/` und App aus dem Repository | siehe [Umstieg von der lokalen App](#umstieg-von-der-lokalen-app) |
 | Kein Update angeboten, obwohl neue Version auf GitHub | `version` in `config.yaml` nicht angehoben, oder Home Assistant hat noch nicht nachgesehen | im App Store **Nach Updates suchen** |
 | `s6-overlay-suexec: fatal: can only run as pid 1` | Supervisor wrapt den Container standardmäßig zusätzlich mit Docker-Init, kollidiert mit s6-Overlay als PID 1 | `init: false` in `config.yaml` setzen **und App neu bauen** (nicht nur neu starten) |
-| `exec: fatal: unable to exec bashio` | `run.sh` nutzte `#!/usr/bin/with-contenv bashio`, obwohl das Skript keine bashio-Funktionen braucht | Shebang auf `#!/usr/bin/env bash` ändern |
+| `exec: fatal: unable to exec bashio` | `run.sh` nutzte `#!/usr/bin/with-contenv bashio`, obwohl das Skript keine bashio-Funktionen braucht | Shebang auf `#!/usr/bin/with-contenv bash` ändern (nicht `#!/usr/bin/env bash`, sonst fehlt die Zeitzone) |
+| Plan-Seite meldet „Uhrzeit des Proxys … weicht ab“, meist um genau eine Stunde | Proxy läuft in UTC: `run.sh` startet ohne `with-contenv`, die Zeitzone von Home Assistant (`TZ`) kommt nicht an | erste Zeile von `run.sh` muss `#!/usr/bin/with-contenv bash` sein, dann App neu bauen; Zeitzone in Home Assistant unter Einstellungen → System → Allgemein prüfen |
 | `env: can't execute 'bash\r'` | `run.sh` mit Windows-Zeilenenden (CRLF) statt Unix (LF) gespeichert | Datei mit LF-Zeilenenden neu speichern (z. B. in VS Code unten rechts CRLF → LF umstellen) |
 | Statt des Dashboards erscheint die Einrichtungsseite | App wurde deinstalliert und neu installiert (löscht `/data`), oder erster Start nach dem Umstieg von 1.0.x | Normal – IP und Script-ID erneut eintragen. Künftig per Update statt Deinstallation aktualisieren |
 | Einstellungen gehen nach jedem Update verloren | `run.sh` setzt `ZENDURE_DATA_DIR` nicht, Startübersicht zeigt `Konfig: /zendure_proxy_config.json` | `run.sh` aus diesem Ordner verwenden und App aktualisieren |
