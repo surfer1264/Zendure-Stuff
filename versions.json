@@ -1,16 +1,16 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-08T08:21:21Z",
+  "generated": "2026-11-12T07:31:39Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
-      "version": "5.3.12",
+      "version": "5.4.0",
       "schema": 1,
       "file": "shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/aaa54a4d8781d41af2c661fc8f14257269ecafbf/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
-      "size": 43113,
-      "codeHash": "sha256:5f4c5cef4e2975ca3c35b467ed55f43edc9dfd937771cb652201f22a03b96e59",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/256ed021a8f574c4f32cfc438840eb1e996ea58b/shelly_script/Controller/zerooutput_multi_kvs_mini.js",
+      "size": 43112,
+      "codeHash": "sha256:835e58e05ee5991ad402b6a4077927d49c508d187ad7a771ca439514af3cb3fa",
       "configKeys": [
         "apiKey",
         "charge",
@@ -62,14 +62,24 @@
         "webhookUrl"
       ],
       "changes": [
-        "**SoC-Grenzen beim Start wieder sicher:** Der SoC-Sync startet 500 ms nach dem KVS-Lesen und wiederholt einen gescheiterten Geräte-Abruf nach 2 s einmal. Seit 5.3.7 bekam das erste Gerät beim Start oft weder `minSoc` noch `socSet`",
-        "**KVS-Startmeldungen vollständig:** Die Zeilen `Wert uebernommen` beim Start kommen einzeln mit 150 ms Abstand und gehen im Log nicht mehr verloren. Der Start dauert dadurch bis zu 1 s länger",
-        "**Fehlergrund im Log:** `Geraet nicht erreichbar (<Grund>)`, z. B. `HTTP 500` oder `-104 …` (Timeout)"
+        "**Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen. Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.",
+        "**Grenzen eingehalten:** Startwerte liegen weiter über den Stoppwerten (40 > 30 W), `socMargin` liegt im erlaubten Bereich 5–25."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Controller/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.3.12",
+          "schema": 1,
+          "codeHash": "sha256:5f4c5cef4e2975ca3c35b467ed55f43edc9dfd937771cb652201f22a03b96e59",
+          "changes": [
+            "**SoC-Grenzen beim Start wieder sicher:** Der SoC-Sync startet 500 ms nach dem KVS-Lesen und wiederholt einen gescheiterten Geräte-Abruf nach 2 s einmal. Seit 5.3.7 bekam das erste Gerät beim Start oft weder `minSoc` noch `socSet`",
+            "**KVS-Startmeldungen vollständig:** Die Zeilen `Wert uebernommen` beim Start kommen einzeln mit 150 ms Abstand und gehen im Log nicht mehr verloren. Der Start dauert dadurch bis zu 1 s länger",
+            "**Fehlergrund im Log:** `Geraet nicht erreichbar (<Grund>)`, z. B. `HTTP 500` oder `-104 …` (Timeout)"
+          ],
+          "notice": null
+        },
         {
           "version": "5.3.9",
           "schema": 1,
@@ -163,17 +173,6 @@
             "**Kein Laden mehr, solange noch entladen wird:** Fällt die Last kurz weg (z. B. Wasserkocher aus), entsteht beim Entladen ein kurzer Export. Bisher konnte im selben Zyklus schon ein anderes Gerät (mit `reverse: true`) mit dem Laden beginnen – ein Speicher entlud, der andere lud, und die Regelung wechselte unnötig die Richtung. Jetzt wird zuerst nur die Entladung zurückgenommen. Erst wenn kein Gerät mehr real entlädt (Ist-Leistung höchstens `dischargeStopPower`) und der Export weiter anliegt, startet das Laden regulär.",
             "Laufendes Laden ist davon nicht betroffen.",
             "Geräte mit vollem Akku (`socLimit` 1, PV-Bypass) zählen nicht als „entlädt“ – ihre Einspeisung darf ein anderes Gerät weiterhin laden."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.2.1",
-          "schema": 1,
-          "codeHash": "sha256:e543b66f9bb34afbe79d15b0a260e39fd0ec223f03f046749a67a85efde0af6a",
-          "changes": [
-            "**minSoc/maxSoc: Mindestabstand 5 Prozentpunkte:** Beim Start gilt jetzt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`). Liegen beide Werte zu eng beieinander, wird `maxSoc` angehoben, die Reserve bleibt erhalten.",
-            "**KVS-Override `zdmc_devN_minSoc` wird gegen `maxSoc` geprüft:** Übernommen wird nur ein Wert zwischen 10 und `maxSoc − 5`. Vorher galt 10–99 ohne Bezug zu `maxSoc` – ein zu hoher Wert (z. B. aus Home Assistant oder Node-RED) wurde übernommen und per `syncMinSocDevice()` sogar aufs Gerät geschrieben. Ungültige Werte werden jetzt ignoriert (mit `debug: true` steht ein Hinweis im Log).",
-            "Fehlt `minSoc` oder `maxSoc` im CONFIG-Block eines Geräts, gilt 10 % bzw. 100 % (vorher `NaN`)."
           ],
           "notice": null
         }
@@ -447,13 +446,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.4.4",
-      "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c47e50cbae4e6e3e732ba21a1963dde571ab9d74/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard.html",
+      "version": "5.5.0",
+      "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/256ed021a8f574c4f32cfc438840eb1e996ea58b/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
-        "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
-        "Home-Assistant-App 5.4.4.0"
+        "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
+        "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
+        "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -461,6 +460,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.4.4",
+          "changes": [
+            "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
+            "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
+            "Home-Assistant-App 5.4.4.0"
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.2",
           "changes": [
@@ -540,30 +548,32 @@
             "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
           ],
           "notice": null
-        },
-        {
-          "version": "4.0.0",
-          "changes": [
-            "Nur die Versionsnummer, inhaltlich wie 3.5.12. Einmal neu hochladen, damit Configurator und Dashboard 4.0.0 zeigen"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.4.4",
+      "version": "5.5.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c47e50cbae4e6e3e732ba21a1963dde571ab9d74/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/256ed021a8f574c4f32cfc438840eb1e996ea58b/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
-        "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
-        "Home-Assistant-App 5.4.4.0"
+        "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
+        "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
+        "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.4.4",
+          "changes": [
+            "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
+            "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
+            "Home-Assistant-App 5.4.4.0"
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.2",
           "changes": [
