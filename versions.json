@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-13T16:39:06Z",
+  "generated": "2026-11-13T20:17:03Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -349,18 +349,27 @@
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ce7c096c7dbb3a84e4099dfdc5008a81dd4e433a/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/99e750f1e915f0df2394b13a7defc8c7423bb8af/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "Abschluss der 2.x-Reihe: Diese Version fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand",
-        "Einrichtung und Update: Neu konfigurieren oder Update mit übernommenen Einstellungen, Einlesen aus Text, Datei oder direkt vom Shelly, Regel-Intervall nach Geräteanzahl",
-        "Helfer und Home-Assistant-App: Direkt-Upload mit Fortschrittsanzeige, passwortgeschützte Shellys, Log aufzeichnen, Downloads im Startdialog"
+        "**Alten Stand sichern:** Beim Update steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen „Vor dem Hochladen alten Stand sichern“, standardmäßig an. Vor dem ersten Upload speichert der Browser dann das Script, das bisher auf dem Shelly lief, als Datei (z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`). Die Datei enthält die Zugangsdaten aus dem CONFIG-Block. Nur mit dem lokalen Helfer bzw. der Home-Assistant-App ab 3.1.0.",
+        "**Log aufzeichnen:** bis 15 Minuten (900 s) statt 10 Minuten. Zur Wahl stehen 140 s und 900 s.",
+        "**Ergebnis ohne „Speicher prüfen“:** Die Speicherprüfung gibt es nur noch auf der Startseite (eingeklappt)."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.0.0",
+          "changes": [
+            "Abschluss der 2.x-Reihe: Diese Version fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand",
+            "Einrichtung und Update: Neu konfigurieren oder Update mit übernommenen Einstellungen, Einlesen aus Text, Datei oder direkt vom Shelly, Regel-Intervall nach Geräteanzahl",
+            "Helfer und Home-Assistant-App: Direkt-Upload mit Fortschrittsanzeige, passwortgeschützte Shellys, Log aufzeichnen, Downloads im Startdialog"
+          ],
+          "notice": null
+        },
         {
           "version": "2.9.4",
           "changes": [
@@ -434,13 +443,6 @@
           "version": "2.6.0",
           "changes": [
             "Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt. Der"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.5.0",
-          "changes": [
-            "Verbesserte Benutzerführung"
           ],
           "notice": null
         }
