@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-13T20:17:03Z",
+  "generated": "2026-11-13T20:59:46Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -62,7 +62,7 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen. Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.",
+        "**Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen (im Configurator ab 3.1.1). Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.",
         "**Grenzen eingehalten:** Startwerte liegen weiter über den Stoppwerten (40 > 30 W), `socMargin` liegt im erlaubten Bereich 5–25."
       ],
       "notice": null,
@@ -179,12 +179,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.4.1",
+      "version": "4.4.2",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/dce6d5bcb572bcc303553d12bd13ef7fbb9f077c/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38610,
-      "codeHash": "sha256:b5dc3fae2fd74b2d6fdbcf99140f679b7f9da33ac993bdc94ba6541afd50ac5d",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/87955b039f408de46d577eceaa38ffda762ed40f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38593,
+      "codeHash": "sha256:c934ac486c31aba9eecd8f5715d7993ba6be419971717fb788c5cb1f2e81c6b0",
       "configKeys": [
         "api",
         "apiEvents",
@@ -231,14 +231,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Absturz beim Start behoben:** Auf manchen Firmware-Ständen stoppte das Script direkt nach dem Einlesen der KVS-Werte mit `Expecting a function to call, got Number`. Ursache war nicht der Programmcode, sondern die Kurznamen in der minifizierten Datei (seit 02.11.): Der Minifier gab einem Schleifenzähler und dem Rückruf denselben Namen. Ältere Firmware wertet `let` für die ganze Funktion, dort überschrieb der Zähler den Rückruf.",
-        "**Minifier angepasst:** `let`/`const` werden vor dem Kürzen zu `var`. So vergibt der Minifier keine doppelten Namen mehr, die Mini verhält sich auf jeder Firmware gleich. Die Prüfung meldet einen Fehler, falls doch noch `let` im gekürzten Teil steht.",
-        "Programmcode und Verhalten unverändert. Die Mini ist 32 Bytes größer."
+        "**Startmeldung:** Im Log steht jetzt „zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)“. Bisher hieß es „Dashboard muss ebenfalls v… sein“ – das stimmt seit Dashboard 5.0.0 nicht mehr, Dashboard und Proxy haben eigene Versionsnummern.",
+        "**Standardwert `api.dischargeStartupPower`:** 40 statt 35, wie `dischargeStartupPower` im Controller ab 5.4.0. Der Wert ist die Untergrenze für die Fix-Entladung im Dashboard (0 oder mindestens dieser Wert). Bestehende Konfigurationen behalten ihren Wert.",
+        "Regelverhalten unverändert."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.4.1",
+          "schema": 1,
+          "codeHash": "sha256:b5dc3fae2fd74b2d6fdbcf99140f679b7f9da33ac993bdc94ba6541afd50ac5d",
+          "changes": [
+            "**Absturz beim Start behoben:** Auf manchen Firmware-Ständen stoppte das Script direkt nach dem Einlesen der KVS-Werte mit `Expecting a function to call, got Number`. Ursache war nicht der Programmcode, sondern die Kurznamen in der minifizierten Datei (seit 02.11.): Der Minifier gab einem Schleifenzähler und dem Rückruf denselben Namen. Ältere Firmware wertet `let` für die ganze Funktion, dort überschrieb der Zähler den Rückruf.",
+            "**Minifier angepasst:** `let`/`const` werden vor dem Kürzen zu `var`. So vergibt der Minifier keine doppelten Namen mehr, die Mini verhält sich auf jeder Firmware gleich. Die Prüfung meldet einen Fehler, falls doch noch `let` im gekürzten Teil steht.",
+            "Programmcode und Verhalten unverändert. Die Mini ist 32 Bytes größer."
+          ],
+          "notice": null
+        },
         {
           "version": "4.4.0",
           "schema": 1,
@@ -333,34 +344,31 @@
             "Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10"
           ],
           "notice": null
-        },
-        {
-          "version": "3.5.9",
-          "schema": 1,
-          "codeHash": "sha256:c650f545f9ca5b266222fb25eb2d3c9d2d2098c18ba6756ecc70850378b83a73",
-          "changes": [
-            "Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile",
-            "Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)",
-            "Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-configurator": {
       "kind": "app",
-      "version": "3.1.0",
+      "version": "3.1.1",
       "file": "shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/99e750f1e915f0df2394b13a7defc8c7423bb8af/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/87955b039f408de46d577eceaa38ffda762ed40f/shelly_script/Multiconfigurator/zendure-multi-configurator_multilang.html",
       "changes": [
-        "**Alten Stand sichern:** Beim Update steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen „Vor dem Hochladen alten Stand sichern“, standardmäßig an. Vor dem ersten Upload speichert der Browser dann das Script, das bisher auf dem Shelly lief, als Datei (z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`). Die Datei enthält die Zugangsdaten aus dem CONFIG-Block. Nur mit dem lokalen Helfer bzw. der Home-Assistant-App ab 3.1.0.",
-        "**Log aufzeichnen:** bis 15 Minuten (900 s) statt 10 Minuten. Zur Wahl stehen 140 s und 900 s.",
-        "**Ergebnis ohne „Speicher prüfen“:** Die Speicherprüfung gibt es nur noch auf der Startseite (eingeklappt)."
+        "**Neue Controller-Standardwerte:** Neue Konfigurationen bekommen jetzt die Standardwerte von Controller 5.4.0 (`dischargeStartupPower`/`reverseStartupPower` 40 W, `dischargeStopPower`/`reverseStopPower` 30 W, `rebalance.socMargin` 6, `idleSkip.cyclesUnchanged` 3). Bisher setzte der Configurator noch die alten Werte ein. Beim Update bleiben die eigenen Werte erhalten.",
+        "**Dashboard-Shelly:** Standard für `api.dischargeStartupPower` 40 statt 35, passend zum Controller."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "3.1.0",
+          "changes": [
+            "**Alten Stand sichern:** Beim Update steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen „Vor dem Hochladen alten Stand sichern“, standardmäßig an. Vor dem ersten Upload speichert der Browser dann das Script, das bisher auf dem Shelly lief, als Datei (z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`). Die Datei enthält die Zugangsdaten aus dem CONFIG-Block. Nur mit dem lokalen Helfer bzw. der Home-Assistant-App ab 3.1.0.",
+            "**Log aufzeichnen:** bis 15 Minuten (900 s) statt 10 Minuten. Zur Wahl stehen 140 s und 900 s.",
+            "**Ergebnis ohne „Speicher prüfen“:** Die Speicherprüfung gibt es nur noch auf der Startseite (eingeklappt)."
+          ],
+          "notice": null
+        },
         {
           "version": "3.0.0",
           "changes": [
@@ -436,13 +444,6 @@
             "Netzquelle http_json: neue Vorlagen „Zendure Smart Meter D0“ (`/properties/report`, Feld `total_power`) und „everHome EcoTracker“ (`/v1/json`, Feld `power`)",
             "Vorlagen mit Einrichtungshinweis: D0 – lokale Schnittstelle einmalig über HEMS in der Zendure-App freischalten; EcoTracker – „Lokaler HTTP-Server“ in der everHome-App einschalten; jeweils feste IP und Vorzeichen per „Testen“ prüfen",
             "Die gewählte Vorlage bleibt im Auswahlfeld sichtbar"
-          ],
-          "notice": null
-        },
-        {
-          "version": "2.6.0",
-          "changes": [
-            "Nicht vom Configurator verwaltete Einträge (z. B. dischargeResetMargin) werden beim Einlesen und Updaten unverändert übernommen. Ungültige Werte in eingelesenen Configs werden durch den Standard ersetzt und angezeigt. Der"
           ],
           "notice": null
         }
