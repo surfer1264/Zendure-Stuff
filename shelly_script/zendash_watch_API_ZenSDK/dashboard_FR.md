@@ -27,6 +27,7 @@ Le tableau de bord affiche en direct la consommation réseau, l'état de charge 
   - [Fonctionnement permanent sur un Synology](#fonctionnement-permanent-sur-un-synology)
   - [En tant qu'app dans Home Assistant](#en-tant-quapp-dans-home-assistant)
   - [Options de démarrage](#options-de-démarrage)
+  - [Adresses du proxy](#adresses-du-proxy)
   - [Bon à savoir](#bon-à-savoir)
   - [En cas de problème](#en-cas-de-problème)
 
@@ -395,6 +396,37 @@ Un échec isolé de la requête au Shelly reste invisible. Ce n'est qu'après de
 Le proxy compte toutes les requêtes échouées vers le Shelly, réparties en délai dépassé (pas de réponse en 5 s, 10 s pour les réglages `config_api`), « injoignable » et erreurs du Shelly. Le compteur repart à zéro à minuit et à chaque démarrage du proxy. S'il y a eu des erreurs aujourd'hui, le pied du tableau de bord affiche **« Erreurs de requête aujourd'hui : … »** avec l'heure de la dernière ; l'infobulle donne la répartition. Données brutes : `http://<adresse-du-proxy>:8000/proxy_fehler`. Chaque erreur figure aussi dans le journal du proxy, y compris dans l'application Home Assistant.
 
 ---
+
+## Adresses du proxy
+
+Toutes les adresses se rapportent à `http://<adresse-du-proxy>:8000/`. Dans l'app Home Assistant, les mêmes chemins s'appliquent derrière l'adresse de l'app.
+
+**Pages**
+
+| Adresse | Contenu |
+|---|---|
+| `/` | Tableau de bord |
+| `/setup` | Configuration : IP et numéro de script du Shelly tableau de bord |
+| `/zeitplan` | [Planning](#planning) de la décharge, nécessite `zeitplan.py` |
+| `/thingspeak` | Configurer l'[envoi vers ThingSpeak](thingspeak.md) (en allemand), nécessite `ts_bridge.py` |
+| `/thingsboard` | Configurer l'[envoi vers ThingsBoard](thingsboard.md) (en allemand), nécessite `ts_bridge.py` |
+| `/bericht_zendure` | [Rapport de l'analyse des journaux](#rapport-de-lanalyse-des-journaux), si un fichier de rapport existe |
+| `/proxy_fehler` | Compteur d'erreurs du proxy en JSON, voir [Problèmes de connexion et compteur d'erreurs](#problèmes-de-connexion-et-compteur-derreurs) |
+
+`/klassisch` et `/neu` mènent à la page d'accueil, pour que les anciens favoris continuent de fonctionner.
+
+**Adresses techniques (JSON)**
+
+| Adresse | Contenu |
+|---|---|
+| `status_api` | Mesures de toutes les batteries et du réseau, transmises par le Shelly. `?bg=wake` et `?bg=read` servent à l'envoi vers le cloud |
+| `config_api` | Réglages du Controller et du Watchdog, transmis par le Shelly |
+| `kvs_set_api?data={…}` | Écrire des réglages, transmis au Shelly |
+| `/schedule` | Lire (GET) et enregistrer (POST) le planning ; c'est ce qu'utilise la page `/zeitplan` |
+| `/versions` | Version du tableau de bord et du proxy et dernier manifeste des versions récupéré |
+| `/standort` | Latitude et longitude du Shelly tableau de bord pour les heures du soleil |
+
+Les trois adresses `…_api` sont décrites en détail dans la [référence API](API.md) (en allemand).
 
 ## Bon à savoir
 

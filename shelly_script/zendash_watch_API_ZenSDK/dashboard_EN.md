@@ -27,6 +27,7 @@ The dashboard shows you live grid draw, state of charge and power of your batter
   - [Continuous operation on a Synology](#continuous-operation-on-a-synology)
   - [As an app in Home Assistant](#as-an-app-in-home-assistant)
   - [Start options](#start-options)
+  - [Proxy addresses](#proxy-addresses)
   - [Good to know](#good-to-know)
   - [If it does not work](#if-it-does-not-work)
 
@@ -395,6 +396,37 @@ A single failed query to the Shelly stays invisible. Only when two queries in a 
 The proxy counts every failed request to the Shelly, split into timeout (no answer within 5 s, 10 s for the settings `config_api`), "unreachable" and errors from the Shelly. The counter restarts at midnight and whenever the proxy starts. If there were errors today, the dashboard footer shows **"Request errors today: …"** with the last time; the tooltip shows the breakdown. Raw data: `http://<proxy-address>:8000/proxy_fehler`. Each error is also written to the proxy log, including in the Home Assistant app.
 
 ---
+
+## Proxy addresses
+
+All addresses are relative to `http://<proxy-address>:8000/`. In the Home Assistant app the same paths apply behind the app's address.
+
+**Pages**
+
+| Address | Content |
+|---|---|
+| `/` | Dashboard |
+| `/setup` | Setup: IP and script number of the dashboard Shelly |
+| `/zeitplan` | [Schedule](#schedule) for discharging, needs `zeitplan.py` |
+| `/thingspeak` | Set up the [ThingSpeak upload](thingspeak.md) (German), needs `ts_bridge.py` |
+| `/thingsboard` | Set up the [ThingsBoard upload](thingsboard.md) (German), needs `ts_bridge.py` |
+| `/bericht_zendure` | [Log analysis report](#log-analysis-report), if a report file exists |
+| `/proxy_fehler` | The proxy's error counter as JSON, see [Connection problems and error counter](#connection-problems-and-error-counter) |
+
+`/klassisch` and `/neu` lead to the start page so that old bookmarks keep working.
+
+**Technical addresses (JSON)**
+
+| Address | Content |
+|---|---|
+| `status_api` | Readings of all batteries and the grid, passed through from the Shelly. `?bg=wake` and `?bg=read` are used by the cloud upload |
+| `config_api` | Settings of Controller and Watchdog, passed through from the Shelly |
+| `kvs_set_api?data={…}` | Write settings, passed through to the Shelly |
+| `/schedule` | Read (GET) and save (POST) the schedule; this is what the `/zeitplan` page uses |
+| `/versions` | Version of dashboard and proxy and the last fetched version manifest |
+| `/standort` | Latitude and longitude of the dashboard Shelly for the sun times |
+
+The three `…_api` addresses are described in detail in the [API reference](API.md) (German).
 
 ## Good to know
 

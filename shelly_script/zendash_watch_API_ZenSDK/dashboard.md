@@ -28,6 +28,7 @@ Das Dashboard zeigt dir live Netzbezug, Ladestand und Leistung deiner Speicher. 
     - [Dauerbetrieb auf einer Synology](#dauerbetrieb-auf-einer-synology)
     - [Als App in Home Assistant](#als-app-in-home-assistant)
     - [Startoptionen](#startoptionen)
+  - [Adressen des Proxys](#adressen-des-proxys)
   - [Gut zu wissen](#gut-zu-wissen)
   - [Wenn es nicht klappt](#wenn-es-nicht-klappt)
 
@@ -403,6 +404,37 @@ Ein einzelner Aussetzer bei der Abfrage des Shellys bleibt unsichtbar. Erst wenn
 Der Proxy zählt alle gescheiterten Anfragen an den Shelly, getrennt nach Zeitüberschreitung (keine Antwort in 5 s, bei den Einstellungen `config_api` in 10 s), „nicht erreichbar“ und Fehler vom Shelly. Der Zähler beginnt um Mitternacht und bei jedem Start des Proxys neu. Gab es heute Fehler, steht im Fuß des Dashboards **„Abfragefehler heute: …“** mit dem letzten Zeitpunkt; der Tooltip zeigt die Aufteilung. Rohdaten: `http://<Proxy-Adresse>:8000/proxy_fehler`. Jeder Fehler steht außerdem im Protokoll des Proxys, auch in der Home-Assistant-App.
 
 ---
+
+## Adressen des Proxys
+
+Alle Adressen hängen an `http://<Proxy-Adresse>:8000/`. In der Home-Assistant-App gelten dieselben Pfade hinter der Adresse der App.
+
+**Seiten**
+
+| Adresse | Inhalt |
+|---|---|
+| `/` | Dashboard |
+| `/setup` | Einrichtung: IP und Script-Nummer des Dashboard-Shellys |
+| `/zeitplan` | [Zeitplan](#zeitplan) für das Entladen, braucht `zeitplan.py` |
+| `/thingspeak` | [ThingSpeak-Upload](thingspeak.md) einrichten, braucht `ts_bridge.py` |
+| `/thingsboard` | [ThingsBoard-Upload](thingsboard.md) einrichten, braucht `ts_bridge.py` |
+| `/bericht_zendure` | [Bericht der Log-Auswertung](#bericht-der-log-auswertung), wenn eine Berichtsdatei vorhanden ist |
+| `/proxy_fehler` | Fehlerzähler des Proxys als JSON, siehe [Verbindungsprobleme und Fehlerzähler](#verbindungsprobleme-und-fehlerzähler) |
+
+`/klassisch` und `/neu` führen auf die Startseite, damit alte Lesezeichen weiter funktionieren.
+
+**Technische Adressen (JSON)**
+
+| Adresse | Inhalt |
+|---|---|
+| `status_api` | Messwerte aller Speicher und des Netzes, vom Shelly durchgereicht. `?bg=wake` und `?bg=read` nutzt der Cloud-Upload |
+| `config_api` | Einstellungen von Controller und Watchdog, vom Shelly durchgereicht |
+| `kvs_set_api?data={…}` | Einstellungen schreiben, vom Shelly durchgereicht |
+| `/schedule` | Zeitplan lesen (GET) und speichern (POST), so arbeitet die Seite `/zeitplan` |
+| `/versions` | Version von Dashboard und Proxy und das zuletzt geholte Versions-Manifest |
+| `/standort` | Breiten- und Längengrad des Dashboard-Shellys für die Sonnenzeiten |
+
+Die drei `…_api`-Adressen beschreibt die [API-Referenz](API.md) im Detail.
 
 ## Gut zu wissen
 
