@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-12T07:31:39Z",
+  "generated": "2026-11-13T14:08:32Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -446,13 +446,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.5.0",
+      "version": "5.5.1",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/256ed021a8f574c4f32cfc438840eb1e996ea58b/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b99268f659b063e147730083e2d746877776a5b8/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
-        "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
-        "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
+        "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
+        "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
+        "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -460,6 +460,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.5.0",
+          "changes": [
+            "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
+            "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
+            "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.4",
           "changes": [
@@ -540,31 +549,32 @@
             "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
           ],
           "notice": null
-        },
-        {
-          "version": "4.0.1",
-          "changes": [
-            "**Minifiziert mit `--mangle`:** Lokale Namen werden verkürzt, der Code ohne CONFIG-Block ist rund 4 kB kleiner (37,6 → 33,5 kB)",
-            "Der Programmcode belegt auf dem Shelly RAM, die Grundlast sollte deshalb etwas sinken – noch nicht gemessen"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.5.0",
+      "version": "5.5.1",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/256ed021a8f574c4f32cfc438840eb1e996ea58b/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b99268f659b063e147730083e2d746877776a5b8/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
-        "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
-        "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
+        "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
+        "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
+        "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.5.0",
+          "changes": [
+            "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
+            "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
+            "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
+          ],
+          "notice": null
+        },
         {
           "version": "5.4.4",
           "changes": [
