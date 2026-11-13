@@ -8,6 +8,16 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.4.1
+
+**Ziel:** Das Script läuft wieder auf jeder Shelly-Firmware, auch auf älteren Ständen.
+
+- **Absturz beim Start behoben:** Auf manchen Firmware-Ständen stoppte das Script direkt nach dem Einlesen der KVS-Werte mit `Expecting a function to call, got Number`. Ursache war nicht der Programmcode, sondern die Kurznamen in der minifizierten Datei (seit 02.11.): Der Minifier gab einem Schleifenzähler und dem Rückruf denselben Namen. Ältere Firmware wertet `let` für die ganze Funktion, dort überschrieb der Zähler den Rückruf.
+- **Minifier angepasst:** `let`/`const` werden vor dem Kürzen zu `var`. So vergibt der Minifier keine doppelten Namen mehr, die Mini verhält sich auf jeder Firmware gleich. Die Prüfung meldet einen Fehler, falls doch noch `let` im gekürzten Teil steht.
+- Programmcode und Verhalten unverändert. Die Mini ist 32 Bytes größer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.4.0
 
 **Ziel:** Melden, wenn die Heizung eines überwachten Geräts einschaltet.

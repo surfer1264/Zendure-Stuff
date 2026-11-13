@@ -9,10 +9,16 @@ Verwendung:
 Vorgehen:
     1. CONFIG-Block strukturell erkennen (Klammerzaehlung, nicht Zeilennummer).
     2. Alles VOR und NACH dem Block mit Terser minifizieren
-       (--ecma 5, KEIN --compress, KEIN --mangle -> nur Kommentare/Whitespace weg).
+       (--ecma 5, --mangle, KEIN --compress). Vorher werden 'let'/'const'
+       ausserhalb von Strings und Kommentaren zu 'var': Die Shelly-Engine
+       behandelt 'let' je nach Firmware wie 'var' (Funktions-Scope). Terser
+       geht von Block-Scope aus und vergibt sonst denselben Kurznamen fuer
+       einen Schleifenzaehler und eine aeussere Variable (z.B. Callback) -
+       auf aelterer Firmware stuerzt das Script dann ab.
     3. Wieder zusammensetzen: minified(davor) + CONFIG-Block original + minified(danach).
     4. Verifikation: Terser parst das Gesamtergebnis nochmal (Syntax-Check),
-       Anzahl 'function'/'let' vorher==nachher, keine Arrow-Functions/Template-Strings.
+       Anzahl 'function' und Deklarationen (let/const/var) vorher==nachher,
+       kein 'let'/'const' mehr im minifizierten Teil, keine Arrow-Functions/Template-Strings.
 """
 import re
 import subprocess
@@ -70,8 +76,51 @@ def find_config_block(text):
     raise ValueError("Ende des CONFIG-Blocks nicht gefunden (unbalancierte Klammern?)")
 
 
+def let_to_var(js_text):
+    """Ersetzt die Schluesselwoerter 'let' und 'const' durch 'var'.
+
+    Strings ('...', "...") und Kommentare (//, /* */) bleiben unberuehrt.
+    Hintergrund: Je nach Firmware gilt 'let' auf dem Shelly fuer die ganze
+    Funktion wie 'var'. Mit 'var' sieht Terser beim Mangeln denselben Scope
+    wie die Engine und vergibt keine kollidierenden Kurznamen.
+    """
+    out = []
+    i = 0
+    n = len(js_text)
+    while i < n:
+        c = js_text[i]
+        if c in "'\"":
+            j = i + 1
+            while j < n and js_text[j] != c:
+                j += 2 if js_text[j] == "\\" else 1
+            out.append(js_text[i:j + 1])
+            i = j + 1
+        elif js_text.startswith("//", i):
+            j = js_text.find("\n", i)
+            j = n if j < 0 else j
+            out.append(js_text[i:j])
+            i = j
+        elif js_text.startswith("/*", i):
+            j = js_text.find("*/", i + 2)
+            j = n if j < 0 else j + 2
+            out.append(js_text[i:j])
+            i = j
+        elif c.isalpha() or c in "_$":
+            j = i
+            while j < n and (js_text[j].isalnum() or js_text[j] in "_$"):
+                j += 1
+            word = js_text[i:j]
+            out.append("var" if word in ("let", "const") else word)
+            i = j
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
 def terser_minify(js_text, tmp_path):
-    """Minifiziert ein JS-Snippet konservativ (kein compress/mangle)."""
+    """Minifiziert ein JS-Snippet (mangle, kein compress); let/const vorher zu var."""
+    js_text = let_to_var(js_text)
     in_path = tmp_path + ".in.js"
     out_path = tmp_path + ".out.js"
     with open(in_path, "w", encoding="utf-8") as f:
@@ -100,9 +149,14 @@ def verify(original_rest, minified_rest, full_output, tmp_dir):
         "Anzahl 'function' unveraendert",
         count(r'\bfunction\b', original_rest) == count(r'\bfunction\b', minified_rest)
     ))
+    decl = r'\b(?:let|const|var)\s+[a-zA-Z_$]'
     checks.append((
-        "Anzahl 'let'-Deklarationen unveraendert",
-        count(r'\blet\s+[a-zA-Z_]', original_rest) == count(r'\blet\s+[a-zA-Z_]', minified_rest)
+        "Anzahl Deklarationen (let/const/var) unveraendert",
+        count(decl, let_to_var(original_rest)) == count(decl, minified_rest)
+    ))
+    checks.append((
+        "kein 'let'/'const' im minifizierten Teil (Scope wie auf dem Shelly)",
+        let_to_var(minified_rest) == minified_rest
     ))
 
     # Terser parst das GESAMTE Ergebnis nochmal als reinen Syntax-Check

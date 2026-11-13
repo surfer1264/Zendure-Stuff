@@ -66,7 +66,7 @@
 // 4.4.0: Watchdog meldet das Einschalten der Heizung (heatState 1).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.4.0";
+let VERSION = "4.4.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
