@@ -66,7 +66,7 @@
 // 4.4.0: Watchdog meldet das Einschalten der Heizung (heatState 1).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.4.1";
+let VERSION = "4.4.2";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -118,7 +118,7 @@ let CONFIG = {
 
     // Untere Grenze fuer zdmc_dischargeFixed (0 ausgenommen) - 1:1 aus
     // CONFIG.dischargeStartupPower im Regel-Script kopieren.
-    dischargeStartupPower: 35,
+    dischargeStartupPower: 40,
 
     // Netzmessung - gleiche Struktur/Feldnamen wie im Regel-Script.
     gridSource: "remote",            // "local", "remote", "http_json"
@@ -219,7 +219,7 @@ if (CONFIG.httpTimeout < 3) CONFIG.httpTimeout = 3;
 if (!(CONFIG.api.pollIntervalSec >= 4)) CONFIG.api.pollIntervalSec = 8;
 
 if (typeof CONFIG.api.dischargeStartupPower !== "number" || CONFIG.api.dischargeStartupPower < 1) {
-  CONFIG.api.dischargeStartupPower = 35;
+  CONFIG.api.dischargeStartupPower = 40;
 }
 
 if (!(W.intervalSec >= 60)) W.intervalSec = 60;
@@ -1888,7 +1888,7 @@ function registerEndpoints() {
 
 function printBanner() {
   print("--------------------------------");
-  print("zenDash-API + Watchdog v" + VERSION + " (Dashboard muss ebenfalls v" + VERSION + " sein)");
+  print("zenDash-API + Watchdog v" + VERSION + " (Dashboard/Proxy ab v5.0.0)");
   print("Module     : API " + (API_ON ? "AN" : "AUS") + " | Watchdog " + (WD_ON ? "AN" : "AUS"));
   let line = "Geraete    :";
   for (let i = 0; i < CONFIG.devices.length; i++) {

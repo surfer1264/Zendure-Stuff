@@ -11,55 +11,26 @@ Ein Shelly-Script für deinen **Dashboard-Shelly**, das zwei Aufgaben rund um de
 
 Beide Teile lassen sich einzeln ein- und ausschalten. Ein einziges Script fragt die Speicher ab und teilt die Daten zwischen beiden Aufgaben – das spart Speicher auf dem Shelly und entlastet deine Zendure-Geräte. Früher waren es zwei getrennte Scripte (zenDash-API 2.x und AkkuVolt-Watchdog 1.x), die zusammen je nach Anzahl der Speicher an die Speichergrenze des Shelly stießen.
 
-## Was macht der AkkuWatchDog?
-
-✅ Das Script liest die Akkudaten der angeschlossenen Akkus aus (`minVol`, `maxVol`, `socLevel`, Temperatur). Alle Packs eines Geräts werden automatisch gefunden (Temperatur des Hyper/Hubs ist ebenfalls dabei).
-
-✅ **WARNUNG:** Wenn das `electricLevel` eines Geräts über die Vollschwelle steigt, wird eine Nachricht verschickt — **pro Gerät einzeln**, mit Label zur Identifikation.
-
-✅ **WARNUNG:** Wenn `minVol` einer Zelle unter den Schwellwert fällt, wird eine Nachricht verschickt — **pro Gerät einzeln**.
-
-✅ **Übertemperatur:** Wenn die Geräte-Temperatur (Hyper/Hub) den Schwellwert überschreitet, wird ebenfalls eine eigene Warnung verschickt — pro Gerät einzeln.
-
-✅ Alle Warnschwellen (Voll, Unterspannung, Temperatur) gelten **global für alle konfigurierten Geräte gleichermaßen** — es gibt bewusst keine Schwellwerte pro Gerät, um die Konfiguration einfach zu halten.
-
-✅ **STATUS:** Sendet zum Sonnenaufgang (`+Offset`) und zum Sonnenuntergang (`+Offset`) **eine einzige Sammel-Nachricht für alle überwachten Geräte gemeinsam**. Jede Zeile zeigt SOC, Geräte-Temperatur und die kleinste Zellspannung eines Geräts, identifiziert über die ersten 10 Zeichen seines `label`. Die Zeilenlänge pro Gerät ist damit begrenzt, dadurch bleibt die Nachricht auch bei vielen Geräten kurz und wird nicht zum Problem für Messenger-APIs mit Längenlimits (mehr dazu unter [Nachrichten](#nachrichten)).
-
 Die aktuelle Version und alle Änderungen stehen in den Changelogs: [Shelly-Script](CHANGELOG.md) und [Dashboard und Proxy](CHANGELOG_dashboard.md).
 
 ---
 
 ## Inhalt
 
-- [Dashboard-Shelly - API + Watchdog](#dashboard-shelly---api--watchdog)
-  - [Was macht der AkkuWatchDog?](#was-macht-der-akkuwatchdog)
-  - [Inhalt](#inhalt)
-  - [Was du brauchst](#was-du-brauchst)
-  - [So arbeitet das Script](#so-arbeitet-das-script)
-  - [Installation](#installation)
-    - [Empfohlen: mit dem Configurator](#empfohlen-mit-dem-configurator)
-    - [Von Hand über die Shelly-Weboberfläche](#von-hand-über-die-shelly-weboberfläche)
-    - [Für Fortgeschrittene: mit `deploy.cmd`](#für-fortgeschrittene-mit-deploycmd)
-    - [Nach dem Start](#nach-dem-start)
-  - [Konfiguration](#konfiguration)
-    - [Geräte (`devices`)](#geräte-devices)
-    - [Dashboard-Teil (`api`)](#dashboard-teil-api)
-    - [Watchdog (`watchdog`)](#watchdog-watchdog)
-    - [Nachrichten (`notify`)](#nachrichten-notify)
-    - [Allgemein](#allgemein)
-  - [Dashboard](#dashboard)
-    - [Verlauf in ThingSpeak oder ThingsBoard](#verlauf-in-thingspeak-oder-thingsboard)
-  - [Nachrichten](#nachrichten)
-  - [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
-  - [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
-  - [Letzte Vollladung](#letzte-vollladung)
-  - [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
-  - [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen)
-  - [Speicherbedarf](#speicherbedarf)
-  - [Fehlersuche](#fehlersuche)
-    - [Debug-Ausgabe einschalten](#debug-ausgabe-einschalten)
-    - [Häufige Probleme](#häufige-probleme)
-  - [Download](#download)
+- [Was du brauchst](#was-du-brauchst)
+- [So arbeitet das Script](#so-arbeitet-das-script)
+- [Installation](#installation)
+- [Konfiguration](#konfiguration)
+- [Dashboard](#dashboard)
+- [Nachrichten](#nachrichten)
+- [Manuelles Laden und Auto-Stop](#manuelles-laden-und-auto-stop)
+- [Entladesperre bei Unterspannung](#entladesperre-bei-unterspannung)
+- [Letzte Vollladung](#letzte-vollladung)
+- [Umstieg von den alten Scripten](#umstieg-von-den-alten-scripten)
+- [Script auf einen anderen Shelly umziehen](#script-auf-einen-anderen-shelly-umziehen)
+- [Speicherbedarf](#speicherbedarf)
+- [Fehlersuche](#fehlersuche)
+- [Download](#download)
 
 ---
 
@@ -121,7 +92,7 @@ Im Log des Scripts erscheint eine Übersicht. Prüfe dort, ob alles so eingestel
 
 ```text
 --------------------------------
-zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
+zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -178,7 +149,7 @@ api: {
   enabled: true,
   kvsHost: "192.168.178.117",
   hysteresis: 12,
-  dischargeStartupPower: 35,
+  dischargeStartupPower: 40,
   gridSource: "remote",
   gridSourceIp: "192.168.178.117",
   gridSourceEmId: 0,
@@ -275,6 +246,8 @@ Im Controller heißt dieser Block `signal`, hier `notify`. `enabled`, `typ`, `ph
 ## Dashboard
 
 Das Dashboard ist eine Webseite, die ihre Daten von diesem Script holt. Du öffnest sie über einen kleinen Proxy auf PC, NAS (z. B. Synology), Home Assistant oder Raspberry Pi – für Windows und Mac gibt es ihn auch als fertiges Programm.
+
+Über den Proxy legst du außerdem einen **Zeitplan** für das Entladen fest: In den gewählten Zeitfenstern darf entladen werden, außerhalb ist es gesperrt. Dafür braucht es den Watchdog dieses Scripts und `zeitplan.py` neben dem Proxy, siehe [Zeitplan](dashboard.md#zeitplan).
 
 👉 **[Dashboard einrichten und bedienen](dashboard.md)**
 

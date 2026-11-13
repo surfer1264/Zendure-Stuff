@@ -33,7 +33,7 @@ S'y ajoute le **[Configurator](Multiconfigurator/readme_FR.md)** avec l'assistan
 
 **Un seul script** tourne sur chaque Shelly. Les Shelly disposent de peu de mémoire pour les scripts – deux scripts sur un même appareil peuvent se faire planter mutuellement.
 
-Le **[tableau de bord](zendash_watch_API_ZenSDK/dashboard.md)** (allemand) est lui-même une page web que vous ouvrez via un petit proxy sur un PC, un NAS ou Home Assistant.
+Le **[tableau de bord](zendash_watch_API_ZenSDK/dashboard_FR.md)** est lui-même une page web que vous ouvrez via un petit proxy sur un PC, un NAS ou Home Assistant. Il permet aussi de définir un [planning](zendash_watch_API_ZenSDK/dashboard_FR.md#planning) de décharge.
 
 ## Autres outils
 

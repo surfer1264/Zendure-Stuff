@@ -92,7 +92,7 @@ Un récapitulatif apparaît dans le journal du script (les sorties du script son
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
+zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -149,7 +149,7 @@ api: {
   enabled: true,
   kvsHost: "192.168.178.117",
   hysteresis: 12,
-  dischargeStartupPower: 35,
+  dischargeStartupPower: 40,
   gridSource: "remote",
   gridSourceIp: "192.168.178.117",
   gridSourceEmId: 0,
@@ -244,6 +244,8 @@ Dans le Controller, ce bloc s'appelle `signal`, ici `notify`. `enabled`, `typ`, 
 ## Tableau de bord
 
 Le tableau de bord est une page web qui récupère ses données auprès de ce script. Vous l'ouvrez via un petit proxy sur un PC, un NAS (p. ex. Synology), Home Assistant ou un Raspberry Pi – pour Windows et Mac, il existe aussi sous forme de programme prêt à l'emploi.
+
+Le proxy permet aussi de définir un **planning** de décharge : la décharge est autorisée dans les plages choisies et bloquée en dehors. Il nécessite le watchdog de ce script et `zeitplan.py` à côté du proxy, voir [Planning](dashboard_FR.md#planning).
 
 👉 **[Installer et utiliser le tableau de bord](dashboard_FR.md)**
 

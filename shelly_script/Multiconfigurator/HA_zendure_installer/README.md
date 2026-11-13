@@ -7,7 +7,8 @@ direkt aus Home Assistant heraus, ohne EXE auf dem PC.
 
 - **Konfigurieren:** Speicher, Netzquelle und Regelung per Assistent einstellen
 - **Direkt hochladen** auf den Shelly, **Update** mit Übernahme der bisherigen Einstellungen
-- **Speicher prüfen** und **Log aufzeichnen**
+- **Alten Stand sichern:** vor dem Update das bisher installierte Script als Datei speichern
+- **Speicher prüfen** und **Log aufzeichnen** (bis 15 Minuten)
 - Die IPs der Shellys merkt sich die App über Updates hinweg
 
 Nach der Installation starten und **„Web-UI öffnen“** wählen.

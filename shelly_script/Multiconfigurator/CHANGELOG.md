@@ -1,5 +1,10 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 3.1.1
+
+- **Neue Controller-Standardwerte:** Neue Konfigurationen bekommen jetzt die Standardwerte von Controller 5.4.0 (`dischargeStartupPower`/`reverseStartupPower` 40 W, `dischargeStopPower`/`reverseStopPower` 30 W, `rebalance.socMargin` 6, `idleSkip.cyclesUnchanged` 3). Bisher setzte der Configurator noch die alten Werte ein. Beim Update bleiben die eigenen Werte erhalten.
+- **Dashboard-Shelly:** Standard für `api.dischargeStartupPower` 40 statt 35, passend zum Controller.
+
 ## 3.1.0
 
 - **Alten Stand sichern:** Beim Update steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen „Vor dem Hochladen alten Stand sichern“, standardmäßig an. Vor dem ersten Upload speichert der Browser dann das Script, das bisher auf dem Shelly lief, als Datei (z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`). Die Datei enthält die Zugangsdaten aus dem CONFIG-Block. Nur mit dem lokalen Helfer bzw. der Home-Assistant-App ab 3.1.0.

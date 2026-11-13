@@ -140,7 +140,7 @@ On Windows the command is often `python` or `py` instead of `python3`. The windo
 On start, the proxy shows a short overview (the helper's output is in German):
 
 ```text
-Zendure Multi-Configurator 2.9.2 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
+Zendure Multi-Configurator 3.1.1 - lokaler Helfer laeuft auf http://127.0.0.1:8787/
 Oeffne den Configurator automatisch im Browser...
 Dieses Fenster offen lassen, solange hochgeladen wird.
 Nach Konfiguration bzw. Update bitte dieses Fenster schliessen (Strg+C).

@@ -33,7 +33,7 @@ On top of that there is the **[Configurator](Multiconfigurator/readme_EN.md)** w
 
 **Exactly one script** runs on each Shelly. Shellys have little script memory – two scripts on one device can crash each other.
 
-The **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** (German) itself is a web page that you open via a small proxy on a PC, NAS or Home Assistant.
+The **[Dashboard](zendash_watch_API_ZenSDK/dashboard_EN.md)** itself is a web page that you open via a small proxy on a PC, NAS or Home Assistant. It also lets you set a [schedule](zendash_watch_API_ZenSDK/dashboard_EN.md#schedule) for discharging.
 
 ## Further tools
 

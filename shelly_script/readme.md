@@ -35,7 +35,7 @@ Dazu kommt der **[Configurator](Multiconfigurator/readme.md)** mit Helfer auf de
 
 Auf jedem Shelly läuft **genau ein Script**. Shellys haben wenig Script-Speicher – zwei Scripte auf einem Gerät können sich gegenseitig zum Absturz bringen.
 
-Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webseite, die du über einen kleinen Proxy auf PC, NAS oder Home Assistant öffnest.
+Das **[Dashboard](zendash_watch_API_ZenSDK/dashboard.md)** selbst ist eine Webseite, die du über einen kleinen Proxy auf PC, NAS oder Home Assistant öffnest. Dort legst du auch einen [Zeitplan](zendash_watch_API_ZenSDK/dashboard.md#zeitplan) für das Entladen fest.
 
 ## Weitere Werkzeuge
 

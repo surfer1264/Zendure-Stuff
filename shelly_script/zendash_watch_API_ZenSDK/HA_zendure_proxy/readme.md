@@ -6,6 +6,7 @@ Live-Dashboard für Zendure-Speicher (SolarFlow, Hyper), die über ein Shelly-Sc
 gesteuert werden – direkt aus Home Assistant heraus.
 
 - **Dashboard** für alle Speicher: Ladestand, Leistungen, Netzsaldo, Regelung, Sperren
+- **Zeitplan** für das Entladen: Zeitfenster festlegen, außerhalb ist Entladen gesperrt (nach der Zeitzone von Home Assistant)
 - **Löst das CORS-Problem** der Shelly-Firmware: Der Browser spricht nur mit dieser App,
   die App holt die Daten vom Shelly
 - **Optional:** Messwerte jede Minute an **ThingSpeak** und/oder **ThingsBoard** senden

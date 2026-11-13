@@ -258,7 +258,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "3.1.0";
+const APP_VERSION = "3.1.1";
 
 const I18N = {
 de: {
@@ -2961,18 +2961,18 @@ ${gridBlock}
 
   // ------------------------------------------------------------------
   rebalance: {
-    socMargin: ${pv('ctrl', 'rebalance.socMargin', ca.rebalance?.socMargin, 5)}${extraTail('ctrl', 'rebalance', ca.rebalance, CFG_KNOWN.ctrl.rebalance, '    ')}
+    socMargin: ${pv('ctrl', 'rebalance.socMargin', ca.rebalance?.socMargin, 6)}${extraTail('ctrl', 'rebalance', ca.rebalance, CFG_KNOWN.ctrl.rebalance, '    ')}
   },
 
   // ------------------------------------------------------------------
-  reverseStartupPower: ${pv('ctrl', 'reverseStartupPower', ca.reverseStartupPower, 35)},
-  reverseStopPower: ${pv('ctrl', 'reverseStopPower', ca.reverseStopPower, 15)},
+  reverseStartupPower: ${pv('ctrl', 'reverseStartupPower', ca.reverseStartupPower, 40)},
+  reverseStopPower: ${pv('ctrl', 'reverseStopPower', ca.reverseStopPower, 30)},
   gridReverseMode: "${grm}",
   chargeResetMargin: ${pv('ctrl', 'chargeResetMargin', ca.chargeResetMargin, 10)},
 
   // ------------------------------------------------------------------
-  dischargeStartupPower: ${pv('ctrl', 'dischargeStartupPower', ca.dischargeStartupPower, 35)},
-  dischargeStopPower: ${pv('ctrl', 'dischargeStopPower', ca.dischargeStopPower, 15)},
+  dischargeStartupPower: ${pv('ctrl', 'dischargeStartupPower', ca.dischargeStartupPower, 40)},
+  dischargeStopPower: ${pv('ctrl', 'dischargeStopPower', ca.dischargeStopPower, 30)},
 
   // ------------------------------------------------------------------
   interval: ${state.intervalChoice !== null ? ctrlInterval() : pv('ctrl', 'interval', ca.interval, recommendedInterval())},
@@ -2987,7 +2987,7 @@ ${gridBlock}
   // Sparmodus — Standard, siehe Doku Kapitel 6
   idleSkip: {
     enabled: ${pv('ctrl', 'idleSkip.enabled', ca.idleSkip?.enabled, true)},
-    cyclesUnchanged: ${pv('ctrl', 'idleSkip.cyclesUnchanged', ca.idleSkip?.cyclesUnchanged, 4)},
+    cyclesUnchanged: ${pv('ctrl', 'idleSkip.cyclesUnchanged', ca.idleSkip?.cyclesUnchanged, 3)},
     maxSkipSeconds: ${pv('ctrl', 'idleSkip.maxSkipSeconds', ca.idleSkip?.maxSkipSeconds, 44)}${extraTail('ctrl', 'idleSkip', ca.idleSkip, CFG_KNOWN.ctrl.idleSkip, '    ')}
   },
 
@@ -3046,7 +3046,7 @@ function buildZdwConfig(){
   // Hysterese nur zur Anzeige - mit Controller in dieser Sitzung gilt immer
   // dessen Wert, damit Dashboard und Regler nie auseinanderlaufen.
   const hysteresis = state.products.controller ? regel().hysteresis : pv('zdw', 'api.hysteresis', zapi.hysteresis, 12);
-  const dsp = pv('zdw', 'api.dischargeStartupPower', ca.dischargeStartupPower ?? zapi.dischargeStartupPower, 35);
+  const dsp = pv('zdw', 'api.dischargeStartupPower', ca.dischargeStartupPower ?? zapi.dischargeStartupPower, 40);
 
   return `let CONFIG = {
   // ------------------------------------------------------------------

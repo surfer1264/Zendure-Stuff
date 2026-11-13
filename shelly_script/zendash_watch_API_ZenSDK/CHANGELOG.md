@@ -8,6 +8,16 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.4.2
+
+**Ziel:** Startmeldung und Standardwert passen zu den getrennten Versionsnummern und zum Controller 5.4.0.
+
+- **Startmeldung:** Im Log steht jetzt „zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)“. Bisher hieß es „Dashboard muss ebenfalls v… sein“ – das stimmt seit Dashboard 5.0.0 nicht mehr, Dashboard und Proxy haben eigene Versionsnummern.
+- **Standardwert `api.dischargeStartupPower`:** 40 statt 35, wie `dischargeStartupPower` im Controller ab 5.4.0. Der Wert ist die Untergrenze für die Fix-Entladung im Dashboard (0 oder mindestens dieser Wert). Bestehende Konfigurationen behalten ihren Wert.
+- Regelverhalten unverändert.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.4.1
 
 **Ziel:** Das Script läuft wieder auf jeder Shelly-Firmware, auch auf älteren Ständen.

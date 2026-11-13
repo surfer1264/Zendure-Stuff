@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 3.1.1.0
+
+- Multi-Configurator 3.1.1: neue Konfigurationen mit den Standardwerten von Controller 5.4.0
+
 ## 3.1.0.0
 
 - Multi-Configurator 3.1.0: alten Stand vor dem Hochladen als Datei sichern (Häkchen, standardmäßig an), Log aufzeichnen bis 15 Minuten, CONFIG-Block im Ergebnis eingeklappt, „Speicher prüfen“ nur noch auf der Startseite

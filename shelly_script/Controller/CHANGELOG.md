@@ -13,7 +13,7 @@
 | `rebalance.socMargin` | 5 | 6 Prozentpunkte | Ein anderes Gerät übernimmt erst bei 6 statt 5 Prozentpunkten Vorsprung |
 | `idleSkip.cyclesUnchanged` | 4 | 3 | Der Sparmodus setzt einen Zyklus früher ein |
 
-- **Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen. Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.
+- **Bestehende Installationen:** Beim Update mit dem Configurator bleiben deine bisherigen Werte erhalten. Die neuen Standardwerte gelten nur für neue Konfigurationen (im Configurator ab 3.1.1). Wer sie übernehmen will, trägt sie selbst im CONFIG-Block bzw. im Configurator ein.
 - **Grenzen eingehalten:** Startwerte liegen weiter über den Stoppwerten (40 > 30 W), `socMargin` liegt im erlaubten Bereich 5–25.
 
 Keine Änderung am CONFIG-Block nötig.

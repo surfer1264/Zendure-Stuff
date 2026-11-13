@@ -10,7 +10,7 @@ Der **Websocket-Log-Grabber** holt das Script-Log aus dem Shelly raus, um über 
 
 Grundvoraussetzung ist eine Python-Umgebung. Die gibt es für jedes Betriebssystem, oft ist sie schon installiert.
 
-> **Tipp:** Für einen kurzen Log-Mitschnitt (bis 10 Minuten) brauchst du diese Werkzeuge nicht – das kann der [Configurator](../Multiconfigurator/readme.md#log-aufzeichnen) mit dem Helfer auf Knopfdruck. Die Werkzeuge hier sind für Aufzeichnungen über Stunden oder Tage gedacht.
+> **Tipp:** Für einen kurzen Log-Mitschnitt (bis 15 Minuten) brauchst du diese Werkzeuge nicht – das kann der [Configurator](../Multiconfigurator/readme.md#log-aufzeichnen) mit dem Helfer auf Knopfdruck. Die Werkzeuge hier sind für Aufzeichnungen über Stunden oder Tage gedacht.
 
 Lade die Dateien hier in **ein** Verzeichnis auf deinem Computer
 

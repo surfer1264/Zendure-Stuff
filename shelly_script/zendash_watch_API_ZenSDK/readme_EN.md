@@ -92,7 +92,7 @@ An overview appears in the script log (the script output is in German). Check th
 
 ```
 --------------------------------
-zenDash-API + Watchdog v3.5.12 (Dashboard muss ebenfalls v3.5.12 sein)
+zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)
 Module     : API AN | Watchdog AN
 Geraete    : SF2400[W] SF800[W]
 Watchdog   : alle 120 s, Offline-Alarm nach 10 min
@@ -149,7 +149,7 @@ api: {
   enabled: true,
   kvsHost: "192.168.178.117",
   hysteresis: 12,
-  dischargeStartupPower: 35,
+  dischargeStartupPower: 40,
   gridSource: "remote",
   gridSourceIp: "192.168.178.117",
   gridSourceEmId: 0,
@@ -244,6 +244,8 @@ In the Controller this block is called `signal`, here `notify`. `enabled`, `typ`
 ## Dashboard
 
 The dashboard is a web page that gets its data from this script. You open it via a small proxy on a PC, NAS (e.g. Synology), Home Assistant or Raspberry Pi – for Windows and Mac it is also available as a ready-made program.
+
+The proxy also lets you set a **schedule** for discharging: discharging is allowed within the chosen time windows and blocked outside them. It needs this script's watchdog and `zeitplan.py` next to the proxy, see [Schedule](dashboard_EN.md#schedule).
 
 👉 **[Set up and use the dashboard](dashboard_EN.md)**
 
