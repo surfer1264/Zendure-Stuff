@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 3.1.0.0
+
+- Multi-Configurator 3.1.0: alten Stand vor dem Hochladen als Datei sichern (Häkchen, standardmäßig an), Log aufzeichnen bis 15 Minuten, CONFIG-Block im Ergebnis eingeklappt, „Speicher prüfen“ nur noch auf der Startseite
+
 ## 3.0.0.0
 
 - Multi-Configurator 3.0.0: Abschluss der 2.x-Reihe; fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand

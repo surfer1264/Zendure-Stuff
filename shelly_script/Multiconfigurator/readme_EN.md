@@ -203,10 +203,6 @@ Only the configuration – for anyone who has customised their script or prefers
 
 Above each CONFIG block, a checkbox switches the script's verbose debug output on or off – before uploading or saving. This also works via [Update](#4-update): choose Update, tick the box, upload directly. Debug is meant for troubleshooting only (e.g. together with [Recording a log](#recording-a-log)) and should be switched off again afterwards.
 
-**🔍 Check memory** *(helper only)*
-
-Shows how much script memory is still free on a Shelly – see [Checking a Shelly's memory](#checking-a-shellys-memory).
-
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
 ---
@@ -240,6 +236,8 @@ When a new version of a script is available, you can bring your Shellys up to da
 ### What happens to your settings during an update
 
 Everything is carried over – including values the wizard doesn't ask for (e.g. `dampingFactor`, `interval` or the Watchdog's warning thresholds). New settings that didn't exist in your old version get their default value.
+
+**Back up the old version:** With the helper, the result page shows the checkbox **"Back up the current version before uploading"** above "⚡ Upload directly", ticked by default. The browser then saves the script that was running on the Shelly as a file before uploading, e.g. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. The file contains your credentials (tokens, passwords, phone numbers) – do not share it. To go back to the old version, [upload it manually](#uploading-a-script-manually).
 
 **Control interval (`interval`):** The recommendation is 3000 ms + 500 ms per device, i.e. 3500 ms for one, 4000 ms for two and 4500 ms for three devices. For a new setup the wizard uses this value. The result page always shows the interval together with the recommendation, and you can change it there at any time: use the recommendation or enter your own value of at least 3000 ms. If a carried-over value differs, a notice with the option "Keep" is shown as well; without a decision the previous value stays.
 
@@ -349,7 +347,7 @@ Without the helper (the instructions are also available as an expandable section
 
 ### Checking a Shelly's memory
 
-With the helper running, enter the IP of any Shelly in the result step and click **"🔍 Check memory"**. With **25,000 bytes of total memory** or more, everything is fine. If a script is already running, the free memory is naturally lower – so the configurator then calculates the total as free + used and also shows how much the script uses (and its peak). This also works on a new Shelly without a script.
+With the helper running, expand **"Check memory"** on the start page, enter the IP of any Shelly and click **"🔍 Check memory"**. With **25,000 bytes of total memory** or more, everything is fine. If a script is already running, the free memory is naturally lower – so the configurator then calculates the total as free + used and also shows how much the script uses (and its peak). This also works on a new Shelly without a script.
 
 For reference: the zenDash-API + Watchdog script uses around 13.5 kB in operation with two batteries, and around 17.8 kB at peak.
 
@@ -364,7 +362,7 @@ For troubleshooting – for example when a script doesn't start or behaves oddly
 1. In the start dialog, choose **"Record log"**.
 2. Enter the Shelly's IP (or click Controller Shelly / Dashboard Shelly) and click **"Show scripts"**.
 3. Select the script you want.
-4. Choose the duration: **140 seconds** or **600 seconds** (10 minutes).
+4. Choose the duration: **140 seconds** or **900 seconds** (15 minutes).
 5. Click **"Start recording"**.
 
 The helper stops the script, restarts it and records for the chosen duration. The log is then saved automatically as a file, e.g. `zerooutput_multi_kvs_v5.1.7_261010-1432.log`. You can see the last lines directly in the configurator. If the script is not running after the recording, the configurator points this out – the cause is then usually in the log.
@@ -372,7 +370,7 @@ The helper stops the script, restarts it and records for the chosen duration. Th
 * **Filtered (default):** "Record only output of the selected script" is ticked – the log only contains what the script itself prints.
 * **Unfiltered:** remove the tick – then all messages from the Shelly are added, including system messages. You need this if the script does not start, because the Shelly reports start errors or low memory as system messages. Lines from the script are then marked with `[Script 8]`.
 
-About size: for the Controller, 600 seconds are around 150 control cycles. Filtered, the log is roughly 100–300 KB depending on the number of batteries, unfiltered correspondingly more – no problem for a text editor.
+About size: for the Controller, 900 seconds are around 225 control cycles. Filtered, the log is roughly 150–450 KB depending on the number of batteries, unfiltered correspondingly more – no problem for a text editor.
 
 **Masking:** webhook IDs, tokens, API keys, passwords and phone numbers are replaced by `***` during recording; only the last 4 characters of serial numbers remain. IP addresses are kept because they are needed for troubleshooting. This makes it easier to share the log in an issue or forum – still, skim it briefly first.
 

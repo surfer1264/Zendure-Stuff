@@ -194,6 +194,10 @@
     background:var(--code-bg); color:var(--code-text); padding:18px; border-radius:10px;
     overflow-x:auto; font-size:.8rem; line-height:1.55; white-space:pre;
   }
+  /* CONFIG-Block im Ergebnis: eingeklappt nur die ersten Zeilen, nach unten ausgeblendet */
+  .cfg-wrap.collapsed pre{max-height:15.5em; overflow:hidden;
+    -webkit-mask-image:linear-gradient(#000 60%, transparent); mask-image:linear-gradient(#000 60%, transparent);}
+  .cfg-toggle{margin:4px 0 0;}
   .summary-list{font-size:.88rem;}
   .summary-list div{padding:6px 0; border-bottom:1px dashed var(--border);}
   .summary-list b{color:var(--accent-text);}
@@ -254,7 +258,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "3.0.0";
+const APP_VERSION = "3.1.0";
 
 const I18N = {
 de: {
@@ -425,6 +429,10 @@ de: {
 
   btn_copy: "📋 In Zwischenablage kopieren",
   btn_savefile: "💾 Nur CONFIG-Block speichern",
+  cfg_expand: "▾ Ganzen CONFIG-Block anzeigen ({n} Zeilen)",
+  cfg_collapse: "▴ CONFIG-Block einklappen",
+  backup_label: "Vor dem Hochladen alten Stand sichern{v}",
+  backup_hint: "Speichert das Script, das jetzt auf dem Shelly läuft, als Datei – mit deiner bisherigen Konfiguration. Die Datei enthält deine Zugangsdaten (z. B. Tokens, Passwörter, Telefonnummern), nicht weitergeben. Zurück geht es über „Script von Hand hochladen“.",
   btn_fullscript: "🔗 Komplettes Script von GitHub speichern",
   fullscript_hint: "Lädt <code>{filename}</code> live von GitHub, ersetzt darin nur den <code>CONFIG</code>-Block durch deine Angaben und bietet das komplette, einsatzbereite Script zum Speichern an — kein manuelles Copy-Paste mehr nötig. Braucht eine Internetverbindung.",
 
@@ -507,7 +515,7 @@ de: {
   log_filter_hint: "Standard. Ohne Häkchen werden alle Meldungen des Shelly aufgezeichnet, auch Systemmeldungen – sinnvoll, wenn das Script nicht startet (z. B. Fehler beim Start oder zu wenig Speicher).",
   log_duration_label: "Dauer der Aufzeichnung",
   log_duration_140: "140 Sekunden",
-  log_duration_600: "600 Sekunden (10 Minuten)",
+  log_duration_900: "900 Sekunden (15 Minuten)",
   log_warn: "⚠️ Das Script wird kurz gestoppt – beim Controller pausiert die Regelung für einige Sekunden. Die Aufzeichnung dauert {s} Sekunden, bitte Seite und Helfer so lange offen lassen.",
   log_start_btn: "Aufzeichnung starten ({s} s)",
   log_running: "Aufzeichnung läuft … noch ca. {s} s · {n} Zeilen",
@@ -852,6 +860,10 @@ en: {
 
   btn_copy: "📋 Copy to clipboard",
   btn_savefile: "💾 Save CONFIG block only",
+  cfg_expand: "▾ Show the whole CONFIG block ({n} lines)",
+  cfg_collapse: "▴ Collapse CONFIG block",
+  backup_label: "Back up the current version before uploading{v}",
+  backup_hint: "Saves the script now running on the Shelly as a file – with your previous configuration. The file contains your credentials (e.g. tokens, passwords, phone numbers), do not share it. To go back, see “Uploading a script manually”.",
   btn_fullscript: "🔗 Save complete script from GitHub",
   fullscript_hint: "Fetches <code>{filename}</code> live from GitHub, replaces only the <code>CONFIG</code> block with your settings, and offers the complete, ready-to-use script for saving — no manual copy-paste needed. Requires an internet connection.",
 
@@ -934,7 +946,7 @@ en: {
   log_filter_hint: "Default. Without the tick, all messages from the Shelly are recorded, including system messages – useful if the script does not start (e.g. errors during start or low memory).",
   log_duration_label: "Recording duration",
   log_duration_140: "140 seconds",
-  log_duration_600: "600 seconds (10 minutes)",
+  log_duration_900: "900 seconds (15 minutes)",
   log_warn: "⚠️ The script is stopped briefly – for the Controller, control pauses for a few seconds. Recording takes {s} seconds; please keep the page and the helper open until then.",
   log_start_btn: "Start recording ({s} s)",
   log_running: "Recording … approx. {s} s left · {n} lines",
@@ -1279,6 +1291,10 @@ fr: {
 
   btn_copy: "📋 Copier dans le presse-papiers",
   btn_savefile: "💾 Enregistrer seulement le bloc CONFIG",
+  cfg_expand: "▾ Afficher tout le bloc CONFIG ({n} lignes)",
+  cfg_collapse: "▴ Replier le bloc CONFIG",
+  backup_label: "Sauvegarder la version actuelle avant le chargement{v}",
+  backup_hint: "Enregistre dans un fichier le script qui tourne actuellement sur le Shelly – avec ta configuration précédente. Le fichier contient tes identifiants (jetons, mots de passe, numéros de téléphone), ne le partage pas. Pour revenir en arrière : « Charger un script manuellement ».",
   btn_fullscript: "🔗 Enregistrer le script complet depuis GitHub",
   fullscript_hint: "Récupère <code>{filename}</code> en direct depuis GitHub, remplace uniquement le bloc <code>CONFIG</code> par tes réglages, et propose le script complet, prêt à l'emploi, à enregistrer — plus besoin de copier-coller manuellement. Nécessite une connexion internet.",
 
@@ -1361,7 +1377,7 @@ fr: {
   log_filter_hint: "Par défaut. Sans la coche, tous les messages du Shelly sont enregistrés, messages système compris – utile si le script ne démarre pas (par ex. erreur au démarrage ou manque de mémoire).",
   log_duration_label: "Durée de l'enregistrement",
   log_duration_140: "140 secondes",
-  log_duration_600: "600 secondes (10 minutes)",
+  log_duration_900: "900 secondes (15 minutes)",
   log_warn: "⚠️ Le script est brièvement arrêté – pour le Controller, la régulation s'interrompt quelques secondes. L'enregistrement dure {s} secondes ; laisse la page et l'assistant local ouverts jusque-là.",
   log_start_btn: "Démarrer l'enregistrement ({s} s)",
   log_running: "Enregistrement en cours … encore env. {s} s · {n} lignes",
@@ -2663,6 +2679,8 @@ function setDebug(key, on){
   debugAdvanced(key).debug = !!on;
   const pre = document.getElementById('configOut_' + key);
   if(pre) pre.textContent = CONFIG_BUILDERS[key]();
+  const tg = document.getElementById('cfgToggle_' + key);
+  if(tg && pre) tg.textContent = cfgToggleText(key, pre.textContent);
   const rep = document.getElementById('cfgReport_' + key);
   if(rep) rep.innerHTML = cfgReportHtml(key);
 }
@@ -3134,6 +3152,61 @@ const DOC_URLS = {
 const UPLOAD_NAMES = { ctrl: 'ctrl', zdw: 'zd' };
 function targetIp(key){ return key === 'ctrl' ? state.runtime.ctr_kvs : state.runtime.apidash_watch; }
 
+// CONFIG-Block im Ergebnis ein-/ausklappen (Standard: eingeklappt)
+function cfgOpen(key){ return !!(state.cfgOpen && state.cfgOpen[key]); }
+function cfgToggleText(key, cfg){
+  return cfgOpen(key) ? t('cfg_collapse') : t('cfg_expand', {n: String(cfg || '').split('\n').length});
+}
+function toggleCfg(key){
+  if(!state.cfgOpen) state.cfgOpen = {};
+  state.cfgOpen[key] = !cfgOpen(key);
+  const w = document.getElementById('cfgWrap_' + key);
+  if(w) w.classList.toggle('collapsed', !cfgOpen(key));
+  const pre = document.getElementById('configOut_' + key);
+  const b = document.getElementById('cfgToggle_' + key);
+  if(b) b.textContent = cfgToggleText(key, pre ? pre.textContent : '');
+}
+
+// Alten Stand vor dem Hochladen sichern (nur Update-Weg mit neuem Helfer:
+// /api/config liefert dann den kompletten installierten Code mit).
+function backupOf(key){
+  const b = state.updateReady && state.upd.backup && state.upd.backup[key];
+  return b && b.code ? b : null;
+}
+function backupWanted(key){
+  const w = state.upd.backupWanted || {};
+  return w[key] !== false;   // Standard: an
+}
+function setBackupWanted(key, on){
+  if(!state.upd.backupWanted) state.upd.backupWanted = {};
+  state.upd.backupWanted[key] = !!on;
+}
+function backupFilename(key, b){
+  const d = new Date(), p = function(n){ return String(n).padStart(2, '0'); };
+  const stamp = String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
+  const base = FULL_SCRIPT_FILENAMES[key].replace(/_mini\.js$/, '');
+  const ver = b.version ? '_v' + String(b.version).replace(/[^0-9A-Za-z._-]/g, '_') : '';
+  return base + ver + '_backup_' + stamp + '.js';
+}
+function backupHtml(key){
+  const b = backupOf(key);
+  if(!b) return '';
+  const v = b.version ? ' (v' + escapeHtml(b.version) + ')' : '';
+  return `<label style="display:flex; gap:8px; align-items:flex-start; margin-top:12px; font-weight:normal;">
+      <input type="checkbox" ${backupWanted(key) ? 'checked' : ''} onchange="setBackupWanted('${key}', this.checked)">
+      <span>${t('backup_label', {v: v})}<span class="hint" style="display:block; margin:2px 0 0;">${t('backup_hint')}</span></span>
+    </label>`;
+}
+// Einmal je Script und Update-Durchlauf, vor dem ersten Upload-Versuch
+function backupBeforeUpload(key){
+  const b = backupOf(key);
+  if(!b || !backupWanted(key)) return;
+  if(!state.upd.backupDone) state.upd.backupDone = {};
+  if(state.upd.backupDone[key]) return;
+  triggerFileDownload(b.code, backupFilename(key, b));
+  state.upd.backupDone[key] = true;
+}
+
 function resultBlock(title, key, cfg, hintKey){
   const ip = targetIp(key);
   return `
@@ -3150,7 +3223,8 @@ function resultBlock(title, key, cfg, hintKey){
       <input type="checkbox" ${debugAdvanced(key).debug === true ? 'checked' : ''} onchange="setDebug('${key}', this.checked)">
       <span>${t('debug_label')}<span class="hint" style="display:block; margin:2px 0 0;">${t('debug_hint')}</span></span>
     </label>
-    <pre id="configOut_${key}">${escapeHtml(cfg)}</pre>
+    <div class="cfg-wrap${cfgOpen(key) ? '' : ' collapsed'}" id="cfgWrap_${key}"><pre id="configOut_${key}">${escapeHtml(cfg)}</pre></div>
+    <div class="copy-row cfg-toggle" style="justify-content:flex-start;"><button class="btn" id="cfgToggle_${key}" onclick="toggleCfg('${key}')">${cfgToggleText(key, cfg)}</button></div>
 
     <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
       <div class="copy-row" style="justify-content:flex-start;">
@@ -3163,6 +3237,7 @@ function resultBlock(title, key, cfg, hintKey){
     <div class="helper-row" id="helperRow_${key}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
       <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
       <p style="font-size:.88rem; margin:0;">${t('upload_target_fixed', {ip: escapeHtml(ip || '—')})}</p>
+      ${backupHtml(key)}
       <div class="copy-row" style="margin-top:10px;">
         <button class="btn btn-primary" id="uploadBtn_${key}" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
         <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
@@ -3209,7 +3284,8 @@ function memCheckBlock(collapsed){
       <button class="btn btn-primary" onclick="checkMemory()">${t('btn_memcheck')}</button>
       <span id="memCheckStatus" class="hint" style="margin:0;"></span>
     </div>`;
-  // Startseite: eingeklappt, damit die Auswahl "Was moechtest du tun?" im Vordergrund steht
+  // Nur noch auf der Startseite (seit 3.1.0 nicht mehr im Ergebnis):
+// eingeklappt, damit die Auswahl "Was moechtest du tun?" im Vordergrund steht
   if(collapsed) return `
   <div class="panel helper-row" id="memCheckBlock" style="display:none;">
     <details ${memCheckOpen ? 'open' : ''} ontoggle="memCheckOpen=this.open">
@@ -3716,8 +3792,8 @@ function renderDownloadPanel(){
 // Standard: nur die Ausgaben des gewaehlten Scripts, optional ungefiltert
 // (dann auch System-Fehlermeldungen zum Script-Start).
 // Die Aufzeichnung laeuft im Helfer als Hintergrund-Job, der Browser fragt
-// den Stand alle 2 s ab (bis zu 10 Minuten sind zu lang fuer einen Aufruf).
-const LOG_DURATIONS = [140, 600];
+// den Stand alle 2 s ab (bis zu 15 Minuten sind zu lang fuer einen Aufruf).
+const LOG_DURATIONS = [140, 900];
 let logTimer = null;
 
 function renderLogPanel(){
@@ -4046,6 +4122,7 @@ async function startUpdate(){
   state.controllerAdvanced = {}; state.zdwAdvanced = {};
   state.intervalChoice = null; state.intervalErr = false;
   state.devices = [];
+  u.backup = {}; u.backupDone = {};
   let current = 0;
   try{
     // Controller zuerst: seine Config ist fuer die Geraetedetails fuehrend
@@ -4055,6 +4132,7 @@ async function startUpdate(){
       setUpdStep(i, 'run');
       setProgress(t('upd_progress_read', {name: KEY_NAMES[key], ip: u.rows[key].ip, i: i + 1, n: keys.length}));
       const data = await helperGet('/api/config?ip=' + encodeURIComponent(u.rows[key].ip) + '&key=' + key);
+      if(data.code) u.backup[key] = { code: data.code, version: data.version || '' };
       const res = applyConfigText(data.config);
       if(!res.ok) throw new Error(KEY_NAMES[key] + ': ' + res.error);
       setUpdStep(i, 'ok');
@@ -4174,6 +4252,7 @@ async function directUpload(key, confirmIds, deleteOthers){
     statusEl.className = 'error';
     return;
   }
+  if(!confirmIds) backupBeforeUpload(key);
   statusEl.textContent = t('upload_loading', {ip: ip});
   statusEl.className = 'hint';
   if(btn) btn.disabled = true;
@@ -4368,7 +4447,6 @@ function renderResult(){
   if(needsDashIp()) html += resultBlock('zenDash-API + Watchdog', 'zdw', buildZdwConfig(), 'hint_zdw');
 
   if(anyProduct()) html += uploadGuideBlock();
-  html += memCheckBlock();
 
   return html;
 }

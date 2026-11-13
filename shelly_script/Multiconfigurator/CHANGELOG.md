@@ -1,5 +1,13 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 3.1.0
+
+- **Alten Stand sichern:** Beim Update steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen „Vor dem Hochladen alten Stand sichern“, standardmäßig an. Vor dem ersten Upload speichert der Browser dann das Script, das bisher auf dem Shelly lief, als Datei (z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`). Die Datei enthält die Zugangsdaten aus dem CONFIG-Block. Nur mit dem lokalen Helfer bzw. der Home-Assistant-App ab 3.1.0.
+- **Log aufzeichnen:** bis 15 Minuten (900 s) statt 10 Minuten. Zur Wahl stehen 140 s und 900 s.
+- **Ergebnis ohne „Speicher prüfen“:** Die Speicherprüfung gibt es nur noch auf der Startseite (eingeklappt).
+- **Ergebnis:** Der CONFIG-Block ist eingeklappt, sichtbar sind die ersten Zeilen. „Ganzen CONFIG-Block anzeigen“ klappt ihn auf. Kopieren und Speichern nehmen weiter den ganzen Block.
+- Helfer: `/api/config` liefert zusätzlich den kompletten installierten Code (Feature `backup_code`), die Log-Grenze liegt bei 900 s. Ein älterer Helfer bietet das Häkchen nicht an und kürzt die Aufzeichnung auf 10 Minuten.
+
 ## 3.0.0
 
 - Abschluss der 2.x-Reihe: Diese Version fasst alle Änderungen seit 2.0 zusammen und finalisiert die Entwicklung auf diesem Stand

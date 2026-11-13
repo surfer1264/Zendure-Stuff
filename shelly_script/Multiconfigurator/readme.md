@@ -205,10 +205,6 @@ Nur die Konfiguration – für alle, die ihr Script selbst angepasst haben oder 
 
 Über jedem CONFIG-Block kannst du per Häkchen die ausführlichen Debug-Ausgaben des Scripts ein- oder ausschalten – vor dem Hochladen oder Speichern. Das geht auch über [Update](#4-update): Update wählen, Häkchen setzen, direkt hochladen. Debug ist nur für die Fehlersuche gedacht (z. B. zusammen mit [Log aufzeichnen](#log-aufzeichnen)) und sollte danach wieder aus.
 
-**🔍 Speicher prüfen** *(nur mit Helfer)*
-
-Zeigt, wie viel Script-Speicher auf einem Shelly noch frei ist – siehe [Speicher eines Shelly prüfen](#speicher-eines-shelly-prüfen).
-
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
 ---
@@ -242,6 +238,8 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 ### Was beim Update mit deinen Einstellungen passiert
 
 Übernommen wird alles – auch Werte, die der Assistent gar nicht abfragt (z. B. `dampingFactor`, `interval` oder die Warnschwellen des Watchdog). Neue Einstellungen, die es in deiner alten Version noch nicht gab, bekommen ihren Standardwert.
+
+**Alten Stand sichern:** Mit dem Helfer steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen **„Vor dem Hochladen alten Stand sichern“**, standardmäßig an. Dann speichert der Browser vor dem Hochladen das Script, das bisher auf dem Shelly lief, als Datei, z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Die Datei enthält deine Zugangsdaten (Tokens, Passwörter, Telefonnummern) – nicht weitergeben. Zurück auf den alten Stand kommst du, indem du sie [von Hand hochlädst](#script-von-hand-hochladen).
 
 **Regel-Intervall (`interval`):** Empfohlen sind 3000 ms + 500 ms je Gerät, also 3500 ms bei einem, 4000 ms bei zwei und 4500 ms bei drei Geräten. Bei einer neuen Einrichtung setzt der Assistent diesen Wert. Die Ergebnisseite zeigt das Intervall immer mit der Empfehlung, und du kannst es dort jederzeit ändern: Empfehlung übernehmen oder einen eigenen Wert ab 3000 ms eintragen. Weicht ein übernommener Wert ab, steht zusätzlich ein Hinweis mit der Wahl „Beibehalten“; ohne Entscheidung bleibt der bisherige Wert.
 
@@ -351,7 +349,7 @@ Ohne Helfer (die Anleitung gibt es auch aufklappbar im Configurator):
 
 ### Speicher eines Shelly prüfen
 
-Mit laufendem Helfer im Ergebnis-Schritt die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. Ab **25 000 Bytes Gesamtspeicher** ist alles gut. Läuft schon ein Script, ist der freie Speicher natürlich kleiner – deshalb rechnet der Configurator dann den Gesamtspeicher aus frei + belegt und zeigt auch, wie viel das Script belegt (und seine Spitze). Das funktioniert auch bei einem neuen Shelly ohne Script.
+Mit laufendem Helfer auf der Startseite den Bereich **„Speicher prüfen“** aufklappen, die IP eines beliebigen Shelly eintragen und **„🔍 Speicher prüfen“** klicken. Ab **25 000 Bytes Gesamtspeicher** ist alles gut. Läuft schon ein Script, ist der freie Speicher natürlich kleiner – deshalb rechnet der Configurator dann den Gesamtspeicher aus frei + belegt und zeigt auch, wie viel das Script belegt (und seine Spitze). Das funktioniert auch bei einem neuen Shelly ohne Script.
 
 Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im Betrieb rund 13,5 kB, in der Spitze rund 17,8 kB.
 
@@ -366,7 +364,7 @@ Für die Fehlersuche – etwa wenn ein Script nicht startet oder sich merkwürdi
 1. Im Startdialog **„Log aufzeichnen“** wählen.
 2. Die IP des Shelly eintragen (oder auf Controller-Shelly bzw. Dashboard-Shelly klicken) und **„Scripte anzeigen“**.
 3. Das gewünschte Script auswählen.
-4. Die Dauer wählen: **140 Sekunden** oder **600 Sekunden** (10 Minuten).
+4. Die Dauer wählen: **140 Sekunden** oder **900 Sekunden** (15 Minuten).
 5. **„Aufzeichnung starten“** klicken.
 
 Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dauer mit. Danach wird das Log automatisch als Datei gespeichert, z. B. `zerooutput_multi_kvs_v5.1.7_261010-1432.log`. Die letzten Zeilen siehst du direkt im Configurator. Läuft das Script nach der Aufzeichnung nicht, weist der Configurator darauf hin – die Ursache steht dann meist im Log.
@@ -374,7 +372,7 @@ Der Helfer stoppt das Script, startet es neu und schreibt für die gewählte Dau
 * **Gefiltert (Standard):** Häkchen bei „Nur Ausgaben des gewählten Scripts aufzeichnen“ – im Log steht nur, was das Script selbst ausgibt.
 * **Ungefiltert:** Häkchen entfernen – dann kommen alle Meldungen des Shelly dazu, auch Systemmeldungen. Das brauchst du, wenn das Script nicht startet, denn Fehler beim Start oder zu wenig Speicher meldet der Shelly als Systemmeldung. Zeilen des Scripts sind dann mit `[Script 8]` markiert.
 
-Zur Größe: 600 Sekunden sind beim Controller rund 150 Regelzyklen. Gefiltert wird das Log je nach Anzahl der Speicher etwa 100–300 KB groß, ungefiltert entsprechend mehr – für einen Texteditor kein Problem.
+Zur Größe: 900 Sekunden sind beim Controller rund 225 Regelzyklen. Gefiltert wird das Log je nach Anzahl der Speicher etwa 150–450 KB groß, ungefiltert entsprechend mehr – für einen Texteditor kein Problem.
 
 **Maskierung:** Webhook-IDs, Tokens, API-Keys, Passwörter und Telefonnummern werden beim Aufzeichnen durch `***` ersetzt, von Seriennummern bleiben nur die letzten 4 Zeichen. IP-Adressen bleiben stehen, weil sie für die Fehlersuche gebraucht werden. So kannst du das Log leichter in einem Issue oder Forum teilen – schau es vorher trotzdem kurz durch.
 

@@ -203,10 +203,6 @@ Uniquement la configuration – pour ceux qui ont adapté leur script eux-mêmes
 
 Au-dessus de chaque bloc CONFIG, une case à cocher active ou désactive les sorties de débogage détaillées du script – avant le chargement ou l'enregistrement. Cela fonctionne aussi via la [mise à jour](#4-mise-à-jour) : choisir « Mettre à jour », cocher la case, charger directement. Le débogage ne sert qu'au diagnostic (par ex. avec [Enregistrer le journal](#enregistrer-le-journal)) et doit être désactivé ensuite.
 
-**🔍 Vérifier la mémoire** *(uniquement avec l'assistant local)*
-
-Indique combien de mémoire de script est encore libre sur un Shelly – voir [Vérifier la mémoire d'un Shelly](#vérifier-la-mémoire-dun-shelly).
-
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
 ---
@@ -240,6 +236,8 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
 ### Ce que deviennent tes réglages lors d'une mise à jour
 
 Tout est repris – y compris les valeurs que l'assistant ne demande pas (par ex. `dampingFactor`, `interval` ou les seuils d'alerte du Watchdog). Les nouveaux réglages qui n'existaient pas encore dans ton ancienne version reçoivent leur valeur par défaut.
+
+**Sauvegarder l'ancienne version :** avec l'assistant local, la page Résultat affiche au-dessus de « ⚡ Charger directement » la case **« Sauvegarder la version actuelle avant le chargement »**, cochée par défaut. Le navigateur enregistre alors, avant le chargement, le script qui tournait sur le Shelly dans un fichier, par ex. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Le fichier contient tes identifiants (jetons, mots de passe, numéros de téléphone) – ne le partage pas. Pour revenir à l'ancienne version, [charge-le manuellement](#charger-un-script-manuellement).
 
 **Intervalle de régulation (`interval`) :** la recommandation est de 3000 ms + 500 ms par appareil, soit 3500 ms pour un, 4000 ms pour deux et 4500 ms pour trois appareils. Pour une nouvelle installation, l'assistant utilise cette valeur. La page de résultat affiche toujours l'intervalle avec la recommandation, et tu peux le modifier à tout moment : reprendre la recommandation ou saisir ta propre valeur d'au moins 3000 ms. Si une valeur reprise diffère, un avis avec le choix « Conserver » s'affiche en plus ; sans décision, l'ancienne valeur reste.
 
@@ -349,7 +347,7 @@ Sans l'assistant local (les instructions sont aussi disponibles en section dépl
 
 ### Vérifier la mémoire d'un Shelly
 
-Avec l'assistant local en marche, saisis à l'étape Résultat l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. À partir de **25 000 octets de mémoire totale**, tout va bien. Si un script tourne déjà, la mémoire libre est forcément plus faible – le configurateur calcule alors le total comme libre + occupé et indique aussi combien le script occupe (et son pic). Cela fonctionne aussi sur un Shelly neuf sans script.
+Avec l'assistant local en marche, déplie **« Vérifier la mémoire »** sur la page d'accueil, saisis l'IP de n'importe quel Shelly et clique sur **« 🔍 Vérifier la mémoire »**. À partir de **25 000 octets de mémoire totale**, tout va bien. Si un script tourne déjà, la mémoire libre est forcément plus faible – le configurateur calcule alors le total comme libre + occupé et indique aussi combien le script occupe (et son pic). Cela fonctionne aussi sur un Shelly neuf sans script.
 
 Pour information : le script zenDash-API + Watchdog occupe, avec deux batteries, environ 13,5 ko en fonctionnement et environ 17,8 ko en pointe.
 
@@ -364,7 +362,7 @@ Pour le diagnostic – par exemple quand un script ne démarre pas ou se comport
 1. Dans la boîte de dialogue de démarrage, choisis **« Enregistrer le journal »**.
 2. Saisis l'IP du Shelly (ou clique sur Shelly Controller / Shelly Dashboard) puis sur **« Afficher les scripts »**.
 3. Sélectionne le script souhaité.
-4. Choisis la durée : **140 secondes** ou **600 secondes** (10 minutes).
+4. Choisis la durée : **140 secondes** ou **900 secondes** (15 minutes).
 5. Clique sur **« Démarrer l'enregistrement »**.
 
 L'assistant local arrête le script, le redémarre et enregistre pendant la durée choisie. Le journal est ensuite enregistré automatiquement dans un fichier, par ex. `zerooutput_multi_kvs_v5.1.7_261010-1432.log`. Les dernières lignes s'affichent directement dans le configurateur. Si le script ne tourne pas après l'enregistrement, le configurateur le signale – la cause figure alors généralement dans le journal.
@@ -372,7 +370,7 @@ L'assistant local arrête le script, le redémarre et enregistre pendant la dur�
 * **Filtré (par défaut) :** « Enregistrer uniquement les sorties du script choisi » est coché – le journal ne contient que ce que le script affiche lui-même.
 * **Sans filtre :** décoche la case – tous les messages du Shelly sont alors ajoutés, messages système compris. C'est nécessaire si le script ne démarre pas, car le Shelly signale les erreurs de démarrage ou le manque de mémoire sous forme de messages système. Les lignes du script sont alors marquées `[Script 8]`.
 
-À propos de la taille : pour le Controller, 600 secondes représentent environ 150 cycles de régulation. Filtré, le journal fait environ 100 à 300 Ko selon le nombre de batteries, sans filtre davantage – aucun problème pour un éditeur de texte.
+À propos de la taille : pour le Controller, 900 secondes représentent environ 225 cycles de régulation. Filtré, le journal fait environ 150 à 450 Ko selon le nombre de batteries, sans filtre davantage – aucun problème pour un éditeur de texte.
 
 **Masquage :** les ID de webhook, jetons, clés d'API, mots de passe et numéros de téléphone sont remplacés par `***` lors de l'enregistrement ; seuls les 4 derniers caractères des numéros de série restent visibles. Les adresses IP sont conservées, car elles sont utiles au diagnostic. Tu peux ainsi partager plus facilement le journal dans un ticket ou un forum – parcours-le tout de même rapidement avant.
 

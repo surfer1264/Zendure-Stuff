@@ -107,7 +107,7 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Configurator per githack), kennt er neue Optionen nicht. Der Configurator
 # bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
 HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture", "shelly_auth",
-                   "upload_progress"]
+                   "upload_progress", "backup_code"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -525,7 +525,10 @@ def read_config(ip, key):
     rng = find_config_block(code.replace("\r\n", "\n"))
     if rng is None:
         raise RpcError("CONFIG-Block im Script auf %s nicht gefunden." % ip)
-    return dict(matching[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]])
+    # code: das komplette installierte Script, damit der Configurator vor
+    # dem Hochladen den alten Stand als Datei sichern kann (Feature
+    # "backup_code"). Wird ohnehin schon ganz gelesen, kein Mehraufwand.
+    return dict(matching[0], config=code.replace("\r\n", "\n")[rng[0]:rng[1]], code=code)
 
 
 # Fortschritt laufender Uploads fuer GET /api/upload_status?id=...
@@ -784,7 +787,7 @@ def check_memory(ip):
 # ---------------------------------------------------------------
 LOG_DEFAULT_SECONDS = 140
 LOG_MIN_SECONDS = 10
-LOG_MAX_SECONDS = 600
+LOG_MAX_SECONDS = 900
 LOG_MAX_LINES = 50000
 SCRIPT_FD_BASE = 100         # fd = 100 + Script-ID, siehe shelly_log_grabber.py
 
@@ -1036,7 +1039,7 @@ def capture_log(ip, sid, seconds=LOG_DEFAULT_SECONDS, only_script=True, progress
             "running": running_after, "seconds": seconds}
 
 
-# Aufzeichnungen laufen als Hintergrund-Job: bis zu 10 Minuten sind zu
+# Aufzeichnungen laufen als Hintergrund-Job: bis zu 15 Minuten sind zu
 # lang fuer einen einzelnen HTTP-Aufruf (Firefox bricht nach 300 s ab).
 # Der Browser startet den Job per POST und fragt den Stand per GET ab.
 LOG_JOBS = {}
