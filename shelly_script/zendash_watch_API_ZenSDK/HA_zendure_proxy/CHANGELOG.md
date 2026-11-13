@@ -2,6 +2,11 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.5.1.0
+
+- Zeitplan sperrt nach vollem Akku wieder, sobald der Akku selbst entlädt
+- Energiefluss: PV-Durchleitung eines vollen Geräts wird nicht mehr als „Akku lädt“ angezeigt
+
 ## 5.5.0.1
 
 - Korrektur: Der Proxy übernimmt jetzt die Zeitzone von Home Assistant. Bisher lief er in UTC, der Zeitplan schaltete dadurch eine Stunde zu spät (im Sommer zwei). `run.sh` startet dafür über `with-contenv`.

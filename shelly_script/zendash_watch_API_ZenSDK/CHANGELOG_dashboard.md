@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.5.1
+
+**Ziel:** Zeitplan hält die Sperre auch nach vollem Akku ein, und der Energiefluss zeigt PV-Durchleitung richtig an. Braucht das Shelly-Script ab 4.1.0.
+
+- **Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.
+- **Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.
+- **Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall.
+- Home-Assistant-App 5.5.1.0
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.5.0
 
 **Ziel:** Entladen nach Zeitplan und nur noch ein Dashboard. Braucht das Shelly-Script ab 4.1.0, keine Änderung an den Shelly-Scripts.

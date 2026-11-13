@@ -23,7 +23,8 @@ Regeln (je Geraet):
   - Manuelles Laden (dischargeAllowed 0, reverse 0, inputLimit > 0): Der
     Plan laesst das Geraet bis zum naechsten Wechsel in Ruhe.
   - Voller Akku (socLimit 1) waehrend einer Plansperre: freigeben, damit
-    Solarstrom durchkommt, dann bis zum naechsten Wechsel in Ruhe lassen.
+    Solarstrom durchkommt. Ist er nicht mehr voll und gibt der Akku selbst
+    mehr als FULL_RELOCK_W ab (PV reicht nicht mehr), wird wieder gesperrt.
   - Nach einem Neustart des Proxys greift der Plan beim naechsten Wechsel,
     nach dem Speichern eines geaenderten Plans sofort.
 
@@ -346,6 +347,15 @@ def _volt_ok(d, hub, wd):
     return mv / 100.0 > reset
 
 
+FULL_RELOCK_W = 30      # Akku gibt mehr als das ab -> Freigabe "voll" zuruecknehmen
+
+
+def _pack_discharging(hub):
+    """Entlaedt der Akku selbst (packInputPower)? Ohne Messwert: nein."""
+    p = (hub or {}).get("packIn")
+    return isinstance(p, (int, float)) and p > FULL_RELOCK_W
+
+
 def evaluate(plan, cfg, status, allowed, edge, rt_devices):
     """Reine Entscheidung ohne Ein-/Ausgabe (auch fuer Tests).
     Aendert rt_devices und gibt {id: 0/1} zurueck, was geschrieben werden soll."""
@@ -408,6 +418,13 @@ def evaluate(plan, cfg, status, allowed, edge, rt_devices):
         elif r["reason"] == "hand" and da == allowed and not _manual(d):
             # Von Hand wieder auf den Planstand gestellt: Plan uebernimmt wieder
             r.update({"owned": True, "reason": None})
+        elif (r["reason"] == "full" and not allowed and da and not _manual(d)
+              and soc_limit != 1 and _pack_discharging(hub)):
+            # Freigabe wegen vollem Akku war nur fuer die PV-Durchleitung
+            # gedacht. Nicht mehr voll und der Akku gibt selbst ab (PV reicht
+            # nicht mehr): Plansperre wieder herstellen. Wird er wieder voll,
+            # gibt der naechste Durchlauf erneut frei.
+            r.update({"owned": True, "reason": None, "want": 0})
         elif r["want"] is not None and _manual(d):
             r["want"] = None
 
@@ -762,7 +779,7 @@ _PAGE = r"""<!DOCTYPE html>
       rules:['Geschaltet wird <b>nur zu den Planzeiten</b>. Was du dazwischen von Hand umstellst, gilt bis zum nächsten Wechsel.',
         '<b>Sperren</b> klappt immer. <b>Freigeben</b> nur, wenn die schwächste Zelle über der Freigabeschwelle des Watchdogs liegt{v}, sonst wird alle zwei Minuten neu versucht.',
         'Der Plan braucht den <b>Watchdog</b> und schaltet nur Geräte, die er überwacht (<span class="num">watch: true</span>). Er nutzt dessen Messwerte und prüft zwischen den Planzeiten alle zwei Minuten.',
-        '<b>Manuelles Laden</b> oder <b>voller Akku</b> unterbrechen den Plan für dieses Gerät bis zum nächsten Wechsel. Bei vollem Akku wird vorher freigegeben, damit Solarstrom durchkommt.',
+        '<b>Manuelles Laden</b> oder <b>voller Akku</b> unterbrechen den Plan für dieses Gerät bis zum nächsten Wechsel. Bei vollem Akku wird freigegeben, damit Solarstrom durchkommt – sobald der Akku danach selbst Strom abgibt, sperrt der Plan wieder.',
         'Der Plan läuft im Proxy und richtet sich nach dessen Uhrzeit. Ist der Proxy aus, bleibt der letzte Zustand stehen. Nach einem Neustart greift er beim nächsten Wechsel.'] },
     en: { sub:'Discharge windows for all devices', back:'Back to the dashboard', active:'Schedule active',
       activeHint:'Discharging is allowed inside the windows and blocked outside them.',
@@ -785,7 +802,7 @@ _PAGE = r"""<!DOCTYPE html>
       rules:['Switching happens <b>only at the scheduled times</b>. Anything you change by hand in between stays until the next change.',
         '<b>Blocking</b> always works. <b>Releasing</b> only if the weakest cell is above the watchdog’s release threshold{v}; otherwise it retries every two minutes.',
         'The schedule needs the <b>watchdog</b> and only switches devices it monitors (<span class="num">watch: true</span>). It uses the watchdog’s readings and checks every two minutes between the scheduled times.',
-        '<b>Manual charging</b> or a <b>full battery</b> pause the schedule for that device until the next change. With a full battery it releases first so solar power gets through.',
+        '<b>Manual charging</b> or a <b>full battery</b> pause the schedule for that device until the next change. With a full battery it releases so solar power gets through – as soon as the battery itself starts discharging, the schedule blocks again.',
         'The schedule runs in the proxy and follows its clock. If the proxy is off, the last state stays. After a restart it takes over at the next change.'] },
     fr: { sub:'Plages de décharge pour tous les appareils', back:'Retour au tableau de bord', active:'Planning actif',
       activeHint:'La décharge est autorisée dans les plages et bloquée en dehors.',
@@ -808,7 +825,7 @@ _PAGE = r"""<!DOCTYPE html>
       rules:['La commutation se fait <b>uniquement aux heures prévues</b>. Ce que tu modifies à la main entre-temps reste jusqu’au prochain changement.',
         '<b>Bloquer</b> fonctionne toujours. <b>Libérer</b> seulement si la cellule la plus faible dépasse le seuil de libération du watchdog{v}, sinon nouvel essai toutes les deux minutes.',
         'Le planning a besoin du <b>watchdog</b> et ne commute que les appareils qu’il surveille (<span class="num">watch: true</span>). Il utilise ses mesures et contrôle toutes les deux minutes entre les heures prévues.',
-        'La <b>charge manuelle</b> ou une <b>batterie pleine</b> suspendent le planning pour cet appareil jusqu’au prochain changement. Avec une batterie pleine, il libère d’abord pour laisser passer le solaire.',
+        'La <b>charge manuelle</b> ou une <b>batterie pleine</b> suspendent le planning pour cet appareil jusqu’au prochain changement. Avec une batterie pleine, il libère pour laisser passer le solaire – dès que la batterie se décharge elle-même, le planning bloque à nouveau.',
         'Le planning tourne dans le proxy et suit son horloge. Si le proxy est arrêté, le dernier état reste. Après un redémarrage, il reprend au prochain changement.'] }
   };
   var lang = 'en';

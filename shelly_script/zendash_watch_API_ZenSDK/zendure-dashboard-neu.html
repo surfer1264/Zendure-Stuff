@@ -1114,7 +1114,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.5.0";
+  const APP_VERSION = "5.5.1";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -3634,7 +3634,15 @@
       hubs.forEach(function(d){
         const h = byId[d.id];
         if (h) {
-          d.soc = h.soc; d.power = h.power; d.online = !!h.online;
+          // AC-Leistung aus outputHomePower - gridInputPower, unabhaengig von acMode.
+          // h.power zaehlt outputHomePower nur bei acMode 2; ein volles Geraet
+          // in acMode 1 reicht PV aber trotzdem ans Haus durch.
+          d.home = isFinite(h.home) && h.home !== null ? Number(h.home) : null;
+          d.gridIn = isFinite(h.gridIn) && h.gridIn !== null ? Number(h.gridIn) : null;
+          d.packIn = isFinite(h.packIn) && h.packIn !== null ? Number(h.packIn) : null;
+          d.packOut = isFinite(h.packOut) && h.packOut !== null ? Number(h.packOut) : null;
+          d.soc = h.soc; d.online = !!h.online;
+          d.power = (d.home !== null && d.gridIn !== null) ? Math.round(d.home - d.gridIn) : h.power;
           d.acMode = h.acMode; d.socLimit = h.socLimit; d.gridReverse = h.gridReverse;
           d.pv = (h.pv === undefined) ? null : h.pv;
           d.minVol = (h.minVol === undefined) ? null : h.minVol;
@@ -3841,6 +3849,9 @@
 
   function battPower(d){
     if (!d.online) return null;
+    // Gemessen am Akku: + = laedt, - = entlaedt (wie die Rechnung darunter)
+    if (d.packIn !== null && d.packIn !== undefined && d.packOut !== null && d.packOut !== undefined)
+      return d.packOut - d.packIn;
     const pv = (d.pv === null || d.pv === undefined) ? 0 : Number(d.pv);
     const off = offW(d) || 0;
     return pv - Number(d.power || 0) - off;
