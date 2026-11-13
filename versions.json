@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-13T14:08:32Z",
+  "generated": "2026-11-13T16:39:06Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -179,12 +179,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.4.0",
+      "version": "4.4.1",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/e40e3f592027376e84a738b4af20b6db8fb6f6b6/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38578,
-      "codeHash": "sha256:b816af8e017f5cf96922d5757f5353e505afb73440c0f3441b2c92c8f40f2472",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/dce6d5bcb572bcc303553d12bd13ef7fbb9f077c/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38610,
+      "codeHash": "sha256:b5dc3fae2fd74b2d6fdbcf99140f679b7f9da33ac993bdc94ba6541afd50ac5d",
       "configKeys": [
         "api",
         "apiEvents",
@@ -231,14 +231,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Neue Meldung:** „♨️ SF800: Heizung an“, sobald `heatState` auf 1 steht. Sie gilt für alle Geräte, die der Watchdog überwacht, und ist nicht abschaltbar, wie die übrigen Meldungen auch. Bei aktivierten Benachrichtigungen kommt sie also nach dem Update ohne weitere Einstellung.",
-        "**Erneute Meldung:** erst, wenn die Heizung zwischendurch 30 Minuten durchgehend aus war. So löst ein Pendeln zwischen 0 und 1 keine Meldungsserie aus. Das Ausschalten wird nicht gemeldet.",
-        "**Ausfall:** Ist das Gerät nicht erreichbar oder fehlt der Wert, beginnen die 30 Minuten danach neu."
+        "**Absturz beim Start behoben:** Auf manchen Firmware-Ständen stoppte das Script direkt nach dem Einlesen der KVS-Werte mit `Expecting a function to call, got Number`. Ursache war nicht der Programmcode, sondern die Kurznamen in der minifizierten Datei (seit 02.11.): Der Minifier gab einem Schleifenzähler und dem Rückruf denselben Namen. Ältere Firmware wertet `let` für die ganze Funktion, dort überschrieb der Zähler den Rückruf.",
+        "**Minifier angepasst:** `let`/`const` werden vor dem Kürzen zu `var`. So vergibt der Minifier keine doppelten Namen mehr, die Mini verhält sich auf jeder Firmware gleich. Die Prüfung meldet einen Fehler, falls doch noch `let` im gekürzten Teil steht.",
+        "Programmcode und Verhalten unverändert. Die Mini ist 32 Bytes größer."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.4.0",
+          "schema": 1,
+          "codeHash": "sha256:b816af8e017f5cf96922d5757f5353e505afb73440c0f3441b2c92c8f40f2472",
+          "changes": [
+            "**Neue Meldung:** „♨️ SF800: Heizung an“, sobald `heatState` auf 1 steht. Sie gilt für alle Geräte, die der Watchdog überwacht, und ist nicht abschaltbar, wie die übrigen Meldungen auch. Bei aktivierten Benachrichtigungen kommt sie also nach dem Update ohne weitere Einstellung.",
+            "**Erneute Meldung:** erst, wenn die Heizung zwischendurch 30 Minuten durchgehend aus war. So löst ein Pendeln zwischen 0 und 1 keine Meldungsserie aus. Das Ausschalten wird nicht gemeldet.",
+            "**Ausfall:** Ist das Gerät nicht erreichbar oder fehlt der Wert, beginnen die 30 Minuten danach neu."
+          ],
+          "notice": null
+        },
         {
           "version": "4.3.0",
           "schema": 1,
@@ -331,15 +342,6 @@
             "Neues Standard-Layout in `zendure-dashboard.html` (im Proxy unter `/`) – gleiche Funktionen, anderer Aufbau: Sperrknopf als deutlich markiertes Schloss, Menü „Ansicht“, Übersicht getrennt in „Jetzt“ und „Regelung“, technische Details (KVS-Schlüssel, IP, Rohcodes) nur auf Wunsch, Status in Klartext, größere Tippflächen, Beschriftungen für Screenreader. Ansichtsgröße, Tag/Nacht und Detailansicht werden gemerkt, „Ansicht zurücksetzen“ im Menü. Der Sperrknopf ändert beim Entsperren seine Breite nicht mehr (vorher verrutschte „Ansicht“ und Klicks gingen daneben). Die Zelle-min-Zeile mit Sperrschwelle steht immer auf einer eigenen Zeile",
             "Bisheriges Layout als `zendure-dashboard-b.html` weiterhin im Proxy unter `/b`; die exe und die Home-Assistant-App enthalten beide Dateien (HA-App-Version 3.5.9.1)",
             "Hilfe-Link zeigt auf die Doku-Seite (GitHub Pages) statt auf die Markdown-Datei auf GitHub"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.8",
-          "schema": 1,
-          "codeHash": "sha256:4ea57c1589954fedb7acf22e90d2b3937d31b48f0e41cf37af7d44f36b94ccdc",
-          "changes": [
-            "Speicheroptimierung"
           ],
           "notice": null
         }
