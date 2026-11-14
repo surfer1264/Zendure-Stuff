@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-14T08:33:44Z",
+  "generated": "2026-11-14T13:59:51Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -179,12 +179,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.4.2",
+      "version": "4.5.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/87955b039f408de46d577eceaa38ffda762ed40f/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38593,
-      "codeHash": "sha256:c934ac486c31aba9eecd8f5715d7993ba6be419971717fb788c5cb1f2e81c6b0",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c707b49168e1ed47826efa79113b4911c7480113/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38810,
+      "codeHash": "sha256:17e0badd484671b64dd70d4aa988882f8a1cea2cbf2749d3418d08608a510e48",
       "configKeys": [
         "api",
         "apiEvents",
@@ -231,14 +231,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**Startmeldung:** Im Log steht jetzt „zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)“. Bisher hieß es „Dashboard muss ebenfalls v… sein“ – das stimmt seit Dashboard 5.0.0 nicht mehr, Dashboard und Proxy haben eigene Versionsnummern.",
-        "**Standardwert `api.dischargeStartupPower`:** 40 statt 35, wie `dischargeStartupPower` im Controller ab 5.4.0. Der Wert ist die Untergrenze für die Fix-Entladung im Dashboard (0 oder mindestens dieser Wert). Bestehende Konfigurationen behalten ihren Wert.",
-        "Regelverhalten unverändert."
+        "**`status_api`:** neue Felder `mem_used_current` (belegter Speicher beim Erzeugen der Antwort) und `mem_max` (höchster gemessener Wert seit dem Start), jeweils in Byte.",
+        "**Messung:** an den acht Stellen, die bisher nur im Debug-Modus den Speicher ins Log schrieben – beim Empfang der Geräte-Reports, beim Bau von `config_api` und am Ende einer Abfrage. Gemessen wird jetzt immer, ins Log geschrieben weiterhin nur mit Debug. Den Log-Text baut das Script nur bei Debug, damit er die Spitze nicht verfälscht.",
+        "**Grenze:** `mem_max` ist eine Untergrenze. Was die Firmware intern belegt, bevor das Script die Antwort bekommt, sieht es nicht."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.4.2",
+          "schema": 1,
+          "codeHash": "sha256:c934ac486c31aba9eecd8f5715d7993ba6be419971717fb788c5cb1f2e81c6b0",
+          "changes": [
+            "**Startmeldung:** Im Log steht jetzt „zenDash-API + Watchdog v4.4.2 (Dashboard/Proxy ab v5.0.0)“. Bisher hieß es „Dashboard muss ebenfalls v… sein“ – das stimmt seit Dashboard 5.0.0 nicht mehr, Dashboard und Proxy haben eigene Versionsnummern.",
+            "**Standardwert `api.dischargeStartupPower`:** 40 statt 35, wie `dischargeStartupPower` im Controller ab 5.4.0. Der Wert ist die Untergrenze für die Fix-Entladung im Dashboard (0 oder mindestens dieser Wert). Bestehende Konfigurationen behalten ihren Wert.",
+            "Regelverhalten unverändert."
+          ],
+          "notice": null
+        },
         {
           "version": "4.4.1",
           "schema": 1,
@@ -331,17 +342,6 @@
             "Weniger Last ohne offenes Dashboard bei aktivem Cloud-Upload: Der Proxy holte bisher jede Minute zweimal `status_api` ab, und jede Abfrage startete im Script den schnellen 8-s-Takt für 15 s – das Script lief so rund 25 s pro Minute mit 3–4 vollen Abfragen von Netzzähler und Hubs",
             "`status_api` versteht den optionalen Parameter `bg`: `bg=wake` löst genau einen Poll aus, `bg=read` liest nur, beide ohne schnellen Takt. Ohne Parameter (Dashboard) unverändert",
             "Proxy/ts_bridge: weckt mit `?bg=wake` 14 s vor der vollen Minute und liest 12 s später mit `?bg=read`. Ergebnis: ein Poll-Durchlauf pro Minute statt drei bis vier"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.10",
-          "schema": 1,
-          "codeHash": "sha256:350bfc955ba9f6b262b025e8e085c70839e81d9f5c57968bad5325687cdb6589",
-          "changes": [
-            "minSoc/maxSoc: Mindestabstand 5 Prozentpunkte wie im Regel-Script ab 5.2.1. Beim Start gilt `minSoc` 10–95 % und `maxSoc` mindestens `minSoc + 5` (vorher `minSoc + 1`)",
-            "config_api: Die Reserve aus der KVS (`zdmc_devN_minSoc`) wird auf 10 … `maxSoc − 5` begrenzt, bevor sie ans Dashboard geht",
-            "Dashboard (beide Layouts): Der Regler für die Reserve endet 5 Prozentpunkte unter der Ladegrenze (kleinerer Wert aus `maxSoc` und `socSet`), vorher 1 Punkt; Versionsnummer 3.5.10"
           ],
           "notice": null
         }
