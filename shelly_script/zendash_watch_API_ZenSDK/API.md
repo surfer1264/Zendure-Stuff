@@ -73,9 +73,7 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
       "heatState": 0,
       "packTempLow": 17
     }
-  ],
-  "mem_used_current": 16044,
-  "mem_max": 21380
+  ]
 }
 ```
 
@@ -103,13 +101,6 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
 | `gridOffModeHw` | Am Gerät eingestellter Offgrid-Modus (Report `gridOffMode`): `0` = EIN, `1` = Öko, `2` = AUS. Das Regel-Script (ab 5.3.8) schreibt nur Änderungen von `zdmc_dev{id}_gridOffMode` auf das Gerät; eine Änderung in der App wird erst über dieses Feld sichtbar. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.1.0 |
 | `heatState` | Wert `heatState` aus dem Report des Geräts (nicht der Akkupacks), `1` = Heizung an, `0` = aus. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.2.0 |
 | `packTempLow` | Kühlstes Pack in ganzen °C: der kleinste `maxTemp`-Wert aller Akkupacks. Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen; als Kälteschutz ist der Wert deshalb nicht geeignet. `null`, wenn kein Pack einen Wert meldet bzw. der Hub offline ist. Seit 4.3.0 |
-
-| Feld (oberste Ebene) | Bedeutung |
-|---|---|
-| `mem_used_current` | Belegter Script-Speicher in Byte (`mem_used`) in dem Moment, in dem die Antwort erzeugt wurde. Seit 4.5.0 |
-| `mem_max` | Höchster gemessener `mem_used` seit dem Start des Scripts, in Byte. Gemessen wird an den Stellen, an denen die Spitze entsteht: beim Empfang eines Geräte-Reports, beim Bau von `config_api` und von `status_api`. Seit 4.5.0 |
-
-`mem_max` ergänzt die Spitze aus `Script.GetStatus` (`mem_peak`) der Firmware. Bei Messungen lag `mem_max` etwa 0,6 kB unter `mem_peak`. Hintergrund: Auf einem Shelly mit Firmware 2.2.0 stand `mem_peak` einmal dauerhaft auf 25.200 Byte, dem gesamten Script-Speicher, und `mem_used` stieg unter Last stetig an. Die Ursache ist noch nicht geklärt. `mem_max` zeigt dann, was das Script selbst gemessen hat. `mem_max` ist eine Untergrenze: Was die Firmware intern belegt, bevor das Script eine Antwort bekommt, sieht das Script nicht. Für die Reserve deshalb mit etwas Puffer rechnen. Bis zur ersten schnellen Abfrage nach dem Start stehen beide Felder auf `null`.
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
@@ -385,6 +376,10 @@ greift über dessen native RPC zu (`/rpc/KVS.GetMany`, `/rpc/KVS.Set`). Die Anfr
 dort von der Firmware bedient und belasten den Variablenpool des Controllers nicht. Den Wert
 `"local"` (Zugriff per `Shelly.call` auf dem eigenen Gerät) gibt es technisch noch; er ist
 nicht vorgesehen, weil Controller und dieses Script nie auf demselben Shelly laufen.
+
+**Speicher beobachten.** Den Speicher des Scripts zeigt `Script.GetStatus` der Firmware: `mem_used` (belegt), `mem_peak` (höchster Wert seit dem Script-Start) und `mem_free`. Der Gesamtspeicher eines Scripts liegt bei etwa 25,2 kB.
+
+Unter **Shelly-Firmware 2.2** räumt die Firmware den Speicher eines Scripts erst auf, wenn sein Variablenpool voll ist (seit 2.2.0 hat jedes Script einen eigenen Pool). Solange das Dashboard abfragt, steigt `mem_used` deshalb stetig an, gemessen etwa 1,3 kB pro Minute, bis der Pool voll ist. Dann springt `mem_peak` auf 25.200 und `mem_used` fällt auf den tatsächlichen Bedarf zurück, gemessen 15,6 kB bei 2 Geräten. Das ist kein Speicherüberlauf, das Script läuft normal weiter. Unter 2.2 zeigen `mem_peak` und ein hohes `mem_used` daher nicht den echten Bedarf; aussagekräftig ist `mem_used` direkt nach dem Abfall. Unter Firmware 1.x und 2.1 räumt die Firmware laufend auf, dort pendelt `mem_used` (gemessen 15,0 bis 15,7 kB) und `mem_peak` zeigt die echte Spitze.
 
 ---
 

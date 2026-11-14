@@ -29,8 +29,7 @@
 //                               gridReverse,pv,minVol,online,
 //                               home,gridIn,packIn,packOut,socSet,
 //                               minSocHw,temp,offGrid,gridOffModeHw,heatState,
-//                               packTempLow}],
-//                        mem_used_current, mem_max }
+//                               packTempLow}] }
 //                      ?bg=wake: ein einzelner Poll (Cloud-Upload), ?bg=read: nur lesen
 //   GET kvs_set_api?data={"zdmc_...":wert} -> { success, written }
 //
@@ -65,12 +64,12 @@
 // 4.2.0: status_api liefert je Hub heatState (Report, Geraeteebene).
 // 4.3.0: status_api liefert je Hub packTempLow (kuehlstes Pack in ganzen C).
 // 4.4.0: Watchdog meldet das Einschalten der Heizung (heatState 1).
-// 4.5.0: status_api liefert mem_used_current und mem_max (hoechstes mem_used
-// seit dem Start), unabhaengig von mem_peak der Firmware (unter 2.2.0 stand
-// mem_peak einmal dauerhaft auf 25200, Ursache noch offen).
+// 4.5.1: Speichermessung aus 4.5.0 (mem_max in status_api) wieder entfernt -
+// unter Firmware 1.x/2.1 genuegt mem_peak, unter 2.2 zeigt keiner von beiden
+// den echten Bedarf (Speicherbereinigung erst bei vollem Variablenpool).
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.5.0";
+let VERSION = "4.5.1";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -261,17 +260,10 @@ function logDebug(msg) {
   print("[DEBUG] " + msg);
 }
 
-// Heap-Stand an den Stellen, an denen die Spitze entsteht (Antwort noch im
-// Speicher). Misst IMMER und merkt sich den Hoechststand fuer status_api
-// (mem_max); ins Log schreibt es nur im Debug-Modus. Den Text (tag) bauen
-// die Aufrufer nur bei Debug - sonst kostet er genau an der Spitze Speicher.
-let MEM_MAX = 0;
+// Nur im Debug-Modus aufgerufen ("if (DBG) memLog(...)"): Heap-Stand ausgeben
 function memLog(tag) {
   let st = Shelly.getComponentStatus("script:" + Shelly.getCurrentScriptId());
-  if (!st) return null;
-  if (st.mem_used > MEM_MAX) MEM_MAX = st.mem_used;
-  if (DBG) logDebug("MEM " + tag + ": used " + st.mem_used + " peak " + st.mem_peak + " free " + st.mem_free);
-  return st.mem_used;
+  if (st) logDebug("MEM " + tag + ": used " + st.mem_used + " peak " + st.mem_peak + " free " + st.mem_free);
 }
 
 function isNum(v) {
@@ -1103,9 +1095,7 @@ for (let hi = 0; hi < CONFIG.devices.length; hi++) {
 
 let LATEST_STATUS = {
   grid: { power: 0, online: false },
-  hubs: HUBS,
-  mem_used_current: null,   // mem_used beim Erzeugen dieser Antwort
-  mem_max: null             // hoechstes mem_used seit dem Start (siehe memLog)
+  hubs: HUBS
 };
 let STATUS_BODY = JSON.stringify(LATEST_STATUS);
 
@@ -1257,10 +1247,10 @@ function pollHub(index, watchNow, logPacks, callback) {
     }
     let body = res.body;
     res = null;
-    memLog(DBG ? "Poll " + cfg.label + " Body " + (body ? body.length : 0) + " B" : "");
+    if (DBG) memLog("Poll " + cfg.label + " Body " + (body ? body.length : 0) + " B");
     let ok = false;
     try { ok = !!body && extractHub(index, body, watchNow, logPacks); } catch (e) { ok = false; }
-    memLog(DBG ? "nach extract " + cfg.label : "");
+    if (DBG) memLog("nach extract " + cfg.label);
     body = null;
     if (!ok) {
       setHubOffline(index);
@@ -1521,8 +1511,6 @@ function tick() {
 
   let afterHubs = function () {
     if (fast) {
-      LATEST_STATUS.mem_used_current = memLog(DBG ? "status_api" : "");
-      LATEST_STATUS.mem_max = MEM_MAX;
       try { STATUS_BODY = JSON.stringify(LATEST_STATUS); } catch (e) { print("status_api: " + e); }
     }
     bgRunning = false;
@@ -1537,7 +1525,7 @@ function tick() {
     try { handleFullEvents(); } catch (e) { print("lastFull-Fehler: " + e); }
     try { handleDischargeLocks(); } catch (e) { print("Entladesperre-Fehler: " + e); }
     notifyPump();
-    memLog(DBG ? "Pollende" + (fast ? " (schnell)" : " (Watchdog)") : "");
+    if (DBG) memLog("Pollende" + (fast ? " (schnell)" : " (Watchdog)"));
   };
 
   if (fast) {
@@ -1642,7 +1630,7 @@ function serveConfig(res, attempt) {
     let kv = null;
     let kvsOk = (store !== null);
     try {
-      memLog(DBG ? "config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")) : "");
+      if (DBG) memLog("config_api KVS " + (typeof store === "string" ? store.length + " B" : (store ? "lokal" : "null")));
       kv = [kvsNumOrNull(store, "zdmc_setpoint"), kvsNumOrNull(store, "zdmc_dischargeFixed"),
         kvsNumOrNull(store, "zdmc_dischargeResetMargin")];
       for (let i = 0; i < CONFIG.devices.length; i++) {
@@ -1655,7 +1643,7 @@ function serveConfig(res, attempt) {
         let lfv = kvsValue(store, pre + "lastFull");
         if (lfv !== undefined) adoptLastFull(i, lfv);
       }
-      memLog(DBG ? "config_api nach Auswertung" : "");
+      if (DBG) memLog("config_api nach Auswertung");
     } catch (e) {
       configFail(res, "Auswertung", e);
       return;
@@ -1675,7 +1663,7 @@ function kvsNumOrNull(store, key) {
 }
 
 function configRespond(res, kv, kvsOk) {
-  memLog(DBG ? "config_api Callback verlassen" : "");
+  if (DBG) memLog("config_api Callback verlassen");
   let devices = buildDeviceDefaults();
   for (let i = 0; i < devices.length; i++) {
     let k = 3 + i * 5;
@@ -1708,7 +1696,7 @@ function configRespond(res, kv, kvsOk) {
     watchdog: { enabled: WD_ON, minVoltWarn: W.minVoltWarn, minVoltReset: W.minVoltReset },
     devices: devices
   });
-  memLog(DBG ? "config_api nach stringify (" + body.length + " B)" : "");
+  if (DBG) memLog("config_api nach stringify (" + body.length + " B)");
 
   if (DBG) {
     let line = "config_api: Antwort" + (!kvsOk ? " (KVS NICHT lesbar - CONFIG-Vorgaben)" : "") +
@@ -1942,7 +1930,7 @@ function startTicking() {
     } catch (e) {
       // mJS erlaubt das Ueberschreiben evtl. nicht - dann einfach ignorieren
     }
-    memLog(DBG ? "nach Start" : "");
+    if (DBG) memLog("nach Start");
   });
 }
 
