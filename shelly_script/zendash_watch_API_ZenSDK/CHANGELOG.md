@@ -8,6 +8,19 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.5.0
+
+**Ziel:** Den höchsten Speicherverbrauch des Scripts direkt im Script messen und abfragbar machen, unabhängig von `mem_peak` der Firmware.
+
+**Hintergrund:** Auf einem Shelly 1PM Gen4 mit Firmware 2.2.0 stand `mem_peak` dauerhaft auf 25.200 Byte, dem gesamten Script-Speicher. Nach einem Neustart des Scripts zählte `mem_peak` wieder normal, `mem_used` stieg bei offenem Dashboard aber stetig, etwa 3 kB in 6 Minuten. Dasselbe Script auf einem Shelly Plus Plug S mit Firmware 1.7 blieb bei rund 15 kB, bei einer Spitze von 19,3 kB. Im direkten Vergleich, mit dem Script auf beiden Shellys gleichzeitig, steigt der Verbrauch unter 2.2.0 nur, solange das Dashboard den Shelly abfragt (Anfragen an `status_api`, `config_api` und `kvs_set_api`): +1,4 kB in 40 Sekunden. Ohne diese Anfragen bleibt er auch unter 2.2.0 konstant. Die Ursache liegt damit sehr wahrscheinlich in der Firmware, beim Verarbeiten eingehender HTTP-Anfragen im Script. Endgültig geklärt ist sie nicht. Firmware 2.2.0 gibt laut Changelog jedem Script einen eigenen Variablenpool; der Gesamtspeicher wird dort mit 25.200 statt 25.186 Byte gemeldet.
+
+- **`status_api`:** neue Felder `mem_used_current` (belegter Speicher beim Erzeugen der Antwort) und `mem_max` (höchster gemessener Wert seit dem Start), jeweils in Byte.
+- **Messung:** an den acht Stellen, die bisher nur im Debug-Modus den Speicher ins Log schrieben – beim Empfang der Geräte-Reports, beim Bau von `config_api` und am Ende einer Abfrage. Gemessen wird jetzt immer, ins Log geschrieben weiterhin nur mit Debug. Den Log-Text baut das Script nur bei Debug, damit er die Spitze nicht verfälscht.
+- **Grenze:** `mem_max` ist eine Untergrenze. Was die Firmware intern belegt, bevor das Script die Antwort bekommt, sieht es nicht.
+- Das Script ist um gut 0,2 kB größer. Regelverhalten und Dashboard unverändert, das Dashboard nutzt die neuen Felder noch nicht.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.4.2
 
 **Ziel:** Startmeldung und Standardwert passen zu den getrennten Versionsnummern und zum Controller 5.4.0.

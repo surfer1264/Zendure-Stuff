@@ -27,6 +27,8 @@ Jedes Script hat auf seinem Shelly rund 25 kB Arbeitsspeicher. Wie viel davon ge
 
 An echten Anlagen gemessen ist bis 3 Geräte und 4 Akkus, alles darüber ist gerechnet. Stand der Messungen: Watchdog-Script 4.0.0, Regler 5.3.6, jeweils mit Debug aus.
 
+> **Hinweis zu Shelly-Firmware 2.2.0:** Die Werte oben stammen von Shellys mit Firmware 1.x und 2.1. Auf einem Shelly 1PM Gen4 mit Firmware 2.2.0 stieg der Verbrauch des Watchdog-Scripts bei offenem Dashboard stetig an; `mem_peak` erreichte einmal den gesamten Speicher (25.200 Byte). Dasselbe Script blieb auf einem Shelly Plus Plug S mit Firmware 1.7 stabil bei rund 15 kB. Der Anstieg tritt nur auf, solange das Dashboard den Shelly abfragt; ohne Dashboard bleibt der Verbrauch auch unter 2.2.0 konstant. Die Ursache liegt sehr wahrscheinlich in der Firmware, beim Verarbeiten eingehender HTTP-Anfragen im Script. Wer Firmware 2.2 nutzt, prüft nach einigen Stunden `mem_peak` bzw. `mem_max` in `status_api` (ab Watchdog-Script 4.5.0). Steht der Wert nahe 25.200, besser einen Shelly mit älterer Firmware verwenden oder auf eine neuere Firmware warten.
+
 ## Rechenmodell
 
 Für alle, die es genau wissen wollen: So entstehen die Werte oben. Die Bewertung richtet sich nach der Reserve, also dem freien Speicher bei der höchsten Belastung: ✅ ab 2 kB, ⚠️ 1–2 kB, ❌ unter 1 kB.

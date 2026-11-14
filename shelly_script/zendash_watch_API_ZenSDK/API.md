@@ -73,7 +73,9 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
       "heatState": 0,
       "packTempLow": 17
     }
-  ]
+  ],
+  "mem_used_current": 16044,
+  "mem_max": 21380
 }
 ```
 
@@ -101,6 +103,13 @@ Die Antwort ist in allen drei Fällen der zuletzt abgefragte Stand.
 | `gridOffModeHw` | Am Gerät eingestellter Offgrid-Modus (Report `gridOffMode`): `0` = EIN, `1` = Öko, `2` = AUS. Das Regel-Script (ab 5.3.8) schreibt nur Änderungen von `zdmc_dev{id}_gridOffMode` auf das Gerät; eine Änderung in der App wird erst über dieses Feld sichtbar. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.1.0 |
 | `heatState` | Wert `heatState` aus dem Report des Geräts (nicht der Akkupacks), `1` = Heizung an, `0` = aus. `null`, wenn das Feld fehlt bzw. der Hub offline ist. Seit 4.2.0 |
 | `packTempLow` | Kühlstes Pack in ganzen °C: der kleinste `maxTemp`-Wert aller Akkupacks. Die Packs melden nur ihren wärmsten Wert, die kälteste Zelle kann also darunter liegen; als Kälteschutz ist der Wert deshalb nicht geeignet. `null`, wenn kein Pack einen Wert meldet bzw. der Hub offline ist. Seit 4.3.0 |
+
+| Feld (oberste Ebene) | Bedeutung |
+|---|---|
+| `mem_used_current` | Belegter Script-Speicher in Byte (`mem_used`) in dem Moment, in dem die Antwort erzeugt wurde. Seit 4.5.0 |
+| `mem_max` | Höchster gemessener `mem_used` seit dem Start des Scripts, in Byte. Gemessen wird an den Stellen, an denen die Spitze entsteht: beim Empfang eines Geräte-Reports, beim Bau von `config_api` und von `status_api`. Seit 4.5.0 |
+
+`mem_max` ergänzt die Spitze aus `Script.GetStatus` (`mem_peak`) der Firmware. Bei Messungen lag `mem_max` etwa 0,6 kB unter `mem_peak`. Hintergrund: Auf einem Shelly mit Firmware 2.2.0 stand `mem_peak` einmal dauerhaft auf 25.200 Byte, dem gesamten Script-Speicher, und `mem_used` stieg unter Last stetig an. Die Ursache ist noch nicht geklärt. `mem_max` zeigt dann, was das Script selbst gemessen hat. `mem_max` ist eine Untergrenze: Was die Firmware intern belegt, bevor das Script eine Antwort bekommt, sieht das Script nicht. Für die Reserve deshalb mit etwas Puffer rechnen. Bis zur ersten schnellen Abfrage nach dem Start stehen beide Felder auf `null`.
 
 `home`, `gridIn`, `packIn` und `packOut` sind die Rohwerte aus dem Report des Hubs,
 ohne Umrechnung. Liefert ein Gerät ein Feld nicht, steht dort `null`, ebenso bei
