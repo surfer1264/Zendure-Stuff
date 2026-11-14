@@ -175,11 +175,22 @@ Les étapes inutiles pour ta sélection sont sautées.
 
 ### Les fonctions de l'étape Résultat
 
-Pour chacun des deux Shelly, tu disposes de plusieurs possibilités :
+La page se lit de haut en bas :
+
+1. **Vue d’ensemble** – quel script va sur quel Shelly, avec la version (pour une mise à jour « installée → nouvelle »). En dessous, « Tes choix » peuvent être dépliés ; pour une mise à jour, ils sont repliés.
+2. **Avant le chargement** – tous les réglages au même endroit : intervalle de régulation, sorties de débogage et, pour une mise à jour, « Sauvegarder la version actuelle ».
+3. **Chargement** *(uniquement avec l'assistant local)* – « ⚡ Charger directement » par script, avec deux scripts aussi « ⚡ Charger les deux ».
+4. **Proxy du tableau de bord** – liens vers le proxy adapté (uniquement si le tableau de bord est inclus).
+5. **Enregistrer le script ou la configuration** – par script, enregistrer ou copier le script complet ou seulement le bloc CONFIG. Sans assistant local, c'est le chemin principal.
+6. **Comment charger le script sur ton Shelly** – les instructions pour le chargement manuel, dépliées sans assistant local.
+
+Les possibilités en détail :
 
 **⚡ Charger directement** *(uniquement avec l'assistant local)*
 
 Le moyen le plus pratique : un clic, terminé. Le script va automatiquement sur le bon Shelly (script Controller sur le Shelly Controller, zenDash-API + Watchdog sur le Shelly Dashboard), est démarré et configuré pour le démarrage automatique. S'il y a déjà d'autres scripts sur le Shelly, le configurateur te demande d'abord – voir [Plusieurs scripts sur un Shelly](#plusieurs-scripts-sur-un-shelly).
+
+Avec **« ⚡ Charger les deux »**, le configurateur charge d'abord le Controller, puis zenDash-API + Watchdog. Si le premier chargement demande une confirmation ou échoue, il s'arrête.
 
 Après le premier chargement réussi, l'assistant local mémorise les IP et les saisit automatiquement la fois suivante.
 
@@ -201,7 +212,7 @@ Uniquement la configuration – pour ceux qui ont adapté leur script eux-mêmes
 
 **🐞 Sorties de débogage**
 
-Au-dessus de chaque bloc CONFIG, une case à cocher active ou désactive les sorties de débogage détaillées du script – avant le chargement ou l'enregistrement. Cela fonctionne aussi via la [mise à jour](#4-mise-à-jour) : choisir « Mettre à jour », cocher la case, charger directement. Le débogage ne sert qu'au diagnostic (par ex. avec [Enregistrer le journal](#enregistrer-le-journal)) et doit être désactivé ensuite.
+Dans la section « Avant le chargement », une case à cocher par script active ou désactive les sorties de débogage détaillées – avant le chargement ou l'enregistrement. Cela fonctionne aussi via la [mise à jour](#4-mise-à-jour) : choisir « Mettre à jour », cocher la case, charger directement. Le débogage ne sert qu'au diagnostic (par ex. avec [Enregistrer le journal](#enregistrer-le-journal)) et doit être désactivé ensuite.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
@@ -237,7 +248,7 @@ Quand une nouvelle version d'un script est disponible, tu mets tes Shelly à jou
 
 Tout est repris – y compris les valeurs que l'assistant ne demande pas (par ex. `dampingFactor`, `interval` ou les seuils d'alerte du Watchdog). Les nouveaux réglages qui n'existaient pas encore dans ton ancienne version reçoivent leur valeur par défaut.
 
-**Sauvegarder l'ancienne version :** avec l'assistant local, la page Résultat affiche au-dessus de « ⚡ Charger directement » la case **« Sauvegarder la version actuelle avant le chargement »**, cochée par défaut. Le navigateur enregistre alors, avant le chargement, le script qui tournait sur le Shelly dans un fichier, par ex. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Le fichier contient tes identifiants (jetons, mots de passe, numéros de téléphone) – ne le partage pas. Pour revenir à l'ancienne version, [charge-le manuellement](#charger-un-script-manuellement).
+**Sauvegarder l'ancienne version :** avec l'assistant local, la page Résultat affiche dans la section « Avant le chargement », pour chaque script, la case **« Sauvegarder la version actuelle avant le chargement »**, cochée par défaut. Le navigateur enregistre alors, avant le chargement, le script qui tournait sur le Shelly dans un fichier, par ex. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Le fichier contient tes identifiants (jetons, mots de passe, numéros de téléphone) – ne le partage pas. Pour revenir à l'ancienne version, [charge-le manuellement](#charger-un-script-manuellement).
 
 **Intervalle de régulation (`interval`) :** la recommandation est de 3000 ms + 500 ms par appareil, soit 3500 ms pour un, 4000 ms pour deux et 4500 ms pour trois appareils. Pour une nouvelle installation, l'assistant utilise cette valeur. La page de résultat affiche toujours l'intervalle avec la recommandation, et tu peux le modifier à tout moment : reprendre la recommandation ou saisir ta propre valeur d'au moins 3000 ms. Si une valeur reprise diffère, un avis avec le choix « Conserver » s'affiche en plus ; sans décision, l'ancienne valeur reste.
 

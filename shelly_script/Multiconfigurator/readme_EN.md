@@ -175,11 +175,22 @@ Steps that are not needed for your selection are skipped.
 
 ### Functions in the result step
 
-For each of the two Shellys you get several options:
+The page is laid out from top to bottom:
+
+1. **Overview** – which script goes to which Shelly, with version (for an update "installed → new"). Below it, "Your choices" can be expanded; for an update they are collapsed.
+2. **Before uploading** – all settings in one place: control interval, debug output and, for an update, "Back up the current version".
+3. **Upload** *(helper only)* – "⚡ Upload directly" per script, with two scripts also "⚡ Upload both".
+4. **Dashboard proxy** – links to the matching proxy (only if the dashboard is included).
+5. **Save script or configuration** – per script, save or copy the complete script or just the CONFIG block. Without the helper this is the main path.
+6. **How to upload the script to your Shelly** – the instructions for uploading manually, expanded when there is no helper.
+
+The options in detail:
 
 **⚡ Upload directly** *(helper only)*
 
 The most convenient way: one click, done. The script automatically goes to the right Shelly (Controller script to the Controller Shelly, zenDash-API + Watchdog to the Dashboard Shelly), is started and set up for autostart. If there are already other scripts on the Shelly, the configurator asks first – see [Several scripts on one Shelly](#several-scripts-on-one-shelly).
+
+With **"⚡ Upload both"** the configurator uploads the Controller first and then zenDash-API + Watchdog. If the first upload needs a confirmation or fails, it stops.
 
 After the first successful upload, the helper remembers the IPs and fills them in automatically next time.
 
@@ -201,7 +212,7 @@ Only the configuration – for anyone who has customised their script or prefers
 
 **🐞 Debug output**
 
-Above each CONFIG block, a checkbox switches the script's verbose debug output on or off – before uploading or saving. This also works via [Update](#4-update): choose Update, tick the box, upload directly. Debug is meant for troubleshooting only (e.g. together with [Recording a log](#recording-a-log)) and should be switched off again afterwards.
+In the "Before uploading" section, a checkbox per script switches the verbose debug output on or off – before uploading or saving. This also works via [Update](#4-update): choose Update, tick the box, upload directly. Debug is meant for troubleshooting only (e.g. together with [Recording a log](#recording-a-log)) and should be switched off again afterwards.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
@@ -237,7 +248,7 @@ When a new version of a script is available, you can bring your Shellys up to da
 
 Everything is carried over – including values the wizard doesn't ask for (e.g. `dampingFactor`, `interval` or the Watchdog's warning thresholds). New settings that didn't exist in your old version get their default value.
 
-**Back up the old version:** With the helper, the result page shows the checkbox **"Back up the current version before uploading"** above "⚡ Upload directly", ticked by default. The browser then saves the script that was running on the Shelly as a file before uploading, e.g. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. The file contains your credentials (tokens, passwords, phone numbers) – do not share it. To go back to the old version, [upload it manually](#uploading-a-script-manually).
+**Back up the old version:** With the helper, the result page shows the checkbox **"Back up the current version before uploading"** per script in the "Before uploading" section, ticked by default. The browser then saves the script that was running on the Shelly as a file before uploading, e.g. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. The file contains your credentials (tokens, passwords, phone numbers) – do not share it. To go back to the old version, [upload it manually](#uploading-a-script-manually).
 
 **Control interval (`interval`):** The recommendation is 3000 ms + 500 ms per device, i.e. 3500 ms for one, 4000 ms for two and 4500 ms for three devices. For a new setup the wizard uses this value. The result page always shows the interval together with the recommendation, and you can change it there at any time: use the recommendation or enter your own value of at least 3000 ms. If a carried-over value differs, a notice with the option "Keep" is shown as well; without a decision the previous value stays.
 

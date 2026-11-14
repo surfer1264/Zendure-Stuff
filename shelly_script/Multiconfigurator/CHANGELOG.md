@@ -1,5 +1,17 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 3.2.0
+
+- **Ergebnisseite neu gegliedert**, ein Fluss von oben nach unten:
+    1. **Übersicht:** welches Script auf welchen Shelly geht, mit Version (beim Update „installiert → neu“). „Deine Entscheidungen“ zum Aufklappen, beim Update eingeklappt.
+    2. **Vor dem Hochladen:** Regel-Intervall, Debug-Ausgaben und „Alten Stand sichern“ an einer Stelle.
+    3. **Hochladen** (nur mit Helfer): ein Knopf je Script, bei zwei Scripten zusätzlich **„⚡ Beide hochladen“** – erst Controller, dann zenDash-API + Watchdog, hält bei einer Rückfrage oder einem Fehler an.
+    4. **Dashboard-Proxy:** Links zum passenden Proxy als eigener Block (nur wenn das Dashboard dabei ist).
+    5. **Script oder Konfiguration sichern:** komplettes Script, CONFIG-Block speichern oder kopieren, CONFIG-Block ansehen. Ohne Helfer ist das der Hauptweg.
+    6. **So lädst du das Script auf den Shelly hoch:** Anleitung als eigener Block am Ende, ohne Helfer aufgeklappt.
+- **Kontraste nach WCAG 2.1 AA** in heller und dunkler Darstellung geprüft und angehoben: Ränder von Eingabefeldern, Auswahlfeld und Knöpfen mind. 3:1 (vorher etwa 1,3:1), Akzentschrift in der hellen Darstellung 4,9:1 statt 4,2:1, Platzhaltertext in der Hinweisfarbe mind. 4,8:1 statt 4,1:1. Häkchen und Auswahlpunkte in der Akzentfarbe statt Browser-Blau.
+- Die übrigen Texte stehen jetzt beim jeweiligen Bedienelement. Der Hinweis zum Umstieg von den alten Einzelscripten (zenDash-API 2.x, Watchdog 1.x) entfällt auf der Ergebnisseite, die Doku beschreibt den Umstieg weiter.
+
 ## 3.1.1
 
 - **Neue Controller-Standardwerte:** Neue Konfigurationen bekommen jetzt die Standardwerte von Controller 5.4.0 (`dischargeStartupPower`/`reverseStartupPower` 40 W, `dischargeStopPower`/`reverseStopPower` 30 W, `rebalance.socMargin` 6, `idleSkip.cyclesUnchanged` 3). Bisher setzte der Configurator noch die alten Werte ein. Beim Update bleiben die eigenen Werte erhalten.

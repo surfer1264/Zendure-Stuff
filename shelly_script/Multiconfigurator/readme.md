@@ -177,11 +177,22 @@ Schritte, die für deine Auswahl nicht nötig sind, werden übersprungen.
 
 ### Die Funktionen im Ergebnis-Schritt
 
-Für jeden der beiden Shellys bekommst du mehrere Möglichkeiten:
+Die Seite ist von oben nach unten aufgebaut:
+
+1. **Übersicht** – welches Script auf welchen Shelly geht, mit Version (beim Update „installiert → neu“). Darunter lassen sich „Deine Entscheidungen“ aufklappen, beim Update sind sie eingeklappt.
+2. **Vor dem Hochladen** – alle Einstellungen an einer Stelle: Regel-Intervall, Debug-Ausgaben und beim Update „Alten Stand sichern“.
+3. **Hochladen** *(nur mit Helfer)* – „⚡ Direkt hochladen“ je Script, bei zwei Scripten zusätzlich „⚡ Beide hochladen“.
+4. **Dashboard-Proxy** – Links zum passenden Proxy (nur wenn das Dashboard dabei ist).
+5. **Script oder Konfiguration sichern** – je Script das komplette Script oder nur den CONFIG-Block speichern bzw. kopieren. Ohne Helfer ist das der Hauptweg.
+6. **So lädst du das Script auf den Shelly hoch** – die Anleitung für das Hochladen von Hand, ohne Helfer aufgeklappt.
+
+Die Möglichkeiten im Einzelnen:
 
 **⚡ Direkt hochladen** *(nur mit Helfer)*
 
 Der bequemste Weg: ein Klick, fertig. Das Script geht automatisch auf den richtigen Shelly (Controller-Script auf den Controller-Shelly, zenDash-API + Watchdog auf den Dashboard-Shelly), wird gestartet und für den Autostart eingerichtet. Liegen auf dem Shelly schon andere Scripte, fragt der Configurator vorher nach – siehe [Mehrere Scripte auf einem Shelly](#mehrere-scripte-auf-einem-shelly).
+
+Mit **„⚡ Beide hochladen“** spielt der Configurator erst den Controller und dann zenDash-API + Watchdog ein. Braucht der erste Upload eine Rückfrage oder schlägt er fehl, hält er an.
 
 Nach dem ersten erfolgreichen Upload merkt sich der Helfer die IPs und trägt sie beim nächsten Start automatisch ein.
 
@@ -203,7 +214,7 @@ Nur die Konfiguration – für alle, die ihr Script selbst angepasst haben oder 
 
 **🐞 Debug-Ausgaben**
 
-Über jedem CONFIG-Block kannst du per Häkchen die ausführlichen Debug-Ausgaben des Scripts ein- oder ausschalten – vor dem Hochladen oder Speichern. Das geht auch über [Update](#4-update): Update wählen, Häkchen setzen, direkt hochladen. Debug ist nur für die Fehlersuche gedacht (z. B. zusammen mit [Log aufzeichnen](#log-aufzeichnen)) und sollte danach wieder aus.
+Im Abschnitt „Vor dem Hochladen“ kannst du je Script per Häkchen die ausführlichen Debug-Ausgaben ein- oder ausschalten – vor dem Hochladen oder Speichern. Das geht auch über [Update](#4-update): Update wählen, Häkchen setzen, direkt hochladen. Debug ist nur für die Fehlersuche gedacht (z. B. zusammen mit [Log aufzeichnen](#log-aufzeichnen)) und sollte danach wieder aus.
 
 <img width="800" alt="image" src="https://github.com/user-attachments/assets/49d74a5d-cfd2-4541-932f-54c40b60ff5b" />
 
@@ -239,7 +250,7 @@ Gibt es eine neue Version eines Scripts, bringst du deine Shellys mit wenigen Kl
 
 Übernommen wird alles – auch Werte, die der Assistent gar nicht abfragt (z. B. `dampingFactor`, `interval` oder die Warnschwellen des Watchdog). Neue Einstellungen, die es in deiner alten Version noch nicht gab, bekommen ihren Standardwert.
 
-**Alten Stand sichern:** Mit dem Helfer steht im Ergebnis über „⚡ Direkt hochladen“ das Häkchen **„Vor dem Hochladen alten Stand sichern“**, standardmäßig an. Dann speichert der Browser vor dem Hochladen das Script, das bisher auf dem Shelly lief, als Datei, z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Die Datei enthält deine Zugangsdaten (Tokens, Passwörter, Telefonnummern) – nicht weitergeben. Zurück auf den alten Stand kommst du, indem du sie [von Hand hochlädst](#script-von-hand-hochladen).
+**Alten Stand sichern:** Mit dem Helfer steht im Ergebnis im Abschnitt „Vor dem Hochladen“ je Script das Häkchen **„Vor dem Hochladen alten Stand sichern“**, standardmäßig an. Dann speichert der Browser vor dem Hochladen das Script, das bisher auf dem Shelly lief, als Datei, z. B. `zerooutput_multi_kvs_v5.3.12_backup_261113-0915.js`. Die Datei enthält deine Zugangsdaten (Tokens, Passwörter, Telefonnummern) – nicht weitergeben. Zurück auf den alten Stand kommst du, indem du sie [von Hand hochlädst](#script-von-hand-hochladen).
 
 **Regel-Intervall (`interval`):** Empfohlen sind 3000 ms + 500 ms je Gerät, also 3500 ms bei einem, 4000 ms bei zwei und 4500 ms bei drei Geräten. Bei einer neuen Einrichtung setzt der Assistent diesen Wert. Die Ergebnisseite zeigt das Intervall immer mit der Empfehlung, und du kannst es dort jederzeit ändern: Empfehlung übernehmen oder einen eigenen Wert ab 3000 ms eintragen. Weicht ein übernommener Wert ab, steht zusätzlich ein Hinweis mit der Wahl „Beibehalten“; ohne Entscheidung bleibt der bisherige Wert.
 

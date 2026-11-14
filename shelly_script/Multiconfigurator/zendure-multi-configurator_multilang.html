@@ -42,6 +42,8 @@
       radial-gradient(circle at 92% 6%, rgba(242,169,59,0.11), transparent 38%);
     --panel:#141E33; --panel-2:#1B2740;
     --border:rgba(255,255,255,0.10); --text:#EAF0F6; --muted:#8B9BB4;
+    /* Rand von Eingabefeldern und Knoepfen: mind. 3:1 (WCAG 1.4.11) */
+    --control-border:#707F96;
     --accent:#4FD1C5; --on-accent:#0B1220; --accent-weak:rgba(79,209,197,0.12); --accent-text:#4FD1C5;
     --warn:#F2A93B; --warn-bg:rgba(242,169,59,0.12);
     --danger:#E2574C; --danger-bg:rgba(226,87,76,0.12);
@@ -56,7 +58,8 @@
       radial-gradient(circle at 92% 4%, rgba(242,169,59,0.18), transparent 38%);
     --panel:#FFFFFF; --panel-2:#F3F7F6;
     --border:rgba(15,23,32,0.12); --text:#10192B; --muted:#5A6B82;
-    --accent:#207B73; --on-accent:#FFFFFF; --accent-weak:rgba(79,209,197,0.14); --accent-text:#207B73;
+    --control-border:#7D8899;
+    --accent:#207B73; --on-accent:#FFFFFF; --accent-weak:rgba(79,209,197,0.14); --accent-text:#1C6F68;
     --warn:#99600A; --warn-bg:rgba(242,169,59,0.16);
     --danger:#CF2E22; --danger-bg:rgba(226,87,76,0.10);
     --code-bg:#161E2C; --code-text:#E6E9EE;
@@ -143,10 +146,15 @@
   label{display:block; font-size:.85rem; font-weight:600; margin-bottom:5px; margin-top:14px;}
   label.first{margin-top:0;}
   input[type=text], input[type=number]{
-    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--border);
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid var(--control-border);
     background:var(--bg); color:var(--text); font-size:.92rem;
   }
+  select{border:1px solid var(--control-border); border-radius:8px; background:var(--bg); color:var(--text);}
   input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  /* Platzhalter in der Hinweisfarbe statt Browser-Grau: mind. 4,5:1 (WCAG 1.4.3) */
+  ::placeholder{color:var(--muted); opacity:1;}
+  /* Haekchen und Auswahlpunkte in der Akzentfarbe statt Browser-Blau */
+  input[type=checkbox], input[type=radio]{accent-color:var(--accent);}
   .row{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
   .device-card{
@@ -160,7 +168,7 @@
   .remove-btn:hover{color:var(--danger);}
   .add-btn, .btn{
     display:inline-flex; align-items:center; gap:6px; padding:9px 16px; border-radius:8px;
-    border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer;
+    border:1px solid var(--control-border); background:var(--panel); color:var(--text); cursor:pointer;
     font-size:.88rem; font-weight:600;
   }
   .add-btn:hover, .btn:hover{border-color:var(--accent);}
@@ -198,6 +206,21 @@
   .cfg-wrap.collapsed pre{max-height:15.5em; overflow:hidden;
     -webkit-mask-image:linear-gradient(#000 60%, transparent); mask-image:linear-gradient(#000 60%, transparent);}
   .cfg-toggle{margin:4px 0 0;}
+  /* Ergebnisseite (ab 3.2.0): Uebersicht -> Vor dem Hochladen -> Hochladen -> Proxy -> Sichern -> Anleitung */
+  .res-table{width:100%; border-collapse:collapse; font-size:.88rem; margin:6px 0 4px;}
+  .res-table th{text-align:left; font-size:.78rem; color:var(--muted); font-weight:600; padding:4px 8px 4px 0; border-bottom:1px solid var(--border);}
+  .res-table td{padding:6px 8px 6px 0; border-bottom:1px dashed var(--border);}
+  .res-details{margin-top:14px;}
+  .res-details > summary{cursor:pointer; font-weight:700; font-size:.88rem;}
+  .res-details .summary-list{margin-top:8px;}
+  .res-h3{font-size:.92rem; font-weight:700; margin:20px 0 6px;}
+  .res-h3:first-of-type{margin-top:6px;}
+  .res-checks{display:flex; flex-wrap:wrap; gap:6px 22px;}
+  label.res-check{display:inline-flex; align-items:center; gap:6px; margin:0; font-weight:normal; font-size:.88rem;}
+  label.res-check input{width:auto;}
+  .res-upl{border-top:1px dashed var(--border); padding-top:12px; margin-top:12px;}
+  .res-upl-head{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .res-sep{border:none; border-top:1px dashed var(--border); margin:20px 0;}
   .summary-list{font-size:.88rem;}
   .summary-list div{padding:6px 0; border-bottom:1px dashed var(--border);}
   .summary-list b{color:var(--accent-text);}
@@ -258,7 +281,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "3.1.1";
+const APP_VERSION = "3.2.0";
 
 const I18N = {
 de: {
@@ -429,6 +452,18 @@ de: {
 
   btn_copy: "📋 In Zwischenablage kopieren",
   btn_savefile: "💾 Nur CONFIG-Block speichern",
+  res_status_h2: "Übersicht",
+  res_col_script: "Script",
+  res_col_shelly: "Shelly",
+  res_col_version: "Version",
+  res_col_update: "installiert → neu",
+  res_before_h2: "Vor dem Hochladen",
+  res_upload_h2: "Hochladen",
+  btn_upload_both: "⚡ Beide hochladen",
+  upload_both_hint: "Spielt erst den Controller, dann zenDash-API + Watchdog ein. Hält bei einer Rückfrage oder einem Fehler an.",
+  res_manual_h2: "Script oder Konfiguration sichern",
+  res_proxy_h2: "Dashboard-Proxy",
+  res_manual_hint: "Hier speicherst du das fertige Script oder nur den CONFIG-Block – zum Hochladen von Hand oder als Sicherung deiner Konfiguration.",
   cfg_expand: "▾ Ganzen CONFIG-Block anzeigen ({n} Zeilen)",
   cfg_collapse: "▴ CONFIG-Block einklappen",
   backup_label: "Vor dem Hochladen alten Stand sichern{v}",
@@ -654,7 +689,6 @@ de: {
   result_regel: "Regelparameter:",
   result_regel_value: "Sollwert {sp} W, Hysterese {hy} W, Entladen {dc}/{ds} W, Laden {cc}/{cs} W",
   result_watch: "Watchdog überwacht:",
-  result_legacy_note: "Umstieg: Das Script „zenDash-API + Watchdog“ ersetzt die alten Einzelscripte (zenDash-API 2.x, Watchdog 1.x). Stoppe diese auf ihren Shellys und schalte dort den Autostart aus — sonst laufen sie parallel weiter.",
   hint_ctrl: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Controller-Script (zerooutput_multi_kvs). Ziel: Controller-Shelly <b>{ip}</b>.",
   hint_zdw: "Ersetzt den <code>let CONFIG = { ... };</code>-Block im Script zendash_watch (zenDash-API + Watchdog). Ziel: Dashboard-Shelly <b>{ip}</b>. Geräteliste und Reihenfolge sind identisch zum Controller.",
   upload_direct_hint: "Lokaler Helfer erkannt — das Script wird direkt auf den Shelly aus Schritt 1 geladen und gestartet.",
@@ -860,6 +894,18 @@ en: {
 
   btn_copy: "📋 Copy to clipboard",
   btn_savefile: "💾 Save CONFIG block only",
+  res_status_h2: "Overview",
+  res_col_script: "Script",
+  res_col_shelly: "Shelly",
+  res_col_version: "Version",
+  res_col_update: "installed → new",
+  res_before_h2: "Before uploading",
+  res_upload_h2: "Upload",
+  btn_upload_both: "⚡ Upload both",
+  upload_both_hint: "Uploads the Controller first, then zenDash API + Watchdog. Stops at a confirmation question or an error.",
+  res_manual_h2: "Save script or configuration",
+  res_proxy_h2: "Dashboard proxy",
+  res_manual_hint: "Save the finished script or just the CONFIG block here – to upload it manually or as a backup of your configuration.",
   cfg_expand: "▾ Show the whole CONFIG block ({n} lines)",
   cfg_collapse: "▴ Collapse CONFIG block",
   backup_label: "Back up the current version before uploading{v}",
@@ -1085,7 +1131,6 @@ en: {
   result_regel: "Control parameters:",
   result_regel_value: "setpoint {sp} W, hysteresis {hy} W, discharge {dc}/{ds} W, charge {cc}/{cs} W",
   result_watch: "Watchdog monitors:",
-  result_legacy_note: "Migration: the \"zenDash-API + Watchdog\" script replaces the old separate scripts (zenDash-API 2.x, Watchdog 1.x). Stop them on their Shellys and disable autostart there — otherwise they keep running in parallel.",
   hint_ctrl: "Replaces the <code>let CONFIG = { ... };</code> block in the Controller script (zerooutput_multi_kvs). Target: Controller Shelly <b>{ip}</b>.",
   hint_zdw: "Replaces the <code>let CONFIG = { ... };</code> block in the zendash_watch script (zenDash-API + Watchdog). Target: Dashboard Shelly <b>{ip}</b>. Device list and order are identical to the Controller.",
   upload_direct_hint: "Local helper detected — the script is uploaded directly to the Shelly from step 1 and started.",
@@ -1291,6 +1336,18 @@ fr: {
 
   btn_copy: "📋 Copier dans le presse-papiers",
   btn_savefile: "💾 Enregistrer seulement le bloc CONFIG",
+  res_status_h2: "Vue d’ensemble",
+  res_col_script: "Script",
+  res_col_shelly: "Shelly",
+  res_col_version: "Version",
+  res_col_update: "installée → nouvelle",
+  res_before_h2: "Avant le chargement",
+  res_upload_h2: "Chargement",
+  btn_upload_both: "⚡ Charger les deux",
+  upload_both_hint: "Charge d’abord le Controller, puis zenDash-API + Watchdog. S’arrête en cas de question de confirmation ou d’erreur.",
+  res_manual_h2: "Enregistrer le script ou la configuration",
+  res_proxy_h2: "Proxy du tableau de bord",
+  res_manual_hint: "Enregistre ici le script complet ou seulement le bloc CONFIG – pour le charger à la main ou comme sauvegarde de ta configuration.",
   cfg_expand: "▾ Afficher tout le bloc CONFIG ({n} lignes)",
   cfg_collapse: "▴ Replier le bloc CONFIG",
   backup_label: "Sauvegarder la version actuelle avant le chargement{v}",
@@ -1516,7 +1573,6 @@ fr: {
   result_regel: "Paramètres de régulation :",
   result_regel_value: "consigne {sp} W, hystérésis {hy} W, décharge {dc}/{ds} W, charge {cc}/{cs} W",
   result_watch: "Watchdog surveille :",
-  result_legacy_note: "Migration : le script « zenDash-API + Watchdog » remplace les anciens scripts séparés (zenDash-API 2.x, Watchdog 1.x). Arrête-les sur leurs Shelly et désactive le démarrage automatique — sinon ils continuent de tourner en parallèle.",
   hint_ctrl: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script Controller (zerooutput_multi_kvs). Cible : Shelly Controller <b>{ip}</b>.",
   hint_zdw: "Remplace le bloc <code>let CONFIG = { ... };</code> dans le script zendash_watch (zenDash-API + Watchdog). Cible : Shelly Dashboard <b>{ip}</b>. La liste et l'ordre des appareils sont identiques au Controller.",
   upload_direct_hint: "Assistant local détecté — le script est chargé directement sur le Shelly de l'étape 1 et démarré.",
@@ -2146,7 +2202,7 @@ function renderProducts(){
       <button class="btn" onclick="document.getElementById('importFile').click()">${t('prod_import_file_button')}</button>
       <input type="file" id="importFile" accept=".js,.txt,text/javascript,text/plain" style="display:none;" onchange="loadImportFile(this)">
     </div>
-    <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
+    <textarea id="importText" rows="6" style="width:100%; font-family:monospace; font-size:.78rem; padding:10px; border-radius:8px; border:1px solid var(--control-border); background:var(--bg); color:var(--text);" placeholder="let CONFIG = { ... };"></textarea>
     <div style="margin-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
       <button class="btn btn-primary" onclick="importConfig()">${t('prod_import_button')}</button>
       <span id="importStatus" class="hint" style="margin:0;"></span>
@@ -2879,12 +2935,13 @@ function setOwnInterval(){
 // Immer sichtbar und aenderbar. Weicht ein eingelesener Wert von der
 // Empfehlung ab und ist noch nichts entschieden, steht der Hinweis mit
 // "Beibehalten" dabei; ohne Entscheidung bleibt der bisherige Wert.
-function intervalBlock(){
+function intervalBlock(inner){
   const v = importedInterval(), r = recommendedInterval(), n = state.devices.length, cur = ctrlInterval();
   const open = intervalOpen();
   const info = open ? `<div class="note" style="margin-top:0;">${t('int_warn', {v: v, n: n, r: r})}</div>`
     : `<p class="hint" style="margin-top:0;">${t(cur === r ? 'int_info_rec' : 'int_info_dev', {cur: cur, n: n, r: r})}</p>`;
-  return `<div class="panel"><h2>${t('int_h2')}</h2>${info}
+  const head = inner ? `<h3 class="res-h3">${t('int_h2')}</h3>` : `<div class="panel"><h2>${t('int_h2')}</h2>`;
+  return `${head}${info}
     <div class="copy-row" style="justify-content:flex-start; margin-top:10px; flex-wrap:wrap; gap:8px;">
       ${open || cur !== r ? `<button class="btn ${open ? 'btn-primary' : ''}" onclick="setIntervalChoice('rec')">${t('int_take_rec', {r: r})}</button>` : ''}
       ${open ? `<button class="btn" onclick="setIntervalChoice(${v})">${t('int_keep', {v: v})}</button>` : ''}
@@ -2893,7 +2950,7 @@ function intervalBlock(){
       <button class="btn" onclick="setOwnInterval()">${t('int_own_btn')}</button>
     </div>
     ${state.intervalErr ? `<p class="error">${t('int_own_err')}</p>` : ''}
-  </div>`;
+  ${inner ? '' : '</div>'}`;
 }
 
 function buildControllerConfig(){
@@ -3188,15 +3245,6 @@ function backupFilename(key, b){
   const ver = b.version ? '_v' + String(b.version).replace(/[^0-9A-Za-z._-]/g, '_') : '';
   return base + ver + '_backup_' + stamp + '.js';
 }
-function backupHtml(key){
-  const b = backupOf(key);
-  if(!b) return '';
-  const v = b.version ? ' (v' + escapeHtml(b.version) + ')' : '';
-  return `<label style="display:flex; gap:8px; align-items:flex-start; margin-top:12px; font-weight:normal;">
-      <input type="checkbox" ${backupWanted(key) ? 'checked' : ''} onchange="setBackupWanted('${key}', this.checked)">
-      <span>${t('backup_label', {v: v})}<span class="hint" style="display:block; margin:2px 0 0;">${t('backup_hint')}</span></span>
-    </label>`;
-}
 // Einmal je Script und Update-Durchlauf, vor dem ersten Upload-Versuch
 function backupBeforeUpload(key){
   const b = backupOf(key);
@@ -3207,45 +3255,137 @@ function backupBeforeUpload(key){
   state.upd.backupDone[key] = true;
 }
 
-function resultBlock(title, key, cfg, hintKey){
-  const ip = targetIp(key);
+// ---------- Ergebnisseite (ab 3.2.0) ----------
+// Ein Fluss von oben nach unten: (1) Uebersicht, (2) Vor dem Hochladen
+// (alle Einstellungen), (3) Hochladen (nur mit Helfer), (4) Dashboard-
+// Proxy, (5) Sichern, (6) Anleitung von Hand. Element-IDs (uploadBtn_, uploadStatus_,
+// uploadBar_, uploadConfirm_, scriptStatus_, cfgReport_, configOut_ ...)
+// sind dieselben wie vorher, die Funktionen dahinter unveraendert.
+const SCRIPT_TITLES = { ctrl: 'Controller', zdw: 'zenDash-API + Watchdog' };
+function resultKeys(){
+  const k = [];
+  if(state.products.controller) k.push('ctrl');
+  if(needsDashIp()) k.push('zdw');
+  return k;
+}
+function installedVersion(key){
+  const r = state.updateReady && state.upd && state.upd.rows && state.upd.rows[key];
+  return r && r.installed ? String(r.installed) : '';
+}
+function helperDisplay(onWithHelper){
+  return 'display:' + ((onWithHelper ? helperAvailable : !helperAvailable) ? 'block' : 'none') + ';';
+}
+// Eigener Block: hat mit dem Hochladen der Shelly-Scripte nichts zu tun
+function resultProxyPanel(){
+  return `<div class="panel"><h2>${t('res_proxy_h2')}</h2>
+    <p class="hint" style="margin:0;">${escapeHtml(t('result_proxy_line'))} ${proxyLinksHtml()}</p>
+    <div id="proxyAfter"></div></div>`;
+}
+
+function resultStatusPanel(keys){
+  const upd = state.updateReady;
+  const rows = keys.map(function(key){
+    const inst = installedVersion(key);
+    return `<tr><td>${SCRIPT_TITLES[key]}</td><td>${escapeHtml(targetIp(key) || '—')}</td>` +
+      `<td>${upd && inst ? 'v' + escapeHtml(inst) + ' → ' : ''}<span id="ver_${key}">${t('ver_loading')}</span></td></tr>`;
+  }).join('');
   return `
   <div class="panel">
-    <h2>${title}-CONFIG <span class="badge">→ ${escapeHtml(ip || '?')}</span></h2>
-    <p class="hint">${t(hintKey, {ip: escapeHtml(ip || '—')})}</p>
-    ${key === 'zdw' && state.products.api ? `<p class="hint">${escapeHtml(t('result_proxy_line'))} ${proxyLinksHtml()}</p>` : ''}
-    <div id="cfgReport_${key}">${cfgReportHtml(key)}</div>
-    <div class="copy-row">
-      <button class="btn" onclick="copyConfig('${key}')">${t('btn_copy')}</button>
-      <button class="btn" onclick="downloadConfig('${key}')">${t('btn_savefile')}</button>
-    </div>
-    <label style="display:flex; gap:8px; align-items:flex-start; margin-top:14px; font-weight:normal;">
-      <input type="checkbox" ${debugAdvanced(key).debug === true ? 'checked' : ''} onchange="setDebug('${key}', this.checked)">
-      <span>${t('debug_label')}<span class="hint" style="display:block; margin:2px 0 0;">${t('debug_hint')}</span></span>
-    </label>
-    <div class="cfg-wrap${cfgOpen(key) ? '' : ' collapsed'}" id="cfgWrap_${key}"><pre id="configOut_${key}">${escapeHtml(cfg)}</pre></div>
-    <div class="copy-row cfg-toggle" style="justify-content:flex-start;"><button class="btn" id="cfgToggle_${key}" onclick="toggleCfg('${key}')">${cfgToggleText(key, cfg)}</button></div>
+    <h2>${t('res_status_h2')}</h2>
+    ${upd ? `<p class="note" style="margin-top:0;">${t('result_update_hint')}</p>` : ''}
+    ${keys.length ? `<table class="res-table"><thead><tr><th>${t('res_col_script')}</th><th>${t('res_col_shelly')}</th>` +
+      `<th>${t(upd ? 'res_col_update' : 'res_col_version')}</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+    <details class="res-details" ${upd ? '' : 'open'}>
+      <summary>${t('result_h2')}</summary>
+      <div class="summary-list">${decisionRows()}</div>
+    </details>
+  </div>`;
+}
 
-    <div style="margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
-      <div class="copy-row" style="justify-content:flex-start;">
-        <button class="btn btn-primary" onclick="downloadFullScript('${key}')">${t('btn_fullscript')}</button>
-        <span id="scriptStatus_${key}" class="hint" style="margin:0;"></span>
-      </div>
-      <p class="hint" style="margin-top:8px; margin-bottom:0;">${t('fullscript_hint', {filename: FULL_SCRIPT_FILENAMES[key]})}</p>
-    </div>
+function resultBeforePanel(keys){
+  let h = `<div class="panel"><h2>${t('res_before_h2')}</h2>`;
+  if(state.products.controller) h += intervalBlock(true);
+  h += `<h3 class="res-h3">${t('debug_label')}</h3><div class="res-checks">` +
+    keys.map(function(k){
+      return `<label class="res-check"><input type="checkbox" ${debugAdvanced(k).debug === true ? 'checked' : ''} onchange="setDebug('${k}', this.checked)"> ${SCRIPT_TITLES[k]}</label>`;
+    }).join('') + `</div><p class="hint" style="margin-top:4px;">${t('debug_hint')}</p>`;
+  const bk = keys.filter(function(k){ return backupOf(k); });
+  if(bk.length){
+    h += `<div class="helper-row" style="${helperDisplay(true)}"><h3 class="res-h3">${t('backup_label', {v: ''})}</h3><div class="res-checks">` +
+      bk.map(function(k){
+        const b = backupOf(k);
+        return `<label class="res-check"><input type="checkbox" ${backupWanted(k) ? 'checked' : ''} onchange="setBackupWanted('${k}', this.checked)"> ${SCRIPT_TITLES[k]}${b.version ? ' (v' + escapeHtml(b.version) + ')' : ''}</label>`;
+      }).join('') + `</div><p class="hint" style="margin-top:4px;">${t('backup_hint')}</p></div>`;
+  }
+  return h + '</div>';
+}
 
-    <div class="helper-row" id="helperRow_${key}" style="display:none; margin-top:16px; padding-top:16px; border-top:1px dashed var(--border);">
-      <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
-      <p style="font-size:.88rem; margin:0;">${t('upload_target_fixed', {ip: escapeHtml(ip || '—')})}</p>
-      ${backupHtml(key)}
-      <div class="copy-row" style="margin-top:10px;">
-        <button class="btn btn-primary" id="uploadBtn_${key}" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
-        <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
+function resultUploadPanel(keys){
+  const both = keys.length > 1;
+  const rows = keys.map(function(key){
+    const ip = targetIp(key);
+    return `
+    <div class="res-upl" id="helperRow_${key}">
+      <div class="res-upl-head">
+        <div><b>${SCRIPT_TITLES[key]}</b><div class="hint" style="margin:2px 0 0;">${t('upload_target_fixed', {ip: escapeHtml(ip || '—')})}</div></div>
+        <button class="btn ${both ? '' : 'btn-primary'}" id="uploadBtn_${key}" onclick="directUpload('${key}')">${t('btn_direct_upload')}</button>
       </div>
+      <span id="uploadStatus_${key}" class="hint" style="margin:0;"></span>
       <div class="upl-bar" id="uploadBar_${key}" hidden><div></div></div>
       <div id="uploadConfirm_${key}"></div>
-    </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="panel helper-row" style="${helperDisplay(true)}">
+    <h2>${t('res_upload_h2')}</h2>
+    <p class="hint" style="margin-top:0;">${t('upload_direct_hint')}</p>
+    ${both ? `<div class="copy-row" style="justify-content:flex-start; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="uploadBothBtn" onclick="uploadBoth()">${t('btn_upload_both')}</button>
+      <span class="hint" style="margin:0;">${t('upload_both_hint')}</span></div>` : ''}
+    ${rows}
   </div>`;
+}
+
+function resultManualPanel(keys){
+  const main = !helperAvailable;   // ohne Helfer ist das hier der Hauptweg
+  const blocks = keys.map(function(key){
+    const cfg = CONFIG_BUILDERS[key]();
+    const ip = targetIp(key);
+    return `
+    <div>
+      <h3 class="res-h3">${SCRIPT_TITLES[key]} <span class="badge">→ ${escapeHtml(ip || '?')}</span></h3>
+      <p class="hint" style="margin-top:0;">${t(key === 'ctrl' ? 'hint_ctrl' : 'hint_zdw', {ip: escapeHtml(ip || '—')})}</p>
+      <div id="cfgReport_${key}">${cfgReportHtml(key)}</div>
+      <div class="copy-row" style="justify-content:flex-start; flex-wrap:wrap;">
+        <button class="btn ${main ? 'btn-primary' : ''}" onclick="downloadFullScript('${key}')">${t('btn_fullscript')}</button>
+        <button class="btn" onclick="downloadConfig('${key}')">${t('btn_savefile')}</button>
+        <button class="btn" onclick="copyConfig('${key}')">${t('btn_copy')}</button>
+      </div>
+      <span id="scriptStatus_${key}" class="hint" style="margin:0;"></span>
+      <p class="hint" style="margin-top:6px;">${t('fullscript_hint', {filename: FULL_SCRIPT_FILENAMES[key]})}</p>
+      <div class="cfg-wrap${cfgOpen(key) ? '' : ' collapsed'}" id="cfgWrap_${key}"><pre id="configOut_${key}">${escapeHtml(cfg)}</pre></div>
+      <div class="copy-row cfg-toggle" style="justify-content:flex-start;"><button class="btn" id="cfgToggle_${key}" onclick="toggleCfg('${key}')">${cfgToggleText(key, cfg)}</button></div>
+    </div>`;
+  }).join('<hr class="res-sep">');
+  return `
+  <div class="panel">
+    <h2>${t('res_manual_h2')}</h2>
+    <p class="hint" style="margin-top:0;">${t('res_manual_hint')}</p>
+    ${blocks}
+  </div>`;
+}
+
+// Beide Scripte nacheinander - Controller zuerst. Haelt an, wenn der
+// erste Upload nicht durchlaeuft (Fehler oder Rueckfrage auf dem Shelly).
+async function uploadBoth(){
+  const b = document.getElementById('uploadBothBtn');
+  if(b) b.disabled = true;
+  try{
+    const ok = await directUpload('ctrl');
+    if(ok) await directUpload('zdw');
+  } finally {
+    if(b) b.disabled = false;
+  }
 }
 
 // Bebilderte Kurzanleitung fuer den letzten Schritt (Copy&Paste in den
@@ -3254,19 +3394,18 @@ function resultBlock(title, key, cfg, hintKey){
 // scheitern an fehlenden CORS-Headern der Shelly-Firmware, siehe
 // zendure_proxy.py; ein generischer lokaler Helfer ist als naechster
 // Ausbauschritt vorgesehen.
-function uploadGuideBlock(){
+function uploadGuideBlock(open, inner){
   const steps = [1,2,3,4,5,6,7].map(function(n){
     return `<li style="margin-bottom:10px;"><b>${t('upload_guide_step'+n+'_title')}</b><br>${t('upload_guide_step'+n+'_desc')}</li>`;
   }).join('');
-  return `
-  <div class="panel">
-    <details>
+  const det = `
+    <details ${open ? 'open' : ''}>
       <summary style="cursor:pointer; font-weight:700; font-size:.85rem; color:var(--muted);">${t('upload_guide_summary')}</summary>
       <ol style="margin:14px 0 0; padding-left:20px; font-size:.88rem; line-height:1.6;">
         ${steps}
       </ol>
-    </details>
-  </div>`;
+    </details>`;
+  return inner ? det : `<div class="panel">${det}</div>`;
 }
 
 // Produktunabhaengiges Diagnose-Tool: prueft mem_free eines beliebigen
@@ -3420,10 +3559,7 @@ function setVersionText(id, text){
 function loadVersions(){
   const jobs = [];
   if(state.products.controller) jobs.push(['ctrl', ['ver_ctrl']]);
-  const ids = [];
-  if(state.products.api) ids.push('ver_api');
-  if(state.products.watchdog) ids.push('ver_wd');
-  if(ids.length) jobs.push(['zdw', ids]);
+  if(needsDashIp()) jobs.push(['zdw', ['ver_zdw']]);
   jobs.forEach(function(job){
     fetchSource(job[0]).then(function(text){
       const v = parseScriptVersion(job[0], text);
@@ -3505,8 +3641,12 @@ async function detectHelper(){
   document.querySelectorAll('.helper-row').forEach(function(el){
     el.style.display = helperAvailable ? 'block' : 'none';
   });
+  document.querySelectorAll('.no-helper-row').forEach(function(el){
+    el.style.display = helperAvailable ? 'none' : 'block';
+  });
   // Startdialog: "Updaten" haengt am Helfer - bei Aenderung neu zeichnen
-  if(before !== helperAvailable + '|' + helperFeatures.join(',') && computeStepList()[stepIndex] === 'start') render();
+  // Startdialog und Ergebnis haengen am Helfer - bei Aenderung neu zeichnen
+  if(before !== helperAvailable + '|' + helperFeatures.join(',') && ['start', 'result'].indexOf(computeStepList()[stepIndex]) !== -1) render();
 }
 
 // ---------- Startdialog: Neu konfigurieren oder Updaten ----------
@@ -4257,7 +4397,7 @@ async function directUpload(key, confirmIds, deleteOthers){
   statusEl.className = 'hint';
   if(btn) btn.disabled = true;
   let stopProgress = function(){};
-  let uploadOk = false;
+  let uploadOk = false, done = false;
   try{
     const merged = await fetchMergedScript(key);
     // Sicherheitsnetz: ein aelterer Helfer kennt "behalten" nicht und
@@ -4292,7 +4432,12 @@ async function directUpload(key, confirmIds, deleteOthers){
     }
     statusEl.textContent = t(data.action === 'updated' ? 'upload_success_updated' : 'upload_success', {ip: ip, id: data.id}) +
       (data.kept_others ? ' ' + t('upload_kept_others', {n: data.kept_others}) : '');
-    if(key === 'zdw' && state.products.api) confirmEl.innerHTML = proxyAfterUploadHtml(latestProxyVersion());
+    // Hinweis zum Proxy nach dem Upload: im Block "Dashboard-Proxy", nicht beim Hochladen
+    if(key === 'zdw' && state.products.api){
+      const pa = document.getElementById('proxyAfter');
+      (pa || confirmEl).innerHTML = proxyAfterUploadHtml(latestProxyVersion());
+    }
+    done = true;
   } catch(e){
     statusEl.textContent = t('upload_error', {msg: e.message});
     statusEl.className = 'error';
@@ -4300,6 +4445,7 @@ async function directUpload(key, confirmIds, deleteOthers){
     stopProgress(uploadOk);
     if(btn) btn.disabled = false;
   }
+  return done;
 }
 
 function showUploadConfirm(key, ip, data){
@@ -4395,23 +4541,16 @@ async function checkMemory(){
   }
 }
 
-function renderResult(){
+// "Deine Entscheidungen" - unveraenderte Zeilen, ohne die Versionen
+// (die stehen jetzt in der Tabelle der Uebersicht)
+function decisionRows(){
   const p = state.products;
   const names = { controller: 'Controller', api: 'zenDash-API', watchdog: 'Watchdog' };
   const row = (label, value) => `<div><b>${label}</b> ${value}</div>`;
-
-  let html = state.updateReady ? `<div class="panel"><p class="note" style="margin:0;">${t('result_update_hint')}</p></div>` : '';
-  if(p.controller) html += intervalBlock();
-  html += `
-  <div class="panel">
-    <h2>${t('result_h2')}</h2>
-    <div class="summary-list">`;
+  let html = '';
   html += row(t('result_products'), ['controller','api','watchdog'].filter(k=>p[k]).map(k=>names[k]).join(', '));
   if(needsCtrIp()) html += row(t('result_ip_ctr'), escapeHtml(state.runtime.ctr_kvs || '—'));
   if(needsDashIp()) html += row(t('result_ip_dash'), escapeHtml(state.runtime.apidash_watch || '—'));
-  if(p.controller) html += row(t('result_ver_ctrl'), `<span id="ver_ctrl">${t('ver_loading')}</span>`);
-  if(p.api) html += row(t('result_ver_api'), `<span id="ver_api">${t('ver_loading')}</span>`);
-  if(p.watchdog) html += row(t('result_ver_wd'), `<span id="ver_wd">${t('ver_loading')}</span>`);
   html += row(t('result_devices'), `${state.devices.length} — ${escapeHtml(state.devices.map(d=>d.label||'?').join(', '))}`);
   if(p.watchdog) html += row(t('result_watch'), escapeHtml(state.devices.filter(d=>d.wdEnabled!==false).map(d=>d.label||'?').join(', ') || '—'));
   if(p.watchdog) html += row(t('result_wd'), t('result_wd_value', {vs: wdVal('vollSchwelle'), er: wdVal('entladeReset'),
@@ -4438,16 +4577,18 @@ function renderResult(){
     html += row(t('result_regel'), t('result_regel_value', {sp: r.setpoint, hy: r.hysteresis, dc: r.dConc, ds: r.dSpread, cc: r.cConc, cs: r.cSpread}));
   }
   html += row(t('result_rest'), t('result_rest_value'));
-  html += `
-    </div>
-    ${ needsDashIp() ? `<div class="note">${t('result_legacy_note')}</div>` : '' }
-  </div>`;
+  return html;
+}
 
-  if(p.controller) html += resultBlock('Controller', 'ctrl', buildControllerConfig(), 'hint_ctrl');
-  if(needsDashIp()) html += resultBlock('zenDash-API + Watchdog', 'zdw', buildZdwConfig(), 'hint_zdw');
-
-  if(anyProduct()) html += uploadGuideBlock();
-
+function renderResult(){
+  const keys = resultKeys();
+  let html = resultStatusPanel(keys);
+  if(!keys.length) return html;
+  html += resultBeforePanel(keys);
+  html += resultUploadPanel(keys);
+  if(state.products.api) html += resultProxyPanel();
+  html += resultManualPanel(keys);
+  html += uploadGuideBlock(!helperAvailable);   // eigener Block, ohne Helfer aufgeklappt
   return html;
 }
 
