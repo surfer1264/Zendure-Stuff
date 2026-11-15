@@ -7,7 +7,7 @@ oder mehrere Zendure-Speicher. Die Logs zeichnet der [Log-Grabber](../../Script_
 auf, siehe [Logs aufzeichnen](#logs-aufzeichnen). `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.7.1** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.8.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -347,6 +347,9 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.8.0**: Zeitraum-Leiste mit `Monat` und `30 T`. `Monat` zeigt einen ganzen Kalendermonat, `‹`/`›` und die
+  Pfeiltasten `←`/`→` blättern dann monatsweise. Der Bericht öffnet jetzt mit dem letzten Kalendermonat.
+  `30 T` zeigt die letzten 30 Tage bis zum Ende der Daten. Nur der Bericht ändert sich, die Logs werden nicht neu gerechnet.
 - **1.7.1**: Bericht öffnet mit den letzten 7 vollen Tagen. Die Zeitraum-Leiste bleibt auf dem iPad unterhalb der
   Statusleiste bedienbar; die Tasten ‹ − + › sind kräftiger. Nur der Bericht ändert sich, die Logs werden nicht neu gerechnet
   (eigene `RECHEN_VERSION` in `analyse.py`).

@@ -42,7 +42,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.7.1"
+VERSION = "1.8.0"
 # Stand der Tagesberechnung. Nur erhöhen, wenn sich Ergebnisse einzelner Tage ändern: dann werden alle Logs neu gerechnet.
 # Reine Änderungen am Bericht (bericht.py) erhöhen nur VERSION.
 RECHEN_VERSION = "1.7.0"
