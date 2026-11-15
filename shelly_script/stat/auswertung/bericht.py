@@ -378,7 +378,7 @@ __SCHRIFTEN__
     <div class="in">
       <div class="seg" id="presets">
         <button type="button" data-w="0">Alles</button>
-        <button type="button" data-k="mon" id="pMon">Monat</button>
+        <button type="button" data-k="mon" id="pMon" title="Kalendermonat – mit ‹ › (oder Pfeiltasten ← →) monatsweise blättern">Monat</button>
         <button type="button" data-k="30" title="Letzte 30 Tage bis zum Ende der Daten">30 T</button>
         <button type="button" data-w="10080">7 T</button>
         <button type="button" data-w="4320">3 T</button>
@@ -755,6 +755,7 @@ function katLinie(id, o){
 
 /* ---------------- Zeitraum ---------------- */
 function setze(a, b){
+  MON = null;
   var span = Math.max(MIN_SPAN, b - a), voll = HI - LO;
   if (span >= voll){ a = LO; b = HI; }
   else {
@@ -770,20 +771,35 @@ function preset(w){
   var m = (range.a + range.b) / 2, a = Math.round((m - w / 2) / TAG) * TAG;
   setze(a, a + w);
 }
-/* Feste Zeiträume: letzter Kalendermonat (vor dem heutigen Monat) und letzte 30 Tage bis Datenende */
-var HEUTE = new Date(), VM = {j: HEUTE.getFullYear() - (HEUTE.getMonth() === 0 ? 1 : 0), m: (HEUTE.getMonth() + 11) % 12};
+/* Monatsmodus: ganzer Kalendermonat (auf vorhandene Daten gekürzt), ‹ › blättern monatsweise.
+   Start ist der letzte Kalendermonat vor dem heutigen; hat der keine Daten, der Monat des letzten Datentags. */
+var MON = null;
+function monatBereich(j, m){
+  var a = Math.max(LO, Date.UTC(j, m, 1) / 60000), b = Math.min(HI, Date.UTC(j, m + 1, 1) / 60000);
+  return b - a >= TAG ? {a: a, b: b} : null;
+}
+function monatPlus(mo, n){ var x = mo.j * 12 + mo.m + n; return {j: Math.floor(x / 12), m: x % 12}; }
+var START_MON = (function(){
+  var h = new Date(), vm = monatPlus({j: h.getFullYear(), m: h.getMonth()}, -1);
+  if (monatBereich(vm.j, vm.m)) return vm;
+  var d = dOf(HI - TAG); return {j: d.getUTCFullYear(), m: d.getUTCMonth()};
+})();
+function setzeMonat(mo){
+  var r = monatBereich(mo.j, mo.m); if (!r) return false;
+  MON = mo; range.a = r.a; range.b = r.b; zeichne(); return true;
+}
+function blaettereMonat(n){
+  var mo = monatPlus(MON, n);
+  if (monatBereich(mo.j, mo.m)) setzeMonat(mo);
+}
+/* Letzte n Tage bis Datenende */
 function festBereich(k){
-  var a, b;
-  if (k === 'mon'){
-    a = Date.UTC(VM.j, VM.m, 1) / 60000;
-    b = Date.UTC(VM.j, VM.m + 1, 1) / 60000;
-  } else { b = HI; a = HI - (+k) * TAG; }
-  a = Math.max(LO, a); b = Math.min(HI, b);
+  var a = Math.max(LO, HI - (+k) * TAG), b = HI;
   return b - a >= TAG ? {a: a, b: b} : null;
 }
 function setzeFest(k){
   var r = festBereich(k); if (!r) return;
-  range.a = r.a; range.b = r.b; zeichne();
+  MON = null; range.a = r.a; range.b = r.b; zeichne();
 }
 function tageImAusschnitt(){
   var idx = [];
@@ -836,21 +852,31 @@ function zeichne(){
   var span = range.b - range.a, alles = range.a <= LO && range.b >= HI;
   document.getElementById('rangeLbl').innerHTML =
     esc(dLang(range.a) + ' ' + hm(range.a) + ' – ' + dLang(range.b) + ' ' + hm(range.b)) +
-    '<small>' + (span >= TAG ? f1(span / TAG) + ' Tage' : f1(span / 60) + ' Stunden') + (alles ? ' · alles' : '') + '</small>';
+    '<small>' + (MON ? esc(MO[MON.m] + ' ' + MON.j) + ' · ' : '') + (span >= TAG ? f1(span / TAG) + ' Tage' : f1(span / 60) + ' Stunden') +
+    (alles && !MON ? ' · alles' : '') + '</small>';
   [].forEach.call(document.querySelectorAll('#presets button'), function(btn){
+    if (btn.dataset.k === 'mon'){ btn.classList.toggle('on', !!MON); return; }
     if (btn.dataset.k){
       var r = festBereich(btn.dataset.k);
-      btn.classList.toggle('on', !!r && range.a === r.a && range.b === r.b);
-      btn.disabled = !r || (btn.dataset.k !== 'mon' && r.a <= LO && r.b >= HI);
+      btn.classList.toggle('on', !MON && !!r && range.a === r.a && range.b === r.b);
+      btn.disabled = !r || (r.a <= LO && r.b >= HI);
       return;
     }
-    var w = +btn.dataset.w; btn.classList.toggle('on', w ? span === w : alles);
+    var w = +btn.dataset.w; btn.classList.toggle('on', !MON && (w ? span === w : alles));
     btn.disabled = w > 0 && w >= HI - LO;
   });
   document.getElementById('zIn').disabled = span <= MIN_SPAN;
   document.getElementById('zOut').disabled = alles;
-  document.getElementById('pL').disabled = range.a <= LO;
-  document.getElementById('pR').disabled = range.b >= HI;
+  var pL = document.getElementById('pL'), pR = document.getElementById('pR');
+  if (MON){
+    var v = monatPlus(MON, -1), n = monatPlus(MON, 1);
+    pL.disabled = !monatBereich(v.j, v.m); pR.disabled = !monatBereich(n.j, n.m);
+    pL.title = 'Vormonat'; pR.title = 'Nächster Monat';
+  } else {
+    pL.disabled = range.a <= LO; pR.disabled = range.b >= HI;
+    pL.title = 'Früher'; pR.title = 'Später';
+  }
+  pL.setAttribute('aria-label', pL.title); pR.setAttribute('aria-label', pR.title);
 
   zeitLinien('c-soc', {serien: G.map(function(g){ return {name: g.name, werte: V['soc_' + g.key], farbe: g.farbe}; }),
     yfmt: f0, einheit: ' %', ymin: 0, ymax: 100, aria: 'Ladezustand über die Zeit'});
@@ -1015,17 +1041,22 @@ document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch 
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
 
 [].forEach.call(document.querySelectorAll('#presets button'), function(btn){
-  btn.addEventListener('click', function(){ if (btn.dataset.k) setzeFest(btn.dataset.k); else preset(+btn.dataset.w); });
+  btn.addEventListener('click', function(){
+    if (btn.dataset.k === 'mon') setzeMonat(MON || START_MON);
+    else if (btn.dataset.k) setzeFest(btn.dataset.k);
+    else preset(+btn.dataset.w);
+  });
 });
-(function(){  /* Monats-Button mit Kurznamen beschriften, z. B. „Okt" */
-  var btn = document.getElementById('pMon');
-  btn.textContent = MO[VM.m].slice(0, 3);
-  btn.title = 'Letzter Monat: ' + MO[VM.m] + ' ' + VM.j + (festBereich('mon') ? '' : ' (keine Daten)');
-})();
 document.getElementById('zIn').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = (range.b - range.a) / 4; setze(m - s, m + s); });
 document.getElementById('zOut').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = range.b - range.a; setze(m - s, m + s); });
-document.getElementById('pL').addEventListener('click', function(){ var s = (range.b - range.a) / 2; setze(range.a - s, range.b - s); });
-document.getElementById('pR').addEventListener('click', function(){ var s = (range.b - range.a) / 2; setze(range.a + s, range.b + s); });
+document.getElementById('pL').addEventListener('click', function(){ if (MON) return blaettereMonat(-1); var s = (range.b - range.a) / 2; setze(range.a - s, range.b - s); });
+document.getElementById('pR').addEventListener('click', function(){ if (MON) return blaettereMonat(1); var s = (range.b - range.a) / 2; setze(range.a + s, range.b + s); });
+/* Tastatur: ← / → wirken wie ‹ / › (nicht in Eingabefeldern, nicht mit Strg/Alt/Cmd) */
+document.addEventListener('keydown', function(e){
+  if (e.ctrlKey || e.altKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) return;
+  var id = e.key === 'ArrowLeft' ? 'pL' : e.key === 'ArrowRight' ? 'pR' : null, b = id && document.getElementById(id);
+  if (b && !b.disabled){ e.preventDefault(); b.click(); }
+});
 
 var themeBtn = document.getElementById('themeBtn');
 function themeIcon(){ themeBtn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☾' : '☀'; }
@@ -1038,9 +1069,8 @@ themeBtn.addEventListener('click', function(){
 themeIcon();
 window.addEventListener('scroll', versteckeTip, {passive: true});
 
-/* Start: die letzten 7 vollen Tage (bei weniger Tagen alles) */
-(function(){ var e = Math.min(HI, TMIN[TMIN.length - 1] + TAG), w = 7 * TAG; if (e - w > LO){ range.a = e - w; range.b = e; } })();
-zeichne();
+/* Start: letzter Kalendermonat (ohne Daten: Monat des letzten Datentags, sonst alles) */
+if (!setzeMonat(START_MON)) zeichne();
 profil();
 /* „So gerechnet“ ans Ende jeder Karte mit data-rw (Text aus bericht.py, Schwellwerte aus den Einstellungen) */
 [].forEach.call(document.querySelectorAll('[data-rw]'), function(card){
