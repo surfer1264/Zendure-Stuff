@@ -162,7 +162,9 @@ Die Auswertung reicht bis zum Ende der Logs, Tageswerte nutzen automatisch nur v
 
 ### Bericht bedienen
 
-- **Zeitraum-Leiste** (bleibt beim Scrollen oben): `Alles`, `7 T`, `3 T`; `−`/`+` zoomen heraus
+- **Zeitraum-Leiste** (bleibt beim Scrollen oben): `Alles`, letzter Monat (beschriftet mit dem
+  Monatsnamen, z. B. `Okt`; ganzer Kalendermonat vor dem aktuellen, soweit Daten vorliegen),
+  `30 T` (die letzten 30 Tage bis zum Ende der Daten), `7 T`, `3 T`; `−`/`+` zoomen heraus
   bzw. hinein, `‹`/`›` verschieben um einen halben Ausschnitt. Kleinster Ausschnitt: 2 Stunden.
 - **Verlauf-Grafiken**: mit der Maus einen Bereich aufziehen = hineinzoomen, Doppelklick = alles.
   Auf Handy/Tablet zeigt Antippen die Werte; gezoomt wird dort über die Knöpfe der Leiste.

@@ -378,6 +378,8 @@ __SCHRIFTEN__
     <div class="in">
       <div class="seg" id="presets">
         <button type="button" data-w="0">Alles</button>
+        <button type="button" data-k="mon" id="pMon">Monat</button>
+        <button type="button" data-k="30" title="Letzte 30 Tage bis zum Ende der Daten">30 T</button>
         <button type="button" data-w="10080">7 T</button>
         <button type="button" data-w="4320">3 T</button>
       </div>
@@ -478,6 +480,7 @@ var NS = 'http://www.w3.org/2000/svg';
 var W = 960, WH = 560, H = 260, HT = 320, ML = 52, MR = 16, MT = 14, MB = 30;
 var TAG = 1440, MIN_SPAN = 120;
 var WT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+var MO = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
 var G = D.geraete, V = D.verlauf, T = D.tage, MEHR = D.mehr;
 var LEER_TXT = MEHR ? 'Netzbezug bei leeren Speichern' : 'Netzbezug bei leerem Speicher';
 var NT = V.t.length;
@@ -767,6 +770,21 @@ function preset(w){
   var m = (range.a + range.b) / 2, a = Math.round((m - w / 2) / TAG) * TAG;
   setze(a, a + w);
 }
+/* Feste Zeiträume: letzter Kalendermonat (vor dem heutigen Monat) und letzte 30 Tage bis Datenende */
+var HEUTE = new Date(), VM = {j: HEUTE.getFullYear() - (HEUTE.getMonth() === 0 ? 1 : 0), m: (HEUTE.getMonth() + 11) % 12};
+function festBereich(k){
+  var a, b;
+  if (k === 'mon'){
+    a = Date.UTC(VM.j, VM.m, 1) / 60000;
+    b = Date.UTC(VM.j, VM.m + 1, 1) / 60000;
+  } else { b = HI; a = HI - (+k) * TAG; }
+  a = Math.max(LO, a); b = Math.min(HI, b);
+  return b - a >= TAG ? {a: a, b: b} : null;
+}
+function setzeFest(k){
+  var r = festBereich(k); if (!r) return;
+  range.a = r.a; range.b = r.b; zeichne();
+}
 function tageImAusschnitt(){
   var idx = [];
   TMIN.forEach(function(t, i){ if (t + TAG > range.a && t < range.b) idx.push(i); });
@@ -820,6 +838,12 @@ function zeichne(){
     esc(dLang(range.a) + ' ' + hm(range.a) + ' – ' + dLang(range.b) + ' ' + hm(range.b)) +
     '<small>' + (span >= TAG ? f1(span / TAG) + ' Tage' : f1(span / 60) + ' Stunden') + (alles ? ' · alles' : '') + '</small>';
   [].forEach.call(document.querySelectorAll('#presets button'), function(btn){
+    if (btn.dataset.k){
+      var r = festBereich(btn.dataset.k);
+      btn.classList.toggle('on', !!r && range.a === r.a && range.b === r.b);
+      btn.disabled = !r || (btn.dataset.k !== 'mon' && r.a <= LO && r.b >= HI);
+      return;
+    }
     var w = +btn.dataset.w; btn.classList.toggle('on', w ? span === w : alles);
     btn.disabled = w > 0 && w >= HI - LO;
   });
@@ -990,7 +1014,14 @@ document.getElementById('txt-aktiv').textContent = 'Summe aller Takte je Tag, in
 document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch ' + f0(D.cfg.takteTag) + ', also etwa alle ' + de(D.cfg.takt, D.cfg.takt % 1 ? 1 : 0) +
   ' s). Ohne Abfrage: Der Sparmodus hat das Polling ausgesetzt.';
 
-[].forEach.call(document.querySelectorAll('#presets button'), function(btn){ btn.addEventListener('click', function(){ preset(+btn.dataset.w); }); });
+[].forEach.call(document.querySelectorAll('#presets button'), function(btn){
+  btn.addEventListener('click', function(){ if (btn.dataset.k) setzeFest(btn.dataset.k); else preset(+btn.dataset.w); });
+});
+(function(){  /* Monats-Button mit Kurznamen beschriften, z. B. „Okt" */
+  var btn = document.getElementById('pMon');
+  btn.textContent = MO[VM.m].slice(0, 3);
+  btn.title = 'Letzter Monat: ' + MO[VM.m] + ' ' + VM.j + (festBereich('mon') ? '' : ' (keine Daten)');
+})();
 document.getElementById('zIn').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = (range.b - range.a) / 4; setze(m - s, m + s); });
 document.getElementById('zOut').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = range.b - range.a; setze(m - s, m + s); });
 document.getElementById('pL').addEventListener('click', function(){ var s = (range.b - range.a) / 2; setze(range.a - s, range.b - s); });
