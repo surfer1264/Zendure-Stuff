@@ -86,7 +86,7 @@ All entries are remembered **per browser** – so a wall tablet comes back in it
 From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
 
 - **Device cards:** a flame after the name while the heater is on (`heatState` = 1, from script 4.2.0), state at the AC connection in words: “feeding in”, “charging from grid”, “off-grid” (no exchange with the house grid, off-grid output delivering at least 5 W) or “standby”. “Standby” says nothing about the battery: PV may be charging it at that moment. If there is a fault it reads “unreachable” or “stale”. Also output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
-- **Schedule:** only with the [schedule](#schedule) switched on: one line with the state and the next change, e.g. “Schedule · blocked until 17:00”, and a thin bar for today below it (light = discharge window, red line = now). Tap it to open the schedule.
+- **Schedule:** only with the [schedule](#schedule) switched on: one line with the state and the next change, e.g. “Schedule · blocked until 17:00” or “Schedule · fixed 800 W until 15:00”, and a thin bar for today below it (teal = zero feed-in, orange = fixed discharge, red line = now). Tap it to open the schedule.
 - **Footer:** shows the version, update notice, request errors and **Help**. **More ▾** opens the setup links (IP / script ID, ThingSpeak, ThingsBoard, log report), plus history and last update. The links to `config_api` and `status_api` only appear with technical details switched on.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
 - **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the switch in the menu.
@@ -98,6 +98,13 @@ From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and 
 
 From 5.5.0 the proxy can allow and block discharging by time of day – e.g. only in the morning and evening when the household uses a lot. You plan **discharge windows**: discharging is allowed inside them and blocked outside them. One schedule applies to **all devices**; within a window the controller distributes the load as usual. Charging (surplus, grid charging) is not affected.
 
+From 5.6.0 each window has a **mode**:
+
+- **Zero feed-in** – the controller follows the meter as without a schedule.
+- **Fixed discharge** – a fixed power in watts (`zdmc_dischargeFixed`), e.g. 800 W during the day, 200 W at night. Allowed are values from `dischargeStartupPower` up to the sum of `maxOutput` of all devices.
+
+Outside the windows discharging is always blocked. To follow the meter without exception, simply switch the schedule off. Windows must not overlap.
+
 Open it via **View → Schedule** or directly at `http://<proxy-address>:8000/zeitplan`.
 
 **Requirement:** the **watchdog** must be on in the zendash script (`watchdog.enabled: true`). The schedule only switches devices the watchdog monitors (`watch: true`), because it uses the watchdog's readings for full battery and cell voltage. If the watchdog is off, the page shows a note and the schedule doesn't switch.
@@ -105,16 +112,16 @@ Open it via **View → Schedule** or directly at `http://<proxy-address>:8000/ze
 | Area | Content |
 |---|---|
 | **Schedule active** | turns the schedule on or off without deleting the windows |
-| **Today** | per device the state, a timeline for today (light = discharge window, red line = now) and the **follows** switch. A device that doesn't follow the schedule is never touched by the proxy – e.g. a battery that has to supply an off-grid socket |
-| **Discharge windows** | list of windows. Tap one to edit: from/to, weekdays, shortcuts “daily · Mon–Fri · Sat, Sun”. Windows past midnight (e.g. 22:00–02:00) count for the start day |
+| **Today** | per device the state, a timeline for today (teal = zero feed-in, orange = fixed discharge, grey = blocked, red line = now) and the **follows** switch. A device that doesn't follow the schedule is never touched by the proxy – e.g. a battery that has to supply an off-grid socket |
+| **Discharge windows** | list of windows. Tap one to edit: from/to, mode (with power for “fixed discharge”), weekdays, shortcuts “daily · Mon–Fri · Sat, Sun”. Windows past midnight (e.g. 22:00–02:00) count for the start day |
 | **Save schedule** | appears after a change. The saved schedule applies immediately |
 
 **How the schedule switches:**
 
-- Switching happens **only at the scheduled times** (start and end of a window). Anything you change by hand in between – e.g. “Discharge allowed” on the device card – stays until the next change. The device card then shows “manual change · until …” right away. If you set the switch back to the schedule's state, the schedule takes the device over again.
+- Switching happens **only at the scheduled times** (start and end of a window, and every change of mode). Anything you change by hand in between – e.g. “Discharge allowed” on the device card – stays until the next change. The device card then shows “manual change · until …” right away. If you set the switch back to the schedule's state, the schedule takes the device over again. The same applies to the fixed power; the schedule page then shows “Fixed power set … by hand”.
 - **Blocking** always works. **Releasing** only if the weakest cell is above the watchdog's `minVoltReset` (default 3.1 V). Otherwise the proxy retries every two minutes while the window is open (“waiting for cell voltage”). This keeps the watchdog's undervoltage lock effective.
-- **Manual charging** pauses the schedule for that device until the next change. Manual charging restores the previous state when it ends.
-- **Full battery** (`socLimit` 1) during a block: the proxy releases the device so solar power gets through and leaves it alone until the next change.
+- **Manual charging** pauses the schedule for that device while it runs. When it ends, manual charging restores the previous state. If the switch then matches the schedule, the schedule takes over right away; otherwise the card shows “manual change · until …” until the next change.
+- **Full battery** (`socLimit` 1) during a block: the proxy releases the device so solar power gets through. Once the battery is no longer full and discharges itself, the schedule blocks again.
 - **Device offline:** blocking still works (the schedule only writes the KVS on the controller Shelly). Releasing waits until the device is reachable again and the cell voltage is fine. The schedule page and the device card show “Schedule · device offline”.
 - Without a window the schedule does nothing.
 
@@ -122,7 +129,9 @@ Open it via **View → Schedule** or directly at `http://<proxy-address>:8000/ze
 
 - The schedule runs **in the proxy** and follows its clock (in Home Assistant its time zone). If it differs from the phone's clock by more than three minutes, the page shows a note.
 - If the proxy is off, nothing switches – the last state stays. After a restart the schedule takes over at the next change.
-- Only `zdmc_devN_dischargeAllowed` is written, through the same interface as the switch in the dashboard. Nothing changes in the Shelly scripts.
+- Only `zdmc_devN_dischargeAllowed` and `zdmc_dischargeFixed` are written, through the same interface as the switches in the dashboard. Nothing changes in the Shelly scripts.
+- **Fixed power and charging:** the fixed power is one shared value and applies to all devices allowed to discharge – including devices that don't follow the schedule. “Charging allowed” takes priority: with surplus a device charges via AC and delivers no fixed share during that time; the fixed power is then shared by the other devices.
+- **Reliable switching:** the schedule compares its target state with the values on the Shelly and only writes what differs – all in one call: block first, then fixed power, release last. If only part arrives, it reads again on the next run (one minute) and writes the rest.
 - The schedule is stored in `zendure_schedule_config.json` next to the proxy configuration (Home Assistant: `/data`).
 - At the scheduled times the proxy switches immediately. In between it checks every two minutes for a full battery, cell voltage, manual charging and manual changes. It only reads the values the watchdog fetches anyway (or the open dashboard) – the batteries are not polled additionally.
 

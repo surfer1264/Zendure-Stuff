@@ -2,6 +2,11 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.6.0.0
+
+- Zeitplan: Betriebsart je Entladefenster – Nulleinspeisung oder Entladen mit fester Leistung (siehe Changelog Dashboard und Proxy 5.6.0)
+- Zeitplan übernimmt das Gerät nach dem manuellen Laden gleich wieder
+
 ## 5.5.1.0
 
 - Zeitplan sperrt nach vollem Akku wieder, sobald der Akku selbst entlädt

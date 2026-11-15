@@ -8,6 +8,21 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.6.0
+
+**Ziel:** Jedes Entladefenster im Zeitplan bekommt eine Betriebsart – Nulleinspeisung oder Entladen mit fester Leistung. Braucht das Shelly-Script ab 4.1.0, keine Änderung an den Shelly-Scripts und am Regler.
+
+- **Betriebsart je Fenster:** Beim Bearbeiten eines Fensters wählst du **Nulleinspeisung** (Regelung nach Zähler) oder **Entladen fix** mit Leistung in Watt. Der Proxy schreibt dazu neben `zdmc_devN_dischargeAllowed` auch `zdmc_dischargeFixed` (im Fenster „fix“ die Leistung, sonst 0). Außerhalb der Fenster ist Entladen weiterhin immer gesperrt. Bestehende Pläne laufen unverändert weiter: Fenster ohne Betriebsart gelten als Nulleinspeisung.
+- **Planwechsel:** Jeder Wechsel der Betriebsart zählt als Planzeit, auch fix 800 W → Nulleinspeisung oder 800 W → 200 W.
+- **Fix-Leistung von Hand:** Verstellst du die Fix-Leistung im Dashboard, gilt das bis zum nächsten Wechsel; die Plan-Seite zeigt es an. Stellst du sie wieder auf den Planwert, übernimmt der Plan wieder.
+- **Prüfung:** Die Plan-Seite und der Proxy lassen nur Leistungen ab `dischargeStartupPower` bis zur Summe `maxOutput` zu und keine sich überschneidenden Fenster. Lehnt das Shelly-Script einen Wert trotzdem ab, zeigt die Plan-Seite den Fehler und der Proxy versucht es erst beim nächsten Wechsel wieder.
+- **Schreiben:** Alle Änderungen gehen in einem `kvs_set_api`-Aufruf raus, in der Reihenfolge sperren → Fix-Leistung → freigeben, damit kein Zwischenstand mehr entlädt als geplant. Nach jedem Schreibversuch liest der Proxy frisch nach; kam nur ein Teil an, schreibt er beim nächsten Durchlauf nur den Rest.
+- **Anzeige:** Plan-Seite mit Etikett je Fenster, farbiger Zeitleiste (türkis Nulleinspeisung, orange fix, grau gesperrt), Legende und Hinweis zur Fix-Leistung. Die Gerätekarte im Dashboard zeigt z. B. „Plan · fix 800 W bis 15:00“ und die Leiste in denselben Farben. DE/EN/FR.
+- **Zeitplan nach manuellem Laden:** Bisher blieb „Plan · pausiert … (manuelles Laden)“ bis zum nächsten Planwechsel stehen, auch wenn das Laden längst beendet war. Jetzt übernimmt der Plan bei seiner nächsten Prüfung (spätestens nach zwei Minuten) wieder, wenn „Entladen erlaubt“ zum Plan passt. Weicht der Schalter ab, zeigt die Karte „von Hand · bis …“; ist der Akku voll, gilt die Regel für vollen Akku. Gerätekarte und Plan-Seite zeigen das Ende des manuellen Ladens sofort an.
+- Home-Assistant-App 5.6.0.0
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.5.1
 
 **Ziel:** Zeitplan hält die Sperre auch nach vollem Akku ein, und der Energiefluss zeigt PV-Durchleitung richtig an. Braucht das Shelly-Script ab 4.1.0.

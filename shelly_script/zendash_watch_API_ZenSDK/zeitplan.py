@@ -5,9 +5,19 @@ Optionales Modul neben zendure_proxy.py (wie ts_bridge.py). Fehlt die
 Datei, laeuft der Proxy ohne Zeitplan weiter.
 
 Ein gemeinsamer Plan fuer alle Geraete: In den Entladefenstern darf
-entladen werden, ausserhalb ist Entladen gesperrt. Geschaltet wird ueber
-das Shelly-Script (kvs_set_api, Key zdmc_devN_dischargeAllowed) - an den
-Shelly-Scripten selbst aendert sich nichts.
+entladen werden, ausserhalb ist Entladen gesperrt. Jedes Fenster hat eine
+Betriebsart (ab 5.6.0):
+  zero  - Nulleinspeisung (Regelung nach Zaehler), zdmc_dischargeFixed 0
+  fixed - Entladen mit fester Leistung, zdmc_dischargeFixed = power (W)
+Geschaltet wird ueber das Shelly-Script (kvs_set_api, Keys
+zdmc_devN_dischargeAllowed und zdmc_dischargeFixed) - an den Shelly-Scripten
+selbst aendert sich nichts. Die Fix-Leistung ist ein gemeinsamer Wert: Der
+Regler verteilt sie auf alle Geraete, die entladen duerfen.
+
+Schreiben: Der Plan haelt einen Sollzustand und vergleicht ihn mit config_api.
+Nur Abweichungen gehen raus, alle in einem kvs_set_api-Aufruf (Reihenfolge:
+erst sperren, dann Fix-Leistung, zuletzt freigeben). Schlaegt das fehl oder
+kommt nur ein Teil an, liest der naechste Takt frisch und schreibt den Rest.
 
 Regeln (je Geraet):
   - Geschaltet wird nur zu den Planzeiten (Flanke). Was dazwischen von Hand
@@ -21,10 +31,16 @@ Regeln (je Geraet):
     kein eigener Poll der Speicher); geprueft wird alle zwei Minuten, an den
     Planzeiten sofort.
   - Manuelles Laden (dischargeAllowed 0, reverse 0, inputLimit > 0): Der
-    Plan laesst das Geraet bis zum naechsten Wechsel in Ruhe.
+    Plan laesst das Geraet in Ruhe, solange es laeuft. Danach (ab 5.6.0)
+    uebernimmt er sofort wieder, wenn der Schalter auf dem Planstand steht,
+    sonst gilt "von Hand" bis zum naechsten Wechsel.
   - Voller Akku (socLimit 1) waehrend einer Plansperre: freigeben, damit
     Solarstrom durchkommt. Ist er nicht mehr voll und gibt der Akku selbst
     mehr als FULL_RELOCK_W ab (PV reicht nicht mehr), wird wieder gesperrt.
+  - Jeder Wechsel der Betriebsart ist ein Planwechsel (auch fix 800 W ->
+    Nulleinspeisung oder 800 W -> 200 W).
+  - Fix-Leistung von Hand (Dashboard) verstellt: gilt bis zum naechsten
+    Wechsel; wieder auf den Planwert gestellt, uebernimmt der Plan erneut.
   - Nach einem Neustart des Proxys greift der Plan beim naechsten Wechsel,
     nach dem Speichern eines geaenderten Plans sofort.
 
@@ -39,6 +55,7 @@ import os
 import re
 import threading
 import time
+import urllib.error
 
 SCHEDULE_FILE = "zendure_schedule_config.json"
 
@@ -58,6 +75,8 @@ CACHE_IDLE_S = 600      # Plan aus: Geraeteliste nur so oft auffrischen
 TICK_OFFSET_S = 3       # Sekunden nach der vollen Minute
 MAX_WINDOWS = 20
 MAX_DEVICES = 64
+MAX_POWER = 20000       # obere Grenze fuer die Fix-Leistung ohne Geraeteliste
+MODES = ("zero", "fixed")
 
 RE_HHMM = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
 
@@ -69,7 +88,10 @@ PLAN = {"enabled": False, "windows": [], "excluded": []}
 
 # Laufzeitzustand, nur im Speicher
 _rt = {
-    "prev_allowed": None,   # Planzustand beim letzten Takt (None = noch keiner)
+    "prev_key": None,       # Planzustand beim letzten Takt ("locked", "zero",
+                            # "fixed:800"; None = noch keiner)
+    "fixed": {"owned": True, "want": None},   # Fix-Leistung (gemeinsamer Wert)
+    "write_error": None,    # Schreiben vom Shelly-Script abgelehnt (kein neuer Versuch)
     "apply_now": False,     # nach dem Speichern sofort anwenden
     "devices": {},          # id -> {"owned", "pending", "reason", "want"}
     "cfg": None, "cfg_at": 0.0,
@@ -119,20 +141,43 @@ def plan_active(plan=None):
     return bool(p.get("enabled")) and bool(p.get("windows"))
 
 
+def _in_window(w, day, minute):
+    f, t = _to_min(w["from"]), _to_min(w["to"])
+    days = w["days"]
+    if f < t:
+        return day in days and f <= minute < t
+    return (day in days and minute >= f) or (_prev_day(day) in days and minute < t)
+
+
+def window_at(windows, day, minute):
+    """day: 1 = Mo ... 7 = So. Fenster ueber Mitternacht zaehlen zum Starttag.
+    Gibt das gueltige Fenster zurueck oder None (= gesperrt)."""
+    for w in windows or []:
+        if _in_window(w, day, minute):
+            return w
+    return None
+
+
 def allowed_at(plan, day, minute):
-    """day: 1 = Mo ... 7 = So. Fenster ueber Mitternacht zaehlen zum Starttag."""
-    for w in plan.get("windows", []):
-        f, t = _to_min(w["from"]), _to_min(w["to"])
-        days = w["days"]
-        if f < t:
-            if day in days and f <= minute < t:
-                return True
-        else:
-            if day in days and minute >= f:
-                return True
-            if _prev_day(day) in days and minute < t:
-                return True
-    return False
+    return window_at(plan.get("windows"), day, minute) is not None
+
+
+def mode_at(plan, day, minute):
+    """("locked", 0), ("zero", 0) oder ("fixed", power)."""
+    w = window_at(plan.get("windows"), day, minute)
+    if w is None:
+        return "locked", 0
+    if w.get("mode") == "fixed":
+        return "fixed", int(w.get("power") or 0)
+    return "zero", 0
+
+
+def mode_key(mode):
+    return mode[0] + (":%d" % mode[1] if mode[0] == "fixed" else "")
+
+
+def mode_text(mode):
+    return {"locked": "gesperrt", "zero": "Nulleinspeisung"}.get(mode[0]) or "fix %d W" % mode[1]
 
 
 def _now():
@@ -144,15 +189,28 @@ def next_change(plan, day, minute):
     """Naechster Wechsel ab jetzt: (minute_des_tages, tage_voraus) oder None."""
     if not plan_active(plan):
         return None
-    cur = allowed_at(plan, day, minute)
+    cur = mode_key(mode_at(plan, day, minute))
     for k in range(1, 8 * 1440 + 1):
         m = minute + k
         add = m // 1440
         d = day
         for _ in range(add):
             d = 1 if d == 7 else d + 1
-        if allowed_at(plan, d, m % 1440) != cur:
+        if mode_key(mode_at(plan, d, m % 1440)) != cur:
             return m % 1440, add
+    return None
+
+
+def _overlap(windows):
+    """Erstes Paar sich ueberschneidender Fenster (Indizes) oder None."""
+    for day in range(1, 8):
+        for m in range(1440):
+            hit = None
+            for i, w in enumerate(windows):
+                if _in_window(w, day, m):
+                    if hit is not None:
+                        return hit, i
+                    hit = i
     return None
 
 
@@ -180,8 +238,21 @@ def validate(data):
         clean = sorted(set(d for d in days if isinstance(d, int) and not isinstance(d, bool) and 1 <= d <= 7))
         if len(clean) != len(set(days)):
             return None, "Wochentag ungueltig (1 = Mo ... 7 = So)"
-        out.append({"from": f, "to": t, "days": clean})
+        mode = w.get("mode", "zero")
+        if mode not in MODES:
+            return None, "Betriebsart ungueltig (zero oder fixed)"
+        win = {"from": f, "to": t, "days": clean, "mode": mode}
+        if mode == "fixed":
+            p = w.get("power")
+            if not (isinstance(p, int) and not isinstance(p, bool) and 1 <= p <= MAX_POWER):
+                return None, "Fix-Leistung ungueltig (ganze Watt)"
+            win["power"] = p
+        out.append(win)
     out.sort(key=lambda w: _to_min(w["from"]))
+    ov = _overlap(out)
+    if ov:
+        a, b = out[ov[0]], out[ov[1]]
+        return None, "Fenster {}-{} und {}-{} ueberschneiden sich".format(a["from"], a["to"], b["from"], b["to"])
     excluded = data.get("excluded", [])
     if not isinstance(excluded, list) or len(excluded) > MAX_DEVICES:
         return None, "excluded ungueltig"
@@ -222,6 +293,11 @@ def handle_post(data):
     plan, error = validate(data)
     if plan is None:
         return False, error
+    with _lock:
+        cfg = _rt["cfg"]
+    error = power_error(plan, cfg)
+    if error:
+        return False, error
     try:
         _save(plan)
     except OSError as e:
@@ -229,12 +305,40 @@ def handle_post(data):
     with _lock:
         PLAN = plan
         _rt["apply_now"] = plan_active(plan)
+        _rt["write_error"] = None
         if not plan_active(plan):
-            _rt["prev_allowed"] = None
+            _rt["prev_key"] = None
             _rt["devices"] = {}
+            _rt["fixed"] = {"owned": True, "want": None}
     _note("Plan gespeichert: " + describe(plan))
     _wake.set()
     return True, None
+
+
+def _limits(cfg):
+    """(dischargeStartupPower, Summe maxOutput) aus config_api; None = unbekannt."""
+    if not isinstance(cfg, dict):
+        return None, None
+    lo = cfg.get("dischargeStartupPower")
+    lo = lo if isinstance(lo, (int, float)) and lo > 0 else None
+    outs = [d.get("maxOutput") for d in cfg.get("devices") or []]
+    hi = sum(o for o in outs if isinstance(o, (int, float)) and o > 0) or None
+    return lo, hi
+
+
+def power_error(plan, cfg):
+    """Fix-Leistung gegen den Regler pruefen: >= dischargeStartupPower (sonst
+    lehnt kvs_set_api ab) und <= Summe maxOutput. Ohne config_api: nur Plan."""
+    lo, hi = _limits(cfg)
+    for w in plan.get("windows") or []:
+        if w.get("mode") != "fixed":
+            continue
+        p = w.get("power")
+        if lo is not None and p < lo:
+            return "Fix-Leistung {} W unter dischargeStartupPower ({} W)".format(p, int(lo))
+        if hi is not None and p > hi:
+            return "Fix-Leistung {} W ueber der Summe maxOutput ({} W)".format(p, int(hi))
+    return None
 
 
 def describe(plan=None):
@@ -243,7 +347,9 @@ def describe(plan=None):
         return "aus"
     if not p["windows"]:
         return "an, aber kein Fenster - tut nichts"
-    return "an, " + ", ".join("{}-{} ({})".format(w["from"], w["to"], ",".join(str(d) for d in w["days"]))
+    return "an, " + ", ".join("{}-{} ({}) {}".format(w["from"], w["to"], ",".join(str(d) for d in w["days"]),
+                                                      mode_text(("fixed", w["power"]) if w.get("mode") == "fixed"
+                                                                else ("zero", 0)))
                               for w in p["windows"]) + \
         (" - ohne Geraet " + ",".join(str(e) for e in p["excluded"]) if p["excluded"] else "")
 
@@ -285,8 +391,15 @@ def feed_kvs(query, body):
     if not isinstance(data, dict):
         return
     with _lock:
-        devs = {d.get("id"): d for d in ((_rt["cfg"] or {}).get("devices") or [])}
+        cfg = _rt["cfg"] or {}
+        devs = {d.get("id"): d for d in (cfg.get("devices") or [])}
         for k, v in data.items():
+            if k == "zdmc_dischargeFixed" and cfg:
+                try:
+                    cfg["dischargeFixed"] = int(float(v))
+                except (TypeError, ValueError):
+                    pass
+                continue
             m = RE_DEV_KEY.match(str(k))
             if not m or int(m.group(1)) not in devs:
                 continue
@@ -377,6 +490,12 @@ def evaluate(plan, cfg, status, allowed, edge, rt_devices):
         hub = hubs.get(i) or {}
         soc_limit = hub.get("socLimit")
 
+        if not edge and not r["owned"] and r["reason"] == "manual" and not _manual(d):
+            # Manuelles Laden vorbei (zendash hat den Vorzustand hergestellt):
+            # gleich wieder uebernehmen; die Pruefung unten entscheidet, ob der
+            # Schalter zum Plan passt (sonst "von Hand", voll -> "full").
+            r.update({"owned": True, "pending": False, "reason": None, "want": None})
+
         if edge:
             r.update({"owned": True, "pending": False, "reason": None, "want": None})
             if _manual(d):
@@ -435,32 +554,107 @@ def evaluate(plan, cfg, status, allowed, edge, rt_devices):
     return writes
 
 
-def _write(writes, cfg):
-    data = {"zdmc_dev{}_dischargeAllowed".format(i): v for i, v in sorted(writes.items())}
+def _cfg_fixed(cfg):
+    v = cfg.get("dischargeFixed")
+    return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def evaluate_fixed(cfg, mode, edge, fx, follow_any):
+    """Fix-Leistung (ein gemeinsamer Wert fuer alle Geraete). Reine
+    Entscheidung wie evaluate(); aendert fx und gibt den zu schreibenden Wert
+    zurueck oder None.
+    Soll: im Fenster "fixed" die Leistung, sonst 0. Geschrieben wird an jedem
+    Wechsel; dazwischen gilt eine Aenderung von Hand bis zum naechsten Wechsel."""
+    cur = _cfg_fixed(cfg)
+    if not follow_any or cur is None:
+        fx.update({"owned": True, "want": None})  # kein Geraet im Plan bzw. aelteres Script
+        return None
+    target = mode[1] if mode[0] == "fixed" else 0
+    if edge:
+        fx.update({"owned": True, "want": target})
+    elif fx["owned"]:
+        if fx["want"] is None and cur != target:
+            fx["owned"] = False                  # von Hand verstellt
+    elif cur == target:
+        fx["owned"] = True                       # wieder auf den Planwert gestellt
+    if fx["want"] is not None and fx["want"] == cur:
+        fx["want"] = None                        # steht schon so (auch: Rest nach Teilerfolg)
+    return fx["want"]
+
+
+def build_data(writes, fixed):
+    """Ein kvs_set_api-Aufruf, Reihenfolge so, dass kein Zwischenstand mehr
+    entlaedt als geplant: erst sperren, dann Fix-Leistung, zuletzt freigeben.
+    (zendash schreibt die Keys nacheinander mit 500 ms Pause.)"""
+    data = {}
+    for i, v in sorted(writes.items()):
+        if v == 0:
+            data["zdmc_dev{}_dischargeAllowed".format(i)] = 0
+    if fixed is not None:
+        data["zdmc_dischargeFixed"] = fixed
+    for i, v in sorted(writes.items()):
+        if v == 1:
+            data["zdmc_dev{}_dischargeAllowed".format(i)] = 1
+    return data
+
+
+def _write(writes, fixed, cfg):
+    data = build_data(writes, fixed)
     query = "data=" + _quote(json.dumps(data, separators=(",", ":")))
     with _lock:
         _rt["last_write_at"] = time.monotonic()
+    rejected = None
     try:
         res = _fetch_json("kvs_set_api", query, KVS_SET_TIMEOUT)
         ok = isinstance(res, dict) and res.get("success") is True
+        if not ok:
+            _err("Schreiben nur teilweise oder gar nicht geklappt - neuer Versuch in einer Minute")
+    except urllib.error.HTTPError as e:
+        ok = False
+        if e.code == 400:
+            # Vom Script abgelehnt (z. B. Fix-Leistung unter dischargeStartupPower):
+            # ein neuer Versuch aendert nichts
+            try:
+                rejected = json.loads(e.read().decode("utf-8")).get("error")
+            except Exception:
+                rejected = None
+            rejected = rejected or "HTTP 400"
+            _err("Schreiben abgelehnt ({}) - kein neuer Versuch bis zum naechsten Wechsel".format(rejected))
+        else:
+            _err("Schreiben fehlgeschlagen ({}) - neuer Versuch in einer Minute".format(e))
     except Exception as e:
         ok = False
         _err("Schreiben fehlgeschlagen ({}) - neuer Versuch in einer Minute".format(e))
     labels = {d.get("id"): d.get("label") for d in cfg.get("devices") or []}
     with _lock:
         _rt["last_write_at"] = time.monotonic()
+        # Nach jedem Schreibversuch frisch lesen: Ein Teilerfolg zeigt sich dann
+        # in config_api, und nur der Rest geht noch einmal raus.
+        _rt["cfg_at"] = 0.0
+        if rejected:
+            _rt["write_error"] = rejected
+            for r in _rt["devices"].values():
+                r["want"] = None
+            _rt["fixed"]["want"] = None
+            return False
+        if not ok:
+            return False
+        _rt["write_error"] = None
+        c = _rt["cfg"] or {}
         for i, v in writes.items():
             r = _rt["devices"].get(i)
-            if ok:
-                if r is not None:
-                    r["want"] = None
-                for d in (_rt["cfg"] or {}).get("devices") or []:
-                    if d.get("id") == i:
-                        d["dischargeAllowed"] = bool(v)
-                _note("{}: Entladen {}".format(labels.get(i, "dev%d" % i), "freigegeben" if v else "gesperrt"))
-        if ok:
-            _rt["cfg_at"] = 0.0                  # naechster Takt liest frisch
-    return ok
+            if r is not None:
+                r["want"] = None
+            for d in c.get("devices") or []:
+                if d.get("id") == i:
+                    d["dischargeAllowed"] = bool(v)
+            _note("{}: Entladen {}".format(labels.get(i, "dev%d" % i), "freigegeben" if v else "gesperrt"))
+        if fixed is not None:
+            _rt["fixed"]["want"] = None
+            if c:
+                c["dischargeFixed"] = fixed
+            _note("Fix-Leistung {}".format("{} W".format(fixed) if fixed else "aus (Nulleinspeisung)"))
+    return True
 
 
 def _quote(s):
@@ -476,8 +670,9 @@ def tick():
         plan = PLAN
         active = plan_active(plan)
         if not active:
-            _rt["prev_allowed"] = None
+            _rt["prev_key"] = None
             _rt["devices"] = {}
+            _rt["fixed"] = {"owned": True, "want": None}
             _rt["last_run"] = time.time()
             _rt["error"] = None
             stale = _rt["cfg"] is None or time.monotonic() - _rt["cfg_at"] > CACHE_IDLE_S
@@ -489,10 +684,12 @@ def tick():
                 except Exception:
                     pass
             return
-        allowed = allowed_at(plan, day, minute)
-        prev = _rt["prev_allowed"]
-        edge = _rt["apply_now"] or (prev is not None and prev != allowed)
-        retry = any(r["want"] is not None for r in _rt["devices"].values())
+        mode = mode_at(plan, day, minute)
+        key = mode_key(mode)
+        allowed = mode[0] != "locked"
+        prev = _rt["prev_key"]
+        edge = _rt["apply_now"] or (prev is not None and prev != key)
+        retry = any(r["want"] is not None for r in _rt["devices"].values()) or _rt["fixed"]["want"] is not None
         due = time.monotonic() - _rt["last_check"] >= CHECK_S - 5
         if not (edge or due or retry or prev is None):
             return                                   # zwischen den Planzeiten: alle zwei Minuten
@@ -507,19 +704,30 @@ def tick():
         return                                       # Flanke bleibt offen: naechster Takt
     with _lock:
         if edge:
-            _note("Wechsel: Entladen {} ({:s})".format("erlaubt" if allowed else "gesperrt", _fmt(minute)))
+            _note("Wechsel: {} ({:s})".format(mode_text(mode), _fmt(minute)))
+            _rt["write_error"] = None
         writes = evaluate(plan, cfg, status, allowed, edge, _rt["devices"])
+        follow_any = bool(_rt["devices"])            # leer, wenn Watchdog aus oder kein Geraet folgt
+        fixed = None
+        if follow_any and mode[0] == "fixed" and power_error(plan, cfg):
+            # Fix-Leistung passt nicht (mehr) zum Regler: nicht schreiben, melden
+            _rt["write_error"] = power_error(plan, cfg)
+            _rt["fixed"]["want"] = None
+        elif not _rt["write_error"]:
+            fixed = evaluate_fixed(cfg, mode, edge, _rt["fixed"], follow_any)
+        if _rt["write_error"]:
+            writes = {}                              # abgelehnt: bis zum naechsten Wechsel nichts schreiben
         no_wd = not (cfg.get("watchdog") or {}).get("enabled")
         if no_wd and not _rt["no_watchdog"]:
             _err("Watchdog im zendash-Script ist aus - der Zeitplan schaltet nicht")
         _rt["no_watchdog"] = no_wd
-        _rt["prev_allowed"] = allowed
+        _rt["prev_key"] = key
         _rt["apply_now"] = False
         _rt["error"] = None
         _rt["last_run"] = time.time()
         _rt["last_check"] = time.monotonic()
-    if writes:
-        _write(writes, cfg)
+    if writes or fixed is not None:
+        _write(writes, fixed, cfg)
 
 
 def _loop(stop):
@@ -555,7 +763,8 @@ def state():
     with _lock:
         plan = json.loads(json.dumps(PLAN))
         active = plan_active(plan)
-        allowed = allowed_at(plan, day, minute) if active else None
+        mode = mode_at(plan, day, minute) if active else None
+        allowed = (mode[0] != "locked") if active else None
         nc = next_change(plan, day, minute)
         cfg = _rt["cfg"] or {}
         wd_on = bool((cfg.get("watchdog") or {}).get("enabled")) if cfg else None
@@ -591,7 +800,7 @@ def state():
             else:
                 st = "free" if allowed else "locked"
             devices.append({"id": i, "label": d.get("label"), "follows": follows, "state": st,
-                            "dischargeAllowed": bool(d.get("dischargeAllowed"))})
+                            "dischargeAllowed": bool(d.get("dischargeAllowed")), "manual": _manual(d)})
         return {
             "version": 1,
             "plan": plan,
@@ -599,11 +808,25 @@ def state():
             "allowed": allowed,
             "now": _fmt(minute), "weekday": day,
             "next": ({"time": _fmt(nc[0]), "days": nc[1]} if nc else None),
+            "mode": mode[0] if mode else None,
+            "power": mode[1] if mode and mode[0] == "fixed" else None,
+            "fixed": _fixed_state(cfg, plan, active, mode),
+            "limits": dict(zip(("startup", "max"), _limits(cfg))),
             "devices": devices,
-            "error": _rt["error"],
+            "error": _rt["error"] or _rt["write_error"],
             "watchdog": wd_on,
             "lastRun": (time.strftime("%H:%M:%S", time.localtime(_rt["last_run"])) if _rt["last_run"] else None),
         }
+
+
+def _fixed_state(cfg, plan, active, mode):
+    """Fix-Leistung fuer die Anzeige: value (aktueller KVS-Wert), state
+    "plan" | "hand" | None (Plan aus / kein Geraet im Plan)."""
+    cur = _cfg_fixed(cfg) if cfg else None
+    if not active or not _rt["devices"] or cur is None:
+        return {"value": cur, "state": None}
+    fx = _rt["fixed"]
+    return {"value": cur, "state": "plan" if fx["owned"] else "hand"}
 
 
 # ---------------------------------------------------------------
@@ -636,13 +859,15 @@ _PAGE = r"""<!DOCTYPE html>
     --surface:#141E33; --surface-2:#1B2740; --border:rgba(255,255,255,0.08); --text:#EAF0F6; --text-muted:#8B9BB4;
     --shadow:0 10px 30px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.25);
     --amber-text:#F2A93B; --teal-text:#4FD1C5; --alert-text:#F0776B;
-    --win:rgba(79,209,197,0.30); --win-edge:#4FD1C5; --lock:rgba(139,155,180,0.14); }
+    --win:rgba(79,209,197,0.30); --win-edge:#4FD1C5; --lock:rgba(139,155,180,0.14);
+    --fix:rgba(242,169,59,0.38); --fix-edge:#F2A93B; }
   html[data-theme="light"]{ color-scheme:light; --bg:#EEF3F1;
     --bg-glow:radial-gradient(circle at 12% -10%, rgba(79,209,197,0.20), transparent 42%),radial-gradient(circle at 92% 4%, rgba(242,169,59,0.18), transparent 38%);
     --surface:#FFFFFF; --surface-2:#F3F7F6; --border:rgba(15,23,32,0.08); --text:#10192B; --text-muted:#536379;
     --shadow:0 10px 24px rgba(20,30,45,0.10), 0 2px 6px rgba(20,30,45,0.06);
     --amber-text:#8A5608; --teal-text:#1B6F68; --alert-text:#CF2E22;
-    --win:rgba(31,163,148,0.28); --win-edge:#1B6F68; --lock:rgba(83,99,121,0.10); }
+    --win:rgba(31,163,148,0.28); --win-edge:#1B6F68; --lock:rgba(83,99,121,0.10);
+    --fix:rgba(201,124,29,0.30); --fix-edge:#8A5608; }
   *{box-sizing:border-box;} html,body{margin:0;padding:0;}
   html{ font-size:100%; background:var(--bg); }
   html[data-fontsize="large"]{ font-size:115%; } html[data-fontsize="xlarge"]{ font-size:130%; } html[data-fontsize="xxlarge"]{ font-size:150%; }
@@ -678,6 +903,16 @@ _PAGE = r"""<!DOCTYPE html>
   .st-ok{ color:var(--teal-text); } .st-lock{ color:var(--text-muted); } .st-pause{ color:var(--amber-text); } .st-warn{ color:var(--alert-text); }
   .tl{ position:relative; height:1.5rem; margin-top:.625rem; border-radius:.4rem; background:var(--lock); overflow:hidden; }
   .tl .seg{ position:absolute; top:0; bottom:0; background:var(--win); border-left:2px solid var(--win-edge); }
+  .tl .seg.fixed{ background:var(--fix); border-left-color:var(--fix-edge); }
+  .legend{ display:flex; flex-wrap:wrap; gap:.875rem; font-size:.75rem; color:var(--text-muted); margin-top:.875rem; }
+  .legend span{ display:inline-flex; align-items:center; gap:.35rem; }
+  .legend i{ display:inline-block; width:.9rem; height:.6rem; border-radius:2px; }
+  .legend .zero{ background:var(--win); box-shadow:inset 2px 0 0 var(--win-edge); }
+  .legend .fixed{ background:var(--fix); box-shadow:inset 2px 0 0 var(--fix-edge); }
+  .legend .locked{ background:var(--lock); }
+  .legend[hidden]{ display:none; }
+  .st-fix{ color:var(--amber-text); }
+  .legend b{ font-weight:400; }
   .tl .now{ position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--alert-text); }
   .tl.off{ opacity:.35; }
   .ticks{ display:flex; justify-content:space-between; font-size:.68rem; color:var(--text-muted); margin-top:.2rem; }
@@ -688,6 +923,19 @@ _PAGE = r"""<!DOCTYPE html>
   .win .t{ font-size:1.05rem; font-weight:600; }
   .win .d{ font-size:.8rem; color:var(--text-muted); margin-top:.1rem; }
   .win .chev{ color:var(--text-muted); font-size:1.1rem; }
+  .badge{ display:inline-block; font-size:.72rem; font-weight:600; padding:.15rem .5rem; border-radius:999px; margin-top:.3rem; }
+  .badge.zero{ background:var(--win); color:var(--teal-text); }
+  .badge.fixed{ background:var(--fix); color:var(--amber-text); }
+  .sublbl{ display:block; font-size:.72rem; color:var(--text-muted); margin-top:.875rem; }
+  .seg-sw{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:.25rem; padding:.25rem; border-radius:var(--radius-md); background:var(--surface-2); border:1px solid var(--border); margin-top:.3rem; }
+  .seg-sw button{ appearance:none; border:0; background:transparent; color:var(--text-muted); font:inherit; font-size:.82rem; font-weight:600; min-height:2.4rem; border-radius:var(--radius-sm); cursor:pointer; padding:0 .25rem; line-height:1.15; }
+  .seg-sw button[aria-checked="true"][data-mode="zero"]{ background:var(--win); color:var(--text); box-shadow:inset 0 0 0 1px var(--win-edge); }
+  .seg-sw button[aria-checked="true"][data-mode="fixed"]{ background:var(--fix); color:var(--text); box-shadow:inset 0 0 0 1px var(--fix-edge); }
+  .power{ display:flex; align-items:center; gap:.5rem; margin-top:.625rem; }
+  .power[hidden]{ display:none; }
+  .power label{ font-size:.8rem; color:var(--text-muted); }
+  .power input{ width:7rem; min-height:var(--tap); padding:0 .625rem; font:inherit; font-size:1rem; color:var(--text); background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); }
+  .power .unit{ color:var(--text-muted); font-size:.9rem; }
   .empty{ font-size:.88rem; color:var(--text-muted); padding:.5rem 0; }
   .edit{ padding:.875rem 0 .375rem; }
   .times{ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:.5rem; align-items:center; }
@@ -735,10 +983,12 @@ _PAGE = r"""<!DOCTYPE html>
     </div>
     <div class="banner warn" id="errBanner" hidden></div>
     <div class="banner" id="clockBanner" hidden></div>
+    <div class="banner" id="fixBanner" hidden></div>
   </div>
 
   <h2 class="section-title" data-t="today"></h2>
-  <div class="card" id="devices"></div>
+  <div class="card"><div id="devices"></div>
+    <div class="legend" id="legend" aria-hidden="true"><span><i class="zero"></i><b data-t="lgZero"></b></span><span><i class="fixed"></i><b data-t="lgFixed"></b></span><span><i class="locked"></i><b data-t="lgLocked"></b></span></div></div>
 
   <h2 class="section-title" data-t="windows"></h2>
   <div class="card">
@@ -759,14 +1009,19 @@ _PAGE = r"""<!DOCTYPE html>
   'use strict';
   var T = {
     de: { sub:'Entladefenster für alle Geräte', back:'Zurück zum Dashboard', active:'Zeitplan aktiv',
-      activeHint:'In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt.',
+      activeHint:'In den Fenstern wird entladen – nach Zähler (Nulleinspeisung) oder mit fester Leistung. Außerhalb der Fenster ist Entladen gesperrt.',
+      mZero:'Nulleinspeisung', mFixed:'Entladen fix', mFixedW:'fix {p} W', modeLbl:'Betriebsart', daysLbl:'Wochentage', power:'Leistung',
+      lgZero:'Nulleinspeisung', lgFixed:'fix', lgLocked:'gesperrt', pOff:'aus',
+      errPow:'Leistung zwischen {a} und {b} W angeben.', errPowMin:'Leistung ab {a} W angeben (ganze Watt).', errOverlap:'Überschneidet sich mit {w}.',
+      fixInfo:'Die Fix-Leistung gilt für alle Geräte, die entladen dürfen. Ist „Laden erlaubt“ an und gibt es Überschuss, lädt ein Gerät per AC und liefert in der Zeit keinen Fix-Anteil.',
+      fixHand:'Fix-Leistung von Hand auf {v} gestellt (Plan: {p}) – gilt bis zum nächsten Wechsel.',
       today:'Heute', windows:'Entladefenster', how:'So arbeitet der Plan', add:'+ Fenster hinzufügen', save:'Plan speichern',
       empty:'Noch kein Fenster. Ohne Fenster tut der Plan nichts.', from:'Von', to:'Bis', cancel:'Abbrechen', del:'Löschen', ok:'Übernehmen',
       daily:'täglich', wd:'Mo–Fr', we:'Sa, So', night:'über Mitternacht', nightNote:'Geht über Mitternacht und zählt zum Starttag.',
       days:['Mo','Di','Mi','Do','Fr','Sa','So'], daysAria:'Wochentage', follows:'folgt', followsAria:'{d} folgt dem Plan',
       errTime:'Gib Start- und Endzeit ein.', errSame:'Start und Ende sind gleich. Wähle eine andere Endzeit.', errDays:'Wähle mindestens einen Wochentag.',
       stOff:'Zeitplan aus', stEmpty:'Kein Fenster angelegt', stExcluded:'Folgt dem Plan nicht', stUnknown:'Plan · greift ab {w}',
-      stFree:'Plan · frei {w}', stLocked:'Plan · gesperrt {w}', stManual:'Plan · pausiert {w} (manuelles Laden)', stFull:'Plan · pausiert {w} (Akku voll)',
+      stFree:'Plan · {m} {w}', stLocked:'Plan · gesperrt {w}', stManual:'Plan · pausiert {w} (manuelles Laden)', stFull:'Plan · pausiert {w} (Akku voll)',
       stVolt:'Plan · wartet auf Zellspannung über {v} V', stHand:'von Hand · {w}',
       stOffline:'Plan · Gerät offline', stNoWd:'Plan · schaltet nicht (Watchdog aus)', stNoWatch:'Folgt dem Plan nicht (Watchdog überwacht das Gerät nicht)',
       noWd:'Der Zeitplan braucht den Watchdog im zendash-Script (watchdog.enabled: true). Solange er aus ist, schaltet der Plan nicht.',
@@ -776,20 +1031,27 @@ _PAGE = r"""<!DOCTYPE html>
       clock:'Uhrzeit des Proxys: {p} – dieses Gerät zeigt {b}. Der Plan richtet sich nach dem Proxy.',
       leave:'Änderungen sind noch nicht gespeichert.',
       foot:'Proxy-Zeit {t} · letzter Durchlauf {r}',
-      rules:['Geschaltet wird <b>nur zu den Planzeiten</b>. Was du dazwischen von Hand umstellst, gilt bis zum nächsten Wechsel.',
+      rules:['In jedem Fenster gilt eine Betriebsart: <b>Nulleinspeisung</b> regelt nach dem Zähler, <b>Entladen fix</b> speist die eingestellte Leistung ein – verteilt auf alle Geräte, die entladen dürfen. <b>Außerhalb der Fenster ist Entladen gesperrt.</b>',
+        'Geschaltet wird <b>nur zu den Planzeiten</b> – auch ein Wechsel der Betriebsart ist eine Planzeit. Was du dazwischen von Hand umstellst (Schalter oder Fix-Leistung), gilt bis zum nächsten Wechsel.',
         '<b>Sperren</b> klappt immer. <b>Freigeben</b> nur, wenn die schwächste Zelle über der Freigabeschwelle des Watchdogs liegt{v}, sonst wird alle zwei Minuten neu versucht.',
         'Der Plan braucht den <b>Watchdog</b> und schaltet nur Geräte, die er überwacht (<span class="num">watch: true</span>). Er nutzt dessen Messwerte und prüft zwischen den Planzeiten alle zwei Minuten.',
-        '<b>Manuelles Laden</b> oder <b>voller Akku</b> unterbrechen den Plan für dieses Gerät bis zum nächsten Wechsel. Bei vollem Akku wird freigegeben, damit Solarstrom durchkommt – sobald der Akku danach selbst Strom abgibt, sperrt der Plan wieder.',
-        'Der Plan läuft im Proxy und richtet sich nach dessen Uhrzeit. Ist der Proxy aus, bleibt der letzte Zustand stehen. Nach einem Neustart greift er beim nächsten Wechsel.'] },
+        '<b>Manuelles Laden</b> pausiert den Plan für dieses Gerät, solange es läuft. Danach übernimmt der Plan wieder, wenn der Schalter auf dem Planstand steht – sonst gilt „von Hand“ bis zum nächsten Wechsel. Bei <b>vollem Akku</b> wird freigegeben, damit Solarstrom durchkommt – sobald der Akku danach selbst Strom abgibt, sperrt der Plan wieder.',
+        'Der Plan läuft im Proxy und richtet sich nach dessen Uhrzeit. Ist der Proxy aus, bleibt der letzte Zustand stehen. Nach einem Neustart greift er beim nächsten Wechsel.',
+        'Soll ohne Ausnahme immer nach Zähler geregelt werden, den Zeitplan einfach ausschalten.'] },
     en: { sub:'Discharge windows for all devices', back:'Back to the dashboard', active:'Schedule active',
-      activeHint:'Discharging is allowed inside the windows and blocked outside them.',
+      activeHint:'Inside the windows the battery discharges – following the meter (zero feed-in) or at a fixed power. Outside the windows discharging is blocked.',
+      mZero:'Zero feed-in', mFixed:'Fixed discharge', mFixedW:'fixed {p} W', modeLbl:'Mode', daysLbl:'Weekdays', power:'Power',
+      lgZero:'zero feed-in', lgFixed:'fixed', lgLocked:'blocked', pOff:'off',
+      errPow:'Enter a power between {a} and {b} W.', errPowMin:'Enter a power of at least {a} W (whole watts).', errOverlap:'Overlaps with {w}.',
+      fixInfo:'The fixed power applies to all devices allowed to discharge. If “Charging allowed” is on and there is surplus, a device charges via AC and delivers no fixed share during that time.',
+      fixHand:'Fixed power set to {v} by hand (schedule: {p}) – stays until the next change.',
       today:'Today', windows:'Discharge windows', how:'How the schedule works', add:'+ Add window', save:'Save schedule',
       empty:'No window yet. Without a window the schedule does nothing.', from:'From', to:'To', cancel:'Cancel', del:'Delete', ok:'Apply',
       daily:'daily', wd:'Mon–Fri', we:'Sat, Sun', night:'past midnight', nightNote:'Runs past midnight and counts for the start day.',
       days:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], daysAria:'Weekdays', follows:'follows', followsAria:'{d} follows the schedule',
       errTime:'Enter a start and end time.', errSame:'Start and end are the same. Pick another end time.', errDays:'Pick at least one weekday.',
       stOff:'Schedule off', stEmpty:'No window yet', stExcluded:'Doesn’t follow the schedule', stUnknown:'Schedule · takes over {w}',
-      stFree:'Schedule · free {w}', stLocked:'Schedule · blocked {w}', stManual:'Schedule · paused {w} (manual charging)', stFull:'Schedule · paused {w} (battery full)',
+      stFree:'Schedule · {m} {w}', stLocked:'Schedule · blocked {w}', stManual:'Schedule · paused {w} (manual charging)', stFull:'Schedule · paused {w} (battery full)',
       stVolt:'Schedule · waiting for cell voltage above {v} V', stHand:'manual change · {w}',
       stOffline:'Schedule · device offline', stNoWd:'Schedule · not switching (watchdog off)', stNoWatch:'Doesn’t follow the schedule (not monitored by the watchdog)',
       noWd:'The schedule needs the watchdog in the zendash script (watchdog.enabled: true). While it is off, the schedule doesn’t switch.',
@@ -799,20 +1061,27 @@ _PAGE = r"""<!DOCTYPE html>
       clock:'Proxy time: {p} – this device shows {b}. The schedule follows the proxy.',
       leave:'Changes aren’t saved yet.',
       foot:'Proxy time {t} · last run {r}',
-      rules:['Switching happens <b>only at the scheduled times</b>. Anything you change by hand in between stays until the next change.',
+      rules:['Each window has a mode: <b>zero feed-in</b> follows the meter, <b>fixed discharge</b> feeds in the set power – shared by all devices allowed to discharge. <b>Outside the windows discharging is blocked.</b>',
+        'Switching happens <b>only at the scheduled times</b> – a change of mode counts as one too. Anything you change by hand in between (switch or fixed power) stays until the next change.',
         '<b>Blocking</b> always works. <b>Releasing</b> only if the weakest cell is above the watchdog’s release threshold{v}; otherwise it retries every two minutes.',
         'The schedule needs the <b>watchdog</b> and only switches devices it monitors (<span class="num">watch: true</span>). It uses the watchdog’s readings and checks every two minutes between the scheduled times.',
-        '<b>Manual charging</b> or a <b>full battery</b> pause the schedule for that device until the next change. With a full battery it releases so solar power gets through – as soon as the battery itself starts discharging, the schedule blocks again.',
-        'The schedule runs in the proxy and follows its clock. If the proxy is off, the last state stays. After a restart it takes over at the next change.'] },
+        '<b>Manual charging</b> pauses the schedule for that device while it runs. Afterwards the schedule takes over again if the switch matches the schedule – otherwise it counts as a manual change until the next change. With a <b>full battery</b> it releases so solar power gets through – as soon as the battery itself starts discharging, the schedule blocks again.',
+        'The schedule runs in the proxy and follows its clock. If the proxy is off, the last state stays. After a restart it takes over at the next change.',
+        'To always follow the meter without exception, simply switch the schedule off.'] },
     fr: { sub:'Plages de décharge pour tous les appareils', back:'Retour au tableau de bord', active:'Planning actif',
-      activeHint:'La décharge est autorisée dans les plages et bloquée en dehors.',
+      activeHint:'Dans les plages, la batterie se décharge – selon le compteur (injection zéro) ou à puissance fixe. En dehors des plages, la décharge est bloquée.',
+      mZero:'Injection zéro', mFixed:'Décharge fixe', mFixedW:'fixe {p} W', modeLbl:'Mode', daysLbl:'Jours', power:'Puissance',
+      lgZero:'injection zéro', lgFixed:'fixe', lgLocked:'bloqué', pOff:'arrêt',
+      errPow:'Indique une puissance entre {a} et {b} W.', errPowMin:'Indique une puissance d’au moins {a} W (watts entiers).', errOverlap:'Chevauche {w}.',
+      fixInfo:'La puissance fixe vaut pour tous les appareils autorisés à décharger. Si « Charge autorisée » est actif et qu’il y a un surplus, un appareil charge en AC et ne fournit pas de part fixe pendant ce temps.',
+      fixHand:'Puissance fixe réglée à la main sur {v} (planning : {p}) – reste jusqu’au prochain changement.',
       today:'Aujourd’hui', windows:'Plages de décharge', how:'Fonctionnement du planning', add:'+ Ajouter une plage', save:'Enregistrer le planning',
       empty:'Aucune plage. Sans plage, le planning ne fait rien.', from:'De', to:'À', cancel:'Annuler', del:'Supprimer', ok:'Appliquer',
       daily:'tous les jours', wd:'lun–ven', we:'sam, dim', night:'après minuit', nightNote:'Dépasse minuit et compte pour le jour de début.',
       days:['lun','mar','mer','jeu','ven','sam','dim'], daysAria:'Jours de la semaine', follows:'suit', followsAria:'{d} suit le planning',
       errTime:'Saisis une heure de début et de fin.', errSame:'Début et fin sont identiques. Choisis une autre heure de fin.', errDays:'Choisis au moins un jour.',
       stOff:'Planning arrêté', stEmpty:'Aucune plage', stExcluded:'Ne suit pas le planning', stUnknown:'Planning · actif {w}',
-      stFree:'Planning · libre {w}', stLocked:'Planning · bloqué {w}', stManual:'Planning · en pause {w} (charge manuelle)', stFull:'Planning · en pause {w} (batterie pleine)',
+      stFree:'Planning · {m} {w}', stLocked:'Planning · bloqué {w}', stManual:'Planning · en pause {w} (charge manuelle)', stFull:'Planning · en pause {w} (batterie pleine)',
       stVolt:'Planning · attend une tension de cellule > {v} V', stHand:'modifié à la main · {w}',
       stOffline:'Planning · appareil hors ligne', stNoWd:'Planning · ne commute pas (watchdog arrêté)', stNoWatch:'Ne suit pas le planning (non surveillé par le watchdog)',
       noWd:'Le planning a besoin du watchdog du script zendash (watchdog.enabled: true). Tant qu’il est arrêté, le planning ne commute pas.',
@@ -822,11 +1091,13 @@ _PAGE = r"""<!DOCTYPE html>
       clock:'Heure du proxy\u00a0: {p} – cet appareil affiche {b}. Le planning suit le proxy.',
       leave:'Les modifications ne sont pas encore enregistrées.',
       foot:'Heure du proxy {t} · dernier passage {r}',
-      rules:['La commutation se fait <b>uniquement aux heures prévues</b>. Ce que tu modifies à la main entre-temps reste jusqu’au prochain changement.',
+      rules:['Chaque plage a un mode : <b>injection zéro</b> suit le compteur, <b>décharge fixe</b> injecte la puissance réglée – répartie sur tous les appareils autorisés à décharger. <b>En dehors des plages, la décharge est bloquée.</b>',
+        'La commutation se fait <b>uniquement aux heures prévues</b> – un changement de mode en fait partie. Ce que tu modifies à la main entre-temps (interrupteur ou puissance fixe) reste jusqu’au prochain changement.',
         '<b>Bloquer</b> fonctionne toujours. <b>Libérer</b> seulement si la cellule la plus faible dépasse le seuil de libération du watchdog{v}, sinon nouvel essai toutes les deux minutes.',
         'Le planning a besoin du <b>watchdog</b> et ne commute que les appareils qu’il surveille (<span class="num">watch: true</span>). Il utilise ses mesures et contrôle toutes les deux minutes entre les heures prévues.',
-        'La <b>charge manuelle</b> ou une <b>batterie pleine</b> suspendent le planning pour cet appareil jusqu’au prochain changement. Avec une batterie pleine, il libère pour laisser passer le solaire – dès que la batterie se décharge elle-même, le planning bloque à nouveau.',
-        'Le planning tourne dans le proxy et suit son horloge. Si le proxy est arrêté, le dernier état reste. Après un redémarrage, il reprend au prochain changement.'] }
+        'La <b>charge manuelle</b> suspend le planning pour cet appareil tant qu’elle dure. Ensuite, le planning reprend si l’interrupteur correspond au planning – sinon cela compte comme modifié à la main jusqu’au prochain changement. Avec une <b>batterie pleine</b>, il libère pour laisser passer le solaire – dès que la batterie se décharge elle-même, le planning bloque à nouveau.',
+        'Le planning tourne dans le proxy et suit son horloge. Si le proxy est arrêté, le dernier état reste. Après un redémarrage, il reprend au prochain changement.',
+        'Pour toujours suivre le compteur sans exception, il suffit d’arrêter le planning.'] }
   };
   var lang = 'en';
   try { var sv = localStorage.getItem('zendash_lang'); if (T[sv]) lang = sv; else throw 0; }
@@ -848,20 +1119,25 @@ _PAGE = r"""<!DOCTYPE html>
   document.querySelectorAll('[data-t]').forEach(function(el){ el.textContent = t(el.getAttribute('data-t')); });
   $('back').setAttribute('aria-label', t('back'));
 
-  function allowedAt(p, day, min){
-    for (var i = 0; i < p.windows.length; i++){
-      var w = p.windows[i], f = toMin(w.from), to = toMin(w.to);
-      if (f < to){ if (w.days.indexOf(day) >= 0 && min >= f && min < to) return true; }
-      else { if (w.days.indexOf(day) >= 0 && min >= f) return true; if (w.days.indexOf(prevDay(day)) >= 0 && min < to) return true; }
+  // Gueltiges Fenster (Index) oder -1; Fenster ueber Mitternacht zaehlen zum Starttag
+  function windowAt(list, day, min, skip){
+    for (var i = 0; i < list.length; i++){
+      if (i === skip) continue;
+      var w = list[i], f = toMin(w.from), to = toMin(w.to);
+      if (f < to){ if (w.days.indexOf(day) >= 0 && min >= f && min < to) return i; }
+      else { if (w.days.indexOf(day) >= 0 && min >= f) return i; if (w.days.indexOf(prevDay(day)) >= 0 && min < to) return i; }
     }
-    return false;
+    return -1;
   }
+  function wMode(w){ return w && w.mode === 'fixed' ? 'fixed' : 'zero'; }
+  function wKey(w){ return w ? wMode(w) + (wMode(w) === 'fixed' ? ':' + w.power : '') : 'locked'; }
+  function modeText(w){ return wMode(w) === 'fixed' ? t('mFixedW', { p:w.power }) : t('mZero'); }
+  // Abschnitte des Tages [von, bis, Fenster|null], nur die Fenster
   function segments(p, day){
-    var segs = [], st = null;
-    for (var m = 0; m <= 1440; m++){
-      var a = m < 1440 && allowedAt(p, day, m);
-      if (a && st === null) st = m;
-      if (!a && st !== null){ segs.push([st, m]); st = null; }
+    var segs = [], st = 0, cur = windowAt(p.windows, day, 0);
+    for (var m = 1; m <= 1440; m++){
+      var x = m < 1440 ? windowAt(p.windows, day, m) : -2;
+      if (x !== cur){ if (cur >= 0) segs.push([st, m, p.windows[cur]]); st = m; cur = x; }
     }
     return segs;
   }
@@ -877,15 +1153,18 @@ _PAGE = r"""<!DOCTYPE html>
     var w = whenText(), st = dv.state;
     // "von Hand" erkennt der Proxy erst bei seiner Pruefung (alle 2 min) -
     // weicht der Schalter schon ab, gleich so anzeigen
+    var cur = S && S.mode === 'fixed' ? { mode:'fixed', power:S.power } : { mode:'zero' };
     if (typeof dv.dischargeAllowed === 'boolean' && S && typeof S.allowed === 'boolean') {
       if ((st === 'free' || st === 'locked') && dv.dischargeAllowed !== (st === 'free')) st = 'hand';
       else if (st === 'hand' && dv.dischargeAllowed === S.allowed) st = S.allowed ? 'free' : 'locked';
+      // Manuelles Laden schon beendet: Der Plan uebernimmt bei seiner naechsten Pruefung
+      else if (st === 'manual' && dv.manual === false) st = dv.dischargeAllowed === S.allowed ? (S.allowed ? 'free' : 'locked') : 'hand';
     }
     switch (st){
       case 'off': return ['st-lock', t('stOff')];
       case 'empty': return ['st-lock', t('stEmpty')];
       case 'excluded': return ['st-lock', t('stExcluded')];
-      case 'free': return ['st-ok', t('stFree', { w:w })];
+      case 'free': return [cur.mode === 'fixed' ? 'st-fix' : 'st-ok', t('stFree', { m:modeText(cur), w:w })];
       case 'locked': return ['st-lock', t('stLocked', { w:w })];
       case 'manual': return ['st-pause', t('stManual', { w:w })];
       case 'full': return ['st-pause', t('stFull', { w:w })];
@@ -919,11 +1198,12 @@ _PAGE = r"""<!DOCTYPE html>
         '<div class="dev-state ' + st[0] + '">' + esc(st[1]) + '</div></div>' +
         '<label class="follow">' + esc(t('follows')) + '<button type="button" class="sw-btn" role="switch" data-follow="' + dv.id + '" aria-checked="' + follows + '" aria-label="' + esc(t('followsAria', { d:dv.label })) + '"></button></label></div>' +
         '<div class="tl' + ((!plan.enabled || !follows) ? ' off' : '') + '" aria-hidden="true">';
-      segs.forEach(function(s){ html += '<div class="seg" style="left:' + (s[0] / 14.4) + '%;width:' + ((s[1] - s[0]) / 14.4) + '%"></div>'; });
+      segs.forEach(function(s){ html += '<div class="seg ' + wMode(s[2]) + '" style="left:' + (s[0] / 14.4) + '%;width:' + ((s[1] - s[0]) / 14.4) + '%"></div>'; });
       html += '<div class="now" style="left:' + (nowMin / 14.4) + '%"></div></div>' +
         '<div class="ticks num"><span>0</span><span>6</span><span>12</span><span>18</span><span>24</span></div></div>';
     });
     $('devices').innerHTML = html || '<div class="empty">–</div>';
+    $('legend').hidden = !devs.length || !plan.windows.length;
   }
 
   function renderWindows(){
@@ -933,7 +1213,8 @@ _PAGE = r"""<!DOCTYPE html>
       if (i === editIdx) { html += editForm(); return; }
       var night = toMin(w.to) <= toMin(w.from);
       html += '<div class="win" role="button" tabindex="0" data-edit="' + i + '"><div><div class="t num">' + w.from + ' – ' + w.to + '</div>' +
-        '<div class="d">' + esc(daysText(w.days)) + (night ? ' · ' + esc(t('night')) : '') + '</div></div><span class="chev" aria-hidden="true">›</span></div>';
+        '<div class="d">' + esc(daysText(w.days)) + (night ? ' · ' + esc(t('night')) : '') + '</div>' +
+        '<span class="badge ' + wMode(w) + '">' + esc(modeText(w)) + '</span></div><span class="chev" aria-hidden="true">›</span></div>';
     });
     if (editIdx === plan.windows.length) html += editForm();
     $('windows').innerHTML = html;
@@ -947,6 +1228,13 @@ _PAGE = r"""<!DOCTYPE html>
       '<div class="times"><div><label for="fFrom">' + esc(t('from')) + '</label><input type="time" id="fFrom" value="' + draft.from + '"></div>' +
       '<span class="sep">–</span><div><label for="fTo">' + esc(t('to')) + '</label><input type="time" id="fTo" value="' + draft.to + '"></div></div>' +
       '<div class="note" id="fNight"' + (night ? '' : ' hidden') + '>' + esc(t('nightNote')) + '</div>' +
+      '<span class="sublbl" id="fModeLbl">' + esc(t('modeLbl')) + '</span>' +
+      '<div class="seg-sw" role="radiogroup" aria-labelledby="fModeLbl">' +
+      [['zero', t('mZero')], ['fixed', t('mFixed')]].map(function(m){
+        return '<button type="button" role="radio" data-mode="' + m[0] + '" aria-checked="' + (draft.mode === m[0]) + '">' + esc(m[1]) + '</button>'; }).join('') + '</div>' +
+      '<div class="power" id="fPowerRow"' + (draft.mode === 'fixed' ? '' : ' hidden') + '><label for="fPower">' + esc(t('power')) + '</label>' +
+      '<input type="number" id="fPower" inputmode="numeric" step="10" min="' + lim().a + '"' + (lim().b ? ' max="' + lim().b + '"' : '') + ' value="' + (draft.power || '') + '"><span class="unit">W</span></div>' +
+      '<span class="sublbl">' + esc(t('daysLbl')) + '</span>' +
       '<div class="chips" role="group" aria-label="' + esc(t('daysAria')) + '">' + chips + '</div>' +
       '<div class="presets"><button type="button" class="preset" data-preset="all">' + esc(t('daily')) + '</button>' +
       '<button type="button" class="preset" data-preset="wd">' + esc(t('wd')) + '</button><button type="button" class="preset" data-preset="we">' + esc(t('we')) + '</button></div>' +
@@ -955,11 +1243,31 @@ _PAGE = r"""<!DOCTYPE html>
       (isNew ? '' : '<button type="button" class="btn del" id="fDel">' + esc(t('del')) + '</button>') +
       '<button type="button" class="btn ok" id="fOk">' + esc(t('ok')) + '</button></div></div>';
   }
+  // Grenzen der Fix-Leistung aus config_api (ueber den Proxy): ab
+  // dischargeStartupPower, hoechstens Summe maxOutput
+  function lim(){ var l = (S && S.limits) || {}; return { a: l.startup || 1, b: l.max || 0 }; }
+  function powerError(p){
+    var l = lim();
+    if (!(p >= l.a) || Math.round(p) !== p || (l.b && p > l.b)) return l.b ? t('errPow', { a:l.a, b:l.b }) : t('errPowMin', { a:l.a });
+    return '';
+  }
+  function overlap(d){
+    var probe = [{ from:d.from, to:d.to, days:d.days }];
+    for (var day = 1; day <= 7; day++){
+      for (var m = 0; m < 1440; m++){
+        if (windowAt(probe, day, m) < 0) continue;
+        var j = windowAt(plan.windows, day, m, editIdx);
+        if (j >= 0){ var w = plan.windows[j]; return t('errOverlap', { w: w.from + '–' + w.to + ' (' + daysText(w.days) + ')' }); }
+      }
+    }
+    return '';
+  }
   function validate(d){
     if (!/^\d\d:\d\d$/.test(d.from) || !/^\d\d:\d\d$/.test(d.to)) return t('errTime');
     if (d.from === d.to) return t('errSame');
     if (!d.days.length) return t('errDays');
-    return '';
+    if (d.mode === 'fixed'){ var e = powerError(d.power); if (e) return e; }
+    return overlap(d);
   }
   function renderRules(){
     var v = minVoltReset != null ? ' (<span class="num">' + fmtV(minVoltReset) + '</span> V)' : '';
@@ -978,6 +1286,12 @@ _PAGE = r"""<!DOCTYPE html>
       else cb.hidden = true;
     }
     $('foot').textContent = S ? t('foot', { t:S.now, r:S.lastRun || '–' }) : '';
+    var fb = $('fixBanner'), fx = S && S.fixed, anyFix = plan.enabled && plan.windows.some(function(w){ return wMode(w) === 'fixed'; });
+    if (!dirty && fx && fx.state === 'hand' && typeof fx.value === 'number') {
+      fb.textContent = t('fixHand', { v: fx.value ? fx.value + ' W' : t('pOff'), p: S.mode === 'fixed' ? S.power + ' W' : t('pOff') });
+      fb.className = 'banner warn'; fb.hidden = false;
+    } else if (anyFix) { fb.textContent = t('fixInfo'); fb.className = 'banner'; fb.hidden = false; }
+    else fb.hidden = true;
   }
   function render(){
     $('planSw').setAttribute('aria-checked', String(!!plan.enabled));
@@ -1015,12 +1329,17 @@ _PAGE = r"""<!DOCTYPE html>
   });
   $('addWin').addEventListener('click', function(){
     if (!plan) return;
-    editIdx = plan.windows.length; draft = { from:'17:00', to:'22:00', days:[1,2,3,4,5,6,7] }; renderWindows(); $('fFrom').focus();
+    editIdx = plan.windows.length; draft = { from:'17:00', to:'22:00', days:[1,2,3,4,5,6,7], mode:'zero', power:null }; renderWindows(); $('fFrom').focus();
   });
-  function openEdit(i){ var w = plan.windows[i]; editIdx = i; draft = { from:w.from, to:w.to, days:w.days.slice() }; renderWindows(); }
+  function openEdit(i){ var w = plan.windows[i]; editIdx = i; draft = { from:w.from, to:w.to, days:w.days.slice(), mode:wMode(w), power:w.power || null }; renderWindows(); }
   $('windows').addEventListener('click', function(e){
     var tg = e.target;
     var row = tg.closest('[data-edit]'); if (row && editIdx === null){ openEdit(+row.getAttribute('data-edit')); return; }
+    var md = tg.closest('[data-mode]');
+    if (md){ draft.mode = md.getAttribute('data-mode');
+      document.querySelectorAll('#windows [data-mode]').forEach(function(b){ b.setAttribute('aria-checked', String(b === md)); });
+      $('fPowerRow').hidden = draft.mode !== 'fixed'; $('fErr').textContent = '';
+      if (draft.mode === 'fixed') $('fPower').focus(); return; }
     var chip = tg.closest('[data-day]');
     if (chip){ var d = +chip.getAttribute('data-day'), k = draft.days.indexOf(d);
       if (k >= 0) draft.days.splice(k, 1); else draft.days.push(d);
@@ -1031,7 +1350,9 @@ _PAGE = r"""<!DOCTYPE html>
     if (tg.id === 'fDel'){ plan.windows.splice(editIdx, 1); editIdx = null; setDirty(true); render(); toast(t('deleted')); return; }
     if (tg.id === 'fOk'){
       var err = validate(draft); if (err){ $('fErr').textContent = err; return; }
-      plan.windows[editIdx] = { from:draft.from, to:draft.to, days:draft.days.slice().sort() };
+      var nw = { from:draft.from, to:draft.to, days:draft.days.slice().sort(), mode:draft.mode };
+      if (draft.mode === 'fixed') nw.power = draft.power;
+      plan.windows[editIdx] = nw;
       plan.windows.sort(function(a, c){ return toMin(a.from) - toMin(c.from); });
       editIdx = null; setDirty(true); render();
     }
@@ -1041,6 +1362,7 @@ _PAGE = r"""<!DOCTYPE html>
     if (row && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openEdit(+row.getAttribute('data-edit')); }
   });
   $('windows').addEventListener('input', function(e){
+    if (e.target.id === 'fPower'){ draft.power = e.target.value === '' ? null : +e.target.value; $('fErr').textContent = ''; return; }
     if (e.target.id !== 'fFrom' && e.target.id !== 'fTo') return;
     if (e.target.id === 'fFrom') draft.from = e.target.value; else draft.to = e.target.value;
     $('fErr').textContent = '';

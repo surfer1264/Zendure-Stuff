@@ -630,6 +630,8 @@
   .plan-line .pl-pause{ color:var(--amber-text); } .plan-line .pl-warn{ color:var(--alert-text); }
   .plan-bar{ display:block; position:relative; height:.25rem; border-radius:2px; overflow:hidden; background:var(--border); }
   .plan-bar .seg{ position:absolute; top:0; bottom:0; background:var(--teal-text); opacity:.55; }
+  .plan-bar .seg.fixed{ background:var(--amber-text); }
+  .plan-line .pl-fix{ color:var(--amber-text); }
   .plan-bar .now{ position:absolute; top:0; bottom:0; width:2px; background:var(--alert-text); }
 
   .hub-settings{
@@ -1114,7 +1116,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.5.1";
+  const APP_VERSION = "5.6.0";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1565,7 +1567,7 @@
   Object.assign(STRINGS.de, {
     viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
     setPlan: 'Zeitplan', setPlanHint: 'Entladefenster festlegen',
-    planFree: 'Plan · frei {w}', planLocked: 'Plan · gesperrt {w}', planManual: 'Plan · pausiert {w} (manuelles Laden)',
+    planFree: 'Plan · {m} {w}', planZero: 'Nulleinspeisung', planFixedW: 'fix {p} W', planLocked: 'Plan · gesperrt {w}', planManual: 'Plan · pausiert {w} (manuelles Laden)',
     planFull: 'Plan · pausiert {w} (Akku voll)', planVolt: 'Plan · wartet auf Zellspannung', planHand: 'von Hand · {w}',
     planUnknown: 'Plan · greift ab {t}', planUntil: 'bis {t}', planUntilTomorrow: 'bis morgen {t}', planUntilDay: 'bis {d} {t}',
     planDays: 'Mo,Di,Mi,Do,Fr,Sa,So', planTitle: 'Zeitplan öffnen', planNoWd: 'Plan · schaltet nicht (Watchdog aus)', planOffline: 'Plan · Gerät offline',
@@ -1594,7 +1596,7 @@
   Object.assign(STRINGS.en, {
     viewDevices: 'Devices', viewFlow: 'Energy flow', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
     setPlan: 'Schedule', setPlanHint: 'Set discharge windows',
-    planFree: 'Schedule · free {w}', planLocked: 'Schedule · blocked {w}', planManual: 'Schedule · paused {w} (manual charging)',
+    planFree: 'Schedule · {m} {w}', planZero: 'zero feed-in', planFixedW: 'fixed {p} W', planLocked: 'Schedule · blocked {w}', planManual: 'Schedule · paused {w} (manual charging)',
     planFull: 'Schedule · paused {w} (battery full)', planVolt: 'Schedule · waiting for cell voltage', planHand: 'manual change · {w}',
     planUnknown: 'Schedule · takes over {t}', planUntil: 'until {t}', planUntilTomorrow: 'until tomorrow {t}', planUntilDay: 'until {d} {t}',
     planDays: 'Mon,Tue,Wed,Thu,Fri,Sat,Sun', planTitle: 'Open schedule', planNoWd: 'Schedule · not switching (watchdog off)', planOffline: 'Schedule · device offline',
@@ -1623,7 +1625,7 @@
   Object.assign(STRINGS.fr, {
     viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
     setPlan: 'Planning', setPlanHint: 'Définir les plages de décharge',
-    planFree: 'Planning · libre {w}', planLocked: 'Planning · bloqué {w}', planManual: 'Planning · en pause {w} (charge manuelle)',
+    planFree: 'Planning · {m} {w}', planZero: 'injection zéro', planFixedW: 'fixe {p} W', planLocked: 'Planning · bloqué {w}', planManual: 'Planning · en pause {w} (charge manuelle)',
     planFull: 'Planning · en pause {w} (batterie pleine)', planVolt: 'Planning · attend la tension de cellule', planHand: 'modifié à la main · {w}',
     planUnknown: 'Planning · actif {t}', planUntil: 'jusqu’à {t}', planUntilTomorrow: 'jusqu’à demain {t}', planUntilDay: 'jusqu’à {d} {t}',
     planDays: 'lun,mar,mer,jeu,ven,sam,dim', planTitle: 'Ouvrir le planning', planNoWd: 'Planning · ne commute pas (watchdog arrêté)', planOffline: 'Planning · appareil hors ligne',
@@ -3434,16 +3436,18 @@
     });
   }
   function planToMin(s){ const p = String(s).split(':'); return (+p[0]) * 60 + (+p[1]); }
-  function planAllowed(p, day, min){
+  // Gueltiges Fenster oder null (= gesperrt). Ab 5.6.0 mit Betriebsart
+  // (mode "zero" / "fixed" + power); Fenster ohne mode = Nulleinspeisung.
+  function planWindow(p, day, min){
     for (let i = 0; i < p.windows.length; i++){
       const w = p.windows[i], f = planToMin(w.from), to = planToMin(w.to);
-      if (f < to) { if (w.days.indexOf(day) >= 0 && min >= f && min < to) return true; }
+      if (f < to) { if (w.days.indexOf(day) >= 0 && min >= f && min < to) return w; }
       else {
-        if (w.days.indexOf(day) >= 0 && min >= f) return true;
-        if (w.days.indexOf(day === 1 ? 7 : day - 1) >= 0 && min < to) return true;
+        if (w.days.indexOf(day) >= 0 && min >= f) return w;
+        if (w.days.indexOf(day === 1 ? 7 : day - 1) >= 0 && min < to) return w;
       }
     }
-    return false;
+    return null;
   }
   function planWhen(){
     const n = schedState.next;
@@ -3468,10 +3472,15 @@
         dv = { state: 'hand' };
       } else if (dv.state === 'hand' && typeof s.allowed === 'boolean' && !!d.dischargeAllowed === s.allowed) {
         dv = { state: s.allowed ? 'free' : 'locked' };
+      } else if (dv.state === 'manual' && typeof s.allowed === 'boolean' && !isManualActive(d)) {
+        // Manuelles Laden schon beendet: Der Proxy uebernimmt bei seiner naechsten Pruefung
+        dv = { state: !!d.dischargeAllowed === s.allowed ? (s.allowed ? 'free' : 'locked') : 'hand' };
       }
       const w = planWhen();
+      const fix = s.mode === 'fixed';
+      const m = fix ? t('planFixedW', { p: s.power }) : t('planZero');
       const map = {
-        free: ['pl-ok', t('planFree', { w: w })], locked: ['pl-lock', t('planLocked', { w: w })],
+        free: [fix ? 'pl-fix' : 'pl-ok', t('planFree', { m: m, w: w })], locked: ['pl-lock', t('planLocked', { w: w })],
         manual: ['pl-pause', t('planManual', { w: w })], full: ['pl-pause', t('planFull', { w: w })],
         volt: ['pl-warn', t('planVolt')], hand: ['pl-pause', t('planHand', { w: w })],
         nowd: ['pl-warn', t('planNoWd')], offline: ['pl-warn', t('planOffline')]
@@ -3479,17 +3488,16 @@
       const st = map[dv.state] || ['pl-lock', t('planUnknown', { t: s.next ? s.next.time : '' })];
       if (!segs) {
         segs = [];
-        let start = null;
-        for (let m = 0; m <= 1440; m += 5) {
-          const a = m < 1440 && planAllowed(s.plan, s.weekday, m);
-          if (a && start === null) start = m;
-          if (!a && start !== null) { segs.push([start, m]); start = null; }
+        let start = 0, cur = planWindow(s.plan, s.weekday, 0);
+        for (let m = 5; m <= 1440; m += 5) {
+          const x = m < 1440 ? planWindow(s.plan, s.weekday, m) : undefined;
+          if (x !== cur) { if (cur) segs.push([start, m, cur.mode === 'fixed' ? 'fixed' : 'zero']); start = m; cur = x; }
         }
       }
       const now = planToMin(s.now);
       el.innerHTML = '<span class="' + st[0] + '">' + st[1] + '</span>' +
         '<span class="plan-bar" aria-hidden="true">' +
-        segs.map(function(g){ return '<span class="seg" style="left:' + (g[0] / 14.4) + '%;width:' + ((g[1] - g[0]) / 14.4) + '%"></span>'; }).join('') +
+        segs.map(function(g){ return '<span class="seg ' + g[2] + '" style="left:' + (g[0] / 14.4) + '%;width:' + ((g[1] - g[0]) / 14.4) + '%"></span>'; }).join('') +
         '<span class="now" style="left:' + (now / 14.4) + '%"></span></span>';
       el.hidden = false;
     });

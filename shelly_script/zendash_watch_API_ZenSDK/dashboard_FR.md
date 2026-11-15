@@ -86,7 +86,7 @@ Toutes les entrées sont mémorisées **par navigateur** – une tablette murale
 Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>:8000/`, et depuis 5.5.0 le seul tableau de bord. Les favoris vers les anciennes adresses `/neu` et `/klassisch` mènent à la page d'accueil. À côté de la zone des appareils se trouve l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.
 
 - **Cartes des appareils :** une flamme après le nom tant que le chauffage est activé (`heatState` = 1, à partir du script 4.2.0), état au raccordement AC en toutes lettres : « injecte », « charge depuis le réseau », « hors réseau » (aucun échange avec le réseau domestique, sortie hors réseau fournissant au moins 5 W) ou « veille ». « Veille » ne dit rien de la batterie : le PV peut la charger pendant ce temps. En cas de problème, il affiche « injoignable » ou « obsolète ». Également la puissance en grand, barre de charge avec la réserve (sous `minSoc`) et la zone au-dessus de la limite de charge hachurées, PV · batterie · hors réseau (batterie = PV − sortie − hors réseau), température et cellule la plus faible sur une petite ligne.
-- **Planning :** seulement avec le [planning](#planning) activé : une ligne avec l'état et le prochain changement, p. ex. « Planning · bloqué jusqu'à 17:00 », et en dessous une fine barre pour aujourd'hui (clair = plage de décharge, trait rouge = maintenant). Un appui ouvre le planning.
+- **Planning :** seulement avec le [planning](#planning) activé : une ligne avec l'état et le prochain changement, p. ex. « Planning · bloqué jusqu'à 17:00 » ou « Planning · fixe 800 W jusqu'à 15:00 », et en dessous une fine barre pour aujourd'hui (turquoise = injection zéro, orange = décharge fixe, trait rouge = maintenant). Un appui ouvre le planning.
 - **Pied de page :** affiche la version, l'avis de mise à jour, les erreurs de requête et **Aide**. **Plus ▾** ouvre les liens de configuration (IP / ID du script, ThingSpeak, ThingsBoard, rapport de log), ainsi que l'historique et la dernière actualisation. Les liens vers `config_api` et `status_api` n'apparaissent qu'avec les détails techniques activés.
 - **Remarques** uniquement en cas d'écart (plein/vide bloqué, `socSet`/`minSoc` différent, export interdit, décharge désactivée, charge manuelle active), sinon « Aucune remarque ».
 - **Réglages** avec les onglets **Régulation · Hors réseau · Charge**, visibles seulement quand les commandes sont déverrouillées. Au chargement de la page et à chaque déverrouillage, chaque carte affiche « Régulation » ; les modifications non appliquées (brouillon de réserve, palier de charge choisi) sont abandonnées. L'onglet n'est pas mémorisé. « Hors réseau » n'apparaît que pour les appareils avec sortie hors réseau. Les **détails techniques** forment un bloc à part, affiché uniquement avec l'interrupteur du menu.
@@ -98,6 +98,13 @@ Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>
 
 Depuis 5.5.0, le proxy peut autoriser et bloquer la décharge selon l'heure – p. ex. seulement le matin et le soir, quand le foyer consomme beaucoup. On planifie des **plages de décharge** : la décharge y est autorisée, en dehors elle est bloquée. Un planning s'applique à **tous les appareils** ; dans une plage, le régulateur répartit comme d'habitude. La charge (surplus, charge réseau) n'est pas concernée.
 
+Depuis 5.6.0, chaque plage a un **mode** :
+
+- **Injection zéro** – le régulateur suit le compteur comme sans planning.
+- **Décharge fixe** – une puissance fixe en watts (`zdmc_dischargeFixed`), p. ex. 800 W le jour, 200 W la nuit. Valeurs autorisées : de `dischargeStartupPower` jusqu'à la somme des `maxOutput` de tous les appareils.
+
+En dehors des plages, la décharge est toujours bloquée. Pour suivre le compteur sans exception, il suffit d'arrêter le planning. Les plages ne doivent pas se chevaucher.
+
 Ouverture via **Affichage → Planning** ou directement `http://<adresse-du-proxy>:8000/zeitplan`.
 
 **Prérequis :** le **watchdog** doit être actif dans le script zendash (`watchdog.enabled: true`). Le planning ne commute que les appareils surveillés par le watchdog (`watch: true`), car il utilise ses mesures pour la batterie pleine et la tension des cellules. Si le watchdog est arrêté, la page l'indique et le planning ne commute pas.
@@ -105,16 +112,16 @@ Ouverture via **Affichage → Planning** ou directement `http://<adresse-du-prox
 | Zone | Contenu |
 |---|---|
 | **Planning actif** | active ou désactive le planning sans supprimer les plages |
-| **Aujourd'hui** | par appareil l'état, une frise pour aujourd'hui (clair = plage de décharge, trait rouge = maintenant) et l'interrupteur **suit**. Un appareil qui ne suit pas le planning n'est jamais touché par le proxy – p. ex. une batterie qui doit alimenter une prise hors réseau |
-| **Plages de décharge** | liste des plages. Un appui ouvre l'édition : de/à, jours, raccourcis « tous les jours · lun–ven · sam, dim ». Les plages après minuit (p. ex. 22:00–02:00) comptent pour le jour de début |
+| **Aujourd'hui** | par appareil l'état, une frise pour aujourd'hui (turquoise = injection zéro, orange = décharge fixe, gris = bloqué, trait rouge = maintenant) et l'interrupteur **suit**. Un appareil qui ne suit pas le planning n'est jamais touché par le proxy – p. ex. une batterie qui doit alimenter une prise hors réseau |
+| **Plages de décharge** | liste des plages. Un appui ouvre l'édition : de/à, mode (avec la puissance pour « décharge fixe »), jours, raccourcis « tous les jours · lun–ven · sam, dim ». Les plages après minuit (p. ex. 22:00–02:00) comptent pour le jour de début |
 | **Enregistrer le planning** | apparaît après une modification. Le planning enregistré s'applique immédiatement |
 
 **Comment le planning commute :**
 
-- La commutation se fait **uniquement aux heures prévues** (début et fin d'une plage). Ce que vous modifiez à la main entre-temps – p. ex. « Décharge autorisée » sur la carte de l'appareil – reste jusqu'au prochain changement. La carte affiche alors immédiatement « modifié à la main · jusqu'à … ». Si vous remettez l'interrupteur sur l'état du planning, le planning reprend l'appareil.
+- La commutation se fait **uniquement aux heures prévues** (début et fin d'une plage, et chaque changement de mode). Ce que vous modifiez à la main entre-temps – p. ex. « Décharge autorisée » sur la carte de l'appareil – reste jusqu'au prochain changement. La carte affiche alors immédiatement « modifié à la main · jusqu'à … ». Si vous remettez l'interrupteur sur l'état du planning, le planning reprend l'appareil. Il en va de même pour la puissance fixe ; la page du planning affiche alors « Puissance fixe réglée à la main … ».
 - **Bloquer** fonctionne toujours. **Libérer** seulement si la cellule la plus faible dépasse `minVoltReset` du watchdog (3,1 V par défaut). Sinon, le proxy réessaie toutes les deux minutes tant que la plage est ouverte (« attend une tension de cellule »). Le blocage pour sous-tension du watchdog reste ainsi efficace.
-- La **charge manuelle** suspend le planning pour cet appareil jusqu'au prochain changement. À la fin, la charge manuelle rétablit l'état précédent.
-- **Batterie pleine** (`socLimit` 1) pendant un blocage : le proxy libère l'appareil pour laisser passer le solaire et le laisse tranquille jusqu'au prochain changement.
+- La **charge manuelle** suspend le planning pour cet appareil tant qu'elle dure. À la fin, la charge manuelle rétablit l'état précédent. Si l'interrupteur correspond alors au planning, le planning reprend aussitôt ; sinon la carte affiche « modifié à la main · jusqu'à … » jusqu'au prochain changement.
+- **Batterie pleine** (`socLimit` 1) pendant un blocage : le proxy libère l'appareil pour laisser passer le solaire. Dès que la batterie n'est plus pleine et se décharge elle-même, le planning bloque à nouveau.
 - **Appareil hors ligne :** le blocage fonctionne quand même (le planning n'écrit que le KVS du Shelly régulateur). La libération attend que l'appareil soit de nouveau joignable et que la tension des cellules convienne. La page du planning et la carte de l'appareil affichent « Planning · appareil hors ligne ».
 - Sans plage, le planning ne fait rien.
 
@@ -122,7 +129,9 @@ Ouverture via **Affichage → Planning** ou directement `http://<adresse-du-prox
 
 - Le planning tourne **dans le proxy** et suit son horloge (dans Home Assistant, son fuseau horaire). Si elle diffère de plus de trois minutes de l'horloge du téléphone, la page l'indique.
 - Si le proxy est arrêté, rien ne commute – le dernier état reste. Après un redémarrage, le planning reprend au prochain changement.
-- Seul `zdmc_devN_dischargeAllowed` est écrit, par la même interface que l'interrupteur du tableau de bord. Rien ne change dans les scripts Shelly.
+- Seuls `zdmc_devN_dischargeAllowed` et `zdmc_dischargeFixed` sont écrits, par la même interface que les interrupteurs du tableau de bord. Rien ne change dans les scripts Shelly.
+- **Puissance fixe et charge :** la puissance fixe est une valeur commune et vaut pour tous les appareils autorisés à décharger – y compris ceux qui ne suivent pas le planning. « Charge autorisée » est prioritaire : en cas de surplus, un appareil charge en AC et ne fournit pas de part fixe pendant ce temps ; la puissance fixe se répartit alors sur les autres appareils.
+- **Commutation fiable :** le planning compare son état cible avec les valeurs du Shelly et n'écrit que ce qui diffère – en un seul appel : d'abord bloquer, puis la puissance fixe, libérer en dernier. Si seule une partie arrive, il relit au passage suivant (une minute) et écrit le reste.
 - Le planning est enregistré dans `zendure_schedule_config.json` à côté de la configuration du proxy (Home Assistant : `/data`).
 - Aux heures prévues, le proxy commute immédiatement. Entre-temps, il contrôle toutes les deux minutes la batterie pleine, la tension des cellules, la charge manuelle et les modifications à la main. Il ne lit que les valeurs que le watchdog relève de toute façon (ou le tableau de bord ouvert) – les batteries ne sont pas interrogées en plus.
 

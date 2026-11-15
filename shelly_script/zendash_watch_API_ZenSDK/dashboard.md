@@ -91,7 +91,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit
 | **Ladebalken** | SOC; der Bereich unter der Reserve (`minSoc`) und über der Ladegrenze ist schraffiert. Darunter Bereich und nutzbarer Anteil, rechts „100 %: vor n Tagen“ |
 | **Werte** | PV, Akku und Offgrid; Akku = PV − Ausgang − Offgrid (+ lädt, − entlädt). Darunter klein Temperatur und schwächste Zelle |
 | **Hinweise** | nur Abweichungen: voll oder leer gesperrt, `socSet`/`minSoc` abweichend, Export verboten, Entladen gesperrt, manuelles Laden aktiv. Sonst „Keine Hinweise“ |
-| **Zeitplan** | nur bei eingeschaltetem [Zeitplan](#zeitplan): eine Zeile mit dem Zustand und dem nächsten Wechsel, z. B. „Plan · gesperrt bis 17:00“, darunter eine dünne Leiste für heute (hell = Entladefenster, roter Strich = jetzt). Antippen öffnet den Zeitplan |
+| **Zeitplan** | nur bei eingeschaltetem [Zeitplan](#zeitplan): eine Zeile mit dem Zustand und dem nächsten Wechsel, z. B. „Plan · gesperrt bis 17:00“ oder „Plan · fix 800 W bis 15:00“, darunter eine dünne Leiste für heute (türkis = Nulleinspeisung, orange = Entladen fix, roter Strich = jetzt). Antippen öffnet den Zeitplan |
 | **Einstellungen** | Reiter **Regelung · Offgrid · Laden** – nur sichtbar, solange die Bedienung freigegeben ist. Nach dem Laden der Seite und nach jedem Entsperren steht jede Karte auf „Regelung“; nicht übernommene Änderungen (Reserve-Entwurf, gewählte Ladestufe) werden dabei verworfen. Der Reiter wird nicht gespeichert. „Offgrid“ erscheint nur bei Geräten mit Offgrid-Ausgang |
 | **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
 
@@ -107,6 +107,13 @@ Im Energiefluss lässt sich oben rechts ein **Hintergrund nach Tageszeit** zusch
 
 Ab 5.5.0 kann der Proxy das Entladen nach Uhrzeit freigeben und sperren – z. B. nur morgens und abends, wenn im Haushalt viel verbraucht wird. Geplant werden **Entladefenster**: Darin darf entladen werden, außerhalb ist Entladen gesperrt. Ein Plan gilt für **alle Geräte**; der Regler verteilt im Fenster wie gewohnt selbst. Laden (Überschuss, Netzladen) ist davon nicht betroffen.
 
+Ab 5.6.0 hat jedes Fenster eine **Betriebsart**:
+
+- **Nulleinspeisung** – der Regler folgt dem Zähler wie ohne Plan.
+- **Entladen fix** – fest eingestellte Leistung in Watt (`zdmc_dischargeFixed`), z. B. tagsüber 800 W, nachts 200 W. Erlaubt sind Werte ab `dischargeStartupPower` bis zur Summe `maxOutput` aller Geräte.
+
+Außerhalb der Fenster ist Entladen immer gesperrt. Soll ohne Ausnahme nach Zähler geregelt werden, einfach den Zeitplan ausschalten. Fenster dürfen sich nicht überschneiden.
+
 Öffnen über das Menü **Ansicht → Zeitplan** oder direkt `http://<Proxy-Adresse>:8000/zeitplan`.
 
 **Voraussetzung:** Im zendash-Script muss der **Watchdog** an sein (`watchdog.enabled: true`). Der Plan schaltet nur Geräte, die der Watchdog überwacht (`watch: true`), denn er nutzt dessen Messwerte für vollen Akku und Zellspannung. Ist der Watchdog aus, zeigt die Seite einen Hinweis und der Plan schaltet nicht.
@@ -114,16 +121,16 @@ Ab 5.5.0 kann der Proxy das Entladen nach Uhrzeit freigeben und sperren – z. B
 | Bereich | Inhalt |
 |---|---|
 | **Zeitplan aktiv** | schaltet den Plan an oder aus, ohne die Fenster zu löschen |
-| **Heute** | je Gerät der Zustand, eine Zeitleiste für heute (hell = Entladefenster, roter Strich = jetzt) und der Schalter **folgt**. Ein Gerät, das dem Plan nicht folgt, fasst der Proxy nie an – z. B. ein Speicher, der eine Offgrid-Steckdose versorgen muss |
-| **Entladefenster** | Liste der Fenster. Antippen öffnet die Bearbeitung: Von/Bis, Wochentage, Kurzwahl „täglich · Mo–Fr · Sa, So“. Fenster über Mitternacht (z. B. 22:00–02:00) zählen zum Starttag |
+| **Heute** | je Gerät der Zustand, eine Zeitleiste für heute (türkis = Nulleinspeisung, orange = Entladen fix, grau = gesperrt, roter Strich = jetzt) und der Schalter **folgt**. Ein Gerät, das dem Plan nicht folgt, fasst der Proxy nie an – z. B. ein Speicher, der eine Offgrid-Steckdose versorgen muss |
+| **Entladefenster** | Liste der Fenster. Antippen öffnet die Bearbeitung: Von/Bis, Betriebsart (bei „Entladen fix“ mit Leistung), Wochentage, Kurzwahl „täglich · Mo–Fr · Sa, So“. Fenster über Mitternacht (z. B. 22:00–02:00) zählen zum Starttag |
 | **Plan speichern** | erscheint nach einer Änderung. Der gespeicherte Plan gilt sofort |
 
 **So schaltet der Plan:**
 
-- Geschaltet wird **nur zu den Planzeiten** (Beginn und Ende eines Fensters). Was du dazwischen von Hand umstellst – z. B. „Entladen erlaubt“ in der Gerätekarte – gilt bis zum nächsten Wechsel. Die Gerätekarte zeigt dann sofort „von Hand · bis …“. Stellst du den Schalter wieder auf den Stand des Plans, übernimmt der Plan das Gerät wieder.
+- Geschaltet wird **nur zu den Planzeiten** (Beginn und Ende eines Fensters, auch jeder Wechsel der Betriebsart). Was du dazwischen von Hand umstellst – z. B. „Entladen erlaubt“ in der Gerätekarte – gilt bis zum nächsten Wechsel. Die Gerätekarte zeigt dann sofort „von Hand · bis …“. Stellst du den Schalter wieder auf den Stand des Plans, übernimmt der Plan das Gerät wieder. Für die Fix-Leistung gilt dasselbe; die Plan-Seite zeigt dann „Fix-Leistung von Hand …“.
 - **Sperren** klappt immer. **Freigeben** nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt (Standard 3,1 V). Sonst versucht der Proxy es alle zwei Minuten erneut, solange das Fenster offen ist („wartet auf Zellspannung“). So bleibt die Unterspannungssperre des Watchdogs wirksam.
-- **Manuelles Laden** pausiert den Plan für dieses Gerät bis zum nächsten Wechsel. Das manuelle Laden stellt am Ende den vorherigen Zustand wieder her.
-- **Voller Akku** (`socLimit` 1) während einer Sperre: Der Proxy gibt das Gerät frei, damit Solarstrom durchkommt, und lässt es bis zum nächsten Wechsel in Ruhe.
+- **Manuelles Laden** pausiert den Plan für dieses Gerät, solange es läuft. Am Ende stellt das manuelle Laden den vorherigen Zustand wieder her. Steht der Schalter dann wie im Plan, übernimmt der Plan sofort wieder; sonst zeigt die Karte „von Hand · bis …“ bis zum nächsten Wechsel.
+- **Voller Akku** (`socLimit` 1) während einer Sperre: Der Proxy gibt das Gerät frei, damit Solarstrom durchkommt. Ist der Akku danach nicht mehr voll und gibt er selbst Strom ab, sperrt der Plan wieder.
 - **Gerät offline:** Gesperrt wird trotzdem (der Plan schreibt nur die KVS im Regler-Shelly). Freigegeben wird erst, wenn das Gerät wieder erreichbar ist und die Zellspannung passt. Plan-Seite und Gerätekarte zeigen „Plan · Gerät offline“.
 - Ohne Fenster tut der Plan nichts.
 
@@ -131,7 +138,9 @@ Ab 5.5.0 kann der Proxy das Entladen nach Uhrzeit freigeben und sperren – z. B
 
 - Der Plan läuft **im Proxy** und richtet sich nach dessen Uhrzeit (in Home Assistant nach dessen Zeitzone). Weicht sie mehr als drei Minuten von der Uhr des Handys ab, zeigt die Seite einen Hinweis.
 - Ist der Proxy aus, schaltet nichts – der letzte Zustand bleibt stehen. Nach einem Neustart greift der Plan beim nächsten Wechsel.
-- Geschrieben wird nur `zdmc_devN_dischargeAllowed`, über dieselbe Schnittstelle wie der Schalter im Dashboard. An den Shelly-Scripts ändert sich nichts.
+- Geschrieben werden nur `zdmc_devN_dischargeAllowed` und `zdmc_dischargeFixed`, über dieselbe Schnittstelle wie die Schalter im Dashboard. An den Shelly-Scripts ändert sich nichts.
+- **Fix-Leistung und Laden:** Die Fix-Leistung ist ein gemeinsamer Wert und gilt für alle Geräte, die entladen dürfen – auch für Geräte, die dem Plan nicht folgen. „Laden erlaubt“ hat Vorrang: Gibt es Überschuss, lädt ein Gerät per AC und liefert in der Zeit keinen Fix-Anteil; die Fix-Leistung verteilt sich dann auf die übrigen Geräte.
+- **Zuverlässig schalten:** Der Plan vergleicht seinen Sollzustand mit den Werten im Shelly und schreibt nur, was abweicht – alles in einem Aufruf, erst sperren, dann Fix-Leistung, zuletzt freigeben. Kommt nur ein Teil an, liest er beim nächsten Durchlauf (eine Minute) neu und schreibt den Rest.
 - Der Plan liegt in `zendure_schedule_config.json` neben der Proxy-Konfiguration (Home Assistant: `/data`).
 - An den Planzeiten schaltet der Proxy sofort. Dazwischen prüft er alle zwei Minuten auf vollen Akku, Zellspannung, manuelles Laden und Umstellen von Hand. Er liest dafür nur die Werte, die der Watchdog ohnehin holt (bzw. das offene Dashboard) – die Speicher werden nicht zusätzlich abgefragt.
 
