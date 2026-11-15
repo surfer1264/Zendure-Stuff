@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-14T14:09:02Z",
+  "generated": "2026-11-15T16:28:40Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -451,13 +451,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.5.1",
+      "version": "5.6.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b99268f659b063e147730083e2d746877776a5b8/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/262694076f67d1fca37afef76f43cc4f54393c54/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
-        "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
-        "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
+        "**Betriebsart je Fenster:** Beim Bearbeiten eines Fensters wählst du **Nulleinspeisung** (Regelung nach Zähler) oder **Entladen fix** mit Leistung in Watt. Der Proxy schreibt dazu neben `zdmc_devN_dischargeAllowed` auch `zdmc_dischargeFixed` (im Fenster „fix“ die Leistung, sonst 0). Außerhalb der Fenster ist Entladen weiterhin immer gesperrt. Bestehende Pläne laufen unverändert weiter: Fenster ohne Betriebsart gelten als Nulleinspeisung.",
+        "**Planwechsel:** Jeder Wechsel der Betriebsart zählt als Planzeit, auch fix 800 W → Nulleinspeisung oder 800 W → 200 W.",
+        "**Fix-Leistung von Hand:** Verstellst du die Fix-Leistung im Dashboard, gilt das bis zum nächsten Wechsel; die Plan-Seite zeigt es an. Stellst du sie wieder auf den Planwert, übernimmt der Plan wieder."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -465,6 +465,15 @@
         "zdmc-zendash-watch": ">=4.1.0"
       },
       "history": [
+        {
+          "version": "5.5.1",
+          "changes": [
+            "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
+            "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
+            "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
+          ],
+          "notice": null
+        },
         {
           "version": "5.5.0",
           "changes": [
@@ -545,32 +554,32 @@
             "**Proxy:** neue Adresse `/versions` (eigene Version und zuletzt geholter Stand von GitHub). Der Proxy fragt beim Start und dann alle 12 Stunden nach und meldet eine neuere Version auch in der Konsole. Mit `--no-update-check` fragt er nie."
           ],
           "notice": null
-        },
-        {
-          "version": "4.1.0",
-          "changes": [
-            "**status_api:** Je Hub gibt es das neue Feld `gridOffModeHw`, den am Gerät eingestellten Modus aus dem Report (`0` = EIN, `1` = Öko, `2` = AUS). Fehlt das Feld oder ist der Hub offline, steht dort `null`. Darüber wird auch eine Änderung in der App sichtbar, denn das Regel-Script gleicht sie nicht ab.",
-            "**config_api:** Je Gerät gibt es das neue Feld `gridOffMode` mit dem Wert aus `zdmc_devN_gridOffMode`. Es gibt keinen CONFIG-Default. Fehlt der Key, steht dort `null`.",
-            "**kvs_set_api:** `zdmc_devN_gridOffMode` wird nur mit `0`, `1` oder `2` angenommen. Bei anderen Werten antwortet die API mit `400` und schreibt keinen Key, denn das Regel-Script würde solche Werte stillschweigend verwerfen."
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.5.1",
+      "version": "5.6.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/b99268f659b063e147730083e2d746877776a5b8/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/262694076f67d1fca37afef76f43cc4f54393c54/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
-        "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
-        "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
+        "**Betriebsart je Fenster:** Beim Bearbeiten eines Fensters wählst du **Nulleinspeisung** (Regelung nach Zähler) oder **Entladen fix** mit Leistung in Watt. Der Proxy schreibt dazu neben `zdmc_devN_dischargeAllowed` auch `zdmc_dischargeFixed` (im Fenster „fix“ die Leistung, sonst 0). Außerhalb der Fenster ist Entladen weiterhin immer gesperrt. Bestehende Pläne laufen unverändert weiter: Fenster ohne Betriebsart gelten als Nulleinspeisung.",
+        "**Planwechsel:** Jeder Wechsel der Betriebsart zählt als Planzeit, auch fix 800 W → Nulleinspeisung oder 800 W → 200 W.",
+        "**Fix-Leistung von Hand:** Verstellst du die Fix-Leistung im Dashboard, gilt das bis zum nächsten Wechsel; die Plan-Seite zeigt es an. Stellst du sie wieder auf den Planwert, übernimmt der Plan wieder."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.5.1",
+          "changes": [
+            "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
+            "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
+            "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
+          ],
+          "notice": null
+        },
         {
           "version": "5.5.0",
           "changes": [
