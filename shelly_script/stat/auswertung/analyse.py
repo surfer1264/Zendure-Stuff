@@ -42,7 +42,7 @@ import numpy as np
 import pandas as pd
 
 # Version der Auswertung (analyse.py + bericht.py gemeinsam); erscheint in der Ausgabe und im Bericht
-VERSION = "1.8.0"
+VERSION = "1.9.0"
 # Stand der Tagesberechnung. Nur erhöhen, wenn sich Ergebnisse einzelner Tage ändern: dann werden alle Logs neu gerechnet.
 # Reine Änderungen am Bericht (bericht.py) erhöhen nur VERSION.
 RECHEN_VERSION = "1.7.0"
@@ -84,7 +84,7 @@ MAX_LUECKE_S = 30                  # Lücken zwischen zwei Takten > 30 s zählen
 VOLLER_TAG_H = 22                  # ab so vielen erfassten Stunden gilt ein Tag als voll
 LEER_SCHWELLE_W = 15               # Ist-Summe < 15 W  = Speicher liefert nichts (leer/Entladegrenze)
 SATT_SCHWELLE_W = 1580             # Ist-Summe >= 1580 W = Speicher am Leistungslimit
-BAND_W = 25                        # Regelgüte: Takt gilt als gut bei |Netzsaldo| <= 25 W
+BAND_W = 20                        # Regelgüte: Takt gilt als gut bei |Netzsaldo - Sollwert| <= 20 W
 PROFIL_PERZENTILE = (10, 25, 50, 75, 90)  # Tagesprofil: Verteilung je Stunde für SOC, Netzsaldo und Speicher-Ausgang.
                                           # Der Bericht zeichnet 10/25/50/75/90 (Bänder 10–90 und 25–75, Linie = 50)
                                           # – diese fünf drin lassen, weitere nur ergänzen

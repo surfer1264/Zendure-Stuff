@@ -274,6 +274,8 @@ __SCHRIFTEN__
   .chip i{width:.55rem; height:.55rem; border-radius:50%; display:inline-block;}
   .brand .sub{font-size:.8rem; color:var(--text-muted);}
   .head-right{display:flex; align-items:center; gap:.625rem; flex-wrap:wrap; justify-content:flex-end;}
+  .dash-btn{text-decoration:none; font-size:.85rem; font-weight:600;}
+  .dash-btn[hidden]{display:none;}
   .pill{display:flex; align-items:center; gap:.5rem; min-height:var(--tap); background:var(--surface);
         border:1px solid var(--border); border-radius:999px; padding:.375rem .875rem; box-shadow:var(--shadow);
         font-size:.8rem; color:var(--text-muted);}
@@ -369,6 +371,7 @@ __SCHRIFTEN__
       <div class="sub">Auswertung der Logs des Multi-Device-Controllers</div>
     </div>
     <div class="head-right">
+      <a class="icon-btn dash-btn" id="dashBtn" href="./" hidden title="Zurück zum Dashboard">← Dashboard</a>
       <div class="pill">Stand <b>__STAND__</b></div>
       <button type="button" class="icon-btn" id="themeBtn" aria-label="Tag/Nacht umschalten" title="Tag/Nacht umschalten">☾</button>
     </div>
@@ -378,10 +381,10 @@ __SCHRIFTEN__
     <div class="in">
       <div class="seg" id="presets">
         <button type="button" data-w="0">Alles</button>
-        <button type="button" data-k="mon" id="pMon" title="Kalendermonat – mit ‹ › (oder Pfeiltasten ← →) monatsweise blättern">Monat</button>
-        <button type="button" data-k="30" title="Letzte 30 Tage bis zum Ende der Daten">30 T</button>
-        <button type="button" data-w="10080">7 T</button>
-        <button type="button" data-w="4320">3 T</button>
+        <button type="button" data-k="mon" id="pMon" title="Aktueller Kalendermonat – ‹ › (oder ← →) blättern monatsweise">Monat</button>
+        <button type="button" data-w="43200" title="Letzte 30 vollen Tage – ‹ › blättern um 30 Tage">30 T</button>
+        <button type="button" data-w="10080" title="Letzte 7 vollen Tage – ‹ › blättern um 7 Tage">7 T</button>
+        <button type="button" data-w="4320" title="Letzte 3 vollen Tage – ‹ › blättern um 3 Tage">3 T</button>
       </div>
       <div class="seg nav">
         <button type="button" id="pL" aria-label="Früher" title="Früher"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -754,8 +757,13 @@ function katLinie(id, o){
 }
 
 /* ---------------- Zeitraum ---------------- */
+/* Zeitraum. WAHL = gewählte Länge (Minuten) aus 30 T / 7 T / 3 T, 0 = Alles, null = frei gezoomt.
+   MON = Monatsansicht. Freies Zoomen (− +, Bereich aufziehen, Doppelklick, Klick auf einen Tag) setzt beides zurück. */
+var WAHL = null, MON = null;
+/* Ende des letzten vollen Tags (T.tag enthält nur volle Tage); der angefangene Tag liegt dahinter */
+var ENDE = TMIN.length ? Math.min(HI, TMIN[TMIN.length - 1] + TAG) : HI;
 function setze(a, b){
-  MON = null;
+  WAHL = null; MON = null;
   var span = Math.max(MIN_SPAN, b - a), voll = HI - LO;
   if (span >= voll){ a = LO; b = HI; }
   else {
@@ -766,40 +774,39 @@ function setze(a, b){
   range.a = Math.round(a); range.b = Math.round(b);
   zeichne();
 }
+/* 30 T / 7 T / 3 T: immer die letzten vollen Tage bis ENDE; Alles: ganzer Datenbereich */
 function preset(w){
-  if (!w) return setze(LO, HI);
-  var m = (range.a + range.b) / 2, a = Math.round((m - w / 2) / TAG) * TAG;
-  setze(a, a + w);
+  MON = null; WAHL = w;
+  if (!w || w >= HI - LO){ range.a = LO; range.b = HI; }
+  else { range.b = ENDE; range.a = Math.max(LO, ENDE - w); }
+  zeichne();
 }
-/* Monatsmodus: ganzer Kalendermonat (auf vorhandene Daten gekürzt), ‹ › blättern monatsweise.
-   Start ist der letzte Kalendermonat vor dem heutigen; hat der keine Daten, der Monat des letzten Datentags. */
-var MON = null;
+/* ‹ ›: um die volle Fensterbreite (Monatsansicht: um einen Monat), am Rand bündig an den Datenbereich */
+function blaettere(r){
+  if (MON) return blaettereMonat(r);
+  var span = range.b - range.a, a = range.a + r * span, b = range.b + r * span;
+  if (a < LO){ a = LO; b = Math.min(HI, LO + span); }
+  if (b > HI){ b = HI; a = Math.max(LO, HI - span); }
+  range.a = a; range.b = b;
+  zeichne();
+}
+/* Monatsansicht: ganzer Kalendermonat (auf vorhandene Daten gekürzt). „Monat“ springt auf den Monat mit den neuesten Daten. */
 function monatBereich(j, m){
   var a = Math.max(LO, Date.UTC(j, m, 1) / 60000), b = Math.min(HI, Date.UTC(j, m + 1, 1) / 60000);
   return b - a >= TAG ? {a: a, b: b} : null;
 }
 function monatPlus(mo, n){ var x = mo.j * 12 + mo.m + n; return {j: Math.floor(x / 12), m: x % 12}; }
-var START_MON = (function(){
-  var h = new Date(), vm = monatPlus({j: h.getFullYear(), m: h.getMonth()}, -1);
-  if (monatBereich(vm.j, vm.m)) return vm;
-  var d = dOf(HI - TAG); return {j: d.getUTCFullYear(), m: d.getUTCMonth()};
+var AKT_MON = (function(){
+  var d = dOf(HI - 1), mo = {j: d.getUTCFullYear(), m: d.getUTCMonth()};
+  return monatBereich(mo.j, mo.m) ? mo : monatPlus(mo, -1);   /* neuer Monat erst wenige Stunden alt: Vormonat */
 })();
 function setzeMonat(mo){
   var r = monatBereich(mo.j, mo.m); if (!r) return false;
-  MON = mo; range.a = r.a; range.b = r.b; zeichne(); return true;
+  WAHL = null; MON = mo; range.a = r.a; range.b = r.b; zeichne(); return true;
 }
 function blaettereMonat(n){
   var mo = monatPlus(MON, n);
   if (monatBereich(mo.j, mo.m)) setzeMonat(mo);
-}
-/* Letzte n Tage bis Datenende */
-function festBereich(k){
-  var a = Math.max(LO, HI - (+k) * TAG), b = HI;
-  return b - a >= TAG ? {a: a, b: b} : null;
-}
-function setzeFest(k){
-  var r = festBereich(k); if (!r) return;
-  MON = null; range.a = r.a; range.b = r.b; zeichne();
 }
 function tageImAusschnitt(){
   var idx = [];
@@ -854,15 +861,11 @@ function zeichne(){
     esc(dLang(range.a) + ' ' + hm(range.a) + ' – ' + dLang(range.b) + ' ' + hm(range.b)) +
     '<small>' + (MON ? esc(MO[MON.m] + ' ' + MON.j) + ' · ' : '') + (span >= TAG ? f1(span / TAG) + ' Tage' : f1(span / 60) + ' Stunden') +
     (alles && !MON ? ' · alles' : '') + '</small>';
+  var schritt = MON ? 'einen Monat' : (span % TAG ? f1(span / 60) + ' Stunden' : f0(span / TAG) + (span === TAG ? ' Tag' : ' Tage'));
   [].forEach.call(document.querySelectorAll('#presets button'), function(btn){
     if (btn.dataset.k === 'mon'){ btn.classList.toggle('on', !!MON); return; }
-    if (btn.dataset.k){
-      var r = festBereich(btn.dataset.k);
-      btn.classList.toggle('on', !MON && !!r && range.a === r.a && range.b === r.b);
-      btn.disabled = !r || (r.a <= LO && r.b >= HI);
-      return;
-    }
-    var w = +btn.dataset.w; btn.classList.toggle('on', !MON && (w ? span === w : alles));
+    var w = +btn.dataset.w;
+    btn.classList.toggle('on', !MON && (w ? WAHL === w : alles));
     btn.disabled = w > 0 && w >= HI - LO;
   });
   document.getElementById('zIn').disabled = span <= MIN_SPAN;
@@ -874,7 +877,7 @@ function zeichne(){
     pL.title = 'Vormonat'; pR.title = 'Nächster Monat';
   } else {
     pL.disabled = range.a <= LO; pR.disabled = range.b >= HI;
-    pL.title = 'Früher'; pR.title = 'Später';
+    pL.title = 'Früher (' + schritt + ')'; pR.title = 'Später (' + schritt + ')';
   }
   pL.setAttribute('aria-label', pL.title); pR.setAttribute('aria-label', pR.title);
 
@@ -1042,15 +1045,22 @@ document.getElementById('txt-takte').textContent = 'Regeltakte pro Tag (typisch 
 
 [].forEach.call(document.querySelectorAll('#presets button'), function(btn){
   btn.addEventListener('click', function(){
-    if (btn.dataset.k === 'mon') setzeMonat(MON || START_MON);
-    else if (btn.dataset.k) setzeFest(btn.dataset.k);
+    if (btn.dataset.k === 'mon') setzeMonat(AKT_MON);
     else preset(+btn.dataset.w);
   });
 });
 document.getElementById('zIn').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = (range.b - range.a) / 4; setze(m - s, m + s); });
 document.getElementById('zOut').addEventListener('click', function(){ var m = (range.a + range.b) / 2, s = range.b - range.a; setze(m - s, m + s); });
-document.getElementById('pL').addEventListener('click', function(){ if (MON) return blaettereMonat(-1); var s = (range.b - range.a) / 2; setze(range.a - s, range.b - s); });
-document.getElementById('pR').addEventListener('click', function(){ if (MON) return blaettereMonat(1); var s = (range.b - range.a) / 2; setze(range.a + s, range.b + s); });
+document.getElementById('pL').addEventListener('click', function(){ blaettere(-1); });
+document.getElementById('pR').addEventListener('click', function(){ blaettere(1); });
+/* Über den Dashboard-Proxy (HA-App, EXE, lokaler Helfer) liegt der Bericht unter …/bericht_zendure,
+   das Dashboard eine Ebene darüber. Relativ, damit es auch hinter Home-Assistant-Ingress stimmt. */
+(function(){
+  var m = /\/bericht_zendure(\/?)$/.exec(location.pathname || '');
+  if (!m || !/^https?:$/.test(location.protocol)) return;
+  var b = document.getElementById('dashBtn');
+  b.setAttribute('href', m[1] ? '../' : './'); b.hidden = false;
+})();
 /* Tastatur: ← / → wirken wie ‹ / › (nicht in Eingabefeldern, nicht mit Strg/Alt/Cmd) */
 document.addEventListener('keydown', function(e){
   if (e.ctrlKey || e.altKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) return;
@@ -1069,8 +1079,8 @@ themeBtn.addEventListener('click', function(){
 themeIcon();
 window.addEventListener('scroll', versteckeTip, {passive: true});
 
-/* Start: letzter Kalendermonat (ohne Daten: Monat des letzten Datentags, sonst alles) */
-if (!setzeMonat(START_MON)) zeichne();
+/* Start: die letzten 7 vollen Tage (bei weniger Daten alles) */
+preset(7 * TAG);
 profil();
 /* „So gerechnet“ ans Ende jeder Karte mit data-rw (Text aus bericht.py, Schwellwerte aus den Einstellungen) */
 [].forEach.call(document.querySelectorAll('[data-rw]'), function(card){

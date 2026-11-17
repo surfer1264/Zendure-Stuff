@@ -7,7 +7,7 @@ oder mehrere Zendure-Speicher. Die Logs zeichnet der [Log-Grabber](../../Script_
 auf, siehe [Logs aufzeichnen](#logs-aufzeichnen). `analyse.py` liest die Logs ein und schreibt CSV-Dateien,
 `bericht.py` erzeugt daraus einen Bericht zum Öffnen im Browser.
 
-Version: **1.8.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
+Version: **1.9.0** (steht als `VERSION` in `analyse.py` und erscheint in der Ausgabe und unten im Bericht).
 
 ## Download
 
@@ -162,13 +162,14 @@ Die Auswertung reicht bis zum Ende der Logs, Tageswerte nutzen automatisch nur v
 
 ### Bericht bedienen
 
-- **Zeitraum-Leiste** (bleibt beim Scrollen oben): `Alles`, `Monat`, `30 T` (die letzten 30 Tage
-  bis zum Ende der Daten), `7 T`, `3 T`; `−`/`+` zoomen heraus bzw. hinein, `‹`/`›` verschieben
-  um einen halben Ausschnitt. Die Pfeiltasten `←`/`→` wirken wie `‹`/`›`.
-- **Monat** zeigt einen ganzen Kalendermonat (soweit Daten vorliegen); `‹`/`›` bzw. `←`/`→` blättern
-  dann monatsweise. Beim Öffnen zeigt der Bericht den letzten Kalendermonat vor dem aktuellen
-  (hat der keine Daten: den Monat des letzten Datentags). Jeder andere Knopf und jedes Zoomen
-  verlassen die Monatsansicht. Kleinster Ausschnitt: 2 Stunden.
+- **Zeitraum-Leiste** (bleibt beim Scrollen oben): `Alles`, `Monat`, `30 T`, `7 T`, `3 T`; `−`/`+` zoomen heraus
+  bzw. hinein, `‹`/`›` blättern. Die Pfeiltasten `←`/`→` wirken wie `‹`/`›`. Kleinster Ausschnitt: 2 Stunden.
+- Beim Öffnen zeigt der Bericht die **letzten 7 vollen Tage**. `30 T`, `7 T` und `3 T` springen immer auf die letzten
+  30, 7 bzw. 3 vollen Tage (der laufende, angefangene Tag liegt dahinter) und `‹`/`›` blättern dann um genau diese
+  Länge. `Monat` springt auf den Kalendermonat mit den neuesten Daten, `‹`/`›` blättern monatsweise.
+  Nach freiem Zoomen (`−`/`+`, Bereich aufziehen, Klick auf einen Tag) blättern `‹`/`›` um die sichtbare Breite.
+- **← Dashboard** oben rechts erscheint, wenn der Bericht über den Dashboard-Proxy (`/bericht_zendure`, auch in der
+  Home-Assistant-App und im lokalen Helfer) geöffnet wurde, und führt zurück zum Dashboard. Als Datei geöffnet fehlt er.
 - **Verlauf-Grafiken**: mit der Maus einen Bereich aufziehen = hineinzoomen, Doppelklick = alles.
   Auf Handy/Tablet zeigt Antippen die Werte; gezoomt wird dort über die Knöpfe der Leiste.
 - **Tages-Grafiken**: Klick auf einen Tag zoomt auf diesen Tag.
@@ -220,7 +221,7 @@ Beispiel:
   "VOLLER_TAG_H": 22,
   "LEER_SCHWELLE_W": 15,
   "SATT_SCHWELLE_W": 1580,
-  "BAND_W": 25,
+  "BAND_W": 20,
   "PROFIL_PERZENTILE": [10, 25, 50, 75, 90],
   "AKTIV_SCHWELLE_W": 10,
   "SOLLWERT_START_W": 0,
@@ -241,7 +242,7 @@ Beispiel:
 | `VOLLER_TAG_H` | Ab so vielen erfassten Stunden gilt ein Tag als voll. |
 | `LEER_SCHWELLE_W` | Ist-Summe darunter = kein Speicher liefert. |
 | `SATT_SCHWELLE_W` | Ist-Summe ab hier = Speicher am Limit; solche Takte zählen nicht für die Regelgüte. |
-| `BAND_W` | Regelgüte: Ein Takt gilt als gut bei \|Netzsaldo\| bis zu diesem Wert. |
+| `BAND_W` | Regelgüte: Ein Takt gilt als gut, wenn \|Netzsaldo − Sollwert\| höchstens diesen Wert erreicht (Standard 20 W). Gemessen wird gegen den im jeweiligen Takt gültigen Sollwert. |
 | `PROFIL_PERZENTILE` | Perzentile der Verteilung je Stunde im Tagesprofil (SOC, Netzsaldo, Speicher-Ausgang). Der Bericht zeichnet 10/25/50/75/90 – diese fünf drin lassen, weitere nur ergänzen. |
 | `AKTIV_SCHWELLE_W` | Ein Gerät gilt als aktiv, solange es mindestens so viel ins Haus abgibt. |
 | `SOLLWERT_START_W` | Sollwert, solange das Log noch keinen gemeldet hat (nur am Anfang des ersten Logs relevant). Danach gilt der Wert aus dem Log. |
@@ -347,6 +348,10 @@ sie enthalten alle Geräte, die der Controller regelt, auch wenn `GERAETE` nur e
 
 ## Änderungen
 
+- **1.9.0**: Bericht öffnet mit den letzten 7 vollen Tagen. `30 T`/`7 T`/`3 T` zeigen immer die letzten vollen Tage,
+  `‹`/`›` blättern um genau diese Länge (nach freiem Zoomen um die sichtbare Breite). `Monat` zeigt den aktuellen
+  Kalendermonat. Knopf **← Dashboard**, wenn der Bericht über den Proxy kommt. Regelgüte-Band `BAND_W` von 25 auf
+  20 W; die Tageswerte werden dadurch einmal neu gerechnet.
 - **1.8.0**: Zeitraum-Leiste mit `Monat` und `30 T`. `Monat` zeigt einen ganzen Kalendermonat, `‹`/`›` und die
   Pfeiltasten `←`/`→` blättern dann monatsweise. Der Bericht öffnet jetzt mit dem letzten Kalendermonat.
   `30 T` zeigt die letzten 30 Tage bis zum Ende der Daten. Nur der Bericht ändert sich, die Logs werden nicht neu gerechnet.
