@@ -10,7 +10,12 @@ Deine Zendure-Speicher (zenSDK-fähige Geräte ab SolarFlow 800) werden damit oh
 
 ## 👉 Hier starten
 
-1. **[Helfer herunterladen](https://github.com/surfer1264/Zendure-Stuff/releases/latest)** (Windows oder Mac mit Apple Silicon) und starten.
+1. **Helfer herunterladen** – nur **eine** Datei, passend zu deinem Rechner – und starten:
+    - [Windows (64 Bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) – `zendure_local_helper-windows.exe`, passt für fast alle Windows-PCs
+    - [Windows (32 Bit)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe) – `zendure_local_helper-windows-x86.exe`, nur für ältere 32-Bit-Windows
+    - [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – `zendure_local_helper-macos`, nur Macs mit Apple Silicon (M1 oder neuer); Start siehe [macOS-Anleitung](Multiconfigurator/local_helper/mcos_helper.md)
+
+    Warnt Windows mit „Windows hat den Computer geschützt“: **„Weitere Informationen“ → „Trotzdem ausführen“**. Die übrigen Dateien auf der [Releases-Seite](https://github.com/surfer1264/Zendure-Stuff/releases/latest) brauchst du dafür nicht: `zendure_proxy-…` ist der Proxy für das [Dashboard](zendash_watch_API_ZenSDK/dashboard.md) (erst später, optional), die `.sha256`-Dateien dienen zum [Prüfen des Downloads](Multiconfigurator/readme.md#integrität-des-downloads-prüfen).
 2. Im Browser öffnet sich der Configurator. **„Neu konfigurieren oder manuell updaten“** wählen und die Fragen beantworten.
 3. Am Ende **„⚡ Direkt hochladen“** – fertig.
 

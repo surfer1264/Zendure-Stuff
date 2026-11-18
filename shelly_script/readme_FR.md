@@ -8,7 +8,12 @@ Vos batteries Zendure (appareils compatibles zenSDK à partir du SolarFlow 800) 
 
 ## 👉 Commencer ici
 
-1. **[Télécharger l'assistant](https://github.com/surfer1264/Zendure-Stuff/releases/latest)** (Windows ou Mac avec Apple Silicon) et le lancer.
+1. **Télécharger l'assistant** – un **seul** fichier, adapté à ton ordinateur – et le lancer :
+    - [Windows (64 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows.exe) – `zendure_local_helper-windows.exe`, convient à presque tous les PC Windows
+    - [Windows (32 bits)](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-windows-x86.exe) – `zendure_local_helper-windows-x86.exe`, uniquement pour les anciens Windows 32 bits
+    - [macOS](https://github.com/surfer1264/Zendure-Stuff/releases/latest/download/zendure_local_helper-macos) – `zendure_local_helper-macos`, uniquement les Mac avec Apple Silicon (M1 ou plus récent) ; pour le lancer, voir le [guide macOS](Multiconfigurator/local_helper/mcos_helper.md) (allemand)
+
+    Si Windows affiche « Windows a protégé votre ordinateur » : **« Informations complémentaires » → « Exécuter quand même »**. Les autres fichiers de la [page des versions](https://github.com/surfer1264/Zendure-Stuff/releases/latest) ne sont pas nécessaires ici : `zendure_proxy-…` est le proxy du [tableau de bord](zendash_watch_API_ZenSDK/dashboard_FR.md) (plus tard, facultatif), les fichiers `.sha256` servent à [vérifier le téléchargement](Multiconfigurator/readme_FR.md#vérifier-lintégrité-du-téléchargement).
 2. Le Configurator s'ouvre dans votre navigateur. Choisissez **« Nouvelle configuration ou mise à jour manuelle »** et répondez aux questions.
 3. Pour finir, cliquez sur **« ⚡ Charger directement »** – c'est terminé.
 
