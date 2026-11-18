@@ -63,7 +63,7 @@ Das gilt auch für Fragen zu Code, Texten oder Verhalten: nicht aus dem Gedächt
 
 Echter Report eines SolarFlow 800 mit 2 Akkupacks (Seriennummern maskiert): `testController/report_sf800_referenz.json`. Bei Parser-, Mock- oder Doku-Arbeit diese Datei als Vorlage nehmen, nicht raten.
 
-Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleichnamige Felder in `properties` und `packData` (z. B. `sn`, beim SolarFlow 800 auch `heatState`) → nur zwischen `properties` und `packData` suchen.
+Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleichnamige Felder in `properties` und `packData` (z. B. `sn`, beim SolarFlow 800 mit Report `version` 3 auch `heatState`) → nur zwischen `properties` und `packData` suchen.
 
 | Feld | Einheit / Bedeutung | Beispiel |
 |---|---|---|
@@ -79,11 +79,19 @@ Aufbau: `sn`, `product` → `properties` (Hub) → `packData[]` (je Pack). Gleic
 | `BatVolt`, `packData[].totalVol` | 0,01 V | 4927 = 49,27 V |
 | `packData[].maxVol`, `minVol` | Zellspannung 0,01 V | 327 = 3,27 V |
 | `packData[].socLevel` | SoC je Pack in % | 30 / 31 |
-| `packNum`, `rssi`, `ts` | Anzahl Packs, WLAN dBm, Unix-Zeit | 2, −66 |
+| `packNum`, `rssi`, `ts` | Anzahl Packs, WLAN dBm, Unix-Zeit (`ts` nur bis Report `version` 3) | 2, −66 |
 
 Werte, deren Bedeutung hier nicht steht, nicht interpretieren – nachfragen oder als unbekannt kennzeichnen.
 
-Weitere echte Reports (Seriennummern maskiert). Die Geräte melden nicht dieselben Felder: Nur die beiden Pro-Geräte haben in `properties` u. a. `gridOffPower` und `gridOffMode`, nur der SolarFlow 800 hat `heatState` auch in `packData`.
+Weitere echte Reports (Seriennummern maskiert). Die Geräte melden nicht dieselben Felder: Nur die beiden Pro-Geräte haben in `properties` u. a. `gridOffPower` und `gridOffMode`, nur der SolarFlow 800 mit Report `version` 3 hat `heatState` auch in `packData`.
+
+Report-Versionen (Feld `version` auf oberster Ebene, ändert sich mit der Geräte-Firmware). Die Beispiele unten sind `version` 3, außer wo `version` 4 dransteht. Unterschiede von `version` 4 gegenüber 3 (geprüft an SolarFlow 800 und SolarFlow 2400 Pro, 11/2026):
+
+- **Neu in `properties`:** `acReverse`, `chargeAvailPower`, `dischargeAvailPower`, `derateFlag`, `reset`; beim 2400 Pro zusätzlich `offGridSurplus`. Bedeutung unbekannt, in den Beispielen alle 0 – nicht interpretieren.
+- **Entfallen in `properties`:** `ts`, `writeRsp`, `acStatus`, `dcStatus`, `pvStatus`. Zeit nur noch über `timestamp` auf oberster Ebene.
+- **Entfallen in `packData[]`:** `heatState` (bisher nur beim SolarFlow 800). `heatState` steht in `version` 4 nur noch in `properties`.
+- Code nicht betroffen (Stand 11/2026): keines der entfallenen Felder wird gelesen; `zendash_watch` liest `heatState` nur vor `packData`.
+- Nicht in der Tabelle, daher nicht interpretieren: `faultLevel` (im 2400-Pro-Beispiel 1), `batcur` (beim Laden klein positiv, beim Entladen um 65 500 – vermutlich vorzeichenbehaftet 16 Bit, unbestätigt).
 
 SolarFlow 2400 Pro (1 Akkupack, Standby):
 
@@ -91,10 +99,22 @@ SolarFlow 2400 Pro (1 Akkupack, Standby):
 {"timestamp":1793908037,"messageId":70,"sn":"xxxxxxxxxxxxxx","version":3,"product":"solarFlow2400Pro","properties":{"heatState":0,"packInputPower":0,"outputPackPower":0,"outputHomePower":0,"remainOutTime":59940,"packState":0,"electricLevel":55,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"solarPower3":0,"solarPower4":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2841,"gridOffPower":0,"dcStatus":0,"pvStatus":1,"acStatus":0,"dataReady":1,"gridState":1,"BatVolt":4912,"socLimit":0,"faultLevel":0,"acCouplingState":57344,"offGridState":0,"dryNodeState":1,"writeRsp":0,"acMode":1,"inputLimit":0,"outputLimit":0,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"gridOffMode":2,"IOTState":2,"Fanmode":0,"Fanspeed":0,"bindstate":0,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1791136227,"tsZone":14,"smartMode":1,"chargeMaxLimit":2400,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":1,"rssi":-52,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxxxxx","packType":500,"socLevel":55,"state":0,"power":0,"maxTemp":2831,"totalVol":4910,"batcur":0,"maxVol":327,"minVol":327,"softVersion":4355}]}
 ```
 
+SolarFlow 2400 Pro, `version` 4 (1 Akkupack, Standby, Entladesperre: SoC 38 % < minSoc 40 %):
+
+```json
+{"timestamp":1795003600,"messageId":125,"sn":"xxxxxxxxxx","version":4,"product":"solarFlow2400Pro","properties":{"heatState":0,"packInputPower":0,"outputPackPower":0,"outputHomePower":0,"remainOutTime":59940,"packState":0,"electricLevel":38,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"solarPower3":0,"solarPower4":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2961,"gridOffPower":0,"dataReady":1,"gridState":1,"BatVolt":4913,"socLimit":2,"faultLevel":1,"acCouplingState":57344,"offGridState":0,"offGridSurplus":0,"dryNodeState":1,"acReverse":0,"chargeAvailPower":0,"dischargeAvailPower":0,"derateFlag":0,"acMode":1,"inputLimit":0,"outputLimit":0,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"gridOffMode":2,"IOTState":2,"Fanmode":0,"Fanspeed":0,"bindstate":1,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"tsZone":13,"smartMode":1,"chargeMaxLimit":2400,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"reset":0,"packNum":1,"rssi":-45,"is_error":0},"packData":[{"sn":"xxxxxxxxx","packType":500,"socLevel":38,"state":0,"power":0,"maxTemp":2941,"totalVol":4910,"batcur":0,"maxVol":327,"minVol":327,"softVersion":4355}]}
+```
+
 SolarFlow 800 (2 Akkupacks, entlädt):
 
 ```json
 {"timestamp":1793909065,"messageId":245,"sn":"xxxxxxxxxxxxxxx","version":3,"product":"solarFlow800","properties":{"heatState":0,"packInputPower":356,"outputPackPower":0,"outputHomePower":356,"remainOutTime":225,"packState":2,"electricLevel":55,"gridInputPower":0,"solarInputPower":0,"solarPower1":0,"solarPower2":0,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2891,"dcStatus":2,"pvStatus":0,"acStatus":1,"dataReady":1,"gridState":1,"BatVolt":4837,"socLimit":0,"faultLevel":0,"writeRsp":0,"acMode":2,"inputLimit":0,"outputLimit":356,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"IOTState":2,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"ts":1793909064,"bindstate":0,"tsZone":13,"chargeMaxLimit":800,"smartMode":1,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"packNum":2,"rssi":-59,"is_error":0},"packData":[{"sn":"xxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":280,"maxTemp":2871,"totalVol":4830,"batcur":65478,"maxVol":323,"minVol":321,"softVersion":4354,"heatState":0},{"sn":"xxxxxxxxxxxxxxx","packType":70,"socLevel":55,"state":2,"power":183,"maxTemp":2861,"totalVol":4830,"batcur":65502,"maxVol":322,"minVol":321,"softVersion":8223,"heatState":0}]}
+```
+
+SolarFlow 800, `version` 4 (2 Akkupacks, lädt 95 W aus PV):
+
+```json
+{"timestamp":1795003454,"messageId":96,"sn":"xxxxxxxxxxxx","version":4,"product":"solarFlow800","properties":{"heatState":0,"packInputPower":0,"outputPackPower":95,"outputHomePower":0,"remainOutTime":59940,"packState":1,"electricLevel":69,"gridInputPower":0,"solarInputPower":95,"solarPower1":46,"solarPower2":49,"pass":0,"reverseState":0,"socStatus":0,"hyperTmp":2881,"dataReady":1,"gridState":1,"BatVolt":5052,"socLimit":0,"faultLevel":0,"acReverse":0,"chargeAvailPower":0,"dischargeAvailPower":0,"derateFlag":0,"acMode":1,"inputLimit":0,"outputLimit":0,"socSet":1000,"minSoc":400,"gridStandard":0,"gridReverse":1,"inverseMaxPower":800,"lampSwitch":0,"IOTState":2,"factoryModeState":0,"OTAState":0,"oldMode":0,"VoltWakeup":0,"bindstate":1,"tsZone":13,"chargeMaxLimit":800,"smartMode":1,"phaseSwitch":1,"batCalTime":60,"socCompSwitch":0,"reset":0,"packNum":2,"rssi":-61,"is_error":0},"packData":[{"sn":"xxxxxxxxx","packType":70,"socLevel":69,"state":1,"power":55,"maxTemp":2841,"totalVol":5030,"batcur":11,"maxVol":335,"minVol":335,"softVersion":4354},{"sn":"xxxxxxxxx","packType":70,"socLevel":69,"state":1,"power":15,"maxTemp":2841,"totalVol":5030,"batcur":3,"maxVol":335,"minVol":335,"softVersion":8223}]}
 ```
 
 SolarFlow 800 Pro (3 Akkupacks, entlädt, Offgrid in Betrieb):

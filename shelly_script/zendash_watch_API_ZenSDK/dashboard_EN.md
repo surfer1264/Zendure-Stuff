@@ -78,8 +78,9 @@ The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” –
 | **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
 | **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
 | **Schedule** | opens the [schedule](#schedule) page (`/zeitplan`). Only appears if the proxy knows the schedule (from 5.5.0). |
+| **Feed-in** | shows an additional feed-in in the household in the energy flow, see [Feed-in in the energy flow](#feed-in-in-the-energy-flow). From 5.7.0. |
 
-All entries are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
+All entries except **Feed-in** are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
 ### New design (start page)
 
@@ -90,7 +91,21 @@ From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and 
 - **Footer:** shows the version, update notice, request errors and **Help**. **More ▾** opens the setup links (IP / script ID, ThingSpeak, ThingsBoard, log report), plus history and last update. The links to `config_api` and `status_api` only appear with technical details switched on.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
 - **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the switch in the menu.
-- **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs). On narrow screens the diagram scrolls sideways.
+- **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Grid and home always cover all devices (home = grid balance + sum of outputs + [feed-in](#feed-in-in-the-energy-flow), if set up). On narrow screens the diagram scrolls sideways.
+
+#### Feed-in in the energy flow
+
+If something else feeds into the household, such as a balcony power plant or another inverter, and a Shelly measures it, the energy flow can show this power as its own node above the home. Without it, the energy flow shows the home consumption too low by exactly this power. Control is not affected – it only works with the grid balance.
+
+Set up in the menu **View → Feed-in**:
+
+- Turn the switch on, give it a **name** (e.g. "Balcony PV", at most 24 characters) and enter the **IP addresses** of up to two Shellys, then **Save**. The switch alone saves immediately.
+- When saving, the proxy queries each address once as a test. If a Shelly does not answer or reports no power value, nothing is saved and the message names the address, e.g. "Not saved: Shelly at 192.168.x.x not reachable". If the test succeeds, the confirmation shows the current power ("Saved · currently 312 W + 0 W"). Switching off saves without a test.
+- It is stored on the proxy (`zendure_einspeisung_config.json`, in the Home Assistant app in the data folder), so it applies to all browsers.
+- The proxy queries the Shellys itself, only while someone is looking at the energy flow. It detects the type: Plug/1PM/2PM (`Switch`, channel 0), PM Mini (`PM1`), EM (`EM1`, channel 0), Pro 3EM (`EM`, total) and Gen1 devices (`/status`; for the 3EM the sum of the three phases). Password protection on the Shelly is not supported.
+- For each Shelly the **absolute value** of the power counts – the sign differs between generations. Below **5 W** it counts as 0, so an inverter's standby draw at night is not counted as feed-in. Both values are added.
+
+Display: the node only appears in the **energy flow**, only for **Total** and only when the function is on and an address is entered. It shows the name and the total; dots run into the home. If one Shelly cannot be reached, it shows "1 of 2 offline" and only the reachable one counts. If none can be reached, the node turns grey with "offline" and the feed-in is left out of the home calculation.
 - **Sunrise and sunset:** next to the clock (☀ 07:00–16:39). Once a day the proxy reads the location from the dashboard Shelly's configuration (`Sys.GetConfig`, not via the script); the times are calculated in the browser. Without a location on the Shelly the display is hidden – set it in the Shelly web interface under location/time zone. Hidden on narrow screens.
 - **Background by time of day:** top right in the energy flow – **Off · Picture · Motion** (default off, remembered per browser). The sun moves from left (east) to right (west), the sky changes smoothly from dawn through day and sunset to night with moon and stars; the little house's windows light up in the evening. Over the year, day length, sun height and landscape colours follow the season, and the moon shows its real phase. When PV is clearly below the best value of the last two weeks at the same time of day, the sun turns paler and the cloud veil thickens (the browser remembers the reference values; with a full battery and during the first days the sky stays clear). Depending on the month: snow on hills and roof (December to February), trees in blossom (April/May), a golden grain field (late summer) and autumn leaves; shifted by half a year in the southern hemisphere. With “Motion” two clouds drift, the stars twinkle and on midsummer nights the occasional shooting star appears. Recalculated once a minute from sunrise and sunset; without a location on the Shelly the switch is hidden. “Reset view” turns it off again; with “reduce motion” on the device everything stands still.
 
@@ -432,6 +447,7 @@ All addresses are relative to `http://<proxy-address>:8000/`. In the Home Assist
 | `config_api` | Settings of Controller and Watchdog, passed through from the Shelly |
 | `kvs_set_api?data={…}` | Write settings, passed through to the Shelly |
 | `/schedule` | Read (GET) and save (POST) the schedule; this is what the `/zeitplan` page uses |
+| `/einspeisung` | Read (GET, with `?mess=1` including the current power) and save (POST) the [feed-in](#feed-in-in-the-energy-flow) setting |
 | `/versions` | Version of dashboard and proxy and the last fetched version manifest |
 | `/standort` | Latitude and longitude of the dashboard Shelly for the sun times |
 

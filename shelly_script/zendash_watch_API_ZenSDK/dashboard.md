@@ -77,8 +77,9 @@ Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehme
 | **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
 | **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
 | **Zeitplan** | öffnet die Seite [Zeitplan](#zeitplan) (`/zeitplan`). Erscheint nur, wenn der Proxy den Zeitplan kennt (ab 5.5.0). |
+| **Einspeisung** | zeigt eine zusätzliche Einspeisung im Haushalt im Energiefluss an, siehe [Einspeisung im Energiefluss](#einspeisung-im-energiefluss). Ab 5.7.0. |
 
-Alle Einträge werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
+Alle Einträge außer **Einspeisung** werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
 ### Neues Design (Startseite)
 
@@ -97,7 +98,21 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit
 
 Auch die **Fußzeile** ist im neuen Design aufgeräumt: Sichtbar sind Version, Update-Hinweis, Abfragefehler und **Hilfe**. **Mehr ▾** klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Links zu `config_api` und `status_api` erscheinen nur bei eingeschalteten technischen Details.
 
-Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
+Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge + [Einspeisung](#einspeisung-im-energiefluss), falls eingerichtet). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
+
+#### Einspeisung im Energiefluss
+
+Speist im Haushalt noch etwas anderes ein, etwa ein Balkonkraftwerk oder ein weiterer Wechselrichter, und misst das ein Shelly, kann der Energiefluss diese Leistung als eigenen Knoten über dem Haus zeigen. Ohne diese Angabe zeigt der Energiefluss den Hausverbrauch um genau diese Leistung zu niedrig an. Die Regelung betrifft das nicht – sie arbeitet nur mit dem Netzsaldo.
+
+Einrichten im Menü **Ansicht → Einspeisung**:
+
+- Schalter einschalten, einen **Namen** vergeben (z. B. „Balkon-PV“, höchstens 24 Zeichen) und die **IP-Adressen** von bis zu zwei Shellys eintragen, dann **Speichern**. Der Schalter allein speichert sofort.
+- Beim Speichern fragt der Proxy jede Adresse einmal testweise ab. Antwortet ein Shelly nicht oder liefert er keinen Leistungswert, wird nichts gespeichert und die Meldung nennt die Adresse, z. B. „Nicht gespeichert: Shelly unter 192.168.x.x nicht erreichbar“. Klappt der Test, steht die aktuelle Leistung in der Bestätigung („Gespeichert · aktuell 312 W + 0 W“). Ausschalten speichert ohne Test.
+- Gespeichert wird beim Proxy (`zendure_einspeisung_config.json`, in der Home-Assistant-App im Datenordner). Die Einstellung gilt damit für alle Browser.
+- Der Proxy fragt die Shellys selbst ab, nur solange jemand den Energiefluss ansieht. Er erkennt den Typ: Plug/1PM/2PM (`Switch`, Kanal 0), PM Mini (`PM1`), EM (`EM1`, Kanal 0), Pro 3EM (`EM`, Summe) und Gen1-Geräte (`/status`; beim 3EM die Summe der drei Phasen). Ein Passwortschutz am Shelly wird nicht unterstützt.
+- Je Shelly zählt der **Betrag** der Leistung – das Vorzeichen ist je nach Generation verschieden. Unter **5 W** gilt 0, damit der Ruheverbrauch eines Wechselrichters nachts nicht als Einspeisung zählt. Beide Werte werden addiert.
+
+Anzeige: Der Knoten erscheint nur im **Energiefluss**, nur bei **Gesamt** und nur, wenn die Funktion eingeschaltet und eine Adresse eingetragen ist. Er zeigt Name und Summe; Punkte laufen ins Haus. Ist ein Shelly nicht erreichbar, steht „1 von 2 offline“ und es zählt nur der erreichbare. Sind alle nicht erreichbar, wird der Knoten grau mit „offline“, und die Einspeisung fehlt in der Hausrechnung.
 
 Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
 
@@ -440,6 +455,7 @@ Alle Adressen hängen an `http://<Proxy-Adresse>:8000/`. In der Home-Assistant-A
 | `config_api` | Einstellungen von Controller und Watchdog, vom Shelly durchgereicht |
 | `kvs_set_api?data={…}` | Einstellungen schreiben, vom Shelly durchgereicht |
 | `/schedule` | Zeitplan lesen (GET) und speichern (POST), so arbeitet die Seite `/zeitplan` |
+| `/einspeisung` | Einstellung der [Einspeisung](#einspeisung-im-energiefluss) lesen (GET, mit `?mess=1` samt aktueller Leistung) und speichern (POST) |
 | `/versions` | Version von Dashboard und Proxy und das zuletzt geholte Versions-Manifest |
 | `/standort` | Breiten- und Längengrad des Dashboard-Shellys für die Sonnenzeiten |
 

@@ -8,6 +8,20 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.7.0
+
+**Ziel:** Eine zusätzliche Einspeisung im Haushalt (Balkonkraftwerk, weiterer Wechselrichter), die ein Shelly misst, erscheint im Energiefluss, und der Hausverbrauch stimmt wieder. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Einstellung:** Menü **Ansicht → Einspeisung**: Schalter, frei wählbarer Name (bis 24 Zeichen) und bis zu zwei IP-Adressen. Gespeichert beim Proxy in `zendure_einspeisung_config.json` (HA-App: Datenordner), gilt für alle Browser. Neue Adresse `/einspeisung` (GET, mit `?mess=1` samt Messung; POST zum Speichern, nur JSON).
+- **Messung im Proxy:** Der Proxy fragt die Shellys direkt ab, beide parallel, nur solange ein Browser den Energiefluss zeigt (Zwischenspeicher 2 s für mehrere Browser). Typ wird selbst erkannt: `Shelly.GetStatus` mit `switch:0`/`pm1:0` (`apower`), `em1:0` (`act_power`), `em:0` (`total_act_power`); ohne RPC Gen1 `/status` mit `meters[0]` bzw. `emeters` (3EM: Summe der drei Phasen). Kein Passwortschutz.
+- **Testabfrage beim Speichern:** Bei eingeschalteter Funktion fragt der Proxy jede Adresse einmal ab und speichert nur, wenn alle einen Leistungswert liefern. Sonst „Nicht gespeichert: Shelly unter … nicht erreichbar“ bzw. „… liefert keine Leistung“, Schalter und Eingaben bleiben zum Korrigieren stehen. Ungültige IP-Adressen werden abgelehnt. Bei Erfolg zeigt die Bestätigung die aktuelle Leistung je Shelly. Ausschalten speichert ohne Test.
+- **Wert:** je Shelly der Betrag (Vorzeichen je nach Generation verschieden), unter 5 W = 0 (Ruheverbrauch nachts), Summe der erreichbaren Shellys.
+- **Hausverbrauch im Energiefluss:** Haus = Netzsaldo + Summe der Ausgänge + Einspeisung. Bisher fehlte die Einspeisung, der Hausverbrauch war um genau diese Leistung zu niedrig.
+- **Anzeige:** eigener Knoten über dem Haus (gestrichelt, Punkte laufen ins Haus), nur im Energiefluss, nur bei „Gesamt“ und nur, wenn eingeschaltet und eine Adresse eingetragen ist. Ein Shelly nicht erreichbar: „1 von 2 offline“, es zählt der erreichbare. Keiner erreichbar: Knoten grau mit „offline“, die Einspeisung fehlt in der Hausrechnung. DE/EN/FR.
+- Home-Assistant-App 5.7.0.0
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.6.0
 
 **Ziel:** Jedes Entladefenster im Zeitplan bekommt eine Betriebsart – Nulleinspeisung oder Entladen mit fester Leistung. Braucht das Shelly-Script ab 4.1.0, keine Änderung an den Shelly-Scripts und am Regler.

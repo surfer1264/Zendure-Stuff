@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 5.7.0.0
+
+- Einspeisung im Haushalt: bis zu zwei Shellys im Energiefluss, Hausverbrauch rechnet sie mit (siehe Changelog Dashboard und Proxy 5.7.0). Die Einstellung liegt im Datenordner der App. Beim Speichern prüft der Proxy jede Adresse mit einer Testabfrage.
+
 ## 5.6.0.0
 
 - Zeitplan: Betriebsart je Entladefenster – Nulleinspeisung oder Entladen mit fester Leistung (siehe Changelog Dashboard und Proxy 5.6.0)

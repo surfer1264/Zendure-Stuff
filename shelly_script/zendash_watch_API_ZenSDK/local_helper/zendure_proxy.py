@@ -92,7 +92,7 @@ except ImportError:
 # unabhaengig vom Shelly-Script (ab 5.0.0, siehe CHANGELOG_dashboard.md).
 # APP_TYPE ist ein fester Bezeichner fuer versions.json (Manifest-Workflow).
 APP_TYPE = "zdmc-proxy"
-APP_VERSION = "5.6.0"
+APP_VERSION = "5.7.0"
 APP_CHANGELOG = "CHANGELOG_dashboard.md"
 
 # ---------------------------------------------------------------
@@ -202,6 +202,208 @@ def standort_holen():
     with STANDORT_LOCK:
         STANDORT.update({"lat": lat, "lon": lon, "ok": ok})
     return {"lat": lat, "lon": lon}
+
+
+# ---------------------------------------------------------------
+# Einspeisung im Haushalt (ab 5.7.0)
+# ---------------------------------------------------------------
+# Bis zu zwei Shellys messen eine zusaetzliche Einspeisung (Wechselrichter,
+# Balkonkraftwerk). Der Proxy fragt sie direkt ab (nicht ueber das Script),
+# nur wenn das Dashboard im Energiefluss danach fragt. Je Quelle zaehlt der
+# Betrag der Leistung (Vorzeichen je nach Shelly-Generation verschieden),
+# unter EINSP_SCHWELLE_W gilt 0; erreichbare Quellen werden addiert.
+# Gespeichert in EINSP_FILENAME neben der Proxy-Konfiguration.
+EINSP_FILENAME = "zendure_einspeisung_config.json"
+EINSP_MAX_QUELLEN = 2
+EINSP_NAME_MAX = 24
+EINSP_SCHWELLE_W = 5
+EINSP_TIMEOUT = 2.5
+EINSP_CACHE_S = 2.0      # mehrere Browser teilen sich eine Messung
+EINSP_LOCK = threading.Lock()
+EINSP = {"aktiv": False, "name": "", "ips": []}
+EINSP_GEN = {}           # IP -> 1 (Gen1, /status) oder 2 (RPC, ab Gen2)
+EINSP_MESSUNG = {"zeit": 0.0, "wert": None}
+
+
+def einspeisung_pfad():
+    return os.path.join(data_dir(), EINSP_FILENAME)
+
+
+def einspeisung_pruefen(data):
+    """Eingabe der Einstellungsseite pruefen. Gibt (cfg, fehler) zurueck."""
+    if not isinstance(data, dict):
+        return None, "Ungültige Daten"
+    aktiv = data.get("aktiv") is True
+    name = str(data.get("name") or "").strip()[:EINSP_NAME_MAX]
+    ips = []
+    roh = data.get("ips") if isinstance(data.get("ips"), list) else []
+    for ip in roh[:EINSP_MAX_QUELLEN]:
+        ip = str(ip or "").strip()
+        if not ip:
+            continue
+        if not IP_PATTERN.match(ip) or any(int(t) > 255 for t in ip.split(".")):
+            return None, "Das sieht nicht nach einer IPv4-Adresse aus: " + ip
+        if ip not in ips:
+            ips.append(ip)
+    return {"aktiv": aktiv, "name": name, "ips": ips}, None
+
+
+def einspeisung_laden():
+    global EINSP
+    try:
+        with open(einspeisung_pfad(), "r", encoding="utf-8") as f:
+            cfg, fehler = einspeisung_pruefen(json.load(f))
+        if cfg is not None:
+            with EINSP_LOCK:
+                EINSP = cfg
+    except (OSError, ValueError):
+        pass   # keine oder kaputte Datei: Funktion bleibt aus
+
+
+def einspeisung_speichern(data):
+    """Pruefen, bei eingeschalteter Funktion jede Adresse testweise abfragen,
+    dann speichern. Gibt ein Ergebnis fuer POST /einspeisung zurueck:
+    {ok, error, code, ip, test}. code: "ip" (Format), "unreach" (keine Antwort),
+    "nopower" (antwortet, aber ohne Leistungswert). test: Leistung je Adresse."""
+    global EINSP
+    cfg, fehler = einspeisung_pruefen(data)
+    if cfg is None:
+        if ": " in fehler:
+            return {"ok": False, "error": fehler, "code": "ip", "ip": fehler.rsplit(": ", 1)[-1]}
+        return {"ok": False, "error": fehler, "code": "data"}
+    test = []
+    if cfg["aktiv"] and cfg["ips"]:
+        with EINSP_LOCK:
+            EINSP_GEN.clear()               # Typ frisch erkennen
+        ergebnisse = _einsp_alle(cfg["ips"], _einsp_abfrage)
+        for ip, erg in zip(cfg["ips"], ergebnisse):
+            w, code = erg if erg else (None, "unreach")
+            if code == "unreach":
+                return {"ok": False, "code": code, "ip": ip,
+                        "error": "Shelly unter {} nicht erreichbar".format(ip)}
+            if code == "nopower":
+                return {"ok": False, "code": code, "ip": ip,
+                        "error": "Shelly unter {} liefert keine Leistung".format(ip)}
+            test.append(w)
+    tmp = einspeisung_pfad() + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(cfg, f)
+    os.replace(tmp, einspeisung_pfad())
+    with EINSP_LOCK:
+        EINSP = cfg
+        EINSP_MESSUNG.update({"zeit": 0.0, "wert": None})
+    return {"ok": True, "error": None, "test": test}
+
+
+def _einsp_json(url):
+    with urllib.request.urlopen(url, timeout=EINSP_TIMEOUT) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def _einsp_leistung_rpc(st):
+    """Leistung aus Shelly.GetStatus (Gen2+). Kanal 0; Dreiphasen-Zaehler: Summe."""
+    if not isinstance(st, dict):
+        return None
+    for key, feld in (("switch:0", "apower"), ("pm1:0", "apower"),
+                      ("em1:0", "act_power"), ("em:0", "total_act_power"),
+                      ("cover:0", "apower")):
+        v = (st.get(key) or {}).get(feld)
+        if isinstance(v, (int, float)):
+            return float(v)
+    return None
+
+
+def _einsp_leistung_gen1(st):
+    """Leistung aus /status (Gen1). meters[0]; emeters: 3 Phasen (3EM) addiert, sonst Kanal 0."""
+    if not isinstance(st, dict):
+        return None
+    em = st.get("emeters")
+    if isinstance(em, list) and em:
+        werte = [e.get("power") for e in em if isinstance(e, dict) and isinstance(e.get("power"), (int, float))]
+        if werte:
+            return float(sum(werte)) if len(em) == 3 else float(werte[0])
+    m = st.get("meters")
+    if isinstance(m, list) and m and isinstance(m[0], dict) and isinstance(m[0].get("power"), (int, float)):
+        return float(m[0]["power"])
+    return None
+
+
+def _einsp_abfrage(ip):
+    """Eine Quelle abfragen. Gibt (w, code) zurueck: w = Leistung in W (Betrag,
+    unter EINSP_SCHWELLE_W = 0) oder None; code None, "unreach" (keine Antwort)
+    oder "nopower" (antwortet, aber ohne bekanntes Leistungsfeld)."""
+    gen = EINSP_GEN.get(ip)   # beim ersten Mal unbekannt: erst RPC, dann Gen1
+    w = None
+    erreicht = False
+    if gen != 1:
+        try:
+            w = _einsp_leistung_rpc(_einsp_json("http://{}/rpc/Shelly.GetStatus".format(ip)))
+            erreicht = True
+        except urllib.error.HTTPError:
+            erreicht = True       # antwortet, aber ohne RPC: Gen1 versuchen
+        except Exception:
+            return None, "unreach"
+        if w is not None:
+            EINSP_GEN[ip] = 2
+        elif gen == 2:
+            return None, "nopower"
+    if w is None:
+        try:
+            w = _einsp_leistung_gen1(_einsp_json("http://{}/status".format(ip)))
+        except urllib.error.HTTPError:
+            return None, "nopower"
+        except Exception:
+            return None, "nopower" if erreicht else "unreach"
+        if w is None:
+            return None, "nopower"
+        EINSP_GEN[ip] = 1
+    w = abs(w)
+    return (0 if w < EINSP_SCHWELLE_W else int(round(w))), None
+
+
+def _einsp_quelle(ip):
+    """Leistung in W oder None, wenn nicht erreichbar/lesbar."""
+    return _einsp_abfrage(ip)[0]
+
+
+def _einsp_alle(ips, fn):
+    """fn(ip) fuer alle Adressen parallel; Ergebnisse in Reihenfolge der Adressen."""
+    werte = [None] * len(ips)
+
+    def hole(i, ip):
+        werte[i] = fn(ip)
+
+    threads = [threading.Thread(target=hole, args=(i, ip), daemon=True) for i, ip in enumerate(ips)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(EINSP_TIMEOUT * 2 + 1)
+    return werte
+
+
+def einspeisung_messen():
+    """Alle Quellen parallel abfragen; Ergebnis kurz zwischenspeichern."""
+    with EINSP_LOCK:
+        cfg = dict(EINSP)
+        if not cfg["aktiv"] or not cfg["ips"]:
+            return None
+        m = EINSP_MESSUNG
+        if m["wert"] is not None and time.time() - m["zeit"] < EINSP_CACHE_S:
+            return m["wert"]
+    werte = _einsp_alle(cfg["ips"], _einsp_quelle)
+    online = [w for w in werte if w is not None]
+    wert = {"power": sum(online) if online else None, "online": len(online), "anzahl": len(werte)}
+    with EINSP_LOCK:
+        EINSP_MESSUNG.update({"zeit": time.time(), "wert": wert})
+    return wert
+
+
+def einspeisung_stand(messen):
+    """Antwort fuer GET /einspeisung: Einstellung, mit messen=True auch die Leistung."""
+    with EINSP_LOCK:
+        out = {"aktiv": EINSP["aktiv"], "name": EINSP["name"], "ips": list(EINSP["ips"])}
+    out["messung"] = einspeisung_messen() if messen else None
+    return out
 
 
 def versions_cache_path():
@@ -672,6 +874,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._json(200, standort_holen())
             return
 
+        if path == "/einspeisung":
+            # Einstellung der Einspeisung; mit ?mess=1 auch die aktuelle Leistung
+            self._json(200, einspeisung_stand("mess=1" in query.split("&")))
+            return
+
         if path == "/versions":
             # Eigene Version + zuletzt geholtes versions.json fuer die Fusszeile
             self._json(200, versions_stand())
@@ -788,6 +995,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path == "/schedule":
             self.post_schedule()
             return
+        if self.path == "/einspeisung":
+            self.post_einspeisung()
+            return
         if self.path != "/setup":
             self.send_error(404, "Nicht gefunden: " + self.path)
             return
@@ -853,6 +1063,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             data = json.loads(self.rfile.read(length).decode("utf-8"))
             ok, error = zeitplan.handle_post(data)
             self._json(200, {"ok": ok, "error": error})
+        except Exception as e:
+            self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
+
+    def post_einspeisung(self):
+        # Nur echtes JSON annehmen (erzwingt beim Browser einen CORS-Preflight,
+        # den dieser Proxy nicht beantwortet - wie bei /schedule).
+        if not self.headers.get("Content-Type", "").startswith("application/json"):
+            self._json(415, {"ok": False, "error": "JSON erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            if length > 4096:
+                self._json(413, {"ok": False, "error": "zu gross"})
+                return
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            self._json(200, einspeisung_speichern(data))
         except Exception as e:
             self._json(500, {"ok": False, "error": "Interner Fehler: {}".format(e)})
 
@@ -1114,6 +1340,7 @@ def say_always(msg):
 def main():
     parse_args()
     load_config()
+    einspeisung_laden()
 
     html = find_html()
     if html is None:

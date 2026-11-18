@@ -78,8 +78,9 @@ La **Réserve (`minSoc`)** se règle avec −/+ et n'est enregistrée qu'avec «
 | **Détails techniques** | affiche les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`). Sans cet interrupteur, le tableau de bord n'affiche que du texte en clair. |
 | **Réinitialiser l'affichage** ↺ | taille, jour/nuit, détails techniques et vue d'ensemble par défaut. La langue est conservée. |
 | **Planning** | ouvre la page [Planning](#planning) (`/zeitplan`). N'apparaît que si le proxy connaît le planning (à partir de 5.5.0). |
+| **Injection** | affiche une injection supplémentaire du foyer dans le flux d'énergie, voir [Injection dans le flux d'énergie](#injection-dans-le-flux-dénergie). À partir de 5.7.0. |
 
-Toutes les entrées sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
+Toutes les entrées sauf **Injection** sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
 
 ### Nouveau design (page d'accueil)
 
@@ -90,7 +91,21 @@ Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>
 - **Pied de page :** affiche la version, l'avis de mise à jour, les erreurs de requête et **Aide**. **Plus ▾** ouvre les liens de configuration (IP / ID du script, ThingSpeak, ThingsBoard, rapport de log), ainsi que l'historique et la dernière actualisation. Les liens vers `config_api` et `status_api` n'apparaissent qu'avec les détails techniques activés.
 - **Remarques** uniquement en cas d'écart (plein/vide bloqué, `socSet`/`minSoc` différent, export interdit, décharge désactivée, charge manuelle active), sinon « Aucune remarque ».
 - **Réglages** avec les onglets **Régulation · Hors réseau · Charge**, visibles seulement quand les commandes sont déverrouillées. Au chargement de la page et à chaque déverrouillage, chaque carte affiche « Régulation » ; les modifications non appliquées (brouillon de réserve, palier de charge choisi) sont abandonnées. L'onglet n'est pas mémorisé. « Hors réseau » n'apparaît que pour les appareils avec sortie hors réseau. Les **détails techniques** forment un bloc à part, affiché uniquement avec l'interrupteur du menu.
-- **Flux d'énergie :** PV, appareil, batterie, maison, réseau et hors réseau avec des lignes animées (sens, vitesse et épaisseur selon la puissance), pour tous les appareils ou un seul (choix mémorisé par navigateur). Réseau et maison couvrent toujours tous les appareils (maison = solde réseau + somme des sorties). Sur écran étroit, le schéma défile latéralement.
+- **Flux d'énergie :** PV, appareil, batterie, maison, réseau et hors réseau avec des lignes animées (sens, vitesse et épaisseur selon la puissance), pour tous les appareils ou un seul (choix mémorisé par navigateur). Réseau et maison couvrent toujours tous les appareils (maison = solde réseau + somme des sorties + [injection](#injection-dans-le-flux-dénergie), si configurée). Sur écran étroit, le schéma défile latéralement.
+
+#### Injection dans le flux d'énergie
+
+Si autre chose injecte dans le foyer, par exemple une centrale de balcon ou un autre onduleur, et qu'un Shelly le mesure, le flux d'énergie peut afficher cette puissance comme un nœud propre au-dessus de la maison. Sans cela, le flux d'énergie affiche une consommation de la maison trop basse d'exactement cette puissance. La régulation n'est pas concernée – elle ne travaille qu'avec le solde réseau.
+
+Configuration dans le menu **Affichage → Injection** :
+
+- Activer l'interrupteur, donner un **nom** (p. ex. « PV balcon », 24 caractères au plus) et saisir les **adresses IP** de deux Shelly au plus, puis **Enregistrer**. L'interrupteur seul enregistre immédiatement.
+- À l'enregistrement, le proxy interroge une fois chaque adresse pour test. Si un Shelly ne répond pas ou ne fournit pas de valeur de puissance, rien n'est enregistré et le message indique l'adresse, p. ex. « Non enregistré : Shelly à 192.168.x.x injoignable ». Si le test réussit, la confirmation affiche la puissance actuelle (« Enregistré · actuellement 312 W + 0 W »). La désactivation enregistre sans test.
+- L'enregistrement se fait sur le proxy (`zendure_einspeisung_config.json`, dans l'app Home Assistant dans le dossier de données) ; le réglage vaut donc pour tous les navigateurs.
+- Le proxy interroge lui-même les Shelly, uniquement tant que quelqu'un regarde le flux d'énergie. Il reconnaît le type : Plug/1PM/2PM (`Switch`, canal 0), PM Mini (`PM1`), EM (`EM1`, canal 0), Pro 3EM (`EM`, total) et appareils Gen1 (`/status` ; pour le 3EM la somme des trois phases). Une protection par mot de passe du Shelly n'est pas prise en charge.
+- Pour chaque Shelly, c'est la **valeur absolue** de la puissance qui compte – le signe diffère selon la génération. En dessous de **5 W**, la valeur vaut 0, afin que la consommation de veille d'un onduleur la nuit ne compte pas comme injection. Les deux valeurs sont additionnées.
+
+Affichage : le nœud n'apparaît que dans le **flux d'énergie**, uniquement pour **Total** et seulement si la fonction est activée et qu'une adresse est saisie. Il affiche le nom et la somme ; les points vont vers la maison. Si un Shelly n'est pas joignable, il indique « 1 sur 2 hors ligne » et seul le Shelly joignable compte. Si aucun n'est joignable, le nœud devient gris avec « hors ligne » et l'injection n'entre pas dans le calcul de la maison.
 - **Lever et coucher du soleil :** à côté de l'horloge (☀ 07:00–16:39). Une fois par jour, le proxy lit la position dans la configuration du Shelly du tableau de bord (`Sys.GetConfig`, pas via le script) ; le calcul se fait dans le navigateur. Sans position enregistrée sur le Shelly, l'affichage est masqué – à renseigner dans l'interface web du Shelly (position/fuseau horaire). Masqué sur écran étroit.
 - **Arrière-plan selon l'heure :** en haut à droite du flux d'énergie – **Désactivé · Image · Animé** (désactivé par défaut, mémorisé par navigateur). Le soleil va de gauche (est) à droite (ouest), le ciel passe progressivement de l'aube au jour, au coucher du soleil puis à la nuit avec lune et étoiles ; les fenêtres de la petite maison s'allument le soir. Au fil de l'année, la durée du jour, la hauteur du soleil et les couleurs du paysage suivent la saison, et la lune montre sa phase réelle. Quand la production PV est nettement inférieure à la meilleure valeur des deux dernières semaines à la même heure, le soleil pâlit et le voile nuageux s'épaissit (le navigateur mémorise les valeurs de référence ; batterie pleine ou premiers jours : ciel dégagé). Selon le mois : neige sur les collines et le toit (décembre à février), arbres en fleurs (avril/mai), un champ de blé doré (fin d'été) et feuillage d'automne ; décalé d'une demi-année dans l'hémisphère sud. En mode « Animé », deux nuages passent, les étoiles scintillent et, les nuits d'été, une étoile filante passe de temps en temps. Calcul une fois par minute à partir du lever et du coucher du soleil ; sans position sur le Shelly, le bouton est masqué. « Réinitialiser l'affichage » le désactive ; avec « réduire les animations » sur l'appareil, tout reste immobile.
 
@@ -432,6 +447,7 @@ Toutes les adresses se rapportent à `http://<adresse-du-proxy>:8000/`. Dans l'a
 | `config_api` | Réglages du Controller et du Watchdog, transmis par le Shelly |
 | `kvs_set_api?data={…}` | Écrire des réglages, transmis au Shelly |
 | `/schedule` | Lire (GET) et enregistrer (POST) le planning ; c'est ce qu'utilise la page `/zeitplan` |
+| `/einspeisung` | Lire (GET, avec `?mess=1` y compris la puissance actuelle) et enregistrer (POST) le réglage [Injection](#injection-dans-le-flux-dénergie) |
 | `/versions` | Version du tableau de bord et du proxy et dernier manifeste des versions récupéré |
 | `/standort` | Latitude et longitude du Shelly tableau de bord pour les heures du soleil |
 

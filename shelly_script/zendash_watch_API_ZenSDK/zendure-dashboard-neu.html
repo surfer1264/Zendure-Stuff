@@ -238,6 +238,18 @@
   .lang-toggle{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.82rem; letter-spacing:.04em; }
   .fs-toggle[hidden]{ display:none; }
   #berichtLine[hidden]{ display:none; }
+  /* Einstellungen der Einspeisung im Menue "Ansicht" (ab 5.7.0) */
+  .feed-form{ display:flex; flex-direction:column; gap:.375rem; padding:.125rem .5rem .5rem; }
+  .feed-form[hidden]{ display:none; }
+  .feed-form label{ display:flex; flex-direction:column; gap:.125rem; font-size:.75rem; color:var(--text-muted); }
+  .feed-form input{ min-height:2.25rem; padding:0 .5rem; border-radius:var(--radius-sm); border:1px solid var(--border);
+    background:var(--surface-2); color:var(--text); font-family:inherit; font-size:.88rem; }
+  .feed-form input:focus-visible{ outline:2px solid var(--teal-text); outline-offset:1px; }
+  .feed-form .feed-act{ display:flex; align-items:center; gap:.5rem; }
+  .feed-form .feed-act button{ min-height:2.25rem; padding:0 .875rem; cursor:pointer; border-radius:var(--radius-sm);
+    background:var(--teal-deep); color:#06201D; border:0; font-family:inherit; font-size:.85rem; font-weight:600; }
+  .feed-form .feed-msg{ font-size:.75rem; color:var(--text-muted); }
+  .feed-form .feed-msg.err{ color:var(--alert-text); }
   #fehlerLine[hidden]{ display:none; }
   /* Abfrage mehrfach fehlgeschlagen: letzte Werte blass, Bewegung aus */
   #app.stale .hub{ opacity:.55; }
@@ -764,6 +776,10 @@
   .fnode.house{ left:14.7em; top:12.625em; border-color:color-mix(in srgb, var(--blue-text) 70%, transparent); } .fnode.house .nk{ color:var(--blue-text); }
   .fnode.grid{ left:.95em; top:12.625em; }
   .fnode.offg{ left:45.95em; top:12.625em; border-color:color-mix(in srgb, var(--violet-text) 70%, transparent); } .fnode.offg .nk{ color:var(--violet-text); }
+  /* Einspeisung (ab 5.7.0): eigener Knoten ueber dem Haus, gestrichelt = nicht vom Solarflow */
+  .fnode.feed{ left:14.7em; top:.875em; border-color:var(--amber-deep); border-style:dashed; } .fnode.feed .nk{ color:var(--amber-text); overflow:hidden; text-overflow:ellipsis; }
+  .fnode.feed.off{ border-color:color-mix(in srgb, var(--text-muted) 55%, transparent); } .fnode.feed.off .nk{ color:var(--text-muted); }
+  .fnode.feed[hidden], .flow svg [hidden]{ display:none; }
   .fnode.hubn{ left:29.7em; top:12em; width:10.625em; min-height:7.25em; align-items:center; justify-content:center; text-align:center; background-color:var(--surface);
     border-color:color-mix(in srgb, var(--text) 35%, transparent); }
   .fnode.hubn .nv{ color:var(--blue-text); font-size:1.4em; }
@@ -925,6 +941,13 @@
             <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
             <div class="set-row" id="planRow" hidden><span><span class="lbl" id="planLbl" data-i18n="setPlan">Zeitplan</span><span class="hint" data-i18n="setPlanHint">Entladefenster festlegen</span></span><a class="icon-btn" href="zeitplan" aria-labelledby="planLbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v3l2 1"/></svg></a></div>
+            <div class="set-row" id="feedRow" hidden><span><span class="lbl" id="feedLbl" data-i18n="setFeed">Einspeisung</span><span class="hint" data-i18n="setFeedHint">Zusätzliche Einspeisung (Shelly) im Energiefluss</span></span><button type="button" class="sw-btn" id="feedToggle" role="switch" aria-checked="false" aria-labelledby="feedLbl"></button></div>
+            <div class="feed-form" id="feedForm" hidden>
+              <label><span data-i18n="feedName">Name</span><input type="text" id="feedName" maxlength="24" autocomplete="off"></label>
+              <label><span data-i18n="feedIp1">IP-Adresse Shelly 1</span><input type="text" id="feedIp1" inputmode="decimal" autocomplete="off" placeholder="192.168.x.x"></label>
+              <label><span data-i18n="feedIp2">IP-Adresse Shelly 2 (optional)</span><input type="text" id="feedIp2" inputmode="decimal" autocomplete="off" placeholder="192.168.x.x"></label>
+              <div class="feed-act"><button type="button" id="feedSave" data-i18n="feedSave">Speichern</button><span class="feed-msg" id="feedMsg" role="status" aria-live="polite"></span></div>
+            </div>
           </div>
         </details>
       </div>
@@ -1044,11 +1067,13 @@
             <line class="ftrack" x1="475" y1="250" x2="385" y2="250"></line>
             <line class="ftrack" x1="165" y1="250" x2="235" y2="250"></line>
             <line class="ftrack" x1="645" y1="250" x2="735" y2="250"></line>
+            <line class="ftrack" id="ft-feed" x1="310" y1="110" x2="310" y2="202" hidden></line>
             <line class="fdot idle" id="fl-pv" x1="560" y1="110" x2="560" y2="192" style="stroke:var(--amber-text)"></line>
             <line class="fdot idle" id="fl-batt" x1="560" y1="308" x2="560" y2="390" style="stroke:var(--teal-text)"></line>
             <line class="fdot idle" id="fl-ac" x1="475" y1="250" x2="385" y2="250" style="stroke:var(--blue-text)"></line>
             <line class="fdot idle" id="fl-grid" x1="165" y1="250" x2="235" y2="250"></line>
             <line class="fdot idle" id="fl-off" x1="645" y1="250" x2="735" y2="250" style="stroke:var(--violet-text)"></line>
+            <line class="fdot idle" id="fl-feed" x1="310" y1="110" x2="310" y2="202" style="stroke:var(--amber-text)" hidden></line>
           </svg>
           <div class="fnode pv"><span class="nk" data-i18n="flowPv">PV</span><span class="nv" id="fnPv">–</span><span class="ns" id="fnPvSub"></span></div>
           <div class="fnode hubn"><span class="nk" id="fnHubName">–</span><span class="nv" id="fnAc">–</span><span class="ns" id="fnAcSub"></span></div>
@@ -1056,6 +1081,7 @@
           <div class="fnode house"><span class="nk" data-i18n="flowHouse">Haus</span><span class="nv" id="fnHouse">–</span><span class="ns" id="fnHouseSub"></span></div>
           <div class="fnode grid" id="fnGridBox"><span class="nk" data-i18n="flowGrid">Netz</span><span class="nv" id="fnGrid">–</span><span class="ns" id="fnGridSub"></span></div>
           <div class="fnode offg"><span class="nk" data-i18n="flowOffgrid">Offgrid</span><span class="nv" id="fnOff">–</span><span class="ns" id="fnOffSub"></span></div>
+          <div class="fnode feed" id="fnFeedBox" hidden><span class="nk" id="fnFeedName">–</span><span class="nv" id="fnFeed">–</span><span class="ns" id="fnFeedSub"></span></div>
         </div>
       </div>
     </div>
@@ -1116,7 +1142,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.6.0";
+  const APP_VERSION = "5.7.0";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1578,6 +1604,11 @@
     fBattIn: 'lädt', fBattOut: 'entlädt', fBattIdle: 'ruht',
     fHouse: 'Verbrauch', fTotalTag: 'gesamt',
     fGridIn: 'Bezug', fGridOut: 'Einspeisung', fGridZero: 'ausgeglichen',
+    setFeed: 'Einspeisung', setFeedHint: 'Zusätzliche Einspeisung (Shelly) im Energiefluss',
+    feedName: 'Name', feedIp1: 'IP-Adresse Shelly 1', feedIp2: 'IP-Adresse Shelly 2 (optional)', feedSave: 'Speichern',
+    feedSaved: 'Gespeichert', feedSavedW: 'Gespeichert · aktuell {w}', feedTesting: 'Prüfe Shelly …', feedErr: 'Nicht gespeichert: {e}',
+    feedErrIp: 'Das sieht nicht nach einer IPv4-Adresse aus: {ip}', feedErrUnreach: 'Shelly unter {ip} nicht erreichbar', feedErrNoPower: 'Shelly unter {ip} liefert keine Leistung', feedDefault: 'Einspeisung',
+    feedOn: 'speist ein', feedIdle: 'keine Einspeisung', feedOffline: 'offline', feedPart: '{n} von {m} offline',
     bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
     sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fOffIdle: 'keine Last', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Bereitschaft', stOg: 'Offgrid',
@@ -1607,6 +1638,11 @@
     fBattIn: 'charging', fBattOut: 'discharging', fBattIdle: 'idle',
     fHouse: 'consumption', fTotalTag: 'total',
     fGridIn: 'import', fGridOut: 'export', fGridZero: 'balanced',
+    setFeed: 'Feed-in', setFeedHint: 'Additional feed-in (Shelly) in the energy flow',
+    feedName: 'Name', feedIp1: 'IP address Shelly 1', feedIp2: 'IP address Shelly 2 (optional)', feedSave: 'Save',
+    feedSaved: 'Saved', feedSavedW: 'Saved · currently {w}', feedTesting: 'Checking Shelly …', feedErr: 'Not saved: {e}',
+    feedErrIp: 'This does not look like an IPv4 address: {ip}', feedErrUnreach: 'Shelly at {ip} not reachable', feedErrNoPower: 'Shelly at {ip} reports no power value', feedDefault: 'Feed-in',
+    feedOn: 'feeding in', feedIdle: 'no feed-in', feedOffline: 'offline', feedPart: '{n} of {m} offline',
     bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
     sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fOffIdle: 'no load', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby', stOg: 'off-grid',
@@ -1636,6 +1672,11 @@
     fBattIn: 'charge', fBattOut: 'décharge', fBattIdle: 'au repos',
     fHouse: 'consommation', fTotalTag: 'total',
     fGridIn: 'soutirage', fGridOut: 'injection', fGridZero: 'équilibré',
+    setFeed: 'Injection', setFeedHint: 'Injection supplémentaire (Shelly) dans le flux d’énergie',
+    feedName: 'Nom', feedIp1: 'Adresse IP Shelly 1', feedIp2: 'Adresse IP Shelly 2 (facultatif)', feedSave: 'Enregistrer',
+    feedSaved: 'Enregistré', feedSavedW: 'Enregistré · actuellement {w}', feedTesting: 'Vérification du Shelly …', feedErr: 'Non enregistré : {e}',
+    feedErrIp: 'Ceci ne ressemble pas à une adresse IPv4 : {ip}', feedErrUnreach: 'Shelly à {ip} injoignable', feedErrNoPower: 'Le Shelly à {ip} ne fournit pas de puissance', feedDefault: 'Injection',
+    feedOn: 'injecte', feedIdle: 'pas d’injection', feedOffline: 'hors ligne', feedPart: '{n} sur {m} hors ligne',
     bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
     sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fOffIdle: 'aucune charge', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille', stOg: 'hors réseau',
@@ -3582,6 +3623,7 @@
     pollBusy = true;
     try {
       const status = await fetchJ('status_api');
+      if (typeof pollFeed === 'function') pollFeed();
 
       // 1 s Toleranz fuer Timer-Jitter, damit der Abgleich im 32-s-Durchlauf
       // kommt und nicht erst einen Durchlauf spaeter.
@@ -4220,7 +4262,10 @@
     const batt = sum(on, function(h){ return battPower(h) || 0; });
     const allOn = hubs.filter(function(h){ return h.online; });
     const acAll = sum(allOn, function(h){ return Number(h.power || 0); });
-    const house = gridOnline ? gridPower + acAll : null;
+    // Einspeisung (ab 5.7.0): zaehlt zum Haus, sobald mindestens eine Quelle erreichbar ist
+    const feedOn = feedShown() && feedMess && feedMess.online > 0;
+    const feedW = feedOn ? Number(feedMess.power || 0) : 0;
+    const house = gridOnline ? gridPower + acAll + feedW : null;
     const socs = on.filter(function(h){ return h.soc !== null && h.soc !== undefined; });
     const soc = socs.length ? Math.round(sum(socs, function(h){ return Number(h.soc); }) / socs.length) : null;
     const none = !on.length;
@@ -4251,7 +4296,111 @@
     setFlowLine('fl-ac', none ? null : ac);
     setFlowLine('fl-off', none || !hasOff ? null : off);
     setFlowLine('fl-grid', g, g !== null && g < 0 ? 'var(--green-line)' : 'var(--alert-text)');
+    renderFeed(feedOn, feedW);
   }
+
+  /* ---------------- Einspeisung im Haushalt (ab 5.7.0) ----------------
+     Bis zu zwei Shellys, die der Proxy direkt abfragt (GET einspeisung).
+     Knoten nur im Energiefluss, nur bei „Gesamt“ und nur, wenn eingeschaltet
+     und eine Adresse eingetragen ist. Der Proxy liefert die Summe der
+     Betraege (unter 5 W = 0) der erreichbaren Quellen. */
+  let feedCfg = null;    // {aktiv, name, ips} vom Proxy; null = Proxy kennt die Funktion nicht
+  let feedMess = null;   // {power, online, anzahl} der letzten Messung
+  let feedBusy = false;
+  function feedShown(){ return !!(feedCfg && feedCfg.aktiv && feedCfg.ips && feedCfg.ips.length); }
+
+  function renderFeed(on, w){
+    const box = document.getElementById('fnFeedBox');
+    if (!box) return;
+    const show = feedShown() && flowScope === 'all';
+    box.hidden = !show;
+    document.getElementById('ft-feed').toggleAttribute('hidden', !show);
+    document.getElementById('fl-feed').toggleAttribute('hidden', !show);
+    if (!show) return;
+    box.classList.toggle('off', !!feedMess && !on);
+    setText('fnFeedName', feedCfg.name || t('feedDefault'));
+    setText('fnFeed', on ? fmtW(w) : '–');
+    let sub;
+    if (!feedMess) sub = t('fNoData');
+    else if (!on) sub = t('feedOffline');
+    else if (feedMess.online < feedMess.anzahl) sub = t('feedPart', { n: feedMess.anzahl - feedMess.online, m: feedMess.anzahl });
+    else sub = t(w >= 5 ? 'feedOn' : 'feedIdle');
+    setText('fnFeedSub', sub);
+    setFlowLine('fl-feed', on ? w : null);   // nach unten = ins Haus
+  }
+
+  // Im Takt der Statusabfrage, aber ohne sie aufzuhalten
+  function pollFeed(){
+    if (feedBusy || view !== 'flow' || !feedShown()) return;
+    feedBusy = true;
+    fetch(API_BASE + 'einspeisung?mess=1', { cache: 'no-store' }).then(function(r){
+      return r.ok ? r.json() : null;
+    }).then(function(j){
+      if (j) { feedCfg = { aktiv: j.aktiv, name: j.name, ips: j.ips || [] }; feedMess = j.messung || null; }
+    }).catch(function(){ feedMess = feedMess ? { power: null, online: 0, anzahl: feedMess.anzahl } : null; })
+      .then(function(){ feedBusy = false; renderFlow(); });
+  }
+
+  const feedRow = document.getElementById('feedRow');
+  const feedToggle = document.getElementById('feedToggle');
+  const feedForm = document.getElementById('feedForm');
+  const feedMsg = document.getElementById('feedMsg');
+  const feedSaveBtn = document.getElementById('feedSave');
+  function feedFill(){
+    const c = feedCfg || { aktiv: false, name: '', ips: [] };
+    feedToggle.setAttribute('aria-checked', c.aktiv ? 'true' : 'false');
+    feedForm.hidden = !c.aktiv;
+    document.getElementById('feedName').value = c.name || '';
+    document.getElementById('feedIp1').value = c.ips[0] || '';
+    document.getElementById('feedIp2').value = c.ips[1] || '';
+  }
+  // Beim Einschalten fragt der Proxy jede Adresse testweise ab und speichert
+  // nur, wenn alle antworten. Fehlercodes: ip, unreach, nopower (sonst Text).
+  const FEED_ERR = { ip: 'feedErrIp', unreach: 'feedErrUnreach', nopower: 'feedErrNoPower' };
+  function feedSend(cfg){
+    feedMsg.classList.remove('err');
+    feedMsg.textContent = cfg.aktiv && cfg.ips.length ? t('feedTesting') : '';
+    feedSaveBtn.disabled = true;
+    return fetch(API_BASE + 'einspeisung', { method: 'POST', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cfg) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (!j || !j.ok) {
+          const k = j && FEED_ERR[j.code];
+          throw new Error(k ? t(k, { ip: j.ip || '' }) : ((j && j.error) || '?'));
+        }
+        feedCfg = cfg; feedMess = null;
+        const test = (j.test || []).filter(function(w){ return typeof w === 'number'; });
+        feedFill();
+        feedMsg.textContent = test.length ? t('feedSavedW', { w: test.map(function(w){ return w + ' W'; }).join(' + ') }) : t('feedSaved');
+        renderFlow(); pollFeed();
+      }).catch(function(e){
+        // Schalter auf den gespeicherten Stand zurueck, Eingaben bleiben zum Korrigieren stehen
+        feedToggle.setAttribute('aria-checked', feedCfg && feedCfg.aktiv ? 'true' : 'false');
+        if (cfg.aktiv) feedForm.hidden = false;
+        feedMsg.textContent = t('feedErr', { e: e.message }); feedMsg.classList.add('err');
+      }).then(function(){ feedSaveBtn.disabled = false; });
+  }
+  function feedFromForm(aktiv){
+    return { aktiv: aktiv, name: document.getElementById('feedName').value.trim(),
+      ips: [document.getElementById('feedIp1').value.trim(), document.getElementById('feedIp2').value.trim()].filter(Boolean) };
+  }
+  feedToggle.addEventListener('click', function(){
+    const an = feedToggle.getAttribute('aria-checked') !== 'true';
+    feedToggle.setAttribute('aria-checked', an ? 'true' : 'false');
+    feedForm.hidden = !an;
+    feedSend(feedFromForm(an));
+  });
+  feedSaveBtn.addEventListener('click', function(){ feedSend(feedFromForm(true)); });
+  // Einstellung beim Start holen; ohne Proxy (oder alter Proxy) bleibt die Zeile aus
+  fetch(API_BASE + 'einspeisung', { cache: 'no-store' }).then(function(r){
+    return r.ok ? r.json() : null;
+  }).then(function(j){
+    if (!j || typeof j.aktiv !== 'boolean') return;
+    feedCfg = { aktiv: j.aktiv, name: j.name || '', ips: j.ips || [] };
+    feedRow.hidden = false;
+    feedFill(); renderFlow(); pollFeed();
+  }).catch(function(){});
   applyView();
 
   loadConfig().then(function(){ loadSchedule(); startPolling(); }).catch(function(err){
