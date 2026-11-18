@@ -17,7 +17,7 @@ Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard un
 - **Testabfrage beim Speichern:** Bei eingeschalteter Funktion fragt der Proxy jede Adresse einmal ab und speichert nur, wenn alle einen Leistungswert liefern. Sonst „Nicht gespeichert: Shelly unter … nicht erreichbar“ bzw. „… liefert keine Leistung“, Schalter und Eingaben bleiben zum Korrigieren stehen. Ungültige IP-Adressen werden abgelehnt. Bei Erfolg zeigt die Bestätigung die aktuelle Leistung je Shelly. Ausschalten speichert ohne Test.
 - **Wert:** je Shelly der Betrag (Vorzeichen je nach Generation verschieden), unter 5 W = 0 (Ruheverbrauch nachts), Summe der erreichbaren Shellys.
 - **Hausverbrauch im Energiefluss:** Haus = Netzsaldo + Summe der Ausgänge + Einspeisung. Bisher fehlte die Einspeisung, der Hausverbrauch war um genau diese Leistung zu niedrig.
-- **Anzeige:** eigener Knoten über dem Haus (gestrichelt, Punkte laufen ins Haus), nur im Energiefluss, nur bei „Gesamt“ und nur, wenn eingeschaltet und eine Adresse eingetragen ist. Ein Shelly nicht erreichbar: „1 von 2 offline“, es zählt der erreichbare. Keiner erreichbar: Knoten grau mit „offline“, die Einspeisung fehlt in der Hausrechnung. DE/EN/FR.
+- **Anzeige:** eigener Knoten über dem Haus (Rahmen wie PV, Punkte laufen ins Haus), nur im Energiefluss, nur bei „Gesamt“ und nur, wenn eingeschaltet und eine Adresse eingetragen ist. Ein Shelly nicht erreichbar: „1 von 2 offline“, es zählt der erreichbare. Keiner erreichbar: Knoten grau mit „offline“, die Einspeisung fehlt in der Hausrechnung. DE/EN/FR.
 - Home-Assistant-App 5.7.0.0
 
 Keine Änderung am CONFIG-Block nötig.
