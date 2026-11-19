@@ -364,6 +364,17 @@ Mit laufendem Helfer auf der Startseite den Bereich **„Speicher prüfen“** a
 
 Zur Orientierung: Das Script zenDash-API + Watchdog belegt mit zwei Speichern im Betrieb rund 13,5 kB, in der Spitze rund 17,8 kB.
 
+### Script ein- und ausschalten
+
+Mit laufendem Helfer (ab 3.3.0) steht oben auf der Startseite unter **„Deine Shellys“** neben jedem Shelly ein **Schalter** mit dem aktuellen Zustand („läuft“ bzw. „gestoppt“). Er schaltet nur das Script der Suite auf diesem Shelly, andere Scripte bleiben unberührt.
+
+- Vor jedem Schalten kommt eine **Sicherheitsabfrage**, erst nach **„Starten“** bzw. **„Stoppen“** passiert etwas.
+- Das Schalten gilt **dauerhaft**: **Ein** startet das Script und schaltet den Autostart ein, es läuft also auch nach einem Neustart des Shellys wieder. **Aus** stoppt das Script und schaltet den Autostart aus, es bleibt auch nach einem Neustart aus, bis du es wieder einschaltest.
+- **Controller aus** heißt: Es wird nicht mehr geregelt. **Dashboard-Shelly aus** heißt: Das Dashboard bekommt keine Daten mehr, die Regelung läuft weiter.
+- Wurde der Autostart am Shelly selbst anders eingestellt, steht das neben dem Zustand, z. B. „läuft · Autostart aus“.
+- Liegt auf dem Shelly kein passendes Script oder mehrere davon, steht dort „kein passendes Script“ und es gibt keinen Schalter.
+- Die IPs stammen aus dem letzten Upload (siehe [Gemerkte IPs zurücksetzen](#gemerkte-ips-zurücksetzen)).
+
 ### Konfiguration sichern
 
 Nach jeder Änderung im Ergebnis-Schritt „💾 Nur CONFIG-Block speichern“ oder „🔗 Komplettes Script von GitHub speichern“ klicken und die Datei aufbewahren. Das komplette Script trägt die Version im Dateinamen – praktisch, wenn du mehrere Stände behalten willst. Beide Dateien kannst du später per „📂 Datei laden…“ wieder [einlesen](#bestehende-konfiguration-einlesen). Damit bist du bei einem Shelly-Defekt oder -Wechsel in wenigen Minuten wieder startklar.

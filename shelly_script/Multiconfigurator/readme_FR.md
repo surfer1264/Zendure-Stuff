@@ -362,6 +362,17 @@ Avec l'assistant local en marche, déplie **« Vérifier la mémoire »** sur la
 
 Pour information : le script zenDash-API + Watchdog occupe, avec deux batteries, environ 13,5 ko en fonctionnement et environ 17,8 ko en pointe.
 
+### Activer et désactiver un script
+
+Avec l'assistant lancé (3.3.0 ou plus récent), la page d'accueil affiche sous **« Tes Shelly »** un **interrupteur** à côté de chaque Shelly, avec l'état actuel (« en marche » ou « arrêté »). Il ne commute que le script de la suite sur ce Shelly ; les autres scripts ne sont pas touchés.
+
+- Chaque commutation demande d'abord une **confirmation** ; rien ne se passe avant d'avoir cliqué sur **« Démarrer »** ou **« Arrêter »**.
+- La commutation est **permanente** : **Marche** démarre le script et active le démarrage automatique, il tourne donc à nouveau après un redémarrage du Shelly. **Arrêt** arrête le script et désactive le démarrage automatique, il reste arrêté même après un redémarrage, jusqu'à ce que tu le réactives.
+- **Controller arrêté** signifie : plus aucune régulation. **Shelly du tableau de bord arrêté** signifie : le tableau de bord ne reçoit plus de données, la régulation continue.
+- Si le démarrage automatique a été réglé autrement sur le Shelly lui-même, c'est indiqué à côté de l'état, p. ex. « en marche · démarrage auto désactivé ».
+- S'il n'y a aucun script correspondant sur le Shelly, ou plusieurs, la mention « aucun script correspondant » s'affiche et il n'y a pas d'interrupteur.
+- Les IP proviennent du dernier envoi.
+
 ### Sauvegarder la configuration
 
 Après chaque modification, clique à l'étape Résultat sur « 💾 Enregistrer seulement le bloc CONFIG » ou « 🔗 Enregistrer le script complet depuis GitHub » et conserve le fichier. Le script complet porte la version dans son nom de fichier – pratique si tu veux garder plusieurs versions. Tu peux [réimporter](#importer-une-configuration-existante) les deux fichiers plus tard avec « 📂 Charger un fichier… ». Ainsi, en cas de panne ou de remplacement d'un Shelly, tu es de nouveau opérationnel en quelques minutes.

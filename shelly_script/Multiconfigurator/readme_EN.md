@@ -362,6 +362,17 @@ With the helper running, expand **"Check memory"** on the start page, enter the 
 
 For reference: the zenDash-API + Watchdog script uses around 13.5 kB in operation with two batteries, and around 17.8 kB at peak.
 
+### Switching a script on and off
+
+With the helper running (3.3.0 or newer), the start page shows a **switch** next to each Shelly under **"Your Shellys"**, together with the current state ("running" or "stopped"). It only switches the suite's script on that Shelly; other scripts are left alone.
+
+- Every switch action asks for **confirmation** first; nothing happens until you click **"Start"** or **"Stop"**.
+- Switching is **permanent**: **On** starts the script and turns autostart on, so it runs again after a restart of the Shelly. **Off** stops the script and turns autostart off, so it stays off after a restart too, until you switch it on again.
+- **Controller off** means: no more control. **Dashboard Shelly off** means: the dashboard no longer gets data, control keeps running.
+- If autostart was set differently on the Shelly itself, this is shown next to the state, e.g. "running · autostart off".
+- If there is no matching script on the Shelly, or more than one, it says "no matching script" and there is no switch.
+- The IPs come from the last upload.
+
 ### Backing up your configuration
 
 After every change, click "💾 Save CONFIG block only" or "🔗 Save complete script from GitHub" in the result step and keep the file. The complete script carries the version in its file name – handy if you want to keep several versions. You can [import](#importing-an-existing-configuration) both files again later with "📂 Load file…". This way you're back up and running within minutes if a Shelly fails or is replaced.

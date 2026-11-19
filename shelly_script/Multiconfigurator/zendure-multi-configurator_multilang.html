@@ -133,6 +133,17 @@
     padding:24px; box-shadow:var(--shadow); margin-bottom:20px;
   }
   .panel h2{margin-top:0; font-size:1.1rem;}
+  .sw-row{display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin:6px 0;}
+  .sw-state{font-size:.85rem; color:var(--muted); margin-left:auto; display:inline-flex; align-items:center; gap:8px;}
+  .sw-state .dot{width:.6rem; height:.6rem; border-radius:50%; background:var(--muted); display:inline-block;}
+  .sw-state.on .dot{background:var(--accent);}
+  .sw-state.err{color:var(--danger);}
+  .sw-toggle{position:relative; width:3rem; height:1.6rem; border-radius:999px; border:1px solid var(--control-border); background:var(--panel-2); cursor:pointer; padding:0; flex:none;}
+  .sw-toggle::after{content:""; position:absolute; top:.15rem; left:.15rem; width:1.2rem; height:1.2rem; border-radius:50%; background:var(--muted); transition:left .15s;}
+  .sw-toggle[aria-checked="true"]{background:var(--accent); border-color:var(--accent);}
+  .sw-toggle[aria-checked="true"]::after{left:1.6rem; background:var(--on-accent);}
+  .sw-toggle:disabled{opacity:.5; cursor:wait;}
+  .sw-toggle:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px;}
   .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,.45); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px;}
   .modal{max-width:420px; width:100%; margin:0; box-shadow:0 10px 40px rgba(0,0,0,.3);}
   .spinner{display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px;
@@ -281,7 +292,7 @@
 // shelly_script/Multiconfigurator/CHANGELOG.md eintragen - der
 // Manifest-Workflow uebernimmt beides (APP_TYPE = fester Bezeichner).
 const APP_TYPE = "zdmc-configurator";
-const APP_VERSION = "3.2.0";
+const APP_VERSION = "3.3.0";
 
 const I18N = {
 de: {
@@ -511,6 +522,18 @@ de: {
   start_ctr_label: "Controller-Shelly",
   start_dash_label: "Dashboard-Shelly",
   start_open_ui: "Weboberfläche öffnen",
+  sw_aria: "{name}-Script ein- oder ausschalten",
+  sw_loading: "prüfe …", sw_running: "läuft", sw_stopped: "gestoppt",
+  sw_autostart_off: "Autostart aus", sw_autostart_on: "Autostart an",
+  sw_none: "kein passendes Script", sw_unreach: "nicht erreichbar",
+  sw_busy_on: "starte …", sw_busy_off: "stoppe …",
+  sw_conf_on: "{name}-Script auf {ip} starten?", sw_conf_off: "{name}-Script auf {ip} stoppen?",
+  sw_conf_ctrl_on: "Die Regelung beginnt sofort.", sw_conf_ctrl_off: "Ohne Controller wird nicht mehr geregelt.",
+  sw_conf_dash_on: "Dashboard und Meldungen bekommen wieder Daten.", sw_conf_dash_off: "Das Dashboard bekommt dann keine Daten mehr. Die Regelung läuft weiter.",
+  sw_conf_keep_on: "Das Script startet auch nach jedem Neustart des Shellys automatisch.",
+  sw_conf_keep_off: "Das Script bleibt auch nach einem Neustart des Shellys aus, bis du es hier wieder einschaltest.",
+  sw_ok_on: "Starten", sw_ok_off: "Stoppen", sw_cancel: "Abbrechen",
+  sw_failed: "Schalten fehlgeschlagen: {msg}",
   start_h2: "Was möchtest du tun?",
   start_new_title: "Neu konfigurieren oder manuell updaten",
   start_new_desc: "Funktionen auswählen und Schritt für Schritt einrichten – oder eine vorhandene Config einlesen (einfügen, Datei oder direkt vom Shelly), Werte ändern und neu hochladen.",
@@ -953,6 +976,18 @@ en: {
   start_ctr_label: "Controller Shelly",
   start_dash_label: "Dashboard Shelly",
   start_open_ui: "Open web interface",
+  sw_aria: "Switch the {name} script on or off",
+  sw_loading: "checking …", sw_running: "running", sw_stopped: "stopped",
+  sw_autostart_off: "autostart off", sw_autostart_on: "autostart on",
+  sw_none: "no matching script", sw_unreach: "not reachable",
+  sw_busy_on: "starting …", sw_busy_off: "stopping …",
+  sw_conf_on: "Start the {name} script on {ip}?", sw_conf_off: "Stop the {name} script on {ip}?",
+  sw_conf_ctrl_on: "Control starts immediately.", sw_conf_ctrl_off: "Without the Controller there is no more control.",
+  sw_conf_dash_on: "Dashboard and notifications get data again.", sw_conf_dash_off: "The dashboard will no longer get data. Control keeps running.",
+  sw_conf_keep_on: "The script also starts automatically after every restart of the Shelly.",
+  sw_conf_keep_off: "The script stays off after a restart of the Shelly too, until you switch it on here again.",
+  sw_ok_on: "Start", sw_ok_off: "Stop", sw_cancel: "Cancel",
+  sw_failed: "Switching failed: {msg}",
   start_h2: "What would you like to do?",
   start_new_title: "Configure from scratch or update manually",
   start_new_desc: "Choose functions and set them up step by step – or import an existing config (paste, file or directly from the Shelly), change values and upload again.",
@@ -1395,6 +1430,18 @@ fr: {
   start_ctr_label: "Shelly Controller",
   start_dash_label: "Shelly Dashboard",
   start_open_ui: "Ouvrir l'interface web",
+  sw_aria: "Activer ou désactiver le script {name}",
+  sw_loading: "vérification …", sw_running: "en marche", sw_stopped: "arrêté",
+  sw_autostart_off: "démarrage auto désactivé", sw_autostart_on: "démarrage auto activé",
+  sw_none: "aucun script correspondant", sw_unreach: "injoignable",
+  sw_busy_on: "démarrage …", sw_busy_off: "arrêt …",
+  sw_conf_on: "Démarrer le script {name} sur {ip} ?", sw_conf_off: "Arrêter le script {name} sur {ip} ?",
+  sw_conf_ctrl_on: "La régulation démarre immédiatement.", sw_conf_ctrl_off: "Sans Controller, plus aucune régulation.",
+  sw_conf_dash_on: "Le tableau de bord et les notifications reçoivent à nouveau des données.", sw_conf_dash_off: "Le tableau de bord ne reçoit plus de données. La régulation continue.",
+  sw_conf_keep_on: "Le script démarre aussi automatiquement après chaque redémarrage du Shelly.",
+  sw_conf_keep_off: "Le script reste arrêté même après un redémarrage du Shelly, jusqu'à ce que tu le réactives ici.",
+  sw_ok_on: "Démarrer", sw_ok_off: "Arrêter", sw_cancel: "Annuler",
+  sw_failed: "Échec de la commutation : {msg}",
   start_h2: "Que veux-tu faire ?",
   start_new_title: "Nouvelle configuration ou mise à jour manuelle",
   start_new_desc: "Choisir les fonctions et les configurer étape par étape – ou importer une config existante (coller, fichier ou directement depuis le Shelly), modifier les valeurs et recharger.",
@@ -3796,14 +3843,94 @@ function setMode(mode){
   if(mode === 'download' && !manifestData) loadManifest().then(function(){ if(state.mode === 'download') render(); }).catch(function(){});
 }
 
+// Ein/Aus-Schalter je Shelly (Helfer ab Feature "script_control").
+// Schaltet nur unser eigenes Script und immer dauerhaft: Ein = Autostart an
+// und starten, Aus = Autostart aus und stoppen. Vor jedem Schalten fragt
+// der Configurator nach. Zustand je Rolle: {ip, st, running, enable, msg}
+// st: loading | ok | none | error | busy
+const SW_ROLES = { ctr_kvs: { key: 'ctrl', name: 'type_ctrl', conf: 'ctrl' },
+                   apidash_watch: { key: 'zdw', name: 'type_zdw', conf: 'dash' } };
+const swState = {};
+
+function swRefresh(role, ip){
+  swState[role] = { ip: ip, st: 'loading' };
+  helperGet('/api/script?ip=' + encodeURIComponent(ip) + '&key=' + SW_ROLES[role].key).then(function(d){
+    if(!swState[role] || swState[role].ip !== ip) return;
+    swState[role] = d.found ? { ip: ip, st: 'ok', running: !!d.running, enable: !!d.enable }
+                            : { ip: ip, st: 'none' };
+  }).catch(function(e){
+    if(!swState[role] || swState[role].ip !== ip) return;
+    swState[role] = { ip: ip, st: 'error', msg: e.authCancelled ? e.message : t('sw_unreach') };
+  }).then(function(){ if(computeStepList()[stepIndex] === 'start') render(); });
+}
+
+function swConfirm(role, ip, run){
+  const c = SW_ROLES[role], name = t(c.name);
+  return new Promise(function(resolve){
+    const wrap = document.createElement('div');
+    wrap.className = 'modal-backdrop';
+    wrap.innerHTML = `<div class="panel modal" role="alertdialog" aria-modal="true" aria-labelledby="swTitle" aria-describedby="swText">
+        <h2 id="swTitle" style="margin-top:0;">${escapeHtml(t(run ? 'sw_conf_on' : 'sw_conf_off', {name: name, ip: ip}))}</h2>
+        <p class="hint" id="swText">${escapeHtml(t('sw_conf_' + c.conf + (run ? '_on' : '_off')))} ${escapeHtml(t(run ? 'sw_conf_keep_on' : 'sw_conf_keep_off'))}</p>
+        <div class="copy-row" style="justify-content:flex-end; margin-top:14px;">
+          <button class="btn" id="swCancel">${t('sw_cancel')}</button>
+          <button class="btn btn-primary" id="swOk">${t(run ? 'sw_ok_on' : 'sw_ok_off')}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(wrap);
+    const done = function(val){ wrap.remove(); resolve(val); };
+    wrap.querySelector('#swOk').onclick = function(){ done(true); };
+    wrap.querySelector('#swCancel').onclick = function(){ done(false); };
+    wrap.addEventListener('keydown', function(e){ if(e.key === 'Escape') done(false); });
+    setTimeout(function(){ wrap.querySelector('#swCancel').focus(); }, 0);
+  });
+}
+
+async function swToggle(role){
+  const s = swState[role];
+  if(!s || s.st !== 'ok') return;
+  const ip = s.ip, run = !s.running;
+  if(!(await swConfirm(role, ip, run))) return;
+  swState[role] = Object.assign({}, s, { st: 'busy', target: run });
+  render();
+  try{
+    const r = await helperFetch('/api/script', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: ip, key: SW_ROLES[role].key, run: run }) });
+    if(!r.data.ok) throw new Error(r.data.error || ('HTTP ' + r.res.status));
+    swState[role] = { ip: ip, st: 'ok', running: !!r.data.running, enable: !!r.data.enable };
+  } catch(e){
+    swState[role] = Object.assign({}, s, { st: 'ok', msg: t('sw_failed', {msg: e.message}) });
+  }
+  if(computeStepList()[stepIndex] === 'start') render();
+}
+
+function swHtml(role, ip){
+  if(!(helperAvailable && helperHas('script_control'))) return '';
+  const s = swState[role];
+  if(!s || s.ip !== ip){ swRefresh(role, ip); return `<span class="sw-state">${t('sw_loading')}</span>`; }
+  if(s.st === 'loading') return `<span class="sw-state">${t('sw_loading')}</span>`;
+  if(s.st === 'none') return `<span class="sw-state">${t('sw_none')}</span>`;
+  if(s.st === 'error') return `<span class="sw-state err">${escapeHtml(s.msg || t('sw_unreach'))}</span>`;
+  const busy = s.st === 'busy';
+  const on = busy ? s.target : s.running;
+  let txt = busy ? t(s.target ? 'sw_busy_on' : 'sw_busy_off') : t(s.running ? 'sw_running' : 'sw_stopped');
+  // Autostart weicht vom Laufzustand ab (z. B. am Shelly geaendert): dazuschreiben
+  if(!busy && s.enable !== s.running) txt += ' · ' + t(s.enable ? 'sw_autostart_on' : 'sw_autostart_off');
+  return `<span class="sw-state ${!busy && s.running ? 'on' : ''}"><span class="dot" aria-hidden="true"></span>${escapeHtml(txt)}</span>
+      <button type="button" class="sw-toggle" role="switch" aria-checked="${on ? 'true' : 'false'}" ${busy ? 'disabled' : ''}
+        aria-label="${escapeHtml(t('sw_aria', {name: t(SW_ROLES[role].name)}))}" onclick="swToggle('${role}')"></button>
+      ${s.msg ? `<div class="error" style="flex-basis:100%; font-size:.85rem;">${escapeHtml(s.msg)}</div>` : ''}`;
+}
+
 function shellyLinks(){
   const rows = [];
   [['ctr_kvs', 'start_ctr_label'], ['apidash_watch', 'start_dash_label']].forEach(function(r){
     const ip = helperSettings[r[0]];
     if(!isValidIp(ip)) return;
-    rows.push(`<div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap; margin:4px 0;">
+    rows.push(`<div class="sw-row">
       <span style="min-width:170px;">${t(r[1])}</span><b>${escapeHtml(ip)}</b>
       <a href="http://${escapeHtml(ip)}/" target="_blank" rel="noopener" style="font-size:.85rem; color:var(--accent-text);">${t('start_open_ui')} ↗</a>
+      ${swHtml(r[0], ip)}
     </div>`);
   });
   if(!rows.length) return '';
@@ -4444,6 +4571,8 @@ async function directUpload(key, confirmIds, deleteOthers){
   } finally {
     stopProgress(uploadOk);
     if(btn) btn.disabled = false;
+    // Ein/Aus-Schalter der Startseite beim naechsten Anzeigen neu lesen
+    Object.keys(swState).forEach(function(k){ delete swState[k]; });
   }
   return done;
 }

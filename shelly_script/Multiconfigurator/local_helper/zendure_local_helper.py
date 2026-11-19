@@ -107,7 +107,7 @@ HTML_FILENAME = "zendure-multi-configurator_multilang.html"
 # Configurator per githack), kennt er neue Optionen nicht. Der Configurator
 # bietet eine Funktion nur an, wenn sie hier aufgefuehrt ist.
 HELPER_FEATURES = ["script_check", "keep_others", "read_config", "settings", "log_capture", "shelly_auth",
-                   "upload_progress", "backup_code"]
+                   "upload_progress", "backup_code", "script_control"]
 RE_APP_VERSION = re.compile(r"""\bAPP_VERSION\s*=\s*["']([^"']+)["']""")
 
 # Herkunftspruefung: nur diese Seiten duerfen den Helfer aus dem Browser
@@ -489,7 +489,7 @@ def inspect_scripts(ip):
     result = []
     for s in rpc(ip, "Script.List").get("scripts", []):
         entry = {"id": s.get("id"), "name": s.get("name") or "",
-                 "running": bool(s.get("running")),
+                 "running": bool(s.get("running")), "enable": bool(s.get("enable")),
                  "type": None, "version": None, "schema": None, "legacy": False}
         try:
             code = read_code(ip, s["id"], full=False)
@@ -506,6 +506,46 @@ def inspect_scripts(ip):
             pass  # Code nicht lesbar -> Typ bleibt unbekannt
         result.append(entry)
     return result
+
+
+def _own_script(ip, key):
+    """Unser Script vom Typ zu key auf dem Shelly (genau eins) oder None."""
+    expected = KEY_TO_TYPE.get(key)
+    if not expected:
+        raise RpcError("Unbekannter Script-Schluessel: %r" % key)
+    matching = [s for s in inspect_scripts(ip) if s["type"] == expected]
+    return matching[0] if len(matching) == 1 else None
+
+
+def script_state(ip, key):
+    """Zustand fuer den Ein/Aus-Schalter auf der Startseite.
+    found False: kein oder mehr als ein passendes Script - kein Schalter."""
+    sc = _own_script(ip, key)
+    if sc is None:
+        return {"found": False}
+    return {"found": True, "id": sc["id"], "version": sc["version"],
+            "running": sc["running"], "enable": sc["enable"]}
+
+
+def script_switch(ip, key, run):
+    """Script dauerhaft ein- bzw. ausschalten: Autostart (enable) setzen,
+    dann starten bzw. stoppen und den Zustand vom Shelly zuruecklesen."""
+    sc = _own_script(ip, key)
+    if sc is None:
+        raise RpcError("Auf %s liegt nicht genau ein passendes Script." % ip)
+    sid = sc["id"]
+    rpc(ip, "Script.SetConfig", {"id": sid, "config": {"enable": bool(run)}})
+    if run:
+        if not sc["running"]:
+            rpc(ip, "Script.Start", {"id": sid})
+    elif sc["running"]:
+        rpc(ip, "Script.Stop", {"id": sid})
+    running = bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running"))
+    if run and not running:
+        time.sleep(0.5)       # Start braucht einen Moment; einmal nachsehen
+        running = bool(rpc(ip, "Script.GetStatus", {"id": sid}).get("running"))
+    enable = bool(rpc(ip, "Script.GetConfig", {"id": sid}).get("enable"))
+    return {"found": True, "id": sid, "version": sc["version"], "running": running, "enable": enable}
 
 
 def read_config(ip, key):
@@ -1214,6 +1254,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._handle_ip_call(parsed.query, lambda ip, q: {"scripts": inspect_scripts(ip)})
         elif parsed.path == "/api/config":
             self._handle_ip_call(parsed.query, lambda ip, q: read_config(ip, (q.get("key") or [""])[0]))
+        elif parsed.path == "/api/script":
+            self._handle_ip_call(parsed.query, lambda ip, q: script_state(ip, (q.get("key") or [""])[0]))
         elif parsed.path == "/api/memcheck":
             self._handle_memcheck(parsed.query)
         elif parsed.path == "/api/settings":
@@ -1282,6 +1324,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path == "/api/auth":
             self._handle_auth()
             return
+        if self.path == "/api/script":
+            self._handle_script_switch()
+            return
         if self.path != "/api/upload":
             self._json(404, {"ok": False, "error": "not found"})
             return
@@ -1341,6 +1386,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
             # Der Thread kann fuer die naechste Anfrage wiederverwendet werden
             _progress_tls.pid = None
 
+
+    def _handle_script_switch(self):
+        ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()
+        if ctype != "application/json":
+            self._json(415, {"ok": False, "error": "Content-Type application/json erwartet"})
+            return
+        try:
+            length = int(self.headers.get("Content-Length", 0))
+            data = json.loads(self.rfile.read(length).decode("utf-8"))
+            ip = (data.get("ip") or "").strip()
+            key = data.get("key") or ""
+            run = data.get("run")
+            if not RE_IP.match(ip):
+                raise RpcError("ungueltige oder fehlende IP")
+            if not isinstance(run, bool):
+                raise RpcError("run (true/false) fehlt")
+            print("Script %s auf %s: %s" % (key, ip, "EIN" if run else "AUS"))
+            result = script_switch(ip, key, run)
+            print("  -> laeuft: %s, Autostart: %s" % (result["running"], result["enable"]))
+            self._json(200, dict({"ok": True}, **result))
+        except RpcError as err:
+            self._err(err)
+        except Exception as err:
+            self._json(500, {"ok": False, "error": str(err)})
 
     def _handle_logcapture(self):
         ctype = (self.headers.get("Content-Type") or "").split(";")[0].strip().lower()

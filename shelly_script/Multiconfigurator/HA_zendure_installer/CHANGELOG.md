@@ -3,6 +3,10 @@
 Ausführliche Historie inklusive EXE:
 https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/Multiconfigurator/CHANGELOG.md
 
+## 3.3.0.0
+
+- Multi-Configurator 3.3.0: Ein/Aus-Schalter je Shelly auf der Startseite (mit Sicherheitsabfrage, wirkt dauerhaft über den Autostart)
+
 ## 3.2.0.0
 
 - Multi-Configurator 3.2.0: Ergebnisseite neu gegliedert (Übersicht, Vor dem Hochladen, Hochladen mit „Beide hochladen“, Dashboard-Proxy, Sichern, Anleitung) und Kontraste nach WCAG in hell und dunkel

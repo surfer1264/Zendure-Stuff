@@ -1,5 +1,17 @@
 # Changelog Multi-Configurator und lokaler Helfer
 
+## 3.3.0
+
+**Ziel:** Die Scripte auf beiden Shellys lassen sich direkt auf der Startseite ein- und ausschalten, ohne die Weboberfläche des Shellys zu öffnen.
+
+- **Ein/Aus-Schalter je Shelly** unter „Deine Shellys“, mit Zustand („läuft“ / „gestoppt“). Geschaltet wird nur das Script der Suite (Controller bzw. zenDash-API + Watchdog), erkannt am Script-Typ. Andere Scripte bleiben unberührt. Kein oder mehr als ein passendes Script: kein Schalter, Hinweis „kein passendes Script“.
+- **Sicherheitsabfrage** vor jedem Schalten, für Ein und Aus und bei beiden Shellys. Sie nennt Shelly, IP und die Folge (Controller aus: keine Regelung mehr).
+- **Dauerhaft:** Ein = Autostart an und starten, Aus = Autostart aus und stoppen. Der Zustand nach dem Schalten wird vom Shelly zurückgelesen. Weicht der Autostart vom Laufzustand ab, steht das dabei („läuft · Autostart aus“).
+- Helfer: neues Feature `script_control`, `GET /api/script?ip=…&key=ctrl|zdw` (Zustand) und `POST /api/script` `{ip, key, run}` (nur JSON). `/api/inspect` liefert zusätzlich `enable`. Passwortgeschützte Shellys wie bisher über die Passwortabfrage. Ein älterer Helfer zeigt keinen Schalter.
+- DE/EN/FR.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## 3.2.0
 
 - **Ergebnisseite neu gegliedert**, ein Fluss von oben nach unten:
