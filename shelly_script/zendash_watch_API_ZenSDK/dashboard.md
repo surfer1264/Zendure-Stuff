@@ -98,7 +98,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit
 
 Auch die **Fußzeile** ist im neuen Design aufgeräumt: Sichtbar sind Version, Update-Hinweis, Abfragefehler und **Hilfe**. **Mehr ▾** klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Links zu `config_api` und `status_api` erscheinen nur bei eingeschalteten technischen Details.
 
-Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge + [Einspeisung](#einspeisung-im-energiefluss), falls eingerichtet). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
+Die Ansicht **Energiefluss** zeigt PV, Gerät, Akku, Haus, Netz und Offgrid. Offgrid erscheint nur, wenn im gewählten Ausschnitt ein Gerät eine Offgrid-Steckdose hat; ist sie am Gerät ausgeschaltet, steht dort „Steckdose aus“. Der Browser merkt sich, welche Geräte eine Steckdose haben, damit der Knoten nicht verschwindet, wenn ein Gerät kurz offline ist. Punkte laufen in Flussrichtung, schneller und dicker bei mehr Leistung. Oben lässt sich zwischen Gesamt und einzelnen Geräten wählen, die Wahl merkt sich der Browser; Netz und Haus gelten immer für alle Geräte (Haus = Netzsaldo + Summe der Ausgänge + [Einspeisung](#einspeisung-im-energiefluss), falls eingerichtet). Auf schmalen Bildschirmen lässt sich das Diagramm seitlich schieben.
 
 #### Einspeisung im Energiefluss
 

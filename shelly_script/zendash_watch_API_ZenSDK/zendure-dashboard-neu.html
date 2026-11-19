@@ -779,7 +779,7 @@
   /* Einspeisung (ab 5.7.0): eigener Knoten ueber dem Haus, gestrichelt = nicht vom Solarflow */
   .fnode.feed{ left:14.7em; top:.875em; border-color:var(--amber-deep); } .fnode.feed .nk{ color:var(--amber-text); overflow:hidden; text-overflow:ellipsis; }
   .fnode.feed.off{ border-color:color-mix(in srgb, var(--text-muted) 55%, transparent); } .fnode.feed.off .nk{ color:var(--text-muted); }
-  .fnode.feed[hidden], .flow svg [hidden]{ display:none; }
+  .fnode[hidden], .flow svg [hidden]{ display:none; }
   .fnode.hubn{ left:29.7em; top:12em; width:10.625em; min-height:7.25em; align-items:center; justify-content:center; text-align:center; background-color:var(--surface);
     border-color:color-mix(in srgb, var(--text) 35%, transparent); }
   .fnode.hubn .nv{ color:var(--blue-text); font-size:1.4em; }
@@ -1066,7 +1066,7 @@
             <line class="ftrack" x1="560" y1="308" x2="560" y2="390"></line>
             <line class="ftrack" x1="475" y1="250" x2="385" y2="250"></line>
             <line class="ftrack" x1="165" y1="250" x2="235" y2="250"></line>
-            <line class="ftrack" x1="645" y1="250" x2="735" y2="250"></line>
+            <line class="ftrack" id="ft-off" x1="645" y1="250" x2="735" y2="250"></line>
             <line class="ftrack" id="ft-feed" x1="310" y1="110" x2="310" y2="202" hidden></line>
             <line class="fdot idle" id="fl-pv" x1="560" y1="110" x2="560" y2="192" style="stroke:var(--amber-text)"></line>
             <line class="fdot idle" id="fl-batt" x1="560" y1="308" x2="560" y2="390" style="stroke:var(--teal-text)"></line>
@@ -1080,7 +1080,7 @@
           <div class="fnode batt"><span class="nk"><span data-i18n="flowBatt">Akku</span> <span id="fnSoc"></span></span><span class="nv" id="fnBatt">–</span><span class="soc-mini"><i id="fnSocBar"></i></span><span class="ns" id="fnBattSub"></span></div>
           <div class="fnode house"><span class="nk" data-i18n="flowHouse">Haus</span><span class="nv" id="fnHouse">–</span><span class="ns" id="fnHouseSub"></span></div>
           <div class="fnode grid" id="fnGridBox"><span class="nk" data-i18n="flowGrid">Netz</span><span class="nv" id="fnGrid">–</span><span class="ns" id="fnGridSub"></span></div>
-          <div class="fnode offg"><span class="nk" data-i18n="flowOffgrid">Offgrid</span><span class="nv" id="fnOff">–</span><span class="ns" id="fnOffSub"></span></div>
+          <div class="fnode offg" id="fnOffBox"><span class="nk" data-i18n="flowOffgrid">Offgrid</span><span class="nv" id="fnOff">–</span><span class="ns" id="fnOffSub"></span></div>
           <div class="fnode feed" id="fnFeedBox" hidden><span class="nk" id="fnFeedName">–</span><span class="nv" id="fnFeed">–</span><span class="ns" id="fnFeedSub"></span></div>
         </div>
       </div>
@@ -1142,7 +1142,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.7.0";
+  const APP_VERSION = "5.7.1";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1610,7 +1610,7 @@
     feedErrIp: 'Das sieht nicht nach einer IPv4-Adresse aus: {ip}', feedErrUnreach: 'Shelly unter {ip} nicht erreichbar', feedErrNoPower: 'Shelly unter {ip} liefert keine Leistung', feedDefault: 'Einspeisung',
     feedOn: 'speist ein', feedIdle: 'keine Einspeisung', feedOffline: 'offline', feedPart: '{n} von {m} offline',
     bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
-    sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffNone: 'nicht belegt', fOffIdle: 'keine Last', fNoData: 'keine Daten',
+    sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffSwOff: 'Steckdose aus', fOffIdle: 'keine Last', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Bereitschaft', stOg: 'Offgrid',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
     tempLbl: 'Temperatur {v} °C', cellWeak: 'schwächste Zelle', usable: 'nutzbar {v} %',
@@ -1644,7 +1644,7 @@
     feedErrIp: 'This does not look like an IPv4 address: {ip}', feedErrUnreach: 'Shelly at {ip} not reachable', feedErrNoPower: 'Shelly at {ip} reports no power value', feedDefault: 'Feed-in',
     feedOn: 'feeding in', feedIdle: 'no feed-in', feedOffline: 'offline', feedPart: '{n} of {m} offline',
     bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
-    sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffNone: 'not in use', fOffIdle: 'no load', fNoData: 'no data',
+    sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffSwOff: 'socket off', fOffIdle: 'no load', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby', stOg: 'off-grid',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
     tempLbl: 'Temperature {v} °C', cellWeak: 'weakest cell', usable: 'usable {v} %',
@@ -1678,7 +1678,7 @@
     feedErrIp: 'Ceci ne ressemble pas à une adresse IPv4 : {ip}', feedErrUnreach: 'Shelly à {ip} injoignable', feedErrNoPower: 'Le Shelly à {ip} ne fournit pas de puissance', feedDefault: 'Injection',
     feedOn: 'injecte', feedIdle: 'pas d’injection', feedOffline: 'hors ligne', feedPart: '{n} sur {m} hors ligne',
     bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
-    sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffNone: 'non utilisé', fOffIdle: 'aucune charge', fNoData: 'pas de données',
+    sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffSwOff: 'prise désactivée', fOffIdle: 'aucune charge', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille', stOg: 'hors réseau',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
     tempLbl: 'Température {v} °C', cellWeak: 'cellule la plus faible', usable: 'utilisable {v} %',
@@ -4246,8 +4246,31 @@
   }
   function setText(id, s){ const el = document.getElementById(id); if (el) el.textContent = s; }
 
+  // Offgrid im Energiefluss (ab 5.7.1) nur fuer Geraete mit Offgrid-Steckdose.
+  // Merkliste je Geraet (id|ip) im Browser: online mit offGrid -> eintragen,
+  // online ohne offGrid -> austragen (kein Ausgang bzw. Geraet getauscht),
+  // offline -> unveraendert. Geraete, die nicht mehr konfiguriert sind, fallen raus.
+  // So verschwindet der Knoten nicht bei jedem kurzen Aussetzer.
+  const OG_SEEN_KEY = 'zendash_neu_offgrid';
+  let ogSeen = {};
+  try { ogSeen = JSON.parse(localStorage.getItem(OG_SEEN_KEY) || '{}') || {}; } catch (e) { ogSeen = {}; }
+  function ogId(h){ return h.id + '|' + h.ip; }
+  function ogHas(h){ return ogSeen[ogId(h)] === 1; }
+  function ogLearn(){
+    const neu = {};
+    hubs.forEach(function(h){
+      const k = ogId(h);
+      if (h.online) { if (h.offGrid !== null && h.offGrid !== undefined) neu[k] = 1; }
+      else if (ogSeen[k] === 1) neu[k] = 1;
+    });
+    if (JSON.stringify(neu) === JSON.stringify(ogSeen)) return;
+    ogSeen = neu;
+    try { localStorage.setItem(OG_SEEN_KEY, JSON.stringify(ogSeen)); } catch (e) {}
+  }
+
   function renderFlow(){
     if (view !== 'flow') return;
+    if (hubs.length) ogLearn();
     const sel = hubs.filter(function(h){ return flowScope === 'all' || String(h.id) === flowScope; });
     const on = sel.filter(function(h){ return h.online; });
     const name = flowScope === 'all'
@@ -4255,7 +4278,12 @@
       : (sel[0] ? sel[0].label : '–');
     const sum = function(list, f){ return list.reduce(function(s, h){ return s + f(h); }, 0); };
     const hasPv = on.some(function(h){ return h.pv !== null && h.pv !== undefined; });
-    const hasOff = on.some(function(h){ return h.offGrid !== null && h.offGrid !== undefined; });
+    const ogSel = sel.filter(ogHas);   // Geraete mit Offgrid-Steckdose im Ausschnitt
+    const ogOn = ogSel.filter(function(h){ return h.online && h.offGrid !== null && h.offGrid !== undefined; });
+    const showOff = ogSel.length > 0;
+    const hasOff = ogOn.length > 0;
+    // Steckdose am Geraet auf AUS (gridOffModeHw 2) bei allen erreichbaren Offgrid-Geraeten
+    const ogAllOff = hasOff && ogOn.every(function(h){ return h.gridOffModeHw === 2; });
     const pv = sum(on, function(h){ return Number(h.pv || 0); });
     const off = sum(on, function(h){ return offW(h) || 0; });
     const ac = sum(on, function(h){ return Number(h.power || 0); });
@@ -4282,7 +4310,10 @@
     const sb = document.getElementById('fnSocBar'); if (sb) sb.style.width = (soc || 0) + '%';
     setText('fnOff', none || !hasOff ? '–' : fmtW(off));
     // Im Fluss nur Betraege; Richtung zeigt Text und Animation (setFlowLine nimmt das Vorzeichen)
-    setText('fnOffSub', none ? t('fNoData') : (!hasOff ? t('fOffNone') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : 'fOffIdle'))));
+    setText('fnOffSub', !hasOff ? t('fNoData') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : (ogAllOff ? 'fOffSwOff' : 'fOffIdle'))));
+    const ob = document.getElementById('fnOffBox'); if (ob) ob.hidden = !showOff;
+    const ot = document.getElementById('ft-off'); if (ot) ot.hidden = !showOff;
+    const ol = document.getElementById('fl-off'); if (ol) ol.hidden = !showOff;
     setText('fnHouse', house === null ? '–' : fmtW(house));
     setText('fnHouseSub', t('fHouse'));   // ohne „gesamt“ – das Haus ist immer das ganze Haus
     const g = gridOnline ? Math.round(gridPower) : null;

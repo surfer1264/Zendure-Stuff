@@ -8,6 +8,18 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.7.1
+
+**Ziel:** Der Energiefluss zeigt Offgrid nur noch, wenn ein Solarflow eine Offgrid-Steckdose hat. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Offgrid nur mit Steckdose:** Knoten, Linie und Punkte erscheinen nur, wenn im gewählten Ausschnitt mindestens ein Gerät eine Offgrid-Steckdose hat (bei „Gesamt“ irgendein Gerät, sonst genau das gewählte). Erkannt wird das wie beim Reiter „Offgrid“ an `offGrid` (Report `gridOffPower`). Bisher stand der Knoten immer da, ohne Steckdose mit „nicht belegt“.
+- **Gemischte Anlagen:** Bei „Gesamt“ zählt die Summe der Geräte mit Steckdose. Ein einzeln gewähltes Gerät ohne Steckdose zeigt keinen Offgrid-Knoten.
+- **Kein Flackern:** Der Browser merkt sich je Gerät „hat Steckdose“ (`localStorage`). Ist ein solches Gerät offline, bleibt der Knoten stehen und zeigt „keine Daten“. Meldet ein Gerät online keinen Offgrid-Wert mehr (z. B. nach einem Tausch), oder ist es nicht mehr konfiguriert, fällt es aus der Merkliste.
+- **Steckdose aus:** Ist die Offgrid-Steckdose am Gerät ausgeschaltet (`gridOffModeHw` = 2) und fließt nichts, steht unter dem Knoten „Steckdose aus“.
+- Home-Assistant-App 5.7.1.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.7.0
 
 **Ziel:** Eine zusätzliche Einspeisung im Haushalt (Balkonkraftwerk, weiterer Wechselrichter), die ein Shelly misst, erscheint im Energiefluss, und der Hausverbrauch stimmt wieder. Keine Änderung an den Shelly-Scripten und am Regler.
