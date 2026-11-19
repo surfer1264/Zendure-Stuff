@@ -8,6 +8,15 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.7.2
+
+**Ziel:** Fehlerkorrektur zu 5.7.1 – ohne Offgrid-Steckdose verschwindet jetzt auch die Flusslinie.
+
+- **Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.
+- Home-Assistant-App 5.7.2.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.7.1
 
 **Ziel:** Der Energiefluss zeigt Offgrid nur noch, wenn ein Solarflow eine Offgrid-Steckdose hat. Keine Änderung an den Shelly-Scripten und am Regler.

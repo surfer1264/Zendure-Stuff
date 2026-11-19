@@ -1142,7 +1142,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.7.1";
+  const APP_VERSION = "5.7.2";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -4312,8 +4312,9 @@
     // Im Fluss nur Betraege; Richtung zeigt Text und Animation (setFlowLine nimmt das Vorzeichen)
     setText('fnOffSub', !hasOff ? t('fNoData') : t(off >= 5 ? 'fOffOn' : (off <= -5 ? 'fOffIn' : (ogAllOff ? 'fOffSwOff' : 'fOffIdle'))));
     const ob = document.getElementById('fnOffBox'); if (ob) ob.hidden = !showOff;
-    const ot = document.getElementById('ft-off'); if (ot) ot.hidden = !showOff;
-    const ol = document.getElementById('fl-off'); if (ol) ol.hidden = !showOff;
+    // SVG-Elemente kennen .hidden nicht - Attribut setzen (wie bei der Einspeisung)
+    const ot = document.getElementById('ft-off'); if (ot) ot.toggleAttribute('hidden', !showOff);
+    const ol = document.getElementById('fl-off'); if (ol) ol.toggleAttribute('hidden', !showOff);
     setText('fnHouse', house === null ? '–' : fmtW(house));
     setText('fnHouseSub', t('fHouse'));   // ohne „gesamt“ – das Haus ist immer das ganze Haus
     const g = gridOnline ? Math.round(gridPower) : null;
