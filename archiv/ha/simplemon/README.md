@@ -1,16 +1,16 @@
-# simplemon – einfacher Logger und Dashboard für einen Zendure-Speicher
+# simplemon – Logger für einen Zendure-Speicher
 
 > **Archiv – wird nicht weiterentwickelt.** simplemon ist ein früher, eigenständiger Vorläufer der Suite. Nachfolger sind das Shelly-Script `zendash_watch` (Daten und Watchdog), der Dashboard-Proxy und die Statistik-Auswertung unter [`shelly_script/`](../../../shelly_script/).
 
-simplemon ist ein einzelnes Python-Script, das **einen** Zendure-Speicher regelmäßig ausliest, die Werte speichert und als Webseite mit Live-Werten, Verläufen und Tagesenergie anzeigt. Auf Wunsch schickt es Warnungen per Signal oder WhatsApp. Es **steuert nichts**: Es liest nur und schreibt nichts auf den Speicher.
+simplemon ist ein einzelnes Python-Script, das **einen** Zendure-Speicher regelmäßig ausliest und die Werte in eine SQLite-Datenbank schreibt, auf Wunsch zusätzlich in CSV-Dateien. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf den Speicher.
 
-Gedacht war es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi.
+Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi. Ausgewertet werden die Daten mit eigenen Werkzeugen, z. B. einem SQLite-Browser oder einer Tabellenkalkulation.
 
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
-| `zendure_dashboard.py` | Das Programm: Abfrage, Speicherung, Warnungen, Webserver und Webseite in einer Datei |
+| `zendure_logger.py` | Das Programm: Abfrage und Speichern |
 | `config.py` | Alle Einstellungen. Nur diese Datei wird angepasst, das Programm lässt sich bei einem Update einfach ersetzen |
 
 Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
@@ -20,63 +20,50 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 1. **Abfrage:** Alle `POLL_INTERVAL` Sekunden (Standard 30) holt es den Report des Speichers über die lokale zenSDK-Schnittstelle (`GET /properties/report`).
    - Optional dazu die Netzleistung von einem **Shelly Pro 3EM** (`EM.GetStatus`, Feld `total_act_power`).
    - Optional die Leistung eines **weiteren Shellys**, z. B. an einer zusätzlichen Einspeisung. Erkannt werden `total_act_power`, `act_power` und `apower`.
-   - Fällt einer der Shellys aus, läuft die Aufzeichnung des Speichers trotzdem weiter.
-2. **Speichern:**
-   - **SQLite** (`zendure_log.db`):
-     - Tabelle `device` mit den wichtigsten Hub-Werten (SoC, PV, Ausgang, Akku laden/entladen, Grenzen, Temperatur, WLAN …).
-     - Tabelle `packs` je Akkupack (SoC, Temperatur, Spannung, Zellspannung min/max …).
-     - Temperaturen werden dabei von Zehntel-Kelvin in ganze °C umgerechnet.
-   - **CSV** (`zendure_log.csv`, `zendure_packs.csv`) als unbegrenztes Archiv, abschaltbar mit `WRITE_CSV = False`.
-   - **Aufräumen:** Einmal am Tag werden Rohdaten älter als `RETENTION_DAYS` (Standard 7) aus der Datenbank gelöscht. Vorher werden die Tageswerte in die Tabelle `energy_daily` übernommen, sie bleiben also dauerhaft erhalten.
-3. **Tagesenergie:** Aus den Leistungswerten rechnet es je Tag die Energie in kWh für PV, Abgabe ans Haus, Laden aus dem Netz, Akku laden und Akku entladen. Lücken länger als zwei Abfrageintervalle (Ausfall, Neustart) werden nicht mitgezählt.
-4. **Warnungen** (nur mit `USE_SIGNAL = True`, über den Dienst CallMeBot). Jede Warnung kommt einmal und erst wieder, wenn der Wert in den sicheren Bereich zurückgekehrt ist:
-   - Akku voll ab `VOLL_SCHWELLE` %, erneut erst nach Unterschreiten von `ENTLADE_RESET` %.
-   - Gerätetemperatur über `TEMP_WARN` °C, zurückgesetzt unter `TEMP_RESET` °C.
-   - Zellspannung eines Packs unter `MIN_VOLT_WARN` V, zurückgesetzt über `MIN_VOLT_RESET` V.
-   - Beim Start zusätzlich die Meldung „Zendure-Watchdog gestartet“.
-5. **Webseite** unter `http://<Rechner-IP>:<WEB_PORT>`:
-   - Leistungsverlauf (PV, Ausgang, Akku laden/entladen, SoC, Netz laut Smartmeter), Anzahl der Punkte umschaltbar (200 / 400 / 600)
-   - Energiefluss live, mit optionaler Kachel für den weiteren Shelly
-   - Arbeit heute und Tageswerte in kWh
-   - Akkupacks als Tabelle und Verlauf der Zellspannungen je Pack
+   - Fällt einer der Shellys aus, läuft die Aufzeichnung des Speichers trotzdem weiter; der Wert bleibt dann leer.
+2. **Speichern in SQLite** (`DB_FILE`, Standard `zendure_log.db`):
 
-## Schnittstellen des Webservers
+   | Tabelle | Inhalt |
+   |---|---|
+   | `device` | je Abfrage eine Zeile: Zeit, Seriennummer des Hubs, Smartmeter- und Shelly-Wert, SoC, PV (gesamt und je Eingang), Ausgang, Akku laden/entladen, Netzladung, Grenzen, Temperatur, Spannung, Betriebsart, WLAN, Fehlerkennung |
+   | `packs` | je Abfrage und Akkupack eine Zeile: Seriennummer, SoC, Zustand, Leistung, Temperatur, Spannung, Strom, Zellspannung max/min |
+   | `energy_daily` | je Tag die Energie in kWh: PV, Abgabe ans Haus, Laden aus dem Netz, Akku laden, Akku entladen |
 
-| Adresse | Liefert |
-|---|---|
-| `/` | die Webseite |
-| `/data` | letzter Report des Speichers plus Smartmeter- und Shelly-Wert (JSON) |
-| `/history?n=…` | Verlauf der Hub-Werte, höchstens `MAX_POINTS` Punkte |
-| `/packhistory?n=…` | Verlauf von Zellspannung min/max je Pack |
-| `/energy?days=…` | Tagesenergie in kWh, optional nur die letzten Tage |
+   Temperaturen werden von Zehntel-Kelvin in ganze °C umgerechnet. Kommen in einer neuen Version Spalten dazu, ergänzt das Programm sie in einer vorhandenen Datenbank selbst.
+3. **CSV (optional):** Mit `WRITE_CSV = True` schreibt es dieselben Werte zusätzlich in `zendure_log.csv` und `zendure_packs.csv`. Die CSV-Dateien wachsen unbegrenzt und dienen als Archiv.
+4. **Aufräumen:** Einmal am Tag rechnet es die Tagesenergie aus den Rohdaten und schreibt sie in `energy_daily`. Danach löscht es Rohdaten älter als `RETENTION_DAYS` (Standard 7) aus `device` und `packs`. Die Tagesenergie und die CSV-Dateien bleiben erhalten. `RETENTION_DAYS = 0` löscht nie.
+   - Für die Tagesenergie zählen nur Abstände bis zu zwei Abfrageintervallen; längere Lücken (Ausfall, Neustart) werden nicht hochgerechnet.
 
 ## Einstellungen (`config.py`)
 
-| Gruppe | Schlüssel |
-|---|---|
-| Gerät und Server | `DEVICE_URL` (Report-Adresse des Speichers), `POLL_INTERVAL`, `WEB_PORT`, `DEVICE_LABEL` |
-| Dateien | `CSV_FILE`, `PACK_CSV_FILE`, `DB_FILE`, `WRITE_CSV` |
-| Ausgabe und Speicherung | `QUIET`, `RETENTION_DAYS`, `MAX_POINTS` |
-| Benachrichtigungen | `USE_SIGNAL`, `MESSENGER_TYP` (`SIGNAL` oder `WHATSAPP`), `SIGNAL_PHONE`, `SIGNAL_KEY` |
-| Schwellen | `VOLL_SCHWELLE`, `ENTLADE_RESET`, `MIN_VOLT_WARN`, `MIN_VOLT_RESET`, `TEMP_WARN`, `TEMP_RESET` |
-| Smartmeter | `USE_SMARTMETER`, `SMARTMETER_URL` |
-| Weiterer Shelly | `USE_EXTRA_SHELLY`, `EXTRA_SHELLY_URL`, `EXTRA_SHELLY_LABEL` |
+| Schlüssel | Bedeutung | Standard |
+|---|---|---|
+| `DEVICE_URL` | Report-Adresse des Speichers, z. B. `http://192.168.x.x/properties/report` | – |
+| `POLL_INTERVAL` | Sekunden zwischen zwei Abfragen | 30 |
+| `DB_FILE` | Name der Datenbank | `zendure_log.db` |
+| `WRITE_CSV` | zusätzlich CSV schreiben | `True` |
+| `CSV_FILE`, `PACK_CSV_FILE` | Namen der CSV-Dateien | `zendure_log.csv`, `zendure_packs.csv` |
+| `QUIET` | `True` = nur Start- und Fehlermeldungen in der Konsole | `False` |
+| `RETENTION_DAYS` | Rohdaten in der Datenbank nach so vielen Tagen löschen, 0 = nie | 7 |
+| `USE_SMARTMETER`, `SMARTMETER_URL` | Netzleistung vom Shelly Pro 3EM mitschreiben | – |
+| `USE_EXTRA_SHELLY`, `EXTRA_SHELLY_URL` | Leistung eines weiteren Shellys mitschreiben | – |
 
-Fehlen in einer älteren `config.py` die Einträge für Smartmeter oder weiteren Shelly, läuft das Programm trotzdem; die Anzeige dafür bleibt dann aus.
+Fehlen die Einträge für Smartmeter oder weiteren Shelly, bleiben diese Quellen aus. Eine ältere `config.py` mit Einträgen für Webseite, Nachrichten oder Schwellwerte funktioniert weiter; diese Einträge werden ignoriert.
 
 ## Start
 
 ```sh
-python3 zendure_dashboard.py
+python3 zendure_logger.py
 ```
 
 `config.py` muss im selben Ordner liegen. Beenden mit Strg+C.
 
-## Grenzen und Hinweise
+## Hinweise
 
-- **Nur ein Speicher.** Mehrere Geräte, Regelung und Einstellungen über das Dashboard gibt es erst in der Suite.
-- **Kein Zugangsschutz.** Der Webserver lauscht auf allen Netzwerkschnittstellen (`0.0.0.0`) ohne Passwort, also nur im Heimnetz betreiben.
-- **Internet für die Diagramme:** Die Webseite lädt Chart.js von `cdn.jsdelivr.net`. Ohne Internet fehlen die Diagramme, die Zahlen erscheinen trotzdem.
-- **Zugangsdaten:** Telefonnummer und CallMeBot-Schlüssel stehen im Klartext in `config.py` und werden in der Abfrage-URL an CallMeBot übertragen. Eine ausgefüllte `config.py` gehört nicht ins Repo.
-- **Port:** Die Beschreibung am Anfang von `zendure_dashboard.py` nennt Port 8080. Maßgeblich ist `WEB_PORT` aus `config.py`, dort steht 8085.
+- **Nur ein Speicher.** Für mehrere Geräte das Programm mehrfach in eigenen Ordnern starten, jeweils mit eigener `config.py`.
 - **Felder des Reports:** simplemon liest nur Felder, die auch in Report `version` 4 noch vorhanden sind (Stand 11/2026). Fehlt ein Feld, bleibt die Spalte leer.
+- **Datenbank im laufenden Betrieb:** Lesen ist jederzeit möglich. Ein Programm, das die Datei sperrt, kann einzelne Schreibvorgänge scheitern lassen; der Fehler erscheint in der Konsole, die nächste Abfrage wird normal geschrieben.
+
+## Frühere Fassung
+
+Bis 11/2026 hieß das Programm `zendure_dashboard.py` und enthielt zusätzlich eine Webseite (Live-Werte, Verläufe, Energiefluss) sowie Warnungen per Signal/WhatsApp mit Schwellwerten. Beides ist entfallen; die Fassung steht in der Git-Historie.
