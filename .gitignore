@@ -1,7 +1,5 @@
-archiv/ha/simplemon/__pycache__/
-archiv/ha/simplemon/zendure_log.csv
-archiv/ha/simplemon/zendure_log.db
-archiv/ha/simplemon/zendure_packs.csv
+# Datenbanken (z. B. simplemon zendure_log.db) - enthalten Seriennummern, nie committen
+*.db
 Zendure-Stuff.wiki/
 ZendureWiki.wiki/
 myconfig.js
