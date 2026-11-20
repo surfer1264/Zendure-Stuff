@@ -1,21 +1,25 @@
 # ============================================================================
-#  Zendure Logger - Konfiguration
+#  Zendure Logger - Konfiguration (VORLAGE)
 # ============================================================================
-#  Diese Datei enthaelt alle Einstellungen. Nur hier etwas aendern.
-#  Das Hauptscript (zendure_logger.py) muss nicht angefasst werden und
-#  kann bei einem Update einfach ersetzt werden - diese Datei bleibt erhalten.
+#  Diese Datei ist die Vorlage im Repo und enthaelt nur Platzhalter.
+#  Eigene Werte NICHT hier eintragen, sondern:
+#    1. diese Datei als config_local.py in denselben Ordner kopieren
+#    2. dort die eigenen Adressen und Einstellungen eintragen
+#  Gibt es config_local.py, liest das Programm nur diese. config_local.py
+#  steht in .gitignore und landet so nie im Repo.
 # ============================================================================
 
-# ----------------------------- Geraet ------------------------------------
-DEVICE_URL = "http://192.168.178.150/properties/report"   # IP deiner Zendure
-POLL_INTERVAL = 60          # Sekunden zwischen Abfragen
-
-# Mehrere Speicher: Liste DEVICES statt DEVICE_URL. Ist DEVICES gesetzt, wird
-# DEVICE_URL ignoriert. "name" erscheint in DB und CSV und muss eindeutig sein.
+# ----------------------------- Geraete -----------------------------------
+# Liste der Speicher. "name" erscheint in DB und CSV und muss eindeutig sein.
 DEVICES = [
-    {"name": "SF2400Pro", "url": "http://192.168.178.150/properties/report"},
-    {"name": "SF800",     "url": "http://192.168.178.143/properties/report"},
+    {"name": "SF800 Pro", "url": "http://192.168.x.x/properties/report"},
+    {"name": "SF800",     "url": "http://192.168.x.y/properties/report"},
 ]
+# Aeltere Schreibweise fuer nur einen Speicher (wird ignoriert, wenn DEVICES
+# gesetzt ist):
+# DEVICE_URL = "http://192.168.x.x/properties/report"
+
+POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
 
 # ----------------------------- Dateien -----------------------------------
 DB_FILE = "zendure_log.db"
@@ -31,8 +35,8 @@ WRITE_DB = True     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufrae
 WRITE_CSV = True    # CSV-Dateien (Geraete-, Pack- und Smartmeter-CSV).
 
 # ----------------------------- Ausgabe & Speicherung ---------------------
-# Konsolenausgabe: True unterdrueckt Routine-Meldungen. Fehler, DB-Migrations-
-# und Startmeldungen erscheinen unabhaengig davon immer.
+# Konsolenausgabe: True unterdrueckt Routine-Meldungen. Fehler und
+# Startmeldungen erscheinen unabhaengig davon immer.
 QUIET = False
 
 # Gleitender Datenbestand in der DB: aeltere Rohdaten werden einmal am Tag
@@ -43,5 +47,5 @@ RETENTION_DAYS = 7
 # ----------------------------- Smartmeter (Shelly Pro 3EM) ---------------
 # Optional: Netzleistung direkt vom Shelly Pro 3EM (lokale RPC-API),
 # gespeichert einmal je Abfrage in der Tabelle site (Spalte gridMeterPower).
-USE_SMARTMETER = True
-SMARTMETER_URL = "http://192.168.178.117/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
+USE_SMARTMETER = False
+SMARTMETER_URL = "http://192.168.x.z/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro

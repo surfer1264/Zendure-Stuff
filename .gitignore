@@ -24,3 +24,6 @@ zendure_versions_cache.json
 
 # Von deploy.cmd erzeugtes Script MIT eigener Konfiguration - nie committen
 upload_mini.js
+
+# simplemon: eigene Konfiguration mit echten Adressen - nie committen
+config_local.py

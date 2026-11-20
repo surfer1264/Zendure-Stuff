@@ -1,6 +1,6 @@
 # simplemon – Logger für Zendure-Speicher
 
-> **Archiv – wird nicht weiterentwickelt.** simplemon ist ein früher, eigenständiger Vorläufer der Suite. Nachfolger sind das Shelly-Script `zendash_watch` (Daten und Watchdog), der Dashboard-Proxy und die Statistik-Auswertung unter [`shelly_script/`](../../../shelly_script/).
+> **Eigenständiges Werkzeug neben der Suite.** simplemon braucht keinen Shelly und kein Script der Suite. Es liest die Speicher direkt über die zenSDK-Schnittstelle. Für Regelung, Dashboard und Meldungen gibt es die [Suite](../readme.md) mit dem Shelly-Script `zendash_watch`, dem Dashboard-Proxy und der [Statistik-Auswertung](../stat/auswertung/readme.md).
 
 simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speicher samt Akkupacks regelmäßig ausliest und die Werte in eine SQLite-Datenbank und/oder in CSV-Dateien schreibt. Beides lässt sich einzeln abschalten. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf die Speicher.
 
@@ -11,7 +11,10 @@ Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Rasp
 | Datei | Inhalt |
 |---|---|
 | `zendure_logger.py` | Das Programm: Abfrage und Speichern |
-| `config.py` | Alle Einstellungen. Nur diese Datei wird angepasst, das Programm lässt sich bei einem Update einfach ersetzen |
+| `config.py` | Vorlage der Einstellungen mit Platzhaltern. Liegt im Repo, wird nicht angepasst |
+| `config_local.py` | Deine Einstellungen mit echten Adressen. Legst du selbst an (Kopie von `config.py`), steht in `.gitignore` und kommt nie ins Repo |
+
+Gibt es `config_local.py`, liest das Programm nur diese Datei, sonst `config.py`. Die Startmeldung nennt die verwendete Datei. Das Programm lässt sich bei einem Update einfach ersetzen, deine Einstellungen bleiben erhalten.
 
 Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 
@@ -56,7 +59,7 @@ Umgerechnet wird vor dem Speichern, gleich für Datenbank und CSV:
 
 Alle anderen Werte bleiben in der Einheit des Reports, z. B. `BatVolt` und `totalVol` in 0,01 V (4913 = 49,13 V), Leistungen in W.
 
-## Einstellungen (`config.py`)
+## Einstellungen (`config_local.py`)
 
 | Schlüssel | Bedeutung | Standard |
 |---|---|---|
@@ -88,7 +91,7 @@ Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter o
 python3 zendure_logger.py
 ```
 
-`config.py` muss im selben Ordner liegen. Beenden mit Strg+C.
+Beim ersten Mal `config.py` als `config_local.py` kopieren und dort die eigenen Adressen eintragen. Beide liegen im selben Ordner wie das Programm. Beenden mit Strg+C.
 
 ## Umstieg von einer früheren Fassung
 
@@ -99,17 +102,17 @@ python3 zendure_logger.py
 - **Jede andere Antwort**, auch nur Enter, bricht ab. Es wird nichts gelöscht, das Programm beendet sich mit einem Hinweis.
 - **Ohne Konsole** (z. B. als Hintergrunddienst oder per Aufgabenplaner) kann niemand antworten: Es wird nichts gelöscht, das Programm beendet sich. Nach einem Update daher einmal von Hand in einer Konsole starten.
 
-Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in `config.py` neue Dateinamen ein (`DB_FILE`, `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE`). Bei späteren Starts bleiben die neuen Dateien erhalten, eine Rückfrage kommt nur bei einem alten Aufbau.
+Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in `config_local.py` neue Dateinamen ein (`DB_FILE`, `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE`). Bei späteren Starts bleiben die neuen Dateien erhalten, eine Rückfrage kommt nur bei einem alten Aufbau.
 
 ## Hinweise
 
 - **Felder des Reports:** simplemon liest nur Felder, die auch in Report `version` 4 noch vorhanden sind (Stand 11/2026). Fehlt ein Feld, bleibt die Spalte leer.
 - **Datenbank im laufenden Betrieb:** Lesen ist jederzeit möglich. Sperrt ein anderes Programm die Datei, kann eine Runde scheitern; der Fehler erscheint in der Konsole, die nächste Runde wird normal geschrieben.
-- **Zugangsdaten und Adressen:** Eine `config.py` mit echten IP-Adressen gehört nicht ins Repo.
+- **Zugangsdaten und Adressen:** Echte IP-Adressen gehören nur in `config_local.py`, nie in `config.py`. Datenbanken (`*.db`) und CSV-Dateien sind über `.gitignore` ausgeschlossen, weil sie Seriennummern enthalten.
 
 ## Mögliche Erweiterung: Versand an ThingsBoard
 
-> **Nur ein Konzept, nicht umgesetzt.** Es orientiert sich an der ThingsBoard-Anbindung des Dashboard-Proxys ([`ts_bridge.py`](../../../shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py)). Die offenen Fragen am Ende sind noch zu entscheiden.
+> **Nur ein Konzept, nicht umgesetzt.** Es orientiert sich an der ThingsBoard-Anbindung des Dashboard-Proxys ([`ts_bridge.py`](../zendash_watch_API_ZenSDK/ts_bridge.py)). Die offenen Fragen am Ende sind noch zu entscheiden.
 
 ### Ziel
 
@@ -167,16 +170,18 @@ Die Werte sind dieselben wie in Datenbank und CSV, mit denselben Umrechnungen (�
    - **Empfehlung:** Position im Namen, Seriennummer als Attribut.
 3. **Sendetakt:** bei jeder Abfrage oder jede volle Minute? **Empfehlung: jede Minute** (`TB_INTERVAL = 60`), auch wenn alle 30 s abgefragt wird.
 4. **Auswahl der Werte:**
-   - Fest vorgegeben, oder in `config.py` als Liste einstellbar (`TB_HUB_FIELDS`, `TB_PACK_FIELDS`) mit Standardwerten?
+   - Fest vorgegeben, oder in `config_local.py` als Liste einstellbar (`TB_HUB_FIELDS`, `TB_PACK_FIELDS`) mit Standardwerten?
    - **Empfehlung: einstellbar.** Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 10 Werten und 4 Akkupacks mit je 5 Werten ergeben 40 Werte pro Minute, rund 58 000 am Tag.
 5. **ThingsBoard nicht erreichbar:** verwerfen wie in `ts_bridge` (die Daten liegen ja in Datenbank bzw. CSV) oder zwischenspeichern und später nachsenden? **Empfehlung: verwerfen.**
 6. **Smartmeter als Gerät „Netz“:** **Empfehlung: ja**, wie in `ts_bridge`.
 
 ### Sicherheit
 
-Das Token (bzw. die Tokens) stünde in `config.py`. Damit wird die Datei noch schützenswerter. Sie darf mit echtem Token nie ins Repo.
+Das Token (bzw. die Tokens) stünde in `config_local.py`, nie in `config.py`. Damit wird die Datei noch schützenswerter.
 
 ## Frühere Fassungen
+
+- Bis 11/2026 lag simplemon im Archiv unter `archiv/ha/simplemon/`.
 
 - Bis 11/2026 hieß das Programm `zendure_dashboard.py` und enthielt zusätzlich eine Webseite sowie Warnungen per Signal/WhatsApp mit Schwellwerten.
 - Die erste Fassung von `zendure_logger.py` konnte nur einen Speicher, schrieb zusätzlich die Leistung eines weiteren Shellys und rechnete eine Tagesenergie (`energy_daily`).

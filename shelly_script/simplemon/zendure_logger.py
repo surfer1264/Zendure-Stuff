@@ -14,17 +14,21 @@ Beenden: Strg+C
 
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
-import csv, json, os, sqlite3, sys, threading, time, urllib.request
+import csv, importlib, json, os, sqlite3, sys, threading, time, urllib.request
 from datetime import datetime
 
 # ----------------------------- Konfiguration -----------------------------
-# Alle Einstellungen stehen in config.py (im selben Ordner). Diese Datei hier
-# muss nicht angefasst werden und kann bei Updates ersetzt werden.
+# Alle Einstellungen stehen in config_local.py (eigene Werte, wird nicht
+# committet) oder, wenn es die nicht gibt, in config.py (Vorlage mit
+# Platzhaltern im Repo). Beide liegen im selben Ordner wie dieses Script,
+# das nicht angefasst werden muss und bei Updates ersetzt werden kann.
+import importlib.util
+CONFIG_NAME = "config_local" if importlib.util.find_spec("config_local") else "config"
 try:
-    import config
+    config = importlib.import_module(CONFIG_NAME)
 except ImportError as e:
-    print("FEHLER: config.py nicht gefunden. Die Datei muss im selben Ordner")
-    print("        liegen wie dieses Script. Details:", e)
+    print("FEHLER: weder config_local.py noch config.py gefunden. Die Datei muss im")
+    print("        selben Ordner liegen wie dieses Script. Details:", e)
     sys.exit(1)
 
 
@@ -71,7 +75,7 @@ try:
     if not WRITE_DB and not WRITE_CSV:
         raise ValueError("WRITE_DB und WRITE_CSV sind beide False - es wuerde nichts geschrieben")
 except ValueError as e:
-    print("FEHLER in config.py:", e)
+    print(f"FEHLER in {CONFIG_NAME}.py:", e)
     sys.exit(1)
 
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
@@ -376,6 +380,7 @@ def store(con, reports, grid_meter, cycle_ts):
 def poll_loop():
     con = setup_db() if WRITE_DB else None
     ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else []))
+    log_always(f"Einstellungen aus {CONFIG_NAME}.py")
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
     for d in DEVICES:
         log_always(f"  {d['name']}: {d['url']}")
