@@ -44,4 +44,4 @@ RETENTION_DAYS = 7
 # Optional: Netzleistung direkt vom Shelly Pro 3EM (lokale RPC-API),
 # gespeichert einmal je Abfrage in der Tabelle site (Spalte gridMeterPower).
 USE_SMARTMETER = True
-SMARTMETER_URL = "http://192.168.x.z/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
+SMARTMETER_URL = "http://192.168.178.117/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro

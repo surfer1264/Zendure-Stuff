@@ -78,32 +78,43 @@ except ValueError as e:
 
 # Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie
 # geloescht und neu angelegt (keine Uebernahme alter Daten).
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
-# Felder des Hubs (properties), die gespeichert werden
+# Felder der obersten Ebene des Reports (neben sn und timestamp)
+TOP_FIELDS = ["product", "version"]
+
+# Felder des Hubs (properties), die gespeichert werden. Gerätefelder, die ein
+# Modell nicht liefert (z. B. Offgrid beim SolarFlow 800), bleiben leer.
 PROPS = [
     "electricLevel", "packInputPower", "outputPackPower", "outputHomePower",
     "gridInputPower", "solarInputPower", "solarPower1", "solarPower2",
-    "solarPower3", "solarPower4", "packState",
-    "hyperTmp", "BatVolt", "outputLimit", "inputLimit", "socSet",
-    "minSoc", "acMode", "rssi", "is_error",
+    "solarPower3", "solarPower4", "packState", "packNum",
+    "hyperTmp", "heatState", "BatVolt", "outputLimit", "inputLimit", "socSet",
+    "minSoc", "socLimit", "socStatus", "acMode", "gridReverse",
+    "chargeMaxLimit", "inverseMaxPower", "gridOffPower", "gridOffMode",
+    "faultLevel", "rssi", "is_error",
 ]
 
 # Felder pro Akku-Pack (Reihenfolge gilt fuer DB-Tabelle und Pack-CSV)
-PACK_FIELDS = ["sn", "socLevel", "state", "power", "maxTemp",
-               "totalVol", "batcur", "maxVol", "minVol"]
+PACK_FIELDS = ["sn", "packType", "softVersion", "socLevel", "state", "power",
+               "maxTemp", "totalVol", "batcur", "maxVol", "minVol"]
 
-# SQLite-Spaltentyp je Pack-Feld (Felder ohne Eintrag -> Standard REAL)
-PACK_TYPES = {"sn": "TEXT", "state": "INTEGER", "batcur": "INTEGER",
-              "maxVol": "INTEGER", "minVol": "INTEGER"}
+# SQLite-Spaltentyp je Feld (Felder ohne Eintrag -> Standard REAL)
+FIELD_TYPES = {"product": "TEXT", "version": "INTEGER", "sn": "TEXT",
+               "packType": "INTEGER", "softVersion": "INTEGER",
+               "state": "INTEGER", "batcur": "INTEGER"}
 
-# Felder, die als Roh-Temperatur (Zehntel-Kelvin) geliefert werden und vor dem
-# Speichern in ganze Grad Celsius umgewandelt werden: (roh - 2731) / 10, gerundet.
+# Umrechnungen vor dem Speichern (gelten fuer DB und CSV):
+#   Temperatur:   Zehntel-Kelvin -> ganze °C:  (roh - 2731) / 10, gerundet
+#   Zellspannung: 0,01 V -> V (2 Nachkommastellen)
+#   minSoc/socSet: Zehntel-Prozent -> % (1 Nachkommastelle)
 TEMP_FIELDS = {"hyperTmp", "maxTemp"}
+VOLT_FIELDS = {"maxVol", "minVol"}
+PERMILLE_FIELDS = {"minSoc", "socSet"}
 
 # Kopfzeilen der CSV-Dateien. Hat eine vorhandene Datei einen anderen Kopf,
 # wird sie geloescht und neu angelegt.
-DEV_HEADER = ["ts", "dt", "name", "hub_sn", "dev_ts"] + PROPS
+DEV_HEADER = ["ts", "dt", "name", "hub_sn", "dev_ts"] + TOP_FIELDS + PROPS
 PACK_HEADER = ["ts", "dt", "name", "hub_sn", "packIndex"] + PACK_FIELDS
 SITE_HEADER = ["ts", "dt", "gridMeterPower"]
 
@@ -121,6 +132,28 @@ def log_always(*args):
 
 def now():
     return f"{datetime.now():%H:%M:%S}"
+
+
+def _num(raw):
+    if raw is None or raw == "":
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def convert(field, raw):
+    """Rohwert eines Feldes in die gespeicherte Einheit umrechnen."""
+    if field in TEMP_FIELDS:
+        return raw_to_celsius(raw)
+    if field in VOLT_FIELDS:
+        v = _num(raw)
+        return None if v is None else round(v / 100, 2)
+    if field in PERMILLE_FIELDS:
+        v = _num(raw)
+        return None if v is None else round(v / 10, 1)
+    return raw
 
 
 def raw_to_celsius(raw):
@@ -157,11 +190,11 @@ def setup_db():
         log_always(f"Datenbank {DB_FILE} hatte einen alten Aufbau - geloescht und neu angelegt")
 
     con = sqlite3.connect(DB_FILE)
-    dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
+    dev_cols = ", ".join(f"{p} {FIELD_TYPES.get(p, 'REAL')}" for p in TOP_FIELDS + PROPS)
     con.execute(f"CREATE TABLE IF NOT EXISTS device ("
                 f"ts INTEGER, dt TEXT, name TEXT, hub_sn TEXT, dev_ts INTEGER, {dev_cols}, "
                 f"PRIMARY KEY (name, ts))")
-    pack_cols = ", ".join(f"{f} {PACK_TYPES.get(f, 'REAL')}" for f in PACK_FIELDS)
+    pack_cols = ", ".join(f"{f} {FIELD_TYPES.get(f, 'REAL')}" for f in PACK_FIELDS)
     con.execute(f"CREATE TABLE IF NOT EXISTS packs ("
                 f"ts INTEGER, dt TEXT, name TEXT, hub_sn TEXT, packIndex INTEGER, {pack_cols})")
     # Werte, die zum Haus gehoeren und nicht zu einem Geraet: einmal je Abfrage
@@ -174,13 +207,18 @@ def setup_db():
 
 
 # ----------------------------- CSV ----------------------------------------
+# Trennzeichen fuer Excel mit deutschen Einstellungen: Spalten mit Semikolon,
+# Dezimalzahlen mit Komma. Gilt nur fuer die CSV, die DB speichert Zahlen.
+CSV_DELIMITER = ";"
+CSV_DECIMAL = ","
+
 def prepare_csv(path, header):
     """Datei mit anderem Kopf (alte Fassung) loeschen - sie wird neu angelegt."""
     if not os.path.exists(path):
         return
     try:
         with open(path, newline="") as f:
-            first = next(csv.reader(f), None)
+            first = next(csv.reader(f, delimiter=CSV_DELIMITER), None)
     except OSError:
         first = None
     if first != header:
@@ -191,14 +229,22 @@ def prepare_csv(path, header):
 def append_csv(path, header, rows):
     new = not os.path.exists(path)
     with open(path, "a", newline="") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, delimiter=CSV_DELIMITER)
         if new:
             w.writerow(header)
         w.writerows(rows)
 
 
 def _csv_val(v):
-    return "" if v is None else v
+    """Wert fuer die CSV: leer statt None, Dezimalkomma statt Punkt.
+    Kommazahlen ohne Nachkommaanteil (z. B. 40.0) als ganze Zahl."""
+    if v is None:
+        return ""
+    if isinstance(v, float):
+        if v.is_integer():
+            return str(int(v))
+        return repr(v).replace(".", CSV_DECIMAL)
+    return v
 
 
 # ----------------------------- Abfragen -----------------------------------
@@ -264,17 +310,13 @@ def store(con, reports, grid_meter, cycle_ts):
         ts = cycle_ts                      # gleiche Zeit fuer alle Tabellen einer Runde
         dev_ts = data.get("timestamp")     # Zeit laut Geraet
         hub_sn = data.get("sn")
-        props = dict(data.get("properties", {}))
-        for f in TEMP_FIELDS:
-            if f in props:
-                props[f] = raw_to_celsius(props[f])
-        dev_rows.append([ts, dt, r["name"], hub_sn, dev_ts] + [props.get(p) for p in PROPS])
+        props = data.get("properties", {})
+        dev_rows.append([ts, dt, r["name"], hub_sn, dev_ts]
+                        + [data.get(f) for f in TOP_FIELDS]
+                        + [convert(p, props.get(p)) for p in PROPS])
         for i, pk in enumerate(data.get("packData", [])):
-            pk = dict(pk)
-            for f in TEMP_FIELDS:
-                if f in pk:
-                    pk[f] = raw_to_celsius(pk[f])
-            pack_rows.append([ts, dt, r["name"], hub_sn, i] + [pk.get(fld) for fld in PACK_FIELDS])
+            pack_rows.append([ts, dt, r["name"], hub_sn, i]
+                             + [convert(f, pk.get(f)) for f in PACK_FIELDS])
 
     if con is not None:
         with con:   # eine Transaktion; bei Fehler alles zurueck
@@ -294,7 +336,7 @@ def store(con, reports, grid_meter, cycle_ts):
         if pack_rows:
             append_csv(PACK_CSV_FILE, PACK_HEADER, [[_csv_val(v) for v in row] for row in pack_rows])
         if USE_SMARTMETER and grid_meter is not None:
-            append_csv(SITE_CSV_FILE, SITE_HEADER, [[cycle_ts, dt, grid_meter]])
+            append_csv(SITE_CSV_FILE, SITE_HEADER, [[cycle_ts, dt, _csv_val(grid_meter)]])
 
 
 # ----------------------------- Abfrage-Schleife ---------------------------

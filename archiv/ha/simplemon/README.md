@@ -25,15 +25,36 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 
    | Tabelle | Inhalt |
    |---|---|
-   | `device` | je Runde und Speicher eine Zeile: Zeit, Name aus der Konfiguration, Seriennummer des Hubs, Zeit laut Gerät (`dev_ts`), SoC, PV (gesamt und je Eingang), Ausgang, Akku laden/entladen, Netzladung, Grenzen, Temperatur, Spannung, Betriebsart, WLAN, Fehlerkennung |
-   | `packs` | je Runde und Akkupack eine Zeile: Zeit, Name und Seriennummer des Hubs, Nummer des Packs, Seriennummer des Packs, SoC, Zustand, Leistung, Temperatur, Spannung, Strom, Zellspannung max/min |
+   | `device` | je Runde und Speicher eine Zeile, Felder siehe unten |
+   | `packs` | je Runde und Akkupack eine Zeile, Felder siehe unten |
    | `site` | je Runde eine Zeile mit der Netzleistung vom Smartmeter (nur mit `USE_SMARTMETER = True`) |
 
    - Alle Zeilen einer Runde tragen dieselbe Zeit `ts`. So lassen sich Speicher, Packs und Smartmeter direkt verknüpfen, z. B. `SELECT … FROM device JOIN site USING (ts)`.
-   - Temperaturen werden von Zehntel-Kelvin in ganze °C umgerechnet.
    - Eine Runde wird in einem Zug geschrieben: entweder ganz oder gar nicht.
 3. **CSV (optional):** Mit `WRITE_CSV = True` schreibt es dieselben Werte zusätzlich in `zendure_log.csv`, `zendure_packs.csv` und, mit Smartmeter, `zendure_site.csv`. Die CSV-Dateien wachsen unbegrenzt.
+   - Format für Excel mit deutschen Einstellungen: Spalten getrennt mit **Semikolon**, Dezimalzahlen mit **Komma** (`3,27`). Kommazahlen ohne Nachkommaanteil stehen als ganze Zahl (`100` statt `100,0`).
+   - In der Datenbank sind die Werte echte Zahlen, dort gibt es kein Dezimalkomma.
 4. **Aufräumen** (nur mit Datenbank): Beim Start und danach einmal am Tag löscht es Zeilen älter als `RETENTION_DAYS` (Standard 7) aus allen Tabellen. `RETENTION_DAYS = 0` löscht nie. Die CSV-Dateien bleiben unangetastet.
+
+## Gespeicherte Felder
+
+Gespeichert wird eine Auswahl aus dem Report, nicht der ganze Report. Felder, die ein Modell nicht liefert (z. B. Offgrid beim SolarFlow 800), bleiben leer.
+
+| Tabelle | Felder |
+|---|---|
+| `device` | `ts`, `dt`, `name`, `hub_sn`, `dev_ts` (Zeit laut Gerät), `product`, `version` (Report-Version) und aus `properties`: `electricLevel`, `packInputPower`, `outputPackPower`, `outputHomePower`, `gridInputPower`, `solarInputPower`, `solarPower1`–`4`, `packState`, `packNum`, `hyperTmp`, `heatState`, `BatVolt`, `outputLimit`, `inputLimit`, `socSet`, `minSoc`, `socLimit`, `socStatus`, `acMode`, `gridReverse`, `chargeMaxLimit`, `inverseMaxPower`, `gridOffPower`, `gridOffMode`, `faultLevel`, `rssi`, `is_error` |
+| `packs` | `ts`, `dt`, `name`, `hub_sn`, `packIndex` und aus `packData`: `sn`, `packType`, `softVersion`, `socLevel`, `state`, `power`, `maxTemp`, `totalVol`, `batcur`, `maxVol`, `minVol` |
+| `site` | `ts`, `dt`, `gridMeterPower` |
+
+Umgerechnet wird vor dem Speichern, gleich für Datenbank und CSV:
+
+| Felder | Report | gespeichert |
+|---|---|---|
+| `hyperTmp`, `maxTemp` | Zehntel-Kelvin | ganze °C, gerundet |
+| `maxVol`, `minVol` (Zellspannung) | 0,01 V | V mit 2 Nachkommastellen, z. B. 3,27 |
+| `minSoc`, `socSet` | Zehntel-Prozent | %, z. B. 40 bzw. 40,5 |
+
+Alle anderen Werte bleiben in der Einheit des Reports, z. B. `BatVolt` und `totalVol` in 0,01 V (4913 = 49,13 V), Leistungen in W.
 
 ## Einstellungen (`config.py`)
 
@@ -69,9 +90,9 @@ python3 zendure_logger.py
 
 `config.py` muss im selben Ordner liegen. Beenden mit Strg+C.
 
-## Umstieg von der Fassung für ein Gerät
+## Umstieg von einer früheren Fassung
 
-Die Datenbank hat einen neuen Aufbau (Spalte `name`, Tabelle `site`, keine Tagesenergie mehr). Beim ersten Start mit dieser Fassung gilt:
+Ändert sich der Aufbau von Datenbank oder CSV (zuletzt: mehrere Geräte, zusätzliche Felder, Umrechnungen, Semikolon und Dezimalkomma in der CSV), gilt beim ersten Start mit der neuen Fassung:
 
 - Eine **Datenbank im alten Aufbau wird gelöscht und neu angelegt.** Alte Daten werden nicht übernommen.
 - **CSV-Dateien mit altem Kopf werden gelöscht** und neu angelegt.
