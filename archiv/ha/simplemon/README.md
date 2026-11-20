@@ -107,6 +107,75 @@ Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in
 - **Datenbank im laufenden Betrieb:** Lesen ist jederzeit möglich. Sperrt ein anderes Programm die Datei, kann eine Runde scheitern; der Fehler erscheint in der Konsole, die nächste Runde wird normal geschrieben.
 - **Zugangsdaten und Adressen:** Eine `config.py` mit echten IP-Adressen gehört nicht ins Repo.
 
+## Mögliche Erweiterung: Versand an ThingsBoard
+
+> **Nur ein Konzept, nicht umgesetzt.** Es orientiert sich an der ThingsBoard-Anbindung des Dashboard-Proxys ([`ts_bridge.py`](../../../shelly_script/zendash_watch_API_ZenSDK/ts_bridge.py)). Die offenen Fragen am Ende sind noch zu entscheiden.
+
+### Ziel
+
+Neben Datenbank und CSV als **dritte, abschaltbare Ausgabe** die Werte an ThingsBoard senden. Jeder Solarflow ist dort ein eigenes Gerät, jeder Akkupack ebenfalls.
+
+```python
+WRITE_TB = True        # WRITE_DB / WRITE_CSV / WRITE_TB – mindestens eins True
+TB_HOST  = "https://eu.thingsboard.cloud"
+```
+
+### Was von `ts_bridge` übernommen wird
+
+- **Geräte-Schnittstelle von ThingsBoard:** `POST {host}/api/v1/{token}/telemetry` für Messwerte und `…/attributes` für selten wechselnde Werte. Erfolg ist HTTP 200.
+- **Fester Sendetakt:** zu jeder vollen Minute, Zeitstempel = volle Minute.
+- **Ein Wiederholversuch** nach 5 s. Scheitert auch der, wird der Wert verworfen und protokolliert.
+- **Status-Werte nur bei Änderung**, dazu einmal am Tag und nach einem Neustart. Das spart Datenpunkte.
+- **Fehlende Werte werden weggelassen.** Ein Gerät, das offline ist, sendet in dieser Minute nichts.
+- **Smartmeter als eigenes Gerät „Netz“** mit dem Wert `gridPower`.
+- **Prüfung der Tokens:** Im Logger gibt es keine Einstellungsseite, deshalb wird beim Start je Token ein Test-Attribut gesendet. Ist ein Token falsch, kommt eine klare Fehlermeldung.
+
+### Geräte in ThingsBoard
+
+| Gerät | Beispielname | Inhalt |
+|---|---|---|
+| je Solarflow | „SF2400Pro“ (Name aus `DEVICES`) | Messwerte und Status des Hubs |
+| je Akkupack | „SF2400Pro Akku 1“ | Messwerte des Packs |
+| Netz | „Netz“ | Netzleistung vom Smartmeter, nur wenn eingerichtet |
+
+Ein Solarflow mit zwei Akkupacks ergibt also drei Geräte.
+
+### Welche Werte wie gesendet werden
+
+Die Werte sind dieselben wie in Datenbank und CSV, mit denselben Umrechnungen (°C, V, %).
+
+| Art | Solarflow | Akkupack |
+|---|---|---|
+| **Messwerte** (Telemetrie, jede Minute) | `electricLevel`, `solarInputPower`, `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower`, `hyperTmp` … | `socLevel`, `power`, `maxTemp`, `totalVol`, `maxVol`, `minVol`, `batcur` |
+| **Status und Grenzen** (Telemetrie, nur bei Änderung) | `socLimit`, `socStatus`, `socSet`, `minSoc`, `heatState`, `gridOffMode`, `chargeMaxLimit`, `inverseMaxPower`, `gridReverse` | – |
+| **Feste Angaben** (Attribute, beim Start und bei Änderung) | `product`, `version`, `hub_sn`, `packNum` | `sn`, `packType`, `softVersion` |
+
+### Ablauf
+
+- Das Senden läuft in einem **eigenen Thread**. Ein langsames oder nicht erreichbares ThingsBoard bremst weder die Abfrage noch das Schreiben in Datenbank und CSV.
+- Der Sendetakt ist unabhängig vom Abfragetakt: Gesendet wird zur vollen Minute der jeweils letzte Stand.
+
+### Offene Fragen (mit Empfehlung)
+
+1. **Ein Token je Gerät oder ein Gateway?**
+   - Wie in `ts_bridge` je Gerät ein Token: Bei Akkupacks wird das mühsam. Jeder Pack muss in ThingsBoard von Hand angelegt werden, und nach einem Tausch braucht es ein neues Gerät mit neuem Token.
+   - Alternative: die **Gateway-Schnittstelle von ThingsBoard**. Ein einziges Gerät „Gateway“ mit einem Token (`…/gateway/telemetry`, `…/gateway/attributes`). ThingsBoard legt Solarflow-, Akku- und Netz-Geräte anhand des Namens **selbst an**.
+   - **Empfehlung: Gateway.**
+2. **Name der Akku-Geräte:**
+   - Nach Position („SF800 Akku 1“): gut lesbar, aber die Nummer kann sich verschieben, wenn sich die Reihenfolge im Report ändert.
+   - Nach Seriennummer („SF800 Akku <sn>“): stabil, aber schlechter lesbar.
+   - **Empfehlung:** Position im Namen, Seriennummer als Attribut.
+3. **Sendetakt:** bei jeder Abfrage oder jede volle Minute? **Empfehlung: jede Minute** (`TB_INTERVAL = 60`), auch wenn alle 30 s abgefragt wird.
+4. **Auswahl der Werte:**
+   - Fest vorgegeben, oder in `config.py` als Liste einstellbar (`TB_HUB_FIELDS`, `TB_PACK_FIELDS`) mit Standardwerten?
+   - **Empfehlung: einstellbar.** Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 10 Werten und 4 Akkupacks mit je 5 Werten ergeben 40 Werte pro Minute, rund 58 000 am Tag.
+5. **ThingsBoard nicht erreichbar:** verwerfen wie in `ts_bridge` (die Daten liegen ja in Datenbank bzw. CSV) oder zwischenspeichern und später nachsenden? **Empfehlung: verwerfen.**
+6. **Smartmeter als Gerät „Netz“:** **Empfehlung: ja**, wie in `ts_bridge`.
+
+### Sicherheit
+
+Das Token (bzw. die Tokens) stünde in `config.py`. Damit wird die Datei noch schützenswerter. Sie darf mit echtem Token nie ins Repo.
+
 ## Frühere Fassungen
 
 - Bis 11/2026 hieß das Programm `zendure_dashboard.py` und enthielt zusätzlich eine Webseite sowie Warnungen per Signal/WhatsApp mit Schwellwerten.
