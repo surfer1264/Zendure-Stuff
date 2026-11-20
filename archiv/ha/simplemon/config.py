@@ -23,8 +23,8 @@ CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
 SITE_CSV_FILE = "zendure_site.csv"   # nur mit Smartmeter
 
-# Hinweis: Eine Datenbank oder CSV-Datei im alten Aufbau (Fassung fuer nur
-# ein Geraet) wird beim Start geloescht und neu angelegt.
+# Hinweis: Hat eine Datenbank oder CSV-Datei einen alten Aufbau, fragt das
+# Programm beim Start, ob sie geloescht und neu angelegt werden soll.
 
 # Was geschrieben wird. Mindestens eins muss True sein.
 WRITE_DB = True     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufraeumen.

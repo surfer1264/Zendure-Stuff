@@ -94,10 +94,12 @@ python3 zendure_logger.py
 
 Ändert sich der Aufbau von Datenbank oder CSV (zuletzt: mehrere Geräte, zusätzliche Felder, Umrechnungen, Semikolon und Dezimalkomma in der CSV), gilt beim ersten Start mit der neuen Fassung:
 
-- Eine **Datenbank im alten Aufbau wird gelöscht und neu angelegt.** Alte Daten werden nicht übernommen.
-- **CSV-Dateien mit altem Kopf werden gelöscht** und neu angelegt.
+- Das Programm listet die Datenbank und die CSV-Dateien im alten Aufbau auf und **fragt nach**: „Löschen und neu anlegen? Alte Daten gehen verloren. [j/N]“
+- **Nur „j“ oder „ja“ löscht** die aufgelisteten Dateien; sie werden danach neu angelegt. Alte Daten werden nicht übernommen.
+- **Jede andere Antwort**, auch nur Enter, bricht ab. Es wird nichts gelöscht, das Programm beendet sich mit einem Hinweis.
+- **Ohne Konsole** (z. B. als Hintergrunddienst oder per Aufgabenplaner) kann niemand antworten: Es wird nichts gelöscht, das Programm beendet sich. Nach einem Update daher einmal von Hand in einer Konsole starten.
 
-Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in `config.py` neue Dateinamen ein. Die Konsole meldet jedes Löschen. Bei späteren Starts bleibt die neue Datenbank erhalten.
+Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in `config.py` neue Dateinamen ein (`DB_FILE`, `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE`). Bei späteren Starts bleiben die neuen Dateien erhalten, eine Rückfrage kommt nur bei einem alten Aufbau.
 
 ## Hinweise
 

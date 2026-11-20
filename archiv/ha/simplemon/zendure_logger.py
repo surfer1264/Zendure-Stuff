@@ -76,8 +76,8 @@ except ValueError as e:
 
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
 
-# Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie
-# geloescht und neu angelegt (keine Uebernahme alter Daten).
+# Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie nach
+# Rueckfrage geloescht und neu angelegt (keine Uebernahme alter Daten).
 SCHEMA_VERSION = 3
 
 # Felder der obersten Ebene des Reports (neben sn und timestamp)
@@ -113,7 +113,7 @@ VOLT_FIELDS = {"maxVol", "minVol"}
 PERMILLE_FIELDS = {"minSoc", "socSet"}
 
 # Kopfzeilen der CSV-Dateien. Hat eine vorhandene Datei einen anderen Kopf,
-# wird sie geloescht und neu angelegt.
+# wird sie nach Rueckfrage geloescht und neu angelegt.
 DEV_HEADER = ["ts", "dt", "name", "hub_sn", "dev_ts"] + TOP_FIELDS + PROPS
 PACK_HEADER = ["ts", "dt", "name", "hub_sn", "packIndex"] + PACK_FIELDS
 SITE_HEADER = ["ts", "dt", "gridMeterPower"]
@@ -183,12 +183,10 @@ def _db_version(path):
 
 
 def setup_db():
-    """Legt die Datenbank an. Eine vorhandene Datei mit anderem Aufbau
-    (z. B. aus der Fassung fuer ein Geraet) wird geloescht und neu angelegt."""
+    """Legt die Datenbank an bzw. oeffnet sie. Eine Datei mit altem Aufbau
+    wurde vorher in check_old_files() nach Rueckfrage entfernt."""
     if os.path.exists(DB_FILE) and _db_version(DB_FILE) != SCHEMA_VERSION:
-        os.remove(DB_FILE)
-        log_always(f"Datenbank {DB_FILE} hatte einen alten Aufbau - geloescht und neu angelegt")
-
+        raise RuntimeError(f"Datenbank {DB_FILE} hat einen alten Aufbau")
     con = sqlite3.connect(DB_FILE)
     dev_cols = ", ".join(f"{p} {FIELD_TYPES.get(p, 'REAL')}" for p in TOP_FIELDS + PROPS)
     con.execute(f"CREATE TABLE IF NOT EXISTS device ("
@@ -212,18 +210,53 @@ def setup_db():
 CSV_DELIMITER = ";"
 CSV_DECIMAL = ","
 
-def prepare_csv(path, header):
-    """Datei mit anderem Kopf (alte Fassung) loeschen - sie wird neu angelegt."""
+def _csv_is_old(path, header):
+    """True, wenn die Datei existiert und einen anderen Kopf hat (alte Fassung)."""
     if not os.path.exists(path):
-        return
+        return False
     try:
         with open(path, newline="") as f:
             first = next(csv.reader(f, delimiter=CSV_DELIMITER), None)
     except OSError:
         first = None
-    if first != header:
+    return first != header
+
+
+def check_old_files():
+    """Dateien im alten Aufbau suchen und erst nach Rueckfrage loeschen.
+
+    Antwort "j"/"ja" -> loeschen, sie werden neu angelegt. Jede andere Antwort
+    oder keine Konsole (z. B. Hintergrunddienst) -> nichts loeschen, Ende.
+    """
+    old = []
+    if WRITE_DB and os.path.exists(DB_FILE) and _db_version(DB_FILE) != SCHEMA_VERSION:
+        old.append(DB_FILE)
+    if WRITE_CSV:
+        csvs = [(CSV_FILE, DEV_HEADER), (PACK_CSV_FILE, PACK_HEADER)]
+        if USE_SMARTMETER:
+            csvs.append((SITE_CSV_FILE, SITE_HEADER))
+        old += [path for path, header in csvs if _csv_is_old(path, header)]
+    if not old:
+        return
+
+    log_always("Diese Dateien haben einen alten Aufbau und passen nicht zu dieser Fassung:")
+    for path in old:
+        log_always(f"  {path}")
+    antwort = ""
+    if sys.stdin is not None and sys.stdin.isatty():
+        try:
+            antwort = input("Loeschen und neu anlegen? Alte Daten gehen verloren. [j/N] ")
+        except EOFError:
+            antwort = ""
+    else:
+        log_always("Keine Konsole fuer die Rueckfrage - es wird nichts geloescht.")
+    if antwort.strip().lower() not in ("j", "ja"):
+        log_always("Abgebrochen, nichts geloescht. Die Dateien wegkopieren oder in config.py")
+        log_always("neue Dateinamen eintragen (DB_FILE, CSV_FILE, PACK_CSV_FILE, SITE_CSV_FILE).")
+        sys.exit(1)
+    for path in old:
         os.remove(path)
-        log_always(f"CSV {path} hatte einen alten Aufbau - geloescht und neu angelegt")
+        log_always(f"{path} geloescht, wird neu angelegt")
 
 
 def append_csv(path, header, rows):
@@ -342,11 +375,6 @@ def store(con, reports, grid_meter, cycle_ts):
 # ----------------------------- Abfrage-Schleife ---------------------------
 def poll_loop():
     con = setup_db() if WRITE_DB else None
-    if WRITE_CSV:
-        prepare_csv(CSV_FILE, DEV_HEADER)
-        prepare_csv(PACK_CSV_FILE, PACK_HEADER)
-        if USE_SMARTMETER:
-            prepare_csv(SITE_CSV_FILE, SITE_HEADER)
     ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else []))
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
     for d in DEVICES:
@@ -405,6 +433,7 @@ def cleanup_loop():
 
 
 def main():
+    check_old_files()
     if WRITE_DB:
         setup_db().close()   # Datenbank pruefen/anlegen, bevor aufgeraeumt wird
         cleanup_db()
