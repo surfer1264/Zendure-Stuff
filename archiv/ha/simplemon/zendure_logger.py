@@ -34,6 +34,7 @@ def _cfg(name, default):
 
 POLL_INTERVAL = _cfg("POLL_INTERVAL", 30)
 DB_FILE = _cfg("DB_FILE", "zendure_log.db")
+WRITE_DB = _cfg("WRITE_DB", True)
 WRITE_CSV = _cfg("WRITE_CSV", True)
 CSV_FILE = _cfg("CSV_FILE", "zendure_log.csv")
 PACK_CSV_FILE = _cfg("PACK_CSV_FILE", "zendure_packs.csv")
@@ -67,6 +68,8 @@ def load_devices():
 
 try:
     DEVICES = load_devices()
+    if not WRITE_DB and not WRITE_CSV:
+        raise ValueError("WRITE_DB und WRITE_CSV sind beide False - es wuerde nichts geschrieben")
 except ValueError as e:
     print("FEHLER in config.py:", e)
     sys.exit(1)
@@ -250,7 +253,8 @@ def fetch_all():
 
 # ----------------------------- Schreiben ----------------------------------
 def store(con, reports, grid_meter, cycle_ts):
-    """Schreibt eine Abfragerunde in einer Transaktion (nur dieser Thread schreibt)."""
+    """Schreibt eine Abfragerunde: in die DB in einer Transaktion (nur dieser
+    Thread schreibt; con None = DB aus) und/oder in die CSV-Dateien."""
     dt = datetime.now().isoformat(timespec="seconds")
     dev_rows, pack_rows = [], []
     for r in reports:
@@ -272,16 +276,17 @@ def store(con, reports, grid_meter, cycle_ts):
                     pk[f] = raw_to_celsius(pk[f])
             pack_rows.append([ts, dt, r["name"], hub_sn, i] + [pk.get(fld) for fld in PACK_FIELDS])
 
-    with con:   # eine Transaktion; bei Fehler alles zurueck
-        if dev_rows:
-            ph = ", ".join("?" * len(DEV_HEADER))
-            con.executemany(f"INSERT OR REPLACE INTO device ({', '.join(DEV_HEADER)}) VALUES ({ph})", dev_rows)
-        if pack_rows:
-            ph = ", ".join("?" * len(PACK_HEADER))
-            con.executemany(f"INSERT INTO packs ({', '.join(PACK_HEADER)}) VALUES ({ph})", pack_rows)
-        if USE_SMARTMETER and grid_meter is not None:
-            con.execute("INSERT OR REPLACE INTO site (ts, dt, gridMeterPower) VALUES (?,?,?)",
-                        (cycle_ts, dt, grid_meter))
+    if con is not None:
+        with con:   # eine Transaktion; bei Fehler alles zurueck
+            if dev_rows:
+                ph = ", ".join("?" * len(DEV_HEADER))
+                con.executemany(f"INSERT OR REPLACE INTO device ({', '.join(DEV_HEADER)}) VALUES ({ph})", dev_rows)
+            if pack_rows:
+                ph = ", ".join("?" * len(PACK_HEADER))
+                con.executemany(f"INSERT INTO packs ({', '.join(PACK_HEADER)}) VALUES ({ph})", pack_rows)
+            if USE_SMARTMETER and grid_meter is not None:
+                con.execute("INSERT OR REPLACE INTO site (ts, dt, gridMeterPower) VALUES (?,?,?)",
+                            (cycle_ts, dt, grid_meter))
 
     if WRITE_CSV:
         if dev_rows:
@@ -294,13 +299,13 @@ def store(con, reports, grid_meter, cycle_ts):
 
 # ----------------------------- Abfrage-Schleife ---------------------------
 def poll_loop():
-    con = setup_db()
+    con = setup_db() if WRITE_DB else None
     if WRITE_CSV:
         prepare_csv(CSV_FILE, DEV_HEADER)
         prepare_csv(PACK_CSV_FILE, PACK_HEADER)
         if USE_SMARTMETER:
             prepare_csv(SITE_CSV_FILE, SITE_HEADER)
-    ziele = DB_FILE + (" + CSV" if WRITE_CSV else " (CSV aus)")
+    ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else []))
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
     for d in DEVICES:
         log_always(f"  {d['name']}: {d['url']}")
@@ -358,9 +363,10 @@ def cleanup_loop():
 
 
 def main():
-    setup_db().close()   # Datenbank pruefen/anlegen, bevor aufgeraeumt wird
-    cleanup_db()
-    threading.Thread(target=cleanup_loop, daemon=True).start()
+    if WRITE_DB:
+        setup_db().close()   # Datenbank pruefen/anlegen, bevor aufgeraeumt wird
+        cleanup_db()
+        threading.Thread(target=cleanup_loop, daemon=True).start()
     log_always("Beenden mit Strg+C")
     try:
         poll_loop()

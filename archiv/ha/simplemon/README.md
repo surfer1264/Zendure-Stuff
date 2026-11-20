@@ -2,7 +2,7 @@
 
 > **Archiv – wird nicht weiterentwickelt.** simplemon ist ein früher, eigenständiger Vorläufer der Suite. Nachfolger sind das Shelly-Script `zendash_watch` (Daten und Watchdog), der Dashboard-Proxy und die Statistik-Auswertung unter [`shelly_script/`](../../../shelly_script/).
 
-simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speicher samt Akkupacks regelmäßig ausliest und die Werte in eine SQLite-Datenbank schreibt, auf Wunsch zusätzlich in CSV-Dateien. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf die Speicher.
+simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speicher samt Akkupacks regelmäßig ausliest und die Werte in eine SQLite-Datenbank und/oder in CSV-Dateien schreibt. Beides lässt sich einzeln abschalten. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf die Speicher.
 
 Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi. Ausgewertet werden die Daten mit eigenen Werkzeugen, z. B. einem SQLite-Browser oder einer Tabellenkalkulation.
 
@@ -21,7 +21,7 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
    - Alle Speicher werden **gleichzeitig** abgefragt. Ein Speicher, der nicht antwortet, hält die anderen nicht auf. Er erscheint als Fehler in der Konsole, die übrigen werden normal geschrieben.
    - Optional dazu die Netzleistung von einem **Shelly Pro 3EM** (`EM.GetStatus`, Feld `total_act_power`), einmal je Runde.
    - Dauert eine Runde länger, verkürzt sich die Pause bis zur nächsten, damit der Takt gleich bleibt.
-2. **Speichern in SQLite** (`DB_FILE`, Standard `zendure_log.db`):
+2. **Speichern in SQLite (optional)** mit `WRITE_DB = True` (Standard) in `DB_FILE`, Standard `zendure_log.db`:
 
    | Tabelle | Inhalt |
    |---|---|
@@ -33,7 +33,7 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
    - Temperaturen werden von Zehntel-Kelvin in ganze °C umgerechnet.
    - Eine Runde wird in einem Zug geschrieben: entweder ganz oder gar nicht.
 3. **CSV (optional):** Mit `WRITE_CSV = True` schreibt es dieselben Werte zusätzlich in `zendure_log.csv`, `zendure_packs.csv` und, mit Smartmeter, `zendure_site.csv`. Die CSV-Dateien wachsen unbegrenzt.
-4. **Aufräumen:** Beim Start und danach einmal am Tag löscht es Zeilen älter als `RETENTION_DAYS` (Standard 7) aus allen Tabellen. `RETENTION_DAYS = 0` löscht nie. Die CSV-Dateien bleiben unangetastet.
+4. **Aufräumen** (nur mit Datenbank): Beim Start und danach einmal am Tag löscht es Zeilen älter als `RETENTION_DAYS` (Standard 7) aus allen Tabellen. `RETENTION_DAYS = 0` löscht nie. Die CSV-Dateien bleiben unangetastet.
 
 ## Einstellungen (`config.py`)
 
@@ -42,8 +42,9 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 | `DEVICES` | Liste der Speicher, je Eintrag `name` und `url` (siehe unten) | – |
 | `DEVICE_URL` | nur ein Speicher, ältere Schreibweise. Wird ignoriert, wenn `DEVICES` gesetzt ist | – |
 | `POLL_INTERVAL` | Sekunden zwischen zwei Runden | 30 |
+| `WRITE_DB` | in die SQLite-Datenbank schreiben | `True` |
+| `WRITE_CSV` | in CSV-Dateien schreiben | `True` |
 | `DB_FILE` | Name der Datenbank | `zendure_log.db` |
-| `WRITE_CSV` | zusätzlich CSV schreiben | `True` |
 | `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE` | Namen der CSV-Dateien | `zendure_log.csv`, `zendure_packs.csv`, `zendure_site.csv` |
 | `QUIET` | `True` = nur Start- und Fehlermeldungen in der Konsole | `False` |
 | `RETENTION_DAYS` | Zeilen in der Datenbank nach so vielen Tagen löschen, 0 = nie | 7 |
@@ -58,7 +59,7 @@ DEVICES = [
 ]
 ```
 
-Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter oder leerer Name bricht den Start mit einer Fehlermeldung ab.
+Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter oder leerer Name bricht den Start mit einer Fehlermeldung ab, ebenso `WRITE_DB = False` zusammen mit `WRITE_CSV = False`.
 
 ## Start
 
