@@ -7,13 +7,24 @@
 # ============================================================================
 
 # ----------------------------- Geraet ------------------------------------
-DEVICE_URL = "http://192.168.x.x/properties/report"   # IP deiner Zendure
-POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
+DEVICE_URL = "http://192.168.178.150/properties/report"   # IP deiner Zendure
+POLL_INTERVAL = 60          # Sekunden zwischen Abfragen
+
+# Mehrere Speicher: Liste DEVICES statt DEVICE_URL. Ist DEVICES gesetzt, wird
+# DEVICE_URL ignoriert. "name" erscheint in DB und CSV und muss eindeutig sein.
+# DEVICES = [
+#     {"name": "SF800 Pro", "url": "http://192.168.x.x/properties/report"},
+#     {"name": "SF800",     "url": "http://192.168.x.y/properties/report"},
+# ]
 
 # ----------------------------- Dateien -----------------------------------
 DB_FILE = "zendure_log.db"
 CSV_FILE = "zendure_log.csv"
 PACK_CSV_FILE = "zendure_packs.csv"
+SITE_CSV_FILE = "zendure_site.csv"   # nur mit Smartmeter
+
+# Hinweis: Eine Datenbank oder CSV-Datei im alten Aufbau (Fassung fuer nur
+# ein Geraet) wird beim Start geloescht und neu angelegt.
 
 # Schreiben der CSV-Dateien (Geraete- und Pack-CSV). False -> nur Datenbank.
 WRITE_CSV = True
@@ -24,18 +35,12 @@ WRITE_CSV = True
 QUIET = False
 
 # Gleitender Datenbestand in der DB: aeltere Rohdaten werden einmal am Tag
-# geloescht (z. B. 1 / 3 / 7 / 20). 0 -> nie loeschen. Die Tagesenergie
-# (Tabelle energy_daily) und die CSV-Dateien bleiben immer erhalten.
+# geloescht (z. B. 1 / 3 / 7 / 20). 0 -> nie loeschen. Die CSV-Dateien
+# bleiben immer erhalten.
 RETENTION_DAYS = 7
 
 # ----------------------------- Smartmeter (Shelly Pro 3EM) ---------------
 # Optional: Netzleistung direkt vom Shelly Pro 3EM (lokale RPC-API),
-# gespeichert in der Spalte gridMeterPower.
-USE_SMARTMETER = True
-SMARTMETER_URL = "http://192.168.x.y/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
-
-# ----------------------------- Weiterer Shelly ---------------------------
-# Optional: Leistung eines weiteren Shelly-Geraets (z. B. Zaehler an einer
-# PV-Einspeisung), gespeichert in der Spalte extraShellyPower.
-USE_EXTRA_SHELLY = True
-EXTRA_SHELLY_URL = "http://192.168.x.y/rpc/Switch.GetStatus?id=0"  # IP des Geraets
+# gespeichert einmal je Abfrage in der Tabelle site (Spalte gridMeterPower).
+USE_SMARTMETER = False
+SMARTMETER_URL = "http://192.168.x.z/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Zendure - Logger.
+Zendure - Logger fuer einen oder mehrere Speicher.
 
-Fragt einen Zendure-Speicher regelmaessig ab (lokale zenSDK-Schnittstelle,
-GET /properties/report) und schreibt die Werte in eine SQLite-Datenbank,
-optional zusaetzlich in CSV-Dateien. Optional werden die Netzleistung eines
-Shelly Pro 3EM und die Leistung eines weiteren Shellys mitgeschrieben.
+Fragt die Speicher regelmaessig ab (lokale zenSDK-Schnittstelle,
+GET /properties/report, alle Geraete parallel) und schreibt die Werte in
+eine SQLite-Datenbank, optional zusaetzlich in CSV-Dateien. Optional wird
+die Netzleistung eines Shelly Pro 3EM mitgeschrieben.
 
 Kein Webserver, keine Nachrichten, keine Schwellwerte - nur Aufzeichnung.
 
@@ -20,34 +20,62 @@ from datetime import datetime
 # ----------------------------- Konfiguration -----------------------------
 # Alle Einstellungen stehen in config.py (im selben Ordner). Diese Datei hier
 # muss nicht angefasst werden und kann bei Updates ersetzt werden.
-# Eine aeltere config.py mit zusaetzlichen Eintraegen (Webserver, Nachrichten,
-# Schwellwerte) funktioniert weiter - diese Eintraege werden ignoriert.
 try:
-    from config import (
-        DEVICE_URL, POLL_INTERVAL,
-        CSV_FILE, PACK_CSV_FILE, DB_FILE, WRITE_CSV, QUIET,
-        RETENTION_DAYS,
-    )
+    import config
 except ImportError as e:
-    print("FEHLER: config.py nicht gefunden oder unvollstaendig.")
-    print("        Die Datei config.py muss im selben Ordner liegen wie dieses Script")
-    print("        und alle Einstellungen enthalten. Details:", e)
+    print("FEHLER: config.py nicht gefunden. Die Datei muss im selben Ordner")
+    print("        liegen wie dieses Script. Details:", e)
     sys.exit(1)
 
-# Optionale Quellen mit Fallback: fehlen die Eintraege, bleiben sie aus.
-try:
-    from config import USE_SMARTMETER, SMARTMETER_URL
-except ImportError:
-    USE_SMARTMETER = False
-    SMARTMETER_URL = ""
+
+def _cfg(name, default):
+    return getattr(config, name, default)
+
+
+POLL_INTERVAL = _cfg("POLL_INTERVAL", 30)
+DB_FILE = _cfg("DB_FILE", "zendure_log.db")
+WRITE_CSV = _cfg("WRITE_CSV", True)
+CSV_FILE = _cfg("CSV_FILE", "zendure_log.csv")
+PACK_CSV_FILE = _cfg("PACK_CSV_FILE", "zendure_packs.csv")
+SITE_CSV_FILE = _cfg("SITE_CSV_FILE", "zendure_site.csv")
+QUIET = _cfg("QUIET", False)
+RETENTION_DAYS = _cfg("RETENTION_DAYS", 7)
+USE_SMARTMETER = _cfg("USE_SMARTMETER", False)
+SMARTMETER_URL = _cfg("SMARTMETER_URL", "")
+
+
+def load_devices():
+    """Geraeteliste aus DEVICES; aeltere config.py mit nur DEVICE_URL -> ein Geraet."""
+    devs = _cfg("DEVICES", None)
+    if devs is None:
+        url = _cfg("DEVICE_URL", "")
+        devs = [{"name": "Hub", "url": url}] if url else []
+    out, names = [], set()
+    for i, d in enumerate(devs):
+        name = str((d or {}).get("name") or "").strip()
+        url = str((d or {}).get("url") or "").strip()
+        if not name or not url:
+            raise ValueError(f"DEVICES[{i}]: 'name' und 'url' muessen gesetzt sein")
+        if name in names:
+            raise ValueError(f"DEVICES: Name '{name}' kommt doppelt vor - Namen muessen eindeutig sein")
+        names.add(name)
+        out.append({"name": name, "url": url})
+    if not out:
+        raise ValueError("Keine Geraete konfiguriert (DEVICES leer)")
+    return out
+
 
 try:
-    from config import USE_EXTRA_SHELLY, EXTRA_SHELLY_URL
-except ImportError:
-    USE_EXTRA_SHELLY = False
-    EXTRA_SHELLY_URL = ""
+    DEVICES = load_devices()
+except ValueError as e:
+    print("FEHLER in config.py:", e)
+    sys.exit(1)
 
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
+
+# Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie
+# geloescht und neu angelegt (keine Uebernahme alter Daten).
+SCHEMA_VERSION = 2
 
 # Felder des Hubs (properties), die gespeichert werden
 PROPS = [
@@ -70,14 +98,11 @@ PACK_TYPES = {"sn": "TEXT", "state": "INTEGER", "batcur": "INTEGER",
 # Speichern in ganze Grad Celsius umgewandelt werden: (roh - 2731) / 10, gerundet.
 TEMP_FIELDS = {"hyperTmp", "maxTemp"}
 
-# Leistungsfelder, aus denen die Tagesenergie (kWh) integriert wird -> Spaltenname
-ENERGY_FIELDS = {
-    "solar": "solarInputPower",
-    "home": "outputHomePower",
-    "grid": "gridInputPower",
-    "charge": "outputPackPower",
-    "discharge": "packInputPower",
-}
+# Kopfzeilen der CSV-Dateien. Hat eine vorhandene Datei einen anderen Kopf,
+# wird sie geloescht und neu angelegt.
+DEV_HEADER = ["ts", "dt", "name", "hub_sn", "dev_ts"] + PROPS
+PACK_HEADER = ["ts", "dt", "name", "hub_sn", "packIndex"] + PACK_FIELDS
+SITE_HEADER = ["ts", "dt", "gridMeterPower"]
 
 
 def log(*args):
@@ -87,8 +112,12 @@ def log(*args):
 
 
 def log_always(*args):
-    """Wichtige Ausgabe (Fehler, Migration, Start). Erscheint immer."""
+    """Wichtige Ausgabe (Fehler, Start, Neuanlage). Erscheint immer."""
     print(*args)
+
+
+def now():
+    return f"{datetime.now():%H:%M:%S}"
 
 
 def raw_to_celsius(raw):
@@ -105,48 +134,68 @@ def raw_to_celsius(raw):
 
 
 # ----------------------------- Datenbank ----------------------------------
-def _pack_col_def(field):
-    return f"{field} {PACK_TYPES.get(field, 'REAL')}"
-
-
-def ensure_columns(con, table, expected):
-    """Ergaenzt fehlende Spalten in einer bestehenden Tabelle per ALTER TABLE.
-
-    `expected` ist eine Liste von (Spaltenname, Typ)-Tupeln. Bereits
-    vorhandene Spalten bleiben unveraendert; nur fehlende werden hinzugefuegt.
-    """
-    have = {row[1] for row in con.execute(f"PRAGMA table_info({table})")}
-    for name, ctype in expected:
-        if name not in have:
-            con.execute(f"ALTER TABLE {table} ADD COLUMN {name} {ctype}")
-            log_always(f"DB-Migration: Spalte '{name}' zu Tabelle '{table}' hinzugefuegt")
+def _db_version(path):
+    """user_version einer vorhandenen Datenbank; None, wenn nicht lesbar."""
+    try:
+        con = sqlite3.connect(path)
+        try:
+            return con.execute("PRAGMA user_version").fetchone()[0]
+        finally:
+            con.close()
+    except sqlite3.Error:
+        return None
 
 
 def setup_db():
+    """Legt die Datenbank an. Eine vorhandene Datei mit anderem Aufbau
+    (z. B. aus der Fassung fuer ein Geraet) wird geloescht und neu angelegt."""
+    if os.path.exists(DB_FILE) and _db_version(DB_FILE) != SCHEMA_VERSION:
+        os.remove(DB_FILE)
+        log_always(f"Datenbank {DB_FILE} hatte einen alten Aufbau - geloescht und neu angelegt")
+
     con = sqlite3.connect(DB_FILE)
-
-    # gridMeterPower: Momentanwert vom Shelly Pro 3EM (echter Smartmeter-Wert,
-    # unabhaengig von der Zendure-eigenen gridInputPower).
     dev_cols = ", ".join(f"{p} REAL" for p in PROPS)
-    con.execute(f"CREATE TABLE IF NOT EXISTS device "
-                f"(ts INTEGER PRIMARY KEY, dt TEXT, hub_sn TEXT, gridMeterPower REAL, "
-                f"extraShellyPower REAL, {dev_cols})")
-    pack_cols = ", ".join(_pack_col_def(f) for f in PACK_FIELDS)
-    con.execute(f"CREATE TABLE IF NOT EXISTS packs (ts INTEGER, dt TEXT, {pack_cols})")
-
-    # Dauerhafte Tages-Energiestatistik (bleibt auch nach Loeschung der Rohdaten)
-    con.execute("""CREATE TABLE IF NOT EXISTS energy_daily (
-        day TEXT PRIMARY KEY, solar REAL, home REAL, grid REAL,
-        charge REAL, discharge REAL)""")
-
-    # Bestehende Tabellen migrieren: neue Felder aus PROPS / PACK_FIELDS nachziehen
-    ensure_columns(con, "device",
-                   [("hub_sn", "TEXT"), ("gridMeterPower", "REAL"), ("extraShellyPower", "REAL")]
-                   + [(p, "REAL") for p in PROPS])
-    ensure_columns(con, "packs", [(f, PACK_TYPES.get(f, "REAL")) for f in PACK_FIELDS])
-
+    con.execute(f"CREATE TABLE IF NOT EXISTS device ("
+                f"ts INTEGER, dt TEXT, name TEXT, hub_sn TEXT, dev_ts INTEGER, {dev_cols}, "
+                f"PRIMARY KEY (name, ts))")
+    pack_cols = ", ".join(f"{f} {PACK_TYPES.get(f, 'REAL')}" for f in PACK_FIELDS)
+    con.execute(f"CREATE TABLE IF NOT EXISTS packs ("
+                f"ts INTEGER, dt TEXT, name TEXT, hub_sn TEXT, packIndex INTEGER, {pack_cols})")
+    # Werte, die zum Haus gehoeren und nicht zu einem Geraet: einmal je Abfrage
+    con.execute("CREATE TABLE IF NOT EXISTS site ("
+                "ts INTEGER PRIMARY KEY, dt TEXT, gridMeterPower REAL)")
+    con.execute("CREATE INDEX IF NOT EXISTS packs_ts ON packs (ts)")
+    con.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
     con.commit()
     return con
+
+
+# ----------------------------- CSV ----------------------------------------
+def prepare_csv(path, header):
+    """Datei mit anderem Kopf (alte Fassung) loeschen - sie wird neu angelegt."""
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, newline="") as f:
+            first = next(csv.reader(f), None)
+    except OSError:
+        first = None
+    if first != header:
+        os.remove(path)
+        log_always(f"CSV {path} hatte einen alten Aufbau - geloescht und neu angelegt")
+
+
+def append_csv(path, header, rows):
+    new = not os.path.exists(path)
+    with open(path, "a", newline="") as f:
+        w = csv.writer(f)
+        if new:
+            w.writerow(header)
+        w.writerows(rows)
+
+
+def _csv_val(v):
+    return "" if v is None else v
 
 
 # ----------------------------- Abfragen -----------------------------------
@@ -156,192 +205,132 @@ def _get_json(url):
         return json.loads(r.read().decode())
 
 
-def fetch_device():
-    return _get_json(DEVICE_URL)
-
-
 def fetch_smartmeter():
     """Aktuelle Netz-Wirkleistung vom Shelly Pro 3EM (EM.GetStatus)."""
     return _get_json(SMARTMETER_URL).get("total_act_power")
 
 
-def fetch_extra_shelly():
-    """Aktueller Leistungswert des weiteren Shellys (RPC).
+def fetch_all():
+    """Alle Speicher und den Smartmeter parallel abfragen.
 
-    Erkennt 'total_act_power' (EM.GetStatus), 'act_power' (EM1.GetStatus)
-    und 'apower' (Switch.GetStatus / PM1.GetStatus).
+    Rueckgabe: (reports, grid_meter). reports: Liste je Geraet, Eintrag
+    {"name", "data"} oder {"name", "error"}. Ein ausgefallenes Geraet haelt
+    die anderen nicht auf.
     """
-    d = _get_json(EXTRA_SHELLY_URL)
-    for key in ("total_act_power", "act_power", "apower"):
-        if key in d:
-            return d[key]
-    return None
+    reports = [None] * len(DEVICES)
+    meter = {"value": None, "error": None}
+
+    def hole_geraet(i, dev):
+        try:
+            reports[i] = {"name": dev["name"], "data": _get_json(dev["url"])}
+        except Exception as e:
+            reports[i] = {"name": dev["name"], "error": str(e)}
+
+    def hole_meter():
+        try:
+            meter["value"] = fetch_smartmeter()
+        except Exception as e:
+            meter["error"] = str(e)
+
+    threads = [threading.Thread(target=hole_geraet, args=(i, d), daemon=True)
+               for i, d in enumerate(DEVICES)]
+    if USE_SMARTMETER:
+        threads.append(threading.Thread(target=hole_meter, daemon=True))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(15)
+    for i, dev in enumerate(DEVICES):
+        if reports[i] is None:
+            reports[i] = {"name": dev["name"], "error": "keine Antwort"}
+    if USE_SMARTMETER and meter["error"]:
+        log_always(f"{now()}  Smartmeter-Fehler: {meter['error']}")
+    return reports, meter["value"]
 
 
 # ----------------------------- Schreiben ----------------------------------
-def log_csv(ts, dt, hub_sn, props, grid_meter=None, extra_shelly=None):
-    new = not os.path.exists(CSV_FILE)
-    with open(CSV_FILE, "a", newline="") as f:
-        w = csv.writer(f)
-        if new:
-            w.writerow(["ts", "dt", "hub_sn", "gridMeterPower", "extraShellyPower"] + PROPS)
-        w.writerow([ts, dt, hub_sn if hub_sn is not None else "",
-                    grid_meter if grid_meter is not None else "",
-                    extra_shelly if extra_shelly is not None else ""] +
-                   [props.get(p, "") for p in PROPS])
-
-
-def log_packs_csv(ts, dt, packs):
-    new = not os.path.exists(PACK_CSV_FILE)
-    with open(PACK_CSV_FILE, "a", newline="") as f:
-        w = csv.writer(f)
-        if new:
-            w.writerow(["ts", "dt", "packIndex"] + PACK_FIELDS)
-        for i, pk in enumerate(packs):
-            w.writerow([ts, dt, i] + [pk.get(fld, "") for fld in PACK_FIELDS])
-
-
-def store(con, data, grid_meter=None, extra_shelly=None):
-    ts = data.get("timestamp", int(time.time()))
+def store(con, reports, grid_meter, cycle_ts):
+    """Schreibt eine Abfragerunde in einer Transaktion (nur dieser Thread schreibt)."""
     dt = datetime.now().isoformat(timespec="seconds")
-    props = dict(data.get("properties", {}))  # Kopie, Original unangetastet
-
-    # Temperaturen vor dem Speichern in ganze Grad Celsius umwandeln
-    for f in TEMP_FIELDS:
-        if f in props:
-            props[f] = raw_to_celsius(props[f])
-
-    packs = [dict(pk) for pk in data.get("packData", [])]  # Kopien
-    for pk in packs:
+    dev_rows, pack_rows = [], []
+    for r in reports:
+        if "data" not in r:
+            continue
+        data = r["data"]
+        ts = cycle_ts                      # gleiche Zeit fuer alle Tabellen einer Runde
+        dev_ts = data.get("timestamp")     # Zeit laut Geraet
+        hub_sn = data.get("sn")
+        props = dict(data.get("properties", {}))
         for f in TEMP_FIELDS:
-            if f in pk:
-                pk[f] = raw_to_celsius(pk[f])
+            if f in props:
+                props[f] = raw_to_celsius(props[f])
+        dev_rows.append([ts, dt, r["name"], hub_sn, dev_ts] + [props.get(p) for p in PROPS])
+        for i, pk in enumerate(data.get("packData", [])):
+            pk = dict(pk)
+            for f in TEMP_FIELDS:
+                if f in pk:
+                    pk[f] = raw_to_celsius(pk[f])
+            pack_rows.append([ts, dt, r["name"], hub_sn, i] + [pk.get(fld) for fld in PACK_FIELDS])
 
-    hub_sn = data.get("sn")  # Seriennummer des Hubs (oberste Ebene im Report)
+    with con:   # eine Transaktion; bei Fehler alles zurueck
+        if dev_rows:
+            ph = ", ".join("?" * len(DEV_HEADER))
+            con.executemany(f"INSERT OR REPLACE INTO device ({', '.join(DEV_HEADER)}) VALUES ({ph})", dev_rows)
+        if pack_rows:
+            ph = ", ".join("?" * len(PACK_HEADER))
+            con.executemany(f"INSERT INTO packs ({', '.join(PACK_HEADER)}) VALUES ({ph})", pack_rows)
+        if USE_SMARTMETER and grid_meter is not None:
+            con.execute("INSERT OR REPLACE INTO site (ts, dt, gridMeterPower) VALUES (?,?,?)",
+                        (cycle_ts, dt, grid_meter))
 
-    dev_cols = ["ts", "dt", "hub_sn", "gridMeterPower", "extraShellyPower"] + PROPS
-    dev_ph = ", ".join("?" * len(dev_cols))
-    con.execute(
-        f"INSERT OR REPLACE INTO device ({', '.join(dev_cols)}) VALUES ({dev_ph})",
-        [ts, dt, hub_sn, grid_meter, extra_shelly] + [props.get(p) for p in PROPS])
-
-    pack_cols = ["ts", "dt"] + PACK_FIELDS
-    pack_ph = ", ".join("?" * len(pack_cols))
-    for pk in packs:
-        con.execute(
-            f"INSERT INTO packs ({', '.join(pack_cols)}) VALUES ({pack_ph})",
-            [ts, dt] + [pk.get(fld) for fld in PACK_FIELDS])
-    con.commit()
     if WRITE_CSV:
-        log_csv(ts, dt, hub_sn, props, grid_meter, extra_shelly)
-        log_packs_csv(ts, dt, packs)
+        if dev_rows:
+            append_csv(CSV_FILE, DEV_HEADER, [[_csv_val(v) for v in row] for row in dev_rows])
+        if pack_rows:
+            append_csv(PACK_CSV_FILE, PACK_HEADER, [[_csv_val(v) for v in row] for row in pack_rows])
+        if USE_SMARTMETER and grid_meter is not None:
+            append_csv(SITE_CSV_FILE, SITE_HEADER, [[cycle_ts, dt, grid_meter]])
 
 
 # ----------------------------- Abfrage-Schleife ---------------------------
 def poll_loop():
     con = setup_db()
-    ziele = DB_FILE + (f" + {CSV_FILE} + {PACK_CSV_FILE}" if WRITE_CSV else " (CSV aus)")
-    log_always(f"Logging {DEVICE_URL} alle {POLL_INTERVAL}s -> {ziele}")
+    if WRITE_CSV:
+        prepare_csv(CSV_FILE, DEV_HEADER)
+        prepare_csv(PACK_CSV_FILE, PACK_HEADER)
+        if USE_SMARTMETER:
+            prepare_csv(SITE_CSV_FILE, SITE_HEADER)
+    ziele = DB_FILE + (" + CSV" if WRITE_CSV else " (CSV aus)")
+    log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
+    for d in DEVICES:
+        log_always(f"  {d['name']}: {d['url']}")
     if USE_SMARTMETER:
-        log_always(f"Smartmeter zusaetzlich unter {SMARTMETER_URL}")
-    if USE_EXTRA_SHELLY:
-        log_always(f"Weiterer Shelly zusaetzlich unter {EXTRA_SHELLY_URL}")
+        log_always(f"  Smartmeter: {SMARTMETER_URL}")
     while True:
+        start = time.time()
+        cycle_ts = int(start)
         try:
-            data = fetch_device()
-
-            # Ein Fehler bei den optionalen Quellen darf die Aufzeichnung des
-            # Speichers nicht stoppen - der Wert bleibt dann einfach leer.
-            grid_meter = None
+            reports, grid_meter = fetch_all()
+            store(con, reports, grid_meter, cycle_ts)
+            for r in reports:
+                if "error" in r:
+                    log_always(f"{now()}  {r['name']}: Fehler: {r['error']}")
+                    continue
+                p = r["data"].get("properties", {})
+                log(f"{now()}  {r['name']}: SoC={p.get('electricLevel')}%  "
+                    f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W  "
+                    f"Packs={len(r['data'].get('packData', []))}")
             if USE_SMARTMETER:
-                try:
-                    grid_meter = fetch_smartmeter()
-                except Exception as e:
-                    log_always(f"{datetime.now():%H:%M:%S}  Smartmeter-Fehler: {e}")
-
-            extra_shelly = None
-            if USE_EXTRA_SHELLY:
-                try:
-                    extra_shelly = fetch_extra_shelly()
-                except Exception as e:
-                    log_always(f"{datetime.now():%H:%M:%S}  Shelly-Fehler: {e}")
-
-            store(con, data, grid_meter, extra_shelly)
-            p = data.get("properties", {})
-            gm_txt = f"  Netz(Meter)={grid_meter}W" if USE_SMARTMETER else ""
-            es_txt = f"  Shelly={extra_shelly}W" if USE_EXTRA_SHELLY else ""
-            log(f"{datetime.now():%H:%M:%S}  SoC={p.get('electricLevel')}%  "
-                f"Solar={p.get('solarInputPower')}W  Out={p.get('outputHomePower')}W{gm_txt}{es_txt}")
+                log(f"{now()}  Netz(Meter)={grid_meter}W")
         except Exception as e:
-            log_always(f"{datetime.now():%H:%M:%S}  Fehler: {e}")
-        time.sleep(POLL_INTERVAL)
+            log_always(f"{now()}  Fehler: {e}")
+        # Takt halten: Dauer der Abfrage vom Intervall abziehen
+        time.sleep(max(1.0, POLL_INTERVAL - (time.time() - start)))
 
 
-# ----------------------------- Tagesenergie / Aufraeumen ------------------
-def energy_by_day():
-    """Berechnet je Kalendertag die Energie (kWh) aus den Leistungswerten.
-
-    Integration: fuer jede DB-Zeile Leistung x Zeit zur Vorzeile. Zeitluecken
-    groesser als 2x POLL_INTERVAL werden verworfen (Geraeteausfall/Neustart).
-
-    Rueckgabe: dict {datum: {solar, home, grid, charge, discharge}} in kWh.
-    """
-    cols = list(ENERGY_FIELDS.keys())
-    selects = ", ".join(ENERGY_FIELDS[c] for c in cols)
-    max_gap = 2 * POLL_INTERVAL
-
-    con = sqlite3.connect(DB_FILE)
-    rows = con.execute(
-        f"SELECT ts, dt, {selects} FROM device ORDER BY ts ASC").fetchall()
-    con.close()
-
-    result = {}
-    prev_ts = None
-    for row in rows:
-        ts, dt = row[0], row[1]
-        day = (dt or "")[:10]  # YYYY-MM-DD
-        if day and day not in result:
-            result[day] = {c: 0.0 for c in cols}
-        if prev_ts is not None and day in result:
-            gap = ts - prev_ts
-            if 0 < gap <= max_gap:
-                hours = gap / 3600.0
-                for i, c in enumerate(cols):
-                    val = row[2 + i]
-                    if val:  # None/0 ueberspringen
-                        result[day][c] += val * hours / 1000.0  # Wh -> kWh
-        prev_ts = ts
-
-    for day in result:
-        for c in result[day]:
-            result[day][c] = round(result[day][c], 3)
-    return result
-
-
-def persist_energy_daily():
-    """Schreibt die aus den Rohdaten berechneten Tageswerte dauerhaft fest.
-
-    INSERT OR REPLACE: der laufende Tag wird aktualisiert, abgeschlossene Tage
-    bleiben erhalten - auch nachdem das Aufraeumen ihre Rohdaten geloescht hat.
-    """
-    try:
-        fresh = energy_by_day()
-        if not fresh:
-            return
-        con = sqlite3.connect(DB_FILE)
-        for day, v in fresh.items():
-            con.execute(
-                "INSERT OR REPLACE INTO energy_daily "
-                "(day, solar, home, grid, charge, discharge) VALUES (?,?,?,?,?,?)",
-                (day, v["solar"], v["home"], v["grid"], v["charge"], v["discharge"]))
-        con.commit()
-        con.close()
-    except Exception as e:
-        log_always(f"{datetime.now():%H:%M:%S}  Energie-Fehler: {e}")
-
-
+# ----------------------------- Aufraeumen ---------------------------------
 def cleanup_db():
-    """Loescht DB-Zeilen aelter als RETENTION_DAYS aus device und packs.
+    """Loescht Zeilen aelter als RETENTION_DAYS aus device, packs und site.
 
     RETENTION_DAYS = 0 -> nichts loeschen. Die CSV-Dateien bleiben unangetastet.
     """
@@ -349,34 +338,28 @@ def cleanup_db():
         return
     cutoff = int(time.time()) - RETENTION_DAYS * 86400
     try:
-        con = sqlite3.connect(DB_FILE)
-        d = con.execute("DELETE FROM device WHERE ts < ?", (cutoff,)).rowcount
-        p = con.execute("DELETE FROM packs WHERE ts < ?", (cutoff,)).rowcount
+        con = sqlite3.connect(DB_FILE, timeout=30)
+        n = 0
+        for table in ("device", "packs", "site"):
+            n += con.execute(f"DELETE FROM {table} WHERE ts < ?", (cutoff,)).rowcount
         con.commit()
-        if d or p:
+        if n:
             con.execute("VACUUM")  # Datei physisch verkleinern
-            con.commit()
-            log(f"{datetime.now():%H:%M:%S}  Aufraeumen: {d} device- und {p} pack-Zeilen "
-                f"aelter als {RETENTION_DAYS} Tage geloescht")
+            log(f"{now()}  Aufraeumen: {n} Zeilen aelter als {RETENTION_DAYS} Tage geloescht")
         con.close()
     except Exception as e:
-        log_always(f"{datetime.now():%H:%M:%S}  Aufraeum-Fehler: {e}")
+        log_always(f"{now()}  Aufraeum-Fehler: {e}")
 
 
 def cleanup_loop():
-    """Sichert taeglich die Tagesenergie und raeumt dann alte Rohdaten auf.
-
-    Reihenfolge ist wichtig: erst die Tageswerte festschreiben, DANN alte
-    Rohdaten loeschen - sonst gingen die Werte verloren.
-    """
     while True:
-        persist_energy_daily()
+        time.sleep(86400)  # erst nach einem Tag, dann taeglich
         cleanup_db()
-        time.sleep(86400)  # 24 Stunden
 
 
 def main():
-    setup_db().close()   # Tabellen anlegen, bevor das Aufraeumen sie liest
+    setup_db().close()   # Datenbank pruefen/anlegen, bevor aufgeraeumt wird
+    cleanup_db()
     threading.Thread(target=cleanup_loop, daemon=True).start()
     log_always("Beenden mit Strg+C")
     try:
