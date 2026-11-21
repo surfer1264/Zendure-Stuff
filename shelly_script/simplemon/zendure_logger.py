@@ -22,6 +22,8 @@ Testmodus ThingsBoard:
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
 import csv, importlib, json, os, re, sqlite3, sys, threading, time
+
+VERSION = "1.0.0"
 import urllib.error, urllib.parse, urllib.request
 from datetime import datetime
 
@@ -36,6 +38,7 @@ CONFIG_NAME = "config_local" if importlib.util.find_spec("config_local") else "c
 # Kommandozeile: ohne Argument Dauerbetrieb, --once = Testmodus ThingsBoard
 _ARGS = sys.argv[1:]
 if any(a not in ("--once",) for a in _ARGS):
+    print("simplemon (zendure_logger) " + VERSION)
     print("Aufruf: python3 zendure_logger.py [--once]")
     print("  --once  Testmodus: einmal abfragen, ThingsBoard-Daten in TB_TEST_FILE schreiben, nichts senden")
     sys.exit(2)
@@ -710,7 +713,8 @@ def _tb_check_tokens():
 def tb_once():
     """Testmodus --once: einmal abfragen, Sendedaten in TB_TEST_FILE schreiben.
     Sendet nichts, schreibt weder DB noch CSV. Tokens stehen nicht in der Datei."""
-    log_always(f"Testmodus ThingsBoard (--once), Einstellungen aus {CONFIG_NAME}.py - es wird nichts gesendet")
+    log_always(f"simplemon (zendure_logger) {VERSION} - Testmodus ThingsBoard (--once), "
+               f"Einstellungen aus {CONFIG_NAME}.py - es wird nichts gesendet")
     reports, grid_meter = fetch_all()
     stamp = int(time.time())
     on_change = _tb_on_change_keys()
@@ -734,6 +738,7 @@ def tb_once():
     nicht_erreicht = [{"solarflow": r["name"], "fehler": r["error"]} for r in reports if "error" in r]
     doc = {
         "erstellt": datetime.fromtimestamp(stamp).isoformat(timespec="seconds"),
+        "version": VERSION,
         "hinweis": "Testmodus --once: nichts gesendet. Tokens sind nicht enthalten. "
                    "Die Datei enthaelt Seriennummern - nicht weitergeben.",
         "einstellungen": {"datei": f"{CONFIG_NAME}.py", "WRITE_TB": WRITE_TB, "TB_HOST": TB_HOST,
@@ -800,6 +805,7 @@ def poll_loop():
     con = setup_db() if WRITE_DB else None
     ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else [])
                        + ([f"ThingsBoard alle {TB_INTERVAL}s"] if WRITE_TB else []))
+    log_always(f"simplemon (zendure_logger) {VERSION}")
     log_always(f"Einstellungen aus {CONFIG_NAME}.py")
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
     if POLL_ALIGN:
