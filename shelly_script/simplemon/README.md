@@ -6,12 +6,15 @@ simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speich
 
 Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi. Ausgewertet werden die Daten mit eigenen Werkzeugen, z. B. einem SQLite-Browser oder einer Tabellenkalkulation.
 
+Version: **1.0.0** (steht als `VERSION` in `zendure_logger.py` und in der Startmeldung). Änderungen: [CHANGELOG](CHANGELOG.md).
+
 ## Dateien
 
 | Datei | Inhalt |
 |---|---|
 | `zendure_logger.py` | Das Programm: Abfrage und Speichern |
 | `config.py` | Vorlage der Einstellungen mit Platzhaltern. Liegt im Repo, wird nicht angepasst |
+| `CHANGELOG.md` | Änderungen je Version |
 | `config_local.py` | Deine Einstellungen mit echten Adressen. Legst du selbst an (Kopie von `config.py`), steht in `.gitignore` und kommt nie ins Repo |
 
 Gibt es `config_local.py`, liest das Programm nur diese Datei, sonst `config.py`. Die Startmeldung nennt die verwendete Datei. Das Programm lässt sich bei einem Update einfach ersetzen, deine Einstellungen bleiben erhalten.
