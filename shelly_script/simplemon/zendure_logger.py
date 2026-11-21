@@ -72,11 +72,14 @@ TB_HUB_TOKENS = _cfg("TB_HUB_TOKENS", {})
 TB_PACK_TOKENS = _cfg("TB_PACK_TOKENS", {})
 TB_GRID_TOKEN = _cfg("TB_GRID_TOKEN", "")
 TB_GRID_KEY = _cfg("TB_GRID_KEY", "gridPower")
+# Standard = Namen wie im Dashboard-Proxy (ts_bridge.py), damit ein Umstieg
+# dieselben ThingsBoard-Geraete und Verlaeufe weiterverwenden kann.
 TB_HUB_FIELDS = _cfg("TB_HUB_FIELDS", {
     "electricLevel": "electricLevel", "solarInputPower": "solarInputPower",
     "outputHomePower": "outputHomePower", "gridInputPower": "gridInputPower",
     "packInputPower": "packInputPower", "outputPackPower": "outputPackPower",
-    "hyperTmp": "hyperTmp",
+    "minVol": "minVol", "batteryPower": "batteryPower", "gridOffPower": "offGridPower",
+    "hyperTmp": "temp", "packTempLow": "packTempLow",
     "socLimit": "socLimit", "socSet": "socSet", "minSoc": "minSoc", "heatState": "heatState",
 })
 TB_PACK_FIELDS = _cfg("TB_PACK_FIELDS", {
@@ -535,6 +538,45 @@ def _tb_is_number(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _hub_min_vol(data):
+    """Kleinste Zellspannung aller Packs in V; Packs mit 0 (schlafend) zaehlen nicht."""
+    werte = [pk.get("minVol") for pk in data.get("packData", [])]
+    werte = [v for v in werte if _tb_is_number(v) and v > 0]
+    return round(min(werte) / 100, 2) if werte else None
+
+
+def _hub_pack_temp_low(data):
+    """Kuehlstes Pack: kleinster maxTemp-Wert in ganzen Grad C; 0 zaehlt nicht."""
+    werte = [pk.get("maxTemp") for pk in data.get("packData", [])]
+    werte = [v for v in werte if _tb_is_number(v) and v > 0]
+    return raw_to_celsius(min(werte)) if werte else None
+
+
+def _hub_battery_power(data):
+    """Akkuleistung: + = Akku entlaedt, - = Akku laedt (packInputPower - outputPackPower)."""
+    p = data.get("properties", {})
+    pi, po = p.get("packInputPower"), p.get("outputPackPower")
+    return pi - po if _tb_is_number(pi) and _tb_is_number(po) else None
+
+
+# Berechnete Werte je Solarflow, genau wie im Dashboard-Proxy (ts_bridge.py).
+# In TB_HUB_FIELDS wie Reportnamen verwendbar; schon umgerechnet (V, Grad C, W).
+TB_HUB_DERIVED = {
+    "minVol": _hub_min_vol,
+    "packTempLow": _hub_pack_temp_low,
+    "batteryPower": _hub_battery_power,
+}
+
+
+def _hub_value(data, props, key):
+    """Wert fuer TB_HUB_FIELDS: Reportfeld (umgerechnet) oder berechneter Wert."""
+    if key in props:
+        return convert(key, props.get(key))
+    if key in TB_HUB_DERIVED:
+        return TB_HUB_DERIVED[key](data)
+    return None
+
+
 def _tb_lookup(data, src, key):
     """Wert aus dem Pack bzw. aus properties, sonst aus der obersten Ebene (z. B. sn, product)."""
     if key in src:
@@ -553,7 +595,7 @@ def _tb_devices(reports, grid_meter, preview=False):
         props = data.get("properties", {})
         tok = TB_HUB_TOKENS.get(hub)
         if tok or preview:
-            tel = {tb: convert(k, props.get(k)) for k, tb in TB_HUB_FIELDS.items()}
+            tel = {tb: _hub_value(data, props, k) for k, tb in TB_HUB_FIELDS.items()}
             att = {tb: convert(k, _tb_lookup(data, props, k)) for k, tb in TB_HUB_ATTRIBUTES.items()}
             out.append(("hub:" + hub, hub, tok,
                         {k: v for k, v in tel.items() if _tb_is_number(v)},

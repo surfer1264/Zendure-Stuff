@@ -93,6 +93,12 @@ TB_GRID_KEY = "gridPower"
 # Reihenfolge und Namen frei waehlbar; was fehlt, wird nicht gesendet.
 # Umrechnungen wie in DB/CSV: hyperTmp/maxTemp in Grad C, BatVolt/totalVol/maxVol/minVol in V,
 # socSet/minSoc in %. Jeder Wert kostet Datenpunkte in ThingsBoard.
+# Standard: dieselben Namen wie der Dashboard-Proxy (ts_bridge) - wer umsteigt,
+# nutzt seine ThingsBoard-Geraete und Verlaeufe einfach weiter.
+# minVol, batteryPower und packTempLow sind berechnet (wie in ts_bridge):
+#   minVol       kleinste Zellspannung aller Packs des Solarflows in V
+#   batteryPower packInputPower - outputPackPower in W (+ entlaedt, - laedt)
+#   packTempLow  kuehlstes Pack (kleinstes maxTemp) in ganzen Grad C
 TB_HUB_FIELDS = {
     "electricLevel":   "electricLevel",
     "solarInputPower": "solarInputPower",
@@ -100,7 +106,11 @@ TB_HUB_FIELDS = {
     "gridInputPower":  "gridInputPower",
     "packInputPower":  "packInputPower",
     "outputPackPower": "outputPackPower",
-    "hyperTmp":        "hyperTmp",
+    "minVol":          "minVol",
+    "batteryPower":    "batteryPower",
+    "gridOffPower":    "offGridPower",
+    "hyperTmp":        "temp",
+    "packTempLow":     "packTempLow",
     "socLimit":        "socLimit",
     "socSet":          "socSet",
     "minSoc":          "minSoc",

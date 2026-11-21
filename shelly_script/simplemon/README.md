@@ -148,16 +148,23 @@ TB_PACK_FIELDS = {"socLevel": "soc", "minVol": "zelleMin", "maxTemp": "temp"}
 
 | Einstellung | Inhalt | Art in ThingsBoard |
 |---|---|---|
-| `TB_HUB_FIELDS` | Messwerte je Solarflow | Telemetrie, bei jedem Senden |
+| `TB_HUB_FIELDS` | Messwerte je Solarflow. Standard: dieselben 15 Werte und Namen wie der Dashboard-Proxy (`ts_bridge`), siehe [Umstieg von `ts_bridge`](#umstieg-von-ts_bridge) | Telemetrie, bei jedem Senden |
 | `TB_PACK_FIELDS` | Messwerte je Akkupack | Telemetrie, bei jedem Senden |
 | `TB_ON_CHANGE` | Reportnamen, die nur **bei Änderung** gesendet werden, dazu einmal am Tag und nach einem Neustart (Standard: `socLimit`, `socStatus`, `socSet`, `minSoc`, `heatState`, `gridOffMode`, `chargeMaxLimit`, `inverseMaxPower`, `gridReverse`). Wirkt nur für Werte, die in `TB_HUB_FIELDS`/`TB_PACK_FIELDS` stehen | Telemetrie |
 | `TB_HUB_ATTRIBUTES` | feste Angaben je Solarflow (Standard: `product`, `version`, `sn` als `hub_sn`, `packNum`) | Attribute, beim Start, bei Änderung und einmal am Tag |
 | `TB_PACK_ATTRIBUTES` | feste Angaben je Akkupack (Standard: `sn`, `packType`, `softVersion`) | Attribute, ebenso |
 | `TB_PACK_NAME_ATTRIBUTE`, `TB_PACK_NAME_FORMAT` | lesbarer **Name des Akkus als Attribut**, Standard `name` = „{hub} Akku {nr}“, z. B. „SF800 Akku 1“. Platzhalter `{hub}`, `{nr}`, `{sn}`. Leerer Attributname = kein Namens-Attribut | Attribut |
 
-- Umgerechnet wird wie in Datenbank und CSV: Temperatur in °C, Zellspannung in V, `socSet`/`minSoc` in %.
+- Umgerechnet wird wie in Datenbank und CSV: Temperatur in °C, Spannungen in V, `socSet`/`minSoc` in %.
+- **Berechnete Werte je Solarflow**, in `TB_HUB_FIELDS` wie Reportnamen verwendbar und genau wie in `ts_bridge` gerechnet:
+
+  | Name | Bedeutung |
+  |---|---|
+  | `minVol` | kleinste Zellspannung aller Packs des Solarflows in V. Packs mit 0 (schlafend) zählen nicht |
+  | `batteryPower` | `packInputPower − outputPackPower` in W: + = Akku entlädt, − = Akku lädt |
+  | `packTempLow` | kühlstes Pack (kleinstes `maxTemp`) in ganzen °C. Packs mit 0 zählen nicht |
 - Werte, die ein Gerät nicht liefert, werden weggelassen.
-- Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 7 Werten und 4 Akkupacks mit je 7 Werten ergeben 42 Werte je Minute, rund 60 000 am Tag. Seltene Status-Werte zählen dank `TB_ON_CHANGE` kaum.
+- Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 11 laufenden Werten und 3 Akkupacks mit je 7 Werten ergeben 43 Werte je Minute, rund 62 000 am Tag. Die vier Status-Werte (`socLimit`, `socSet`, `minSoc`, `heatState`) zählen dank `TB_ON_CHANGE` kaum. Die genaue Zahl für die eigene Anlage zeigt der [Testmodus `--once`](#testmodus---once).
 
 ### Senden
 
@@ -193,6 +200,40 @@ python3 zendure_logger.py --once
 - Am Ende der Datei und in der Konsole: nicht erreichte Solarflows, Geräte ohne Token und die Zahl der Datenpunkte (erste Sendung, jede weitere Sendung, ungefähr je Tag).
 
 Die Datei enthält Seriennummern. Sie steht deshalb in `.gitignore` (`tb_test*.json`) und sollte nicht weitergegeben werden.
+
+### Umstieg von `ts_bridge`
+
+Wer bisher den ThingsBoard-Versand des Dashboard-Proxys (`ts_bridge`) nutzt, kann auf simplemon umsteigen und **seine ThingsBoard-Geräte und Verläufe weiterverwenden**.
+
+**Was gleich ist**
+
+| | `ts_bridge` | simplemon |
+|---|---|---|
+| Gerät je Solarflow | ja | ja, dasselbe Gerät mit demselben Token |
+| Werte je Solarflow | 15 wählbare Werte | dieselben 15 Werte mit denselben Namen, im Standard alle aktiv |
+| Berechnete Werte | `minVol`, `batteryPower`, `packTempLow` | gleich gerechnet |
+| Einheiten | V, °C, % | gleich |
+| Nur bei Änderung | `socLimit`, `socSet`, `minSoc`, `heatState` | dieselben, plus weitere Status-Werte, falls ausgewählt |
+| Gerät „Netz“ | `gridPower`, + = Bezug | `gridPower`, + = Bezug (Quelle: Shelly Pro 3EM, `USE_SMARTMETER`) |
+| Zeitpunkt | jede volle Minute | jede volle Minute (`TB_INTERVAL = 60`) |
+| Hub offline | in dieser Minute nichts | gleich |
+
+**Was neu dazukommt**
+- ein **Gerät je Akkupack** (`TB_PACK_TOKENS`) mit eigenen Messwerten,
+- **Attribute** je Solarflow und Akku (`product`, `hub_sn`, Akku-Name …) sowie beim Start das Test-Attribut `simplemonStart`,
+- in `ts_bridge` abgeschaltete Werte (z. B. `batteryPower`, `temp`) sind im Standard von simplemon **an**. Wer genau die bisherige Auswahl behalten will, entfernt die überzähligen Zeilen aus `TB_HUB_FIELDS`.
+
+**So geht der Umstieg**
+1. Die Access Tokens der Solarflows und des Netzes in ThingsBoard holen: beim jeweiligen Gerät unter „Zugangsdaten“ kopieren. Die Proxy-Seite `/thingsboard` zeigt sie nur gekürzt an, hilft aber bei der Zuordnung, welches Gerät zu welchem Hub gehört.
+2. In `config_local.py` eintragen:
+   - Solarflow: das Token beim **Namen** aus `DEVICES` in `TB_HUB_TOKENS`. `ts_bridge` ordnet nach Hub-Nummer, simplemon nach Namen, also auf die richtige Zuordnung achten.
+   - Netz: das Token in `TB_GRID_TOKEN`, dazu `USE_SMARTMETER = True` mit der Adresse des Shelly Pro 3EM.
+   - Für die Akkupacks in ThingsBoard neue Geräte anlegen und ihre Tokens in `TB_PACK_TOKENS` eintragen.
+3. Mit `python3 zendure_logger.py --once` prüfen, was gesendet würde.
+4. **Auf der Proxy-Seite `/thingsboard` den ThingsBoard-Versand abschalten.** Sonst kommt jeder Wert zweimal an, von `ts_bridge` und von simplemon.
+5. `WRITE_TB = True` setzen und simplemon starten.
+
+Gleiche Namen und gleiche Geräte bedeuten: In ThingsBoard laufen Verläufe, Dashboards und Regeln ohne Änderung weiter.
 
 ### Sicherheit
 
