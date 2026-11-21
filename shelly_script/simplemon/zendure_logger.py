@@ -52,7 +52,12 @@ def _cfg(name, default):
     return getattr(config, name, default)
 
 
-POLL_INTERVAL = _cfg("POLL_INTERVAL", 30)
+POLL_INTERVAL = _cfg("POLL_INTERVAL", 60)
+# Abfragen am Raster ausrichten: jeweils POLL_LEAD Sekunden vor einem Vielfachen
+# von POLL_INTERVAL (bei 60: um hh:mm:50). Der ThingsBoard-Versand zur vollen
+# Minute hat dann einen frischen Stand - wie im Dashboard-Proxy (ts_bridge).
+POLL_ALIGN = _cfg("POLL_ALIGN", True)
+POLL_LEAD = _cfg("POLL_LEAD", 10)
 DB_FILE = _cfg("DB_FILE", "zendure_log.db")
 WRITE_DB = _cfg("WRITE_DB", True)
 WRITE_CSV = _cfg("WRITE_CSV", True)
@@ -166,6 +171,10 @@ def load_devices():
 
 
 try:
+    if not isinstance(POLL_INTERVAL, int) or POLL_INTERVAL < 1:
+        raise ValueError("POLL_INTERVAL muss eine ganze Zahl ab 1 (Sekunden) sein")
+    if not isinstance(POLL_LEAD, int) or POLL_LEAD < 0:
+        raise ValueError("POLL_LEAD muss eine ganze Zahl ab 0 (Sekunden) sein")
     DEVICES = load_devices()
     if ONCE:
         check_tb_config(tokens=False)
@@ -768,12 +777,34 @@ def tb_loop():
 
 
 # ----------------------------- Abfrage-Schleife ---------------------------
+def _poll_lead():
+    """Vorlauf vor dem Raster, hoechstens das halbe Intervall."""
+    return max(0, min(int(POLL_LEAD), POLL_INTERVAL // 2))
+
+
+def _poll_wait(start):
+    """Wartezeit bis zur naechsten Abfrage.
+    POLL_ALIGN: naechster Zeitpunkt k * POLL_INTERVAL - POLL_LEAD, mindestens 1 s
+    nach der laufenden Abfrage. Sonst: Intervall ab Beginn der laufenden Abfrage."""
+    jetzt = time.time()
+    if not POLL_ALIGN:
+        return max(1.0, POLL_INTERVAL - (jetzt - start))
+    lead = _poll_lead()
+    nxt = (int((jetzt + lead) // POLL_INTERVAL) + 1) * POLL_INTERVAL - lead
+    while nxt - jetzt < 1.0:
+        nxt += POLL_INTERVAL
+    return nxt - jetzt
+
+
 def poll_loop():
     con = setup_db() if WRITE_DB else None
     ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else [])
                        + ([f"ThingsBoard alle {TB_INTERVAL}s"] if WRITE_TB else []))
     log_always(f"Einstellungen aus {CONFIG_NAME}.py")
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
+    if POLL_ALIGN:
+        log_always(f"  Abfrage {_poll_lead()}s vor jedem Vielfachen von {POLL_INTERVAL}s "
+                   f"(erste Abfrage sofort)")
     for d in DEVICES:
         log_always(f"  {d['name']}: {d['url']}")
     if USE_SMARTMETER:
@@ -799,8 +830,7 @@ def poll_loop():
                 log(f"{now()}  Netz(Meter)={grid_meter}W")
         except Exception as e:
             log_always(f"{now()}  Fehler: {e}")
-        # Takt halten: Dauer der Abfrage vom Intervall abziehen
-        time.sleep(max(1.0, POLL_INTERVAL - (time.time() - start)))
+        time.sleep(_poll_wait(start))
 
 
 # ----------------------------- Aufraeumen ---------------------------------

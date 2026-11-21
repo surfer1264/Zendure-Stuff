@@ -25,7 +25,14 @@ DEVICES = [
 # gesetzt ist):
 # DEVICE_URL = "http://192.168.x.x/properties/report"
 
-POLL_INTERVAL = 30          # Sekunden zwischen Abfragen
+POLL_INTERVAL = 60          # Sekunden zwischen Abfragen (60 = jede Minute, wie ts_bridge)
+# Abfrage am Raster ausrichten: jeweils POLL_LEAD Sekunden vor einem Vielfachen
+# von POLL_INTERVAL, bei 60 also um hh:mm:50. Der ThingsBoard-Versand zur vollen
+# Minute hat dann einen frischen Stand (ca. 10 s alt, wie im Dashboard-Proxy).
+# POLL_LEAD hoechstens das halbe Intervall. POLL_ALIGN = False: Abfrage ab Start
+# im festen Abstand, ohne Raster.
+POLL_ALIGN = True
+POLL_LEAD = 10
 
 # ----------------------------- Dateien -----------------------------------
 DB_FILE = "zendure_log.db"
@@ -37,9 +44,9 @@ SITE_CSV_FILE = "zendure_site.csv"   # nur mit Smartmeter
 # Start umbenannt (z. B. zendure_log_alt_20261121-153000.db) und neu angelegt.
 
 # Was geschrieben wird. Mindestens eins muss True sein.
-WRITE_DB = True     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufraeumen.
-WRITE_CSV = True    # CSV-Dateien (Geraete-, Pack- und Smartmeter-CSV).
-WRITE_TB = False    # Versand an ThingsBoard (Einstellungen ganz unten).
+WRITE_DB = False     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufraeumen.
+WRITE_CSV = False    # CSV-Dateien (Geraete-, Pack- und Smartmeter-CSV).
+WRITE_TB = True   # Versand an ThingsBoard (Einstellungen ganz unten).
 
 # ----------------------------- Ausgabe & Speicherung ---------------------
 # Konsolenausgabe: True unterdrueckt Routine-Meldungen. Fehler und

@@ -20,10 +20,11 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 
 ## Was es macht
 
-1. **Abfrage:** Alle `POLL_INTERVAL` Sekunden (Standard 30) holt es von jedem Speicher den Report über die lokale zenSDK-Schnittstelle (`GET /properties/report`).
+1. **Abfrage:** Alle `POLL_INTERVAL` Sekunden (Standard 60) holt es von jedem Speicher den Report über die lokale zenSDK-Schnittstelle (`GET /properties/report`).
    - Alle Speicher werden **gleichzeitig** abgefragt. Ein Speicher, der nicht antwortet, hält die anderen nicht auf. Er erscheint als Fehler in der Konsole, die übrigen werden normal geschrieben.
    - Optional dazu die Netzleistung von einem **Shelly Pro 3EM** (`EM.GetStatus`, Feld `total_act_power`), einmal je Runde.
-   - Dauert eine Runde länger, verkürzt sich die Pause bis zur nächsten, damit der Takt gleich bleibt.
+   - **Fester Takt am Raster** (`POLL_ALIGN = True`, Standard): Abgefragt wird jeweils `POLL_LEAD` Sekunden (Standard 10) vor einem Vielfachen von `POLL_INTERVAL`, bei 60 also immer um hh:mm:50. Die erste Abfrage nach dem Start läuft sofort. So hat der ThingsBoard-Versand zur vollen Minute einen rund 10 s alten Stand, wie im Dashboard-Proxy.
+   - Mit `POLL_ALIGN = False` wird ab dem Start im festen Abstand abgefragt, ohne Raster. Dauert eine Runde länger, verkürzt sich die Pause bis zur nächsten.
 2. **Speichern in SQLite (optional)** mit `WRITE_DB = True` (Standard) in `DB_FILE`, Standard `zendure_log.db`:
 
    | Tabelle | Inhalt |
@@ -67,7 +68,9 @@ Alle anderen Werte bleiben in der Einheit des Reports, z. B. Leistungen in W und
 |---|---|---|
 | `DEVICES` | Liste der Speicher, je Eintrag `name` und `url` (siehe unten) | – |
 | `DEVICE_URL` | nur ein Speicher, ältere Schreibweise. Wird ignoriert, wenn `DEVICES` gesetzt ist | – |
-| `POLL_INTERVAL` | Sekunden zwischen zwei Runden | 30 |
+| `POLL_INTERVAL` | Sekunden zwischen zwei Runden | 60 |
+| `POLL_ALIGN` | Abfrage am Raster ausrichten (siehe oben) | `True` |
+| `POLL_LEAD` | Sekunden vor dem Raster, höchstens das halbe Intervall | 10 |
 | `WRITE_DB` | in die SQLite-Datenbank schreiben | `True` |
 | `WRITE_CSV` | in CSV-Dateien schreiben | `True` |
 | `WRITE_TB` | an ThingsBoard senden, Einstellungen `TB_…` siehe [Versand an ThingsBoard](#versand-an-thingsboard) | `False` |
@@ -173,7 +176,8 @@ TB_PACK_FIELDS = {"socLevel": "soc", "minVol": "zelleMin", "maxTemp": "temp"}
 | `TB_HOST` | Adresse des ThingsBoard-Servers, auch ein eigener Server im Heimnetz | `https://eu.thingsboard.cloud` |
 | `TB_INTERVAL` | Sekunden zwischen zwei Sendungen, ab 10. Bei 60 wird zu jeder vollen Minute gesendet | 60 |
 
-- Gesendet wird zu jedem Vielfachen von `TB_INTERVAL` der **letzte Stand der Abfrage**, mit diesem Zeitpunkt als Zeitstempel. `POLL_INTERVAL` und `TB_INTERVAL` sind unabhängig: Man kann z. B. alle 30 s in die Datenbank schreiben und jede Minute an ThingsBoard senden.
+- Gesendet wird zu jedem Vielfachen von `TB_INTERVAL` der **letzte Stand der Abfrage**, mit diesem Zeitpunkt als Zeitstempel. Mit den Standardwerten (`POLL_INTERVAL = 60`, `POLL_ALIGN = True`, `POLL_LEAD = 10`, `TB_INTERVAL = 60`) wird um hh:mm:50 abgefragt und zur vollen Minute gesendet. Der Stand ist dann rund 10 s alt, wie im Dashboard-Proxy.
+- `POLL_INTERVAL` und `TB_INTERVAL` sind unabhängig: Man kann z. B. alle 30 s in die Datenbank schreiben und jede Minute an ThingsBoard senden. Damit der gesendete Stand frisch ist, sollte `TB_INTERVAL` ein Vielfaches von `POLL_INTERVAL` sein.
 - Das Senden läuft in einem **eigenen Thread**. Ein langsames oder nicht erreichbares ThingsBoard bremst weder die Abfrage noch Datenbank und CSV.
 - Scheitert eine Sendung, folgt nach 5 s **ein Wiederholversuch**. Scheitert auch der, wird der Wert verworfen und in der Konsole gemeldet. Nachgesendet wird nicht, die Daten liegen ja in Datenbank bzw. CSV.
 - Ist ein Solarflow offline, sendet er in dieser Runde nichts, ebenso seine Akkus.
@@ -216,6 +220,7 @@ Wer bisher den ThingsBoard-Versand des Dashboard-Proxys (`ts_bridge`) nutzt, kan
 | Nur bei Änderung | `socLimit`, `socSet`, `minSoc`, `heatState` | dieselben, plus weitere Status-Werte, falls ausgewählt |
 | Gerät „Netz“ | `gridPower`, + = Bezug | `gridPower`, + = Bezug (Quelle: Shelly Pro 3EM, `USE_SMARTMETER`) |
 | Zeitpunkt | jede volle Minute | jede volle Minute (`TB_INTERVAL = 60`) |
+| Alter des Stands | Abfrage 14 s vor der vollen Minute, höchstens ca. 8 s alt | Abfrage 10 s vor der vollen Minute (`POLL_LEAD`), ca. 10 s alt |
 | Hub offline | in dieser Minute nichts | gleich |
 
 **Was neu dazukommt**
