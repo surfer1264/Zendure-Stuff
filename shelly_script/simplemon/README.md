@@ -2,7 +2,7 @@
 
 > **Eigenständiges Werkzeug neben der Suite.** simplemon braucht keinen Shelly und kein Script der Suite. Es liest die Speicher direkt über die zenSDK-Schnittstelle. Für Regelung, Dashboard und Meldungen gibt es die [Suite](../readme.md) mit dem Shelly-Script `zendash_watch`, dem Dashboard-Proxy und der [Statistik-Auswertung](../stat/auswertung/readme.md).
 
-simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speicher samt Akkupacks regelmäßig ausliest und die Werte in eine SQLite-Datenbank und/oder in CSV-Dateien schreibt. Beides lässt sich einzeln abschalten. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf die Speicher.
+simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speicher samt Akkupacks regelmäßig ausliest und die Werte in eine SQLite-Datenbank, in CSV-Dateien und/oder an ThingsBoard schreibt. Jede der drei Ausgaben lässt sich einzeln abschalten. Es **steuert nichts**, zeigt nichts an und verschickt keine Nachrichten. Es liest nur und schreibt nichts auf die Speicher.
 
 Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi. Ausgewertet werden die Daten mit eigenen Werkzeugen, z. B. einem SQLite-Browser oder einer Tabellenkalkulation.
 
@@ -36,8 +36,10 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
    - Eine Runde wird in einem Zug geschrieben: entweder ganz oder gar nicht.
 3. **CSV (optional):** Mit `WRITE_CSV = True` schreibt es dieselben Werte zusätzlich in `zendure_log.csv`, `zendure_packs.csv` und, mit Smartmeter, `zendure_site.csv`. Die CSV-Dateien wachsen unbegrenzt.
    - Format für Excel mit deutschen Einstellungen: Spalten getrennt mit **Semikolon**, Dezimalzahlen mit **Komma** (`3,27`). Kommazahlen ohne Nachkommaanteil stehen als ganze Zahl (`100` statt `100,0`).
+   - Umgerechnete Spalten tragen die Einheit im Kopf, z. B. `BatVolt (V)`, `hyperTmp (Grad C)`, `socSet (%)`. In der Datenbank heißen die Spalten wie im Report.
    - In der Datenbank sind die Werte echte Zahlen, dort gibt es kein Dezimalkomma.
-4. **Aufräumen** (nur mit Datenbank): Beim Start und danach einmal am Tag löscht es Zeilen älter als `RETENTION_DAYS` (Standard 7) aus allen Tabellen. `RETENTION_DAYS = 0` löscht nie. Die CSV-Dateien bleiben unangetastet.
+4. **ThingsBoard (optional):** Mit `WRITE_TB = True` gehen die Werte zusätzlich an ThingsBoard, siehe [Versand an ThingsBoard](#versand-an-thingsboard).
+5. **Aufräumen** (nur mit Datenbank): Beim Start und danach einmal am Tag löscht es Zeilen älter als `RETENTION_DAYS` (Standard 7) aus allen Tabellen. `RETENTION_DAYS = 0` löscht nie. Die CSV-Dateien bleiben unangetastet.
 
 ## Gespeicherte Felder
 
@@ -54,10 +56,10 @@ Umgerechnet wird vor dem Speichern, gleich für Datenbank und CSV:
 | Felder | Report | gespeichert |
 |---|---|---|
 | `hyperTmp`, `maxTemp` | Zehntel-Kelvin | ganze °C, gerundet |
-| `maxVol`, `minVol` (Zellspannung) | 0,01 V | V mit 2 Nachkommastellen, z. B. 3,27 |
+| `BatVolt` (Hub), `totalVol` (Pack), `maxVol`, `minVol` (Zellspannung) | 0,01 V | V mit 2 Nachkommastellen, z. B. 49,13 bzw. 3,27 |
 | `minSoc`, `socSet` | Zehntel-Prozent | %, z. B. 40 bzw. 40,5 |
 
-Alle anderen Werte bleiben in der Einheit des Reports, z. B. `BatVolt` und `totalVol` in 0,01 V (4913 = 49,13 V), Leistungen in W.
+Alle anderen Werte bleiben in der Einheit des Reports, z. B. Leistungen in W und Ladestände in %.
 
 ## Einstellungen (`config_local.py`)
 
@@ -68,6 +70,7 @@ Alle anderen Werte bleiben in der Einheit des Reports, z. B. `BatVolt` und `tota
 | `POLL_INTERVAL` | Sekunden zwischen zwei Runden | 30 |
 | `WRITE_DB` | in die SQLite-Datenbank schreiben | `True` |
 | `WRITE_CSV` | in CSV-Dateien schreiben | `True` |
+| `WRITE_TB` | an ThingsBoard senden, Einstellungen `TB_…` siehe [Versand an ThingsBoard](#versand-an-thingsboard) | `False` |
 | `DB_FILE` | Name der Datenbank | `zendure_log.db` |
 | `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE` | Namen der CSV-Dateien | `zendure_log.csv`, `zendure_packs.csv`, `zendure_site.csv` |
 | `QUIET` | `True` = nur Start- und Fehlermeldungen in der Konsole | `False` |
@@ -83,7 +86,7 @@ DEVICES = [
 ]
 ```
 
-Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter oder leerer Name bricht den Start mit einer Fehlermeldung ab, ebenso `WRITE_DB = False` zusammen mit `WRITE_CSV = False`.
+Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter oder leerer Name bricht den Start mit einer Fehlermeldung ab, ebenso wenn `WRITE_DB`, `WRITE_CSV` und `WRITE_TB` alle `False` sind.
 
 ## Start
 
@@ -93,91 +96,107 @@ python3 zendure_logger.py
 
 Beim ersten Mal `config.py` als `config_local.py` kopieren und dort die eigenen Adressen eintragen. Beide liegen im selben Ordner wie das Programm. Beenden mit Strg+C.
 
+Testmodus für ThingsBoard, siehe [Testmodus `--once`](#testmodus---once):
+
+```sh
+python3 zendure_logger.py --once
+```
+
 ## Umstieg von einer früheren Fassung
 
-Ändert sich der Aufbau von Datenbank oder CSV (zuletzt: mehrere Geräte, zusätzliche Felder, Umrechnungen, Semikolon und Dezimalkomma in der CSV), gilt beim ersten Start mit der neuen Fassung:
+Ändert sich der Aufbau von Datenbank oder CSV (zuletzt: alle Spannungen in V, Einheit im CSV-Kopf), passen vorhandene Dateien nicht mehr. Beim ersten Start mit der neuen Fassung gilt:
 
-- Das Programm listet die Datenbank und die CSV-Dateien im alten Aufbau auf und **fragt nach**: „Löschen und neu anlegen? Alte Daten gehen verloren. [j/N]“
-- **Nur „j“ oder „ja“ löscht** die aufgelisteten Dateien; sie werden danach neu angelegt. Alte Daten werden nicht übernommen.
-- **Jede andere Antwort**, auch nur Enter, bricht ab. Es wird nichts gelöscht, das Programm beendet sich mit einem Hinweis.
-- **Ohne Konsole** (z. B. als Hintergrunddienst oder per Aufgabenplaner) kann niemand antworten: Es wird nichts gelöscht, das Programm beendet sich. Nach einem Update daher einmal von Hand in einer Konsole starten.
+- Die Datenbank und die CSV-Dateien im alten Aufbau werden **umbenannt**, mit Datum und Uhrzeit im Namen, z. B. `zendure_log.db` → `zendure_log_alt_20261121-153000.db`. Gibt es den Namen schon, wird `_2`, `_3` … angehängt.
+- **Es wird nichts gelöscht und nicht nachgefragt.** Das funktioniert auch als Hintergrunddienst.
+- Danach legt das Programm neue Dateien an. Die alten Daten bleiben in den umbenannten Dateien, werden aber nicht übernommen.
+- Lässt sich eine Datei nicht umbenennen, weil sie z. B. in Excel oder einem SQLite-Browser geöffnet ist, beendet sich das Programm mit einem Hinweis. Datei schließen und neu starten.
 
-Wer die alten Daten behalten will, kopiert die Dateien vorher weg oder trägt in `config_local.py` neue Dateinamen ein (`DB_FILE`, `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE`). Bei späteren Starts bleiben die neuen Dateien erhalten, eine Rückfrage kommt nur bei einem alten Aufbau.
+Dateien im aktuellen Aufbau bleiben unverändert.
 
 ## Hinweise
 
 - **Felder des Reports:** simplemon liest nur Felder, die auch in Report `version` 4 noch vorhanden sind (Stand 11/2026). Fehlt ein Feld, bleibt die Spalte leer.
 - **Datenbank im laufenden Betrieb:** Lesen ist jederzeit möglich. Sperrt ein anderes Programm die Datei, kann eine Runde scheitern; der Fehler erscheint in der Konsole, die nächste Runde wird normal geschrieben.
-- **Zugangsdaten und Adressen:** Echte IP-Adressen gehören nur in `config_local.py`, nie in `config.py`. Datenbanken (`*.db`) und CSV-Dateien sind über `.gitignore` ausgeschlossen, weil sie Seriennummern enthalten.
+- **Zugangsdaten und Adressen:** Echte IP-Adressen gehören nur in `config_local.py`, nie in `config.py`. Das gilt ebenso für ThingsBoard-Tokens. Datenbanken (`*.db`) und CSV-Dateien sind über `.gitignore` ausgeschlossen, weil sie Seriennummern enthalten.
 
-## Mögliche Erweiterung: Versand an ThingsBoard
+## Versand an ThingsBoard
 
-> **Nur ein Konzept, nicht umgesetzt.** Es orientiert sich an der ThingsBoard-Anbindung des Dashboard-Proxys ([`ts_bridge.py`](../zendash_watch_API_ZenSDK/ts_bridge.py)). Die offenen Fragen am Ende sind noch zu entscheiden.
+Mit `WRITE_TB = True` sendet simplemon die Werte an [ThingsBoard](https://thingsboard.io), zusätzlich zu oder statt Datenbank und CSV. Das Vorbild ist die ThingsBoard-Anbindung des Dashboard-Proxys ([`ts_bridge.py`](../zendash_watch_API_ZenSDK/ts_bridge.py)).
 
-### Ziel
+### Geräte und Tokens
 
-Neben Datenbank und CSV als **dritte, abschaltbare Ausgabe** die Werte an ThingsBoard senden. Jeder Solarflow ist dort ein eigenes Gerät, jeder Akkupack ebenfalls.
+**Jeder Solarflow und jeder Akkupack ist in ThingsBoard ein eigenes Gerät mit eigenem Access Token.** Die Geräte legst du in ThingsBoard selbst an, kopierst je Gerät das Access Token und trägst es in `config_local.py` ein:
+
+| Gerät | Name in ThingsBoard (Empfehlung) | Token in `config_local.py` |
+|---|---|---|
+| Solarflow | Name wie in `DEVICES`, z. B. „SF800 Pro“ | `TB_HUB_TOKENS = {"SF800 Pro": "<TOKEN>"}` |
+| Akkupack | **Seriennummer** des Packs | `TB_PACK_TOKENS = {"<SERIENNUMMER>": "<TOKEN>"}` |
+| Netz (Smartmeter) | „Netz“ | `TB_GRID_TOKEN = "<TOKEN>"`, Wertname `TB_GRID_KEY` (Standard `gridPower`) |
+
+- Die Seriennummern der Packs stehen in der Datenbank bzw. CSV (Spalte `sn`). Findet simplemon einen Pack ohne Token, meldet es das einmal in der Konsole, mit Seriennummer und Position („SF800 Akku 2“).
+- Ein Akku wird über seine Seriennummer zugeordnet, nicht über seine Position. Ändert sich die Reihenfolge im Report, landen die Werte trotzdem beim richtigen Gerät.
+- Ein Solarflow oder Akku ohne Token wird nicht gesendet. Die anderen laufen normal weiter.
+
+### Welche Werte gesendet werden
+
+Alles ist in `config_local.py` einstellbar. Jede Liste ordnet einem **Namen im Report** einen **selbst gewählten Namen in ThingsBoard** zu:
 
 ```python
-WRITE_TB = True        # WRITE_DB / WRITE_CSV / WRITE_TB – mindestens eins True
-TB_HOST  = "https://eu.thingsboard.cloud"
+TB_HUB_FIELDS  = {"electricLevel": "soc", "solarInputPower": "pv", "minSoc": "reserve"}
+TB_PACK_FIELDS = {"socLevel": "soc", "minVol": "zelleMin", "maxTemp": "temp"}
 ```
 
-### Was von `ts_bridge` übernommen wird
-
-- **Geräte-Schnittstelle von ThingsBoard:** `POST {host}/api/v1/{token}/telemetry` für Messwerte und `…/attributes` für selten wechselnde Werte. Erfolg ist HTTP 200.
-- **Fester Sendetakt:** zu jeder vollen Minute, Zeitstempel = volle Minute.
-- **Ein Wiederholversuch** nach 5 s. Scheitert auch der, wird der Wert verworfen und protokolliert.
-- **Status-Werte nur bei Änderung**, dazu einmal am Tag und nach einem Neustart. Das spart Datenpunkte.
-- **Fehlende Werte werden weggelassen.** Ein Gerät, das offline ist, sendet in dieser Minute nichts.
-- **Smartmeter als eigenes Gerät „Netz“** mit dem Wert `gridPower`.
-- **Prüfung der Tokens:** Im Logger gibt es keine Einstellungsseite, deshalb wird beim Start je Token ein Test-Attribut gesendet. Ist ein Token falsch, kommt eine klare Fehlermeldung.
-
-### Geräte in ThingsBoard
-
-| Gerät | Beispielname | Inhalt |
+| Einstellung | Inhalt | Art in ThingsBoard |
 |---|---|---|
-| je Solarflow | „SF2400Pro“ (Name aus `DEVICES`) | Messwerte und Status des Hubs |
-| je Akkupack | „SF2400Pro Akku 1“ | Messwerte des Packs |
-| Netz | „Netz“ | Netzleistung vom Smartmeter, nur wenn eingerichtet |
+| `TB_HUB_FIELDS` | Messwerte je Solarflow | Telemetrie, bei jedem Senden |
+| `TB_PACK_FIELDS` | Messwerte je Akkupack | Telemetrie, bei jedem Senden |
+| `TB_ON_CHANGE` | Reportnamen, die nur **bei Änderung** gesendet werden, dazu einmal am Tag und nach einem Neustart (Standard: `socLimit`, `socStatus`, `socSet`, `minSoc`, `heatState`, `gridOffMode`, `chargeMaxLimit`, `inverseMaxPower`, `gridReverse`). Wirkt nur für Werte, die in `TB_HUB_FIELDS`/`TB_PACK_FIELDS` stehen | Telemetrie |
+| `TB_HUB_ATTRIBUTES` | feste Angaben je Solarflow (Standard: `product`, `version`, `sn` als `hub_sn`, `packNum`) | Attribute, beim Start, bei Änderung und einmal am Tag |
+| `TB_PACK_ATTRIBUTES` | feste Angaben je Akkupack (Standard: `sn`, `packType`, `softVersion`) | Attribute, ebenso |
+| `TB_PACK_NAME_ATTRIBUTE`, `TB_PACK_NAME_FORMAT` | lesbarer **Name des Akkus als Attribut**, Standard `name` = „{hub} Akku {nr}“, z. B. „SF800 Akku 1“. Platzhalter `{hub}`, `{nr}`, `{sn}`. Leerer Attributname = kein Namens-Attribut | Attribut |
 
-Ein Solarflow mit zwei Akkupacks ergibt also drei Geräte.
+- Umgerechnet wird wie in Datenbank und CSV: Temperatur in °C, Zellspannung in V, `socSet`/`minSoc` in %.
+- Werte, die ein Gerät nicht liefert, werden weggelassen.
+- Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 7 Werten und 4 Akkupacks mit je 7 Werten ergeben 42 Werte je Minute, rund 60 000 am Tag. Seltene Status-Werte zählen dank `TB_ON_CHANGE` kaum.
 
-### Welche Werte wie gesendet werden
+### Senden
 
-Die Werte sind dieselben wie in Datenbank und CSV, mit denselben Umrechnungen (°C, V, %).
-
-| Art | Solarflow | Akkupack |
+| Einstellung | Bedeutung | Standard |
 |---|---|---|
-| **Messwerte** (Telemetrie, jede Minute) | `electricLevel`, `solarInputPower`, `outputHomePower`, `gridInputPower`, `packInputPower`, `outputPackPower`, `hyperTmp` … | `socLevel`, `power`, `maxTemp`, `totalVol`, `maxVol`, `minVol`, `batcur` |
-| **Status und Grenzen** (Telemetrie, nur bei Änderung) | `socLimit`, `socStatus`, `socSet`, `minSoc`, `heatState`, `gridOffMode`, `chargeMaxLimit`, `inverseMaxPower`, `gridReverse` | – |
-| **Feste Angaben** (Attribute, beim Start und bei Änderung) | `product`, `version`, `hub_sn`, `packNum` | `sn`, `packType`, `softVersion` |
+| `TB_HOST` | Adresse des ThingsBoard-Servers, auch ein eigener Server im Heimnetz | `https://eu.thingsboard.cloud` |
+| `TB_INTERVAL` | Sekunden zwischen zwei Sendungen, ab 10. Bei 60 wird zu jeder vollen Minute gesendet | 60 |
 
-### Ablauf
+- Gesendet wird zu jedem Vielfachen von `TB_INTERVAL` der **letzte Stand der Abfrage**, mit diesem Zeitpunkt als Zeitstempel. `POLL_INTERVAL` und `TB_INTERVAL` sind unabhängig: Man kann z. B. alle 30 s in die Datenbank schreiben und jede Minute an ThingsBoard senden.
+- Das Senden läuft in einem **eigenen Thread**. Ein langsames oder nicht erreichbares ThingsBoard bremst weder die Abfrage noch Datenbank und CSV.
+- Scheitert eine Sendung, folgt nach 5 s **ein Wiederholversuch**. Scheitert auch der, wird der Wert verworfen und in der Konsole gemeldet. Nachgesendet wird nicht, die Daten liegen ja in Datenbank bzw. CSV.
+- Ist ein Solarflow offline, sendet er in dieser Runde nichts, ebenso seine Akkus.
+- Ist der letzte Stand älter als zwei Abfrageintervalle bzw. ein Sendeintervall, wird in dieser Runde nichts gesendet.
 
-- Das Senden läuft in einem **eigenen Thread**. Ein langsames oder nicht erreichbares ThingsBoard bremst weder die Abfrage noch das Schreiben in Datenbank und CSV.
-- Der Sendetakt ist unabhängig vom Abfragetakt: Gesendet wird zur vollen Minute der jeweils letzte Stand.
+### Prüfungen
 
-### Offene Fragen (mit Empfehlung)
+- **Beim Start, ohne Verbindung:** Form der Einstellungen. Tokens dürfen nur erlaubte Zeichen enthalten, `TB_HUB_TOKENS` darf nur Namen aus `DEVICES` enthalten, die Listen müssen Zuordnungen „Report → ThingsBoard“ sein. Bei einem Fehler bricht der Start mit Meldung ab.
+- **Beim Start, mit Verbindung:** Jedes Token sendet einmal das Test-Attribut `simplemonStart`. Lehnt ThingsBoard ein Token ab (HTTP 401), meldet die Konsole das, und dieses Token wird bis zum nächsten Neustart nicht mehr verwendet. Die übrigen Geräte laufen weiter.
 
-1. **Ein Token je Gerät oder ein Gateway?**
-   - Wie in `ts_bridge` je Gerät ein Token: Bei Akkupacks wird das mühsam. Jeder Pack muss in ThingsBoard von Hand angelegt werden, und nach einem Tausch braucht es ein neues Gerät mit neuem Token.
-   - Alternative: die **Gateway-Schnittstelle von ThingsBoard**. Ein einziges Gerät „Gateway“ mit einem Token (`…/gateway/telemetry`, `…/gateway/attributes`). ThingsBoard legt Solarflow-, Akku- und Netz-Geräte anhand des Namens **selbst an**.
-   - **Empfehlung: Gateway.**
-2. **Name der Akku-Geräte:**
-   - Nach Position („SF800 Akku 1“): gut lesbar, aber die Nummer kann sich verschieben, wenn sich die Reihenfolge im Report ändert.
-   - Nach Seriennummer („SF800 Akku <sn>“): stabil, aber schlechter lesbar.
-   - **Empfehlung:** Position im Namen, Seriennummer als Attribut.
-3. **Sendetakt:** bei jeder Abfrage oder jede volle Minute? **Empfehlung: jede Minute** (`TB_INTERVAL = 60`), auch wenn alle 30 s abgefragt wird.
-4. **Auswahl der Werte:**
-   - Fest vorgegeben, oder in `config_local.py` als Liste einstellbar (`TB_HUB_FIELDS`, `TB_PACK_FIELDS`) mit Standardwerten?
-   - **Empfehlung: einstellbar.** Jeder Wert kostet Datenpunkte in ThingsBoard. Beispiel: 2 Solarflows mit je 10 Werten und 4 Akkupacks mit je 5 Werten ergeben 40 Werte pro Minute, rund 58 000 am Tag.
-5. **ThingsBoard nicht erreichbar:** verwerfen wie in `ts_bridge` (die Daten liegen ja in Datenbank bzw. CSV) oder zwischenspeichern und später nachsenden? **Empfehlung: verwerfen.**
-6. **Smartmeter als Gerät „Netz“:** **Empfehlung: ja**, wie in `ts_bridge`.
+### Testmodus `--once`
+
+Bevor etwas an ThingsBoard geht, lässt sich ansehen, was gesendet würde:
+
+```sh
+python3 zendure_logger.py --once
+```
+
+- Fragt alle Speicher und den Smartmeter **einmal** ab, baut die Daten genau wie beim Senden (Zuordnung, Umrechnung, Akku-Namen, Attribute) und schreibt sie in die Datei `TB_TEST_FILE` (Standard `tb_test.json`). Danach endet das Programm.
+- **Es wird nichts gesendet**, Datenbank und CSV werden nicht angefasst, es wird nichts umbenannt.
+- Funktioniert auch mit `WRITE_TB = False` und mit Platzhaltern statt Tokens. Geprüft wird nur der Aufbau der Listen.
+- **Tokens stehen nie in der Datei.** Je Gerät steht dort nur „eingetragen“ oder „fehlt – wird nicht gesendet“, die Adresse mit `<TOKEN>`.
+- Geräte ohne Token erscheinen trotzdem, Akkus mit Seriennummer und Position. So findet man die Seriennummern für `TB_PACK_TOKENS`.
+- Am Ende der Datei und in der Konsole: nicht erreichte Solarflows, Geräte ohne Token und die Zahl der Datenpunkte (erste Sendung, jede weitere Sendung, ungefähr je Tag).
+
+Die Datei enthält Seriennummern. Sie steht deshalb in `.gitignore` (`tb_test*.json`) und sollte nicht weitergegeben werden.
 
 ### Sicherheit
 
-Das Token (bzw. die Tokens) stünde in `config_local.py`, nie in `config.py`. Damit wird die Datei noch schützenswerter.
+Tokens sind Zugangsdaten. Sie gehören nur in `config_local.py`, die nicht ins Repo kommt, nie in `config.py`.
 
 ## Frühere Fassungen
 

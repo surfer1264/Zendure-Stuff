@@ -56,7 +56,7 @@ Das gilt auch für Fragen zu Code, Texten oder Verhalten: nicht aus dem Gedächt
 | Configurator | `Multiconfigurator/` (+ `HA_zendure_installer/`, `local_helper/`) | Erstkonfiguration, Update, Upload, Log-Mitschnitt für beide Shellys |
 | Test-Harness | `testController/` | Führt den Controller unverändert unter Node gegen einen Mock-Server aus |
 | Werkzeuge | `Script_poller/`, `stat/auswertung/`, `thingsboard/` | Speicher-/CPU-Messung, Log-Auswertung, Dashboards |
-| simplemon | `simplemon/` (`zendure_logger.py`) | Eigenständiger Logger ohne Shelly: liest mehrere Speicher samt Akkupacks direkt per zenSDK und schreibt in SQLite und/oder CSV (Semikolon, Dezimalkomma). Nicht auf der Doku-Seite (`exclude_docs`). Echte Adressen nur in `config_local.py` (in `.gitignore`), `config.py` ist die Vorlage mit Platzhaltern. `*.db` und `*.csv` enthalten Seriennummern und werden nie committet |
+| simplemon | `simplemon/` (`zendure_logger.py`) | Eigenständiger Logger ohne Shelly: liest mehrere Speicher samt Akkupacks direkt per zenSDK und schreibt in SQLite, CSV (Semikolon, Dezimalkomma) und/oder an ThingsBoard (je Solarflow und je Akku ein Gerät mit eigenem Token, Vorbild `ts_bridge.py`). Nicht auf der Doku-Seite (`exclude_docs`). Echte Adressen und ThingsBoard-Tokens nur in `config_local.py` (in `.gitignore`), `config.py` ist die Vorlage mit Platzhaltern. `*.db` und `*.csv` enthalten Seriennummern und werden nie committet |
 
 **Veraltet – nicht weiterentwickeln, nur lesen:** liegt im Repo unter `archiv/` (`archiv/shelly_script/`: `Upload_Controller/`, `WatchdogZenSDK/`, `AkkuWatchDogMulti/`, `Datenmonitor/`; `archiv/ha/`: frühere Home-Assistant-Dateien). `zendash/` ist gelöscht. Änderungen gehören in die Nachfolger (Controller, zendash_watch, Configurator).
 

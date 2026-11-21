@@ -27,3 +27,5 @@ upload_mini.js
 
 # simplemon: eigene Konfiguration mit echten Adressen - nie committen
 config_local.py
+# simplemon Testmodus --once: enthaelt Seriennummern
+tb_test*.json

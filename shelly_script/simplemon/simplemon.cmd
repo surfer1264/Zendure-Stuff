@@ -1,1 +1,1 @@
-python3 zendure_logger.py
+python3 zendure_logger.py --once

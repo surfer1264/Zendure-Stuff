@@ -4,17 +4,25 @@ Zendure - Logger fuer einen oder mehrere Speicher.
 
 Fragt die Speicher regelmaessig ab (lokale zenSDK-Schnittstelle,
 GET /properties/report, alle Geraete parallel) und schreibt die Werte in
-eine SQLite-Datenbank, optional zusaetzlich in CSV-Dateien. Optional wird
-die Netzleistung eines Shelly Pro 3EM mitgeschrieben.
+eine SQLite-Datenbank, in CSV-Dateien und/oder an ThingsBoard - jede
+Ausgabe einzeln abschaltbar. Optional wird die Netzleistung eines
+Shelly Pro 3EM mitgeschrieben.
 
 Kein Webserver, keine Nachrichten, keine Schwellwerte - nur Aufzeichnung.
 
 Start:   python3 zendure_logger.py
 Beenden: Strg+C
 
+Testmodus ThingsBoard:
+         python3 zendure_logger.py --once
+         Fragt alle Speicher einmal ab und schreibt die Daten, die an
+         ThingsBoard gingen, in TB_TEST_FILE (JSON). Sendet nichts, schreibt
+         weder DB noch CSV, Tokens stehen nicht in der Datei.
+
 Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
-import csv, importlib, json, os, sqlite3, sys, threading, time, urllib.request
+import csv, importlib, json, os, re, sqlite3, sys, threading, time
+import urllib.error, urllib.parse, urllib.request
 from datetime import datetime
 
 # ----------------------------- Konfiguration -----------------------------
@@ -24,6 +32,14 @@ from datetime import datetime
 # das nicht angefasst werden muss und bei Updates ersetzt werden kann.
 import importlib.util
 CONFIG_NAME = "config_local" if importlib.util.find_spec("config_local") else "config"
+
+# Kommandozeile: ohne Argument Dauerbetrieb, --once = Testmodus ThingsBoard
+_ARGS = sys.argv[1:]
+if any(a not in ("--once",) for a in _ARGS):
+    print("Aufruf: python3 zendure_logger.py [--once]")
+    print("  --once  Testmodus: einmal abfragen, ThingsBoard-Daten in TB_TEST_FILE schreiben, nichts senden")
+    sys.exit(2)
+ONCE = "--once" in _ARGS
 try:
     config = importlib.import_module(CONFIG_NAME)
 except ImportError as e:
@@ -47,6 +63,82 @@ QUIET = _cfg("QUIET", False)
 RETENTION_DAYS = _cfg("RETENTION_DAYS", 7)
 USE_SMARTMETER = _cfg("USE_SMARTMETER", False)
 SMARTMETER_URL = _cfg("SMARTMETER_URL", "")
+
+# ThingsBoard (Beschreibung und Beispiele in config.py)
+WRITE_TB = _cfg("WRITE_TB", False)
+TB_HOST = str(_cfg("TB_HOST", "https://eu.thingsboard.cloud")).strip().rstrip("/")
+TB_INTERVAL = _cfg("TB_INTERVAL", 60)
+TB_HUB_TOKENS = _cfg("TB_HUB_TOKENS", {})
+TB_PACK_TOKENS = _cfg("TB_PACK_TOKENS", {})
+TB_GRID_TOKEN = _cfg("TB_GRID_TOKEN", "")
+TB_GRID_KEY = _cfg("TB_GRID_KEY", "gridPower")
+TB_HUB_FIELDS = _cfg("TB_HUB_FIELDS", {
+    "electricLevel": "electricLevel", "solarInputPower": "solarInputPower",
+    "outputHomePower": "outputHomePower", "gridInputPower": "gridInputPower",
+    "packInputPower": "packInputPower", "outputPackPower": "outputPackPower",
+    "hyperTmp": "hyperTmp",
+    "socLimit": "socLimit", "socSet": "socSet", "minSoc": "minSoc", "heatState": "heatState",
+})
+TB_PACK_FIELDS = _cfg("TB_PACK_FIELDS", {
+    "socLevel": "socLevel", "power": "power", "maxTemp": "maxTemp",
+    "totalVol": "totalVol", "maxVol": "maxVol", "minVol": "minVol", "batcur": "batcur",
+})
+TB_ON_CHANGE = _cfg("TB_ON_CHANGE", [
+    "socLimit", "socStatus", "socSet", "minSoc", "heatState", "gridOffMode",
+    "chargeMaxLimit", "inverseMaxPower", "gridReverse",
+])
+TB_HUB_ATTRIBUTES = _cfg("TB_HUB_ATTRIBUTES", {
+    "product": "product", "version": "version", "sn": "hub_sn", "packNum": "packNum",
+})
+TB_PACK_ATTRIBUTES = _cfg("TB_PACK_ATTRIBUTES", {
+    "sn": "sn", "packType": "packType", "softVersion": "softVersion",
+})
+TB_PACK_NAME_ATTRIBUTE = _cfg("TB_PACK_NAME_ATTRIBUTE", "name")
+TB_PACK_NAME_FORMAT = _cfg("TB_PACK_NAME_FORMAT", "{hub} Akku {nr}")
+TB_TEST_FILE = _cfg("TB_TEST_FILE", "tb_test.json")   # Ausgabe des Testmodus --once
+
+
+_TB_TOKEN_RE = re.compile(r"^[A-Za-z0-9_\-.~]{1,128}$")
+
+
+def _check_mapping(name, m):
+    if not isinstance(m, dict):
+        raise ValueError(f"{name} muss ein Dictionary sein: {{\"Reportname\": \"Name in ThingsBoard\"}}")
+    for k, v in m.items():
+        if not isinstance(k, str) or not isinstance(v, str) or not k.strip() or not v.strip():
+            raise ValueError(f"{name}: Eintrag {k!r}: {v!r} - beide Namen muessen Text sein")
+
+
+def check_tb_config(tokens=True):
+    """ThingsBoard-Einstellungen pruefen (nur Form, keine Verbindung).
+    tokens=False (Testmodus): Tokens nicht pruefen, Platzhalter sind erlaubt."""
+    if not TB_HOST.startswith(("http://", "https://")):
+        raise ValueError("TB_HOST muss mit http:// oder https:// beginnen")
+    if not isinstance(TB_INTERVAL, int) or TB_INTERVAL < 10:
+        raise ValueError("TB_INTERVAL muss eine ganze Zahl ab 10 (Sekunden) sein")
+    for name in ("TB_HUB_TOKENS", "TB_PACK_TOKENS"):
+        m = globals()[name]
+        if not isinstance(m, dict):
+            raise ValueError(f"{name} muss ein Dictionary sein")
+        for k, tok in (m.items() if tokens else ()):
+            if not _TB_TOKEN_RE.match(str(tok or "")):
+                raise ValueError(f"{name}: Token fuer {k!r} fehlt oder enthaelt ungueltige Zeichen")
+    if tokens and TB_GRID_TOKEN and not _TB_TOKEN_RE.match(str(TB_GRID_TOKEN)):
+        raise ValueError("TB_GRID_TOKEN enthaelt ungueltige Zeichen")
+    if tokens and not TB_HUB_TOKENS and not TB_PACK_TOKENS and not TB_GRID_TOKEN:
+        raise ValueError("WRITE_TB = True, aber kein Token eingetragen")
+    names = {d["name"] for d in DEVICES}
+    for k in TB_HUB_TOKENS:
+        if k not in names:
+            raise ValueError(f"TB_HUB_TOKENS: {k!r} steht nicht in DEVICES")
+    for name in ("TB_HUB_FIELDS", "TB_PACK_FIELDS", "TB_HUB_ATTRIBUTES", "TB_PACK_ATTRIBUTES"):
+        _check_mapping(name, globals()[name])
+    if not isinstance(TB_ON_CHANGE, (list, tuple)):
+        raise ValueError("TB_ON_CHANGE muss eine Liste von Reportnamen sein")
+    try:
+        TB_PACK_NAME_FORMAT.format(hub="x", nr=1, sn="x")
+    except (KeyError, IndexError, ValueError, AttributeError):
+        raise ValueError("TB_PACK_NAME_FORMAT: erlaubt sind {hub}, {nr} und {sn}")
 
 
 def load_devices():
@@ -72,17 +164,22 @@ def load_devices():
 
 try:
     DEVICES = load_devices()
-    if not WRITE_DB and not WRITE_CSV:
-        raise ValueError("WRITE_DB und WRITE_CSV sind beide False - es wuerde nichts geschrieben")
+    if ONCE:
+        check_tb_config(tokens=False)
+    else:
+        if not WRITE_DB and not WRITE_CSV and not WRITE_TB:
+            raise ValueError("WRITE_DB, WRITE_CSV und WRITE_TB sind alle False - es wuerde nichts geschrieben")
+        if WRITE_TB:
+            check_tb_config()
 except ValueError as e:
     print(f"FEHLER in {CONFIG_NAME}.py:", e)
     sys.exit(1)
 
 # --- Technische Definitionen (gehoeren zum Code, nicht zur Nutzer-Konfig) ---
 
-# Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie nach
-# Rueckfrage geloescht und neu angelegt (keine Uebernahme alter Daten).
-SCHEMA_VERSION = 3
+# Aufbau der Datenbank. Passt eine vorhandene Datei nicht dazu, wird sie beim
+# Start umbenannt (Datum und Uhrzeit im Namen) und neu angelegt.
+SCHEMA_VERSION = 4
 
 # Felder der obersten Ebene des Reports (neben sn und timestamp)
 TOP_FIELDS = ["product", "version"]
@@ -110,17 +207,34 @@ FIELD_TYPES = {"product": "TEXT", "version": "INTEGER", "sn": "TEXT",
 
 # Umrechnungen vor dem Speichern (gelten fuer DB und CSV):
 #   Temperatur:   Zehntel-Kelvin -> ganze °C:  (roh - 2731) / 10, gerundet
-#   Zellspannung: 0,01 V -> V (2 Nachkommastellen)
+#   Spannungen:   0,01 V -> V (2 Nachkommastellen): BatVolt, totalVol, maxVol, minVol
 #   minSoc/socSet: Zehntel-Prozent -> % (1 Nachkommastelle)
 TEMP_FIELDS = {"hyperTmp", "maxTemp"}
-VOLT_FIELDS = {"maxVol", "minVol"}
+VOLT_FIELDS = {"BatVolt", "totalVol", "maxVol", "minVol"}
 PERMILLE_FIELDS = {"minSoc", "socSet"}
 
-# Kopfzeilen der CSV-Dateien. Hat eine vorhandene Datei einen anderen Kopf,
-# wird sie nach Rueckfrage geloescht und neu angelegt.
+# Kopfzeilen der Datenbank (Reportnamen). Die CSV nutzt sie mit Einheit, siehe
+# _csv_name(); eine CSV mit anderem Kopf wird beim Start umbenannt.
 DEV_HEADER = ["ts", "dt", "name", "hub_sn", "dev_ts"] + TOP_FIELDS + PROPS
 PACK_HEADER = ["ts", "dt", "name", "hub_sn", "packIndex"] + PACK_FIELDS
 SITE_HEADER = ["ts", "dt", "gridMeterPower"]
+
+
+def _csv_name(field):
+    """Spaltenname in der CSV: umgerechnete Werte mit Einheit, z. B. 'BatVolt (V)'.
+    So passt eine CSV aus einer Fassung mit anderer Einheit nicht mehr zum Kopf
+    und wird beim Start umbenannt statt weitergeschrieben."""
+    if field in TEMP_FIELDS:
+        return f"{field} (Grad C)"
+    if field in VOLT_FIELDS:
+        return f"{field} (V)"
+    if field in PERMILLE_FIELDS:
+        return f"{field} (%)"
+    return field
+
+
+DEV_CSV_HEADER = [_csv_name(f) for f in DEV_HEADER]
+PACK_CSV_HEADER = [_csv_name(f) for f in PACK_HEADER]
 
 
 def log(*args):
@@ -188,7 +302,7 @@ def _db_version(path):
 
 def setup_db():
     """Legt die Datenbank an bzw. oeffnet sie. Eine Datei mit altem Aufbau
-    wurde vorher in check_old_files() nach Rueckfrage entfernt."""
+    wurde vorher in check_old_files() umbenannt."""
     if os.path.exists(DB_FILE) and _db_version(DB_FILE) != SCHEMA_VERSION:
         raise RuntimeError(f"Datenbank {DB_FILE} hat einen alten Aufbau")
     con = sqlite3.connect(DB_FILE)
@@ -226,41 +340,43 @@ def _csv_is_old(path, header):
     return first != header
 
 
-def check_old_files():
-    """Dateien im alten Aufbau suchen und erst nach Rueckfrage loeschen.
+def _archive_name(path, stamp):
+    """zendure_log.db -> zendure_log_alt_20261121-153000.db (bei Kollision _2, _3 ...)."""
+    base, ext = os.path.splitext(path)
+    name = f"{base}_alt_{stamp}{ext}"
+    n = 2
+    while os.path.exists(name):
+        name = f"{base}_alt_{stamp}_{n}{ext}"
+        n += 1
+    return name
 
-    Antwort "j"/"ja" -> loeschen, sie werden neu angelegt. Jede andere Antwort
-    oder keine Konsole (z. B. Hintergrunddienst) -> nichts loeschen, Ende.
-    """
+
+def check_old_files():
+    """Dateien im alten Aufbau umbenennen (Datum und Uhrzeit im Namen), damit
+    neue Dateien angelegt werden koennen. Es wird nichts geloescht und nicht
+    nachgefragt - laeuft also auch als Hintergrunddienst."""
     old = []
     if WRITE_DB and os.path.exists(DB_FILE) and _db_version(DB_FILE) != SCHEMA_VERSION:
         old.append(DB_FILE)
     if WRITE_CSV:
-        csvs = [(CSV_FILE, DEV_HEADER), (PACK_CSV_FILE, PACK_HEADER)]
+        csvs = [(CSV_FILE, DEV_CSV_HEADER), (PACK_CSV_FILE, PACK_CSV_HEADER)]
         if USE_SMARTMETER:
             csvs.append((SITE_CSV_FILE, SITE_HEADER))
         old += [path for path, header in csvs if _csv_is_old(path, header)]
     if not old:
         return
-
-    log_always("Diese Dateien haben einen alten Aufbau und passen nicht zu dieser Fassung:")
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_always("Diese Dateien haben einen alten Aufbau und werden umbenannt (nichts geloescht):")
     for path in old:
-        log_always(f"  {path}")
-    antwort = ""
-    if sys.stdin is not None and sys.stdin.isatty():
+        neu = _archive_name(path, stamp)
         try:
-            antwort = input("Loeschen und neu anlegen? Alte Daten gehen verloren. [j/N] ")
-        except EOFError:
-            antwort = ""
-    else:
-        log_always("Keine Konsole fuer die Rueckfrage - es wird nichts geloescht.")
-    if antwort.strip().lower() not in ("j", "ja"):
-        log_always("Abgebrochen, nichts geloescht. Die Dateien wegkopieren oder in config.py")
-        log_always("neue Dateinamen eintragen (DB_FILE, CSV_FILE, PACK_CSV_FILE, SITE_CSV_FILE).")
-        sys.exit(1)
-    for path in old:
-        os.remove(path)
-        log_always(f"{path} geloescht, wird neu angelegt")
+            os.replace(path, neu)
+        except OSError as e:
+            log_always(f"FEHLER: {path} laesst sich nicht umbenennen ({e}).")
+            log_always("        Die Datei ist vermutlich geoeffnet - schliessen und neu starten.")
+            sys.exit(1)
+        log_always(f"  {path} -> {neu}")
+    log_always("Neue Dateien werden angelegt.")
 
 
 def append_csv(path, header, rows):
@@ -369,17 +485,251 @@ def store(con, reports, grid_meter, cycle_ts):
 
     if WRITE_CSV:
         if dev_rows:
-            append_csv(CSV_FILE, DEV_HEADER, [[_csv_val(v) for v in row] for row in dev_rows])
+            append_csv(CSV_FILE, DEV_CSV_HEADER, [[_csv_val(v) for v in row] for row in dev_rows])
         if pack_rows:
-            append_csv(PACK_CSV_FILE, PACK_HEADER, [[_csv_val(v) for v in row] for row in pack_rows])
+            append_csv(PACK_CSV_FILE, PACK_CSV_HEADER, [[_csv_val(v) for v in row] for row in pack_rows])
         if USE_SMARTMETER and grid_meter is not None:
             append_csv(SITE_CSV_FILE, SITE_HEADER, [[cycle_ts, dt, _csv_val(grid_meter)]])
+
+
+# ----------------------------- ThingsBoard --------------------------------
+# Jeder Solarflow und jeder Akkupack ist in ThingsBoard ein eigenes Geraet mit
+# eigenem Access Token (Device-API wie im Dashboard-Proxy, ts_bridge.py):
+#   POST {TB_HOST}/api/v1/{token}/telemetry   Messwerte {"ts": ms, "values": {...}}
+#   POST {TB_HOST}/api/v1/{token}/attributes  feste Angaben {...}
+# Solarflow: Token ueber den Namen aus DEVICES, Akku: ueber die Seriennummer,
+# Netz (Smartmeter): eigenes Token. Gesendet wird im eigenen Thread zu jedem
+# Vielfachen von TB_INTERVAL (volle Minute bei 60) der letzte Stand der
+# Abfrage; ein langsames ThingsBoard bremst Abfrage, DB und CSV nicht.
+# Ein Wiederholversuch nach 5 s, dann verworfen (Daten liegen in DB/CSV).
+_tb_lock = threading.Lock()
+_tb_latest = {"snap": None}     # (cycle_ts, reports, grid_meter) der letzten Runde
+_tb_last = {}                   # Geraet -> {TB-Name: (Wert, Datum)} fuer TB_ON_CHANGE
+_tb_attr_last = {}              # Geraet -> (Attribute, Datum)
+_tb_bad = set()                 # von ThingsBoard abgelehnte Tokens (HTTP 401)
+_tb_warned = set()              # bereits gemeldete Akkus ohne Token
+TB_RETRY_S = 5
+
+
+def tb_update(reports, grid_meter, cycle_ts):
+    """Letzten Stand fuer den Sende-Thread ablegen (aus der Abfrage-Schleife)."""
+    with _tb_lock:
+        _tb_latest["snap"] = (cycle_ts, reports, grid_meter)
+
+
+def _tb_post(token, kind, payload):
+    """kind = 'telemetry' oder 'attributes'. Rueckgabe (ok, Text). 401 = Token falsch."""
+    url = "{}/api/v1/{}/{}".format(TB_HOST, urllib.parse.quote(token, safe=""), kind)
+    req = urllib.request.Request(url, data=json.dumps(payload).encode(),
+                                 headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            return r.status == 200, "HTTP {}".format(r.status)
+    except urllib.error.HTTPError as e:
+        return False, "HTTP {}".format(e.code)
+    except Exception as e:
+        return False, str(e)
+
+
+def _tb_is_number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _tb_lookup(data, src, key):
+    """Wert aus dem Pack bzw. aus properties, sonst aus der obersten Ebene (z. B. sn, product)."""
+    if key in src:
+        return src.get(key)
+    return data.get(key)
+
+
+def _tb_devices(reports, grid_meter, preview=False):
+    """Liste der Sendeziele: (Schluessel, Anzeige, Token, Messwerte, Attribute, Info).
+    preview=True (Testmodus): auch Geraete ohne Token, Token dann None."""
+    out = []
+    for r in reports:
+        if "data" not in r:
+            continue                                     # Solarflow offline -> nichts
+        data, hub = r["data"], r["name"]
+        props = data.get("properties", {})
+        tok = TB_HUB_TOKENS.get(hub)
+        if tok or preview:
+            tel = {tb: convert(k, props.get(k)) for k, tb in TB_HUB_FIELDS.items()}
+            att = {tb: convert(k, _tb_lookup(data, props, k)) for k, tb in TB_HUB_ATTRIBUTES.items()}
+            out.append(("hub:" + hub, hub, tok,
+                        {k: v for k, v in tel.items() if _tb_is_number(v)},
+                        {k: v for k, v in att.items() if v is not None},
+                        {"art": "Solarflow", "solarflow": hub}))
+        for i, pk in enumerate(data.get("packData", [])):
+            sn = pk.get("sn")
+            tok = TB_PACK_TOKENS.get(sn)
+            if not tok and not preview:
+                if sn and sn not in _tb_warned:
+                    _tb_warned.add(sn)
+                    log_always(f"{now()}  ThingsBoard: Akku {sn} ({hub} Akku {i + 1}) hat kein Token "
+                               f"in TB_PACK_TOKENS - wird nicht gesendet")
+                continue
+            tel = {tb: convert(k, pk.get(k)) for k, tb in TB_PACK_FIELDS.items()}
+            att = {tb: convert(k, _tb_lookup(data, pk, k)) for k, tb in TB_PACK_ATTRIBUTES.items()}
+            att = {k: v for k, v in att.items() if v is not None}
+            if TB_PACK_NAME_ATTRIBUTE:
+                att[TB_PACK_NAME_ATTRIBUTE] = TB_PACK_NAME_FORMAT.format(hub=hub, nr=i + 1, sn=sn)
+            out.append(("pack:" + str(sn), f"Akku {sn}", tok,
+                        {k: v for k, v in tel.items() if _tb_is_number(v)}, att,
+                        {"art": "Akku", "solarflow": hub, "position": i + 1, "seriennummer": sn}))
+    if (TB_GRID_TOKEN or (preview and USE_SMARTMETER)) and _tb_is_number(grid_meter):
+        out.append(("grid", "Netz", TB_GRID_TOKEN or None, {TB_GRID_KEY: grid_meter}, {},
+                    {"art": "Netz"}))
+    return out
+
+
+def _tb_on_change_keys():
+    """TB-Namen der Werte, die nur bei Aenderung gesendet werden."""
+    names = set(TB_ON_CHANGE)
+    return ({tb for k, tb in TB_HUB_FIELDS.items() if k in names}
+            | {tb for k, tb in TB_PACK_FIELDS.items() if k in names})
+
+
+def _tb_send_all(snap, stamp):
+    _, reports, grid_meter = snap
+    heute = time.strftime("%Y-%m-%d")
+    on_change = _tb_on_change_keys()
+    ts_ms = int(stamp * 1000)
+    geraete = werte = 0
+    for key, label, tok, tel, att, _info in _tb_devices(reports, grid_meter):
+        if tok in _tb_bad:
+            continue
+        # Feste Angaben: beim ersten Mal, bei Aenderung und einmal je Tag
+        if att and _tb_attr_last.get(key) != (att, heute):
+            ok, ans = _tb_post(tok, "attributes", att)
+            if ok:
+                _tb_attr_last[key] = (att, heute)
+            else:
+                _tb_fail(tok, label, "Attribute", ans)
+                if tok in _tb_bad:
+                    continue
+        # Status-Werte nur bei Aenderung (und einmal je Tag)
+        last = _tb_last.get(key, {})
+        tel = {k: v for k, v in tel.items() if not (k in on_change and last.get(k) == (v, heute))}
+        if not tel:
+            continue
+        payload = {"ts": ts_ms, "values": tel}
+        ok, ans = _tb_post(tok, "telemetry", payload)
+        if not ok and not ans.startswith("HTTP 401"):
+            time.sleep(TB_RETRY_S)
+            ok, ans = _tb_post(tok, "telemetry", payload)
+        if ok:
+            merk = _tb_last.setdefault(key, {})
+            for k in on_change & set(tel):
+                merk[k] = (tel[k], heute)
+            geraete += 1
+            werte += len(tel)
+        else:
+            _tb_fail(tok, label, "Messwerte", ans)
+    zeit = time.strftime("%H:%M:%S", time.localtime(stamp))
+    log(f"{now()}  ThingsBoard {zeit}: {werte} Werte an {geraete} Geraet(e) gesendet")
+
+
+def _tb_fail(tok, label, was, ans):
+    if ans.startswith("HTTP 401"):
+        _tb_bad.add(tok)
+        log_always(f"{now()}  ThingsBoard: Token fuer {label} abgelehnt (HTTP 401) - "
+                   f"wird bis zum Neustart nicht mehr verwendet")
+    else:
+        log_always(f"{now()}  ThingsBoard: {was} fuer {label} verworfen ({ans})")
+
+
+def _tb_check_tokens():
+    """Beim Start jedes Token einmal pruefen (Test-Attribut wie in ts_bridge)."""
+    stamp = time.strftime("%Y-%m-%dT%H:%M:%S")
+    tokens = [(f"Solarflow {k}", t) for k, t in TB_HUB_TOKENS.items()]
+    tokens += [(f"Akku {k}", t) for k, t in TB_PACK_TOKENS.items()]
+    if TB_GRID_TOKEN:
+        tokens.append(("Netz", TB_GRID_TOKEN))
+    for label, tok in tokens:
+        ok, ans = _tb_post(tok, "attributes", {"simplemonStart": stamp})
+        if ok:
+            log_always(f"  ThingsBoard {label}: Token ok")
+        else:
+            _tb_fail(tok, label, "Test", ans)
+    for d in DEVICES:
+        if d["name"] not in TB_HUB_TOKENS:
+            log_always(f"  ThingsBoard: Solarflow {d['name']} hat kein Token - wird nicht gesendet")
+
+
+def tb_once():
+    """Testmodus --once: einmal abfragen, Sendedaten in TB_TEST_FILE schreiben.
+    Sendet nichts, schreibt weder DB noch CSV. Tokens stehen nicht in der Datei."""
+    log_always(f"Testmodus ThingsBoard (--once), Einstellungen aus {CONFIG_NAME}.py - es wird nichts gesendet")
+    reports, grid_meter = fetch_all()
+    stamp = int(time.time())
+    on_change = _tb_on_change_keys()
+    geraete, ohne_token, punkte, punkte_dauer = [], [], 0, 0
+    for key, label, tok, tel, att, info in _tb_devices(reports, grid_meter, preview=True):
+        name = info.get("solarflow") if info["art"] == "Solarflow" else (
+            f"{info['solarflow']} Akku {info['position']}" if info["art"] == "Akku" else "Netz")
+        eintrag = dict(info)
+        eintrag["token"] = "eingetragen" if tok else "fehlt - wird nicht gesendet"
+        eintrag["telemetry"] = {"url": f"{TB_HOST}/api/v1/<TOKEN>/telemetry",
+                                "payload": {"ts": stamp * 1000, "values": tel}}
+        eintrag["nur_bei_aenderung"] = sorted(on_change & set(tel))
+        if att:
+            eintrag["attributes"] = {"url": f"{TB_HOST}/api/v1/<TOKEN>/attributes", "payload": att}
+        geraete.append(eintrag)
+        if tok:
+            punkte += len(tel)
+            punkte_dauer += len(set(tel) - on_change)
+        else:
+            ohne_token.append(name if info["art"] != "Akku" else f"{name} (Seriennummer {info['seriennummer']})")
+    nicht_erreicht = [{"solarflow": r["name"], "fehler": r["error"]} for r in reports if "error" in r]
+    doc = {
+        "erstellt": datetime.fromtimestamp(stamp).isoformat(timespec="seconds"),
+        "hinweis": "Testmodus --once: nichts gesendet. Tokens sind nicht enthalten. "
+                   "Die Datei enthaelt Seriennummern - nicht weitergeben.",
+        "einstellungen": {"datei": f"{CONFIG_NAME}.py", "WRITE_TB": WRITE_TB, "TB_HOST": TB_HOST,
+                          "TB_INTERVAL": TB_INTERVAL},
+        "geraete": geraete,
+        "nicht_erreicht": nicht_erreicht,
+        "ohne_token": ohne_token,
+        "datenpunkte": {
+            "erste_sendung": punkte,
+            "je_sendung_danach": punkte_dauer,
+            "je_tag_ca": punkte_dauer * (86400 // TB_INTERVAL),
+            "hinweis": "nur Geraete mit Token; Werte aus nur_bei_aenderung zaehlen nur bei Aenderung",
+        },
+    }
+    with open(TB_TEST_FILE, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, indent=2)
+    log_always(f"{len(geraete)} Geraet(e) -> {TB_TEST_FILE}")
+    for g in nicht_erreicht:
+        log_always(f"  nicht erreicht: {g['solarflow']} ({g['fehler']})")
+    for n in ohne_token:
+        log_always(f"  ohne Token: {n}")
+    log_always(f"  Datenpunkte je Sendung: {punkte_dauer} (erste Sendung {punkte}), "
+               f"je Tag ca. {doc['datenpunkte']['je_tag_ca']}")
+
+
+def tb_loop():
+    _tb_check_tokens()
+    max_alter = max(2 * POLL_INTERVAL, TB_INTERVAL)
+    while True:
+        nxt = (int(time.time()) // TB_INTERVAL + 1) * TB_INTERVAL
+        time.sleep(max(0.0, nxt - time.time()))
+        with _tb_lock:
+            snap = _tb_latest["snap"]
+        if snap is None or nxt - snap[0] > max_alter:
+            log(f"{now()}  ThingsBoard: kein aktueller Stand - nichts gesendet")
+            continue
+        try:
+            _tb_send_all(snap, nxt)
+        except Exception as e:
+            log_always(f"{now()}  ThingsBoard-Fehler: {e}")
 
 
 # ----------------------------- Abfrage-Schleife ---------------------------
 def poll_loop():
     con = setup_db() if WRITE_DB else None
-    ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else []))
+    ziele = " + ".join(([DB_FILE] if WRITE_DB else []) + (["CSV"] if WRITE_CSV else [])
+                       + ([f"ThingsBoard alle {TB_INTERVAL}s"] if WRITE_TB else []))
     log_always(f"Einstellungen aus {CONFIG_NAME}.py")
     log_always(f"Logging von {len(DEVICES)} Geraet(en) alle {POLL_INTERVAL}s -> {ziele}")
     for d in DEVICES:
@@ -391,7 +741,10 @@ def poll_loop():
         cycle_ts = int(start)
         try:
             reports, grid_meter = fetch_all()
-            store(con, reports, grid_meter, cycle_ts)
+            if WRITE_DB or WRITE_CSV:
+                store(con, reports, grid_meter, cycle_ts)
+            if WRITE_TB:
+                tb_update(reports, grid_meter, cycle_ts)
             for r in reports:
                 if "error" in r:
                     log_always(f"{now()}  {r['name']}: Fehler: {r['error']}")
@@ -438,11 +791,16 @@ def cleanup_loop():
 
 
 def main():
+    if ONCE:
+        tb_once()
+        return
     check_old_files()
     if WRITE_DB:
         setup_db().close()   # Datenbank pruefen/anlegen, bevor aufgeraeumt wird
         cleanup_db()
         threading.Thread(target=cleanup_loop, daemon=True).start()
+    if WRITE_TB:
+        threading.Thread(target=tb_loop, daemon=True).start()
     log_always("Beenden mit Strg+C")
     try:
         poll_loop()
