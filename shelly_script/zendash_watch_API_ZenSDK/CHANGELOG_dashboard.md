@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.8.0
+
+**Ziel:** Zeitplan, Technische Details und Übersicht lassen sich per Tastenkürzel aufrufen. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.
+- **Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.
+- **Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader.
+- Home-Assistant-App 5.8.0.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.7.2
 
 **Ziel:** Fehlerkorrektur zu 5.7.1 – ohne Offgrid-Steckdose verschwindet jetzt auch die Flusslinie.

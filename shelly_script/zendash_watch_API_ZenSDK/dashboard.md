@@ -81,6 +81,18 @@ Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehme
 
 Alle Einträge außer **Einspeisung** werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
+### Tastenkürzel
+
+Ab 5.8.0 auf der Startseite. Sie gelten nicht, solange man in einem Eingabefeld tippt, und nicht zusammen mit Strg, Alt oder Cmd. So bleiben die Kürzel des Browsers frei.
+
+| Taste | Wirkung |
+|---|---|
+| **Z** | öffnet den [Zeitplan](#zeitplan). Ohne Zeitplan im Proxy erscheint ein kurzer Hinweis. |
+| **T** | **Technische Details** ein/aus |
+| **O** | **Übersicht** auf-/zuklappen |
+| **?** | zeigt die Kürzel kurz unten an |
+| **Esc** | schließt das Menü „Ansicht“ |
+
 ### Neues Design (Startseite)
 
 Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.

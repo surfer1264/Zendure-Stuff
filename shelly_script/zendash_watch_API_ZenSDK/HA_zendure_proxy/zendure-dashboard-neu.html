@@ -938,9 +938,10 @@
             <div class="set-row"><span class="lbl" data-i18n="setTheme">Tag-/Nachtsicht</span><button type="button" class="icon-btn" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button></div>
             <div class="set-row"><span class="lbl" data-i18n="setLang">Sprache</span><button type="button" class="icon-btn lang-toggle" id="langToggle" aria-label="Sprache wechseln" data-i18n-aria="langAria" title="Sprache wechseln">DE</button></div>
             <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
-            <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
+            <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" aria-keyshortcuts="T" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
             <div class="set-row" id="planRow" hidden><span><span class="lbl" id="planLbl" data-i18n="setPlan">Zeitplan</span><span class="hint" data-i18n="setPlanHint">Entladefenster festlegen</span></span><a class="icon-btn" href="zeitplan" aria-labelledby="planLbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v3l2 1"/></svg></a></div>
+            <div class="set-row"><span><span class="lbl" data-i18n="setKeys">Tastenkürzel</span><span class="hint" data-i18n="setKeysHint">Z Zeitplan · T Technische Details · O Übersicht · ? Hilfe</span></span></div>
             <div class="set-row" id="feedRow" hidden><span><span class="lbl" id="feedLbl" data-i18n="setFeed">Einspeisung</span><span class="hint" data-i18n="setFeedHint">Zusätzliche Einspeisung (Shelly) im Energiefluss</span></span><button type="button" class="sw-btn" id="feedToggle" role="switch" aria-checked="false" aria-labelledby="feedLbl"></button></div>
             <div class="feed-form" id="feedForm" hidden>
               <label><span data-i18n="feedName">Name</span><input type="text" id="feedName" maxlength="24" autocomplete="off"></label>
@@ -956,7 +957,7 @@
     <div class="diag" id="diag" role="alert" hidden></div>
     <div class="hold" id="hold" role="status" aria-live="polite" hidden></div>
 
-    <button type="button" class="section-title section-toggle" id="overviewToggle" aria-expanded="true" aria-controls="overviewRow" data-i18n-title="overviewAria" title="Übersicht ein-/ausklappen"><span class="chev" aria-hidden="true">▾</span><span data-i18n="overview">Übersicht</span><span class="ov-summary mono" id="overviewSummary"></span></button>
+    <button type="button" class="section-title section-toggle" id="overviewToggle" aria-keyshortcuts="O" aria-expanded="true" aria-controls="overviewRow" data-i18n-title="overviewAria" title="Übersicht ein-/ausklappen"><span class="chev" aria-hidden="true">▾</span><span data-i18n="overview">Übersicht</span><span class="ov-summary mono" id="overviewSummary"></span></button>
     <div class="ov" id="overviewRow">
 
       <section class="ov-group" aria-labelledby="nowTitle">
@@ -1142,7 +1143,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.7.2";
+  const APP_VERSION = "5.8.0";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1593,6 +1594,8 @@
   Object.assign(STRINGS.de, {
     viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
     setPlan: 'Zeitplan', setPlanHint: 'Entladefenster festlegen',
+    setKeys: 'Tastenkürzel', setKeysHint: 'Z Zeitplan · T Technische Details · O Übersicht · ? Hilfe',
+    kbHelp: 'Tasten: Z Zeitplan · T Technische Details · O Übersicht · Esc Menü schließen', kbNoPlan: 'Zeitplan nicht verfügbar',
     planFree: 'Plan · {m} {w}', planZero: 'Nulleinspeisung', planFixedW: 'fix {p} W', planLocked: 'Plan · gesperrt {w}', planManual: 'Plan · pausiert {w} (manuelles Laden)',
     planFull: 'Plan · pausiert {w} (Akku voll)', planVolt: 'Plan · wartet auf Zellspannung', planHand: 'von Hand · {w}',
     planUnknown: 'Plan · greift ab {t}', planUntil: 'bis {t}', planUntilTomorrow: 'bis morgen {t}', planUntilDay: 'bis {d} {t}',
@@ -1627,6 +1630,8 @@
   Object.assign(STRINGS.en, {
     viewDevices: 'Devices', viewFlow: 'Energy flow', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
     setPlan: 'Schedule', setPlanHint: 'Set discharge windows',
+    setKeys: 'Keyboard shortcuts', setKeysHint: 'Z schedule · T technical details · O overview · ? help',
+    kbHelp: 'Keys: Z schedule · T technical details · O overview · Esc close menu', kbNoPlan: 'Schedule not available',
     planFree: 'Schedule · {m} {w}', planZero: 'zero feed-in', planFixedW: 'fixed {p} W', planLocked: 'Schedule · blocked {w}', planManual: 'Schedule · paused {w} (manual charging)',
     planFull: 'Schedule · paused {w} (battery full)', planVolt: 'Schedule · waiting for cell voltage', planHand: 'manual change · {w}',
     planUnknown: 'Schedule · takes over {t}', planUntil: 'until {t}', planUntilTomorrow: 'until tomorrow {t}', planUntilDay: 'until {d} {t}',
@@ -1661,6 +1666,8 @@
   Object.assign(STRINGS.fr, {
     viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
     setPlan: 'Planning', setPlanHint: 'Définir les plages de décharge',
+    setKeys: 'Raccourcis clavier', setKeysHint: 'Z planning · T détails techniques · O vue d’ensemble · ? aide',
+    kbHelp: 'Touches : Z planning · T détails techniques · O vue d’ensemble · Échap fermer le menu', kbNoPlan: 'Planning non disponible',
     planFree: 'Planning · {m} {w}', planZero: 'injection zéro', planFixedW: 'fixe {p} W', planLocked: 'Planning · bloqué {w}', planManual: 'Planning · en pause {w} (charge manuelle)',
     planFull: 'Planning · en pause {w} (batterie pleine)', planVolt: 'Planning · attend la tension de cellule', planHand: 'modifié à la main · {w}',
     planUnknown: 'Planning · actif {t}', planUntil: 'jusqu’à {t}', planUntilTomorrow: 'jusqu’à demain {t}', planUntilDay: 'jusqu’à {d} {t}',
@@ -2223,12 +2230,12 @@
   }
 
   let toastTimer = null;
-  function showToast(msg){
+  function showToast(msg, ms){
     const t = document.getElementById('toast');
     t.textContent = '→ ' + msg;
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, ms || 2600);
   }
 
   // Variante B: Rueckmeldung mit Klartext statt KVS-Schluessel
@@ -4612,6 +4619,27 @@
   });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && viewMenu.open) { viewMenu.open = false; viewMenu.querySelector('summary').focus(); }
+  });
+
+  // Tastenkuerzel: Z Zeitplan, T Technische Details, O Uebersicht, ? Hilfe.
+  // Nicht beim Tippen in Eingabefeldern und nicht mit Strg/Alt/Cmd
+  // (Browser-Kuerzel bleiben frei). Shift ist erlaubt, sonst ginge "?" nicht.
+  document.addEventListener('keydown', function(e){
+    if (e.ctrlKey || e.altKey || e.metaKey || e.repeat || e.isComposing) return;
+    const tg = e.target;
+    if (tg && (tg.isContentEditable || (tg.closest && tg.closest('input, textarea, select')))) return;
+    const k = (e.key || '').toLowerCase();
+    if (k === 'z'){
+      e.preventDefault();
+      if (document.getElementById('planRow').hidden) showToast(t('kbNoPlan'));
+      else location.href = 'zeitplan';
+    } else if (k === 't'){
+      e.preventDefault(); expertToggle.click();
+    } else if (k === 'o'){
+      e.preventDefault(); overviewToggle.click();
+    } else if (k === '?'){
+      e.preventDefault(); showToast(t('kbHelp'), 6000);
+    }
   });
 
   // Hilfetexte auch per Tastatur (Tab auf die gepunktet unterstrichene Beschriftung)

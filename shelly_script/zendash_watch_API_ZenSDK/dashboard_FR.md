@@ -82,6 +82,18 @@ La **Réserve (`minSoc`)** se règle avec −/+ et n'est enregistrée qu'avec «
 
 Toutes les entrées sauf **Injection** sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
 
+### Raccourcis clavier
+
+À partir de 5.8.0 sur la page d'accueil. Ils ne s'appliquent pas pendant la saisie dans un champ, ni avec Ctrl, Alt ou Cmd : les raccourcis du navigateur restent libres.
+
+| Touche | Effet |
+|---|---|
+| **Z** | ouvre le [Planning](#planning). Si le proxy n'a pas de planning, une courte indication apparaît. |
+| **T** | **Détails techniques** activés/désactivés |
+| **O** | déplier/replier la **vue d'ensemble** |
+| **?** | affiche brièvement les raccourcis en bas |
+| **Échap** | ferme le menu « Affichage » |
+
 ### Nouveau design (page d'accueil)
 
 Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>:8000/`, et depuis 5.5.0 le seul tableau de bord. Les favoris vers les anciennes adresses `/neu` et `/klassisch` mènent à la page d'accueil. À côté de la zone des appareils se trouve l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.

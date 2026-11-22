@@ -82,6 +82,18 @@ The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” –
 
 All entries except **Feed-in** are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
+### Keyboard shortcuts
+
+From 5.8.0 on the start page. They do not apply while typing in an input field, nor together with Ctrl, Alt or Cmd, so the browser's own shortcuts stay free.
+
+| Key | Effect |
+|---|---|
+| **Z** | opens the [schedule](#schedule). If the proxy has no schedule, a short note appears. |
+| **T** | **Technical details** on/off |
+| **O** | expand/collapse the **overview** |
+| **?** | briefly shows the shortcuts at the bottom |
+| **Esc** | closes the "View" menu |
+
 ### New design (start page)
 
 From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
