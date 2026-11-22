@@ -299,7 +299,7 @@ TB_PACK_FIELDS = {"socLevel": "soc", "minVol": "zelleMin", "maxTemp": "temp"}
 
 | Einstellung | Inhalt | Art in ThingsBoard |
 |---|---|---|
-| `TB_HUB_FIELDS` | Messwerte je Solarflow. Standard: dieselben 15 Werte und Namen wie der Dashboard-Proxy (`ts_bridge`), siehe [Umstieg von `ts_bridge`](#umstieg-von-ts_bridge) | Telemetrie, bei jedem Senden |
+| `TB_HUB_FIELDS` | Messwerte je Solarflow. Standard: dieselben 15 Werte und Namen wie der Dashboard-Proxy (`ts_bridge`) | Telemetrie, bei jedem Senden |
 | `TB_PACK_FIELDS` | Messwerte je Akkupack | Telemetrie, bei jedem Senden |
 | `TB_ON_CHANGE` | Reportnamen, die nur **bei Änderung** gesendet werden, dazu einmal am Tag und nach einem Neustart (Standard: `socLimit`, `socStatus`, `socSet`, `minSoc`, `heatState`, `gridOffMode`, `chargeMaxLimit`, `inverseMaxPower`, `gridReverse`). Wirkt nur für Werte, die in `TB_HUB_FIELDS`/`TB_PACK_FIELDS` stehen | Telemetrie |
 | `TB_HUB_ATTRIBUTES` | feste Angaben je Solarflow (Standard: `product`, `version`, `sn` als `hub_sn`, `packNum`) | Attribute, beim Start, bei Änderung und einmal am Tag |
