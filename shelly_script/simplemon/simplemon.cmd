@@ -1,2 +1,2 @@
-python3 zendure_logger.py --once
+python3 zendure_logger.py
 pause
