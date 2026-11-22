@@ -44,9 +44,9 @@ SITE_CSV_FILE = "zendure_site.csv"   # nur mit Smartmeter
 # Start umbenannt (z. B. zendure_log_alt_20261121-153000.db) und neu angelegt.
 
 # Was geschrieben wird. Mindestens eins muss True sein.
-WRITE_DB = False     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufraeumen.
-WRITE_CSV = False    # CSV-Dateien (Geraete-, Pack- und Smartmeter-CSV).
-WRITE_TB = True   # Versand an ThingsBoard (Einstellungen ganz unten).
+WRITE_DB = True     # SQLite-Datenbank (DB_FILE). False -> keine DB, kein Aufraeumen.
+WRITE_CSV = True    # CSV-Dateien (Geraete-, Pack- und Smartmeter-CSV).
+WRITE_TB = False   # Versand an ThingsBoard (Einstellungen ganz unten).
 
 # ----------------------------- Ausgabe & Speicherung ---------------------
 # Konsolenausgabe: True unterdrueckt Routine-Meldungen. Fehler und
@@ -56,13 +56,65 @@ QUIET = False
 # Gleitender Datenbestand in der DB: aeltere Rohdaten werden einmal am Tag
 # geloescht (z. B. 1 / 3 / 7 / 20). 0 -> nie loeschen. Die CSV-Dateien
 # bleiben immer erhalten.
-RETENTION_DAYS = 7
+RETENTION_DAYS = 31
 
-# ----------------------------- Smartmeter (Shelly Pro 3EM) ---------------
-# Optional: Netzleistung direkt vom Shelly Pro 3EM (lokale RPC-API),
-# gespeichert einmal je Abfrage in der Tabelle site (Spalte gridMeterPower).
+# ----------------------------- Smartmeter --------------------------------
+# Optional: Netzleistung (W, positiv = Bezug) einmal je Abfrage, gespeichert in
+# der Tabelle site (Spalte gridMeterPower), an ThingsBoard als Geraet "Netz".
+# Typen wie im Multi-Configurator:
+#
+#   SMARTMETER_TYPE  Geraet                         noetig
+#   "pro3em"         Shelly Pro 3EM                 SMARTMETER_IP, SMARTMETER_EM_ID
+#   "zendure3ct"     Zendure Smart Meter 3CT        SMARTMETER_IP
+#   "zendured0"      Zendure Smart Meter D0         SMARTMETER_IP
+#   "ecotracker"     everHome EcoTracker            SMARTMETER_IP
+#   "shelly3em"      Shelly 3EM (Gen1, nicht Pro)   SMARTMETER_IP
+#   "tasmota"        Tasmota-Lesekopf               SMARTMETER_IP, SMARTMETER_FIELD
+#   "http_json"      beliebiges Geraet mit JSON     SMARTMETER_URL, SMARTMETER_FIELD
+#
+# SMARTMETER_FIELD: Feld mit der gesamten Netzleistung in W. Bei den Vorlagen
+# schon gesetzt (leer lassen), bei "tasmota" und "http_json" selbst eintragen.
+# Verschachtelte Antwort mit Punkten verbinden, z. B. bei Tasmota
+# "StatusSNS.<Geraet>.power" - den mittleren Namen aus der Antwort von
+# http://<IP>/cm?cmnd=STATUS%2010 einsetzen.
+# SMARTMETER_INVERT = True, wenn der Wert bei Netzbezug negativ ist.
 USE_SMARTMETER = False
-SMARTMETER_URL = "http://192.168.x.z/rpc/EM.GetStatus?id=0"  # IP des 3EM Pro
+SMARTMETER_TYPE = "pro3em"
+SMARTMETER_IP = "192.168.x.z"      # Adresse des Smartmeters
+SMARTMETER_EM_ID = 0               # nur pro3em: Nummer des EM-Kanals, meist 0
+SMARTMETER_URL = ""                # nur http_json: vollstaendige Adresse, z. B. "http://192.168.x.z/status"
+SMARTMETER_FIELD = ""              # nur tasmota/http_json, sonst leer lassen
+SMARTMETER_INVERT = False
+
+# Beispiele (Adressen sind Platzhalter) - passenden Block nach oben uebernehmen:
+#
+# Shelly Pro 3EM          -> http://192.168.x.z/rpc/EM.GetStatus?id=0, Feld total_act_power
+#   SMARTMETER_TYPE = "pro3em"
+#   SMARTMETER_IP = "192.168.x.z"
+#   SMARTMETER_EM_ID = 0
+#
+# Zendure Smart Meter 3CT -> http://192.168.x.z/properties/report, Feld total_power
+#   SMARTMETER_TYPE = "zendure3ct"          (D0: "zendured0", gleiche Adresse)
+#   SMARTMETER_IP = "192.168.x.z"
+#
+# everHome EcoTracker     -> http://192.168.x.z/v1/json, Feld power
+#   SMARTMETER_TYPE = "ecotracker"
+#   SMARTMETER_IP = "192.168.x.z"
+#
+# Shelly 3EM (Gen1)       -> http://192.168.x.z/status, Feld total_power
+#   SMARTMETER_TYPE = "shelly3em"
+#   SMARTMETER_IP = "192.168.x.z"
+#
+# Tasmota-Lesekopf        -> http://192.168.x.z/cm?cmnd=STATUS%2010
+#   SMARTMETER_TYPE = "tasmota"
+#   SMARTMETER_IP = "192.168.x.z"
+#   SMARTMETER_FIELD = "StatusSNS.DVS7420.power"   # mittleren Namen aus der Antwort
+#
+# Beliebiges JSON         -> genau SMARTMETER_URL
+#   SMARTMETER_TYPE = "http_json"
+#   SMARTMETER_URL = "http://192.168.x.z/api/werte"
+#   SMARTMETER_FIELD = "daten.netz"
+#   SMARTMETER_INVERT = True                       # wenn Bezug negativ geliefert wird
 
 # ----------------------------- ThingsBoard -------------------------------
 # Nur mit WRITE_TB = True. Jeder Solarflow und jeder Akkupack ist in

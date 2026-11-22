@@ -23,7 +23,7 @@ Keine externen Pakete noetig - nur Python 3 Standardbibliothek.
 """
 import csv, importlib, json, os, re, sqlite3, sys, threading, time
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 import urllib.error, urllib.parse, urllib.request
 from datetime import datetime
 
@@ -70,7 +70,27 @@ SITE_CSV_FILE = _cfg("SITE_CSV_FILE", "zendure_site.csv")
 QUIET = _cfg("QUIET", False)
 RETENTION_DAYS = _cfg("RETENTION_DAYS", 7)
 USE_SMARTMETER = _cfg("USE_SMARTMETER", False)
-SMARTMETER_URL = _cfg("SMARTMETER_URL", "")
+# Smartmeter-Typen wie im Multi-Configurator (Controller: gridSource "remote"
+# bzw. "http_json" mit Vorlagen). Fehlt SMARTMETER_TYPE, aber SMARTMETER_URL
+# ist gesetzt (Fassung 1.0.0), gilt die URL mit Feld total_act_power.
+SMARTMETER_TYPE = _cfg("SMARTMETER_TYPE", None)
+SMARTMETER_IP = str(_cfg("SMARTMETER_IP", "")).strip()
+SMARTMETER_EM_ID = _cfg("SMARTMETER_EM_ID", 0)
+SMARTMETER_URL = str(_cfg("SMARTMETER_URL", "")).strip()
+SMARTMETER_FIELD = _cfg("SMARTMETER_FIELD", None)
+SMARTMETER_INVERT = _cfg("SMARTMETER_INVERT", False)
+
+# Vorlagen: Pfad auf dem Messgeraet und Feld mit der gesamten Netzleistung in W
+# (positiv = Bezug). Gleiche Werte wie GRID_PRESETS im Multi-Configurator.
+SMARTMETER_TYPES = {
+    "pro3em":     {"name": "Shelly Pro 3EM",            "path": "/rpc/EM.GetStatus?id={em_id}", "field": "total_act_power"},
+    "zendure3ct": {"name": "Zendure Smart Meter 3CT",   "path": "/properties/report",            "field": "total_power"},
+    "zendured0":  {"name": "Zendure Smart Meter D0",    "path": "/properties/report",            "field": "total_power"},
+    "ecotracker": {"name": "everHome EcoTracker",       "path": "/v1/json",                      "field": "power"},
+    "shelly3em":  {"name": "Shelly 3EM (Gen1, nicht Pro)", "path": "/status",                    "field": "total_power"},
+    "tasmota":    {"name": "Tasmota-Lesekopf",          "path": "/cm?cmnd=STATUS%2010",          "field": None},
+    "http_json":  {"name": "eigene Adresse (JSON)",     "path": None,                            "field": None},
+}
 
 # ThingsBoard (Beschreibung und Beispiele in config.py)
 WRITE_TB = _cfg("WRITE_TB", False)
@@ -152,6 +172,62 @@ def check_tb_config(tokens=True):
         raise ValueError("TB_PACK_NAME_FORMAT: erlaubt sind {hub}, {nr} und {sn}")
 
 
+def _meter_field_parts(field):
+    """Feldpfad als Liste: "StatusSNS.DVS7420.power" oder ["StatusSNS", "DVS7420", "power"]."""
+    if isinstance(field, (list, tuple)):
+        parts = [str(p).strip() for p in field]
+    else:
+        parts = [p.strip() for p in str(field or "").split(".")]
+    return parts
+
+
+def _is_placeholder_host(host):
+    """192.168.x.x, 192.168.x.z ... aus der Vorlage: ein Teil ist nur x, y oder z."""
+    host = host.split("/")[0].split(":")[0]
+    return any(part in ("x", "y", "z") for part in host.split("."))
+
+
+def resolve_smartmeter():
+    """Smartmeter-Einstellung in (Beschreibung, URL, Feldpfad, invertieren) aufloesen.
+    Wirft ValueError mit verstaendlicher Meldung bei unvollstaendiger Einstellung."""
+    typ = SMARTMETER_TYPE
+    if typ is None:
+        if not SMARTMETER_URL:
+            raise ValueError("USE_SMARTMETER = True, aber SMARTMETER_TYPE fehlt")
+        typ = "http_json"                       # Fassung 1.0.0: nur URL zum Pro 3EM
+        field = SMARTMETER_FIELD or "total_act_power"
+    else:
+        field = SMARTMETER_FIELD
+    if typ not in SMARTMETER_TYPES:
+        raise ValueError(f"SMARTMETER_TYPE {typ!r} unbekannt - erlaubt: {', '.join(SMARTMETER_TYPES)}")
+    vorlage = SMARTMETER_TYPES[typ]
+    if typ == "http_json":
+        url = SMARTMETER_URL
+        if not url.startswith(("http://", "https://")) or "<" in url:
+            raise ValueError("SMARTMETER_URL muss die vollstaendige Adresse sein (http://...)")
+        if _is_placeholder_host(url.split("://", 1)[1]):
+            raise ValueError("SMARTMETER_URL enthaelt noch die Platzhalter-Adresse - echte IP eintragen")
+    else:
+        if not SMARTMETER_IP or "<" in SMARTMETER_IP or " " in SMARTMETER_IP:
+            raise ValueError(f"SMARTMETER_IP fehlt (Adresse des {vorlage['name']})")
+        if _is_placeholder_host(SMARTMETER_IP):
+            raise ValueError(f"SMARTMETER_IP {SMARTMETER_IP!r} ist noch der Platzhalter - echte IP eintragen")
+        if not isinstance(SMARTMETER_EM_ID, int) or SMARTMETER_EM_ID < 0:
+            raise ValueError("SMARTMETER_EM_ID muss eine ganze Zahl ab 0 sein")
+        url = "http://" + SMARTMETER_IP + vorlage["path"].format(em_id=SMARTMETER_EM_ID)
+    field = field or vorlage["field"]
+    if not field:
+        raise ValueError(f"SMARTMETER_FIELD fehlt - bei {vorlage['name']} z. B. "
+                         + ('"StatusSNS.<Geraet>.power" (Namen aus der Antwort einsetzen)' if typ == "tasmota"
+                            else '"total_power"'))
+    parts = _meter_field_parts(field)
+    if not parts or any(not p or "<" in p for p in parts):
+        raise ValueError(f"SMARTMETER_FIELD {field!r} ist unvollstaendig - Platzhalter <...> ersetzen")
+    if not isinstance(SMARTMETER_INVERT, bool):
+        raise ValueError("SMARTMETER_INVERT muss True oder False sein")
+    return vorlage["name"], url, parts, SMARTMETER_INVERT
+
+
 def load_devices():
     """Geraeteliste aus DEVICES; aeltere config.py mit nur DEVICE_URL -> ein Geraet."""
     devs = _cfg("DEVICES", None)
@@ -173,7 +249,10 @@ def load_devices():
     return out
 
 
+SMARTMETER = None   # (Beschreibung, URL, Feldpfad, invertieren), gesetzt beim Start
 try:
+    if USE_SMARTMETER:
+        SMARTMETER = resolve_smartmeter()
     if not isinstance(POLL_INTERVAL, int) or POLL_INTERVAL < 1:
         raise ValueError("POLL_INTERVAL muss eine ganze Zahl ab 1 (Sekunden) sein")
     if not isinstance(POLL_LEAD, int) or POLL_LEAD < 0:
@@ -423,8 +502,21 @@ def _get_json(url):
 
 
 def fetch_smartmeter():
-    """Aktuelle Netz-Wirkleistung vom Shelly Pro 3EM (EM.GetStatus)."""
-    return _get_json(SMARTMETER_URL).get("total_act_power")
+    """Aktuelle Netzleistung in W (positiv = Bezug) vom eingestellten Smartmeter."""
+    _, url, parts, invert = SMARTMETER
+    v = _get_json(url)
+    for p in parts:
+        if not isinstance(v, dict) or p not in v:
+            raise ValueError(f"Feld {'.'.join(parts)} nicht in der Antwort (fehlt: {p})")
+        v = v[p]
+    if isinstance(v, str):
+        try:
+            v = float(v.replace(",", "."))
+        except ValueError:
+            pass
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        raise ValueError(f"Feld {'.'.join(parts)} ist keine Zahl ({v!r})")
+    return -v if invert else v
 
 
 def fetch_all():
@@ -814,7 +906,8 @@ def poll_loop():
     for d in DEVICES:
         log_always(f"  {d['name']}: {d['url']}")
     if USE_SMARTMETER:
-        log_always(f"  Smartmeter: {SMARTMETER_URL}")
+        log_always(f"  Smartmeter: {SMARTMETER[0]}, {SMARTMETER[1]}, Feld {'.'.join(SMARTMETER[2])}"
+                   + (", Vorzeichen umgekehrt" if SMARTMETER[3] else ""))
     while True:
         start = time.time()
         cycle_ts = int(start)

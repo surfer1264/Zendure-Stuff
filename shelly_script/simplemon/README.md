@@ -6,7 +6,7 @@ simplemon ist ein einzelnes Python-Script, das einen oder mehrere Zendure-Speich
 
 Gedacht ist es für einen Dauerläufer im Heimnetz, etwa ein NAS oder einen Raspberry Pi. Ausgewertet werden die Daten mit eigenen Werkzeugen, z. B. einem SQLite-Browser oder einer Tabellenkalkulation.
 
-Version: **1.0.0** (steht als `VERSION` in `zendure_logger.py` und in der Startmeldung). Änderungen: [CHANGELOG](CHANGELOG.md).
+Version: **1.1.0** (steht als `VERSION` in `zendure_logger.py` und in der Startmeldung). Änderungen: [CHANGELOG](CHANGELOG.md).
 
 ## Dateien
 
@@ -25,7 +25,7 @@ Es braucht nur Python 3 mit der Standardbibliothek, keine Zusatzpakete.
 
 1. **Abfrage:** Alle `POLL_INTERVAL` Sekunden (Standard 60) holt es von jedem Speicher den Report über die lokale zenSDK-Schnittstelle (`GET /properties/report`).
    - Alle Speicher werden **gleichzeitig** abgefragt. Ein Speicher, der nicht antwortet, hält die anderen nicht auf. Er erscheint als Fehler in der Konsole, die übrigen werden normal geschrieben.
-   - Optional dazu die Netzleistung von einem **Shelly Pro 3EM** (`EM.GetStatus`, Feld `total_act_power`), einmal je Runde.
+   - Optional dazu die Netzleistung von einem **Smartmeter**, einmal je Runde. Unterstützt werden dieselben Geräte wie im Multi-Configurator (Shelly Pro 3EM, Zendure Smart Meter 3CT/D0, everHome EcoTracker, Shelly 3EM, Tasmota-Lesekopf, beliebiges JSON), siehe [Smartmeter](#smartmeter).
    - **Fester Takt am Raster** (`POLL_ALIGN = True`, Standard): Abgefragt wird jeweils `POLL_LEAD` Sekunden (Standard 10) vor einem Vielfachen von `POLL_INTERVAL`, bei 60 also immer um hh:mm:50. Die erste Abfrage nach dem Start läuft sofort. So hat der ThingsBoard-Versand zur vollen Minute einen rund 10 s alten Stand, wie im Dashboard-Proxy.
    - Mit `POLL_ALIGN = False` wird ab dem Start im festen Abstand abgefragt, ohne Raster. Dauert eine Runde länger, verkürzt sich die Pause bis zur nächsten.
 2. **Speichern in SQLite (optional)** mit `WRITE_DB = True` (Standard) in `DB_FILE`, Standard `zendure_log.db`:
@@ -81,7 +81,7 @@ Alle anderen Werte bleiben in der Einheit des Reports, z. B. Leistungen in W und
 | `CSV_FILE`, `PACK_CSV_FILE`, `SITE_CSV_FILE` | Namen der CSV-Dateien | `zendure_log.csv`, `zendure_packs.csv`, `zendure_site.csv` |
 | `QUIET` | `True` = nur Start- und Fehlermeldungen in der Konsole | `False` |
 | `RETENTION_DAYS` | Zeilen in der Datenbank nach so vielen Tagen löschen, 0 = nie | 7 |
-| `USE_SMARTMETER`, `SMARTMETER_URL` | Netzleistung vom Shelly Pro 3EM mitschreiben | `False` |
+| `USE_SMARTMETER` | Netzleistung vom Smartmeter mitschreiben, Einstellungen `SMARTMETER_…` siehe [Smartmeter](#smartmeter) | `False` |
 
 Mehrere Speicher:
 
@@ -93,6 +93,8 @@ DEVICES = [
 ```
 
 Der Name erscheint in Datenbank und CSV und muss eindeutig sein. Ein doppelter oder leerer Name bricht den Start mit einer Fehlermeldung ab, ebenso wenn `WRITE_DB`, `WRITE_CSV` und `WRITE_TB` alle `False` sind.
+
+Smartmeter: siehe eigener Abschnitt [Smartmeter](#smartmeter).
 
 ## Start
 
@@ -118,6 +120,149 @@ python3 zendure_logger.py --once
 - Lässt sich eine Datei nicht umbenennen, weil sie z. B. in Excel oder einem SQLite-Browser geöffnet ist, beendet sich das Programm mit einem Hinweis. Datei schließen und neu starten.
 
 Dateien im aktuellen Aufbau bleiben unverändert.
+
+## Smartmeter
+
+Mit `USE_SMARTMETER = True` liest simplemon je Runde die Netzleistung in W (positiv = Bezug). Sie landet in der Tabelle `site`, in `zendure_site.csv` und bei ThingsBoard im Gerät „Netz“. Die Typen entsprechen der Smartmeter-Auswahl im Multi-Configurator.
+
+### Übersicht
+
+| `SMARTMETER_TYPE` | Gerät | nötige Einstellungen |
+|---|---|---|
+| `pro3em` | Shelly Pro 3EM | `SMARTMETER_IP`, `SMARTMETER_EM_ID` |
+| `zendure3ct` | Zendure Smart Meter 3CT | `SMARTMETER_IP` |
+| `zendured0` | Zendure Smart Meter D0 | `SMARTMETER_IP` |
+| `ecotracker` | everHome EcoTracker | `SMARTMETER_IP` |
+| `shelly3em` | Shelly 3EM (Gen1, nicht Pro) | `SMARTMETER_IP` |
+| `tasmota` | Tasmota-Lesekopf | `SMARTMETER_IP`, `SMARTMETER_FIELD` |
+| `http_json` | beliebiges Gerät mit JSON-Antwort | `SMARTMETER_URL`, `SMARTMETER_FIELD` |
+
+Aus Typ und IP baut simplemon die Adresse selbst:
+
+| `SMARTMETER_TYPE` | Adresse (URL-Muster) | gelesenes Feld |
+|---|---|---|
+| `pro3em` | `http://<IP>/rpc/EM.GetStatus?id=<EM_ID>` | `total_act_power` |
+| `zendure3ct` | `http://<IP>/properties/report` | `total_power` |
+| `zendured0` | `http://<IP>/properties/report` | `total_power` |
+| `ecotracker` | `http://<IP>/v1/json` | `power` |
+| `shelly3em` | `http://<IP>/status` | `total_power` |
+| `tasmota` | `http://<IP>/cm?cmnd=STATUS%2010` | `SMARTMETER_FIELD`, z. B. `StatusSNS.<Zähler>.power` |
+| `http_json` | `SMARTMETER_URL` | `SMARTMETER_FIELD` |
+
+Tipp: Die Adresse einmal im Browser öffnen. Dann sieht man die Antwort und das Feld mit der Netzleistung.
+
+### Beispiele
+
+Jeweils: Einstellung in `config_local.py` → daraus gebaute Adresse → typische Antwort (gekürzt), das gelesene Feld ist markiert.
+
+**Shelly Pro 3EM**
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "pro3em"
+SMARTMETER_IP = "192.168.x.z"
+SMARTMETER_EM_ID = 0
+```
+
+Adresse: `http://192.168.x.z/rpc/EM.GetStatus?id=0`
+
+```text
+{"id": 0, "a_act_power": 120.4, "b_act_power": 80.1, "c_act_power": 145.0,
+ "total_act_power": 345.5}                     ← gelesen: 345.5 W
+```
+
+**Zendure Smart Meter 3CT** (D0 genauso mit `"zendured0"`)
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "zendure3ct"
+SMARTMETER_IP = "192.168.x.z"
+```
+
+Adresse: `http://192.168.x.z/properties/report`
+
+```text
+{"a_aprt_power": 40, "b_aprt_power": -90, "c_aprt_power": -70,
+ "total_power": -120}                          ← gelesen: -120 W (Einspeisung)
+```
+
+**everHome EcoTracker**
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "ecotracker"
+SMARTMETER_IP = "192.168.x.z"
+```
+
+Adresse: `http://192.168.x.z/v1/json`
+
+```text
+{"power": 512, "powerAvg": 500, "powerPhase1": 170, "powerPhase2": 172, "powerPhase3": 170,
+ "energyCounterIn": 1234567, "energyCounterOut": 89012}
+   ↑ gelesen: power = 512 W
+```
+
+**Shelly 3EM (Gen1, nicht Pro)**
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "shelly3em"
+SMARTMETER_IP = "192.168.x.z"
+```
+
+Adresse: `http://192.168.x.z/status`
+
+```text
+{"emeters": [{"power": 30.2}, {"power": 25.1}, {"power": 22.2}],
+ "total_power": 77.5}                          ← gelesen: 77.5 W
+```
+
+**Tasmota-Lesekopf**
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "tasmota"
+SMARTMETER_IP = "192.168.x.z"
+SMARTMETER_FIELD = "StatusSNS.DVS7420.power"   # mittleren Namen aus der Antwort übernehmen
+```
+
+Adresse: `http://192.168.x.z/cm?cmnd=STATUS%2010`
+
+```text
+{"StatusSNS": {"Time": "2026-11-22T10:00:00",
+               "DVS7420": {"energy": 20302, "power": 353}}}
+                                     ↑ gelesen: StatusSNS → DVS7420 → power = 353 W
+```
+
+Der mittlere Name (hier `DVS7420`) hängt vom Zähler bzw. vom Tasmota-Script ab, z. B. auch `SML`, `MT681` oder `eBZ`. Deshalb die Antwort einmal im Browser ansehen.
+
+**Beliebiges Gerät mit JSON (`http_json`)**
+
+```python
+USE_SMARTMETER = True
+SMARTMETER_TYPE = "http_json"
+SMARTMETER_URL = "http://192.168.x.z/api/werte"
+SMARTMETER_FIELD = "daten.netz"                # verschachtelt mit Punkten
+SMARTMETER_INVERT = True                       # Gerät liefert Bezug negativ
+```
+
+Adresse: genau `SMARTMETER_URL`
+
+```text
+{"daten": {"netz": "-1234,5", "pv": "0"}}
+   ↑ gelesen: daten → netz = "-1234,5" → -1234.5 → umgekehrt: 1234.5 W Bezug
+```
+
+### Einzelheiten
+
+- **`SMARTMETER_FIELD`:** Feld mit der gesamten Netzleistung. Bei den Vorlagen ist es schon gesetzt, das Feld dann leer lassen. Verschachtelte Namen mit Punkten verbinden oder als Liste angeben: `["StatusSNS", "DVS7420", "power"]`.
+- **`SMARTMETER_INVERT = True`**, wenn der Wert bei Netzbezug negativ ist. Das ist wie „Vorzeichen umkehren“ im Configurator. Prüfen: Bei Bezug aus dem Netz muss der Wert positiv sein.
+- **`SMARTMETER_EM_ID`** (nur `pro3em`): Nummer des Messkanals, fast immer 0.
+- Liefert das Gerät die Zahl als Text, z. B. `"1234,5"`, wird sie umgewandelt.
+- **Beim Start geprüft:** bekannter Typ, Adresse vorhanden und kein Platzhalter (`192.168.x.z`), Feld ohne `<…>`. Sonst bricht der Start mit Meldung ab.
+- **Im Betrieb:** Ist der Smartmeter nicht erreichbar oder fehlt das Feld in der Antwort, meldet die Konsole das, z. B. „Feld daten.netz nicht in der Antwort“. Die Speicher werden trotzdem geschrieben, der Netzwert bleibt in dieser Runde leer.
+- **Ältere Einstellung:** Steht in `config_local.py` nur `SMARTMETER_URL` ohne `SMARTMETER_TYPE` (Fassung 1.0.0), wird diese Adresse wie bisher mit dem Feld `total_act_power` gelesen.
+- Mit dem [Testmodus `--once`](#testmodus---once) lässt sich der gelesene Wert prüfen, ohne etwas zu schreiben: Er steht in `tb_test.json` beim Gerät „Netz“.
 
 ## Hinweise
 
@@ -207,41 +352,6 @@ python3 zendure_logger.py --once
 - Am Ende der Datei und in der Konsole: nicht erreichte Solarflows, Geräte ohne Token und die Zahl der Datenpunkte (erste Sendung, jede weitere Sendung, ungefähr je Tag).
 
 Die Datei enthält Seriennummern. Sie steht deshalb in `.gitignore` (`tb_test*.json`) und sollte nicht weitergegeben werden.
-
-### Umstieg von `ts_bridge`
-
-Wer bisher den ThingsBoard-Versand des Dashboard-Proxys (`ts_bridge`) nutzt, kann auf simplemon umsteigen und **seine ThingsBoard-Geräte und Verläufe weiterverwenden**.
-
-**Was gleich ist**
-
-| | `ts_bridge` | simplemon |
-|---|---|---|
-| Gerät je Solarflow | ja | ja, dasselbe Gerät mit demselben Token |
-| Werte je Solarflow | 15 wählbare Werte | dieselben 15 Werte mit denselben Namen, im Standard alle aktiv |
-| Berechnete Werte | `minVol`, `batteryPower`, `packTempLow` | gleich gerechnet |
-| Einheiten | V, °C, % | gleich |
-| Nur bei Änderung | `socLimit`, `socSet`, `minSoc`, `heatState` | dieselben, plus weitere Status-Werte, falls ausgewählt |
-| Gerät „Netz“ | `gridPower`, + = Bezug | `gridPower`, + = Bezug (Quelle: Shelly Pro 3EM, `USE_SMARTMETER`) |
-| Zeitpunkt | jede volle Minute | jede volle Minute (`TB_INTERVAL = 60`) |
-| Alter des Stands | Abfrage 14 s vor der vollen Minute, höchstens ca. 8 s alt | Abfrage 10 s vor der vollen Minute (`POLL_LEAD`), ca. 10 s alt |
-| Hub offline | in dieser Minute nichts | gleich |
-
-**Was neu dazukommt**
-- ein **Gerät je Akkupack** (`TB_PACK_TOKENS`) mit eigenen Messwerten,
-- **Attribute** je Solarflow und Akku (`product`, `hub_sn`, Akku-Name …) sowie beim Start das Test-Attribut `simplemonStart`,
-- in `ts_bridge` abgeschaltete Werte (z. B. `batteryPower`, `temp`) sind im Standard von simplemon **an**. Wer genau die bisherige Auswahl behalten will, entfernt die überzähligen Zeilen aus `TB_HUB_FIELDS`.
-
-**So geht der Umstieg**
-1. Die Access Tokens der Solarflows und des Netzes in ThingsBoard holen: beim jeweiligen Gerät unter „Zugangsdaten“ kopieren. Die Proxy-Seite `/thingsboard` zeigt sie nur gekürzt an, hilft aber bei der Zuordnung, welches Gerät zu welchem Hub gehört.
-2. In `config_local.py` eintragen:
-   - Solarflow: das Token beim **Namen** aus `DEVICES` in `TB_HUB_TOKENS`. `ts_bridge` ordnet nach Hub-Nummer, simplemon nach Namen, also auf die richtige Zuordnung achten.
-   - Netz: das Token in `TB_GRID_TOKEN`, dazu `USE_SMARTMETER = True` mit der Adresse des Shelly Pro 3EM.
-   - Für die Akkupacks in ThingsBoard neue Geräte anlegen und ihre Tokens in `TB_PACK_TOKENS` eintragen.
-3. Mit `python3 zendure_logger.py --once` prüfen, was gesendet würde.
-4. **Auf der Proxy-Seite `/thingsboard` den ThingsBoard-Versand abschalten.** Sonst kommt jeder Wert zweimal an, von `ts_bridge` und von simplemon.
-5. `WRITE_TB = True` setzen und simplemon starten.
-
-Gleiche Namen und gleiche Geräte bedeuten: In ThingsBoard laufen Verläufe, Dashboards und Regeln ohne Änderung weiter.
 
 ### Sicherheit
 

@@ -1,5 +1,17 @@
 # Changelog simplemon (zendure_logger)
 
+## 1.1.0
+
+**Ziel:** Dieselben Smartmeter wie im Multi-Configurator.
+
+- **Smartmeter-Typen** (`SMARTMETER_TYPE`): Shelly Pro 3EM (`pro3em`, mit `SMARTMETER_EM_ID`), Zendure Smart Meter 3CT (`zendure3ct`) und D0 (`zendured0`), everHome EcoTracker (`ecotracker`), Shelly 3EM Gen1 (`shelly3em`), Tasmota-Lesekopf (`tasmota`) und beliebiges JSON (`http_json` mit `SMARTMETER_URL`). Adresse über `SMARTMETER_IP`, Pfad und Feld kommen aus der Vorlage.
+- **Feld frei wählbar** (`SMARTMETER_FIELD`), auch verschachtelt mit Punkten (`StatusSNS.DVS7420.power`) oder als Liste. Zahlen als Text (`"1234,5"`) werden umgewandelt.
+- **Vorzeichen umkehren** (`SMARTMETER_INVERT`) wie im Configurator.
+- **Prüfung beim Start:** unbekannter Typ, fehlende Adresse, Platzhalter (`192.168.x.z`, `<…>`) im Feld oder in der Adresse brechen mit Meldung ab. Fehlt das Feld zur Laufzeit in der Antwort, meldet die Konsole das; die Speicher werden trotzdem geschrieben.
+- Eine Einstellung nur mit `SMARTMETER_URL` (Fassung 1.0.0) gilt weiter, Feld `total_act_power`.
+
+Keine Änderung an Datenbank, CSV und ThingsBoard-Format.
+
 ## 1.0.0
 
 **Ziel:** Eigenständiger Logger ohne Shelly: liest einen oder mehrere Zendure-Speicher samt Akkupacks direkt über die zenSDK-Schnittstelle und schreibt die Werte in SQLite, CSV und/oder an ThingsBoard.
