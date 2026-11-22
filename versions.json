@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-19T06:58:47Z",
+  "generated": "2026-11-22T20:15:21Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -452,12 +452,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.7.2",
+      "version": "5.8.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d146d0df44db4e714467c527bee750df7efb3a80/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/581c9481f2f3c33180673efa8b8ad22fb84120e2/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.",
-        "Home-Assistant-App 5.7.2.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
+        "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
+        "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -466,6 +467,14 @@
       },
       "history": [
         {
+          "version": "5.7.2",
+          "changes": [
+            "**Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.",
+            "Home-Assistant-App 5.7.2.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.7.1",
           "changes": [
             "**Offgrid nur mit Steckdose:** Knoten, Linie und Punkte erscheinen nur, wenn im gewählten Ausschnitt mindestens ein Gerät eine Offgrid-Steckdose hat (bei „Gesamt“ irgendein Gerät, sonst genau das gewählte). Erkannt wird das wie beim Reiter „Offgrid“ an `offGrid` (Report `gridOffPower`). Bisher stand der Knoten immer da, ohne Steckdose mit „nicht belegt“.",
@@ -543,15 +552,6 @@
             "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
             "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
             "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.3.0",
-          "changes": [
-            "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
-            "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
-            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
           ],
           "notice": null
         }
@@ -559,17 +559,26 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.7.2",
+      "version": "5.8.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/d146d0df44db4e714467c527bee750df7efb3a80/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/581c9481f2f3c33180673efa8b8ad22fb84120e2/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.",
-        "Home-Assistant-App 5.7.2.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
+        "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
+        "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.7.2",
+          "changes": [
+            "**Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.",
+            "Home-Assistant-App 5.7.2.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
         {
           "version": "5.7.1",
           "changes": [
@@ -648,15 +657,6 @@
             "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
             "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
             "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.3.0",
-          "changes": [
-            "**Solarflow-Knoten (neues Design):** Der Untertext lautet jetzt „gibt ab“ (AC über 5 W oder Offgrid ab 5 W), „nimmt auf“ (sonst AC unter −5 W, Offgrid ab −5 W oder PV ab 5 W) oder „Bereitschaft“ (sonst). Bisher stand dort auch dann „Bereitschaft“, wenn nur die PV den Akku lud oder nur die Offgrid-Dose lieferte. Der Wert darüber bleibt die AC-Leistung.",
-            "**Deutsche Texte (neues Design):** „Standby“ heißt in der Gerätekarte und in den technischen Details jetzt „Bereitschaft“.",
-            "Das klassische Dashboard und der Proxy haben nur die neue Versionsnummer bekommen."
           ],
           "notice": null
         }
