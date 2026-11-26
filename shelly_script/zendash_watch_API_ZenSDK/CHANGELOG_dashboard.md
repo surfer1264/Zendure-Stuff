@@ -8,6 +8,16 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.8.1
+
+**Ziel:** Technische Details direkt auf dem Dashboard schalten statt über das Menü „Ansicht“. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.
+- **Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.
+- Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.8.0
 
 **Ziel:** Zeitplan, Technische Details und Übersicht lassen sich per Tastenkürzel aufrufen. Keine Änderung an den Shelly-Scripten und am Regler.

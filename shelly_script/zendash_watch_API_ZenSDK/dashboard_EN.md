@@ -75,10 +75,11 @@ The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” –
 | **Day/night view** | light or dark display. Without switching, the page follows the device setting. |
 | **Language** | DE → EN → FR. Default is the browser language. |
 | **Full screen** | hides the browser bars; only shown if the browser supports it |
-| **Technical details** | shows KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`). Without this switch the dashboard shows plain language only. |
 | **Reset view** ↺ | size, day/night, technical details and overview back to default. The language is kept. |
 | **Schedule** | opens the [schedule](#schedule) page (`/zeitplan`). Only appears if the proxy knows the schedule (from 5.5.0). |
 | **Feed-in** | shows an additional feed-in in the household in the energy flow, see [Feed-in in the energy flow](#feed-in-in-the-energy-flow). From 5.7.0. |
+
+Since 5.8.1, technical details are no longer in the menu but the **Details** button in the **Devices | Energy flow | Details** switch (see [New design](#new-design-start-page)).
 
 All entries except **Feed-in** are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
@@ -89,20 +90,20 @@ From 5.8.0 on the start page. They do not apply while typing in an input field, 
 | Key | Effect |
 |---|---|
 | **Z** | opens the [schedule](#schedule). If the proxy has no schedule, a short note appears. |
-| **T** | **Technical details** on/off |
+| **T** | **Details** (technical details) on/off |
 | **O** | expand/collapse the **overview** |
 | **?** | briefly shows the shortcuts at the bottom |
 | **Esc** | closes the "View" menu |
 
 ### New design (start page)
 
-From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser.
+From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser. In the same switch, set off by a thin line, the **Details** button shows or hides KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`), also remembered per browser (shortcut **T**). Without it the dashboard shows plain language only.
 
 - **Device cards:** a flame after the name while the heater is on (`heatState` = 1, from script 4.2.0), state at the AC connection in words: “feeding in”, “charging from grid”, “off-grid” (no exchange with the house grid, off-grid output delivering at least 5 W) or “standby”. “Standby” says nothing about the battery: PV may be charging it at that moment. If there is a fault it reads “unreachable” or “stale”. Also output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
 - **Schedule:** only with the [schedule](#schedule) switched on: one line with the state and the next change, e.g. “Schedule · blocked until 17:00” or “Schedule · fixed 800 W until 15:00”, and a thin bar for today below it (teal = zero feed-in, orange = fixed discharge, red line = now). Tap it to open the schedule.
 - **Footer:** shows the version, update notice, request errors and **Help**. **More ▾** opens the setup links (IP / script ID, ThingSpeak, ThingsBoard, log report), plus history and last update. The links to `config_api` and `status_api` only appear with technical details switched on.
 - **Notices** only when something deviates (full/empty blocked, `socSet`/`minSoc` differing, export blocked, discharge disabled, manual charging active), otherwise “No notices”.
-- **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the switch in the menu.
+- **Settings** with the tabs **Control · Off-grid · Charge** are only visible while the controls are unlocked. After loading the page and after every unlock each card shows “Control”; changes not yet applied (reserve draft, selected charging step) are discarded. The tab is not remembered. “Off-grid” only appears for devices with an off-grid output. **Technical details** are a separate block, shown only with the **Details** button.
 - **Energy flow:** PV, device, battery, home, grid and off-grid with animated lines (direction, speed and width follow the power), for all devices or one at a time (the choice is remembered per browser). Off-grid only appears if a device in the selection has an off-grid socket; if the socket is switched off on the device, it says "socket off". The browser remembers which devices have a socket, so the node does not disappear when a device is briefly offline. Grid and home always cover all devices (home = grid balance + sum of outputs + [feed-in](#feed-in-in-the-energy-flow), if set up). On narrow screens the diagram scrolls sideways.
 
 #### Feed-in in the energy flow
@@ -491,5 +492,5 @@ The three `…_api` addresses are described in detail in the [API reference](API
 | Settings gone after restarting the Controller | Set `kvsForceReseed: false` in the Controller. |
 | Not reachable from the phone | `http://` instead of `https://`, correct IP from the "Im Netz" line, check the firewall rule. |
 | Nothing can be operated | The page is locked – tap the padlock in the header. |
-| KVS keys, IP addresses or `acMode`/`socLimit` are missing | Switch on **Technical details** in the “View” menu. |
+| KVS keys, IP addresses or `acMode`/`socLimit` are missing | Switch on **Details** in the **Devices | Energy flow | Details** switch (or press **T**). |
 | "Konnte Port 8000 nicht oeffnen" (could not open port 8000) | The proxy is already running (e.g. in a second window), or another program is using the port. |

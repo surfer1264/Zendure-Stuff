@@ -75,10 +75,11 @@ La **Réserve (`minSoc`)** se règle avec −/+ et n'est enregistrée qu'avec «
 | **Mode jour/nuit** | affichage clair ou sombre. Sans basculer, la page suit le réglage de l'appareil. |
 | **Langue** | DE → EN → FR. Par défaut : langue du navigateur. |
 | **Plein écran** | masque les barres du navigateur ; n'apparaît que si le navigateur le permet |
-| **Détails techniques** | affiche les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`). Sans cet interrupteur, le tableau de bord n'affiche que du texte en clair. |
 | **Réinitialiser l'affichage** ↺ | taille, jour/nuit, détails techniques et vue d'ensemble par défaut. La langue est conservée. |
 | **Planning** | ouvre la page [Planning](#planning) (`/zeitplan`). N'apparaît que si le proxy connaît le planning (à partir de 5.5.0). |
 | **Injection** | affiche une injection supplémentaire du foyer dans le flux d'énergie, voir [Injection dans le flux d'énergie](#injection-dans-le-flux-dénergie). À partir de 5.7.0. |
+
+Depuis 5.8.1, les détails techniques ne sont plus dans le menu mais le bouton **Détails** du sélecteur **Appareils | Flux d'énergie | Détails** (voir [Nouveau design](#nouveau-design-page-daccueil)).
 
 Toutes les entrées sauf **Injection** sont mémorisées **par navigateur** – une tablette murale retrouve donc son affichage après un rechargement. Le verrouillage, lui, n'est volontairement pas mémorisé.
 
@@ -89,20 +90,20 @@ Toutes les entrées sauf **Injection** sont mémorisées **par navigateur** – 
 | Touche | Effet |
 |---|---|
 | **Z** | ouvre le [Planning](#planning). Si le proxy n'a pas de planning, une courte indication apparaît. |
-| **T** | **Détails techniques** activés/désactivés |
+| **T** | **Détails** (détails techniques) activés/désactivés |
 | **O** | déplier/replier la **vue d'ensemble** |
 | **?** | affiche brièvement les raccourcis en bas |
 | **Échap** | ferme le menu « Affichage » |
 
 ### Nouveau design (page d'accueil)
 
-Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>:8000/`, et depuis 5.5.0 le seul tableau de bord. Les favoris vers les anciennes adresses `/neu` et `/klassisch` mènent à la page d'accueil. À côté de la zone des appareils se trouve l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur.
+Depuis 4.0.0, le nouveau design est la page d'accueil `http://<adresse-du-proxy>:8000/`, et depuis 5.5.0 le seul tableau de bord. Les favoris vers les anciennes adresses `/neu` et `/klassisch` mènent à la page d'accueil. À côté de la zone des appareils se trouve l'affichage **Flux d'énergie**. Le sélecteur **Appareils | Flux d'énergie** se trouve à côté du titre ; le choix est mémorisé par navigateur. Dans le même sélecteur, séparé par un trait, le bouton **Détails** affiche ou masque les clés KVS (p. ex. `zdmc_setpoint`), les adresses IP et les codes bruts (`acMode`, `socLimit`, `gridReverse`), également mémorisé par navigateur (raccourci **T**). Sans lui, le tableau de bord n'affiche que du texte en clair.
 
 - **Cartes des appareils :** une flamme après le nom tant que le chauffage est activé (`heatState` = 1, à partir du script 4.2.0), état au raccordement AC en toutes lettres : « injecte », « charge depuis le réseau », « hors réseau » (aucun échange avec le réseau domestique, sortie hors réseau fournissant au moins 5 W) ou « veille ». « Veille » ne dit rien de la batterie : le PV peut la charger pendant ce temps. En cas de problème, il affiche « injoignable » ou « obsolète ». Également la puissance en grand, barre de charge avec la réserve (sous `minSoc`) et la zone au-dessus de la limite de charge hachurées, PV · batterie · hors réseau (batterie = PV − sortie − hors réseau), température et cellule la plus faible sur une petite ligne.
 - **Planning :** seulement avec le [planning](#planning) activé : une ligne avec l'état et le prochain changement, p. ex. « Planning · bloqué jusqu'à 17:00 » ou « Planning · fixe 800 W jusqu'à 15:00 », et en dessous une fine barre pour aujourd'hui (turquoise = injection zéro, orange = décharge fixe, trait rouge = maintenant). Un appui ouvre le planning.
 - **Pied de page :** affiche la version, l'avis de mise à jour, les erreurs de requête et **Aide**. **Plus ▾** ouvre les liens de configuration (IP / ID du script, ThingSpeak, ThingsBoard, rapport de log), ainsi que l'historique et la dernière actualisation. Les liens vers `config_api` et `status_api` n'apparaissent qu'avec les détails techniques activés.
 - **Remarques** uniquement en cas d'écart (plein/vide bloqué, `socSet`/`minSoc` différent, export interdit, décharge désactivée, charge manuelle active), sinon « Aucune remarque ».
-- **Réglages** avec les onglets **Régulation · Hors réseau · Charge**, visibles seulement quand les commandes sont déverrouillées. Au chargement de la page et à chaque déverrouillage, chaque carte affiche « Régulation » ; les modifications non appliquées (brouillon de réserve, palier de charge choisi) sont abandonnées. L'onglet n'est pas mémorisé. « Hors réseau » n'apparaît que pour les appareils avec sortie hors réseau. Les **détails techniques** forment un bloc à part, affiché uniquement avec l'interrupteur du menu.
+- **Réglages** avec les onglets **Régulation · Hors réseau · Charge**, visibles seulement quand les commandes sont déverrouillées. Au chargement de la page et à chaque déverrouillage, chaque carte affiche « Régulation » ; les modifications non appliquées (brouillon de réserve, palier de charge choisi) sont abandonnées. L'onglet n'est pas mémorisé. « Hors réseau » n'apparaît que pour les appareils avec sortie hors réseau. Les **détails techniques** forment un bloc à part, affiché uniquement avec le bouton **Détails**.
 - **Flux d'énergie :** PV, appareil, batterie, maison, réseau et hors réseau avec des lignes animées (sens, vitesse et épaisseur selon la puissance), pour tous les appareils ou un seul (choix mémorisé par navigateur). Le hors réseau n'apparaît que si un appareil de la sélection possède une prise hors réseau ; si elle est désactivée sur l'appareil, « prise désactivée » s'affiche. Le navigateur mémorise quels appareils ont une prise, afin que le nœud ne disparaisse pas lorsqu'un appareil est brièvement hors ligne. Réseau et maison couvrent toujours tous les appareils (maison = solde réseau + somme des sorties + [injection](#injection-dans-le-flux-dénergie), si configurée). Sur écran étroit, le schéma défile latéralement.
 
 #### Injection dans le flux d'énergie
@@ -491,5 +492,5 @@ Les trois adresses `…_api` sont décrites en détail dans la [référence API]
 | Réglages perdus après redémarrage du Controller | Définir `kvsForceReseed: false` dans le Controller. |
 | Inaccessible depuis le téléphone | `http://` au lieu de `https://`, bonne IP de la ligne « Im Netz », vérifier l'autorisation du pare-feu. |
 | Rien n'est utilisable | La page est verrouillée – toucher le cadenas dans l'en-tête. |
-| Clés KVS, adresses IP ou `acMode`/`socLimit` absents | Activer les **Détails techniques** dans le menu « Affichage ». |
+| Clés KVS, adresses IP ou `acMode`/`socLimit` absents | Activer **Détails** dans le sélecteur **Appareils | Flux d'énergie | Détails** (ou touche **T**). |
 | « Konnte Port 8000 nicht oeffnen » (impossible d'ouvrir le port 8000) | Le proxy tourne déjà (p. ex. dans une deuxième fenêtre), ou un autre programme occupe le port. |

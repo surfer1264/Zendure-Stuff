@@ -74,10 +74,11 @@ Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehme
 | **Tag-/Nachtsicht** | helle oder dunkle Darstellung. Ohne Umschalten folgt die Seite der Einstellung des Geräts. |
 | **Sprache** | DE → EN → FR. Standard ist die Sprache des Browsers. |
 | **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
-| **Technische Details** | blendet KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein. Ohne diesen Schalter zeigt das Dashboard nur Klartext. |
 | **Ansicht zurücksetzen** ↺ | Größe, Tag/Nacht, technische Details und Übersicht auf Standard. Die Sprache bleibt. |
 | **Zeitplan** | öffnet die Seite [Zeitplan](#zeitplan) (`/zeitplan`). Erscheint nur, wenn der Proxy den Zeitplan kennt (ab 5.5.0). |
 | **Einspeisung** | zeigt eine zusätzliche Einspeisung im Haushalt im Energiefluss an, siehe [Einspeisung im Energiefluss](#einspeisung-im-energiefluss). Ab 5.7.0. |
+
+Die technischen Details stehen seit 5.8.1 nicht mehr im Menü, sondern als Taste **Details** im Umschalter **Geräte | Energiefluss | Details** (siehe [Neues Design](#neues-design-startseite)).
 
 Alle Einträge außer **Einspeisung** werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
@@ -88,14 +89,14 @@ Ab 5.8.0 auf der Startseite. Sie gelten nicht, solange man in einem Eingabefeld 
 | Taste | Wirkung |
 |---|---|
 | **Z** | öffnet den [Zeitplan](#zeitplan). Ohne Zeitplan im Proxy erscheint ein kurzer Hinweis. |
-| **T** | **Technische Details** ein/aus |
+| **T** | **Details** (technische Details) ein/aus |
 | **O** | **Übersicht** auf-/zuklappen |
 | **?** | zeigt die Kürzel kurz unten an |
 | **Esc** | schließt das Menü „Ansicht“ |
 
 ### Neues Design (Startseite)
 
-Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt.
+Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt. Im selben Umschalter, durch einen Strich abgesetzt, schaltet die Taste **Details** KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein und aus, ebenfalls pro Browser gemerkt (Tastenkürzel **T**). Ohne sie zeigt das Dashboard nur Klartext.
 
 | Bereich der Gerätekarte | Inhalt |
 |---|---|
@@ -106,7 +107,7 @@ Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit
 | **Hinweise** | nur Abweichungen: voll oder leer gesperrt, `socSet`/`minSoc` abweichend, Export verboten, Entladen gesperrt, manuelles Laden aktiv. Sonst „Keine Hinweise“ |
 | **Zeitplan** | nur bei eingeschaltetem [Zeitplan](#zeitplan): eine Zeile mit dem Zustand und dem nächsten Wechsel, z. B. „Plan · gesperrt bis 17:00“ oder „Plan · fix 800 W bis 15:00“, darunter eine dünne Leiste für heute (türkis = Nulleinspeisung, orange = Entladen fix, roter Strich = jetzt). Antippen öffnet den Zeitplan |
 | **Einstellungen** | Reiter **Regelung · Offgrid · Laden** – nur sichtbar, solange die Bedienung freigegeben ist. Nach dem Laden der Seite und nach jedem Entsperren steht jede Karte auf „Regelung“; nicht übernommene Änderungen (Reserve-Entwurf, gewählte Ladestufe) werden dabei verworfen. Der Reiter wird nicht gespeichert. „Offgrid“ erscheint nur bei Geräten mit Offgrid-Ausgang |
-| **Technische Details** | eigener Block mit den Rohwerten, nur mit dem Schalter im Menü |
+| **Technische Details** | eigener Block mit den Rohwerten, nur mit der Taste **Details** |
 
 Auch die **Fußzeile** ist im neuen Design aufgeräumt: Sichtbar sind Version, Update-Hinweis, Abfragefehler und **Hilfe**. **Mehr ▾** klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Links zu `config_api` und `status_api` erscheinen nur bei eingeschalteten technischen Details.
 
@@ -477,7 +478,7 @@ Die drei `…_api`-Adressen beschreibt die [API-Referenz](API.md) im Detail.
 
 - **Kein Passwortschutz:** Jeder im Heimnetz, der die Adresse kennt, kann das Dashboard öffnen und Einstellungen ändern – auch die Shelly-Adresse unter `/setup` – und den Bericht unter `/bericht_zendure` lesen. Den Proxy deshalb **nie** per Portweiterleitung ins Internet stellen.
 - **Script-Nummer:** Beim **Update** über den Configurator bleibt die Nummer gleich. Wird das Script **neu angelegt** (erste Installation, „andere löschen“, Shelly-Wechsel oder Upload von Hand), bekommt es eine neue Nummer. Geht das Dashboard danach nicht mehr, unter `http://<Proxy-Adresse>:8000/setup` die neue Nummer eintragen. Ein Neustart des Proxys ist nicht nötig.
-- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über das Menü „Ansicht“. Dort gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Die früheren Adressen `/b`, `/neu` und `/klassisch` leiten auf das Dashboard weiter; das klassische Dashboard ist seit 5.5.0 entfernt.
+- **Layout:** Unter `http://<Proxy-Adresse>:8000/` läuft das Dashboard im neuen Aufbau – übersichtlicher gegliedert, Sperrknopf als deutlich markiertes Schloss, Status in Klartext, einklappbare Übersicht, technische Details (KVS-Schlüssel, IP-Adressen) nur auf Wunsch über die Taste **Details**. Im Menü „Ansicht“ gewählte Einstellungen werden gemerkt – siehe [Bedienung](#bedienung). Die früheren Adressen `/b`, `/neu` und `/klassisch` leiten auf das Dashboard weiter; das klassische Dashboard ist seit 5.5.0 entfernt.
 - **Neue Dashboard-Version:** Beim Python-Script und auf der Synology einfach `zendure-dashboard-neu.html` austauschen und die Seite im Browser neu laden – der Proxy liest die Datei bei jedem Aufruf frisch ein. Beim fertigen Programm ist die Seite eingebaut, dort kommt sie mit einem neuen Download. In Home Assistant muss die App neu gebaut werden.
 
 ---
@@ -499,5 +500,5 @@ Die drei `…_api`-Adressen beschreibt die [API-Referenz](API.md) im Detail.
 | Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
 | Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Firewall-Freigabe prüfen. |
 | Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss in der Kopfzeile antippen. |
-| KVS-Schlüssel, IP-Adressen oder `acMode`/`socLimit` fehlen | Im Menü „Ansicht“ die **Technischen Details** einschalten. |
+| KVS-Schlüssel, IP-Adressen oder `acMode`/`socLimit` fehlen | Im Umschalter **Geräte | Energiefluss | Details** die Taste **Details** einschalten (oder Taste **T**). |
 | „Konnte Port 8000 nicht oeffnen“ | Der Proxy läuft schon (z. B. in einem zweiten Fenster), oder ein anderes Programm belegt den Port. |

@@ -578,6 +578,7 @@
 
   .view-bar{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin:0 0 1rem; }
   .view-bar .section-title{ margin:0; }
+  .seg .seg-sep{ width:1px; align-self:stretch; margin:.25rem .125rem; background:var(--border); }
   .seg{ display:inline-flex; gap:.25rem; padding:.25rem; border-radius:999px; background:var(--surface); border:1px solid var(--border); }
   .seg button{
     appearance:none; border:0; background:transparent; color:var(--text-muted); cursor:pointer;
@@ -938,10 +939,9 @@
             <div class="set-row"><span class="lbl" data-i18n="setTheme">Tag-/Nachtsicht</span><button type="button" class="icon-btn" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button></div>
             <div class="set-row"><span class="lbl" data-i18n="setLang">Sprache</span><button type="button" class="icon-btn lang-toggle" id="langToggle" aria-label="Sprache wechseln" data-i18n-aria="langAria" title="Sprache wechseln">DE</button></div>
             <div class="set-row" id="fsRow" hidden><span class="lbl" data-i18n="setFs">Vollbild</span><button type="button" class="icon-btn fs-toggle" id="fullscreenToggle" aria-label="Vollbild umschalten" data-i18n-aria="fsAria" title="Vollbild" hidden>⛶</button></div>
-            <div class="set-row"><span><span class="lbl" id="expertLbl" data-i18n="setExpert">Technische Details</span><span class="hint" data-i18n="setExpertHint">KVS-Schlüssel, IP-Adressen und Rohwerte einblenden</span></span><button type="button" class="sw-btn" id="expertToggle" aria-keyshortcuts="T" role="switch" aria-checked="false" aria-labelledby="expertLbl"></button></div>
             <div class="set-row"><span><span class="lbl" id="viewResetLbl" data-i18n="setReset">Ansicht zurücksetzen</span><span class="hint" data-i18n="setResetHint">Größe, Tag/Nacht, Details, Übersicht und Geräte/Energiefluss auf Standard</span></span><button type="button" class="icon-btn" id="viewReset" aria-labelledby="viewResetLbl">↺</button></div>
             <div class="set-row" id="planRow" hidden><span><span class="lbl" id="planLbl" data-i18n="setPlan">Zeitplan</span><span class="hint" data-i18n="setPlanHint">Entladefenster festlegen</span></span><a class="icon-btn" href="zeitplan" aria-labelledby="planLbl"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M12 14v3l2 1"/></svg></a></div>
-            <div class="set-row"><span><span class="lbl" data-i18n="setKeys">Tastenkürzel</span><span class="hint" data-i18n="setKeysHint">Z Zeitplan · T Technische Details · O Übersicht · ? Hilfe</span></span></div>
+            <div class="set-row"><span><span class="lbl" data-i18n="setKeys">Tastenkürzel</span><span class="hint" data-i18n="setKeysHint">Z Zeitplan · T Details · O Übersicht · ? Hilfe</span></span></div>
             <div class="set-row" id="feedRow" hidden><span><span class="lbl" id="feedLbl" data-i18n="setFeed">Einspeisung</span><span class="hint" data-i18n="setFeedHint">Zusätzliche Einspeisung (Shelly) im Energiefluss</span></span><button type="button" class="sw-btn" id="feedToggle" role="switch" aria-checked="false" aria-labelledby="feedLbl"></button></div>
             <div class="feed-form" id="feedForm" hidden>
               <label><span data-i18n="feedName">Name</span><input type="text" id="feedName" maxlength="24" autocomplete="off"></label>
@@ -1012,6 +1012,8 @@
       <div class="seg" role="group" data-i18n-aria="viewAria" aria-label="Ansicht wählen">
         <button type="button" id="viewDevices" aria-pressed="true" data-i18n="viewDevices">Geräte</button>
         <button type="button" id="viewFlow" aria-pressed="false" data-i18n="viewFlow">Energiefluss</button>
+        <span class="seg-sep" aria-hidden="true"></span>
+        <button type="button" id="expertToggle" aria-pressed="false" aria-keyshortcuts="T" data-i18n="viewDetails" data-i18n-title="setExpertHint" title="KVS-Schlüssel, IP-Adressen und Rohwerte einblenden">Details</button>
       </div>
     </div>
     <div class="hubs-grid" id="hubsGrid"></div>
@@ -1143,7 +1145,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.8.0";
+  const APP_VERSION = "5.8.1";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1592,10 +1594,10 @@
 
   // Texte des neuen Designs (Geraetekarten, Energiefluss, Design-Wechsel)
   Object.assign(STRINGS.de, {
-    viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
+    viewDevices: 'Geräte', viewFlow: 'Energiefluss', viewDetails: 'Details', viewAria: 'Ansicht wählen', flowScopeAria: 'Geräte im Energiefluss',
     setPlan: 'Zeitplan', setPlanHint: 'Entladefenster festlegen',
-    setKeys: 'Tastenkürzel', setKeysHint: 'Z Zeitplan · T Technische Details · O Übersicht · ? Hilfe',
-    kbHelp: 'Tasten: Z Zeitplan · T Technische Details · O Übersicht · Esc Menü schließen', kbNoPlan: 'Zeitplan nicht verfügbar',
+    setKeys: 'Tastenkürzel', setKeysHint: 'Z Zeitplan · T Details · O Übersicht · ? Hilfe',
+    kbHelp: 'Tasten: Z Zeitplan · T Details · O Übersicht · Esc Menü schließen', kbNoPlan: 'Zeitplan nicht verfügbar',
     planFree: 'Plan · {m} {w}', planZero: 'Nulleinspeisung', planFixedW: 'fix {p} W', planLocked: 'Plan · gesperrt {w}', planManual: 'Plan · pausiert {w} (manuelles Laden)',
     planFull: 'Plan · pausiert {w} (Akku voll)', planVolt: 'Plan · wartet auf Zellspannung', planHand: 'von Hand · {w}',
     planUnknown: 'Plan · greift ab {t}', planUntil: 'bis {t}', planUntilTomorrow: 'bis morgen {t}', planUntilDay: 'bis {d} {t}',
@@ -1628,10 +1630,10 @@
     techCellLock: 'Sperrschwelle Zelle', yes: 'ja', no: 'nein'
   });
   Object.assign(STRINGS.en, {
-    viewDevices: 'Devices', viewFlow: 'Energy flow', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
+    viewDevices: 'Devices', viewFlow: 'Energy flow', viewDetails: 'Details', viewAria: 'Choose view', flowScopeAria: 'Devices in the energy flow',
     setPlan: 'Schedule', setPlanHint: 'Set discharge windows',
-    setKeys: 'Keyboard shortcuts', setKeysHint: 'Z schedule · T technical details · O overview · ? help',
-    kbHelp: 'Keys: Z schedule · T technical details · O overview · Esc close menu', kbNoPlan: 'Schedule not available',
+    setKeys: 'Keyboard shortcuts', setKeysHint: 'Z schedule · T details · O overview · ? help',
+    kbHelp: 'Keys: Z schedule · T details · O overview · Esc close menu', kbNoPlan: 'Schedule not available',
     planFree: 'Schedule · {m} {w}', planZero: 'zero feed-in', planFixedW: 'fixed {p} W', planLocked: 'Schedule · blocked {w}', planManual: 'Schedule · paused {w} (manual charging)',
     planFull: 'Schedule · paused {w} (battery full)', planVolt: 'Schedule · waiting for cell voltage', planHand: 'manual change · {w}',
     planUnknown: 'Schedule · takes over {t}', planUntil: 'until {t}', planUntilTomorrow: 'until tomorrow {t}', planUntilDay: 'until {d} {t}',
@@ -1664,10 +1666,10 @@
     techCellLock: 'Cell lock threshold', yes: 'yes', no: 'no'
   });
   Object.assign(STRINGS.fr, {
-    viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
+    viewDevices: 'Appareils', viewFlow: 'Flux d’énergie', viewDetails: 'Détails', viewAria: 'Choisir l’affichage', flowScopeAria: 'Appareils dans le flux d’énergie',
     setPlan: 'Planning', setPlanHint: 'Définir les plages de décharge',
-    setKeys: 'Raccourcis clavier', setKeysHint: 'Z planning · T détails techniques · O vue d’ensemble · ? aide',
-    kbHelp: 'Touches : Z planning · T détails techniques · O vue d’ensemble · Échap fermer le menu', kbNoPlan: 'Planning non disponible',
+    setKeys: 'Raccourcis clavier', setKeysHint: 'Z planning · T détails · O vue d’ensemble · ? aide',
+    kbHelp: 'Touches : Z planning · T détails · O vue d’ensemble · Échap fermer le menu', kbNoPlan: 'Planning non disponible',
     planFree: 'Planning · {m} {w}', planZero: 'injection zéro', planFixedW: 'fixe {p} W', planLocked: 'Planning · bloqué {w}', planManual: 'Planning · en pause {w} (charge manuelle)',
     planFull: 'Planning · en pause {w} (batterie pleine)', planVolt: 'Planning · attend la tension de cellule', planHand: 'modifié à la main · {w}',
     planUnknown: 'Planning · actif {t}', planUntil: 'jusqu’à {t}', planUntilTomorrow: 'jusqu’à demain {t}', planUntilDay: 'jusqu’à {d} {t}',
@@ -4567,7 +4569,7 @@
   try { expert = localStorage.getItem(EXPERT_KEY) === '1'; } catch (e) {}
   function applyExpert(){
     appEl.classList.toggle('expert', expert);
-    expertToggle.setAttribute('aria-checked', expert ? 'true' : 'false');
+    expertToggle.setAttribute('aria-pressed', expert ? 'true' : 'false');
   }
   expertToggle.addEventListener('click', function(){
     expert = !expert;
