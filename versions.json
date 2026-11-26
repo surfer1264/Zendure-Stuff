@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-22T20:15:21Z",
+  "generated": "2026-11-26T21:02:08Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -452,13 +452,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.8.0",
+      "version": "5.8.1",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/581c9481f2f3c33180673efa8b8ad22fb84120e2/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ee6383f54131e4e108a49ef530b4de8249b370bc/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
-        "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
-        "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
+        "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
+        "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
+        "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -467,6 +467,15 @@
       },
       "history": [
         {
+          "version": "5.8.0",
+          "changes": [
+            "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
+            "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
+            "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.7.2",
           "changes": [
             "**Offgrid-Linie:** Bei Geräten ohne Offgrid-Steckdose (z. B. SolarFlow 800) war in 5.7.1 nur der Knoten ausgeblendet, Linie und Spur blieben stehen. Jetzt verschwinden beide mit dem Knoten.",
@@ -543,15 +552,6 @@
             "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
             "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
             "Das Dashboard hat nur die neue Versionsnummer bekommen."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.0",
-          "changes": [
-            "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
-            "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
-            "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
           ],
           "notice": null
         }
@@ -559,18 +559,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.8.0",
+      "version": "5.8.1",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/581c9481f2f3c33180673efa8b8ad22fb84120e2/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ee6383f54131e4e108a49ef530b4de8249b370bc/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
-        "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
-        "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
+        "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
+        "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
+        "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.8.0",
+          "changes": [
+            "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
+            "**Keine Konflikte:** Die Kürzel greifen nicht beim Tippen in Eingabefeldern und nicht mit Strg, Alt oder Cmd. Groß- und Kleinschreibung ist egal.",
+            "**Menü „Ansicht“:** neue Zeile „Tastenkürzel“ mit der Liste. Die Schalter tragen `aria-keyshortcuts` für Screenreader."
+          ],
+          "notice": null
+        },
         {
           "version": "5.7.2",
           "changes": [
@@ -648,15 +657,6 @@
             "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
             "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
             "Das Dashboard hat nur die neue Versionsnummer bekommen."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.0",
-          "changes": [
-            "**Fußzeile:** Sichtbar bleiben Version, Update-Hinweis, Abfragefehler und der Link „Hilfe“.",
-            "**„Mehr ▾“:** Klappt die Einrichtung auf (IP / Script-ID, ThingSpeak, ThingsBoard, Log-Bericht), dazu Verlauf und letzte Aktualisierung. Die Wahl wird nicht gespeichert.",
-            "**API-Links:** `config_api`, `status_api` und `kvs_set_api` erscheinen nur noch bei eingeschalteten technischen Details."
           ],
           "notice": null
         }
