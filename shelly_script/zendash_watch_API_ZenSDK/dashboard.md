@@ -52,7 +52,7 @@ Die Startseite `http://<Proxy-Adresse>:8000/` zeigt das Dashboard. Beschrieben s
 
 | Bereich | Inhalt |
 |---|---|
-| **Kopfzeile** | Verbindungsstatus: Ein grüner Punkt heißt, die letzte Abfrage beim Shelly-Script (alle 4 s) hat geklappt; die Erklärung steht im Tooltip. Rot mit „Verbindungsproblem“ heißt, mindestens zwei Abfragen in Folge sind gescheitert. Dazu Uhrzeit und Datum, das **Schloss** und das Menü **⚙ Ansicht** |
+| **Kopfzeile** | Verbindungsstatus: Ein grüner Punkt heißt, die letzte Abfrage beim Shelly-Script (alle 4 s) hat geklappt; die Erklärung steht im Tooltip. Rot mit „Verbindungsproblem“ heißt, mindestens zwei Abfragen in Folge sind gescheitert. Der Punkt sitzt seit 5.8.2 in derselben Pille wie Uhrzeit und Datum. Dazu das **Schloss** und das Menü **⚙ Ansicht**. Auf schmalen Bildschirmen (Handy) zeigt das Menü nur ⚙, und statt „Verbindungsproblem“ wird nur der Punkt rot – Antippen zeigt die Erklärung |
 | **Übersicht – Jetzt** | Messwerte: Netzbezug/Einspeisung und Solarflow-Leistung (Summe aller Speicher) mit Verlaufskurve |
 | **Übersicht – Regelung** | Einstellungen für alle Speicher: Sollwert, Entlade-Sperre und Fix-Entladung |
 | **Geräte** | je Speicher eine Karte mit Messwerten, Status, „Steuerung“ und „Manuelles Laden“ |
@@ -70,7 +70,7 @@ Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehme
 
 | Eintrag | Wirkung |
 |---|---|
-| **Ansichtsgröße** (A1–A4) | Schrift und Bedienelemente in vier Stufen: Normal, Groß (Standard), Sehr groß, Maximal |
+| **Ansichtsgröße** (A1–A3) | Schrift und Bedienelemente in drei Stufen: Normal, Groß (Standard), Sehr groß. Die frühere Stufe A4 (Maximal) gibt es seit 5.8.2 nicht mehr, eine gemerkte A4 wird zu A3 |
 | **Tag-/Nachtsicht** | helle oder dunkle Darstellung. Ohne Umschalten folgt die Seite der Einstellung des Geräts. |
 | **Sprache** | DE → EN → FR. Standard ist die Sprache des Browsers. |
 | **Vollbild** | Browserleisten ausblenden; erscheint nur, wenn der Browser das kann |
@@ -78,7 +78,7 @@ Die **Reserve (`minSoc`)** wird mit −/+ eingestellt und erst mit „Übernehme
 | **Zeitplan** | öffnet die Seite [Zeitplan](#zeitplan) (`/zeitplan`). Erscheint nur, wenn der Proxy den Zeitplan kennt (ab 5.5.0). |
 | **Einspeisung** | zeigt eine zusätzliche Einspeisung im Haushalt im Energiefluss an, siehe [Einspeisung im Energiefluss](#einspeisung-im-energiefluss). Ab 5.7.0. |
 
-Die technischen Details stehen seit 5.8.1 nicht mehr im Menü, sondern als Taste **Details** im Umschalter **Geräte | Energiefluss | Details** (siehe [Neues Design](#neues-design-startseite)).
+Die technischen Details stehen seit 5.8.1 nicht mehr im Menü, sondern als runder Knopf **Details** (Symbol `</>`) neben dem Umschalter **Geräte | Energiefluss** (siehe [Neues Design](#neues-design-startseite)).
 
 Alle Einträge außer **Einspeisung** werden **pro Browser** gemerkt – ein Wandtablet startet nach einem Neuladen also wieder in seiner Ansicht. Die Sperre wird bewusst nicht gemerkt.
 
@@ -96,7 +96,7 @@ Ab 5.8.0 auf der Startseite. Sie gelten nicht, solange man in einem Eingabefeld 
 
 ### Neues Design (Startseite)
 
-Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt. Im selben Umschalter, durch einen Strich abgesetzt, schaltet die Taste **Details** KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein und aus, ebenfalls pro Browser gemerkt (Tastenkürzel **T**). Ohne sie zeigt das Dashboard nur Klartext.
+Ab 4.0.0 ist das neue Design die Startseite `http://<Proxy-Adresse>:8000/`, seit 5.5.0 das einzige Dashboard. Lesezeichen auf die früheren Adressen `/neu` und `/klassisch` landen auf der Startseite. Zum Gerätebereich gibt es die zusätzliche Ansicht **Energiefluss**. Der Umschalter **Geräte | Energiefluss** steht neben der Überschrift; die Wahl wird pro Browser gemerkt. Auf schmalen Bildschirmen füllt er die ganze Breite und die Überschrift entfällt. Rechts daneben schaltet der runde Knopf **Details** (Symbol `</>`, eingeschaltet farbig umrandet) KVS-Schlüssel (z. B. `zdmc_setpoint`), IP-Adressen und Rohcodes (`acMode`, `socLimit`, `gridReverse`) ein und aus, ebenfalls pro Browser gemerkt (Tastenkürzel **T**). Ohne sie zeigt das Dashboard nur Klartext.
 
 | Bereich der Gerätekarte | Inhalt |
 |---|---|
@@ -129,7 +129,7 @@ Anzeige: Der Knoten erscheint nur im **Energiefluss**, nur bei **Gesamt** und nu
 
 Neben der Uhr oben rechts stehen Sonnenaufgang und Sonnenuntergang des Tages (☀ 07:00–16:39). Der Proxy liest dafür einmal am Tag den Standort aus der Konfiguration des Dashboard-Shellys (`Sys.GetConfig`, nicht über das Script); gerechnet wird im Browser. Hat der Shelly keinen Standort, fehlt die Anzeige – eintragen lässt er sich in der Weboberfläche des Shellys unter Standort/Zeitzone. Auf schmalen Bildschirmen ist die Anzeige ausgeblendet.
 
-Im Energiefluss lässt sich oben rechts ein **Hintergrund nach Tageszeit** zuschalten: **Aus · Bild · Bewegung** (Standard: Aus, wird pro Browser gemerkt). Die Sonne zieht von links (Osten) nach rechts (Westen), der Himmel wechselt stufenlos von Morgendämmerung über Tag und Abendrot bis zur Nacht mit Mond und Sternen; die Fenster des kleinen Hauses leuchten abends. Über das Jahr folgen Tageslänge, Sonnenhöhe und die Farben der Landschaft der Jahreszeit; der Mond zeigt seine echte Phase. Kommt deutlich weniger PV als an den besten Tagen der letzten zwei Wochen zur selben Uhrzeit, wird die Sonne etwas blasser und der Wolkenschleier dichter (die Vergleichswerte merkt sich der Browser; bei vollem Akku und in den ersten Tagen bleibt der Himmel klar). Dazu je nach Monat: Schnee auf Hügeln und Dach (Dezember bis Februar), blühende Bäume (April/Mai), ein goldenes Getreidefeld (Spätsommer) und buntes Laub (Herbst); auf der Südhalbkugel um ein halbes Jahr versetzt. Bei „Bewegung“ ziehen zwei Wolken, die Sterne funkeln und im Hochsommer zieht nachts ab und zu eine Sternschnuppe. Gerechnet wird einmal pro Minute aus Sonnenauf- und -untergang; ohne Standort am Shelly fehlt der Schalter. „Ansicht zurücksetzen“ schaltet den Hintergrund wieder aus; bei „Bewegung reduzieren“ am Gerät steht alles still.
+Im Energiefluss lässt sich oben rechts ein **Hintergrund nach Tageszeit** zuschalten: Ein runder Knopf schaltet bei jedem Antippen weiter **Aus → Bild → Bewegung**, sein Symbol zeigt den aktuellen Zustand (Standard: Aus, wird pro Browser gemerkt). Bei mehreren Speichern lässt sich die Geräteauswahl daneben waagerecht wischen, wenn sie nicht in eine Zeile passt. Die Sonne zieht von links (Osten) nach rechts (Westen), der Himmel wechselt stufenlos von Morgendämmerung über Tag und Abendrot bis zur Nacht mit Mond und Sternen; die Fenster des kleinen Hauses leuchten abends. Über das Jahr folgen Tageslänge, Sonnenhöhe und die Farben der Landschaft der Jahreszeit; der Mond zeigt seine echte Phase. Kommt deutlich weniger PV als an den besten Tagen der letzten zwei Wochen zur selben Uhrzeit, wird die Sonne etwas blasser und der Wolkenschleier dichter (die Vergleichswerte merkt sich der Browser; bei vollem Akku und in den ersten Tagen bleibt der Himmel klar). Dazu je nach Monat: Schnee auf Hügeln und Dach (Dezember bis Februar), blühende Bäume (April/Mai), ein goldenes Getreidefeld (Spätsommer) und buntes Laub (Herbst); auf der Südhalbkugel um ein halbes Jahr versetzt. Bei „Bewegung“ ziehen zwei Wolken, die Sterne funkeln und im Hochsommer zieht nachts ab und zu eine Sternschnuppe. Gerechnet wird einmal pro Minute aus Sonnenauf- und -untergang; ohne Standort am Shelly fehlt der Schalter. „Ansicht zurücksetzen“ schaltet den Hintergrund wieder aus; bei „Bewegung reduzieren“ am Gerät steht alles still.
 
 ### Zeitplan
 
@@ -500,5 +500,5 @@ Die drei `…_api`-Adressen beschreibt die [API-Referenz](API.md) im Detail.
 | Einstellungen nach Neustart des Controllers weg | Im Controller `kvsForceReseed: false` setzen. |
 | Vom Handy nicht erreichbar | `http://` statt `https://`, richtige IP aus der Zeile „Im Netz“, Firewall-Freigabe prüfen. |
 | Nichts lässt sich bedienen | Die Seite ist gesperrt – Schloss in der Kopfzeile antippen. |
-| KVS-Schlüssel, IP-Adressen oder `acMode`/`socLimit` fehlen | Im Umschalter **Geräte | Energiefluss | Details** die Taste **Details** einschalten (oder Taste **T**). |
+| KVS-Schlüssel, IP-Adressen oder `acMode`/`socLimit` fehlen | Rechts neben **Geräte \| Energiefluss** den Knopf **Details** (`</>`) einschalten (oder Taste **T**). |
 | „Konnte Port 8000 nicht oeffnen“ | Der Proxy läuft schon (z. B. in einem zweiten Fenster), oder ein anderes Programm belegt den Port. |

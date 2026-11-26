@@ -7,7 +7,7 @@
   try{s=localStorage.getItem('zendash_b_theme');f=localStorage.getItem('zendash_b_fontsize');}catch(e){}
   try{if(s!=='dark'&&s!=='light')s=(window.matchMedia&&!window.matchMedia('(prefers-color-scheme: dark)').matches)?'light':'dark';
     d.setAttribute('data-theme',s);}catch(e){}
-  f=f||'large';if(f!=='normal')d.setAttribute('data-fontsize',f);})();</script>
+  f=f||'large';if(f==='xxlarge')f='xlarge';if(f!=='normal')d.setAttribute('data-fontsize',f);})();</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -92,7 +92,7 @@
   html{ font-size:100%; }
   html[data-fontsize="large"]{ font-size:115%; }
   html[data-fontsize="xlarge"]{ font-size:130%; }
-  html[data-fontsize="xxlarge"]{ font-size:150%; }
+  /* Stufe 4 (150 %) seit 5.8.2 entfernt - auf dem Handy brach dort fast alles um */
   /* Auch auf html, nicht nur auf body: Beim Ueberdehnen der Seite (Gummiband-
      Effekt auf Tablets) wird sonst die Flaeche darunter sichtbar, die der
      Browser selbst faerbt. */
@@ -168,7 +168,8 @@
     background:var(--surface); border:1px solid var(--border); border-radius:999px;
     padding:.375rem .875rem; box-shadow:var(--shadow); font-size:.8rem; color:var(--text-muted);
   }
-  .status-pill #statusText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* Status-Punkt sitzt seit 5.8.2 in der Uhr-Pille (eine Pille weniger in der Kopfzeile) */
+  .status-pill #statusText{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:11em; }
   .status-dot{
     width:.625rem; height:.625rem; border-radius:50%; background:var(--teal-text); flex-shrink:0;
     animation:pulse 2.2s ease-out infinite;
@@ -181,7 +182,7 @@
   .status-dot.offline{ background:var(--alert-text); animation:none; }
   /* Live: nur der Punkt, die Erklaerung steht im Tooltip. Der Text bleibt fuer
      Screenreader im DOM, ist aber unsichtbar. */
-  .status-pill.dot-only{ position:relative; padding:.375rem; min-width:var(--tap); justify-content:center; }
+  .status-pill.dot-only{ position:relative; }
   .status-pill.dot-only #statusText{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
   .clock-pill .time{ font-family:'IBM Plex Mono', monospace; font-feature-settings:'ss04' 1; font-weight:600; font-size:.95rem; color:var(--text); }
   .clock-pill .date{ font-size:.75rem; }
@@ -316,7 +317,7 @@
      Ansichtsstufe, wie im Original. */
   .ov{ display:grid; grid-template-columns:minmax(0, 1fr); gap:1.5rem; margin-bottom:2rem; }
   @media (min-width:1000px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
+    html:not([data-fontsize="xlarge"]) .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
   }
   @media (min-width:1300px){
     html[data-fontsize="xlarge"] .ov{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem; }
@@ -324,11 +325,11 @@
   /* Uebersicht mit 5 Kacheln: "Jetzt" (2) und "Regelung" (3) nebeneinander,
      Spaltenbreite im Verhaeltnis 2:3, damit alle Kacheln gleich breit sind. */
   @media (min-width:640px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .tiles.tiles-3{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    html:not([data-fontsize="xlarge"]) .tiles.tiles-3{ grid-template-columns:repeat(3, minmax(0, 1fr)); }
   }
   @media (min-width:1000px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov{ grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); }
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .ov .tile{ padding:1.125rem 1rem 1rem; }
+    html:not([data-fontsize="xlarge"]) .ov{ grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); }
+    html:not([data-fontsize="xlarge"]) .ov .tile{ padding:1.125rem 1rem 1rem; }
   }
   @media (min-width:1300px){
     html[data-fontsize="xlarge"] .ov{ grid-template-columns:minmax(0, 2fr) minmax(0, 3fr); }
@@ -341,7 +342,7 @@
   .group-title .tag{ font-size:.72rem; font-weight:500; color:var(--text-muted); letter-spacing:.04em; }
   .tiles{ display:grid; grid-template-columns:minmax(0, 1fr); gap:1rem; }
   @media (min-width:520px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .tiles{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
+    html:not([data-fontsize="xlarge"]) .tiles{ grid-template-columns:repeat(2, minmax(0, 1fr)); }
   }
   @media (min-width:640px){ .tiles{ grid-template-columns:repeat(2, minmax(0, 1fr)); } }
   .tile{ min-width:0; padding:1.25rem 1.25rem 1.125rem; display:flex; flex-direction:column; }
@@ -359,8 +360,8 @@
     display:flex; align-items:baseline; flex-wrap:wrap; gap:.5rem;
   }
   @media (min-width:1000px){
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-value,
-    html:not([data-fontsize="xlarge"]):not([data-fontsize="xxlarge"]) .hero-input{ font-size:clamp(1.4rem, 2.4vw, 2.4rem); }
+    html:not([data-fontsize="xlarge"]) .hero-value,
+    html:not([data-fontsize="xlarge"]) .hero-input{ font-size:clamp(1.4rem, 2.4vw, 2.4rem); }
   }
   .hero-value .unit{ font-size:1rem; font-weight:500; color:var(--text-muted); }
   .dir{
@@ -578,7 +579,44 @@
 
   .view-bar{ display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; margin:0 0 1rem; }
   .view-bar .section-title{ margin:0; }
-  .seg .seg-sep{ width:1px; align-self:stretch; margin:.25rem .125rem; background:var(--border); }
+  .view-tools{ display:flex; align-items:center; gap:.5rem; }
+  /* Runder Symbolknopf (Details, Hintergrund) - gleiche Groesse wie das Schloss */
+  .round-btn{
+    appearance:none; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+    width:var(--tap); height:var(--tap); padding:0; border-radius:50%; cursor:pointer;
+    background:var(--surface); color:var(--text-muted); border:1px solid var(--border);
+  }
+  .round-btn svg{ width:1.25rem; height:1.25rem; display:block; }
+  .round-btn:active{ transform:scale(.95); }
+  .round-btn:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
+  .round-btn[aria-pressed="true"]{ color:var(--teal-text); border:2px solid var(--teal-text); }
+
+  /* Schmale Seite (ab 5.8.2): Grenze in em statt px - sie waechst mit der
+     Ansichtsgroesse (A1 600 px, A2 690 px, A3 780 px Breite). Abgefragt wird
+     die Breite von Kopfzeile bzw. Leiste selbst (Container Query), nicht das
+     Fenster. Nicht auf .shell/#app: dort wuerde container-type die
+     position:fixed-Elemente (Einblendung, Hilfe) an den Container binden. */
+  header, .view-bar{ container-type:inline-size; }
+  /* container-type bildet eine eigene Stapelebene - ohne z-index laege das
+     Menue "Ansicht" unter den Geraetekarten (position:relative). */
+  header{ position:relative; z-index:30; }
+  @container (max-width:37em){
+    .head-right{ width:100%; justify-content:flex-end; }
+    .head-right .clock-pill{ margin-right:auto; }
+    /* Statustext ("Verbinde…", "Verbindungsproblem") nur optisch weg: der Punkt
+       wird rot, Antippen zeigt die Erklaerung, Screenreader lesen ihn weiter */
+    .status-pill #statusText{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    .menu > summary{ width:var(--tap); padding:0; justify-content:center; }
+    .menu > summary > span[aria-hidden]{ font-size:1.15rem; }
+    /* Beschriftung "Ansicht" nur optisch ausblenden, fuer Screenreader bleibt sie */
+    .menu-lbl{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+  }
+  @container (max-width:37.5em){
+    .view-bar .section-title{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+    .view-tools{ flex:1 1 auto; min-width:0; }
+    .view-tools .seg{ flex:1 1 auto; min-width:0; display:flex; }
+    .view-tools .seg button{ flex:1 1 0; min-width:0; padding:0 .5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  }
   .seg{ display:inline-flex; gap:.25rem; padding:.25rem; border-radius:999px; background:var(--surface); border:1px solid var(--border); }
   .seg button{
     appearance:none; border:0; background:transparent; color:var(--text-muted); cursor:pointer;
@@ -797,11 +835,12 @@
   .flow-wrap .flow-scroll{ position:relative; z-index:1; }
   .flow-bg{ margin-left:auto; display:flex; align-items:center; gap:.375rem; }
   .flow-bg[hidden]{ display:none; }
-  .flow-bg .seg3{ display:inline-flex; padding:.1875rem; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); }
-  .flow-bg .seg3 button{ appearance:none; cursor:pointer; border:0; background:none; color:var(--text-muted); min-height:2rem; padding:0 .75rem;
-    border-radius:999px; font-family:'IBM Plex Sans', sans-serif; font-size:.78rem; font-weight:500; }
-  .flow-bg .seg3 button[aria-pressed="true"]{ background:var(--teal-deep); color:#06201D; }
-  .flow-bg .seg3 button:focus-visible{ outline:2px solid var(--teal-text); outline-offset:2px; }
+  .flow-bg .round-btn.active{ color:var(--teal-text); }
+  /* Geraeteauswahl im Energiefluss: eine Zeile, bei Platzmangel waagerecht wischen statt umbrechen */
+  .flow-head{ flex-wrap:nowrap; }
+  .flow-scopes{ flex-wrap:nowrap; overflow-x:auto; min-width:0; scrollbar-width:none; scroll-snap-type:x proximity; padding:2px; margin:-2px; }
+  .flow-scopes::-webkit-scrollbar{ display:none; }
+  .flow-scopes button{ flex-shrink:0; scroll-snap-align:start; white-space:nowrap; }
   .sky{ position:absolute; inset:0; z-index:0; pointer-events:none; }
   .sky[hidden]{ display:none; }
   .sky > *{ position:absolute; }
@@ -929,11 +968,10 @@
         </div>
       </div>
       <div class="head-right">
-        <div class="pill status-pill" role="status" aria-live="polite" tabindex="0"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span id="statusText" data-i18n="connecting">Verbinde…</span></div>
-        <div class="pill clock-pill"><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span><span class="sun" id="clockSun" hidden></span></div>
+        <div class="pill clock-pill status-pill" tabindex="0"><span class="status-dot" id="statusDot" aria-hidden="true"></span><span id="statusText" role="status" aria-live="polite" data-i18n="connecting">Verbinde…</span><span class="time mono" id="clockTime">--:--:--</span><span class="date" id="clockDate">–</span><span class="sun" id="clockSun" hidden></span></div>
         <button type="button" class="lock-btn locked" id="lockToggle" aria-label="Bedienung sperren/entsperren" data-i18n-aria="lockAria" title="Bedienung sperren/entsperren"><span id="lockIcon" aria-hidden="true"><svg class="lock-icon"><use href="#lk-closed"/></svg></span></button>
         <details class="menu" id="viewMenu">
-          <summary><span aria-hidden="true">⚙</span><span data-i18n="viewMenu">Ansicht</span></summary>
+          <summary><span aria-hidden="true">⚙</span><span class="menu-lbl" data-i18n="viewMenu">Ansicht</span></summary>
           <div class="menu-panel">
             <div class="set-row"><span class="lbl" data-i18n="setSize">Ansichtsgröße</span><button type="button" class="icon-btn font-toggle" id="fontSizeToggle" aria-label="Ansichtsgröße umschalten" data-i18n-aria="fontAria" title="Ansichtsgröße: Groß">A<span class="lvl" id="fontSizeLvl">2</span></button></div>
             <div class="set-row"><span class="lbl" data-i18n="setTheme">Tag-/Nachtsicht</span><button type="button" class="icon-btn" id="themeToggle" aria-label="Tag/Nacht umschalten" data-i18n-aria="themeAria" title="Tag/Nacht umschalten">☾</button></div>
@@ -1009,11 +1047,12 @@
 
     <div class="view-bar">
       <h2 class="section-title" id="viewTitle" data-i18n="devices">Geräte</h2>
-      <div class="seg" role="group" data-i18n-aria="viewAria" aria-label="Ansicht wählen">
-        <button type="button" id="viewDevices" aria-pressed="true" data-i18n="viewDevices">Geräte</button>
-        <button type="button" id="viewFlow" aria-pressed="false" data-i18n="viewFlow">Energiefluss</button>
-        <span class="seg-sep" aria-hidden="true"></span>
-        <button type="button" id="expertToggle" aria-pressed="false" aria-keyshortcuts="T" data-i18n="viewDetails" data-i18n-title="setExpertHint" title="KVS-Schlüssel, IP-Adressen und Rohwerte einblenden">Details</button>
+      <div class="view-tools">
+        <div class="seg" role="group" data-i18n-aria="viewAria" aria-label="Ansicht wählen">
+          <button type="button" id="viewDevices" aria-pressed="true" data-i18n="viewDevices">Geräte</button>
+          <button type="button" id="viewFlow" aria-pressed="false" data-i18n="viewFlow">Energiefluss</button>
+        </div>
+        <button type="button" class="round-btn" id="expertToggle" aria-pressed="false" aria-keyshortcuts="T" data-i18n-aria="viewDetails" aria-label="Details" data-i18n-title="setExpertHint" title="KVS-Schlüssel, IP-Adressen und Rohwerte einblenden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M13.5 5l-3 14"/></svg></button>
       </div>
     </div>
     <div class="hubs-grid" id="hubsGrid"></div>
@@ -1057,9 +1096,8 @@
       <div class="flow-head">
         <div class="flow-scopes" id="flowScopes" role="group" data-i18n-aria="flowScopeAria" aria-label="Geräte im Energiefluss"></div>
         <div class="flow-bg" id="flowBg" hidden>
-          <span class="seg3" role="group" data-i18n-aria="bgAria" data-i18n-title="bgAria" aria-label="Hintergrund des Energieflusses" title="Hintergrund des Energieflusses">
-            <button type="button" data-bg="off" data-i18n="bgOff">Aus</button><button type="button" data-bg="still" data-i18n="bgStill">Bild</button><button type="button" data-bg="move" data-i18n="bgMove">Bewegung</button>
-          </span>
+          <!-- Ein Knopf schaltet Aus -> Bild -> Bewegung durch; Symbol und Beschriftung setzt applyBgButtons() -->
+          <button type="button" class="round-btn" id="bgCycle"></button>
         </div>
       </div>
       <div class="flow-scroll">
@@ -1145,7 +1183,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.8.1";
+  const APP_VERSION = "5.8.2";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1219,7 +1257,7 @@
       note: 'Hinweis:',
       toDay: 'Auf Tagsicht umschalten',
       toNight: 'Auf Nachtsicht umschalten',
-      fontNormal: 'Normal', fontLarge: 'Groß', fontXLarge: 'Sehr groß', fontXXLarge: 'Maximal',
+      fontNormal: 'Normal', fontLarge: 'Groß', fontXLarge: 'Sehr groß',
       fontTitle: 'Ansichtsgröße: {lvl} (antippen für nächste Stufe)',
       unlock: 'Bedienung entsperren',
       lock: 'Bedienung sperren',
@@ -1344,7 +1382,7 @@
       note: 'Note:',
       toDay: 'Switch to day mode',
       toNight: 'Switch to night mode',
-      fontNormal: 'Normal', fontLarge: 'Large', fontXLarge: 'Extra large', fontXXLarge: 'Maximum',
+      fontNormal: 'Normal', fontLarge: 'Large', fontXLarge: 'Extra large',
       fontTitle: 'View size: {lvl} (tap for next level)',
       unlock: 'Unlock controls',
       lock: 'Lock controls',
@@ -1469,7 +1507,7 @@
       note: 'Remarque\u00a0:',
       toDay: 'Passer en mode jour',
       toNight: 'Passer en mode nuit',
-      fontNormal: 'Normale', fontLarge: 'Grande', fontXLarge: 'Très grande', fontXXLarge: 'Maximale',
+      fontNormal: 'Normale', fontLarge: 'Grande', fontXLarge: 'Très grande',
       fontTitle: 'Taille d’affichage\u00a0: {lvl} (toucher pour le niveau suivant)',
       unlock: 'Déverrouiller les commandes',
       lock: 'Verrouiller les commandes',
@@ -1815,8 +1853,8 @@
   }
 
   /* ---------------- Ansichtsgröße ----------------
-     Vier Stufen (100/115/130/150 %), wirkt seit 3.5.5 als Zoom der ganzen
-     Seite (siehe CSS). Standard ist A2 (Groß).
+     Drei Stufen (100/115/130 %, A4 = 150 % seit 5.8.2 entfernt), wirkt seit
+     3.5.5 als Zoom der ganzen Seite (siehe CSS). Standard ist A2 (Groß).
      Variante B: Die gewaehlte Stufe wird gemerkt (FONT_KEY), anders als im
      Original - ein Wandtablet soll nach einem Neuladen nicht wieder klein
      starten. */
@@ -1826,12 +1864,13 @@
   const FONT_LEVELS = [
     { key: 'normal', label: 'fontNormal' },
     { key: 'large',  label: 'fontLarge' },
-    { key: 'xlarge', label: 'fontXLarge' },
-    { key: 'xxlarge', label: 'fontXXLarge' }
+    { key: 'xlarge', label: 'fontXLarge' }
   ];
   let fontSizeIdx = 1; // Standard: A2 / "Groß"
   try {
-    const savedFont = localStorage.getItem(FONT_KEY);
+    let savedFont = localStorage.getItem(FONT_KEY);
+    // Frueher gemerkte Stufe A4 wird zu A3 (auch fuer die Zeitplan-Seite, die denselben Schluessel liest)
+    if (savedFont === 'xxlarge') { savedFont = 'xlarge'; localStorage.setItem(FONT_KEY, savedFont); }
     const savedIdx = FONT_LEVELS.findIndex(function(l){ return l.key === savedFont; });
     if (savedIdx >= 0) fontSizeIdx = savedIdx;
   } catch (e) {}
@@ -2079,10 +2118,23 @@
     }
     skyStarsBuilt = true;
   }
+  // Ein Knopf statt drei (ab 5.8.2): zeigt den aktuellen Zustand, Antippen schaltet weiter
+  const BG_ORDER = ['off', 'still', 'move'];
+  const BG_LBL = { off: 'bgOff', still: 'bgStill', move: 'bgMove' };
+  const BG_ICON = {
+    off: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 20L20 4"/>',
+    still: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 16l5-5 4 4 3-3 6 6"/><circle cx="16" cy="9" r="1.5"/>',
+    move: '<path d="M7 17h10a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 17z"/><path d="M2 21h5M10 21h9"/>'
+  };
   function applyBgButtons(){
-    document.querySelectorAll('#flowBg button[data-bg]').forEach(function(b){
-      b.setAttribute('aria-pressed', b.getAttribute('data-bg') === bgMode ? 'true' : 'false');
-    });
+    const b = document.getElementById('bgCycle');
+    if (!b) return;
+    const mode = BG_LBL[bgMode] ? bgMode : 'still';
+    const lbl = t('bgAria') + ': ' + t(BG_LBL[mode]);
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + BG_ICON[mode] + '</svg>';
+    b.setAttribute('aria-label', lbl);
+    b.title = lbl;
+    b.classList.toggle('active', mode !== 'off');
   }
   function updateSky(){
     if (!skyReady) return;
@@ -2208,12 +2260,10 @@
       ? 'rgba(255,255,255,' + (0.06 + 0.24 * light).toFixed(2) + ')'
       : 'rgba(11,18,32,' + (0.1 + 0.2 * light).toFixed(2) + ')';
   }
-  document.querySelectorAll('#flowBg button[data-bg]').forEach(function(b){
-    b.addEventListener('click', function(){
-      bgMode = b.getAttribute('data-bg');
-      try { localStorage.setItem(BG_KEY, bgMode); } catch (e) {}
-      updateSky();
-    });
+  document.getElementById('bgCycle').addEventListener('click', function(){
+    bgMode = BG_ORDER[(BG_ORDER.indexOf(bgMode) + 1) % BG_ORDER.length];
+    try { localStorage.setItem(BG_KEY, bgMode); } catch (e) {}
+    updateSky();
   });
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) updateSky(); });
   skyReady = true;

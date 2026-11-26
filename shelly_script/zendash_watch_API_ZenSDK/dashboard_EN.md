@@ -53,7 +53,7 @@ The start page `http://<proxy-address>:8000/` shows the dashboard. This section 
 
 | Area | Content |
 |---|---|
-| **Header** | connection status: a green dot means the last request to the Shelly script (every 4 s) succeeded; the tooltip explains it. Red with "Connection problem" means at least two requests in a row failed. Then time and date, the **padlock** and the **⚙ View** menu |
+| **Header** | connection status: a green dot means the last request to the Shelly script (every 4 s) succeeded; the tooltip explains it. Red with "Connection problem" means at least two requests in a row failed. Since 5.8.2 the dot sits in the same pill as time and date. Then the **padlock** and the **⚙ View** menu. On narrow screens (phone) the menu shows only ⚙, and instead of "Connection problem" only the dot turns red – tapping it shows the explanation |
 | **Overview – Now** | readings: grid import/export and Solarflow power (sum of all batteries) with history curve |
 | **Overview – Control** | settings for all batteries: setpoint, discharge lock and fixed discharge |
 | **Devices** | one card per battery with readings, status, "Controls" and "Manual charging" |
@@ -71,7 +71,7 @@ The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” –
 
 | Entry | Effect |
 |---|---|
-| **View size** (A1–A4) | text and controls in four levels: Normal, Large (default), Extra large, Maximum |
+| **View size** (A1–A3) | text and controls in three levels: Normal, Large (default), Extra large. The former level A4 (Maximum) was removed in 5.8.2; a remembered A4 becomes A3 |
 | **Day/night view** | light or dark display. Without switching, the page follows the device setting. |
 | **Language** | DE → EN → FR. Default is the browser language. |
 | **Full screen** | hides the browser bars; only shown if the browser supports it |
@@ -79,7 +79,7 @@ The **Reserve (`minSoc`)** is set with −/+ and only saved with “Apply” –
 | **Schedule** | opens the [schedule](#schedule) page (`/zeitplan`). Only appears if the proxy knows the schedule (from 5.5.0). |
 | **Feed-in** | shows an additional feed-in in the household in the energy flow, see [Feed-in in the energy flow](#feed-in-in-the-energy-flow). From 5.7.0. |
 
-Since 5.8.1, technical details are no longer in the menu but the **Details** button in the **Devices | Energy flow | Details** switch (see [New design](#new-design-start-page)).
+Since 5.8.1, technical details are no longer in the menu but the round **Details** button (icon `</>`) next to the **Devices | Energy flow** switch (see [New design](#new-design-start-page)).
 
 All entries except **Feed-in** are remembered **per browser** – so a wall tablet comes back in its own view after a reload. The lock is deliberately not remembered.
 
@@ -97,7 +97,7 @@ From 5.8.0 on the start page. They do not apply while typing in an input field, 
 
 ### New design (start page)
 
-From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser. In the same switch, set off by a thin line, the **Details** button shows or hides KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`), also remembered per browser (shortcut **T**). Without it the dashboard shows plain language only.
+From 4.0.0 the new design is the start page `http://<proxy-address>:8000/`, and since 5.5.0 the only dashboard. Bookmarks to the former addresses `/neu` and `/klassisch` lead to the start page. Next to the device area there is an extra **Energy flow** view. The **Devices | Energy flow** switch sits next to the heading; the choice is remembered per browser. On narrow screens it fills the full width and the heading is hidden. To its right, the round **Details** button (icon `</>`, outlined in colour when on) shows or hides KVS keys (e.g. `zdmc_setpoint`), IP addresses and raw codes (`acMode`, `socLimit`, `gridReverse`), also remembered per browser (shortcut **T**). Without it the dashboard shows plain language only.
 
 - **Device cards:** a flame after the name while the heater is on (`heatState` = 1, from script 4.2.0), state at the AC connection in words: “feeding in”, “charging from grid”, “off-grid” (no exchange with the house grid, off-grid output delivering at least 5 W) or “standby”. “Standby” says nothing about the battery: PV may be charging it at that moment. If there is a fault it reads “unreachable” or “stale”. Also output power in large type, charge bar with the reserve (below `minSoc`) and the area above the charge limit hatched, PV · battery · off-grid (battery = PV − output − off-grid), temperature and weakest cell in one small line.
 - **Schedule:** only with the [schedule](#schedule) switched on: one line with the state and the next change, e.g. “Schedule · blocked until 17:00” or “Schedule · fixed 800 W until 15:00”, and a thin bar for today below it (teal = zero feed-in, orange = fixed discharge, red line = now). Tap it to open the schedule.
@@ -120,7 +120,7 @@ Set up in the menu **View → Feed-in**:
 
 Display: the node only appears in the **energy flow**, only for **Total** and only when the function is on and an address is entered. It shows the name and the total; dots run into the home. If one Shelly cannot be reached, it shows "1 of 2 offline" and only the reachable one counts. If none can be reached, the node turns grey with "offline" and the feed-in is left out of the home calculation.
 - **Sunrise and sunset:** next to the clock (☀ 07:00–16:39). Once a day the proxy reads the location from the dashboard Shelly's configuration (`Sys.GetConfig`, not via the script); the times are calculated in the browser. Without a location on the Shelly the display is hidden – set it in the Shelly web interface under location/time zone. Hidden on narrow screens.
-- **Background by time of day:** top right in the energy flow – **Off · Picture · Motion** (default off, remembered per browser). The sun moves from left (east) to right (west), the sky changes smoothly from dawn through day and sunset to night with moon and stars; the little house's windows light up in the evening. Over the year, day length, sun height and landscape colours follow the season, and the moon shows its real phase. When PV is clearly below the best value of the last two weeks at the same time of day, the sun turns paler and the cloud veil thickens (the browser remembers the reference values; with a full battery and during the first days the sky stays clear). Depending on the month: snow on hills and roof (December to February), trees in blossom (April/May), a golden grain field (late summer) and autumn leaves; shifted by half a year in the southern hemisphere. With “Motion” two clouds drift, the stars twinkle and on midsummer nights the occasional shooting star appears. Recalculated once a minute from sunrise and sunset; without a location on the Shelly the switch is hidden. “Reset view” turns it off again; with “reduce motion” on the device everything stands still.
+- **Background by time of day:** top right in the energy flow – a round button steps through **Off → Picture → Motion** on each tap, its icon shows the current state (default off, remembered per browser). With several batteries, the device selection next to it can be swiped sideways when it does not fit on one line. The sun moves from left (east) to right (west), the sky changes smoothly from dawn through day and sunset to night with moon and stars; the little house's windows light up in the evening. Over the year, day length, sun height and landscape colours follow the season, and the moon shows its real phase. When PV is clearly below the best value of the last two weeks at the same time of day, the sun turns paler and the cloud veil thickens (the browser remembers the reference values; with a full battery and during the first days the sky stays clear). Depending on the month: snow on hills and roof (December to February), trees in blossom (April/May), a golden grain field (late summer) and autumn leaves; shifted by half a year in the southern hemisphere. With “Motion” two clouds drift, the stars twinkle and on midsummer nights the occasional shooting star appears. Recalculated once a minute from sunrise and sunset; without a location on the Shelly the switch is hidden. “Reset view” turns it off again; with “reduce motion” on the device everything stands still.
 
 ### Schedule
 
@@ -492,5 +492,5 @@ The three `…_api` addresses are described in detail in the [API reference](API
 | Settings gone after restarting the Controller | Set `kvsForceReseed: false` in the Controller. |
 | Not reachable from the phone | `http://` instead of `https://`, correct IP from the "Im Netz" line, check the firewall rule. |
 | Nothing can be operated | The page is locked – tap the padlock in the header. |
-| KVS keys, IP addresses or `acMode`/`socLimit` are missing | Switch on **Details** in the **Devices | Energy flow | Details** switch (or press **T**). |
+| KVS keys, IP addresses or `acMode`/`socLimit` are missing | Switch on the **Details** button (`</>`) next to **Devices \| Energy flow** (or press **T**). |
 | "Konnte Port 8000 nicht oeffnen" (could not open port 8000) | The proxy is already running (e.g. in a second window), or another program is using the port. |

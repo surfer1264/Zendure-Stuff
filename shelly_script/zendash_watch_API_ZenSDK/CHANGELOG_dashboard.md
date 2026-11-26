@@ -8,6 +8,20 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 5.8.2
+
+**Ziel:** Die Knöpfe passen auf dem Handy wieder in eine Zeile – auch bei Ansichtsgröße A2 und A3. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.
+- **Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.
+- **Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen.
+- **Grenze für „schmal“ wächst mit der Ansichtsgröße:** Abgefragt wird die Breite von Kopfzeile bzw. Leiste (Container Query, 37 em) statt fester 640 px Fensterbreite. Bei A1 ab 600 px, bei A2 ab 690 px, bei A3 ab 780 px Inhaltsbreite. iPad quer und PC bleiben unverändert, iPad hochkant wird bei großer Schrift kompakt.
+- **Ansichtsgröße A4 (150 %) entfällt.** Eine gemerkte A4 wird beim nächsten Laden zu A3, auch für die Zeitplan-Seite.
+- Geprüft mit Edge bei 360, 402, 820 und 1280 px in DE und FR. Im Extremfall (Französisch, A3, 360 px) wird „Flux d’énergie“ gekürzt, nichts ragt mehr aus dem Bild. Safari ab iOS 16 und Chrome ab 105 unterstützen Container Queries.
+- Home-Assistant-App 5.8.2.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 5.8.1
 
 **Ziel:** Technische Details direkt auf dem Dashboard schalten statt über das Menü „Ansicht“. Keine Änderung an den Shelly-Scripten und am Regler.
