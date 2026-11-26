@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-26T21:02:08Z",
+  "generated": "2026-11-26T21:33:29Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -452,13 +452,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.8.1",
+      "version": "5.8.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ee6383f54131e4e108a49ef530b4de8249b370bc/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c9debb1b9a563d9f9a5afbdacaddb4de77f070a2/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
-        "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
-        "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
+        "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
+        "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -467,6 +467,15 @@
       },
       "history": [
         {
+          "version": "5.8.1",
+          "changes": [
+            "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
+            "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
+            "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.8.0",
           "changes": [
             "**Tastenkürzel auf der Startseite:** **Z** öffnet den Zeitplan, **T** schaltet Technische Details ein/aus, **O** klappt die Übersicht auf/zu, **?** zeigt die Kürzel 6 s lang unten an. Ohne Zeitplan im Proxy meldet **Z** „Zeitplan nicht verfügbar“.",
@@ -543,15 +552,6 @@
             "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
             "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
             "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.1",
-          "changes": [
-            "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
-            "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
-            "Das Dashboard hat nur die neue Versionsnummer bekommen."
           ],
           "notice": null
         }
@@ -559,18 +559,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.8.1",
+      "version": "5.8.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/ee6383f54131e4e108a49ef530b4de8249b370bc/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c9debb1b9a563d9f9a5afbdacaddb4de77f070a2/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
-        "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
-        "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
+        "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
+        "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.8.1",
+          "changes": [
+            "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
+            "**Menü „Ansicht“:** die Zeile „Technische Details“ entfällt.",
+            "Home-Assistant-App 5.8.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
         {
           "version": "5.8.0",
           "changes": [
@@ -648,15 +657,6 @@
             "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
             "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
             "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.1",
-          "changes": [
-            "**Favicon:** Der Proxy liefert statt des Blitzes die Ligatur „ZS“ aus dem Designsystem (Teal nach Amber auf dunklem Grund), für `favicon.svg` und `favicon.ico`.",
-            "**Home-Bildschirm (iOS):** Dasselbe Motiv als PNG 180 × 180 für alle `apple-touch-icon`-Pfade. Ein schon angelegtes Symbol auf dem Home-Bildschirm bleibt, bis es neu hinzugefügt wird.",
-            "Das Dashboard hat nur die neue Versionsnummer bekommen."
           ],
           "notice": null
         }
