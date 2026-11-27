@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-27T21:46:57Z",
+  "generated": "2026-11-27T22:05:27Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -452,9 +452,9 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.8.3",
+      "version": "6.0.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fca16dcf4cf2e77aca005610aeba05001453aabd/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/9298b0e8cd304f91396647c953ecdda0862dbb47/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
         "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
         "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
@@ -467,6 +467,15 @@
       },
       "history": [
         {
+          "version": "5.8.3",
+          "changes": [
+            "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
+            "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
+            "**Beenden:** gleicher Knopf, Zurück-Geste/Esc, Drehen ins Hochformat oder Wechsel zur Geräteansicht. Ein Seiten-Vollbild aus dem Menü bleibt danach bestehen."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.8.2",
           "changes": [
             "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
@@ -545,23 +554,14 @@
             "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
           ],
           "notice": null
-        },
-        {
-          "version": "5.4.4",
-          "changes": [
-            "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
-            "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
-            "Home-Assistant-App 5.4.4.0"
-          ],
-          "notice": null
         }
       ]
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.8.3",
+      "version": "6.0.0",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fca16dcf4cf2e77aca005610aeba05001453aabd/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/9298b0e8cd304f91396647c953ecdda0862dbb47/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
         "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
         "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
@@ -572,6 +572,15 @@
       "requires": {},
       "history": [
         {
+          "version": "5.8.3",
+          "changes": [
+            "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
+            "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
+            "**Beenden:** gleicher Knopf, Zurück-Geste/Esc, Drehen ins Hochformat oder Wechsel zur Geräteansicht. Ein Seiten-Vollbild aus dem Menü bleibt danach bestehen."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.8.2",
           "changes": [
             "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
@@ -648,15 +657,6 @@
             "**Zeitplan (neu):** Auf der Seite `/zeitplan` legst du Entladefenster für alle Geräte fest (Von/Bis, Wochentage, auch über Mitternacht). In den Fenstern darf entladen werden, außerhalb ist Entladen gesperrt. Der Proxy schaltet dazu `zdmc_devN_dischargeAllowed` über `kvs_set_api`. Je Gerät lässt sich wählen, ob es dem Plan folgt.",
             "**Regeln:** Geschaltet wird nur zu den Planzeiten; was du dazwischen von Hand umstellst, bleibt bis zum nächsten Wechsel. Sperren klappt immer. Freigegeben wird nur, wenn die schwächste Zelle über `minVoltReset` des Watchdogs liegt, sonst neuer Versuch alle zwei Minuten. Manuelles Laden und voller Akku unterbrechen den Plan für das Gerät bis zum nächsten Wechsel, bei vollem Akku wird vorher freigegeben.",
             "**Watchdog nötig:** Der Plan braucht den Watchdog im zendash-Script und schaltet nur Geräte mit `watch: true`. Er liest nur dessen Werte mit (`status_api?bg=read`), fragt die Speicher also nicht zusätzlich ab. An den Planzeiten schaltet er sofort, dazwischen prüft er alle zwei Minuten."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.4",
-          "changes": [
-            "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
-            "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
-            "Home-Assistant-App 5.4.4.0"
           ],
           "notice": null
         }
