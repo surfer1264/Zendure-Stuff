@@ -8,16 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
-## Changelog 5.8.3
+## Changelog 6.0.0
 
 **Ziel:** Den Energiefluss auf dem Handy quer im Vollbild zeigen, ohne die übrige Seite. Keine Änderung an den Shelly-Scripten und am Regler.
 
 - **Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.
 - **Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.
 - **Beenden:** gleicher Knopf, Zurück-Geste/Esc, Drehen ins Hochformat oder Wechsel zur Geräteansicht. Ein Seiten-Vollbild aus dem Menü bleibt danach bestehen.
+- **iPad/iPhone:** Die Knopfzeile hält oben gut 3 rem Abstand, weil Safari im Vollbild dort eigene, halb durchsichtige Bedienelemente einblendet.
 - **Display bleibt an,** solange das Vollbild läuft, wo der Browser es erlaubt (Wake Lock, nur über https, z. B. Home Assistant).
 - Geprüft mit Edge (Handy-Emulation 844 × 390 quer und 390 × 844 hoch, PC 1280 × 720). Echtes Vollbild auf dem Gerät noch nicht geprüft.
-- Home-Assistant-App 5.8.3.0. Der Proxy ändert sich nur in der Versionsnummer.
+- Home-Assistant-App 6.0.0.0. Der Proxy ändert sich nur in der Versionsnummer.
 
 Keine Änderung am CONFIG-Block nötig.
 

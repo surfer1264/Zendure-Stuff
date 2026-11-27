@@ -92,7 +92,7 @@ except ImportError:
 # unabhaengig vom Shelly-Script (ab 5.0.0, siehe CHANGELOG_dashboard.md).
 # APP_TYPE ist ein fester Bezeichner fuer versions.json (Manifest-Workflow).
 APP_TYPE = "zdmc-proxy"
-APP_VERSION = "5.8.3"
+APP_VERSION = "6.0.0"
 APP_CHANGELOG = "CHANGELOG_dashboard.md"
 
 # ---------------------------------------------------------------

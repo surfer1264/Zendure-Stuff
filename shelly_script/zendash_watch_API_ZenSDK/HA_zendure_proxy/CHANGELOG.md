@@ -2,9 +2,9 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
-## 5.8.3.0
+## 6.0.0.0
 
-- Dashboard: Vollbild nur für den Energiefluss auf Handy und Tablet im Querformat (siehe Changelog Dashboard und Proxy 5.8.3)
+- Dashboard: Vollbild nur für den Energiefluss auf Handy und Tablet im Querformat (siehe Changelog Dashboard und Proxy 6.0.0)
 
 ## 5.8.2.0
 

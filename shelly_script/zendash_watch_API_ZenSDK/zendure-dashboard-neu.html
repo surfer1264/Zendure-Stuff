@@ -839,17 +839,22 @@
   /* Rechte Knoepfe im Kopf des Energieflusses (Hintergrund, Vollbild) */
   .flow-tools{ margin-left:auto; display:flex; align-items:center; gap:.375rem; flex-shrink:0; }
   .flow-tools .round-btn[hidden]{ display:none; }
-  /* Vollbild nur fuer den Energiefluss (ab 5.8.3). Gilt fuer echtes Vollbild
+  /* Vollbild nur fuer den Energiefluss (ab 6.0.0). Gilt fuer echtes Vollbild
      (Fullscreen-API) und fuer den Ersatz per CSS (iPhone): der Energiefluss
      liegt ueber der ganzen Seite, die Schrift - und damit alles in em - wird
-     so gross, dass 65 x 32 em ohne Wischen auf das Display passen. */
-  .flow-wrap.flow-fs{ position:fixed; inset:0; z-index:1000; box-sizing:border-box; width:100%; height:100%; margin:0;
+     so gross, dass 65 x 32 em ohne Wischen auf das Display passen.
+     --fs-top: Abstand der Knopfzeile nach oben. Auf iPad/iPhone legt Safari im
+     Vollbild oben eigene, halb durchsichtige Bedienelemente (Schliessen-Knopf,
+     Statuszeile) ueber die Seite - dort mehr Platz lassen (Klasse fs-ios). */
+  .flow-wrap.flow-fs{ --fs-top:max(.5rem, env(safe-area-inset-top)); --fs-bot:max(.5rem, env(safe-area-inset-bottom));
+    position:fixed; inset:0; z-index:1000; box-sizing:border-box; width:100%; height:100%; margin:0;
     border:0; border-radius:0; box-shadow:none; gap:.5rem;
-    padding:max(.5rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+    padding:var(--fs-top) max(1rem, env(safe-area-inset-right)) var(--fs-bot) max(1rem, env(safe-area-inset-left)); }
+  .flow-wrap.flow-fs.fs-ios{ --fs-top:max(3.25rem, calc(env(safe-area-inset-top) + 1rem)); }
   .flow-wrap.flow-fs .flow-scroll{ flex:1 1 auto; min-height:0; overflow:hidden; display:flex; align-items:center; justify-content:center; }
   .flow-wrap.flow-fs .flow{ flex-shrink:0; margin:0;
-    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100vh - var(--tap) - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 32.5));
-    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100dvh - var(--tap) - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 32.5)); }
+    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100vh - var(--tap) - var(--fs-top) - var(--fs-bot) - 1rem) / 32.5));
+    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100dvh - var(--tap) - var(--fs-top) - var(--fs-bot) - 1rem) / 32.5)); }
   html.flow-fs-open, html.flow-fs-open body{ overflow:hidden; }
   /* Geraeteauswahl im Energiefluss: eine Zeile, bei Platzmangel waagerecht wischen statt umbrechen */
   .flow-head{ flex-wrap:nowrap; }
@@ -1202,7 +1207,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.8.3";
+  const APP_VERSION = "6.0.0";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1949,7 +1954,7 @@
     applyFullscreenState();
   }
 
-  /* ---------------- Vollbild nur fuer den Energiefluss (ab 5.8.3) ----------------
+  /* ---------------- Vollbild nur fuer den Energiefluss (ab 6.0.0) ----------------
      Knopf nur auf Handy/Tablet im Querformat (Touch ohne Hover) - am PC und im
      Hochformat ausgeblendet. Mit Fullscreen-API wird nur #flowWrap Vollbild;
      wo sie fehlt (Safari auf dem iPhone), legt sich der Energiefluss per CSS
@@ -1962,6 +1967,8 @@
   const flowFsMq = window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse) and (orientation:landscape)') : null;
   let flowFsMode = null;   // null | 'api' | 'css'
   let flowWake = null;     // null | true (Anfrage laeuft) | WakeLockSentinel
+  // iPad meldet sich als "Macintosh" - daher zusaetzlich ueber Touchpunkte erkennen
+  const flowFsIos = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const FLOW_FS_ICON = {
     enter: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
     exit: '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/>'
@@ -1993,6 +2000,7 @@
     const useApi = fsSupported && !!(flowWrapEl.requestFullscreen || flowWrapEl.webkitRequestFullscreen);
     flowFsMode = useApi ? 'api' : 'css';
     flowWrapEl.classList.add('flow-fs');
+    flowWrapEl.classList.toggle('fs-ios', flowFsIos);
     docEl.classList.add('flow-fs-open');
     if (useApi) {
       try {
@@ -2007,7 +2015,7 @@
   function flowFsExit(){
     if (!flowFsMode) return;
     flowFsMode = null;
-    flowWrapEl.classList.remove('flow-fs');
+    flowWrapEl.classList.remove('flow-fs', 'fs-ios');
     docEl.classList.remove('flow-fs-open');
     flowWakeOff();
     // Nur unser eigenes Vollbild beenden - ein Seiten-Vollbild darunter bleibt
