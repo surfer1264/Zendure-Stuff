@@ -941,6 +941,15 @@
   }
   .help-tip.show{ opacity:1; }
 
+  /* WCAG 1.4.11 (ab 6.0.2): Bedienelemente im hellen Modus mit mindestens 3:1
+     gegen ihre Umgebung - Schalter aus (Rahmen), Schalter an (gruen), Schiene
+     des Reglers und gewaehlter Reiter. Der dunkle Modus bleibt unveraendert. */
+  html[data-theme="light"] .switch .track{ border-color:var(--text-muted); }
+  html[data-theme="light"] .switch.teal input:checked ~ .track{ background:#168577; }
+  html[data-theme="light"] input[type="range"]::-webkit-slider-runnable-track{ border-color:var(--text-muted); }
+  html[data-theme="light"] input[type="range"]::-moz-range-track{ border-color:var(--text-muted); }
+  html[data-theme="light"] .set-tab[aria-selected="true"]{ box-shadow:inset 0 0 0 1px var(--text-muted); }
+
   /* Rueckmeldung nach dem Speichern: am unteren Bildrand statt in der
      Fusszeile - dort war sie auf dem Handy meist ausserhalb des Bildes. */
   .toast{
@@ -1196,7 +1205,7 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<div class="help-tip" id="helpTip" role="tooltip"></div>
+<div class="help-tip" id="helpTip" role="tooltip" hidden></div>
 <script>
 (function(){
 
@@ -1221,7 +1230,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "6.0.1";
+  const APP_VERSION = "6.0.2";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -4659,13 +4668,20 @@
       warn: wdVolt ? fmtVolt(wdVolt.warn) : '?', reset: wdVolt ? fmtVolt(wdVolt.reset) : '?' });
   }
 
+  // Leerer Tipp ist ausgeblendet (hidden) - ein leeres role="tooltip" ohne Namen
+  // verstoesst gegen WCAG 4.1.2. Nach dem Ausblenden (0,15 s) wieder hidden.
+  let helpHideTimer = null;
   function hideHelp(){
     helpTip.classList.remove('show');
     helpOwner = null;
     clearTimeout(helpTimer);
+    clearTimeout(helpHideTimer);
+    helpHideTimer = setTimeout(function(){ if (!helpTip.classList.contains('show')) helpTip.hidden = true; }, 200);
   }
 
   function showHelp(el){
+    clearTimeout(helpHideTimer);
+    helpTip.hidden = false;
     helpTip.textContent = helpText(el.getAttribute('data-help'));
     helpTip.style.left = '0px'; helpTip.style.top = '0px';
     helpTip.classList.add('show');

@@ -8,6 +8,17 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 6.0.2
+
+**Ziel:** Die helle Variante erfüllt die Kontrastregeln für Bedienelemente (WCAG 2.2 AA). Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Barrierefreiheit (heller Modus, WCAG 1.4.11):** Schalter „aus“ mit sichtbarem Rahmen (vorher 1,2 : 1, jetzt 5,7 : 1), Schalter „an“ in Grün etwas dunkler (`#168577`, 4,2 : 1 statt 2,9 : 1), Schiene des Sollwert-Reglers mit Rahmen (vorher 1,2 : 1, jetzt 6,1 : 1), gewählter Reiter in den Einstellungen mit deutlichem Rahmen (vorher 1,9 : 1, jetzt 5,7 : 1). Der dunkle Modus bleibt unverändert.
+- **Hilfe-Tipp (WCAG 4.1.2):** Ist kein Tipp offen, ist das Tipp-Element ausgeblendet. Bisher lasen Screenreader ein leeres Element mit der Rolle „Tooltip“ ohne Namen. Beim Antippen erscheint der Tipp wie bisher.
+- Geprüft mit axe-core 4.10 (WCAG 2.2 A/AA) und eigener Kontrastrechnung in Edge: PC und Handy, Geräte, Energiefluss, technische Details, entsperrt mit Einstellungen, Menü offen – keine Verstöße. Tastaturbedienung und Screenreader nicht von Hand geprüft.
+- Home-Assistant-App 6.0.2.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 6.0.1
 
 **Ziel:** Der Energiefluss bleibt im hellen Modus auch nachts gut lesbar. Keine Änderung an den Shelly-Scripten und am Regler.

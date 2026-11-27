@@ -2,6 +2,10 @@
 
 Hier steht nur, was sich in der App ändert. Die Einzelheiten stehen im [Changelog Dashboard und Proxy](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md), das Shelly-Script hat einen [eigenen Changelog](https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md).
 
+## 6.0.2.0
+
+- Dashboard: Schalter, Regler und Reiter im hellen Modus kontrastreicher, Hilfe-Tipp für Screenreader korrigiert (WCAG) (siehe Changelog Dashboard und Proxy 6.0.2)
+
 ## 6.0.1.0
 
 - Dashboard: Energiefluss im hellen Modus nachts mit dunklen Kacheln und hellen Linien (siehe Changelog Dashboard und Proxy 6.0.1)
