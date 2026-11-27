@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-26T21:33:29Z",
+  "generated": "2026-11-27T21:46:57Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -179,12 +179,12 @@
       ]
     },
     "zdmc-zendash-watch": {
-      "version": "4.5.1",
+      "version": "4.6.0",
       "schema": 1,
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/cacda839700a07810b130f5a774a7158d5628b54/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
-      "size": 38593,
-      "codeHash": "sha256:c736867c4a09577bdc2ddceb0e6161b4e630db80ab70ba6d566b38d97fa39113",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fca16dcf4cf2e77aca005610aeba05001453aabd/shelly_script/zendash_watch_API_ZenSDK/zendash_watch_mini.js",
+      "size": 38660,
+      "codeHash": "sha256:fc2cd549c16b3b933f17d3736ce628926d0f38c91e47a33ecd848dfb34e72f45",
       "configKeys": [
         "api",
         "apiEvents",
@@ -231,14 +231,25 @@
         "webhookUrl"
       ],
       "changes": [
-        "**`status_api`:** Die Felder `mem_used_current` und `mem_max` entfallen wieder. Das Script entspricht damit 4.4.2 und ist wieder gut 0,2 kB kleiner.",
-        "**Warum:** Unter Firmware 1.x und 2.1 zeigt `mem_peak` aus `Script.GetStatus` die echte Spitze; `mem_max` lag nur etwa 0,6 kB darunter. Unter Firmware 2.2 räumt die Firmware den Speicher eines Scripts erst auf, wenn sein Variablenpool voll ist – `mem_used`, `mem_peak` und auch `mem_max` laufen dadurch bis an die 25.200 Byte, danach fällt `mem_used` auf den tatsächlichen Bedarf zurück (gemessen 15,6 kB bei 2 Geräten). Das ist harmlos, das Script läuft weiter. Details in der [API-Referenz](API.md) unter „Betriebsverhalten“.",
-        "Regelverhalten und Dashboard unverändert."
+        "**Neue Zeile je Speicher:** `SF800: 55%, Hub 15.8C, Pack 12C, 3.21V` – Ladestand, Temperatur des Speichers (`hyperTmp`), Temperatur des kühlsten Packs (kleinster `maxTemp` aller Packs, ganze °C) und kleinste Zellspannung. Bisher: `SF800: 55%, 15.8C, 3.21V`.",
+        "Die beiden Temperaturen sind mit **Hub** und **Pack** beschriftet, damit sie nicht verwechselt werden.",
+        "Schlafen alle Packs (Werte 0), steht bei Pack und Zellspannung `n/a`. Ohne aktuelle Werte bleibt es bei `n/a` für die ganze Zeile."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG.md",
       "requires": {},
       "history": [
+        {
+          "version": "4.5.1",
+          "schema": 1,
+          "codeHash": "sha256:c736867c4a09577bdc2ddceb0e6161b4e630db80ab70ba6d566b38d97fa39113",
+          "changes": [
+            "**`status_api`:** Die Felder `mem_used_current` und `mem_max` entfallen wieder. Das Script entspricht damit 4.4.2 und ist wieder gut 0,2 kB kleiner.",
+            "**Warum:** Unter Firmware 1.x und 2.1 zeigt `mem_peak` aus `Script.GetStatus` die echte Spitze; `mem_max` lag nur etwa 0,6 kB darunter. Unter Firmware 2.2 räumt die Firmware den Speicher eines Scripts erst auf, wenn sein Variablenpool voll ist – `mem_used`, `mem_peak` und auch `mem_max` laufen dadurch bis an die 25.200 Byte, danach fällt `mem_used` auf den tatsächlichen Bedarf zurück (gemessen 15,6 kB bei 2 Geräten). Das ist harmlos, das Script läuft weiter. Details in der [API-Referenz](API.md) unter „Betriebsverhalten“.",
+            "Regelverhalten und Dashboard unverändert."
+          ],
+          "notice": null
+        },
         {
           "version": "4.5.0",
           "schema": 1,
@@ -331,17 +342,6 @@
           "codeHash": "sha256:7578ab4d0194d3802416e62b4fe6805a631189e187dbc64e00491dc30f1a518e",
           "changes": [
             "Nur die Versionsnummer, inhaltlich wie 3.5.12. Einmal neu hochladen, damit Configurator und Dashboard 4.0.0 zeigen"
-          ],
-          "notice": null
-        },
-        {
-          "version": "3.5.12",
-          "schema": 1,
-          "codeHash": "sha256:0a3e119e5674db6be87eb5d2d654f0bee5804fdd979dc4bf58a895aaa8728e27",
-          "changes": [
-            "**Neu: Entlade-Sperre** (`zdmc_dischargeResetMargin`, ab Regel-Script 5.2.4): Eingabefeld im Dashboard neben dem Sollwert, erlaubt 3 bis (Ladegrenze − Reserve) − 11. Ist dieser Abstand zu klein, ist das Feld gesperrt und es gilt 3. Eine höhere Reserve, die nicht mehr zur Sperre passt, wird mit Meldung abgelehnt. Mit älterem Regel-Script wird der Wert gespeichert, aber nicht ausgewertet",
-            "**Manuelles Laden:** Eine Leiste oben zeigt Start, Ergebnis und Restzeit. Während der Regler die Änderung übernimmt (10 s), ist die Bedienung gesperrt; danach prüft das Dashboard den echten Stand. Behoben: „Manuelles Laden … konnte nicht beendet werden“, obwohl die Werte richtig geschrieben waren",
-            "**Neues Design** unter `/neu`, das klassische Dashboard bleibt unter `/`. Umschalten im Menü „Ansicht“ → „Design“. Gerätekarten mit Ladebalken, Hinweise nur bei Abweichungen, Ansicht „Energiefluss“ mit animierten Linien"
           ],
           "notice": null
         }
@@ -452,13 +452,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "5.8.2",
+      "version": "5.8.3",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c9debb1b9a563d9f9a5afbdacaddb4de77f070a2/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fca16dcf4cf2e77aca005610aeba05001453aabd/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
-        "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
-        "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
+        "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
+        "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
+        "**Beenden:** gleicher Knopf, Zurück-Geste/Esc, Drehen ins Hochformat oder Wechsel zur Geräteansicht. Ein Seiten-Vollbild aus dem Menü bleibt danach bestehen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -467,6 +467,15 @@
       },
       "history": [
         {
+          "version": "5.8.2",
+          "changes": [
+            "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
+            "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
+            "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
+          ],
+          "notice": null
+        },
+        {
           "version": "5.8.1",
           "changes": [
             "**Taste „Details“** (technische Details) sitzt jetzt im Umschalter: **Geräte | Energiefluss | Details**, durch einen dünnen Strich abgesetzt, weil sie unabhängig ein/aus schaltet. Sichtbar in beiden Ansichten, eingeschaltet farbig hinterlegt wie die gewählte Ansicht. Der Zustand wird weiter pro Browser gemerkt, Tastenkürzel **T** und „Ansicht zurücksetzen“ wirken wie bisher.",
@@ -543,15 +552,6 @@
             "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
             "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
             "Home-Assistant-App 5.4.4.0"
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.2",
-          "changes": [
-            "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
-            "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
-            "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
           ],
           "notice": null
         }
@@ -559,18 +559,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "5.8.2",
+      "version": "5.8.3",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/c9debb1b9a563d9f9a5afbdacaddb4de77f070a2/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/fca16dcf4cf2e77aca005610aeba05001453aabd/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
-        "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
-        "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
+        "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
+        "**Vollbild nur für den Energiefluss:** Das Flowchart wird so groß, dass es ohne seitliches Wischen auf das Display passt; Geräteauswahl, Hintergrund (Bild/Bewegung) und Linien laufen mit. Mit Fullscreen-API (Android, iPad) echtes Vollbild, sonst (Safari auf dem iPhone) legt sich der Energiefluss über die Seite – dort bleiben die Safari-Leisten sichtbar, als Home-Bildschirm-App nicht.",
+        "**Beenden:** gleicher Knopf, Zurück-Geste/Esc, Drehen ins Hochformat oder Wechsel zur Geräteansicht. Ein Seiten-Vollbild aus dem Menü bleibt danach bestehen."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "5.8.2",
+          "changes": [
+            "**Kopfzeile:** Der Status-Punkt sitzt in der Uhr-Pille (eine Pille weniger). Auf schmalen Bildschirmen zeigt das Menü nur ⚙, Uhr links, Schloss und ⚙ rechts. „Verbinde…“/„Verbindungsproblem“ ist dort nur noch am roten Punkt zu sehen, Antippen zeigt die Erklärung, Screenreader lesen den Text weiter vor.",
+            "**Details:** eigener runder Knopf (Symbol `</>`) neben **Geräte | Energiefluss** statt dritter Teil des Umschalters. Auf schmalen Bildschirmen füllt der Umschalter die ganze Breite, die Überschrift „Geräte“/„Energiefluss“ entfällt dort (für Screenreader bleibt sie). Tastenkürzel **T** wie bisher.",
+            "**Energiefluss:** Hintergrund über einen runden Knopf, der Aus → Bild → Bewegung durchschaltet, statt drei Knöpfen. Die Geräteauswahl bricht nicht mehr um, sondern lässt sich waagerecht wischen."
+          ],
+          "notice": null
+        },
         {
           "version": "5.8.1",
           "changes": [
@@ -648,15 +657,6 @@
             "**Verbindungsstatus (neues Design):** Statt „Live · Poll alle 4s“ steht oben rechts nur noch der grüne Punkt. Der Tooltip erklärt ihn: Das Dashboard fragt alle 4 s den Status beim Shelly-Script ab, grün heißt, die letzte Abfrage hat geklappt. Bei einem Verbindungsproblem bleiben roter Punkt und Text wie bisher, mit eigenem Tooltip. Das klassische Dashboard ist unverändert.",
             "**ThingsBoard-Upload:** neue wählbare Werte `temp` (Gerätetemperatur), `packTempLow` (kühlstes Akkupack) und `heatState` (Heizung, 0 aus / 1 an), auf `/thingsboard` standardmäßig aus. `heatState` geht wie `minSoc` nur bei Änderung raus, dazu einmal am Tag und nach einem Neustart. Die Werte brauchen das Shelly-Script ab 3.5.9 (`temp`), 4.2.0 (`heatState`) bzw. 4.3.0 (`packTempLow`), sonst fehlen sie.",
             "Home-Assistant-App 5.4.4.0"
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.4.2",
-          "changes": [
-            "**Icon-Links relativ:** Das Dashboard verweist auf `favicon.svg` und `apple-touch-icon.png` ohne führenden Schrägstrich. Damit kommen die Icons auch über die Seitenleiste von Home Assistant (Ingress) vom Proxy und nicht von Home Assistant.",
-            "**Neu laden erzwingen:** Die Links tragen `?v=5.4.2`, damit iOS und Browser ein zwischengespeichertes altes Symbol nicht weiterverwenden.",
-            "**HEAD-Anfragen:** Der Proxy beantwortet Anfragen nach den Icons jetzt auch per HEAD, vorher kam „nicht gefunden“."
           ],
           "notice": null
         }
