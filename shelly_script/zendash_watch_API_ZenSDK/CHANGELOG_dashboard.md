@@ -8,6 +8,16 @@ Es gibt drei Changelogs:
 
 Ab 5.0.0 zählen Dashboard und Proxy unabhängig vom Shelly-Script. Dashboard und Proxy tragen untereinander dieselbe Nummer. Welche Script-Version mindestens nötig ist, steht im jeweiligen Abschnitt. Bis 4.1.0 trugen alle drei dieselbe Nummer, Änderungen bis 3.5.12 stehen im [Changelog des Shelly-Scripts](CHANGELOG.md).
 
+## Changelog 6.0.1
+
+**Ziel:** Der Energiefluss bleibt im hellen Modus auch nachts gut lesbar. Keine Änderung an den Shelly-Scripten und am Regler.
+
+- **Heller Modus mit Hintergrund (Bild/Bewegung) bei dunklem Himmel:** Ab der Dämmerung (Sonne mehr als 4° unter dem Horizont) zeigt der Energiefluss die Farben des dunklen Modus – dunkle Kacheln, helle Linien, Fließpunkte und Schrift. Bisher waren die Linien auf dem Nachthimmel praktisch unsichtbar und die weißen Kacheln wirkten grell.
+- Nur der Energiefluss wechselt, die übrige Seite bleibt hell. Am Tag, ohne Hintergrund und im dunklen Modus bleibt alles wie bisher. Umgeschaltet wird mit der minütlichen Neuberechnung des Himmels.
+- Home-Assistant-App 6.0.1.0. Der Proxy ändert sich nur in der Versionsnummer.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 6.0.0
 
 **Ziel:** Den Energiefluss auf dem Handy quer im Vollbild zeigen, ohne die übrige Seite. Keine Änderung an den Shelly-Scripten und am Regler.

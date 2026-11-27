@@ -894,6 +894,20 @@
   html[data-theme="light"] .flow-wrap.bg-on .fnode{ background-color:rgba(255,255,255,.97); }
   html[data-theme="dark"] .flow-wrap.bg-on .ftrack{ stroke:rgba(255,255,255,.16); }
   html[data-theme="light"] .flow-wrap.bg-on .ftrack{ stroke:rgba(16,25,43,.22); }
+  /* Heller Modus, Himmel dunkel (ab 6.0.1, Klasse sky-night setzt updateSky):
+     im Energiefluss die Farben des dunklen Modus - Kacheln dunkel, Linien,
+     Punkte und Schrift hell. Die Seite ausserhalb bleibt hell. */
+  html[data-theme="light"] .flow-wrap.bg-on.sky-night{ color-scheme:dark;
+    --surface:#141E33; --surface-2:#1B2740; --border:rgba(255,255,255,0.08);
+    --text:#EAF0F6; --text-muted:#8B9BB4;
+    --amber-text:#F2A93B; --teal-text:#4FD1C5; --green-text:#5CCB76; --alert-text:#F0776B;
+    --blue-text:#6CB6FF; --violet-text:#8F9BFF; --green-line:#5CCB76; --zone-stripe:rgba(11,18,32,0.55);
+    --tile-hi:rgba(255,255,255,.05);
+    --tile-shadow:inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.45), 0 6px 16px rgba(0,0,0,.38);
+    color:var(--text); }
+  html[data-theme="light"] .flow-wrap.bg-on.sky-night .fnode{ background-color:rgba(27,39,64,.96); }
+  html[data-theme="light"] .flow-wrap.bg-on.sky-night .fnode.hubn{ background-color:rgba(15,26,45,.96); }
+  html[data-theme="light"] .flow-wrap.bg-on.sky-night .ftrack{ stroke:rgba(255,255,255,.16); }
 
   /* Link zum anderen Design im Menue */
   a.icon-btn{ text-decoration:none; color:var(--text); }
@@ -1207,7 +1221,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "6.0.0";
+  const APP_VERSION = "6.0.1";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -2270,6 +2284,7 @@
     wrap.classList.toggle('bg-on', on);
     wrap.classList.toggle('bg-move', on && bgMode === 'move');
     sky.hidden = !on;
+    if (!on) wrap.classList.remove('sky-night');
     if (!on || wrap.hidden || document.hidden) return;   // unsichtbar: nichts rechnen
     buildSkyStars();
     const SR = up.getHours() * 60 + up.getMinutes(), SS = down.getHours() * 60 + down.getMinutes();
@@ -2287,6 +2302,9 @@
     const nearHz = skyClamp(1 - Math.abs(elev) / 12, 0, 1);
     const starOp = skyClamp((-elev - 5) / 9, 0, 1);
     const hell = document.documentElement.getAttribute('data-theme') === 'light';
+    // Heller Modus bei dunklem Himmel (ab Daemmerung, Sonne unter -4 Grad): Energiefluss
+    // im Nachtbild des dunklen Modus - sonst verschwinden Linien und Punkte im Himmel
+    wrap.classList.toggle('sky-night', hell && elev < -4);
     // Truebung nur bei Tag und erst ab etwas Sonnenhoehe (morgens/abends ist wenig PV normal)
     pvDimShown = pvDim;
     const dim = isDay ? pvDim * skyClamp((elev - 3) / 8, 0, 1) : 0;
