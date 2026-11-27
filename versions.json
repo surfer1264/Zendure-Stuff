@@ -1,7 +1,7 @@
 {
   "manifestVersion": 1,
   "hashAlgo": "sha256-noconfig-v1",
-  "generated": "2026-11-27T22:22:42Z",
+  "generated": "2026-11-27T22:29:54Z",
   "helperMin": "1.0",
   "scripts": {
     "zdmc-controller": {
@@ -452,13 +452,13 @@
     },
     "zdmc-dashboard": {
       "kind": "app",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/e728924e92a8c10e9676f3baaa8b5bbfd6b765f1/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/407cda420f4f0d807cbe8d945284a65130d6c049/shelly_script/zendash_watch_API_ZenSDK/zendure-dashboard-neu.html",
       "changes": [
-        "**Heller Modus mit Hintergrund (Bild/Bewegung) bei dunklem Himmel:** Ab der Dämmerung (Sonne mehr als 4° unter dem Horizont) zeigt der Energiefluss die Farben des dunklen Modus – dunkle Kacheln, helle Linien, Fließpunkte und Schrift. Bisher waren die Linien auf dem Nachthimmel praktisch unsichtbar und die weißen Kacheln wirkten grell.",
-        "Nur der Energiefluss wechselt, die übrige Seite bleibt hell. Am Tag, ohne Hintergrund und im dunklen Modus bleibt alles wie bisher. Umgeschaltet wird mit der minütlichen Neuberechnung des Himmels.",
-        "Home-Assistant-App 6.0.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Barrierefreiheit (heller Modus, WCAG 1.4.11):** Schalter „aus“ mit sichtbarem Rahmen (vorher 1,2 : 1, jetzt 5,7 : 1), Schalter „an“ in Grün etwas dunkler (`#168577`, 4,2 : 1 statt 2,9 : 1), Schiene des Sollwert-Reglers mit Rahmen (vorher 1,2 : 1, jetzt 6,1 : 1), gewählter Reiter in den Einstellungen mit deutlichem Rahmen (vorher 1,9 : 1, jetzt 5,7 : 1). Der dunkle Modus bleibt unverändert.",
+        "**Hilfe-Tipp (WCAG 4.1.2):** Ist kein Tipp offen, ist das Tipp-Element ausgeblendet. Bisher lasen Screenreader ein leeres Element mit der Rolle „Tooltip“ ohne Namen. Beim Antippen erscheint der Tipp wie bisher.",
+        "Geprüft mit axe-core 4.10 (WCAG 2.2 A/AA) und eigener Kontrastrechnung in Edge: PC und Handy, Geräte, Energiefluss, technische Details, entsperrt mit Einstellungen, Menü offen – keine Verstöße. Tastaturbedienung und Screenreader nicht von Hand geprüft."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
@@ -467,6 +467,15 @@
       },
       "history": [
         {
+          "version": "6.0.1",
+          "changes": [
+            "**Heller Modus mit Hintergrund (Bild/Bewegung) bei dunklem Himmel:** Ab der Dämmerung (Sonne mehr als 4° unter dem Horizont) zeigt der Energiefluss die Farben des dunklen Modus – dunkle Kacheln, helle Linien, Fließpunkte und Schrift. Bisher waren die Linien auf dem Nachthimmel praktisch unsichtbar und die weißen Kacheln wirkten grell.",
+            "Nur der Energiefluss wechselt, die übrige Seite bleibt hell. Am Tag, ohne Hintergrund und im dunklen Modus bleibt alles wie bisher. Umgeschaltet wird mit der minütlichen Neuberechnung des Himmels.",
+            "Home-Assistant-App 6.0.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
+        {
           "version": "6.0.0",
           "changes": [
             "**Neuer Knopf im Energiefluss** rechts neben dem Hintergrund-Knopf (Symbol: vier Ecken). Nur auf Handy und Tablet (Touch ohne Maus) im Querformat; am PC und im Hochformat ausgeblendet. Ohne Standort am Shelly fehlt nur der Hintergrund-Knopf, der Vollbild-Knopf bleibt.",
@@ -543,15 +552,6 @@
             "**Betriebsart je Fenster:** Beim Bearbeiten eines Fensters wählst du **Nulleinspeisung** (Regelung nach Zähler) oder **Entladen fix** mit Leistung in Watt. Der Proxy schreibt dazu neben `zdmc_devN_dischargeAllowed` auch `zdmc_dischargeFixed` (im Fenster „fix“ die Leistung, sonst 0). Außerhalb der Fenster ist Entladen weiterhin immer gesperrt. Bestehende Pläne laufen unverändert weiter: Fenster ohne Betriebsart gelten als Nulleinspeisung.",
             "**Planwechsel:** Jeder Wechsel der Betriebsart zählt als Planzeit, auch fix 800 W → Nulleinspeisung oder 800 W → 200 W.",
             "**Fix-Leistung von Hand:** Verstellst du die Fix-Leistung im Dashboard, gilt das bis zum nächsten Wechsel; die Plan-Seite zeigt es an. Stellst du sie wieder auf den Planwert, übernimmt der Plan wieder."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.5.1",
-          "changes": [
-            "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
-            "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
-            "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
           ],
           "notice": null
         }
@@ -559,18 +559,27 @@
     },
     "zdmc-proxy": {
       "kind": "app",
-      "version": "6.0.1",
+      "version": "6.0.2",
       "file": "shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
-      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/e728924e92a8c10e9676f3baaa8b5bbfd6b765f1/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
+      "url": "https://raw.githubusercontent.com/surfer1264/Zendure-Stuff/407cda420f4f0d807cbe8d945284a65130d6c049/shelly_script/zendash_watch_API_ZenSDK/zendure_proxy.py",
       "changes": [
-        "**Heller Modus mit Hintergrund (Bild/Bewegung) bei dunklem Himmel:** Ab der Dämmerung (Sonne mehr als 4° unter dem Horizont) zeigt der Energiefluss die Farben des dunklen Modus – dunkle Kacheln, helle Linien, Fließpunkte und Schrift. Bisher waren die Linien auf dem Nachthimmel praktisch unsichtbar und die weißen Kacheln wirkten grell.",
-        "Nur der Energiefluss wechselt, die übrige Seite bleibt hell. Am Tag, ohne Hintergrund und im dunklen Modus bleibt alles wie bisher. Umgeschaltet wird mit der minütlichen Neuberechnung des Himmels.",
-        "Home-Assistant-App 6.0.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+        "**Barrierefreiheit (heller Modus, WCAG 1.4.11):** Schalter „aus“ mit sichtbarem Rahmen (vorher 1,2 : 1, jetzt 5,7 : 1), Schalter „an“ in Grün etwas dunkler (`#168577`, 4,2 : 1 statt 2,9 : 1), Schiene des Sollwert-Reglers mit Rahmen (vorher 1,2 : 1, jetzt 6,1 : 1), gewählter Reiter in den Einstellungen mit deutlichem Rahmen (vorher 1,9 : 1, jetzt 5,7 : 1). Der dunkle Modus bleibt unverändert.",
+        "**Hilfe-Tipp (WCAG 4.1.2):** Ist kein Tipp offen, ist das Tipp-Element ausgeblendet. Bisher lasen Screenreader ein leeres Element mit der Rolle „Tooltip“ ohne Namen. Beim Antippen erscheint der Tipp wie bisher.",
+        "Geprüft mit axe-core 4.10 (WCAG 2.2 A/AA) und eigener Kontrastrechnung in Edge: PC und Handy, Geräte, Energiefluss, technische Details, entsperrt mit Einstellungen, Menü offen – keine Verstöße. Tastaturbedienung und Screenreader nicht von Hand geprüft."
       ],
       "notice": null,
       "changelogUrl": "https://github.com/surfer1264/Zendure-Stuff/blob/main/shelly_script/zendash_watch_API_ZenSDK/CHANGELOG_dashboard.md",
       "requires": {},
       "history": [
+        {
+          "version": "6.0.1",
+          "changes": [
+            "**Heller Modus mit Hintergrund (Bild/Bewegung) bei dunklem Himmel:** Ab der Dämmerung (Sonne mehr als 4° unter dem Horizont) zeigt der Energiefluss die Farben des dunklen Modus – dunkle Kacheln, helle Linien, Fließpunkte und Schrift. Bisher waren die Linien auf dem Nachthimmel praktisch unsichtbar und die weißen Kacheln wirkten grell.",
+            "Nur der Energiefluss wechselt, die übrige Seite bleibt hell. Am Tag, ohne Hintergrund und im dunklen Modus bleibt alles wie bisher. Umgeschaltet wird mit der minütlichen Neuberechnung des Himmels.",
+            "Home-Assistant-App 6.0.1.0. Der Proxy ändert sich nur in der Versionsnummer."
+          ],
+          "notice": null
+        },
         {
           "version": "6.0.0",
           "changes": [
@@ -648,15 +657,6 @@
             "**Betriebsart je Fenster:** Beim Bearbeiten eines Fensters wählst du **Nulleinspeisung** (Regelung nach Zähler) oder **Entladen fix** mit Leistung in Watt. Der Proxy schreibt dazu neben `zdmc_devN_dischargeAllowed` auch `zdmc_dischargeFixed` (im Fenster „fix“ die Leistung, sonst 0). Außerhalb der Fenster ist Entladen weiterhin immer gesperrt. Bestehende Pläne laufen unverändert weiter: Fenster ohne Betriebsart gelten als Nulleinspeisung.",
             "**Planwechsel:** Jeder Wechsel der Betriebsart zählt als Planzeit, auch fix 800 W → Nulleinspeisung oder 800 W → 200 W.",
             "**Fix-Leistung von Hand:** Verstellst du die Fix-Leistung im Dashboard, gilt das bis zum nächsten Wechsel; die Plan-Seite zeigt es an. Stellst du sie wieder auf den Planwert, übernimmt der Plan wieder."
-          ],
-          "notice": null
-        },
-        {
-          "version": "5.5.1",
-          "changes": [
-            "**Zeitplan, voller Akku:** Bei vollem Akku (`socLimit 1`) gibt der Plan weiterhin frei, damit Solarstrom durchkommt. Neu: Ist der Akku danach nicht mehr voll und gibt er selbst mehr als 30 W ab (`packInputPower`), sperrt der Plan wieder – bisher blieb das Gerät bis zum nächsten Planwechsel frei und entlud außerhalb der Fenster. Wird der Akku wieder voll, gibt der Plan erneut frei. Hilfetexte der Plan-Seite (DE/EN/FR) angepasst.",
-            "**Energiefluss und Gerätekarten:** Die AC-Leistung wird jetzt aus `outputHomePower − gridInputPower` berechnet, unabhängig von `acMode`. Ein volles Gerät in `acMode 1`, das PV ans Haus durchreicht, zeigte bisher 0 W und im Energiefluss „Akku lädt“; auch der Hausverbrauch war zu niedrig.",
-            "**Akku im Energiefluss:** direkt gemessen (`outputPackPower − packInputPower`), die bisherige Rechnung PV − AC − Offgrid bleibt als Rückfall."
           ],
           "notice": null
         }
