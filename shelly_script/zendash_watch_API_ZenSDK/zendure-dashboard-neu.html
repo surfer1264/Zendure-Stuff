@@ -836,6 +836,21 @@
   .flow-bg{ margin-left:auto; display:flex; align-items:center; gap:.375rem; }
   .flow-bg[hidden]{ display:none; }
   .flow-bg .round-btn.active{ color:var(--teal-text); }
+  /* Rechte Knoepfe im Kopf des Energieflusses (Hintergrund, Vollbild) */
+  .flow-tools{ margin-left:auto; display:flex; align-items:center; gap:.375rem; flex-shrink:0; }
+  .flow-tools .round-btn[hidden]{ display:none; }
+  /* Vollbild nur fuer den Energiefluss (ab 5.8.3). Gilt fuer echtes Vollbild
+     (Fullscreen-API) und fuer den Ersatz per CSS (iPhone): der Energiefluss
+     liegt ueber der ganzen Seite, die Schrift - und damit alles in em - wird
+     so gross, dass 65 x 32 em ohne Wischen auf das Display passen. */
+  .flow-wrap.flow-fs{ position:fixed; inset:0; z-index:1000; box-sizing:border-box; width:100%; height:100%; margin:0;
+    border:0; border-radius:0; box-shadow:none; gap:.5rem;
+    padding:max(.5rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(.5rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left)); }
+  .flow-wrap.flow-fs .flow-scroll{ flex:1 1 auto; min-height:0; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .flow-wrap.flow-fs .flow{ flex-shrink:0; margin:0;
+    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100vh - var(--tap) - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 32.5));
+    font-size:min(calc((100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right)) / 65.5), calc((100dvh - var(--tap) - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) / 32.5)); }
+  html.flow-fs-open, html.flow-fs-open body{ overflow:hidden; }
   /* Geraeteauswahl im Energiefluss: eine Zeile, bei Platzmangel waagerecht wischen statt umbrechen */
   .flow-head{ flex-wrap:nowrap; }
   .flow-scopes{ flex-wrap:nowrap; overflow-x:auto; min-width:0; scrollbar-width:none; scroll-snap-type:x proximity; padding:2px; margin:-2px; }
@@ -1095,9 +1110,13 @@
       </div>
       <div class="flow-head">
         <div class="flow-scopes" id="flowScopes" role="group" data-i18n-aria="flowScopeAria" aria-label="Geräte im Energiefluss"></div>
-        <div class="flow-bg" id="flowBg" hidden>
-          <!-- Ein Knopf schaltet Aus -> Bild -> Bewegung durch; Symbol und Beschriftung setzt applyBgButtons() -->
-          <button type="button" class="round-btn" id="bgCycle"></button>
+        <div class="flow-tools">
+          <div class="flow-bg" id="flowBg" hidden>
+            <!-- Ein Knopf schaltet Aus -> Bild -> Bewegung durch; Symbol und Beschriftung setzt applyBgButtons() -->
+            <button type="button" class="round-btn" id="bgCycle"></button>
+          </div>
+          <!-- Vollbild nur fuer den Energiefluss, nur Handy/Tablet quer; Symbol und Beschriftung setzt applyFlowFsBtn() -->
+          <button type="button" class="round-btn" id="flowFsBtn" hidden></button>
         </div>
       </div>
       <div class="flow-scroll">
@@ -1183,7 +1202,7 @@
   // Seit 5.5.0 traegt diese Seite die Kennung (das klassische Dashboard ist
   // entfernt).
   const APP_TYPE = "zdmc-dashboard";
-  const APP_VERSION = "5.8.2";
+  const APP_VERSION = "5.8.3";
   const APP_CHANGELOG = "CHANGELOG_dashboard.md";
   const VERSION = APP_VERSION;
   const MIN_SCRIPT = "4.1.0";
@@ -1653,6 +1672,7 @@
     feedErrIp: 'Das sieht nicht nach einer IPv4-Adresse aus: {ip}', feedErrUnreach: 'Shelly unter {ip} nicht erreichbar', feedErrNoPower: 'Shelly unter {ip} liefert keine Leistung', feedDefault: 'Einspeisung',
     feedOn: 'speist ein', feedIdle: 'keine Einspeisung', feedOffline: 'offline', feedPart: '{n} von {m} offline',
     bgAria: 'Hintergrund des Energieflusses nach Tageszeit', bgOff: 'Aus', bgStill: 'Bild', bgMove: 'Bewegung',
+    flowFsEnter: 'Energiefluss im Vollbild', flowFsExit: 'Vollbild beenden',
     sunTitle: 'Sonnenaufgang – Sonnenuntergang (Standort des Dashboard-Shellys)', fAllHubs: 'Solarflows', fOffOn: 'Ausgang', fOffIn: 'Eingang', fOffSwOff: 'Steckdose aus', fOffIdle: 'keine Last', fNoData: 'keine Daten',
     stOut: 'speist ein', stIn: 'bezieht vom Netz', stIdle: 'Bereitschaft', stOg: 'Offgrid',
     valPv: 'PV', valBatt: 'Akku', valOff: 'Offgrid', socShort: 'SOC',
@@ -1689,6 +1709,7 @@
     feedErrIp: 'This does not look like an IPv4 address: {ip}', feedErrUnreach: 'Shelly at {ip} not reachable', feedErrNoPower: 'Shelly at {ip} reports no power value', feedDefault: 'Feed-in',
     feedOn: 'feeding in', feedIdle: 'no feed-in', feedOffline: 'offline', feedPart: '{n} of {m} offline',
     bgAria: 'Energy flow background by time of day', bgOff: 'Off', bgStill: 'Picture', bgMove: 'Motion',
+    flowFsEnter: 'Energy flow full screen', flowFsExit: 'Exit full screen',
     sunTitle: 'Sunrise – sunset (location of the dashboard Shelly)', fAllHubs: 'Solarflows', fOffOn: 'output', fOffIn: 'input', fOffSwOff: 'socket off', fOffIdle: 'no load', fNoData: 'no data',
     stOut: 'feeding in', stIn: 'charging from grid', stIdle: 'standby', stOg: 'off-grid',
     valPv: 'PV', valBatt: 'Battery', valOff: 'Off-grid', socShort: 'SOC',
@@ -1725,6 +1746,7 @@
     feedErrIp: 'Ceci ne ressemble pas à une adresse IPv4 : {ip}', feedErrUnreach: 'Shelly à {ip} injoignable', feedErrNoPower: 'Le Shelly à {ip} ne fournit pas de puissance', feedDefault: 'Injection',
     feedOn: 'injecte', feedIdle: 'pas d’injection', feedOffline: 'hors ligne', feedPart: '{n} sur {m} hors ligne',
     bgAria: 'Arrière-plan du flux selon l’heure', bgOff: 'Désactivé', bgStill: 'Image', bgMove: 'Animé',
+    flowFsEnter: 'Flux d’énergie en plein écran', flowFsExit: 'Quitter le plein écran',
     sunTitle: 'Lever – coucher du soleil (position du Shelly du tableau de bord)', fAllHubs: 'Solarflows', fOffOn: 'sortie', fOffIn: 'entrée', fOffSwOff: 'prise désactivée', fOffIdle: 'aucune charge', fNoData: 'pas de données',
     stOut: 'injecte', stIn: 'charge depuis le réseau', stIdle: 'veille', stOg: 'hors réseau',
     valPv: 'PV', valBatt: 'Batterie', valOff: 'Hors réseau', socShort: 'SOC',
@@ -1925,6 +1947,94 @@
     document.addEventListener('fullscreenchange', applyFullscreenState);
     document.addEventListener('webkitfullscreenchange', applyFullscreenState);
     applyFullscreenState();
+  }
+
+  /* ---------------- Vollbild nur fuer den Energiefluss (ab 5.8.3) ----------------
+     Knopf nur auf Handy/Tablet im Querformat (Touch ohne Hover) - am PC und im
+     Hochformat ausgeblendet. Mit Fullscreen-API wird nur #flowWrap Vollbild;
+     wo sie fehlt (Safari auf dem iPhone), legt sich der Energiefluss per CSS
+     ueber die Seite - als Home-Bildschirm-App praktisch Vollbild, im Browser
+     bleiben dessen Leisten sichtbar. Beenden: Knopf, Zurueck-Geste/Esc oder
+     Drehen ins Hochformat. Solange es an ist, bleibt das Display wach, wo der
+     Browser das erlaubt (Wake Lock, nur ueber https). */
+  const flowFsBtn = document.getElementById('flowFsBtn');
+  const flowWrapEl = document.getElementById('flowWrap');
+  const flowFsMq = window.matchMedia ? window.matchMedia('(hover:none) and (pointer:coarse) and (orientation:landscape)') : null;
+  let flowFsMode = null;   // null | 'api' | 'css'
+  let flowWake = null;     // null | true (Anfrage laeuft) | WakeLockSentinel
+  const FLOW_FS_ICON = {
+    enter: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+    exit: '<path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/>'
+  };
+  function applyFlowFsBtn(){
+    const on = !!flowFsMode;
+    const lbl = t(on ? 'flowFsExit' : 'flowFsEnter');
+    flowFsBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + FLOW_FS_ICON[on ? 'exit' : 'enter'] + '</svg>';
+    flowFsBtn.setAttribute('aria-label', lbl);
+    flowFsBtn.title = lbl;
+    flowFsBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    flowFsBtn.hidden = !(flowFsMq && flowFsMq.matches);
+  }
+  function flowWakeOn(){
+    if (flowWake || !navigator.wakeLock) return;
+    flowWake = true;
+    navigator.wakeLock.request('screen').then(function(l){
+      if (!flowFsMode) { l.release().catch(function(){}); flowWake = null; return; }
+      flowWake = l;
+      l.addEventListener('release', function(){ if (flowWake === l) flowWake = null; });
+    }).catch(function(){ flowWake = null; });
+  }
+  function flowWakeOff(){
+    if (flowWake && flowWake !== true) flowWake.release().catch(function(){});
+    if (flowWake !== true) flowWake = null;   // laufende Anfrage gibt sich selbst frei
+  }
+  function flowFsEnter(){
+    if (flowFsMode || flowWrapEl.hidden) return;
+    const useApi = fsSupported && !!(flowWrapEl.requestFullscreen || flowWrapEl.webkitRequestFullscreen);
+    flowFsMode = useApi ? 'api' : 'css';
+    flowWrapEl.classList.add('flow-fs');
+    docEl.classList.add('flow-fs-open');
+    if (useApi) {
+      try {
+        const p = flowWrapEl.requestFullscreen ? flowWrapEl.requestFullscreen({ navigationUI: 'hide' }) : flowWrapEl.webkitRequestFullscreen();
+        // Abgelehnt: als CSS-Vollbild weitermachen
+        if (p && p.catch) p.catch(function(){ if (flowFsMode === 'api') flowFsMode = 'css'; });
+      } catch (e) { flowFsMode = 'css'; }
+    }
+    flowWakeOn();
+    applyFlowFsBtn();
+  }
+  function flowFsExit(){
+    if (!flowFsMode) return;
+    flowFsMode = null;
+    flowWrapEl.classList.remove('flow-fs');
+    docEl.classList.remove('flow-fs-open');
+    flowWakeOff();
+    // Nur unser eigenes Vollbild beenden - ein Seiten-Vollbild darunter bleibt
+    if (fsElement() === flowWrapEl) {
+      try {
+        if (document.exitFullscreen) document.exitFullscreen().catch(function(){});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      } catch (e) {}
+    }
+    applyFlowFsBtn();
+  }
+  function onFlowFsChange(){
+    // Zurueck-Geste/Esc beendet das API-Vollbild - Zustand nachziehen
+    if (flowFsMode === 'api' && fsElement() !== flowWrapEl) flowFsExit();
+  }
+  if (flowFsBtn && flowWrapEl) {
+    flowFsBtn.addEventListener('click', function(){ if (flowFsMode) flowFsExit(); else flowFsEnter(); });
+    document.addEventListener('fullscreenchange', onFlowFsChange);
+    document.addEventListener('webkitfullscreenchange', onFlowFsChange);
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && flowFsMode === 'css') flowFsExit(); });
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden && flowFsMode) flowWakeOn(); });
+    if (flowFsMq) {
+      const onMq = function(){ if (!flowFsMq.matches) flowFsExit(); applyFlowFsBtn(); };
+      if (flowFsMq.addEventListener) flowFsMq.addEventListener('change', onMq);
+      else if (flowFsMq.addListener) flowFsMq.addListener(onMq);
+    }
+    applyFlowFsBtn();
   }
 
   /* ---------------- Clock ---------------- */
@@ -4251,6 +4361,7 @@
     viewFlowBtn.setAttribute('aria-pressed', flow ? 'true' : 'false');
     hubsGrid.hidden = flow;
     document.getElementById('flowWrap').hidden = !flow;
+    if (!flow) { try { flowFsExit(); } catch (e) {} }   // Vollbild endet mit der Ansicht
     const title = document.getElementById('viewTitle');
     title.setAttribute('data-i18n', flow ? 'viewFlow' : 'devices');
     title.textContent = t(flow ? 'viewFlow' : 'devices');
@@ -4576,6 +4687,7 @@
     langToggle.title = t('langTitle');
     applyTheme();
     if (fsSupported) applyFullscreenState();
+    if (flowFsBtn) applyFlowFsBtn();
     applyFontSize();
     applyLockState();
     showSetpointState();

@@ -277,7 +277,7 @@ Diese Nachrichten kann das Script verschicken:
 | ❌ SF800: Report unlesbar seit 10 min | Speicher antwortet, aber mit unvollständigen oder unbrauchbaren Daten |
 | ✅ SF800: wieder erreichbar | nach einer der beiden vorigen Meldungen |
 | ⚠️ SF800 seit 20 Tagen nicht voll | einmal täglich beim Morgen-Update geprüft, siehe [Letzte Vollladung](#letzte-vollladung) |
-| 🌅 Morgen-Update / 🌇 Abend-Update | zu Sonnenauf- und -untergang: Ladestand, Temperatur und niedrigste Zellspannung je überwachtem Gerät |
+| 🌅 Morgen-Update / 🌇 Abend-Update | zu Sonnenauf- und -untergang je überwachtem Gerät eine Zeile, z. B. `SF800: 55%, Hub 15.8C, Pack 12C, 3.21V`: Ladestand, Temperatur des Geräts, Temperatur des kühlsten Akkupacks und niedrigste Zellspannung |
 | ✅ SF2400: manuelles Laden beendet (voll) … | Auto-Stop hat funktioniert (bei `apiEvents: true`) |
 | ⚠️ SF2400: Auto-Stop fehlgeschlagen … | Auto-Stop konnte die Einstellungen nicht zurücksetzen. Bitte im Dashboard prüfen. |
 

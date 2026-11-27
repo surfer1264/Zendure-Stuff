@@ -275,7 +275,7 @@ Le script peut envoyer les messages suivants. Les textes des messages sont en al
 | ❌ SF800: Report unlesbar seit 10 min | la batterie répond, mais avec des données incomplètes ou inutilisables (rapport illisible) |
 | ✅ SF800: wieder erreichbar | après l'un des deux messages précédents (de nouveau joignable) |
 | ⚠️ SF800 seit 20 Tagen nicht voll | vérifié une fois par jour lors du récapitulatif du matin (pas pleine depuis 20 jours), voir [Dernière charge complète](#dernière-charge-complète) |
-| 🌅 Morgen-Update / 🌇 Abend-Update | au lever et au coucher du soleil : état de charge, température et tension de cellule la plus basse par appareil |
+| 🌅 Morgen-Update / 🌇 Abend-Update | au lever et au coucher du soleil, une ligne par appareil surveillé, p. ex. `SF800: 55%, Hub 15.8C, Pack 12C, 3.21V` : état de charge, température de l'appareil, température du pack de batterie le plus froid et tension de cellule la plus basse |
 | ✅ SF2400: manuelles Laden beendet (voll) … | l'arrêt automatique a fonctionné (avec `apiEvents: true`) |
 | ⚠️ SF2400: Auto-Stop fehlgeschlagen … | l'arrêt automatique n'a pas pu rétablir les réglages. Merci de vérifier dans le tableau de bord. |
 

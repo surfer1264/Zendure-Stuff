@@ -67,9 +67,11 @@
 // 4.5.1: Speichermessung aus 4.5.0 (mem_max in status_api) wieder entfernt -
 // unter Firmware 1.x/2.1 genuegt mem_peak, unter 2.2 zeigt keiner von beiden
 // den echten Bedarf (Speicherbereinigung erst bei vollem Variablenpool).
+// 4.6.0: Morgen-/Abend-Update zeigt zusaetzlich die Temperatur des
+// kuehlsten Packs (packTempLow), Temperaturen mit "Hub"/"Pack" beschriftet.
 // =====================================================================
 let SCRIPT_TYPE = "zdmc-zendash-watch";
-let VERSION = "4.5.1";
+let VERSION = "4.6.0";
 let CONFIG_SCHEMA = 1;
 let CONFIG = {
   // ------------------------------------------------------------------
@@ -1365,8 +1367,9 @@ function deviceValues(index) {
   let fresh = hub.online && ws.ts > 0 && (Date.now() - ws.ts) < 2 * W.intervalSec * 1000;
   if (!fresh) return "n/a";
   let tempStr = isNum(ws.hyperTemp) ? (ws.hyperTemp.toFixed(1) + "C") : "n/a";
+  let packStr = (hub.packTempLow !== null) ? (hub.packTempLow + "C") : "n/a";
   let volStr = (hub.minVol !== null) ? ((hub.minVol / 100).toFixed(2) + "V") : "n/a";
-  return hub.soc + "%, " + tempStr + ", " + volStr;
+  return hub.soc + "%, Hub " + tempStr + ", Pack " + packStr + ", " + volStr;
 }
 
 function sendDigest(headerText) {

@@ -8,6 +8,18 @@ Es gibt drei Changelogs:
 
 Ab Dashboard/Proxy 5.0.0 zählt das Script unabhängig von Dashboard und Proxy. Welche Script-Version das Dashboard mindestens braucht, steht in dessen Changelog. Bis 3.5.12 stand alles gemeinsam hier.
 
+## Changelog 4.6.0
+
+**Ziel:** Im Morgen- und Abend-Update steht auch die Temperatur des kühlsten Akkupacks.
+
+- **Neue Zeile je Speicher:** `SF800: 55%, Hub 15.8C, Pack 12C, 3.21V` – Ladestand, Temperatur des Speichers (`hyperTmp`), Temperatur des kühlsten Packs (kleinster `maxTemp` aller Packs, ganze °C) und kleinste Zellspannung. Bisher: `SF800: 55%, 15.8C, 3.21V`.
+- Die beiden Temperaturen sind mit **Hub** und **Pack** beschriftet, damit sie nicht verwechselt werden.
+- Schlafen alle Packs (Werte 0), steht bei Pack und Zellspannung `n/a`. Ohne aktuelle Werte bleibt es bei `n/a` für die ganze Zeile.
+- Der Wert wurde schon seit 4.3.0 für das Dashboard gelesen (`packTempLow`) – kein zusätzlicher Speicher, nur etwa 14 Zeichen mehr je Zeile.
+- Wer die Meldung in Home Assistant o. Ä. per Text auswertet, muss das neue Format berücksichtigen.
+
+Keine Änderung am CONFIG-Block nötig.
+
 ## Changelog 4.5.1
 
 **Ziel:** Die Speichermessung aus 4.5.0 wieder entfernen – sie zeigt nichts, was die Firmware nicht schon liefert.
